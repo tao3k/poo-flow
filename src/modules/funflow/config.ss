@@ -3,8 +3,8 @@
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
 (import (only-in :clan/poo/object .ref object<-alist)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax
         (only-in :poo-flow/src/modules/workflow/cicd-core
                  poo-flow-cicd-alist-ref
                  poo-flow-cicd-symbol-member?)
@@ -55,7 +55,10 @@
 ;;; The CI/CD payload is a Funflow feature, not a new top-level category. It is
 ;;; inspectable module data; adapters such as GitHub, Docker, or Nix stay out.
 ;; : UserModuleFlagEntry
-(import ./config-adapter.ss)
+(import (only-in ./config-adapter.ss
+                 poo-flow-funflow-require
+                 poo-flow-funflow-poo-check->cicd-check
+                 poo-flow-funflow-poo-pipeline->check-map))
 
 (def poo-flow-funflow-cicd-default-payload
   '(+cicd

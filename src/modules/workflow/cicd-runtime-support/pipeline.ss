@@ -136,6 +136,7 @@
                                             diagnostics
                                             readiness)))
 
+;; : (forall (c p) (-> [c] Alist [p] Alist))
 ;; : (-> [PooFlowCicdCheck] Alist [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-pipeline-run-step-summary checks graph profile-catalog)
   (let* ((steps

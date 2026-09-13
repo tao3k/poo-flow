@@ -6,14 +6,14 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-recovery-scenario
+        "./support/performance"
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/recovery-scenario
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects)
 

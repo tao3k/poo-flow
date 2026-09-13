@@ -356,6 +356,7 @@
       (cdr entry)
       default-value)))
 
+;; : (forall (k v) (-> [k] [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-select
 ;;   : (-> [Symbol] Alist Alist)
 ;;   | doc m%
@@ -377,6 +378,7 @@
             (cons key (cdr entry)))))
    keys))
 
+;; : (forall (k v) (-> k [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-delete-key
 ;;   : (-> Symbol Alist Alist)
 ;;   | doc m%
@@ -396,6 +398,7 @@
      (equal? key (car entry)))
    alist))
 
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-merge-right
 ;;   : (-> Alist Alist Alist)
 ;;   | doc m%

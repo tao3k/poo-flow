@@ -21,6 +21,7 @@ dev = [
 
 [project.scripts]
 poo-flow-proof = "poo_flow_proof.cli:main"
+poo-flow-axle-verify = "poo_flow_proof.axle_verify:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

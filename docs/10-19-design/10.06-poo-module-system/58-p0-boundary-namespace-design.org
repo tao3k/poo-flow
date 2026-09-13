@@ -96,7 +96,7 @@ Repository source folders should follow the canonical boundary layer when the im
 | =src/graph/*= | graph data structures and algorithms |
 | =src/semantic/*= | POO object families and semantic descriptors |
 | =src/contract/*= | typed validation and hard-gate receipts |
-| =src/observability/*= | events, spans, diagnostics, receipts |
+| =src/module-system/observability/*= | events, spans, diagnostics, receipts |
 | =src/projection/*= | manifest, report, proof, and handoff projections |
 | =src/runtime/*= | runtime handoff adapters only |
 

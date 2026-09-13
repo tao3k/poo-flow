@@ -1,4 +1,10 @@
-(import :clan/poo/object
+;;; Boundary: projects resolved feature bindings into inert runtime handoff plans.
+;;; Invariant: handoff planning records requirements but performs no runtime effects.
+(import (only-in :clan/poo/object
+                 .ref
+                 make-object
+                 object-slots-set!
+                 object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/adapter-projection-binding
         :poo-flow/src/utilities/functional)
@@ -41,11 +47,13 @@
 (def +feature-runtime-handoff-manifest-kind+
   'poo-flow.feature-runtime-handoff-manifest.v1)
 
+;; : (-> Alist POOObject)
 (def (constant-feature-runtime-handoff-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> Symbol Symbol Symbol Symbol Symbol Integer Symbol PooFeatureRuntimeHandoff)
 (def (feature-runtime-handoff-value
       kind handoff-id adapter-requirement-id projection-request-id
       contract-id contract-version schema-id)
@@ -59,6 +67,7 @@
      (contract-version . ,contract-version)
      (projection-schema-id . ,schema-id))))
 
+;; : (-> Object Symbol Boolean)
 (def (feature-runtime-handoff-kind? value expected-kind)
   (with-catch
    (lambda (_failure) #f)
@@ -73,6 +82,18 @@
           (.ref value 'projection-schema-id)
           #t))))
 
+;; define-feature-runtime-handoff-family
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       `define-feature-runtime-handoff-family` defines a handoff constructor and predicate pair.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (define-feature-runtime-handoff-family kind constructor predicate)
+;;       ;; => defines constructor and predicate
+;;       ```
+;;     %
 (defrules define-feature-runtime-handoff-family ()
   ((_ kind-constant constructor predicate)
    (begin
@@ -105,11 +126,13 @@
   feature-evidence-obligation
   feature-evidence-obligation?)
 
+;; : (-> Object Boolean)
 (def (feature-runtime-handoff? value)
   (or (feature-runtime-bundle-handoff? value)
       (feature-cedar-input-handoff? value)
       (feature-evidence-obligation? value)))
 
+;; : (-> Symbol Symbol Object Object Object Alist)
 (def (feature-runtime-handoff-diagnostic
       code channel subject expected observed)
   (constant-feature-runtime-handoff-object
@@ -120,6 +143,7 @@
      (expected . ,expected)
      (observed . ,observed))))
 
+;; : (-> [Object] [Alist])
 (def (feature-runtime-handoff-invalid-diagnostics handoffs)
   (poo-flow-filter-map
    (lambda (handoff)
@@ -132,11 +156,13 @@
            handoff)))
    handoffs))
 
+;; : (-> [Object] [PooFeatureRuntimeHandoff])
 (def (feature-runtime-handoff-valid-values handoffs)
   (poo-flow-filter-map
    (lambda (handoff) (and (feature-runtime-handoff? handoff) handoff))
    handoffs))
 
+;; : (-> [PooFeatureRuntimeHandoff] [Alist])
 (def (feature-runtime-handoff-duplicate-diagnostics handoffs)
   (let ((seen (make-hash-table))
         (duplicates (make-hash-table)))
@@ -162,6 +188,7 @@
       '()
       handoffs))))
 
+;; : (-> [POOObject] Symbol HashTable)
 (def (feature-runtime-handoff-index values id-slot)
   (let (index (make-hash-table))
     (for-each
@@ -169,6 +196,7 @@
      values)
     index))
 
+;; : (-> Symbol [PooFeatureRuntimeHandoff] PooFeatureRuntimeHandoffManifest)
 (def (feature-runtime-handoff-manifest manifest-id handoffs)
   (let* ((valid-handoffs
           (feature-runtime-handoff-valid-values handoffs))
@@ -191,6 +219,7 @@
        (status . ,(if accepted? 'ready 'rejected))
        (diagnostics . ,diagnostics)))))
 
+;; : (-> Object Boolean)
 (def (feature-runtime-handoff-manifest? value)
   (with-catch
    (lambda (_failure) #f)
@@ -199,22 +228,26 @@
           (eq? (.ref value 'kind)
                +feature-runtime-handoff-manifest-kind+)))))
 
+;; : (-> PooFeatureRuntimeHandoffManifest Symbol MaybeFeatureRuntimeHandoff)
 (def (feature-runtime-handoff-manifest-ref manifest handoff-id)
   (and (feature-runtime-handoff-manifest? manifest)
        (.ref manifest 'accepted?)
        (hash-get (.ref manifest 'handoff-index) handoff-id)))
 
+;; : (-> PooFeatureRuntimeHandoffManifest PooFeatureRuntimeHandoffManifest)
 (def (require-valid-feature-runtime-handoff-manifest manifest)
   (if (and (feature-runtime-handoff-manifest? manifest)
            (.ref manifest 'accepted?))
     manifest
     (error "feature runtime handoff manifest rejected" manifest)))
 
+;; : (-> PooFeatureRuntimeHandoffManifest Symbol PooFeatureRuntimeHandoff)
 (def (require-feature-runtime-handoff-manifest-ref manifest handoff-id)
   (or (feature-runtime-handoff-manifest-ref manifest handoff-id)
       (error "feature runtime handoff is not declared"
              handoff-id manifest)))
 
+;; : (-> Object List)
 (def (feature-runtime-handoff-binding-state binding)
   (with-catch
    (lambda (_failure)
@@ -226,6 +259,7 @@
          (list #f 'feature-adapter-projection-binding-rejected))
        (list #f 'invalid-feature-adapter-projection-binding)))))
 
+;; : (-> Object List)
 (def (feature-runtime-handoff-manifest-state manifest)
   (cond
    ((not (feature-runtime-handoff-manifest? manifest))
@@ -234,60 +268,74 @@
     (list #f 'feature-runtime-handoff-manifest-rejected))
    (else (list #t #f))))
 
+;; : (-> PooFeatureRuntimeHandoff PooFeatureAdapterBinding Boolean)
 (def (feature-runtime-handoff-contract-matches? handoff adapter-binding)
   (and (equal? (.ref handoff 'contract-id)
                (.ref adapter-binding 'contract-id))
        (equal? (.ref handoff 'contract-version)
                (.ref adapter-binding 'contract-version))))
 
+;; : (-> PooFeatureRuntimeHandoff PooFeatureProjectionBinding Boolean)
 (def (feature-runtime-handoff-schema-matches? handoff projection-binding)
   (equal? (.ref handoff 'projection-schema-id)
           (.ref projection-binding 'schema-id)))
 
+;; : (-> PooFeatureRuntimeHandoff MaybeFeatureAdapterBinding MaybeAlist)
+(def (missing-handoff-adapter-diagnostic handoff adapter-binding)
+  (and (not adapter-binding)
+       (feature-runtime-handoff-diagnostic
+        'missing-handoff-adapter-requirement
+        (.ref handoff 'kind)
+        (.ref handoff 'handoff-id)
+        (.ref handoff 'adapter-requirement-id)
+        #f)))
+
+;; : (-> PooFeatureRuntimeHandoff MaybeFeatureProjectionBinding MaybeAlist)
+(def (missing-handoff-projection-diagnostic handoff projection-binding)
+  (and (not projection-binding)
+       (feature-runtime-handoff-diagnostic
+        'missing-handoff-projection-request
+        (.ref handoff 'kind)
+        (.ref handoff 'handoff-id)
+        (.ref handoff 'projection-request-id)
+        #f)))
+
+;; : (-> PooFeatureRuntimeHandoff MaybeFeatureAdapterBinding MaybeAlist)
+(def (handoff-contract-mismatch-diagnostic handoff adapter-binding)
+  (and adapter-binding
+       (not (feature-runtime-handoff-contract-matches?
+             handoff adapter-binding))
+       (feature-runtime-handoff-diagnostic
+        'runtime-handoff-contract-mismatch
+        (.ref handoff 'kind)
+        (.ref handoff 'handoff-id)
+        handoff
+        adapter-binding)))
+
+;; : (-> PooFeatureRuntimeHandoff MaybeFeatureProjectionBinding MaybeAlist)
+(def (handoff-schema-mismatch-diagnostic handoff projection-binding)
+  (and projection-binding
+       (not (feature-runtime-handoff-schema-matches?
+             handoff projection-binding))
+       (feature-runtime-handoff-diagnostic
+        'runtime-handoff-schema-mismatch
+        (.ref handoff 'kind)
+        (.ref handoff 'handoff-id)
+        (.ref handoff 'projection-schema-id)
+        (.ref projection-binding 'schema-id))))
+
+;; : (-> PooFeatureRuntimeHandoff MaybeFeatureAdapterBinding MaybeFeatureProjectionBinding [Alist])
 (def (feature-one-runtime-handoff-diagnostics
       handoff adapter-binding projection-binding)
-  (append
-   (if adapter-binding
-     '()
-     (list
-      (feature-runtime-handoff-diagnostic
-       'missing-handoff-adapter-requirement
-       (.ref handoff 'kind)
-       (.ref handoff 'handoff-id)
-       (.ref handoff 'adapter-requirement-id)
-       #f)))
-   (if projection-binding
-     '()
-     (list
-      (feature-runtime-handoff-diagnostic
-       'missing-handoff-projection-request
-       (.ref handoff 'kind)
-       (.ref handoff 'handoff-id)
-       (.ref handoff 'projection-request-id)
-       #f)))
-   (if (and adapter-binding
-            (not (feature-runtime-handoff-contract-matches?
-                  handoff adapter-binding)))
-     (list
-      (feature-runtime-handoff-diagnostic
-       'runtime-handoff-contract-mismatch
-       (.ref handoff 'kind)
-       (.ref handoff 'handoff-id)
-       handoff
-       adapter-binding))
-     '())
-   (if (and projection-binding
-            (not (feature-runtime-handoff-schema-matches?
-                  handoff projection-binding)))
-     (list
-      (feature-runtime-handoff-diagnostic
-       'runtime-handoff-schema-mismatch
-       (.ref handoff 'kind)
-       (.ref handoff 'handoff-id)
-       (.ref handoff 'projection-schema-id)
-       (.ref projection-binding 'schema-id)))
-     '())))
+  (poo-flow-filter-map
+   identity
+   (list
+    (missing-handoff-adapter-diagnostic handoff adapter-binding)
+    (missing-handoff-projection-diagnostic handoff projection-binding)
+    (handoff-contract-mismatch-diagnostic handoff adapter-binding)
+    (handoff-schema-mismatch-diagnostic handoff projection-binding))))
 
+;; : (-> PooFeatureRuntimeHandoff PooFeatureAdapterBinding PooFeatureProjectionBinding PooFeatureResolvedRuntimeHandoff)
 (def (feature-resolved-runtime-handoff
       handoff adapter-binding projection-binding)
   (constant-feature-runtime-handoff-object
@@ -302,6 +350,7 @@
      (contract-version . ,(.ref adapter-binding 'contract-version))
      (projection-schema-id . ,(.ref projection-binding 'schema-id)))))
 
+;; : (-> PooFeatureAdapterProjectionBinding PooFeatureRuntimeHandoffManifest List)
 (def (feature-resolve-runtime-handoffs binding manifest)
   (let ((adapter-index
          (feature-runtime-handoff-index
@@ -339,6 +388,7 @@
            (.ref manifest 'handoffs)))
       (list (reverse (car state)) (reverse (cadr state))))))
 
+;; : (-> PooFeatureAdapterProjectionBinding PooFeatureRuntimeHandoffManifest PooFeatureRuntimeHandoffPlan)
 (def (feature-runtime-handoff-plan binding manifest)
   (let ((binding-state (feature-runtime-handoff-binding-state binding))
         (manifest-state (feature-runtime-handoff-manifest-state manifest)))
@@ -385,12 +435,25 @@
            (status . ,(if accepted? 'ready 'rejected))
            (diagnostics . ,diagnostics)))))))
 
+;; : (-> PooFeatureRuntimeHandoffPlan PooFeatureRuntimeHandoffPlan)
 (def (require-feature-runtime-handoff-plan plan)
   (if (.ref plan 'accepted?)
     plan
     (error "feature runtime handoff plan rejected"
            (.ref plan 'diagnostics))))
 
+;; defpoo-feature-runtime-bundle-handoff
+;;   : (-> Identifier Clauses FeatureRuntimeBundleHandoffBinding)
+;;   | doc m%
+;;       `defpoo-feature-runtime-bundle-handoff` binds one runtime bundle handoff.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-runtime-bundle-handoff handoff clauses ...)
+;;       ;; => binds handoff
+;;       ```
+;;     %
 (defrules defpoo-feature-runtime-bundle-handoff
   (handoff-id adapter-requirement-id projection-request-id
               bundle-contract-id bundle-version schema-id)
@@ -410,6 +473,18 @@
       contract-version
       projection-schema-id))))
 
+;; defpoo-feature-cedar-input-handoff
+;;   : (-> Identifier Clauses FeatureCedarInputHandoffBinding)
+;;   | doc m%
+;;       `defpoo-feature-cedar-input-handoff` binds one Cedar input handoff.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-cedar-input-handoff handoff clauses ...)
+;;       ;; => binds handoff
+;;       ```
+;;     %
 (defrules defpoo-feature-cedar-input-handoff
   (handoff-id adapter-requirement-id projection-request-id
               input-contract-id input-contract-version schema-id)
@@ -429,6 +504,18 @@
       contract-version
       projection-schema-id))))
 
+;; defpoo-feature-evidence-obligation
+;;   : (-> Identifier Clauses FeatureEvidenceObligationBinding)
+;;   | doc m%
+;;       `defpoo-feature-evidence-obligation` binds one evidence handoff obligation.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-evidence-obligation handoff clauses ...)
+;;       ;; => binds handoff
+;;       ```
+;;     %
 (defrules defpoo-feature-evidence-obligation
   (handoff-id adapter-requirement-id projection-request-id
               evidence-contract-id evidence-contract-version schema-id)
@@ -448,6 +535,19 @@
       contract-version
       projection-schema-id))))
 
+;; defpoo-feature-runtime-handoff-manifest
+;;   : (-> Identifier Clauses FeatureRuntimeHandoffManifestBinding)
+;;   | doc m%
+;;       `defpoo-feature-runtime-handoff-manifest` binds an indexed handoff manifest.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-runtime-handoff-manifest manifest
+;;         (manifest-id runtime) (handoffs handoff))
+;;       ;; => binds manifest
+;;       ```
+;;     %
 (defrules defpoo-feature-runtime-handoff-manifest
   (manifest-id handoffs)
   ((_ binding
@@ -457,6 +557,19 @@
      (feature-runtime-handoff-manifest
       semantic-id (list handoff ...)))))
 
+;; defpoo-feature-runtime-handoff-plan
+;;   : (-> Identifier Clauses FeatureRuntimeHandoffPlanBinding)
+;;   | doc m%
+;;       `defpoo-feature-runtime-handoff-plan` binds a resolved runtime handoff plan.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-runtime-handoff-plan plan
+;;         (from-binding binding) (using-manifest manifest))
+;;       ;; => binds plan
+;;       ```
+;;     %
 (defrules defpoo-feature-runtime-handoff-plan
   (from-binding using-manifest)
   ((_ binding

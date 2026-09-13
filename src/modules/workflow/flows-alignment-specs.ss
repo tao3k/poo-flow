@@ -18,21 +18,6 @@
         alignment-gate-proof-commands
         poo-flow-funflow-tutorial-alignment-gate-ids)
 
-;;; Boundary: flows alignment field rows preserve parser-visible slots for
-;;; funflow compatibility receipts.
-;; poo-flow-flows-alignment-field-rows
-;; : (-> FlowsAlignmentFieldRowsClauseSyntax FlowsAlignmentFieldRowsExpansionSyntax)
-;; | doc m%
-;;   Expands funflow-alignment field clauses into stable compatibility rows.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-flows-alignment-field-rows (arrow 'kleisli))
-;;   ;; => ((arrow . kleisli))
-;;   ```
-(defrules poo-flow-flows-alignment-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
-
 ;;; Boundary: this schema symbol is the stable POO report envelope identity.
 ;;; Tests and docs compare this value directly, so it must not drift with paths.
 ;; | PooFlowFunflowTutorialAlignmentSchema = Symbol
@@ -206,9 +191,8 @@
 ;;; Keeping proof strings inert lets downstream tooling audit coverage safely.
 ;; : (-> Symbol [String] PooFlowAlignmentGateProof)
 (def (alignment-gate-proof id proofs)
-  (poo-flow-flows-alignment-field-rows
-   (id id)
-   (proofs proofs)))
+  (list (cons 'id id)
+        (cons 'proofs proofs)))
 
 ;;; Boundary: result gates track the repository proof ladder, not upstream files.
 ;;; The catalog connects tutorial parity to concrete local verification commands.

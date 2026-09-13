@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 || -z "$1" ]]; then
+  echo "usage: $0 OUT" >&2
+  exit 2
+fi
+
+repo_root="$(cd "$(dirname "$0")/../.." && pwd -P)"
+workspace="$repo_root/bindings/cedar-gerbil"
+proof="$repo_root/packages/proof/lean"
+output="$1"
+profile="${POO_FLOW_CEDAR_BUILD_PROFILE:-release}"
+
+case "$profile" in
+  dev|release) ;;
+  *)
+    echo "POO_FLOW_CEDAR_BUILD_PROFILE must be dev or release" >&2
+    exit 2
+    ;;
+esac
+
+if [[ -n "${CARGO_TARGET_DIR:-}" ]]; then
+  cargo_target="$CARGO_TARGET_DIR"
+else
+  cargo_target="$workspace/target"
+fi
+
+cargo_args=(
+  build
+  --locked
+  --manifest-path "$workspace/Cargo.toml"
+  -p poo-flow-cedar-authority
+  --features aot-runtime-host
+  --lib
+)
+archive_profile=debug
+if [[ "$profile" == release ]]; then
+  cargo_args+=(--release)
+  archive_profile=release
+fi
+
+cargo "${cargo_args[@]}"
+
+archive="$cargo_target/$archive_profile/libpoo_flow_cedar_authority.a"
+if [[ ! -f "$archive" ]]; then
+  echo "Cargo did not produce the declared runtime core archive: $archive" >&2
+  exit 1
+fi
+
+(
+  cd "$proof"
+  POO_FLOW_CEDAR_RUNTIME_CORE_ARCHIVE="$archive" lake build cedarRuntimeHost
+)
+
+host="$proof/.lake/build/bin/cedarRuntimeHost"
+if [[ ! -x "$host" ]]; then
+  echo "Lake did not produce the declared Runtime Host: $host" >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "$output")"
+cp "$host" "$output"
+chmod 0755 "$output"
+echo "$output"

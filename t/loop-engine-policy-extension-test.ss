@@ -4,11 +4,10 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/loop-engine-policy-extension)
+        :poo-flow/src/modules/loop-engine/policy-extension)
 
 (export loop-engine-policy-extension-test)
 

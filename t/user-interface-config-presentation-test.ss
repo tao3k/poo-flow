@@ -4,13 +4,12 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/presentation
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
 
 (load! "../user-interface/custom/my-module/profiles/agent-sandbox-audit")
@@ -36,7 +35,9 @@
                 (thunk)
                 #f)))
 
-(run-tests!
+(export user-interface-config-presentation-test)
+
+(def user-interface-config-presentation-test
  (test-suite "user-interface config presentation"
    (test-case "shows an independent custom-module profile fragment as user config"
      (let* ((config (pooFlowUserConfig

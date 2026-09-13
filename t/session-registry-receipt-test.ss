@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -118,5 +117,3 @@
                       'poo-flow.session.registry-receipt)
         (check-equal? (test-ref receipt-row 'entry-count) 2)
         (check-equal? (test-ref receipt-row 'runtime-executed) #f)))))
-
-(run-tests! session-registry-receipt-test)

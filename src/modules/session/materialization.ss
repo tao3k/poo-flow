@@ -81,20 +81,10 @@
 (def (poo-flow-session-materialization-rows/tail rows tail)
   (foldr cons tail rows))
 
-;;; Boundary: materialization field rows preserve the receipt slot ABI for
-;;; durable session checkpoint and replay policy.
-;; poo-flow-session-materialization-field-rows
-;; : (-> SessionMaterializationFieldRowsClauseSyntax SessionMaterializationFieldRowsExpansionSyntax)
-;; | doc m%
-;;   Expands materialization field clauses into checkpoint receipt rows.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-session-materialization-field-rows (checkpoint-id 'c1))
-;;   ;; => ((checkpoint-id . c1))
-;;   ```
-(defrules poo-flow-session-materialization-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+;;; Boundary: materialization callers construct explicit receipt field pairs.
+;; : (-> (List (Pair Symbol Object)) (List (Pair Symbol Object)))
+(def (poo-flow-session-materialization-field-rows . rows)
+  rows)
 
 ;; : (-> [Symbol] Object [Symbol])
 (def (poo-flow-session-materialization-undeclared-refs refs declared-refs)
@@ -108,13 +98,13 @@
 ;; : (-> Symbol Symbol Object Alist)
 (def (poo-flow-session-materialization-diagnostic code request-id detail)
   (poo-flow-session-materialization-field-rows
-   (kind 'poo-flow.session.materialization.diagnostic)
-   (schema 'poo-flow.modules.session.materialization.diagnostic.v1)
-   (code code)
-   (request-id request-id)
-   (detail detail)
-   (severity 'error)
-   (runtime-executed #f)))
+   (cons 'kind 'poo-flow.session.materialization.diagnostic)
+   (cons 'schema 'poo-flow.modules.session.materialization.diagnostic.v1)
+   (cons 'code code)
+   (cons 'request-id request-id)
+   (cons 'detail detail)
+   (cons 'severity 'error)
+   (cons 'runtime-executed #f)))
 
 ;; : (-> Symbol Symbol [Symbol] [Alist] [Alist])
 (def (poo-flow-session-materialization-session-diagnostics/rev request-id
@@ -131,7 +121,7 @@
             code
             request-id
             (poo-flow-session-materialization-field-rows
-             (session-ref (car session-refs))))
+             (cons 'session-ref (car session-refs))))
            diagnostics-rev))))
 
 ;; : (-> Symbol Symbol [Symbol] [Alist])
@@ -159,7 +149,7 @@
       'materialization-sandbox-handle-not-declared
       request-id
       (poo-flow-session-materialization-field-rows
-       (sandbox-handle-ref sandbox-handle-ref))))
+       (cons 'sandbox-handle-ref sandbox-handle-ref))))
     '()))
 
 ;; : (-> Symbol Symbol Object Object [Alist])
@@ -176,7 +166,7 @@
        'materialization-sandbox-handle-required
        request-id
        (poo-flow-session-materialization-field-rows
-        (state state))))
+        (cons 'state state))))
      '())
    (if (and (eq? state 'failed)
             (not error-summary))

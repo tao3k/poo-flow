@@ -1,5 +1,10 @@
-(import :poo-flow/src/proof/proof-fact-wire
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-bundle)
+
+(def proof-gate-bundle-test
+  (test-suite "proof gate bundle"
+    (test-case "validates accepted and rejected bundles"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -73,4 +78,4 @@
                'rejection-rule
                (poo-flow-proof-fact-ref 'scenario
                                         missing-capability-rejected-bundle))
-              'runtime-row-rejected-by-accepted)
+              'runtime-row-rejected-by-accepted))))

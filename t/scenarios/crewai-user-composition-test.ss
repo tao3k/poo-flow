@@ -2,13 +2,11 @@
 ;;; Scenario: user-interface CrewAI-style composition instance.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/test check-equal? run-tests! test-case test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/profile-composition-accessors)
+        (only-in :std/test check-equal? test-case test-suite)
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/module-system/profile-composition/interface
+        :poo-flow/src/module-system/profile-composition/accessors)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def crewai
   (eval (call-with-input-file "user-interface/profiles/crewai.ss" read)))
@@ -31,7 +29,7 @@
 (def (single-stage composition)
   (car (poo-flow-composition-stages composition)))
 
-(run-tests!
+(def crewai-user-composition-test
  (test-suite "crewai user composition"
   (test-case "crewai declares one reusable production composition"
     (let* ((stage (single-stage crewai-composition))

@@ -1,9 +1,7 @@
 ;;; -*- Gerbil -*-
-;;; Contract: utilities contracts project into type-fact proof rows.
+;;; Contract: native POO Contracts project into type-fact proof rows.
 
-(eval '(import "./src/utilities/contracts.ss"))
-(eval '(import "./src/utilities/contract-syntax.ss"))
-(eval '(import "./src/type-facts/objects.ss"))
+(import :std/test)
 
 ;; : (-> PooFlowTypeFactsProjectionExpr PooFlowTypeFactsProjectionValue)
 (def (type-facts-projection-eval expr)
@@ -14,35 +12,46 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-(type-facts-projection-eval
- '(defcontract-family
-    +type-facts-fixture-slots+
-    +type-facts-fixture-contract+
-    'type-facts/fixture
-    'type-facts
-    'PooFlowTypeFactsFixture
-    '((projection . type-facts-test))
-    ((+type-facts-fixture-name-slot+
-      'type-facts.fixture/name
-      'name
-      'Symbol
-      'symbol?
-      symbol?
-      #t
-      '((slot . name)))
-     (+type-facts-fixture-tags-slot+
-      'type-facts.fixture/tags
-      'tags
-      'List
-      'list?
-      list?
-      #f
-      '((slot . tags))))))
+(export type-facts-contract-projection-test)
+
+(def type-facts-contract-projection-test
+  (test-suite "type-facts-contract-projection-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import "./src/type-facts/objects.ss"))
+      (eval '(import :clan/poo/object :clan/poo/mop))
+      (type-facts-projection-eval
+ '(begin
+    (def +type-facts-fixture-name-slot+
+      (poo-flow-contract-slot
+       'type-facts.fixture/name
+       'name
+       (poo-flow-contract-value-type 'Symbol symbol? 'Symbol 'symbol?)
+       #t
+       '((slot . name))))
+    (def +type-facts-fixture-tags-slot+
+      (poo-flow-contract-slot
+       'type-facts.fixture/tags
+       'tags
+       (poo-flow-contract-value-type 'List list? 'List 'list?)
+       #f
+       '((slot . tags))))
+    (def +type-facts-fixture-contract+
+      (poo-flow-native-contract
+       'type-facts/fixture
+       'type-facts
+       'PooFlowTypeFactsFixture
+       object?
+       (list +type-facts-fixture-name-slot+
+             +type-facts-fixture-tags-slot+)
+       (lambda (candidate slot) (.slot? candidate slot))
+       (lambda (candidate slot) (.ref candidate slot))
+       '((projection . type-facts-test))))))
 
 (let* ((rows
         (type-facts-projection-eval
          '(map poo-flow-type-fact-contract->alist
-               (poo-flow-object-type-contract->type-facts
+               (poo-flow-native-contract->type-facts
                 +type-facts-fixture-contract+))))
        (name-row (car rows))
        (tags-row (cadr rows))
@@ -61,7 +70,7 @@
 (let* ((rows
         (type-facts-projection-eval
          '(map poo-flow-lean-fact-contract->alist
-               (poo-flow-object-type-contract->lean-fact-contracts
+               (poo-flow-native-contract->lean-fact-contracts
                 +type-facts-fixture-contract+))))
        (name-row (car rows))
        (tags-row (cadr rows)))
@@ -72,4 +81,4 @@
                (eq? (alist-ref/default name-row 'lean-name #f) 'name)
                (eq? (alist-ref/default name-row 'source-slot #f) 'name)
                (eq? (alist-ref/default tags-row 'polarity #f) 'optional))
-    (error "object contract should project stable Lean fact contracts")))
+    (error "object contract should project stable Lean fact contracts"))))))

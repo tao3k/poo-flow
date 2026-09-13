@@ -202,10 +202,49 @@ asp org lint docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-compositi
 #+end_src
 
 #+begin_src shell
-gxpkg build -g
+just deps
+just build
 #+end_src
 
-Do not run =gxpkg uninstall= inside this workspace. If package identity or tag state drifts, use =gxpkg clean=, =gxpkg update <package>=, or =gxpkg deps --install= and report any remaining tag conflict.
+The package =build.ss= declares native targets through the =exclude-modules=
+and =extra-spec= POO slots of =:asp-gerbil-scheme/build-api=. The upstream
+catalog owns discovery; there is no downstream =native-spec-projector= or
+second source scan. ASP Scheme owns shared build and testing
+machinery; POO Flow retains its domain modules, test cases, and performance
+contracts. There is no package-local CLI support or testing framework wrapper.
+
+The default =just clean/deps/build/test= recipes call Gerbil's native package
+commands. =just rebuild= runs clean, dependency installation, build, and the
+unit suite sequentially, stopping at the first failure. =just check= runs the
+native build and unit suite; neither command invokes Bazel.
+
+Run the single native test entrypoint and Scheme scripts through the package
+environment:
+
+#+begin_src shell
+just test
+gerbil env ./unit-tests.ss
+gerbil env gerbil interactive t/fixtures/cli-run-smoke.ss 3
+#+end_src
+
+=unit-tests.ss= is the only package test interface. It applies ASP Scheme's
+default POO Testing profile to the current Gambit runtime, initializes
+=clan/testing=, and leaves recursive =*-test.ss= discovery to that upstream
+framework. Users do not pass heap options on the command line; a larger test derives the memory
+profile with =.cc= and maps it with =.map=. Every package test uses clan's
+single convention: a =*-test.ss= file defines the same-named =test-suite=.
+There is no downstream aggregate export list, compatibility runner, or
+duplicate source collector.
+Performance measurements use ASP Scheme's nanosecond timer and p95 helpers;
+local fixtures retain their own budgets and report =admissionStatistic=p95=.
+Compare performance only after the package and its dependencies have been
+compiled together; mixing source-loaded modules with compiled dependencies is
+not a comparable performance baseline.
+
+Do not run =gerbil pkg uninstall= (or =gxpkg uninstall=) inside this workspace.
+If package identity or tag state drifts, use =gerbil clean=,
+=gerbil pkg update <package>=, or =gerbil deps --install= and report any
+remaining tag conflict.
 
 * Docs
 The design record lives under =docs/10-19-design=. Use these as entry points:

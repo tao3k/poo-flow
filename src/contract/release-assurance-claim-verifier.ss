@@ -1,6 +1,8 @@
+;;; Boundary: verifies release-assurance claims against manifest evidence.
+;;; Invariant: verification can reject claims but never upgrades their assurance level.
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/contract/release-assurance-manifest)
 
 (def +poo-flow-assurance-levels+
@@ -107,35 +109,34 @@
                (not (assurance-evidence-owner? 'lean evidence)))
       (reject! 'missing-lean-proof-evidence 'lean
                (map poo-flow-assurance-evidence-reference-owner evidence)))
-    (object<-alist
-     (list (cons 'kind 'poo-flow.assurance-claim-verification-receipt.v1)
-           (cons 'claim-id (poo-flow-assurance-claim-id claim))
-           (cons 'declared-level level)
-           (cons 'tcb-family
-                 (and (poo-flow-assurance-tcb? tcb)
-                      (poo-flow-assurance-tcb-family tcb)))
-           (cons 'accepted? (null? diagnostics))
-           (cons 'code (if (null? diagnostics) 'verified 'rejected))
-           (cons 'diagnostics (reverse diagnostics))))))
+    (let (diagnostic-values (reverse diagnostics))
+      (.o (kind 'poo-flow.assurance-claim-verification-receipt.v1)
+          (claim-id (poo-flow-assurance-claim-id claim))
+          (declared-level level)
+          (tcb-family
+           (and (poo-flow-assurance-tcb? tcb)
+                (poo-flow-assurance-tcb-family tcb)))
+          (accepted? (null? diagnostic-values))
+          (code (if (null? diagnostic-values) 'verified 'rejected))
+          (diagnostics diagnostic-values)))))
 
 (def (poo-flow-release-assurance-manifest-verify-claims manifest)
   (let (validation (poo-flow-release-assurance-manifest-validate manifest))
     (if (not (.ref validation 'accepted?))
-      (object<-alist
-       (list (cons 'kind 'poo-flow.assurance-manifest-claim-receipt.v1)
-             (cons 'accepted? #f)
-             (cons 'code 'invalid-manifest)
-             (cons 'claim-receipts '())
-             (cons 'diagnostics (.ref validation 'diagnostics))))
+      (.o (kind 'poo-flow.assurance-manifest-claim-receipt.v1)
+          (accepted? #f)
+          (code 'invalid-manifest)
+          (claim-receipts '())
+          (diagnostics (.ref validation 'diagnostics)))
       (let* ((receipts
               (map poo-flow-assurance-claim-verify
                    (poo-flow-release-assurance-manifest-claims manifest)))
              (accepted? (andmap (lambda (receipt)
                                   (.ref receipt 'accepted?))
                                 receipts)))
-        (object<-alist
-         (list (cons 'kind 'poo-flow.assurance-manifest-claim-receipt.v1)
-               (cons 'accepted? accepted?)
-               (cons 'code (if accepted? 'verified 'claim-rejected))
-               (cons 'claim-receipts receipts)
-               (cons 'diagnostics '())))))))
+        (let (accepted-value accepted?)
+          (.o (kind 'poo-flow.assurance-manifest-claim-receipt.v1)
+            (accepted? accepted-value)
+            (code (if accepted? 'verified 'claim-rejected))
+            (claim-receipts receipts)
+            (diagnostics '())))))))

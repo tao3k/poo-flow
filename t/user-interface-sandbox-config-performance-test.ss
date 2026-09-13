@@ -7,14 +7,14 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .ref)
         "./user-interface-fixtures.ss"
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/profile-config
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/profile-config
         :poo-flow/src/modules/agent-sandbox/config)
 
 (export user-interface-sandbox-config-performance-test)

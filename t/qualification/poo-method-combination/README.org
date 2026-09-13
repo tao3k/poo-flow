@@ -1,0 +1,23 @@
+#+title: Method-combination qualification ownership
+
+This directory owns only the pure statistical projection over native POO
+performance receipts.  Package build and test execution are not reimplemented
+here.
+
+| File | Responsibility |
+|------+----------------|
+| =summary.ss= | pure median/range/GC/allocation projection from native POO trial receipts |
+| =summary-test.ss= | repeated-trial arithmetic and empty/duplicate/inconsistent receipt rejection |
+
+From the project root:
+#+begin_src sh
+gerbil build
+just test
+#+end_src
+
+The summary consumes the same POO objects returned by the measured scenario;
+it does not serialize logs and parse them back into a second wire model.
+
+This remains a focused semantic/performance test slice, not all-package release
+admission.  Exact frozen semantics and workload limitations are in
+[[file:../../../src/module-system/poo-method-combination/V1-CONTRACT.org][the source-owned v1 contract]].

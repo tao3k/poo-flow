@@ -194,7 +194,7 @@ The removed row DSL has no downstream compatibility surface. The replacement is
 plain POO:
 
 #+begin_src scheme
-(import :poo-flow/src/module-system/init-syntax
+(import :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/nono-sandbox/profile-interface
         :poo-flow/src/modules/sandbox-core/profile-interface)
 
@@ -325,7 +325,7 @@ Agents should write this interface by following these rules:
 POO observability is a strict, non-POO edge. It must not dereference the object
 being diagnosed. The concrete adapter is
 =poo-flow-poo-slot-authoring-observations= from
-=src/module-system/observability.ss=.
+=src/module-system/observability/module-presentation.ss=.
 
 It catches two classes that otherwise become expensive runtime debugging:
 
@@ -396,5 +396,5 @@ The upstream owners are:
   and Docker-specific defaults.
 - =src/modules/cubeSandbox/profile-interface.ss=: =cubeSandbox-profile= and
   Cube-specific defaults.
-- =src/module-system/init-syntax.ss=: the =use-module= syntax bridge from
+- =src/user-interface/init-syntax.ss=: the =use-module= syntax bridge from
   public POO declarations to inert module selections.

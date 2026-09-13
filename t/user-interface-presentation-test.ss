@@ -10,14 +10,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/user-interface/profile-config
         "user-interface-fixtures.ss")
 
 (export user-interface-presentation-test)
@@ -173,16 +172,17 @@
              (settings (.ref presentation 'settings)))
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'module-count) 7)
+        (check-equal? (.ref presentation 'module-count) 8)
         (check-equal? (.ref presentation 'module-keys)
-                      '((flow . funflow)
+                      '((core . poo-method-combination)
+                        (flow . funflow)
                         (session . session-core)
                         (loop . governor)
                         (sandbox . nono-sandbox)
                         (sandbox . cubeSandbox)
                         (sandbox . docker-sandbox)
                         (flow . loop-engine)))
-        (check-equal? (.ref presentation 'feature-count) 7)
+        (check-equal? (.ref presentation 'feature-count) 8)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
@@ -211,7 +211,7 @@
                                    (car feature-facts))
                       'init-selection)
         (check-equal? (alist-value 'key (car feature-facts))
-                      '(flow . funflow))
+                      '(core . poo-method-combination))
         (check-equal? (alist-value 'dependency-installation?
                                    (car feature-facts))
                       #f)
@@ -220,14 +220,7 @@
                       #f)
         (check-equal? (.ref presentation 'setting-count) 7)
         (check-equal? (alist-value 'flags (car modules))
-                      '(+functional +dag +typed-receipts
-                        +runtime-manifest
-                        (+cicd
-                         (checks +parallel +typed-receipts)
-                         (artifacts +export)
-                         (release +manual-gate)
-                         (webhook +server)
-                         (runtime +manifest-handoff))))
+                      '(+standard))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (alist-value 'checks cicd-intent)
                       '(+parallel +typed-receipts))
@@ -355,12 +348,12 @@
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-profile-presentation-kind)
         (check-equal? (.ref presentation 'profile-name) 'developer)
-        (check-equal? (.ref presentation 'module-bundle-count) 7)
-        (check-equal? (.ref presentation 'module-count) 7)
+        (check-equal? (.ref presentation 'module-bundle-count) 8)
+        (check-equal? (.ref presentation 'module-count) 8)
         (check-equal? (.ref presentation 'config-presentation-kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'config-module-count) 7)
-        (check-equal? (.ref presentation 'feature-count) 7)
+        (check-equal? (.ref presentation 'config-module-count) 8)
+        (check-equal? (.ref presentation 'feature-count) 8)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
@@ -412,7 +405,7 @@
                       0)
         (check-equal? (alist-value 'key
                                    (car (.ref presentation 'feature-facts)))
-                      '(flow . funflow))
+                      '(core . poo-method-combination))
         (check-equal? (not
                        (not
                         (member "poo-flow-profile"
@@ -439,8 +432,8 @@
                       poo-flow-user-profile-doctor-presentation-kind)
         (check-equal? (.ref presentation 'doctor-status) 'ok)
         (check-equal? (.ref presentation 'diagnostic-count) 0)
-        (check-equal? (.ref presentation 'module-count) 7)
-        (check-equal? (.ref presentation 'feature-count) 7)
+        (check-equal? (.ref presentation 'module-count) 8)
+        (check-equal? (.ref presentation 'feature-count) 8)
         (check-equal? (.ref presentation 'session-core-intent-count) 1)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (.ref presentation

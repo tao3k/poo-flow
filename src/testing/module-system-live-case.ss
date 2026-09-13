@@ -3,9 +3,10 @@
 ;;; Invariant: concrete cases stay under user-interface; this file only runs them.
 
 (import (only-in :gerbil/gambit getenv)
+        (only-in :clan/poo/object make-object)
         (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/process run-process)
-        :poo-flow/src/testing/module-system-live-case-object
+        "./module-system-live-case-object"
         (only-in :poo-flow/src/modules/agent-sandbox/api
                  agent-sandbox-profile-backend-kind
                  agent-sandbox-profile-metadata
@@ -26,7 +27,7 @@
                  nono-c-binding-dry-run
                  nono-c-binding-live-test))
 
-(export (import: :poo-flow/src/testing/module-system-live-case-object)
+(export (import: "./module-system-live-case-object")
         poo-flow-module-system-live-case-profile
         poo-flow-module-system-live-case-command
         poo-flow-module-system-live-case-request
@@ -34,8 +35,7 @@
         poo-flow-module-system-live-case-stage-project-copy
         poo-flow-module-system-live-case-runtime-manifest
         poo-flow-module-system-live-case-receipt
-        poo-flow-module-system-live-case-test-suite
-        define-poo-flow-module-system-live-case-test)
+        poo-flow-module-system-live-case-test-suite)
 
 ;;; Host probes are best-effort support for building the nono command. A failed
 ;;; probe returns an explicit default instead of changing the case semantics.
@@ -397,11 +397,14 @@
      (poo-flow-module-system-live-case-nono-run-command live-case
                                                          workspace)))))
 
-;;; `:inherits` is the POO supers list. The live-case object itself inherits
-;;; sandbox profile slots, so projection does not perform a second lookup.
+;;; `:inherits` is the POO supers list. Build a profile-only view so the live
+;;; case's own kind/name metadata cannot shadow the sandbox profile contract.
 ;; : (-> POOObject AgentSandboxProfile)
 (def (poo-flow-module-system-live-case-profile live-case)
-  (poo-flow-sandbox-profile->profile live-case))
+  (poo-flow-sandbox-profile->profile
+   (make-object
+    supers: (poo-flow-module-system-live-case-supers live-case)
+    slots: '())))
 
 ;;; Profile declarations use user-facing network rows such as
 ;;; `(allowlisted "github.com")`; runtime manifests need the alist form consumed
@@ -706,25 +709,3 @@
                                   project-copy-failed))
                                #t)
                           #t)))))))
-
-;; define-poo-flow-module-system-live-case-test
-;;   : (-> Syntax Syntax)
-;;   | contract: expands a downstream live case object into a std/test suite definition
-;;   | result: a named test suite; the case is executed only when the suite runs
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (define-poo-flow-module-system-live-case-test
-;;         user-interface-live-cicd-case-test
-;;         poo-flow-custom-my-module-current-system-build-case)
-;;       ;; => defines user-interface-live-cicd-case-test
-;;       ```
-;;     %
-;; : (-> Syntax Syntax)
-(defsyntax (define-poo-flow-module-system-live-case-test stx)
-  (syntax-case stx ()
-    ((_ test-name live-case)
-     (syntax
-      (def test-name
-        (poo-flow-module-system-live-case-test-suite live-case))))))

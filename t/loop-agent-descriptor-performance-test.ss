@@ -6,12 +6,12 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :std/srfi/1 fold)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor
                  loop-pattern-descriptor->contract))

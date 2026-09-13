@@ -3,9 +3,9 @@
 
 (export #t)
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex
+(import (only-in :clan/poo/object .ref object<-alist)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/text/hex hex-encode)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch
@@ -16,6 +16,7 @@
         :poo-flow/src/proof/proof-case-vector
         :poo-flow/src/proof/generated/proof-case-vector-v1)
 
+;; : (-> Object DigestHex)
 (def (fixture-digest value)
   (hex-encode
    (sha256 (call-with-output-string (lambda (port) (write value port))))))
@@ -50,6 +51,7 @@
      (poo-flow-organization-protocol-facet (list effect) '())
      (poo-flow-organization-empty-evidence-facet))))
 
+;; : (-> DigestHex DigestHex DigestHex DigestHex DigestHex DigestHex Epoch PooFlowEffectBinding)
 (def (fixture-binding bundle-digest policy-digest entity-digest
                       decision-digest intent-digest payload-digest epoch)
   (poo-flow-effect-binding
@@ -60,6 +62,7 @@
 (def (fixture-obligations)
   (poo-flow-authorized-effect-obligations #t #t #t #t #t #t #t #t))
 
+;;; Fixture boundary: derive every linked digest from one deterministic canonical scenario.
 (def (poo-flow-agentic-control-plane-canonical-fixture)
   (let* ((bundle (fixture-bundle))
          (bundle-validation (poo-flow-organization-bundle-validate bundle))
@@ -146,13 +149,17 @@
       (cons 'required-consumers
             '(runtime-c-installed python-cffi-wheel lean-ffi-smoke))))))
 
+;; : (-> Symbol Symbol PooFlowAgenticControlPlaneNegativeFixture)
 (def (negative-result kind code)
   (object<-alist
-   (list (cons 'kind 'poo-flow.agentic-control-plane.negative-fixture.v1)
-         (cons 'mutation kind)
-         (cons 'accepted? #f)
-         (cons 'code code))))
+   (map cons
+        '(kind mutation accepted? code)
+        (list 'poo-flow.agentic-control-plane.negative-fixture.v1
+              kind
+              #f
+              code))))
 
+;; : (-> PooFlowAgenticControlPlaneFixture [PooFlowAgenticControlPlaneNegativeFixture])
 (def (poo-flow-agentic-control-plane-negative-fixtures fixture)
   (let* ((token (.ref fixture 'token))
          (binding (.ref token 'binding))

@@ -1,3 +1,5 @@
+;;; Boundary: reads and validates memory intent carried by session POO objects.
+;;; Invariant: transformation preserves explicit store and handoff references.
 (import :gerbil/gambit
         (only-in :clan/poo/object .ref object?)
         :poo-flow/src/modules/session/objects)

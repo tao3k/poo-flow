@@ -1,4 +1,10 @@
-(import :clan/poo/object
+;;; Boundary: binds feature contributions to policy and strategy algebra objects.
+;;; Invariant: contribution composition preserves declared precedence and provenance.
+(import (only-in :clan/poo/object
+                 .ref
+                 make-object
+                 object-slots-set!
+                 object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/domain-case-assembly
         :poo-flow/src/utilities/functional)
@@ -21,11 +27,13 @@
 (def +feature-strategy-contribution-kind+
   'poo-flow.feature-strategy-contribution.v1)
 
+;; : (-> Alist POOObject)
 (def (constant-feature-binding-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> Symbol Symbol Symbol POOObject PooFeatureAlgebraContribution)
 (def (feature-algebra-contribution kind contribution-id algebra-id prototype)
   (constant-feature-binding-object
    `((kind . ,kind)
@@ -34,6 +42,7 @@
      (algebra-id . ,algebra-id)
      (prototype . ,prototype))))
 
+;; : (-> Object Symbol Boolean)
 (def (feature-algebra-contribution? value expected-kind)
   (with-catch
    (lambda (_failure) #f)
@@ -44,6 +53,18 @@
           (object? (.ref value 'prototype))
           #t))))
 
+;; define-feature-algebra-contribution-family
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       `define-feature-algebra-contribution-family` defines a typed constructor and predicate pair.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (define-feature-algebra-contribution-family kind constructor predicate)
+;;       ;; => defines constructor and predicate
+;;       ```
+;;     %
 (defrules define-feature-algebra-contribution-family ()
   ((_ kind-constant constructor predicate)
    (begin
@@ -63,6 +84,7 @@
   feature-strategy-contribution
   feature-strategy-contribution?)
 
+;; : (-> Symbol Symbol Object Alist)
 (def (feature-binding-diagnostic code channel observed)
   (constant-feature-binding-object
    `((kind . poo-flow.feature-policy-strategy-binding-diagnostic.v1)
@@ -70,6 +92,7 @@
      (channel . ,channel)
      (observed . ,observed))))
 
+;; : (-> Symbol Symbol Symbol)
 (def (feature-binding-code channel suffix)
   (case channel
     ((policy)
@@ -87,12 +110,15 @@
        ((mismatch) 'strategy-algebra-mismatch)
        ((composition) 'strategy-role-composition-failed)))))
 
+;; : (forall (a) (-> (-> a Boolean) (List a) (List a)))
+;; : (-> Procedure [Object] [Object])
 (def (feature-valid-contributions contribution? contributions)
   (poo-flow-filter-map
    (lambda (contribution)
      (and (contribution? contribution) contribution))
    contributions))
 
+;; : (-> Symbol Procedure [Object] [Alist])
 (def (feature-invalid-contribution-diagnostics
       channel contribution? contributions)
   (poo-flow-filter-map
@@ -104,6 +130,7 @@
            contribution)))
    contributions))
 
+;; : (-> Symbol [PooFeatureAlgebraContribution] [Alist])
 (def (feature-duplicate-contribution-diagnostics channel contributions)
   (let ((seen (make-hash-table))
         (duplicates (make-hash-table)))
@@ -127,6 +154,7 @@
       '()
       contributions))))
 
+;; : (-> Symbol MaybeSymbol [PooFeatureAlgebraContribution] [Alist])
 (def (feature-algebra-mismatch-diagnostics
       channel algebra-id contributions)
   (if algebra-id
@@ -144,6 +172,7 @@
      contributions)
     '()))
 
+;; : (-> Symbol [PooFeatureAlgebraContribution] List)
 (def (feature-compose-contribution-prototypes channel contributions)
   (if (null? contributions)
     (list #t #f '())
@@ -167,6 +196,7 @@
                  contributions)))
         '())))))
 
+;; : (-> Symbol Symbol Procedure MaybeSymbol [Object] PooFeatureAlgebraBinding)
 (def (feature-one-algebra-binding
       channel kind contribution? algebra-id contributions)
   (let* ((valid-contributions
@@ -209,6 +239,7 @@
        (status . ,(if accepted? 'ready 'rejected))
        (diagnostics . ,all-diagnostics)))))
 
+;; : (-> Object List)
 (def (feature-domain-case-assembly-state assembly)
   (with-catch
    (lambda (_failure) (list #f #f 'invalid-domain-case-assembly))
@@ -219,6 +250,7 @@
          (list #f #f 'domain-case-assembly-rejected))
        (list #f #f 'invalid-domain-case-assembly)))))
 
+;; : (-> PooFeatureDomainCaseAssembly PooFeaturePolicyStrategyBinding)
 (def (feature-policy-strategy-binding assembly)
   (let* ((assembly-state (feature-domain-case-assembly-state assembly))
          (assembly-accepted? (car assembly-state))
@@ -266,12 +298,26 @@
            (status . ,(if accepted? 'ready 'rejected))
            (diagnostics . ,diagnostics)))))))
 
+;; : (-> PooFeaturePolicyStrategyBinding PooFeaturePolicyStrategyBinding)
 (def (require-feature-policy-strategy-binding binding)
   (if (.ref binding 'accepted?)
     binding
     (error "feature policy/strategy binding rejected"
            (.ref binding 'diagnostics))))
 
+;; defpoo-feature-algebra-contribution
+;;   : (-> Identifier Identifier Clauses FeatureAlgebraContributionBinding)
+;;   | doc m%
+;;       `defpoo-feature-algebra-contribution` binds one contribution through its family constructor.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-algebra-contribution constructor item
+;;         (contribution-id item) (algebra-id policy) (prototype role))
+;;       ;; => binds item
+;;       ```
+;;     %
 (defrules defpoo-feature-algebra-contribution ()
   ((_ constructor binding
       (contribution-id semantic-id)
@@ -280,6 +326,19 @@
    (def binding
      (constructor semantic-id algebra-identity role-prototype))))
 
+;; defpoo-feature-policy-contribution
+;;   : (-> Identifier Clauses FeaturePolicyContributionBinding)
+;;   | doc m%
+;;       `defpoo-feature-policy-contribution` binds one policy contribution.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-policy-contribution item
+;;         (contribution-id item) (algebra-id policy) (prototype role))
+;;       ;; => binds item
+;;       ```
+;;     %
 (defrules defpoo-feature-policy-contribution
   (contribution-id algebra-id prototype)
   ((_ binding
@@ -293,6 +352,19 @@
      (algebra-id algebra-identity)
      (prototype role-prototype))))
 
+;; defpoo-feature-strategy-contribution
+;;   : (-> Identifier Clauses FeatureStrategyContributionBinding)
+;;   | doc m%
+;;       `defpoo-feature-strategy-contribution` binds one strategy contribution.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-strategy-contribution item
+;;         (contribution-id item) (algebra-id strategy) (prototype role))
+;;       ;; => binds item
+;;       ```
+;;     %
 (defrules defpoo-feature-strategy-contribution
   (contribution-id algebra-id prototype)
   ((_ binding
@@ -306,6 +378,18 @@
      (algebra-id algebra-identity)
      (prototype role-prototype))))
 
+;; defpoo-feature-policy-strategy-binding
+;;   : (-> Identifier Clause FeaturePolicyStrategyBindingBinding)
+;;   | doc m%
+;;       `defpoo-feature-policy-strategy-binding` binds an accepted assembly's algebra composition.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-policy-strategy-binding binding (from-assembly assembly))
+;;       ;; => binds binding
+;;       ```
+;;     %
 (defrules defpoo-feature-policy-strategy-binding
   (from-assembly)
   ((_ binding (from-assembly assembly))

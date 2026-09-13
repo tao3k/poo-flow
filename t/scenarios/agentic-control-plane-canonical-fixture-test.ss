@@ -1,9 +1,7 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/qualification/agentic-control-plane-fixture)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def canonical-fixture
   (poo-flow-agentic-control-plane-canonical-fixture))
@@ -40,5 +38,3 @@
                               binding-substitution proof-vector-mismatch))
         (check (andmap (lambda (value) (not (.ref value 'accepted?))) negative)
                => #t)))))
-
-(run-tests! agentic-control-plane-canonical-fixture-test)

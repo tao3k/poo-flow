@@ -6,11 +6,11 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         :poo-flow/src/modules/session/config)
 
 (export session-communication-receipt-performance-test)

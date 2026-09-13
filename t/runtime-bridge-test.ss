@@ -10,12 +10,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/workflow/store)
 
 (export runtime-bridge-test)
 

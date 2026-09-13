@@ -1,0 +1,98 @@
+#+title: POO method-combination module v1 contract and qualification boundary
+
+* Owner and admission
+This is an opt-in POO Flow module. Native Gerbil POO owns objects, Type
+descriptors, C3, lazy computed slots and instance/type lookup. The combination
+helper owns qualifier sequencing and lexical next. It is not a CLOS
+class-specializer system or a dispatch registry. Its module admission does not
+by itself grant runtime-wide production performance admission.
+
+The closed kernel factors are =types.ss=, =objects.ss=, and =funcs.ss=.
+=interface.ss= is the public factor. =plugins/observation.ss= is the declared optional
+plugin factor and is absent from the default descriptor/selection path. The
+module key is =(:core . poo-method-combination)= and its descriptor depth is
+=(-110 . -110)=, below ordinary modules such as Funflow.
+
+* Frozen v1 semantics
+- Single receiver. =from: instance= selects its collector; =from: type= selects
+  the collector of its native =.type= while passing the actual receiver.
+- =required:= and =rest?:= govern positional arguments after the receiver.
+  Optional defaults, keyword binding and method lambda-list congruence are not
+  provided. A method's own Scheme arity exception propagates unchanged.
+- Plan equivalence means the same ordered descriptor objects in each qualifier.
+  Equal symbolic names are insufficient. A reused descriptor on distinct
+  prototypes contributes twice; a shared ancestor contributes once by native C3.
+- Around and primary delegate explicitly. Before is most-specific first; after
+  is least-specific first and runs only after normal primary completion.
+  Primary applicability is checked even if an around method would short circuit.
+- Replacement next arguments include the receiver and preserve every qualified
+  chain. Replacement arity/applicability are checked even when next is absent.
+  Replacement arguments do not mutate the original lexical invocation.
+- Frames are local lexical values, not dynamically expiring capabilities.
+  Retaining a frame and replaying its next after the original call returns is
+  supported in-process; repeated replay repeats bodies/effects. There is no
+  once-only, expiry, transaction, recovery or serialization protocol. Frames must
+  not cross an output, persisted-observation or runtime handoff boundary.
+- Native/user exceptions preserve identity. Typed combination failures retain
+  symbolic generic/method/qualifier context, not raw argument payloads.
+- Mutation of descriptors, frames, or reserved cached-plan/owner slots is outside
+  this contract. Construct domain extensions with the named POO helpers.
+
+* First opt-in consumer
+=plugins/observation.ss= explicitly exports =poo-observation-combination-renderer= and
+=poo-observation-combination-summary=. A caller creates one renderer and reuses
+it for independent existing admission observations. Its method plans are stable;
+results and admission decisions are not cached. The base renderer selects the
+source-owned summary; the detailed renderer extends it with a source-owned
+explanation. Neither becomes the default Observability renderer.
+
+The local workload envelope is bounded Scheme-side diagnostic summary
+generation: one base primary, optionally one explanatory primary. Admission
+happens before rendering. No clock, output port, trace adapter, network, policy
+decision or runtime handoff is part of the consumer implementation. Internal
+explanations are not publication-safe merely because rendering is pure. A
+method or around guard is not an authority boundary against arbitrary Scheme.
+
+No measured application call rate or user-approved latency/allocation SLA is
+available. The 10000 ms threshold is a test hang/smoke limit only. Neither
+passing that threshold nor comparison with one native method establishes
+production eligibility. Production admission requires an explicit workload/SLA
+decision; it is not silently inferred from this local qualification.
+
+* Measurement contract
+The original single-native-method timing is retained only as a lower-bound
+reference, not an equivalent cost baseline. The new matrix uses an ordinary
+functional primary chain with the same number of increments; the all-qualifier
+case adds the same counts of around, before and after callbacks. POO admission,
+frame contracts and applicability checks intentionally have no counterpart in
+that semantic-work baseline. This distinction is part of interpreting overhead.
+
+Depths =0, 1, 4, 8= cross both owner modes and primary-only/all-qualifier forms.
+Every case warms both paths equally, alternates measurement order, records five
+100-call trials, and checks exact checksums and stable native plan identity.
+Each native POO trial records process wall time, GC wall time/count and allocated
+bytes for both paths. Counters include measuring-process scaffolding, not child
+compiler resources. Missing counters fail; no unavailable value becomes zero.
+No GC attribution or optimization win may be claimed from correlation alone.
+
+The first opt-in Observation consumer contributes five more 100-call trials.
+They compare the detailed method-combined renderer with the equivalent pure
+functional summary/explanation path using the same rejected SemanticModule
+event, alternating order, exact checksum and stable renderer-plan identity.
+Thus the default qualification matrix has 85 trials. Frame validation uses the
+exact native =CombinationFrame= predicate directly; the resulting allocation
+reduction is local measured evidence, not a wall-time or production-SLA claim.
+
+* Native build and test ownership
+
+The project-level =build.ss= is the sole package build declaration and delegates
+to the ASP Gerbil Scheme Build API and upstream =std/make=.  Suites are
+discovered and run through the single =unit-tests.ss= =:clan/testing=
+entrypoint.  This feature does not maintain a
+second source catalog, compiler subprocess, output tree, =.o1= scanner,
+artifact manifest, dependency fingerprint set, or private test scheduler.
+
+The performance matrix returns native POO receipts.  The optional summary is a
+pure projection over those objects, so no textual runner log is parsed back
+into an ad hoc wire model.  This is focused semantic/performance validation,
+not all-package release acceptance or an artifact-provenance claim.

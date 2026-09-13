@@ -2,7 +2,7 @@
 ;;; Boundary: memory handoff manifest objects and projections.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects-core)
@@ -34,6 +34,7 @@
    runtime-executed
    metadata)
   transparent: #t)
+;; : (-> Symbol PooMemoryStoreSpec [Alist] PooMemoryHandoffManifest)
 (def (poo-flow-memory-handoff-manifest request-id spec . maybe-metadata)
   (poo-flow-session-require "memory handoff request id must be a symbol"
                             (symbol? request-id)

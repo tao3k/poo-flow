@@ -6,10 +6,8 @@
                  check-equal?
                  test-case
                  test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/agent-lifecycle-gate)
+        :poo-flow/src/modules/session/lifecycle-gate)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export agent-lifecycle-gate-test)
 

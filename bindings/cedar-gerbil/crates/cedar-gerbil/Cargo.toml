@@ -1,0 +1,22 @@
+[package]
+name = "poo-flow-cedar-gerbil"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[features]
+conformance = []
+
+[dependencies]
+gerbil-scheme.workspace = true
+gerbil-scheme-sys.workspace = true
+poo-flow-cedar-authority.workspace = true
+serde.workspace = true
+
+[build-dependencies]
+gerbil-scheme-native-build.workspace = true
+
+[[test]]
+name = "native_authorization"
+required-features = ["conformance"]

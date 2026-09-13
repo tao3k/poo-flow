@@ -6,14 +6,15 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/extension
+        "./support/performance"
+        (only-in :poo-flow/src/module-system/extension/interface
                  poo-flow-module-extension-node-slots)
-        (only-in :poo-flow/src/module-system/object-core
+        (only-in :poo-flow/src/module-system/object-core/interface
+                 PooFlowModuleListType
                  poo-flow-module-config-merge-result-root
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
@@ -34,7 +35,7 @@
 
 ;; : PooModuleFieldContract
 (def module-object-list-merge-field
-  (poo-flow-module-field-contract 'capabilities 'List 'append '() '()))
+  (poo-flow-module-field-contract 'capabilities PooFlowModuleListType 'append '() '()))
 
 ;; : PooModuleObject
 (def module-object-list-merge-object

@@ -5,7 +5,7 @@
 
 (import :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/config
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/user-interface/custom/my-module/profiles/all)
 
 (load! "tool-core")

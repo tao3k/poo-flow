@@ -1,3 +1,5 @@
+;;; Boundary: declarative model catalog, policy, and receipt POO values;
+;;; provider invocation and runtime routing stay behind the handoff boundary.
 (export +poo-flow-model-core-spec-kind+
         +poo-flow-model-core-catalog-kind+
         +poo-flow-model-core-selection-policy-kind+
@@ -35,7 +37,7 @@
         poo-flow-model-select)
 
 (import (only-in :clan/poo/object .ref object<-alist object?)
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/modules/session/policy
         (only-in :poo-flow/src/modules/session/objects-core
                  poo-flow-session-every?
@@ -46,29 +48,47 @@
 (def +poo-flow-model-core-selection-policy-kind+ 'poo-flow-model-core-selection-policy)
 (def +poo-flow-model-core-selection-receipt-kind+ 'poo-flow-model-core-selection-receipt)
 
+;; poo-flow-model-field-rows
+;;   : (-> FieldRow... Alist)
+;;   | doc m%
+;;       `poo-flow-model-field-rows` constructs ordered model object fields.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-model-field-rows (model-ref primary) (valid? #t))
+;;       ;; => ((model-ref . primary) (valid? . #t))
+;;       ```
+;;     %
 (defrules poo-flow-model-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;; : (-> Object Boolean)
 (def (poo-flow-model-symbol-list? value)
   (and (list? value)
        (poo-flow-session-every? symbol? value)))
 
+;; : (-> Object Boolean)
 (def (poo-flow-model-alist? value)
   (and (list? value)
        (poo-flow-session-every? pair? value)))
 
+;; : (-> Object Boolean)
 (def (poo-flow-model-positive-integer? value)
   (and (integer? value)
        (> value 0)))
 
+;; : (-> Object Boolean)
 (def (poo-flow-model-optional-symbol? value)
   (or (not value)
       (symbol? value)))
 
+;; : (-> POOObject Symbol Boolean)
 (def (poo-flow-model-kind? value kind)
   (eq? (.ref value 'kind) kind))
 
+;; : (-> Symbol Symbol String [Symbol] [Symbol] Integer Integer String Symbol Symbol [Alist] PooModelSpec)
 (def (poo-flow-model-spec model-ref
                           provider
                           model-id
@@ -155,16 +175,11 @@
     (runtime-executed runtime-executed)
     (metadata metadata))))
 
+;; : (-> [PooModelSpec] (Values [Symbol] Integer))
 (def (poo-flow-model-catalog-summary models)
-  (let loop ((rest models)
-             (refs '())
-             (count 0))
-    (if (null? rest)
-      (cons (reverse refs) count)
-      (loop (cdr rest)
-            (cons (poo-flow-model-spec-ref (car rest)) refs)
-            (+ count 1)))))
+  (values (map poo-flow-model-spec-ref models) (length models)))
 
+;; : (-> Symbol [PooModelSpec] [Alist] PooModelCatalog)
 (def (poo-flow-model-catalog catalog-ref models . maybe-metadata)
   (poo-flow-session-require "model catalog ref must be a symbol"
                             (symbol? catalog-ref)
@@ -173,9 +188,8 @@
                             (poo-flow-session-every? poo-flow-model-spec?
                                                      models)
                             models)
-  (let* ((catalog-summary (poo-flow-model-catalog-summary models))
-         (model-refs (car catalog-summary))
-         (model-count (cdr catalog-summary)))
+  (let-values (((model-refs model-count)
+                (poo-flow-model-catalog-summary models)))
     (object<-alist
      (list
       (cons 'kind +poo-flow-model-core-catalog-kind+)
@@ -198,6 +212,7 @@
    (poo-flow-model-catalog-model-count model-count))
   (projections))
 
+;; : (-> Symbol [PooModelSpec] MaybeModelSpec)
 (def (poo-flow-model-spec-find model-ref models)
   (cond
    ((null? models) #f)
@@ -206,9 +221,11 @@
    (else
     (poo-flow-model-spec-find model-ref (cdr models)))))
 
+;; : (-> PooModelCatalog Symbol MaybeModelSpec)
 (def (poo-flow-model-catalog-find catalog model-ref)
   (poo-flow-model-spec-find model-ref (.ref catalog 'models)))
 
+;; : (-> Symbol [Symbol] MaybeSymbol [Symbol] Symbol Alist [Alist] PooModelSelectionPolicy)
 (def (poo-flow-model-selection-policy policy-ref
                                       candidate-model-refs
                                       fallback-model-ref
@@ -258,17 +275,20 @@
    (poo-flow-model-selection-policy-required-capabilities required-capabilities))
   (projections))
 
+;; : (-> PooModelSpec Symbol Boolean)
 (def (poo-flow-model-supports-capability? spec capability)
   (if (memq capability (poo-flow-model-spec-capabilities spec))
     #t
     #f))
 
+;; : (-> PooModelSpec [Symbol] Boolean)
 (def (poo-flow-model-supports-capabilities? spec capabilities)
   (poo-flow-session-every?
    (lambda (capability)
      (poo-flow-model-supports-capability? spec capability))
    capabilities))
 
+;; : (-> MaybeSymbol Symbol Alist)
 (def (poo-flow-model-selection-diagnostic model-ref reason)
   (poo-flow-model-field-rows
    (model-ref model-ref)
@@ -286,6 +306,7 @@
    runtime-executed)
   transparent: #t)
 
+;; : (-> PooModelSelectionReceipt Symbol Object Object)
 (def (poo-flow-model-selection-receipt-ref receipt key default)
   (cond
    ((poo-flow-model-selection-receipt-record? receipt)
@@ -306,6 +327,7 @@
    ((object? receipt) (.ref receipt key))
    (else default)))
 
+;; : (-> PooModelSelectionPolicy PooModelCatalog Boolean MaybeModelSpec [Alist] PooModelSelectionReceipt)
 (def (poo-flow-model-selection-receipt policy
                                       catalog
                                       valid?
@@ -324,19 +346,24 @@
    diagnostics
    #f))
 
+;; : (-> Object Boolean)
 (def (poo-flow-model-selection-receipt? value)
   (or (poo-flow-model-selection-receipt-record? value)
       (poo-flow-model-kind? value +poo-flow-model-core-selection-receipt-kind+)))
 
+;; : (-> PooModelSelectionReceipt Boolean)
 (def (poo-flow-model-selection-receipt-valid? receipt)
   (poo-flow-model-selection-receipt-ref receipt 'valid? #f))
 
+;; : (-> PooModelSelectionReceipt MaybeSymbol)
 (def (poo-flow-model-selection-receipt-selected-model-ref receipt)
   (poo-flow-model-selection-receipt-ref receipt 'selected-model-ref #f))
 
+;; : (-> PooModelSelectionReceipt [Alist])
 (def (poo-flow-model-selection-receipt-diagnostics receipt)
   (poo-flow-model-selection-receipt-ref receipt 'diagnostics '()))
 
+;; : (-> PooModelSelectionReceipt Alist)
 (def (poo-flow-model-selection-receipt->alist receipt)
   (poo-flow-model-field-rows
    (schema (poo-flow-model-selection-receipt-ref receipt 'schema #f))
@@ -349,6 +376,7 @@
    (runtime-executed
     (poo-flow-model-selection-receipt-ref receipt 'runtime-executed #f))))
 
+;; : (-> PooModelSelectionPolicy PooModelCatalog MaybeSymbol MaybeModelSpec Boolean [Alist] PooModelSelectionReceipt)
 (def (poo-flow-model-selection-fallback-receipt policy
                                                 catalog
                                                 fallback-ref
@@ -366,10 +394,11 @@
                                                 'no-model-selected)
            diagnostics))))
 
+;; : (-> PooModelCatalog [Symbol] [Symbol] [Alist] (Values MaybeModelSpec [Alist]))
 (def (poo-flow-model-select-candidates catalog candidate-model-refs capabilities diagnostics)
   (cond
    ((null? candidate-model-refs)
-    (cons #f (reverse diagnostics)))
+    (values #f (reverse diagnostics)))
    (else
     (let* ((model-ref (car candidate-model-refs))
            (model (poo-flow-model-catalog-find catalog model-ref)))
@@ -382,7 +411,7 @@
          (cons (poo-flow-model-selection-diagnostic model-ref 'missing-model)
                diagnostics)))
        ((poo-flow-model-supports-capabilities? model capabilities)
-        (cons model (reverse diagnostics)))
+        (values model (reverse diagnostics)))
        (else
         (poo-flow-model-select-candidates
          catalog
@@ -391,6 +420,7 @@
          (cons (poo-flow-model-selection-diagnostic model-ref 'missing-capability)
                diagnostics))))))))
 
+;; : (-> PooModelSelectionPolicy PooModelCatalog PooModelSelectionReceipt)
 (def (poo-flow-model-select policy catalog)
   (poo-flow-session-require "model selection policy must be a model policy"
                             (poo-flow-model-selection-policy? policy)
@@ -398,28 +428,26 @@
   (poo-flow-session-require "model selection catalog must be a model catalog"
                             (poo-flow-model-catalog? catalog)
                             catalog)
-  (let* ((required-capabilities (.ref policy 'required-capabilities))
-         (candidate-result
-          (poo-flow-model-select-candidates
+  (let (required-capabilities (.ref policy 'required-capabilities))
+    (let-values (((selected-model diagnostics)
+                  (poo-flow-model-select-candidates
+                   catalog
+                   (.ref policy 'candidate-model-refs)
+                   required-capabilities
+                   '())))
+      (if selected-model
+        (poo-flow-model-selection-receipt policy catalog #t selected-model diagnostics)
+        (let* ((fallback-ref (.ref policy 'fallback-model-ref))
+               (fallback-model (and fallback-ref
+                                    (poo-flow-model-catalog-find catalog fallback-ref)))
+               (fallback-valid? (and fallback-model
+                                     (poo-flow-model-supports-capabilities?
+                                      fallback-model
+                                      required-capabilities))))
+          (poo-flow-model-selection-fallback-receipt
+           policy
            catalog
-           (.ref policy 'candidate-model-refs)
-           required-capabilities
-           '()))
-         (selected-model (car candidate-result))
-         (diagnostics (cdr candidate-result)))
-    (if selected-model
-      (poo-flow-model-selection-receipt policy catalog #t selected-model diagnostics)
-      (let* ((fallback-ref (.ref policy 'fallback-model-ref))
-             (fallback-model (and fallback-ref
-                                  (poo-flow-model-catalog-find catalog fallback-ref)))
-             (fallback-valid? (and fallback-model
-                                   (poo-flow-model-supports-capabilities?
-                                    fallback-model
-                                    required-capabilities))))
-        (poo-flow-model-selection-fallback-receipt
-         policy
-         catalog
-         fallback-ref
-         fallback-model
-         fallback-valid?
-         diagnostics)))))
+           fallback-ref
+           fallback-model
+           fallback-valid?
+           diagnostics))))))

@@ -41,7 +41,9 @@ The unified fixture gate currently covers 15 POO performance scenarios:
 Each benchmark fixture must satisfy three contracts at the same time:
 
 - benchmark contract: includes =sourcePath=, timing budgets, observed timings, input/expected comparison, and standard measurement phases.
-- memory contract: declares =maxRssMb=, =memoryMetric=, and =memoryUnit=, and includes =assert-memory-gate= in =measurementPhases=.
+- memory execution policy is selected through the ASP POO Testing Profile;
+  benchmark fixtures retain observed memory receipts but do not redeclare a
+  static heap or RSS limit.
 - POO evidence contract: declares =pooFormEvidence= and =pooUsageCallEvidence= to prove that the scenario remains centered on the POO API.
 
 These three contracts serve different purposes:

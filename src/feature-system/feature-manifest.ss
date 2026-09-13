@@ -1,5 +1,11 @@
-(import :std/misc/hash
-        :clan/poo/object
+;;; Boundary: immutable feature manifest values with construction-only indexing;
+;;; activation ordering and dependency resolution remain resolver-owned.
+(import (only-in :std/misc/hash
+                 hash-key?
+                 hash-put!
+                 hash-ref
+                 make-hash-table-eq)
+        (only-in :clan/poo/object .ref make-object object-slots-set!)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/model
         :poo-flow/src/feature-system/resolver
@@ -20,22 +26,26 @@
 ;; Manifest and bundle values deliberately use the same constant-slot POO
 ;; representation as the feature model. The local mutation is restricted to
 ;; constructing a fresh object whose public slots are immutable afterwards.
+;; : (-> Alist POOObject)
 (def (constant-manifest-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> HashTable Integer PooFeatureManifestIndex)
 (def (feature-manifest-index-object storage size)
   (constant-manifest-object
    `((kind . feature-manifest-index)
      (size . ,size)
      (,feature-manifest-index-storage-slot . ,storage))))
 
+;; : (-> PooFeatureManifestIndex Symbol MaybeFeatureManifest)
 (def (feature-manifest-index-ref index feature-id)
   (hash-ref (.ref index feature-manifest-index-storage-slot)
             feature-id
             #f))
 
+;; : (-> FeatureDescriptor PooFeatureManifest)
 (def (feature-manifest descriptor)
   (constant-manifest-object
    `((kind . feature-manifest)
@@ -53,6 +63,7 @@
      (adapter-requirements . ,(.ref descriptor 'adapter-requirements))
      (projections . ,(.ref descriptor 'projections)))))
 
+;; : (-> PooFeatureManifest [Alist] [Alist])
 (def (feature-manifest-option-diagnostics manifest diagnostics)
   (let ((feature-id (.ref manifest 'feature-id))
         (seen (make-hash-table-eq)))
@@ -74,31 +85,36 @@
                (loop rest diagnostics)))))
         ([] diagnostics)))))
 
-(def (feature-manifests+diagnostics descriptors)
-  (let ((storage (make-hash-table-eq)))
-    (let loop ((descriptors descriptors)
-               (manifests [])
-               (diagnostics [])
-               (index-size 0))
-      (match descriptors
-        ([descriptor . rest]
-         (let* ((manifest (feature-manifest descriptor))
-                (feature-id (.ref manifest 'feature-id))
-                (new-identity? (not (hash-key? storage feature-id))))
-           (when new-identity?
-             (hash-put! storage feature-id manifest))
-           (loop rest
-                 (cons manifest manifests)
-                 (feature-manifest-option-diagnostics
-                  manifest diagnostics)
-                 (if new-identity?
-                   (+ index-size 1)
-                   index-size))))
-        ([] (values (reverse manifests)
-                    (reverse diagnostics)
-                    (feature-manifest-index-object
-                     storage index-size)))))))
+;;; Construction fold owns the only index mutation; the accumulator remains a
+;;; plain value carrying manifests, diagnostics, and the unique identity count.
+;; : (-> HashTable FeatureDescriptor ManifestFoldState ManifestFoldState)
+(def (feature-manifest-fold-step storage descriptor state)
+  (let* ((manifests (car state))
+         (diagnostics (cadr state))
+         (index-size (caddr state))
+         (manifest (feature-manifest descriptor))
+         (feature-id (.ref manifest 'feature-id))
+         (new-identity? (not (hash-key? storage feature-id))))
+    (when new-identity?
+      (hash-put! storage feature-id manifest))
+    (list (cons manifest manifests)
+          (feature-manifest-option-diagnostics manifest diagnostics)
+          (if new-identity? (+ index-size 1) index-size))))
 
+;; : (-> [FeatureDescriptor] (values [FeatureManifest] [Diagnostic] FeatureManifestIndex))
+(def (feature-manifests+diagnostics descriptors)
+  (let* ((storage (make-hash-table-eq))
+         (state
+          (poo-flow-fold-left
+           (lambda (descriptor state)
+             (feature-manifest-fold-step storage descriptor state))
+           (list '() '() 0)
+           descriptors)))
+    (values (reverse (car state))
+            (reverse (cadr state))
+            (feature-manifest-index-object storage (caddr state)))))
+
+;; : (-> Symbol [FeatureDescriptor] PooFeatureManifestBundle)
 (def (feature-manifest-bundle bundle-id descriptors)
   (let-values (((manifests structural-diagnostics manifest-index)
                 (feature-manifests+diagnostics descriptors)))
@@ -124,6 +140,7 @@
          (accepted? . ,(eq? status 'ready))
          (diagnostics . ,diagnostics))))))
 
+;; : (-> PooFeatureManifestBundle Symbol MaybeFeatureManifest)
 (def (feature-manifest-bundle-ref bundle feature-id)
   (let ((index (.ref bundle 'manifest-index)))
     (if index
@@ -132,12 +149,14 @@
              (.ref bundle 'bundle-id)
              (.ref bundle 'diagnostics)))))
 
+;; : (-> PooFeatureManifestBundle Symbol PooFeatureManifest)
 (def (require-feature-manifest-bundle-ref bundle feature-id)
   (or (feature-manifest-bundle-ref bundle feature-id)
       (error "feature manifest not found in bundle"
              (.ref bundle 'bundle-id)
              feature-id)))
 
+;; : (-> PooFeatureManifestBundle PooFeatureManifestBundle)
 (def (require-valid-feature-manifest-bundle bundle)
   (if (.ref bundle 'accepted?)
     bundle
@@ -145,6 +164,19 @@
            (.ref bundle 'bundle-id)
            (.ref bundle 'diagnostics))))
 
+;; defpoo-feature-manifest-bundle
+;;   : (-> Identifier Clauses FeatureManifestBundleBinding)
+;;   | doc m%
+;;       Bind a validated, indexed bundle from feature descriptors.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-manifest-bundle bundle
+;;         (bundle-id app) (features cache logging))
+;;       ;; => binds bundle
+;;       ```
+;;     %
 (defrules defpoo-feature-manifest-bundle (bundle-id features)
   ((_ binding
       (bundle-id semantic-id)

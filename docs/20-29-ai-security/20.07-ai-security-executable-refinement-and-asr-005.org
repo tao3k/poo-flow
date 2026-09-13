@@ -1,0 +1,152 @@
+#+title: AI Security Executable Refinement and ASR-005 Evidence Verification
+#+startup: overview
+
+* Status
+
+- RFC state: implemented locally, external qualification remains open.
+- Normative authority: this Org RFC and the adjacent AI-security RFC family.
+- Formal authority: =AISecurityExecutableRefinementContractClosure= and
+  =AISecurityExecutableRefinementImplementationClosure=.
+- Executable authorities: the POO-native Scheme transition and the independent
+  Python refinement/replay.
+- Empirical authority: versioned run receipts only.  Diagrams and rendered
+  documents are presentation views and never correctness authorities.
+
+* Decision
+
+POO Flow SHALL consume one provider-neutral =AgentActionEvidenceEnvelope=.  A
+Cursor, Claude, Codex, or future adapter may normalize its own log format, but
+neither Scheme nor Lean SHALL parse those provider-native logs as an assurance
+interface.
+
+The envelope preserves the existing separation:
+
+1. =ObservationEvent= identifies what was observed.
+2. =RecoveryDecision= identifies the policy/recovery decision derived from it.
+3. =evidenceRoot= binds the evidence content used by that decision.
+4. =traceParentRoot= binds causal ancestry across action boundaries.
+
+This RFC does not prescribe a fixed three-layer, ten-layer, or vendor-specific
+security architecture.  POO Flow is a composition engine: organizations may
+compose control, data, identity, model, workload, supply-chain, runtime,
+governance, or other guarantee coordinates.  The executable transition below
+defines the minimum cross-coordinate invariants required before an action can
+enter the provable region.
+
+* Four high-value invariants
+
+The reference transition evaluates four named obligations independently:
+
+| Invariant | Required evidence | Fail-closed meaning |
+|-
+| capability confinement | =capabilityId= is in the policy grant set | the action requests authority it was not granted |
+| tool identity | the normalized =toolIdentity= equals policy identity | the executor/tool binding cannot be authenticated |
+| effect containment | effect domain is allowed and requested effects are a subset of envelope allowance | the action may escape its authorized effect boundary |
+| causal continuity | parent action and parent trace root equal the policy expectation | the action cannot be connected to the admitted history |
+
+The result is =accepted= only when all four obligations hold.  Each failed
+invariant remains a named escalation reason; no generic malicious/non-malicious
+classifier is an assurance substitute.
+
+* Scheme reference transition
+
+The public Scheme surface is POO-native:
+
+- =poo-flow-agent-action-evidence-envelope= constructs the typed POO object;
+- =poo-flow-ai-security-transition-policy= constructs policy authority;
+- =poo-flow-ai-security-transition-prototype= is the ordinary =.mix= extension
+  point;
+- the =execute= and =replay-valid?= slots are pure functions;
+- the transition emits a versioned POO receipt with envelope digest, output
+  digest, trace root, four invariant receipts, and escalation reasons.
+
+The named projection function is an FFI/refinement boundary.  Its alist is not
+the public authoring DSL and provider-specific fields are not admitted.
+
+* Python independent refinement and double replay
+
+Python decodes only the exact named Scheme projection into the same typed
+identity.  Unknown/missing fields fail closed.  It then independently computes:
+
+- the four invariant results;
+- the transition decision;
+- the canonical envelope and output digests;
+- the trace root;
+- a versioned executable transition receipt.
+
+=replay_reference_transition= recomputes the complete receipt and rejects any
+receipt-level drift.  This is the second replay.  Scheme also recomputes its own
+receipt identity through the =replay-valid?= POO slot.  Agreement is therefore
+not a provider-supplied =validated= bit.
+
+* ASR-005 evidence-content verifier
+
+ASR-005 is provider-neutral and schema-specific.  The verifier records four
+stage receipts, never one merged =validated= boolean:
+
+| Stage | States | Authority question |
+|-
+| digest integrity | verified / failed | do the artifact bytes match the expected digest? |
+| schema-semantic replay | verified / failed | is the schema exact and does its registered semantic replay succeed? |
+| issuer authentication | verified / failed / not-provided | was the artifact authenticated by the required issuer authority? |
+| transparency inclusion | verified / failed / not-provided | is this exact digest included in the required transparency authority? |
+
+The aggregate =decision= is =verified= only when every stage is =verified=;
+otherwise it is =fail-closed=.  This decision does not erase the four stage
+states.  In particular, missing issuer or transparency evidence remains
+=not-provided= rather than being silently treated as success.
+
+* Red-team compilation and regression
+
+Explorer/ADR-Bench findings SHALL be compiled into all of the following:
+
+1. a minimized counterexample envelope or evidence bundle;
+2. an explicit policy refinement;
+3. a Scheme/Python property or regression;
+4. a Lean theorem when the refined claim is formalizable;
+5. a versioned replay receipt.
+
+The existing six mapping attacks remain required regressions: authority
+amplification, digest mismatch, escalation without reason, pending-detail
+promotion, spoofed coverage, and exact-bundle metric replay.  New executable
+regressions cover each of the four transition invariants, receipt tampering,
+schema spoofing, missing issuer evidence, and missing transparency evidence.
+
+* Metrics
+
+Every empirical report SHALL publish three assurance metric groups in addition
+to detector precision/recall:
+
+| Metric | Definition |
+|-
+| proof coverage | executions whose evidence and policy place them inside the formally modeled region divided by eligible executions |
+| unknown/escalation rate | executions that fail closed because a required fact or authority is absent divided by eligible executions |
+| replay success | historical receipts independently reconstructed from their bundles divided by replay attempts |
+
+Local regression counts are engineering evidence, not enterprise qualification.
+As of this RFC implementation, Python executable refinement has 16 local tests
+and the existing mapping replay has 6 local red-team tests.  A production
+sample/run receipt containing population definition, adapter versions, issuer
+trust roots, transparency-log identity, and replay outcomes has not yet been
+provided.  Therefore empirical enterprise qualification remains an explicit
+open obligation.
+
+* Four-authority closure
+
+#+begin_example
+Org RFC (normative promise)
+  -> Lean (promise under explicit assumptions)
+  -> Scheme reference transition + Python independent replay
+  -> empirical run receipts and qualification metrics
+#+end_example
+
+Mermaid and Typst may present this cycle, but they do not participate in the
+correctness chain.
+
+* Implementation topology
+
+- =src/policy/ai-security-executable-refinement.ss=
+- =t/ai-security-executable-refinement-test.ss=
+- =packages/proof/python/src/poo_flow_proof/ai_security_executable_refinement.py=
+- =packages/proof/python/tests/test_ai_security_executable_refinement.py=
+- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityExecutableRefinementImplementationClosure.lean=

@@ -1,0 +1,234 @@
+;;; -*- Gerbil -*-
+;;; Boundary: object validation catalog summaries and require gates.
+
+(import (only-in :std/srfi/1 fold)
+        :gerbil/gambit
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/object-validation/support/facts
+        :poo-flow/src/module-system/object-validation/support/harness
+        :poo-flow/src/module-system/object-validation/support/object
+        :poo-flow/src/module-system/projection/syntax)
+
+(export poo-flow-module-objects-validation
+        poo-flow-module-objects-validation->alists
+        poo-flow-module-invalid-object-identities
+        poo-flow-module-validation-values
+        poo-flow-module-objects-validation-summary
+        poo-flow-require-module-object-validation!
+        poo-flow-require-module-objects-validation!)
+
+;;; Boundary: module objects validation is the policy-visible edge for module-
+;;; system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; : (-> [PooModuleObject] HashTable HashTable HashTable HashTable [POOObject] [POOObject])
+(def (poo-flow-module-objects-validation/rev
+      objects
+      field-cache
+      harness-cache
+      harness-fields-cache
+      field-origins-cache
+      validations-rev)
+  (fold
+   (lambda (object validations)
+     (cons (poo-flow-module-object-validation/catalog-caches
+            object
+            field-cache
+            harness-cache
+            harness-fields-cache
+            field-origins-cache)
+           validations))
+   validations-rev
+   objects))
+
+;; : (-> [PooModuleObject] [POOObject])
+(def (poo-flow-module-objects-validation objects)
+  (let ((field-cache (make-hash-table))
+        (harness-cache (make-hash-table))
+        (harness-fields-cache (make-hash-table))
+        (field-origins-cache (make-hash-table)))
+    (reverse
+     (poo-flow-module-objects-validation/rev
+      objects
+      field-cache
+      harness-cache
+      harness-fields-cache
+      field-origins-cache
+      '()))))
+
+;;; Validation receipts stay list-shaped for callers that serialize reports;
+;;; the POO detail remains available to object-native callers.
+;; : (-> [POOObject] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-module-objects-validation->alists (validations)
+  (projector poo-flow-module-object-validation->alist)
+  (error-message "module object validation serialization requires a list"))
+
+;;; Boundary: module invalid object identities is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; : (-> [POOObject] [Symbol] [Symbol])
+(def (poo-flow-module-invalid-object-identities/rev validations
+                                                    identities-rev)
+  (fold
+   (lambda (validation identities)
+     (if (poo-flow-module-object-validation-valid? validation)
+       identities
+       (let (identity (poo-flow-validation-ref validation 'object))
+         (if identity
+           (cons identity identities)
+           identities))))
+   identities-rev
+   validations))
+
+;; : (-> [POOObject] [Symbol])
+(def (poo-flow-module-invalid-object-identities validations)
+  (reverse
+   (poo-flow-module-invalid-object-identities/rev validations '())))
+
+;;; Boundary: module validation values is the policy-visible edge for module-
+;;; system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; : (-> [POOObject] Symbol [Value] [Value])
+(def (poo-flow-module-validation-values/rev validations key values-rev)
+  (fold
+   (lambda (validation values)
+     (cons (poo-flow-validation-ref validation key) values))
+   values-rev
+   validations))
+
+;; : (-> [POOObject] Symbol [Value])
+(def (poo-flow-module-validation-values validations key)
+  (reverse
+   (poo-flow-module-validation-values/rev validations key '())))
+
+;;; Boundary: module objects validation summary collect is the policy-visible
+;;; edge for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
+;; poo-flow-module-objects-validation-summary/collect
+;;   : (-> [POOObject] Values)
+;;   | doc m%
+;;       `poo-flow-module-objects-validation-summary/collect` documents the
+;;       module-system, object boundary that the Gerbil policy harness treats
+;;       as agent-facing behavior. The example keeps the call shape visible
+;;       without duplicating implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-objects-validation-summary/collect ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
+(def (poo-flow-module-objects-validation-summary/collect validations)
+  (let loop ((rest validations)
+             (object-count 0)
+             (object-identities '())
+             (inheritance-chains '())
+             (direct-field-counts '())
+             (direct-field-identities '())
+             (resolved-field-counts '())
+             (resolved-field-identities '())
+             (field-origins '())
+             (inheritance-counts '())
+             (validation-phases '())
+             (invalid-objects '()))
+    (if (null? rest)
+      (values object-count
+              (reverse object-identities)
+              (reverse inheritance-chains)
+              (reverse direct-field-counts)
+              (reverse direct-field-identities)
+              (reverse resolved-field-counts)
+              (reverse resolved-field-identities)
+              (reverse field-origins)
+              (reverse inheritance-counts)
+              (reverse validation-phases)
+              (reverse invalid-objects))
+      (let* ((validation (car rest))
+             (object (poo-flow-validation-ref validation 'object))
+             (invalid? (not (poo-flow-module-object-validation-valid? validation))))
+        (loop (cdr rest)
+              (+ object-count 1)
+              (cons object object-identities)
+              (cons (poo-flow-validation-ref validation 'inheritance-chain)
+                    inheritance-chains)
+              (cons (poo-flow-validation-ref validation 'direct-field-count)
+                    direct-field-counts)
+              (cons (poo-flow-validation-ref validation 'direct-field-identities)
+                    direct-field-identities)
+              (cons (poo-flow-validation-ref validation 'resolved-field-count)
+                    resolved-field-counts)
+              (cons (poo-flow-validation-ref validation 'resolved-field-identities)
+                    resolved-field-identities)
+              (cons (poo-flow-validation-ref validation 'field-origins)
+                    field-origins)
+              (cons (poo-flow-validation-ref validation 'inherit-count)
+                    inheritance-counts)
+              (cons (poo-flow-validation-ref validation 'validationPhases)
+                    validation-phases)
+              (if invalid?
+                (cons object invalid-objects)
+                invalid-objects))))))
+
+;; poo-flow-module-objects-validation-summary
+;;   : (-> [POOObject] POOObject)
+;;   | doc m%
+;;       `poo-flow-module-objects-validation-summary` projects catalog-level
+;;       validation facts without rewalking module objects or executing runtime
+;;       descriptors.
+;;     %
+(def (poo-flow-module-objects-validation-summary validations)
+  (call-with-values
+    (lambda ()
+      (poo-flow-module-objects-validation-summary/collect validations))
+    (lambda (object-count
+             object-identities
+             inheritance-chains
+             direct-field-counts
+             direct-field-identities
+             resolved-field-counts
+             resolved-field-identities
+             field-origins
+             inheritance-counts
+             validation-phases
+             invalid-objects)
+      (receipt
+       (cons 'kind "poo-flow-module-objects-validation-summary")
+       (cons 'schema poo-flow-module-object-validation-schema)
+       (cons 'object-count object-count)
+       (cons 'object-identities object-identities)
+       (cons 'inheritance-chains inheritance-chains)
+       (cons 'direct-field-counts direct-field-counts)
+       (cons 'direct-field-identities direct-field-identities)
+       (cons 'resolved-field-counts resolved-field-counts)
+       (cons 'resolved-field-identities resolved-field-identities)
+       (cons 'field-origins field-origins)
+       (cons 'inheritance-counts inheritance-counts)
+       (cons 'validation-phases validation-phases)
+       (cons 'invalid-count (length invalid-objects))
+       (cons 'invalid-objects invalid-objects)
+       (cons 'valid (null? invalid-objects))
+       (cons 'checkedSignals
+             '(object-catalog-validation-contract
+               object-catalog-debug-contract
+               object-catalog-field-origin-contract
+               object-catalog-inheritance-chain-contract
+               object-catalog-phase-contract
+               object-catalog-counts
+               object-catalog-invalid-identities))
+       (cons 'descriptor-realized? #f)
+       (cons 'runtime-executed #f)))))
+
+;;; Catalog loading calls this gate so invalid module objects fail before a
+;;; user-facing declarative configuration is projected.
+;; : (-> PooModuleObject PooModuleObject)
+(def (poo-flow-require-module-object-validation! object)
+  (let (validation (poo-flow-module-object-validation object))
+    (if (poo-flow-module-object-validation-valid? validation)
+      object
+      (error "poo-flow module object failed upstream harness validation"
+             validation))))
+
+;; : (-> [PooModuleObject] [PooModuleObject])
+(def (poo-flow-require-module-objects-validation! objects)
+  (for-each poo-flow-require-module-object-validation! objects)
+  objects)

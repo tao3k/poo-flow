@@ -3,7 +3,7 @@
 
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier
         :poo-flow/src/qualification/agentic-control-plane-fixture

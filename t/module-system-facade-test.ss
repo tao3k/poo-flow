@@ -9,16 +9,15 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection
-        :poo-flow/src/module-system/presentation
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/interface
+        :poo-flow/src/user-interface/presentation
+        :poo-flow/src/user-interface/facade)
 
 (export module-system-facade-test)
 

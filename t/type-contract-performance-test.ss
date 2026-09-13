@@ -7,8 +7,8 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in "./support/performance.ss"
-                 poo-flow-performance-best-elapsed-ms)
+        (only-in :asp-gerbil-scheme/build-api
+                 benchmark-p95-elapsed-ms)
         "./support/type-contract-performance.ss")
 
 (export type-contract-performance-test)
@@ -60,8 +60,8 @@
         (type-contract-performance-ref receipt 'cached-type-facts-ms-max-ms))))
 
 ;; : (-> Integer (-> Integer) Rational)
-(def (type-contract-performance-best-ms attempts workload)
-  (poo-flow-performance-best-elapsed-ms
+(def (type-contract-performance-p95-ms attempts workload)
+  (benchmark-p95-elapsed-ms
    attempts
    (lambda ()
      (workload))))
@@ -77,62 +77,62 @@
          (cached-slots 50)
          (cached-rounds 10000)
          (slot-check-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-check-slots-rounds
               micro-slots
               micro-rounds))))
          (alist-projection-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-object-contract-alist-rounds
               projection-slots
               projection-rounds))))
          (type-facts-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-type-facts-rounds
               projection-slots
               projection-rounds))))
          (lean-facts-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-lean-facts-rounds
               projection-slots
               projection-rounds))))
          (session-policy-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
-             (+ (type-contract-performance-session-policy-type-facts-rounds
+             (+ (type-contract-performance-session-policy-projection-rounds
                  session-rounds)
-                (type-contract-performance-session-tool-grant-lean-facts-rounds
+                (type-contract-performance-session-tool-grant-projection-rounds
                  session-rounds)
                 (type-contract-performance-session-policy-require-rounds
                  session-rounds)
                 (type-contract-performance-session-tool-grant-require-rounds
                  session-rounds)))))
          (scale-100-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-object-family-check-count 100 10))))
          (scale-1000-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-object-family-check-count 1000 10))))
          (scale-10000-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-object-family-check-count 10000 2))))
          (cached-type-facts-ms
-          (type-contract-performance-best-ms
+          (type-contract-performance-p95-ms
            attempts
            (lambda ()
              (type-contract-performance-cached-type-facts-rounds
@@ -140,6 +140,7 @@
               cached-rounds)))))
     (list
      (cons 'attempts attempts)
+     (cons 'admissionStatistic 'p95)
      (cons 'micro-slots micro-slots)
      (cons 'micro-rounds micro-rounds)
      (cons 'projection-slots projection-slots)

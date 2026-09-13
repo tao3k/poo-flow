@@ -2,145 +2,44 @@
 ;;; Boundary: user-facing agent sandbox profile declarations.
 ;;; Invariant: profiles are inert data until a runtime bridge consumes them.
 
-(import (only-in :clan/poo/object .o .ref object? object<-alist)
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :clan/poo/mop element?)
         :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/profile-native-contract
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/projection/syntax)
 
-(export poo-flow-sandbox-profile-kind
-        poo-flow-sandbox-profiles-presentation-kind
-        poo-flow-sandbox-profile
-        poo-flow-sandbox-profiles
-        poo-flow-sandbox-profile-config
-        poo-flow-sandbox-profile?
-        poo-flow-sandbox-profile-name
-        poo-flow-sandbox-profile-backend-kind
-        poo-flow-sandbox-profile-backend-ref
-        poo-flow-sandbox-profile-network-policy
-        poo-flow-sandbox-profile-capabilities
-        poo-flow-sandbox-profile-resource-policy
-        poo-flow-sandbox-profile-metadata
-        poo-flow-sandbox-profile->descriptor
-        poo-flow-sandbox-profile->profile
-        poo-flow-sandbox-profile->alist
-        poo-flow-sandbox-profile-backend-capability/registry
-        poo-flow-sandbox-profile-backend-capability
-        poo-flow-sandbox-profile-policy-validation-receipt/registry
-        poo-flow-sandbox-profile-policy-validation-receipt
-        poo-flow-sandbox-profile-policy-projection-receipt/registry
-        poo-flow-sandbox-profile-policy-projection-receipt
-        poo-flow-sandbox-profile-policy-projections-valid?
-        poo-flow-sandbox-profile-policy-presentation-diagnostics
-        poo-flow-sandbox-profile-runtime-intent/registry
-        poo-flow-sandbox-profile-runtime-intent
-        poo-flow-sandbox-profile-runtime-summary
-        poo-flow-sandbox-profile-handoff-summary
-        poo-flow-sandbox-profile-names
-        poo-flow-sandbox-profile-alists
-        poo-flow-sandbox-profile-by-name
-        poo-flow-default-sandbox-profiles
-        poo-flow-default-sandbox-profile-names
+(export poo-flow-sandbox-profile-kind PooFlowSandboxProfileContract
+        poo-flow-sandbox-profile-contract-admission poo-flow-sandbox-profile-contract-admitted?
+        poo-flow-sandbox-profile-type-contract->alist poo-flow-require-sandbox-profile-contract!
+        poo-flow-sandbox-profiles-presentation-kind poo-flow-sandbox-profile poo-flow-sandbox-profiles
+        poo-flow-sandbox-profile-config poo-flow-sandbox-profile? poo-flow-sandbox-profile-name
+        poo-flow-sandbox-profile-backend-kind poo-flow-sandbox-profile-backend-ref
+        poo-flow-sandbox-profile-network-policy poo-flow-sandbox-profile-capabilities
+        poo-flow-sandbox-profile-resource-policy poo-flow-sandbox-profile-metadata
+        poo-flow-sandbox-profile-recipe-portable? poo-flow-sandbox-profile->descriptor
+        poo-flow-sandbox-profile->profile poo-flow-sandbox-profile->alist
+        poo-flow-sandbox-profile-backend-capability/registry poo-flow-sandbox-profile-backend-capability
+        poo-flow-sandbox-profile-policy-validation-receipt/registry poo-flow-sandbox-profile-policy-validation-receipt
+        poo-flow-sandbox-profile-policy-projection-receipt/registry poo-flow-sandbox-profile-policy-projection-receipt
+        poo-flow-sandbox-profile-policy-projections-valid? poo-flow-sandbox-profile-policy-presentation-diagnostics
+        poo-flow-sandbox-profile-runtime-intent/registry poo-flow-sandbox-profile-runtime-intent
+        poo-flow-sandbox-profile-runtime-summary poo-flow-sandbox-profile-handoff-summary
+        poo-flow-sandbox-profile-names poo-flow-sandbox-profile-alists poo-flow-sandbox-profile-by-name
+        poo-flow-default-sandbox-profiles poo-flow-default-sandbox-profile-names
         poo-flow-default-sandbox-profile-presentation
-        pooFlowSandboxProfilesPresentation/registry
-        pooFlowSandboxProfilesPresentation)
+        pooFlowSandboxProfilesPresentation/registry pooFlowSandboxProfilesPresentation)
 
-;;; Profile kind ids are receipt vocabulary. They are stable enough for
-;;; presentation and tests, but do not select a runtime backend by themselves.
-;; : PooFlowSandboxProfileKindId
-;; | PooFlowSandboxProfileKindId = String
-(def poo-flow-sandbox-profile-kind
-  "poo-flow.agent-sandbox.user-profile.v1")
-
-;;; The presentation kind names the shallow, non-executing view used by agents
-;;; and CLI tooling before any backend descriptor is realized.
-;; : PooFlowSandboxProfilesPresentationKindId
-;; | PooFlowSandboxProfilesPresentationKindId = String
-(def poo-flow-sandbox-profiles-presentation-kind
-  "poo-flow.agent-sandbox.user-profiles.presentation.v1")
-
-;;; Form lookup stays textual and inert: unknown rows are ignored here because
-;;; runtime/profile validation happens after projection to the sandbox contract.
-;; : (-> Symbol [SandboxProfileForm] SandboxProfileForm SandboxProfileForm)
-(def (poo-flow-sandbox-profile-form key forms default-value)
-  (cond
-   ((null? forms) default-value)
-   ((and (pair? (car forms))
-         (eq? (caar forms) key))
-    (car forms))
-   (else
-    (poo-flow-sandbox-profile-form key (cdr forms) default-value))))
-
-;;; Tail extraction keeps malformed optional rows harmless: non-pairs project
-;;; to an empty payload and leave stricter checks to descriptor validation.
-;; : (-> MaybeSandboxProfileForm [SandboxProfileForm])
-(def (poo-flow-sandbox-profile-tail form)
-  (if (and form (pair? form)) (cdr form) '()))
-
-;;; A one-symbol backend row such as `(backend nono)` means both backend kind
-;;; and backend ref are `nono`; explicit refs let cubeSandbox name a profile.
-;; : (-> [SandboxProfileForm] (Values Symbol Symbol))
-(def (poo-flow-sandbox-profile-backend-values forms)
-  (let* ((backend-form
-          (poo-flow-sandbox-profile-form 'backend
-                                         forms
-                                         '(backend nono nono-sandbox)))
-         (backend-payload (poo-flow-sandbox-profile-tail backend-form))
-         (backend-kind (if (null? backend-payload)
-                         'nono
-                         (car backend-payload)))
-         (backend-ref (if (or (null? backend-payload)
-                              (null? (cdr backend-payload)))
-                        backend-kind
-                        (cadr backend-payload))))
-    (values backend-kind backend-ref)))
-
-;;; List-form projection preserves user order and avoids inventing defaults
-;;; for rows that should remain owned by upstream sandbox policy.
-;; : (-> Symbol [SandboxProfileForm] [Value] [Value])
-(def (poo-flow-sandbox-profile-list-form key forms default-value)
-  (let (form (poo-flow-sandbox-profile-form key forms #f))
-    (if form
-      (poo-flow-sandbox-profile-tail form)
-      default-value)))
-
-;;; Profile config construction keeps parsing shallow: it only projects rows
-;;; into POO slots and leaves descriptor validation to the bridge boundary.
-;; : (-> Symbol [SandboxProfileForm] POOObject)
-(def (poo-flow-sandbox-profile-config name-value forms)
-  (call-with-values
-    (lambda () (poo-flow-sandbox-profile-backend-values forms))
-    (lambda (backend-kind-value backend-ref-value)
-      (.o kind: poo-flow-sandbox-profile-kind
-          name: name-value
-          backend-kind: backend-kind-value
-          backend-ref: backend-ref-value
-          network-policy: (poo-flow-sandbox-profile-list-form
-                           'network
-                           forms
-                           '(deny-by-default))
-          capabilities: (poo-flow-sandbox-profile-list-form
-                         'capabilities
-                         forms
-                         '(process filesystem tmpdir))
-          resource-policy: (poo-flow-sandbox-profile-list-form
-                            'resources
-                            forms
-                            '())
-          metadata: (agent-sandbox-field-rows/tail
-                     (poo-flow-sandbox-profile-list-form
-                      'metadata
-                      forms
-                      '())
-                     (declared-by 'poo-flow-user-interface)
-                     (runtime-executed #f))))))
-
+(import :poo-flow/src/modules/agent-sandbox/config-form-support)
 ;;; Bass-style profile rows are just data recipes. The macro is deliberately a
 ;;; thin syntax bridge; semantic state lives in the POO profile object slots.
 ;; poo-flow-sandbox-profile
 ;;   : (-> Symbol SandboxProfileForm... PooSandboxProfile)
 ;;   | contract: expands one profile row into inert POO data only
 ;;   | doc m%
+;;       `poo-flow-sandbox-profile` expands one named inert profile recipe.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
@@ -150,7 +49,6 @@
 ;;       ;; => POO profile recipe, not a runtime request
 ;;       ```
 ;;     %
-;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
 (defrules poo-flow-sandbox-profile ()
   ((_ name form ...)
    (poo-flow-sandbox-profile-config 'name '(form ...))))
@@ -159,6 +57,8 @@
 ;;   : (-> SandboxProfileRow... [PooSandboxProfile])
 ;;   | contract: preserves declaration order for agent/tool presentation
 ;;   | doc m%
+;;       `poo-flow-sandbox-profiles` preserves profile declaration order.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
@@ -168,7 +68,6 @@
 ;;       ;; => ordered profile recipes
 ;;       ```
 ;;     %
-;; : (-> SandboxProfileRow... [PooSandboxProfile])
 (defrules poo-flow-sandbox-profiles ()
   ((_)
    '())
@@ -193,7 +92,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 2)
@@ -231,8 +129,7 @@
 ;; : (-> PooSandboxProfileCandidate Boolean)
 ;; | PooSandboxProfileCandidate = POOObject
 (def (poo-flow-sandbox-profile? value)
-  (and (object? value)
-       (equal? (.ref value 'kind) poo-flow-sandbox-profile-kind)))
+  (element? PooFlowSandboxProfileContract value))
 
 ;;; Accessors stay as thin `.ref` wrappers so callers do not reach into the POO
 ;;; object directly or duplicate slot names across tests and runtime bridges.
@@ -266,16 +163,141 @@
 
 ;;; Descriptor projection is the boundary where inert user recipes start
 ;;; participating in the existing sandbox profile validation contract.
-;; : (-> PooSandboxProfile AgentSandboxProfileDescriptor)
+;; : (-> Character Boolean)
+(def (poo-flow-sandbox-profile-recipe-path-separator? character)
+  (or (char=? character #\/)
+      (char=? character #\\)))
+
+;; : (-> Character Boolean)
+(def (poo-flow-sandbox-profile-recipe-ascii-letter? character)
+  (or (and (char>=? character #\a) (char<=? character #\z))
+      (and (char>=? character #\A) (char<=? character #\Z))))
+
+;; : (-> String Boolean)
+(def (poo-flow-sandbox-profile-recipe-file-uri? value)
+  (and (>= (string-length value) 5)
+       (char-ci=? (string-ref value 0) #\f)
+       (char-ci=? (string-ref value 1) #\i)
+       (char-ci=? (string-ref value 2) #\l)
+       (char-ci=? (string-ref value 3) #\e)
+       (char=? (string-ref value 4) #\:)))
+
+;; : (-> String Boolean)
+(def (poo-flow-sandbox-profile-recipe-absolute-path? value)
+  (let (length (string-length value))
+    (or (and (> length 0)
+             (poo-flow-sandbox-profile-recipe-path-separator?
+              (string-ref value 0)))
+        (and (>= length 3)
+             (poo-flow-sandbox-profile-recipe-ascii-letter?
+              (string-ref value 0))
+             (char=? (string-ref value 1) #\:)
+             (poo-flow-sandbox-profile-recipe-path-separator?
+              (string-ref value 2)))
+        (poo-flow-sandbox-profile-recipe-file-uri? value))))
+
+;; : (-> String Integer Integer Boolean)
+(def (poo-flow-sandbox-profile-recipe-source-segment-portable?
+      value start end)
+  (let (length (- end start))
+    (and (> length 0)
+         (not (and (= length 1)
+                   (char=? (string-ref value start) #\.)))
+         (not (and (= length 2)
+                   (char=? (string-ref value start) #\.)
+                   (char=? (string-ref value (+ start 1)) #\.))))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-sandbox-profile-recipe-source-portable? value)
+  (and (string? value)
+       (not (poo-flow-sandbox-profile-recipe-absolute-path? value))
+       (or (string=? value ".")
+           (let (length (string-length value))
+             (and (> length 0)
+                  (let loop ((index 0) (segment-start 0))
+                    (cond
+                     ((= index length)
+                      (poo-flow-sandbox-profile-recipe-source-segment-portable?
+                       value segment-start index))
+                     ((or (char=? (string-ref value index) #\\)
+                          (char=? (string-ref value index) #\:))
+                      #f)
+                     ((char=? (string-ref value index) #\/)
+                      (and
+                       (poo-flow-sandbox-profile-recipe-source-segment-portable?
+                        value segment-start index)
+                       (loop (+ index 1) (+ index 1))))
+                     (else
+                      (loop (+ index 1) segment-start)))))))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-sandbox-profile-recipe-project-marker-portable? value)
+  (and (poo-flow-sandbox-profile-recipe-project-marker-name-portable? value)
+       (andmap
+        poo-flow-sandbox-profile-recipe-project-marker-character-portable?
+        (string->list value))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-sandbox-profile-recipe-project-marker-name-portable? value)
+  (and (string? value)
+       (not (member value '("" "." "..")))))
+
+;; : (-> Character Boolean)
+(def (poo-flow-sandbox-profile-recipe-project-marker-character-portable? value)
+  (and (not (poo-flow-sandbox-profile-recipe-path-separator? value))
+       (not (char=? value #\:))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-sandbox-profile-recipe-datum-portable? datum)
+  (cond
+   ((string? datum)
+    (not (poo-flow-sandbox-profile-recipe-absolute-path? datum)))
+   ((pair? datum)
+    (and
+     (not (and (symbol? (car datum))
+               (eq? (car datum) 'target)))
+     (or (not (and (symbol? (car datum))
+                   (eq? (car datum) 'source)))
+         (poo-flow-sandbox-profile-recipe-source-portable? (cdr datum)))
+     (or (not (and (symbol? (car datum))
+                   (eq? (car datum) 'project-marker)))
+         (poo-flow-sandbox-profile-recipe-project-marker-portable? (cdr datum)))
+     (poo-flow-sandbox-profile-recipe-datum-portable? (car datum))
+     (poo-flow-sandbox-profile-recipe-datum-portable? (cdr datum))))
+   (else #t)))
+
+;; Recipes are portable declarations. Concrete sandbox mount paths belong to
+;; the backend materialization boundary, never to the composable POO object.
+;; : (-> PooSandboxProfile Boolean)
+(def (poo-flow-sandbox-profile-recipe-portable? profile)
+  (and (poo-flow-sandbox-profile? profile)
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-name profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-backend-ref profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-network-policy profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-capabilities profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-resource-policy profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-metadata profile))))
+
 (def (poo-flow-sandbox-profile->descriptor profile)
-  (make-agent-sandbox-profile-descriptor
-   (poo-flow-sandbox-profile-name profile)
-   (poo-flow-sandbox-profile-backend-kind profile)
-   (poo-flow-sandbox-profile-backend-ref profile)
-   (poo-flow-sandbox-profile-network-policy profile)
-   (poo-flow-sandbox-profile-capabilities profile)
-   (poo-flow-sandbox-profile-resource-policy profile)
-   (poo-flow-sandbox-profile-metadata profile)))
+  (let (admitted-profile
+        (poo-flow-require-sandbox-profile-contract! profile))
+    (unless (poo-flow-sandbox-profile-recipe-portable? admitted-profile)
+      (error "sandbox profile recipe contains an absolute path"
+             (poo-flow-sandbox-profile-name admitted-profile)))
+    (make-agent-sandbox-profile-descriptor
+     (poo-flow-sandbox-profile-name admitted-profile)
+     (poo-flow-sandbox-profile-backend-kind admitted-profile)
+     (poo-flow-sandbox-profile-backend-ref admitted-profile)
+     (poo-flow-sandbox-profile-network-policy admitted-profile)
+     (poo-flow-sandbox-profile-capabilities admitted-profile)
+     (poo-flow-sandbox-profile-resource-policy admitted-profile)
+     (poo-flow-sandbox-profile-metadata admitted-profile))))
 
 ;;; Profile projection is the last Scheme-side step before the shared sandbox
 ;;; contract takes over validation and runtime adapter handoff.

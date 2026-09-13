@@ -6,11 +6,11 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/core/flow-strand
                  default-flow-strand-registry
                  flow-strand-for-kind-in

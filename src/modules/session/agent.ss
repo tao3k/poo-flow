@@ -8,7 +8,8 @@
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/objects-handoff
         :poo-flow/src/modules/session/registry
-        :poo-flow/src/modules/session/receipt-syntax)
+        :poo-flow/src/modules/session/receipt-syntax
+        :poo-flow/src/modules/session/receipt-projection)
 
 (export poo-flow-session-agent-node
         poo-flow-session-agent-node?
@@ -257,10 +258,11 @@
 ;;       A list of agent-node receipt alists.
 ;;     %
 ;; : (-> [PooSessionAgentNode] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-agent-nodes->alists (nodes)
-  (projector poo-flow-session-agent-node->alist)
-  (error-message "session agent node serialization requires a list"))
+(def (poo-flow-session-agent-nodes->alists nodes)
+  (poo-flow-session-receipt-projection-batch
+   nodes
+   poo-flow-session-agent-node->alist
+   "session agent node serialization requires a list"))
 
 ;; poo-flow-session-agent-node->registry-entry
 ;;   | contract: adjacent signature fixes the node-to-registry projection.

@@ -1,11 +1,15 @@
 #!/usr/bin/env gxi
+;;; Example owner: this composition keeps human authority and evidence return
+;;; explicit across every stage before bundle publication.
 
 (import :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition
+        :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/feature-system/bundle-v1-composition-writer)
 
 (export human-capability)
 
+;;; Composition boundary: human authority and evidence return are represented
+;;; as declarative stages; no stage executes while this value is constructed.
 (def human-capability
   (use-composition human-capability
     (use-module human-ai-capability as capability
@@ -69,4 +73,6 @@
       (edges (knowledge governed-action)
              (governed-action evidence-return)))))
 
+;;; Publication boundary: the example's only effect is the explicit bundle
+;;; writer handoff after the complete composition value has been constructed.
 (poo-flow-write-composition-bundle-v1/from-environment! human-capability)

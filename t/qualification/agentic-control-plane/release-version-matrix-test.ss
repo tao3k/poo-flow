@@ -1,9 +1,7 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/qualification/release-version-matrix)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def release-version-matrix-test
   (test-suite "AC-11 release version matrix"
@@ -41,5 +39,3 @@
              (receipt (poo-flow-ac11-release-version-matrix-verify frozen)))
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'abi-v1-frozen?) => #f)))))
-
-(run-tests! release-version-matrix-test)

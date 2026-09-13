@@ -7,13 +7,13 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object object?)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/durable-policy)
+        "./support/performance"
+        :poo-flow/src/modules/memory-core/durable/policy)
 
 (export durable-policy-performance-test)
 

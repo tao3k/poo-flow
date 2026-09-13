@@ -3,7 +3,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -49,5 +48,3 @@
                       #f)
         (check-equal? (poo-flow-session-policy-default-action hook-policy)
                       'deny)))))
-
-(run-tests! session-hook-tool-policy-test)

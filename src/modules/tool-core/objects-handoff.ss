@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: POO-native runtime handoff manifest projections.
 
-(import (only-in :clan/poo/object .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
+(import (only-in :clan/poo/object .o .ref object?)
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/tool-core/objects-spec
         :poo-flow/src/modules/tool-core/objects-support)
@@ -34,31 +34,35 @@
             '()
             (list
              (poo-flow-tool-field-rows
-              (code 'tool-spec-missing-sandbox-profile)
-              (tool-ref (poo-flow-tool-spec-ref spec))
-              (severity 'error))))))
-    (object<-alist
-     (list
-      (cons 'kind +poo-flow-tool-core-handoff-manifest-kind+)
-      (cons 'schema 'poo-flow.modules.tool-core.handoff-manifest.v1)
-      (cons 'request-id request-id)
-      (cons 'tool-ref (poo-flow-tool-spec-ref spec))
-      (cons 'tool-kind (poo-flow-tool-spec-tool-kind spec))
-      (cons 'actions (poo-flow-tool-spec-actions spec))
-      (cons 'operation (.ref spec 'handoff-operation))
-      (cons 'input-schema (.ref spec 'input-schema))
-      (cons 'output-schema (.ref spec 'output-schema))
-      (cons 'runtime-owner (.ref spec 'runtime-owner))
-      (cons 'runtime-backend (.ref spec 'runtime-backend))
-      (cons 'sandbox-required? sandbox-required?)
-      (cons 'sandbox-profile-ref sandbox-profile-ref)
-      (cons 'handoff-ready? (null? diagnostics))
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'diagnostics diagnostics)
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                          '()
-                          (car maybe-metadata)))))))
+              (cons 'code 'tool-spec-missing-sandbox-profile)
+              (cons 'tool-ref (poo-flow-tool-spec-ref spec))
+              (cons 'severity 'error)))))
+         ;; `.o` treats a bare identifier matching its slot as self dispatch.
+         ;; Capture every local that crosses the object boundary first.
+         (request-id-value request-id)
+         (sandbox-required-value sandbox-required?)
+         (sandbox-profile-ref-value sandbox-profile-ref)
+         (diagnostic-values diagnostics)
+         (metadata-value
+          (if (null? maybe-metadata) '() (car maybe-metadata))))
+    (.o (kind +poo-flow-tool-core-handoff-manifest-kind+)
+        (schema 'poo-flow.modules.tool-core.handoff-manifest.v1)
+        (request-id request-id-value)
+        (tool-ref (poo-flow-tool-spec-ref spec))
+        (tool-kind (poo-flow-tool-spec-tool-kind spec))
+        (actions (poo-flow-tool-spec-actions spec))
+        (operation (.ref spec 'handoff-operation))
+        (input-schema (.ref spec 'input-schema))
+        (output-schema (.ref spec 'output-schema))
+        (runtime-owner (.ref spec 'runtime-owner))
+        (runtime-backend (.ref spec 'runtime-backend))
+        (sandbox-required? sandbox-required-value)
+        (sandbox-profile-ref sandbox-profile-ref-value)
+        (handoff-ready? (null? diagnostic-values))
+        (diagnostic-count (length diagnostic-values))
+        (diagnostics diagnostic-values)
+        (runtime-executed #f)
+        (metadata metadata-value))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-tool-handoff-manifest? value)

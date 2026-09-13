@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -148,5 +147,3 @@
         (check-equal? (.ref analysis 'components) '((a) (b)))
         (check-equal? (.ref analysis 'cyclic-components) '((a)))
         (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))))
-
-(run-tests! graph-algorithm-test)

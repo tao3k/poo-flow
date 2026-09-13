@@ -2,15 +2,15 @@
 ;;; Boundary: core session policy object shape, projection, and contracts.
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax
-        (only-in "../../utilities/contracts.ss"
-                 poo-flow-contract-alist?
+        (only-in "../../module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
-                 poo-flow-object-type-contract->alist)
-        (only-in "../../utilities/contract-syntax.ss"
-                 defcontract-family))
+                 poo-flow-contract-slot
+                 poo-flow-contract-value-type
+                 poo-flow-native-contract
+                 poo-flow-native-contract->alist))
 
 (export poo-flow-session-policy-ref?
         poo-flow-session-policy-alist?
@@ -38,8 +38,7 @@
         poo-flow-session-policy-slots/tail
         poo-flow-session-policy-object-rows
         poo-flow-session-policy-object
-        +poo-flow-session-policy-slot-contracts+
-        +poo-flow-session-policy-type-contract+
+        PooFlowSessionPolicyContract
         poo-flow-session-policy-type-contract->alist
         poo-flow-session-policy-check-slot!
         poo-flow-session-policy-require-slots!)
@@ -50,7 +49,8 @@
 
 ;; : (-> Datum Boolean)
 (def (poo-flow-session-policy-alist? value)
-  (poo-flow-contract-alist? value))
+  (and (list? value)
+       (andmap pair? value)))
 
 ;; : (-> Datum Boolean)
 (def (poo-flow-session-policy-ref-list? values)
@@ -101,12 +101,17 @@
             'poo-flow.session.policy)))
 
 ;;; Generated slot accessors for the stable POO session policy shape.
-(defpoo-session-policy-slot-accessors
-  poo-flow-session-policy-slot
-  (poo-flow-session-policy-kind policy-kind #f)
-  (poo-flow-session-policy-name policy-name #f)
-  (poo-flow-session-policy-scope-ref scope-ref #f)
-  (poo-flow-session-policy-default-action default-action 'deny))
+(def (poo-flow-session-policy-kind policy)
+  (poo-flow-session-policy-slot policy 'policy-kind #f))
+
+(def (poo-flow-session-policy-name policy)
+  (poo-flow-session-policy-slot policy 'policy-name #f))
+
+(def (poo-flow-session-policy-scope-ref policy)
+  (poo-flow-session-policy-slot policy 'scope-ref #f))
+
+(def (poo-flow-session-policy-default-action policy)
+  (poo-flow-session-policy-slot policy 'default-action 'deny))
 
 ;; : (-> PooSessionPolicy PooDurablePolicy PooSessionPolicy)
 (def (poo-flow-session-policy-attach-durable policy durable-policy)
@@ -254,6 +259,7 @@
       (cons 'runtime-executed (.ref policy 'runtime-executed)))
      (poo-flow-session-policy-durable-rows policy))))
 
+;; : (forall (a) (-> (List a) (List a) (List a)))
 ;; : (-> Alist Alist Alist)
 (def (poo-flow-session-policy-rows/tail rows tail)
   (foldr cons tail rows))
@@ -336,93 +342,77 @@
       policy-slots
       metadata))))
 
-(defcontract-family
-  +poo-flow-session-policy-slot-contracts+
-  +poo-flow-session-policy-type-contract+
-  'session/policy
-  'session
-  'PooSessionPolicy
-  '((boundary . session-policy) (runtime . marlin-agent-core))
-  ((+poo-flow-session-policy-kind-contract+
-    'session.policy/kind
-    'kind
-    'Symbol
-    'poo-flow-session-policy-kind-value?
-    poo-flow-session-policy-kind-value?
-    #t
-    '())
-   (+poo-flow-session-policy-schema-contract+
-    'session.policy/schema
-    'schema
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-policy-policy-kind-contract+
-    'session.policy/policy-kind
-    'policy-kind
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-policy-policy-name-contract+
-    'session.policy/policy-name
-    'policy-name
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-policy-scope-ref-contract+
-    'session.policy/scope-ref
-    'scope-ref
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-policy-default-action-contract+
-    'session.policy/default-action
-    'default-action
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-policy-policy-slots-contract+
-    'session.policy/policy-slots
-    'policy-slots
-    'Alist
-    'poo-flow-session-policy-alist?
-    poo-flow-session-policy-alist?
-    #t
-    '())
-   (+poo-flow-session-policy-metadata-contract+
-    'session.policy/metadata
-    'metadata
-    'Alist
-    'poo-flow-session-policy-alist?
-    poo-flow-session-policy-alist?
-    #t
-    '())
-   (+poo-flow-session-policy-runtime-owner-contract+
-    'session.policy/runtime-owner
-    'runtime-owner
-    'RuntimeOwner
-    'poo-flow-session-policy-runtime-owner?
-    poo-flow-session-policy-runtime-owner?
-    #t
-    '())
-   (+poo-flow-session-policy-runtime-executed-contract+
-    'session.policy/runtime-executed
-    'runtime-executed
-    'Boolean
-    'poo-flow-session-policy-boolean?
-    poo-flow-session-policy-boolean?
-    #t
-    '())))
+(def PooFlowSessionPolicyKindType
+  (poo-flow-contract-value-type
+   'SessionPolicyKind poo-flow-session-policy-kind-value? 'Symbol))
+(def PooFlowSessionSymbolType
+  (poo-flow-contract-value-type 'Symbol symbol? 'Symbol))
+(def PooFlowSessionAlistType
+  (poo-flow-contract-value-type
+   'Alist poo-flow-session-policy-alist? 'Alist))
+(def PooFlowSessionRuntimeOwnerType
+  (poo-flow-contract-value-type
+   'RuntimeOwner poo-flow-session-policy-runtime-owner? 'RuntimeOwner))
+(def PooFlowSessionBooleanType
+  (poo-flow-contract-value-type
+   'Boolean poo-flow-session-policy-boolean? 'Boolean))
+
+(def (poo-flow-session-policy-slot-contract key slot value-type)
+  (poo-flow-contract-slot key slot value-type #t '()))
+
+(def PooFlowSessionPolicyKindSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/kind 'kind PooFlowSessionPolicyKindType))
+(def PooFlowSessionPolicySchemaSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/schema 'schema PooFlowSessionSymbolType))
+(def PooFlowSessionPolicyPolicyKindSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/policy-kind 'policy-kind PooFlowSessionSymbolType))
+(def PooFlowSessionPolicyNameSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/policy-name 'policy-name PooFlowSessionSymbolType))
+(def PooFlowSessionPolicyScopeRefSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/scope-ref 'scope-ref PooFlowSessionSymbolType))
+(def PooFlowSessionPolicyDefaultActionSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/default-action 'default-action PooFlowSessionSymbolType))
+(def PooFlowSessionPolicySlotsSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/policy-slots 'policy-slots PooFlowSessionAlistType))
+(def PooFlowSessionPolicyMetadataSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/metadata 'metadata PooFlowSessionAlistType))
+(def PooFlowSessionPolicyRuntimeOwnerSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/runtime-owner 'runtime-owner PooFlowSessionRuntimeOwnerType))
+(def PooFlowSessionPolicyRuntimeExecutedSlot
+  (poo-flow-session-policy-slot-contract
+   'session.policy/runtime-executed 'runtime-executed PooFlowSessionBooleanType))
+
+(def PooFlowSessionPolicySlots
+  (list PooFlowSessionPolicyKindSlot
+        PooFlowSessionPolicySchemaSlot
+        PooFlowSessionPolicyPolicyKindSlot
+        PooFlowSessionPolicyNameSlot
+        PooFlowSessionPolicyScopeRefSlot
+        PooFlowSessionPolicyDefaultActionSlot
+        PooFlowSessionPolicySlotsSlot
+        PooFlowSessionPolicyMetadataSlot
+        PooFlowSessionPolicyRuntimeOwnerSlot
+        PooFlowSessionPolicyRuntimeExecutedSlot))
+
+(def PooFlowSessionPolicyContract
+  (poo-flow-native-contract
+   'session/policy
+   'session
+   'PooSessionPolicy
+   poo-flow-session-policy?
+   PooFlowSessionPolicySlots
+   (lambda (policy slot) (and (object? policy) (.slot? policy slot)))
+   (lambda (policy slot) (.ref policy slot))
+   '((boundary . session-policy) (runtime . marlin-agent-core))))
 
 ;; poo-flow-session-policy-type-contract->alist
 ;;   | contract: adjacent machine contract below defines the projection.
@@ -435,8 +425,7 @@
 ;;     %
 ;; : (-> Unit Alist)
 (def (poo-flow-session-policy-type-contract->alist)
-  (poo-flow-object-type-contract->alist
-   +poo-flow-session-policy-type-contract+))
+  (poo-flow-native-contract->alist PooFlowSessionPolicyContract))
 
 ;; : (-> PooFlowSlotContract PooFlowValue PooFlowValue)
 (def (poo-flow-session-policy-check-slot! contract value)
@@ -466,33 +455,33 @@
                                              runtime-owner
                                              runtime-executed?)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-kind-contract+
+   PooFlowSessionPolicyKindSlot
    kind)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-schema-contract+
+   PooFlowSessionPolicySchemaSlot
    schema)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-policy-kind-contract+
+   PooFlowSessionPolicyPolicyKindSlot
    policy-kind)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-policy-name-contract+
+   PooFlowSessionPolicyNameSlot
    policy-name)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-scope-ref-contract+
+   PooFlowSessionPolicyScopeRefSlot
    scope-ref)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-default-action-contract+
+   PooFlowSessionPolicyDefaultActionSlot
    default-action)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-policy-slots-contract+
+   PooFlowSessionPolicySlotsSlot
    policy-slots)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-metadata-contract+
+   PooFlowSessionPolicyMetadataSlot
    metadata)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-runtime-owner-contract+
+   PooFlowSessionPolicyRuntimeOwnerSlot
    runtime-owner)
   (poo-flow-session-policy-check-slot!
-   +poo-flow-session-policy-runtime-executed-contract+
+   PooFlowSessionPolicyRuntimeExecutedSlot
    runtime-executed?)
   #t)

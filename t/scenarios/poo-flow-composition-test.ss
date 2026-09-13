@@ -3,11 +3,9 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? test-case test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/profile-composition-builders
-        :poo-flow/src/module-system/profile-composition-accessors)
+        :poo-flow/src/module-system/profile-composition/builders
+        :poo-flow/src/module-system/profile-composition/accessors)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 ;; : PooModule
 (def session-module
@@ -92,7 +90,8 @@
       (.ref (car clauses) 'payload))
      (else (loop (cdr clauses))))))
 
-(test-suite "poo-flow POO-native composition interface"
+(def poo-flow-composition-test
+  (test-suite "poo-flow POO-native composition interface"
   (test-case "builds staged composition from module profile slots"
     (check-equal? (poo-flow-composition? rag-composition) #t)
     (check-equal? (poo-flow-composition-name rag-composition) 'rag-agent)
@@ -122,4 +121,4 @@
                     '(scope-contained
                       dependency-ready
                       graph-reachable
-                      loop-progress)))))
+                      loop-progress))))))

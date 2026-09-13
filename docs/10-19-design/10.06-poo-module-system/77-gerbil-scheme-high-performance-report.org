@@ -43,7 +43,7 @@ Local =.data/gerbil-poo= research exposed these important POO owners:
 
 Local =src= evidence shows these current POO Flow anchors:
 
-- =src/module-system/tool-calling-control.ss=: fact-set, fact-ref,
+- =src/modules/tool-core/calling-control.ss=: fact-set, fact-ref,
   runtime-validation proof facts, and index ref surfaces.
 - =src/core/runtime-protocol.ss=: runtime request/response schemas,
   runtime response normalization, adapter conversion, and invalid response

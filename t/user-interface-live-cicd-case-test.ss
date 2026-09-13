@@ -2,9 +2,9 @@
 ;;; Boundary: test entrypoint for root user-interface CI/CD live cases.
 ;;; Invariant: live execution cases are test fixtures, not user module syntax.
 
-(import (only-in :std/test run-tests!)
-        (only-in :poo-flow/src/testing/module-system-live-case
-                 define-poo-flow-module-system-live-case-test
+(import (only-in :std/test )
+        (only-in "../src/testing/module-system-live-case"
+                 poo-flow-module-system-live-case-test-suite
                  pooFlowModuleSystemLiveCaseFromModuleSelection)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-case
@@ -21,6 +21,7 @@
    poo-flow-custom-my-module-cicd-module
    poo-flow-custom-my-module-cicd-case))
 
-(define-poo-flow-module-system-live-case-test
-  user-interface-live-cicd-case-test
-  poo-flow-user-interface-live-cicd-case)
+;; : TestSuite
+(def user-interface-live-cicd-case-test
+  (poo-flow-module-system-live-case-test-suite
+   poo-flow-user-interface-live-cicd-case))

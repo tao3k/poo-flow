@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -106,5 +105,3 @@
                                 'error-kind)
                       'RuntimeError)
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! session-materialization-receipt-test)

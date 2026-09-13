@@ -3,17 +3,18 @@
 ;;; Invariant: summary aggregation stays report-only and never realizes runtime descriptors.
 
 (import :gerbil/gambit
+        (only-in :clan/poo/object .o .ref object?)
         (only-in :std/test
                  check-equal?
                  test-case
                  test-suite)
         (only-in :std/srfi/1 first last)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/object-validation
+        "./support/performance"
+        (only-in :poo-flow/src/module-system/object-validation/interface
                  poo-flow-module-objects-validation-summary))
 
 (export module-objects-validation-summary-performance-test)
@@ -31,60 +32,38 @@
   (string->symbol
    (string-append "validation-object-" (number->string index))))
 
-;; : (-> HashTable Symbol Value HashTable)
-(def (module-objects-validation-summary-put! table key value)
-  (hash-put! table key value)
-  table)
-
-;; : (-> Integer HashTable)
+;; : (-> Integer POOObject)
 (def (module-objects-validation-summary-validation index)
-  (let* ((table (make-hash-table))
-         (object-name (module-objects-validation-summary-name index))
+  (let* ((object-name (module-objects-validation-summary-name index))
          (valid? (not (= (modulo index 10) 0))))
-    (module-objects-validation-summary-put! table 'object object-name)
-    (module-objects-validation-summary-put!
-     table
-     'inheritance-chain
-     (list object-name 'validation-root))
-    (module-objects-validation-summary-put! table 'direct-field-count 3)
-    (module-objects-validation-summary-put!
-     table
-     'direct-field-identities
-     '(alpha beta gamma))
-    (module-objects-validation-summary-put! table 'resolved-field-count 5)
-    (module-objects-validation-summary-put!
-     table
-     'resolved-field-identities
-     '(alpha beta gamma delta epsilon))
-    (module-objects-validation-summary-put!
-     table
-     'field-origins
-     '((alpha . direct) (delta . inherited)))
-    (module-objects-validation-summary-put! table 'inherit-count 2)
-    (module-objects-validation-summary-put!
-     table
-     'validationPhases
-     '(source-ref harness-validation diagnostics))
-    (module-objects-validation-summary-put! table 'valid valid?)
-    table))
+    (.o object: object-name
+        inheritance-chain: (list object-name 'validation-root)
+        direct-field-count: 3
+        direct-field-identities: '(alpha beta gamma)
+        resolved-field-count: 5
+        resolved-field-identities: '(alpha beta gamma delta epsilon)
+        field-origins: '((alpha . direct) (delta . inherited))
+        inherit-count: 2
+        validationPhases: '(source-ref harness-validation diagnostics)
+        valid: valid?)))
 
-;; : (-> Integer [HashTable])
+;; : (-> Integer [POOObject])
 (def (module-objects-validation-summary-validations count)
   (poo-flow-performance-build-list
    count
    module-objects-validation-summary-validation))
 
-;; : (-> HashTable [Symbol])
+;; : (-> POOObject [Symbol])
 (def (module-objects-validation-summary-object-identities summary)
-  (hash-get summary 'object-identities))
+  (.ref summary 'object-identities))
 
-;; : (-> HashTable [Symbol])
+;; : (-> POOObject [Symbol])
 (def (module-objects-validation-summary-invalid-objects summary)
-  (hash-get summary 'invalid-objects))
+  (.ref summary 'invalid-objects))
 
-;; : (-> HashTable Symbol Pair)
+;; : (-> POOObject Symbol Pair)
 (def (module-objects-validation-summary-field summary key)
-  (cons key (hash-get summary key)))
+  (cons key (.ref summary key)))
 
 ;; : (-> HashTable [Pair])
 (def (module-objects-validation-summary-core-fields summary)
@@ -138,6 +117,7 @@
              (summary
               (module-objects-validation-summary-snapshot
                (poo-flow-module-objects-validation-summary validations))))
+        (check-equal? (andmap object? validations) #t)
         (check-equal?
          (benchmark-fixture-contract-pass? module-objects-validation-summary-fixture)
          #t)

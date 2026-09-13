@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: generic module extension tests keep POO fixed-point semantics out
+;;; Boundary: generic module extension tests keep POO resolution semantics out
 ;;; of feature-specific workflow code.
 
 (import (only-in :std/test
@@ -10,13 +10,12 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects)
@@ -31,8 +30,8 @@
 ;;; This suite locks extension composition behavior for user-authored modules
 ;;; without introducing a second module-system surface.
 ;; : TestSuite
-(def module-extension-fixed-point-test
-  (test-suite "poo-flow module extension fixed point"
+(def module-extension-resolution-test
+  (test-suite "poo-flow module extension resolution"
     (test-case "applies slot and child-node operations to a stable object graph"
       (let* ((build-node
               (poo-flow-module-extension-node
@@ -75,7 +74,7 @@
                 (poo-flow-module-extension-slot-remove 'env '(DEBUG))
                 (poo-flow-module-extension-slot-append 'artifacts '("dist")))))
              (result
-              (poo-flow-module-extension-fixed-point
+              (poo-flow-module-extension-resolve
                root-node
                (list root-contribution build-contribution)))
              (resolved-root
@@ -106,13 +105,13 @@
     (test-case "merges module config contributions through POO field contracts"
       (let* ((needs-field
               (poo-flow-module-field-contract
-               'needs 'List 'append '() '((domain . workflow))))
+               'needs PooFlowModuleListType 'append '() '((domain . workflow))))
              (features-field
               (poo-flow-module-field-contract
-               'features 'List 'prepend '() '((domain . workflow))))
+               'features PooFlowModuleListType 'prepend '() '((domain . workflow))))
              (run-field
               (poo-flow-module-field-contract
-               'run 'String 'override #f '((domain . workflow))))
+               'run PooFlowModuleStringType 'override #f '((domain . workflow))))
              (root-node
               (poo-flow-module-extension-node
                'workflow/pipeline/default
@@ -150,7 +149,7 @@
                       "gxi build.ss --optimized")))))
 
 ;;; This suite keeps object inheritance and C3 precedence separate from the
-;;; slot-level fixed-point tests above.
+;;; slot-level resolution tests above.
 ;; : TestSuite
 (def module-extension-object-inheritance-test
   (test-suite "poo-flow module object inheritance"
@@ -161,11 +160,11 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'sandbox '())
+                 'backend PooFlowModuleSymbolType 'override 'sandbox '())
                 (poo-flow-module-field-contract
-                 'flags 'List 'append '() '())
+                 'flags PooFlowModuleListType 'append '() '())
                 (poo-flow-module-field-contract
-                 'runtime-args 'List 'append '() '()))
+                 'runtime-args PooFlowModuleListType 'append '() '()))
                '((domain . sandbox))))
              (nono-sandbox-object
               (poo-flow-module-object
@@ -173,9 +172,9 @@
                (list shared-sandbox-object)
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'nono '())
+                 'backend PooFlowModuleSymbolType 'override 'nono '())
                 (poo-flow-module-field-contract
-                 'binding 'Symbol 'override 'none '()))
+                 'binding PooFlowModuleSymbolType 'override 'none '()))
                '((backend . nono))))
              (cube-sandbox-object
               (poo-flow-module-object
@@ -183,9 +182,9 @@
                (list shared-sandbox-object)
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'cube '())
+                 'backend PooFlowModuleSymbolType 'override 'cube '())
                 (poo-flow-module-field-contract
-                 'profile 'Symbol 'override 'default '()))
+                 'profile PooFlowModuleSymbolType 'override 'default '()))
                '((backend . cube))))
              (root-node
               (poo-flow-module-extension-node
@@ -241,9 +240,9 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'root '())
+                 'shared PooFlowModuleSymbolType 'override 'root '())
                 (poo-flow-module-field-contract
-                 'root-only 'Symbol 'override 'root-only '()))
+                 'root-only PooFlowModuleSymbolType 'override 'root-only '()))
                '()))
              (right-object
               (poo-flow-module-object
@@ -251,9 +250,9 @@
                (list root-object)
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'right '())
+                 'shared PooFlowModuleSymbolType 'override 'right '())
                 (poo-flow-module-field-contract
-                 'right-only 'Symbol 'override 'right-only '()))
+                 'right-only PooFlowModuleSymbolType 'override 'right-only '()))
                '()))
              (left-object
               (poo-flow-module-object
@@ -261,9 +260,9 @@
                (list root-object)
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'left '())
+                 'shared PooFlowModuleSymbolType 'override 'left '())
                 (poo-flow-module-field-contract
-                 'left-only 'Symbol 'override 'left-only '()))
+                 'left-only PooFlowModuleSymbolType 'override 'left-only '()))
                '()))
              (child-object
               (poo-flow-module-object
@@ -271,7 +270,7 @@
                (list left-object right-object)
                (list
                 (poo-flow-module-field-contract
-                 'child-only 'Symbol 'override 'child-only '()))
+                 'child-only PooFlowModuleSymbolType 'override 'child-only '()))
                '())))
         (check-equal? (map poo-flow-module-field-contract-identity
                            (poo-flow-module-object-fields child-object))
@@ -302,7 +301,7 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'root '()))
+                 'shared PooFlowModuleSymbolType 'override 'root '()))
                '()))
              (a-object
               (poo-flow-module-object
@@ -391,10 +390,6 @@
 ;; : TestSuite
 (def module-extension-test
   (test-suite "poo-flow module extension"
-    module-extension-fixed-point-test
+    module-extension-resolution-test
     module-extension-object-inheritance-test
     module-extension-object-merge-test))
-
-(run-tests! module-extension-fixed-point-test
-            module-extension-object-inheritance-test
-            module-extension-object-merge-test)

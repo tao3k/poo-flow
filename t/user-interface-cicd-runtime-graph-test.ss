@@ -4,15 +4,15 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation-config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/user-interface-fixtures)
+        "./user-interface-fixtures")
 
 (export user-interface-cicd-runtime-graph-test)
 
@@ -275,7 +275,7 @@
     (check-equal? (length manifests) 3)
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-manifest 'argv)
-     '("gxpkg" "build"))
+     '("gerbil" "build"))
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-request 'check)
      'build)
@@ -337,7 +337,7 @@
      'build)
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-summary 'argv)
-     '("gxpkg" "build"))
+     '("gerbil" "build"))
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-summary
                                                   'durable-task-id)

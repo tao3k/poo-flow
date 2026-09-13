@@ -10,14 +10,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/profile-config)
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/profile-config)
 
 (export user-interface-profile-set-case-test)
 

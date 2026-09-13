@@ -1,0 +1,3 @@
+[submodule "lambda-episteme"]
+	path = lambda-episteme
+	url = https://github.com/tao3k/lambda-episteme.git

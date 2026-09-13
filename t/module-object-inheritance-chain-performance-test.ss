@@ -6,15 +6,15 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :std/srfi/1 fold)
-        :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/object-core
+        "./support/performance"
+        (only-in :poo-flow/src/module-system/object-core/interface
                  poo-flow-module-object)
-        (only-in :poo-flow/src/module-system/object-validation
+        (only-in :poo-flow/src/module-system/object-validation/interface
                  poo-flow-module-object-inheritance-chain))
 
 (export module-object-inheritance-chain-performance-test)

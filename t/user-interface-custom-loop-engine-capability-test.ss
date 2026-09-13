@@ -5,19 +5,19 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation-config
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-capability-test)
 

@@ -4,13 +4,12 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend
-        :poo-flow/src/module-system/durable-runtime-store-operation)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend
+        :poo-flow/src/modules/memory-core/durable/store-operation)
 
 (export durable-runtime-store-operation-test)
 
@@ -110,5 +109,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'invalid-causal-refs)
          #t)))))
-
-(run-tests! durable-runtime-store-operation-test)

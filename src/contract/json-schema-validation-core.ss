@@ -21,6 +21,8 @@
                  poo-flow-json-schema-pattern-property-compiled)
         (only-in :std/srfi/13
                  string-join)
+        (only-in :std/srfi/1
+                 find)
         (only-in :std/pregexp
                  pregexp
                  pregexp-match))
@@ -79,14 +81,22 @@
      (.all-slots candidate)))
    (else '())))
 
-;; : (-> JsonSchemaCandidateRows Symbol JsonSchemaCandidateSlotValue)
-;; : (forall (k v) (-> [(Pair k v)] k v))
-;; : (-> JsonObjectRows JsonObjectSlot JsonObjectValue)
-;; | doc Returns the normalized JSON object row value for a requested slot, or
-;; | doc the validation missing sentinel when the candidate does not provide it.
-;; # Examples
-;; (poo-flow-json-schema-candidate-row-slot '(("jobs" . jobs)) 'jobs) => jobs
-;; result: Any | +poo-flow-json-schema-validation-missing+
+;; poo-flow-json-schema-candidate-row-slot
+;;   : (forall (k v) (-> [(Pair k v)] k v))
+;;   : (-> JsonObjectRows JsonObjectSlot JsonObjectValue)
+;;   | result: matched value or +poo-flow-json-schema-validation-missing+
+;;   | doc m%
+;;       `poo-flow-json-schema-candidate-row-slot` returns the normalized JSON
+;;       object row value for a requested slot, or the validation missing
+;;       sentinel when the candidate does not provide it.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-json-schema-candidate-row-slot '(("jobs" . jobs)) 'jobs)
+;;       ;; => jobs
+;;       ```
+;;     %
 ;;
 ;; Optimization boundary: JSON Schema object keys commonly arrive as strings,
 ;; while generated contracts address slots as symbols.  This is intentionally a
@@ -94,24 +104,24 @@
 ;; an assq miss plus generic object-ref fallback for every row.
 (def (poo-flow-json-schema-candidate-row-slot rows slot)
   (let* ((slot-symbol (poo-flow-contract-key->symbol slot))
-         (slot-string (poo-flow-contract-key->string slot)))
-    (let loop ((rest rows))
-      (cond
-       ((null? rest)
+         (slot-string (poo-flow-contract-key->string slot))
+         (row
+          (find
+           (lambda (candidate-row)
+             (let* ((key (car candidate-row))
+                    (key-symbol (poo-flow-contract-key->symbol key)))
+               (or (eq? key-symbol slot-symbol)
+                   (and slot-string
+                        (equal? (poo-flow-contract-key->string key)
+                                slot-string)))))
+           rows)))
+    (match row
+      (#f
         (poo-flow-contract-object-ref
          rows
          slot
          +poo-flow-json-schema-validation-missing+))
-       (else
-        (let* ((row (car rest))
-               (key (car row))
-               (key-symbol (poo-flow-contract-key->symbol key)))
-          (if (or (eq? key-symbol slot-symbol)
-                  (and slot-string
-                       (equal? (poo-flow-contract-key->string key)
-                               slot-string)))
-            (cdr row)
-            (loop (cdr rest)))))))))
+      ([_ . value] value))))
 
 ;; : (-> JsonSchemaPathPart String)
 (def (poo-flow-json-schema-path-part->string part)

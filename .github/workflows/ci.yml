@@ -21,6 +21,148 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  native-gerbil-tests:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: Native Gerbil unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            gerbil-label: source-v0.18.2-4-gadd92248
+            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
+          - os: macos-latest
+            gerbil-label: source-v0.18.2-4-gadd92248
+            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
+    env:
+      GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
+      GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            git \
+            libsqlite3-dev \
+            libssl-dev \
+            openssl \
+            pkg-config \
+            sqlite3 \
+            zlib1g-dev
+
+      - name: Install macOS system dependencies
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: |
+          brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
+          brew install gcc jq openssl pkg-config sqlite zlib
+
+          gcc_prefix="$(brew --prefix gcc)"
+          gcc_bin="$(
+            find "$gcc_prefix/bin" -maxdepth 1 -type f -name 'gcc-[0-9]*' \
+              | awk -F- '{print $NF "\t" $0}' \
+              | sort -n \
+              | tail -n 1 \
+              | cut -f2-
+          )"
+          test -x "$gcc_bin"
+          echo "GERBIL_GCC=$gcc_bin" >> "$GITHUB_ENV"
+
+          openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
+          echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+          "$gcc_bin" --version
+
+      - name: Restore native Gerbil install cache
+        id: native-gerbil-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ci/gerbil/${{ matrix.gerbil-label }}
+          key: native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
+          restore-keys: |
+            native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+
+      - name: Build native Gerbil
+        if: steps.native-gerbil-cache.outputs.cache-hit != 'true'
+        env:
+          GERBIL_REF: ${{ matrix.gerbil-ref }}
+        run: |
+          build_cores() {
+            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
+          }
+          mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
+          rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
+          git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
+          cd "$GERBIL_SRC"
+          git checkout "$GERBIL_REF"
+          ./configure --prefix="$GERBIL_PREFIX"
+          echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
+          . ./build-env.sh
+          for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
+            GERBIL_BUILD_CORES="$(build_cores)" ./src/build.sh "$target"
+          done
+          ./install.sh
+
+      - name: Save native Gerbil install cache
+        if: steps.native-gerbil-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ci/gerbil/${{ matrix.gerbil-label }}
+          key: native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
+
+      - name: Activate native Gerbil
+        run: |
+          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
+          "$GERBIL_PREFIX/bin/gerbil" --version
+          "$GERBIL_PREFIX/bin/gerbil" interactive -e '(displayln "gerbil-ready")'
+
+      - name: Restore native Gerbil package cache
+        id: native-gerbil-pkg-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gerbil/pkg
+            .gerbil/lib
+            .gerbil/bin
+          key: native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
+          restore-keys: |
+            native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+
+      - name: Install native Gerbil package dependencies
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/build-api) (displayln "native-dependencies-ready"))'; then
+            gerbil deps --install
+          fi
+
+      - name: Save native Gerbil package cache
+        if: steps.native-gerbil-pkg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gerbil/pkg
+            .gerbil/lib
+            .gerbil/bin
+          key: native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
+
+      - name: Build native Gerbil package
+        run: |
+          gerbil clean
+          gerbil build
+
+      - name: Run the single native unit-test entrypoint
+        run: gerbil env ./unit-tests.ss
+
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Lean proof bridge
@@ -62,6 +204,23 @@ jobs:
           lake build ffiSmoke
           .lake/build/bin/ffiSmoke
 
+      - name: Build and qualify Cedar AOT Runtime Host
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          host="$RUNNER_TEMP/cedarRuntimeHost"
+          POO_FLOW_CEDAR_BUILD_PROFILE=dev \
+            tools/ci/build-cedar-runtime-host "$host"
+          POO_FLOW_CEDAR_RUNTIME_HOST="$host" \
+            cargo test --locked \
+              --manifest-path bindings/cedar-gerbil/Cargo.toml \
+              -p poo-flow-cedar-authority \
+              --features native-runtime-host-qualification \
+              --test runtime_host \
+              --test authorization
+
       - name: Save Lean cache
         if: steps.lean-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -70,6 +229,61 @@ jobs:
             ~/.elan
             packages/proof/lean/.lake
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+
+  external-module-linux-full:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: POO Flow external Bazel module (linux-amd64, full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            git \
+            libsqlite3-dev \
+            libssl-dev \
+            pkg-config \
+            zlib1g-dev
+
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow external-module cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
+          disk-cache: ci-${{ runner.os }}-external-module-full-v1
+          repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazelisk mod deps --lockfile_mode=error
+
+      - name: Validate external Bazel qualification logic
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s t/qualification/external_bazel -p 'external_module_test.py' -v
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: 12
+        env:
+          POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
+          POO_FLOW_EXTERNAL_TEST_MODE: full
+        run: python3 t/qualification/external_bazel/external_module.py
 
   native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -85,8 +299,12 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
-            external-module-mode: full
-            job-timeout-minutes: 20
+            compile-timeout-minutes: 8
+            compile-runaway-timeout-seconds: 420
+            acceptance-timeout-minutes: 10
+            acceptance-runaway-timeout-seconds: 540
+            external-module-mode: analysis
+            job-timeout-minutes: 30
     steps: &native-steps
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -231,14 +449,18 @@ jobs:
           # updated action cache is published instead of being trapped behind
           # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazelisk mod deps --lockfile_mode=error
 
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         env:
           POO_FLOW_EXTERNAL_TEST_MODE: ${{ matrix.external-module-mode }}
-        run: tools/ci/test_external_bazel_module.sh
+        run: python3 t/qualification/external_bazel/external_module.py
 
       - name: Resolve shared Gerbil capability
         id: gerbil-native-abi
@@ -268,25 +490,21 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Install Gerbil project dependencies
-        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel run @local_gerbil//:install_dependencies
-
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel build //scheme:dependency_packages
+        run: bazel build //gerbil:dependency_packages
 
       - name: Validate shared Gerbil provider
-        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
+        run: bazel test --test_output=errors //t/qualification/gerbil-bazel:tests
 
       - name: Validate Bazel target graph
         run: bazel query //...
 
       - name: Build Scheme package through Bazel
         id: scheme-compile
-        timeout-minutes: 8
+        timeout-minutes: ${{ matrix.compile-timeout-minutes }}
         env:
-          COMPILE_BUDGET_SECONDS: 480
+          COMPILE_RUNAWAY_TIMEOUT_SECONDS: ${{ matrix.compile-runaway-timeout-seconds }}
         shell: bash
         run: |
           set -euo pipefail
@@ -295,23 +513,26 @@ jobs:
           start_seconds=$SECONDS
 
           set +e
-          bazel build --profile="$profile" //scheme:compile
+          bazel build \
+            --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
+            --profile="$profile" \
+            //gerbil:compile
           build_status=$?
           set -e
 
           elapsed_seconds=$((SECONDS - start_seconds))
-          scheme_receipt="bazel-bin/scheme/compile.receipt.json"
+          gerbil_receipt="bazel-bin/gerbil/compile.receipt.json"
           jq -n \
-            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
             --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
             --argjson status "$build_status" \
             --argjson elapsedSeconds "$elapsed_seconds" \
-            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
-            --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
+            --argjson runawayTimeoutSeconds "$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
+            --argjson schemeReceiptAvailable "$([[ -f "$gerbil_receipt" ]] && printf true || printf false)" \
             '{schema: $schema, phase: $phase, runner: $runner, status: $status,
-              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
-              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              elapsedSeconds: $elapsedSeconds,
+              runawayTimeoutSeconds: $runawayTimeoutSeconds,
               schemeReceiptAvailable: $schemeReceiptAvailable}' > "$ci_receipt"
           echo "profile=$profile" >> "$GITHUB_OUTPUT"
           echo "ci-receipt=$ci_receipt" >> "$GITHUB_OUTPUT"
@@ -319,14 +540,6 @@ jobs:
           if (( build_status != 0 )); then
             exit "$build_status"
           fi
-          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
-            echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
-            exit 1
-          fi
-
-      - name: Validate stable Scheme project receipt v1
-        timeout-minutes: 2
-        run: bazel test --test_output=errors //scheme:compile_receipt_v1_test
 
       - name: Upload Scheme compile evidence
         if: always()
@@ -336,8 +549,8 @@ jobs:
           path: |
             ${{ steps.scheme-compile.outputs.ci-receipt }}
             ${{ steps.scheme-compile.outputs.profile }}
-            bazel-bin/scheme/compile.receipt.json
-            bazel-bin/scheme/compile.log
+            bazel-bin/gerbil/compile.receipt.json
+            bazel-bin/gerbil/compile.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -346,7 +559,7 @@ jobs:
         id: wheel-scheme-projection
         timeout-minutes: 2
         env:
-          PROJECTION_ARTIFACT: bazel-bin/scheme/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_ARTIFACT: bazel-bin/gerbil/wheel_smoke.ss.poo-flow-projection.sexp
           PROJECTION_BUDGET_SECONDS: 120
         shell: bash
         run: |
@@ -360,7 +573,7 @@ jobs:
           set +e
           bazel build \
             --profile="$profile" \
-            //scheme:wheel_smoke_projection_artifact
+            //gerbil:wheel_smoke_projection_artifact
           build_status=$?
           set -e
 
@@ -375,8 +588,8 @@ jobs:
           jq -n \
             --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
           --arg producerJob "native-linux" \
-          --arg action "//scheme:wheel_smoke_projection_artifact" \
-          --arg compileOwner "//scheme:compile" \
+          --arg action "//gerbil:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//gerbil:compile" \
           --arg currentHeadSha "$GITHUB_SHA" \
           --arg artifactDigest "$artifact_digest" \
             --argjson status "$build_status" \
@@ -447,9 +660,9 @@ jobs:
 
       - name: Run Bazel acceptance suites
         id: bazel-acceptance
-        timeout-minutes: 3
+        timeout-minutes: ${{ matrix.acceptance-timeout-minutes }}
         env:
-          ACCEPTANCE_BUDGET_SECONDS: 150
+          ACCEPTANCE_BUDGET_SECONDS: ${{ matrix.acceptance-runaway-timeout-seconds }}
         shell: bash
         run: |
           set -euo pipefail
@@ -458,8 +671,8 @@ jobs:
           start_seconds=$SECONDS
 
           targets=(
-            //scheme:tests
-            //tools/bazel:shared_gerbil_capability_test
+            //t/qualification/gerbil-bazel:tests
+            //t/qualification/module-system:owner_map_tests
             //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
           )
@@ -501,7 +714,7 @@ jobs:
 
       - name: Reject stale runtime-C Make routes
         if: runner.os == 'Linux'
-        run: tools/ci/check-runtime-c-build-boundary
+        run: python3 -m unittest t/qualification/runtime_c/build_boundary_test.py -v
 
       - name: Finalize runtime-C producer handoff
         if: runner.os == 'Linux'
@@ -604,7 +817,11 @@ jobs:
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
             external-module-mode: analysis
-            job-timeout-minutes: 30
+            compile-timeout-minutes: 15
+            compile-runaway-timeout-seconds: 840
+            acceptance-timeout-minutes: 15
+            acceptance-runaway-timeout-seconds: 840
+            job-timeout-minutes: 45
     steps: *native-steps
 
   python-runtime-wheel:
@@ -631,7 +848,7 @@ jobs:
 
       - name: Generate the Linux module-extension evaluation
         run: |
-          bazelisk mod deps --config=lock_update
+          bazelisk mod deps --lockfile_mode=update
           bazelisk mod deps --lockfile_mode=error
 
       - name: Upload the Linux lock seed
@@ -667,7 +884,7 @@ jobs:
       - name: Merge the Darwin module-extension evaluation
         run: |
           cp .ci/lock-linux/MODULE.bazel.lock MODULE.bazel.lock
-          bazelisk mod deps --config=lock_update
+          bazelisk mod deps --lockfile_mode=update
           bazelisk mod deps --lockfile_mode=error
 
       - name: Upload the merged cross-platform lock

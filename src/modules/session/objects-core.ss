@@ -91,11 +91,8 @@
 ;;       ;; => ((kind . session) (tail . value))
 ;;       ```
 ;;     %
-(defrules poo-flow-session-field-rows/tail ()
-  ((_ tail (field value) ...)
-   (poo-flow-session-rows/tail
-    (list (cons 'field value) ...)
-    tail)))
+(def (poo-flow-session-field-rows/tail tail . rows)
+  (poo-flow-session-rows/tail rows tail))
 
 ;;; Chunks are receipt rows, not extension surfaces. Keeping them as primitive
 ;;; rows prevents presentation code from repeatedly instantiating child POO
@@ -431,8 +428,8 @@
           (if (null? maybe-metadata)
             '()
             (car maybe-metadata))
-          (declared-by 'poo-flow-session-module)
-          (runtime-executed #f))))
+          (cons 'declared-by 'poo-flow-session-module)
+          (cons 'runtime-executed #f))))
     (.o (:: @ [lineage-prototype placement-prototype])
         kind: 'poo-flow.session.value
         schema: 'poo-flow.modules.session.value.v1

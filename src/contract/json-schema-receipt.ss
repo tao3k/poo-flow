@@ -1,14 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: public receipt for JSON Schema to POO Flow contract generation.
 
-(import (only-in "../utilities/contracts.ss"
-                 poo-flow-object-type-contract->alist)
+(import (only-in "../module-system/descriptor/contracts.ss"
+                 poo-flow-native-contract->alist)
         (only-in "../type-facts/objects.ss"
                  poo-flow-type-fact-contract->alist
                  poo-flow-lean-fact-contract->alist
-                 poo-flow-object-type-contract->type-facts
-                 poo-flow-object-type-contract->lean-fact-contracts)
-        (only-in "../observability/objects.ss"
+                 poo-flow-native-contract->type-facts
+                 poo-flow-native-contract->lean-fact-contracts)
+        (only-in "../module-system/observability/objects.ss"
                  poo-flow-observability-diagnostic-record
                  poo-flow-observability-diagnostic-severity
                  poo-flow-observability-diagnostic->alist)
@@ -113,7 +113,7 @@
          (poo-flow-json-schema-normalization->alist
           (poo-flow-json-schema-contract-artifact-normalization artifact)))
    (cons 'object-contract
-         (poo-flow-object-type-contract->alist
+         (poo-flow-native-contract->alist
           (poo-flow-json-schema-contract-artifact-object-contract artifact)))
    (cons 'diagnostics
          (poo-flow-contract-project-list
@@ -163,9 +163,9 @@
            poo-flow-json-schema-diagnostic->observability
            (poo-flow-json-schema-normalization-diagnostics normalization)))
          (type-facts
-          (poo-flow-object-type-contract->type-facts object-contract))
+          (poo-flow-native-contract->type-facts object-contract))
          (lean-fact-contracts
-          (poo-flow-object-type-contract->lean-fact-contracts object-contract)))
+          (poo-flow-native-contract->lean-fact-contracts object-contract)))
     (make-poo-flow-json-schema-contract-artifact
      'json-schema-contract-artifact
      "poo-flow-json-schema-contract-artifact/v1"

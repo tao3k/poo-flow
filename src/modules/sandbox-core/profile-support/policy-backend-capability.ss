@@ -267,6 +267,7 @@
 	           seen
 	           (cons entry-key ordered))))))))
 
+;; : (forall (e) (-> [e] HashTable [e] [e]))
 ;; : (-> Alist HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/kept entries
                                                                   latest
@@ -282,6 +283,7 @@
              (poo-flow-sandbox-backend-capability-registry-entry-key entry)))))
     entries)))
 
+;; : (forall (k e) (-> [k] HashTable [e] [e]))
 ;; : (-> [Symbol] HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/materialize keys
                                                                           latest

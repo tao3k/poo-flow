@@ -378,9 +378,9 @@ scheduler in Scheme.
 The first packet-projection slice is now represented in Scheme as report-only
 runtime boundary data:
 
-1. =src/module-system/loop-engine-runtime-vocabulary.ss= owns packet contract
+1. =src/modules/loop-engine/runtime-vocabulary.ss= owns packet contract
    symbols and the shared =runtime-packet-contracts= table.
-2. =src/module-system/loop-engine-runtime.ss= projects:
+2. =src/modules/loop-engine/runtime.ss= projects:
    - =runtime-capability-descriptor=;
    - =policy-profile-packet=;
    - =runtime-action-packet=;

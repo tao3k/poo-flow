@@ -406,6 +406,7 @@
            policy-name)))
     diagnostics))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowGraphRuntimeReceipt Alist)
 (def (poo-flow-graph-runtime-receipt->lean-facts receipt)
   (let* ((receipt-ref
@@ -444,6 +445,7 @@
      (cons 'graph.runtime/reusable-production-case
            reusable-production-case?))))
 
+;; : (forall (v) (-> [(Pair Symbol v)] Boolean))
 ;; : (-> Alist Boolean)
 (def (poo-flow-graph-runtime-lean-fact-contract-complete? facts)
   (and (andmap (lambda (key)

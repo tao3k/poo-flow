@@ -1,0 +1,199 @@
+#+title: POO method-combination module
+
+* Status and ownership
+This is an opt-in, first-class POO Flow module, not an upstream Gerbil patch.
+The implementation imports native =:clan/poo/object= APIs. It does not replace
+=.defgeneric=, Gerbil core =defmethod=, or introduce another priority system.
+Its closed kernel and public facade are module-owned; it is not a proposal to
+transplant the CLOS MOP or a claim of runtime-wide production admission.
+The frozen semantics, consumer envelope and native qualification ownership are
+specified in [[file:V1-CONTRACT.org][the v1 contract]].
+
+| Owner | Responsibility |
+|-------+----------------|
+| =types.ss= | native =define-type= families, ancestry and field contracts |
+| =objects.ss= | checked constructors, shared roots, slot ownership, cached plans |
+| =funcs.ss= | argument admission, effective method execution, lexical next |
+| =interface.ss= | explicit supported exports; no collector or frame constructor |
+| =config.ss= | native module interface, descriptor, selection, and factor manifest |
+| =plugins/observation.ss= | opt-in reusable pure Observation summary consumer |
+
+The Doom-like boundary is explicit. Its key is
+=(:core . poo-method-combination)= and its descriptor depth is
+=(-110 . -110)=, so it loads before ordinary modules such as Funflow.
+Within the module,
+=types.ss=, =objects.ss=, and =funcs.ss= are
+the closed kernel factors; =interface.ss= is the public factor;
+=plugins/observation.ss= is an optional plugin factor selected with =+observation=.
+Importing =config.ss= or =interface.ss= does not import that plugin.
+Funflow refers to this shared standard through a module-system
+=standard-library= source ref; it does not own or re-export the kernel factors.
+
+* Supported authoring surface
+#+begin_src scheme
+(import :clan/poo/object
+        :poo-flow/src/module-system/poo-method-combination/interface)
+(def render-generic
+  (poo-combination-generic 'render 'example/render-plan
+                           from: 'instance required: 1 rest?: #f))
+(def render (poo-combination-bind render-generic))
+(def (render-base _frame _receiver value) value)
+(def (decorate frame _receiver _value)
+  (list 'decorated (poo-call-next-method frame)))
+(def renderer
+  (poo-method-prototype (poo-method-root render-generic) render-generic
+    (poo-method-bundle primary: (poo-combination-method 'base render-base))))
+(def decorated-renderer
+  (poo-method-prototype renderer render-generic
+    (poo-method-bundle around: (poo-combination-method 'decorate decorate))))
+(render decorated-renderer 'hello) ; => (decorated hello)
+#+end_src
+
+=from: 'instance= selects the receiver's collector slot. =from: 'type= selects
+the collector on its native =.type= object; method bodies still receive the
+actual receiver. This matches upstream owner lookup without adding a type
+registry. =required:= counts arguments after the receiver; =rest?: #f= requires
+exactly that count, while =#t= permits additional positional arguments. Defaults
+are zero required arguments and an unrestricted rest tail, retaining the initial
+API. This is not CLOS optional/keyword lambda-list congruence.
+
+The generic, method, bundle and failure families are native Type descriptors
+exported for =element?=/=validate=. Field lookalikes without the relevant native
+prototype ancestry are rejected. Failures expose =code=, =generic=, =qualifier=
+and =method= as symbolic context, never raw argument payloads. User procedure
+exceptions and native C3/slot-computation exceptions propagate unchanged.
+
+Invocation frames use the static =CombinationFrame= prototype plus constant
+native defaults, following the project hot-path value-family rule. They retain
+the same native type checks. The internal constructor's association pairs are
+arguments to upstream =.mix=, not a public method declaration language.
+
+* Semantic contract
+Native =.extend= and =.mix= own C3 precedence and shared-ancestor deduplication.
+Each prototype contributes up to one method per qualifier through a named
+=poo-method-bundle=. Named Scheme procedures implement methods; declarations
+and invocation contexts are native POO objects, not an alist DSL.
+
+The inherited computed slot collects ordered qualified method chains, not an
+effective result. Plan validation and reversed after order are cached by native
+=.ref=; each call executes method bodies anew. The
+internal adapter is the only surface that uses =$computed-slot-spec= and the
+raw self/super protocol. There is no global registry or copied linearizer.
+
+Each generic owns one object-local cached shared root. Native root metadata checks
+that different generics do not claim the same collector slot, including either
+parent order in a =.mix=. The internal =poo/combination/owners= and
+=poo/combination/owners-valid?= slots are reserved; they do not order methods.
+Construction validates the inherited plan; first demand validates the new plan.
+Unrelated receiver slots remain lazy. Descriptor mutation and manual overriding
+of internal plan/ownership slots are unsupported; use named constructors and
+native extension/composition of domain objects instead.
+
+| Qualifier | Native precedence | Delegation |
+|-----------+-------------------+------------|
+| around | most specific first | explicit next; may short circuit |
+| before | most specific first | next forbidden; values ignored |
+| primary | most specific first | explicit next; multiple values preserved |
+| after | least specific first | next forbidden; values ignored |
+
+No applicable methods and missing primary are distinct typed failures. An
+around-only set also fails: primary applicability is checked before execution.
+After runs only on normal primary completion, never as an unwind handler.
+Around and primary methods receive an explicit local lexical POO frame with named
+=poo-call-next-method= and =poo-next-method?= helpers. Frames are not recovery
+continuations and must not enter persisted observations or runtime payloads.
+They have no dynamic expiry: retained next can be replayed after return, repeating
+the delegated bodies. The invocation tests freeze this behavior explicitly.
+No-argument next retains that invocation's original arguments. Replacement
+arguments include the receiver and must preserve each ordered qualified method
+chain by descriptor identity (not printed identity names); changing applicable methods is an error, not a
+redispatch. A new receiver with the same method chains is allowed.
+Method descriptors may be reused: distinct prototype contributions still run
+separately, while one shared ancestor contributes once. Equivalence concerns
+the ordered descriptors, not a second class-specializer model. Replacement
+arity and applicability are checked even at the end of a primary chain.
+
+* Executable scenarios
+#+begin_src sh
+gerbil build
+just test
+#+end_src
+
+The native Gerbil package build and upstream test runner exercise the v1
+contract without a second qualification compiler, artifact manifest, or test
+scheduler.  Git retains the stable acceptance contract in
+[[file:QUALIFICATION.org][Qualification]].
+
+=t/poo-method-combination-test.ss= covers native diamond D/B/C/A ordering,
+reverse after ordering, one shared ancestor, repeated execution, short circuit,
+multiple and zero values, original/replacement arguments, multiple next calls,
+typed failure codes, generic-slot identity collision, and exception sequencing.
+
+=t/scenarios/poo-method-combination/observation.ss= uses real
+SemanticModule admission. A base summary method is extended by an explanation
+method using next and native =.cc=. Expected evidence: rejected admission,
+one failure, path =(imports)=, code =prototype-mismatch=. No output or telemetry
+adapter executes; internal explanatory data is not declared safe to publish.
+An around guard is not a security boundary against arbitrary Scheme methods.
+The optional =plugins/observation.ss= plugin factor owns reusable renderer
+construction. Importing this module does not alter default Observability:
+#+begin_src scheme
+(def renderer (poo-observation-combination-renderer explanation?: #t))
+(poo-observation-combination-summary renderer existing-admission-observation)
+#+end_src
+
+=t/poo-method-combination-contract-test.ss= exercises native descriptor ancestry,
+constructor rejection, all entry points, fixed/rest arity, =from: type=,
+upstream =.defgeneric= compatibility, conflicting slot owners, malformed plans,
+native C3 rejection, lazy unrelated slots and ordered applicability.
+
+=t/poo-method-combination-next-test.ss= proves primary shadowing, total around
+short circuit, auxiliary exceptions, replacement argument scope, repeated
+around next, recursive invocations, type-based receiver replacement and
+last-primary replacement validation.
+
+=performance.ss= owns a real timing matrix. Its generic cases span depths
+=0, 1, 4, 8=, both owner modes and primary/all-qualifier forms. The first
+Observation consumer adds five trials of its detailed renderer against the
+equivalent pure functional summary/explanation path. Together the default
+matrix contains 85 trials, alternating measurement order and preserving exact
+checksums and native plan identity. Construction, first demand, warm calls and
+ordinary native generic calls are measured separately. The predeclared 10000 ms
+warm smoke budget is not a latency SLA or evidence of parity with =.defgeneric=.
+No test parses timing text to make its decision; tests consume native POO
+receipts. The accepted frame-predicate specialization reduced allocations in
+the measured consumer and depth-8 cases, but noisy wall samples establish no
+latency or production-SLA claim.
+
+The AOT qualification script compiles all six owned modules plus focused tests
+into a fresh temporary library, verifies nonempty =.ssi= and =.o1= outputs, and
+runs package-qualified compiled imports. Each compiler/interpreter log starts
+with an exact argv record and ends with an explicit zero-status record; inherited
+environment data is not serialized. Source hashes must remain unchanged through
+compilation. No installed dependency cache or source checkout is rewritten.
+Its Darwin child environment follows =devenv.nix='s Homebrew native
+toolchain boundary; the first raw-profile attempt failed with mixed Nix SDK
+=FILE= errors and is not an AOT pass. The eight focused =//gerbil:= targets above
+are the package-graph gate for this slice. They do not constitute full-package
+release acceptance and remain separate evidence from the own-library closure.
+
+* Limits and upstream proposal gate
+This is single-receiver instance/type-prototype selection. It does not implement
+CLOS class/eql specializers, multi-argument specificity, full lambda-list congruence,
+custom method combinations, method redefinition, or the full MOP. It does not
+change existing unary =.defgeneric= value-slot semantics. Descriptor mutation
+is unsupported: compose new objects instead. Full-package qualification and
+runtime-wide production adoption remains separate; focused tests are not those gates.
+
+Before an upstream PR: review the local function-based authoring surface and
+instance/type mapping with upstream, agree on optional/keyword argument and
+method identity semantics, review measured cold/warm costs, run package
+qualification, and ask upstream to review how the collector integrates with
+the existing =mop.ss= method-combination TODO. This local module admission does
+not authorize an upstream PR.
+
+* Sources
+- [[https://www.lispworks.com/documentation/HyperSpec/Body/07_ffb.htm][CLHS 7.6.6.2: Standard Method Combination]]
+- [[https://www.lispworks.com/documentation/HyperSpec/Body/f_call_n.htm][CLHS: call-next-method]]
+- Local upstream corpus: =.data/gerbil-poo/object.ss= (native slots/C3) and
+  =.data/gerbil-poo/mop.ss= (generic dispatch and method-combination TODO).

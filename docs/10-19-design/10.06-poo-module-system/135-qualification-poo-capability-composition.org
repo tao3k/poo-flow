@@ -345,7 +345,7 @@ executable Scenario fixtures:
 
 * Phase 1 internal implementation
 
-=src/module-system/domain-case.ss= owns the first non-facade implementation.
+=src/feature-system/domain-case/interface.ss= owns the first non-facade implementation.
 It provides POO-native slot, type, method/state contract, projection,
 CaseComponent, DomainCase, cache, closure, instance, diagnostic, and projection
 receipts.  It does not change =defpoo-object-family= or export a new public
@@ -421,7 +421,7 @@ distributions and the zero-C3 hot-path gate remain future qualification work.
 
 * Phase 2 declarative module authoring
 
-=src/module-system/domain-case-syntax.ss= owns two internal hygienic forms:
+=src/feature-system/domain-case/syntax.ss= owns two internal hygienic forms:
 =defpoo-case-component= and =defpoo-domain-case=.  They follow the existing
 Gerbil =defrules= style and expand to ordinary =poo-flow-case-component=,
 =poo-flow-domain-case-close=, =def=, =list=, and POO slot access.  They do not

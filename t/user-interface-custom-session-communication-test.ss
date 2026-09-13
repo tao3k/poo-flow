@@ -5,12 +5,11 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-session-communication-test)
 
@@ -76,5 +75,3 @@
         (check-equal? (test-ref cross-root 'handoff-required) #t)
         (check-equal? (test-ref cross-root 'delivered?) #f)
         (check-equal? (test-ref cross-root 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-communication-test)

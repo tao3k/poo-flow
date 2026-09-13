@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -256,5 +255,3 @@
         (check-equal? (length rows) 1)
         (check-equal? (test-ref (car rows) 'contract-id)
                       'agent-param/build)))))
-
-(run-tests! session-agent-param-contract-test)

@@ -86,7 +86,7 @@ The policy manifest is necessary but not sufficient for runtime language adoptio
 
 Implemented closure:
 
-- Scheme module: =:poo-flow/src/module-system/durable-runtime-manifest=.
+- Scheme module: =:poo-flow/src/modules/memory-core/durable/runtime-manifest=.
 - Canonical schema: =poo-flow.durable.runtime-envelope.v1=.
 - Public carrier helpers:
   - =poo-flow-durable-runtime-manifest-alist=
@@ -114,7 +114,7 @@ Primary validation gate:
 
 Implemented closure:
 
-- Scheme module: =:poo-flow/src/module-system/durable-policy-manifest=.
+- Scheme module: =:poo-flow/src/modules/memory-core/durable/policy-manifest=.
 - Canonical schema: =poo-flow.durable.runtime-policy-manifest.v1=.
 - Public carrier helpers:
   - =poo-flow-durable-policy-runtime-manifest-alist=

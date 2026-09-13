@@ -2,7 +2,7 @@
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/utilities/functional)
 
 (export feature-system-runtime-handoff-plan-test)

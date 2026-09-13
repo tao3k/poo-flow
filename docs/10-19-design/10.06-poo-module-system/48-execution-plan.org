@@ -27,7 +27,7 @@ Before starting a package:
 | P0 | Scenario and test owner matrix | =10.06.49= | none | Acceptance spine |
 | P1 | Sandbox POO object family hardening | =sandbox-core=, backend objects, backend syntax | P0 | Reusable sandbox/resource object pattern |
 | P2 | Session policy family generation | =src/modules/session/*= | P0, P1 pattern | Macro-backed policy families |
-| P3 | Runtime receipt projection generation | =src/module-system/loop-engine-runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
+| P3 | Runtime receipt projection generation | =src/modules/loop-engine/runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
 | P4 | Loop intent functional pipeline | =loop-engine-*=, session selector/materialization owners | P2, P3 | Value-in/value-out loop governance core |
 | P5 | Funflow functional kernel alignment | =src/core/flow*=, =src/modules/funflow=, workflow owners | P3, P4 | Functional DAG and arrow/Kleisli flow surface |
 | P6 | Public =use-module= branch generation | =init-syntax.ss=, profile/config owners | P1-P5 | Generated syntax branches with unchanged public form |
@@ -38,7 +38,7 @@ Before starting a package:
 - P0 exists as =10.06.49 Scenario Test Owner Matrix= and should be maintained as the acceptance spine.
 - P1 has an implementation slice: sandbox backend object-family coverage and shared POO-native resource fragments are the reference generated-family pattern.
 - P2 has an implementation slice: =src/modules/session/policy-syntax.ss= owns an internal policy-family macro, and current session policy constructors use it for foundational, model, prompt, tool-permission, hook-tool-permission, resource-sharing, and agent-execution policy families.
-- P3 has an expanded implementation slice: =src/module-system/runtime-projection-syntax.ss= owns generated receipt projection for lineage, selector, resource-dispatch, memory, compression, capability =->alist=, and runtime handoff facts. Capability receipt construction remains an explicit hot path. Sandbox handoff agreement remains explicit validation logic for the P7 boundary.
+- P3 has an expanded implementation slice: =src/module-system/projection/runtime-syntax.ss= owns generated receipt projection for lineage, selector, resource-dispatch, memory, compression, capability =->alist=, and runtime handoff facts. Capability receipt construction remains an explicit hot path. Sandbox handoff agreement remains explicit validation logic for the P7 boundary.
 - P4 has a second user-facing slice: =user-interface/custom/my-module/cases/loop-engine.ss= now wires session selector and materialization receipts through the POO profile, loop intent, runtime manifest request, handoff facts, and presentation surface. Selector receipts remain report-only: =fallback-ref= can name the intended fallback, but =selected-candidate-ref= stays =#f= while =selection-state= is =pending=.
 - P4 validation evidence for this slice: =gxpkg clean=, =gxpkg build -R -O=, =gxtest t/user-interface-custom-loop-engine-test.ss=, =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=, =gxtest t/session-selector-receipt-test.ss=, and =gxtest t/session-materialization-receipt-test.ss=.
 - P5 now has a user-facing presentation slice: Funflow CI/CD scenarios project POO-native pipeline objects into Funflow-owned functional DAG POO objects, and config/profile presentation surfaces expose =workflow-cicd-functional-dags= without runtime execution.
@@ -138,7 +138,7 @@ Exit criteria:
 Purpose: prevent receipt and manifest shape drift by generating projection families from named declarations.
 
 Tasks:
-- Keep =src/module-system/runtime-projection-syntax.ss= as the internal projection syntax owner.
+- Keep =src/module-system/projection/runtime-syntax.ss= as the internal projection syntax owner.
 - Maintain generated projection families for lineage, selector, resource-dispatch, memory, compression, capability =->alist=, and runtime handoff facts.
 - Keep capability receipt construction explicit when it is a performance-sensitive data path.
 - Keep sandbox-handoff agreement explicit until P7 boundary review because it owns diagnostics and handoff readiness, not only final projection.
@@ -360,7 +360,7 @@ Actions:
 
 Primary owners:
 - =src/modules/funflow/config.ss=
-- =src/module-system/workflow-cicd-config.ss=
+- =src/modules/workflow/cicd-config.ss=
 - =user-interface/custom/my-module/cases/funflow-cicd.ss=
 
 Focused gates:
@@ -385,8 +385,8 @@ Actions:
 4. Keep observability POO-friendly by exposing inspectable receipts and presentation slots instead of long ad hoc debug paths.
 
 Primary owners:
-- =src/module-system/loop-engine-runtime.ss=
-- =src/module-system/loop-engine-runtime-agent.ss=
+- =src/modules/loop-engine/runtime.ss=
+- =src/modules/loop-engine/runtime-agent.ss=
 - =src/modules/memory-core/*=
 - =user-interface/custom/my-module/cases/loop-engine.ss=
 
@@ -416,8 +416,8 @@ Actions:
 
 Primary owners:
 - =src/modules/session/policy-syntax.ss=
-- =src/module-system/runtime-projection-syntax.ss=
-- =src/module-system/init-syntax.ss=
+- =src/module-system/projection/runtime-syntax.ss=
+- =src/user-interface/init-syntax.ss=
 
 Focused gates:
 #+begin_src text

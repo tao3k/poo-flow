@@ -5,14 +5,13 @@
 (import (only-in :std/sugar match)
         (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flags)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-check-map->functional-dag
                  poo-flow-funflow-composition-step?
@@ -44,7 +43,7 @@
                              artifact-outputs result-protocol runtime-mode)
       check-name: 'build
       profile-ref: 'ci/build
-      command-vector: '("gxpkg" "build")
+      command-vector: '("gerbil" "build")
       artifact-outputs: '(build-log)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff)
@@ -55,7 +54,7 @@
                             dependency-refs)
       check-name: 'test
       profile-ref: 'ci/check
-      command-vector: '("gxtest" "t/unit-tests.ss")
+      command-vector: '("gerbil" "env" "./unit-tests.ss")
       artifact-outputs: '(test-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -67,7 +66,7 @@
                                dependency-refs)
       check-name: 'package
       profile-ref: 'ci/check
-      command-vector: '("gxtest" "t/workflow-cicd-dependency-graph-test.ss")
+      command-vector: '("gerbil" "env" "./unit-tests.ss")
       artifact-outputs: '(package-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -159,5 +158,3 @@
                       "marlin-agent-core")
         (check-equal? (funflow-functional-dag-alist-ref row-first-edge 'from)
                       'build)))))
-
-(run-tests! funflow-functional-dag-test)

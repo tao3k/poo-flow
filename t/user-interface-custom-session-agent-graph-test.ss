@@ -5,14 +5,13 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/session/config)
 
 (export user-interface-custom-session-agent-graph-test)
@@ -89,5 +88,3 @@
         (check-equal? (test-ref build-audit 'runtime-executed) #f)
         (check-equal? (length communication-channel-rows) 2)
         (check-equal? (length communication-rows) 2)))))
-
-(run-tests! user-interface-custom-session-agent-graph-test)

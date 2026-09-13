@@ -3,9 +3,9 @@
 
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes
         (only-in :poo-flow/src/semantic/organization-bundle
                  +poo-flow-organization-bundle-schema+)
@@ -40,13 +40,16 @@
    (poo-flow-release-version-matrix-abi-v1-frozen? abi-v1-frozen?))
   (projections))
 
+;; : (-> Symbol PooFlowRuntimeAbiVersion PooFlowProofVectorVersion Symbol [Path] Boolean PooFlowReleaseVersionMatrix)
 (def (poo-flow-release-version-matrix bundle-schema-value runtime-abi-value
                                       proof-vector-value assurance-schema-value
                                       owner-artifacts-value frozen-value?)
   (poo-flow-qualification-capability-composition-assert!
-   (list (cons 'versioned +poo-flow-versioned-capability-slots+)
-         (cons 'owner-bound +poo-flow-owner-bound-capability-slots+)
-         (cons 'decision-state +poo-flow-decision-state-capability-slots+)))
+   (map cons
+        '(versioned owner-bound decision-state)
+        (list +poo-flow-versioned-capability-slots+
+              +poo-flow-owner-bound-capability-slots+
+              +poo-flow-decision-state-capability-slots+)))
   (poo-core-role-object
    (slots ((kind +poo-flow-release-version-matrix-kind+)
            (bundle-schema bundle-schema-value)
@@ -83,18 +86,23 @@
      src/contract/release-assurance-manifest.ss)
    #f))
 
+;; : (-> PooFlowRuntimeAbiVersion PooFlowRuntimeAbiVersion Boolean)
 (def (release-runtime-abi=? left right)
-  (and (= (.ref left 'major) (.ref right 'major))
-       (= (.ref left 'minor) (.ref right 'minor))))
+  (andmap identity
+          (list (= (.ref left 'major) (.ref right 'major))
+                (= (.ref left 'minor) (.ref right 'minor)))))
 
+;; : (-> PooFlowProofVectorVersion PooFlowProofVectorVersion Boolean)
 (def (release-proof-vector=? left right)
-  (and (= (.ref left 'version) (.ref right 'version))
-       (equal? (.ref left 'schema-fingerprint)
-               (.ref right 'schema-fingerprint))
-       (equal? (.ref left 'vector-domain) (.ref right 'vector-domain))
-       (equal? (.ref left 'theorem-set-domain)
-               (.ref right 'theorem-set-domain))))
+  (andmap identity
+          (list (= (.ref left 'version) (.ref right 'version))
+                (equal? (.ref left 'schema-fingerprint)
+                        (.ref right 'schema-fingerprint))
+                (equal? (.ref left 'vector-domain) (.ref right 'vector-domain))
+                (equal? (.ref left 'theorem-set-domain)
+                        (.ref right 'theorem-set-domain)))))
 
+;; : (-> PooFlowReleaseVersionMatrix PooFlowReleaseVersionMatrixReceipt)
 (def (poo-flow-ac11-release-version-matrix-verify matrix)
   (let* ((expected (poo-flow-ac11-current-release-version-matrix))
          (accepted?

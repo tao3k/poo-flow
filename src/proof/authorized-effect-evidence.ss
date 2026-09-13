@@ -1,23 +1,30 @@
-;;; Boundary: bounded AC-08 proof projection; proofs never invent observations.
-(import :clan/poo/object)
+;;; Boundary: projects bounded AC-08 proof facts from authorized-effect evidence.
+;;; Invariant: proof projection never invents observations or raises claim level.
+(import (only-in :clan/poo/object .o .ref))
 
 (export poo-flow-authorized-effect-proof-facts
         poo-flow-authorized-effect-proof-claim-level
         poo-flow-authorized-effect-proof-facts->ffi-wire)
 
+;; : (-> PooFlowAuthorizedEffectProofFacts PooFlowAuthorizedEffectClaimLevel)
 (def (poo-flow-authorized-effect-proof-claim-level facts)
-  (cond
-   ((and (.ref facts 'l2-ready?)
-         (.ref facts 'durable-evidence-reference)
-         (.ref facts 'kernel-signature)
-         (.ref facts 'signature-verified?)
-         (.ref facts 'inclusion-proof-verified?)) 'l3-verified)
-   ((.ref facts 'l2-ready?) 'l2-evidenced)
-   ((and (.ref facts 'decision-permit?)
-         (.ref facts 'semantic-root-bound?)
-         (.ref facts 'token-consumed?)) 'l1-mediated)
-   (else 'unverified)))
+  (match (cond
+          ((and (.ref facts 'l2-ready?)
+                (.ref facts 'durable-evidence-reference)
+                (.ref facts 'kernel-signature)
+                (.ref facts 'signature-verified?)
+                (.ref facts 'inclusion-proof-verified?)) 'l3)
+          ((.ref facts 'l2-ready?) 'l2)
+          ((and (.ref facts 'decision-permit?)
+                (.ref facts 'semantic-root-bound?)
+                (.ref facts 'token-consumed?)) 'l1)
+          (else 'unverified))
+    ('l3 'l3-verified)
+    ('l2 'l2-evidenced)
+    ('l1 'l1-mediated)
+    (else 'unverified)))
 
+;; : (-> PooFlowFactId Boolean Boolean Boolean Boolean Boolean Symbol Symbol Object Object Boolean Boolean PooFlowAuthorizedEffectProofFacts)
 (def (poo-flow-authorized-effect-proof-facts
       identity decision-permit semantic-bound token-consumed root-linked
       adapter-observed effect-outcome durability-profile evidence-reference
@@ -42,23 +49,40 @@
         (inclusion-proof-verified? inclusion-proof-verified)
         (l2-ready? l2-ready))))
 
+;; : (forall (v) (-> v [(Pair Symbol v)]))
+;; : (-> PooFlowAuthorizedEffectProofFacts Alist)
 (def (poo-flow-authorized-effect-proof-facts->ffi-wire facts)
   (let (claim-level (poo-flow-authorized-effect-proof-claim-level facts))
-    (list (cons 'schema 'poo-flow.proof.authorized-effect.ffi-wire)
-          (cons 'version 1)
-          (cons 'fact-id (.ref facts 'fact-id))
-          (cons 'claim-level claim-level)
-          (cons 'accepted? (memq claim-level '(l2-evidenced l3-verified)))
-          (cons 'decision-permit? (.ref facts 'decision-permit?))
-          (cons 'semantic-root-bound? (.ref facts 'semantic-root-bound?))
-          (cons 'token-consumed? (.ref facts 'token-consumed?))
-          (cons 'execution-root-linked? (.ref facts 'execution-root-linked?))
-          (cons 'adapter-observed? (.ref facts 'adapter-observed?))
-          (cons 'outcome (.ref facts 'outcome))
-          (cons 'durability (.ref facts 'durability))
-          (cons 'durable-evidence-reference
-                (.ref facts 'durable-evidence-reference))
-          (cons 'kernel-signature (.ref facts 'kernel-signature))
-          (cons 'signature-verified? (.ref facts 'signature-verified?))
-          (cons 'inclusion-proof-verified?
-                (.ref facts 'inclusion-proof-verified?)))))
+    (map cons
+         '(schema
+           version
+           fact-id
+           claim-level
+           accepted?
+           decision-permit?
+           semantic-root-bound?
+           token-consumed?
+           execution-root-linked?
+           adapter-observed?
+           outcome
+           durability
+           durable-evidence-reference
+           kernel-signature
+           signature-verified?
+           inclusion-proof-verified?)
+         (list 'poo-flow.proof.authorized-effect.ffi-wire
+               1
+               (.ref facts 'fact-id)
+               claim-level
+               (memq claim-level '(l2-evidenced l3-verified))
+               (.ref facts 'decision-permit?)
+               (.ref facts 'semantic-root-bound?)
+               (.ref facts 'token-consumed?)
+               (.ref facts 'execution-root-linked?)
+               (.ref facts 'adapter-observed?)
+               (.ref facts 'outcome)
+               (.ref facts 'durability)
+               (.ref facts 'durable-evidence-reference)
+               (.ref facts 'kernel-signature)
+               (.ref facts 'signature-verified?)
+               (.ref facts 'inclusion-proof-verified?)))))

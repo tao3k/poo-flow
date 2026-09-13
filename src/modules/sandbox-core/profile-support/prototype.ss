@@ -3,8 +3,8 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation
@@ -31,37 +31,37 @@
    (list poo-flow-shared-sandbox-object)
    (list
     (poo-flow-module-field-contract
-     'profile-name 'Symbol 'override 'default
+     'profile-name PooFlowModuleSymbolType 'override 'default
      '((scope . sandbox-core) (dsl-row . profile-name)))
     (poo-flow-module-field-contract
-     'backend-kind 'Symbol 'override 'sandbox
+     'backend-kind PooFlowModuleSymbolType 'override 'sandbox
      '((scope . sandbox-core) (owned-by . module-config)))
     (poo-flow-module-field-contract
-     'backend-ref 'Symbol 'override 'sandbox-profile
+     'backend-ref PooFlowModuleSymbolType 'override 'sandbox-profile
      '((scope . sandbox-core) (owned-by . module-config)))
     (poo-flow-module-field-contract
-     'network-policy 'List 'override '(deny-by-default)
+     'network-policy PooFlowModuleListType 'override '(deny-by-default)
      '((scope . sandbox-core) (dsl-row . network)))
     (poo-flow-module-field-contract
-     'capabilities 'List 'override '(process-run filesystem-read tmpdir)
+     'capabilities PooFlowModuleListType 'override '(process-run filesystem-read tmpdir)
      '((scope . sandbox-core) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'backend-capability 'Object 'override
+     'backend-capability PooFlowModuleObjectType 'override
      poo-flow-sandbox-backend-capability/sandbox
      '((scope . sandbox-core) (owned-by . module-config)))
     (poo-flow-module-field-contract
-     'profile-policy 'Object 'override
+     'profile-policy PooFlowModuleObjectType 'override
      poo-flow-sandbox-profile-policy/default
      '((scope . sandbox-core) (owned-by . policy-object)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override
+     'resource-policy PooFlowModuleListType 'override
      '((filesystem
         (scope . runtime)
         (materialized-by . runtime)
         (mounts . runtime)))
      '((scope . sandbox-core) (dsl-row . resources)))
     (poo-flow-module-field-contract
-     'metadata 'List 'append '()
+     'metadata PooFlowModuleListType 'append '()
      '((scope . sandbox-core) (dsl-row . metadata))))
    '((namespace . objects.sandbox-core)
      (domain . profile)

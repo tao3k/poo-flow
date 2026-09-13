@@ -237,6 +237,7 @@
    (poo-flow-json-schema-node->alist
     (poo-flow-json-schema-pattern-property-schema pattern-property))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowJsonSchemaObject Alist)
 (def (poo-flow-json-schema-object->alist object)
   (list
@@ -265,6 +266,7 @@
    (cons 'metadata
          (poo-flow-json-schema-diagnostic-metadata diagnostic))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowJsonSchemaNormalization Alist)
 (def (poo-flow-json-schema-normalization->alist normalization)
   (list

@@ -1,0 +1,509 @@
+#+title: 20.04 Enterprise AI Security Guarantee Coordinate Algebra
+#+startup: overview
+
+* Status
+
+Research synthesis and pre-RFC semantic model.
+
+Research snapshot: 2026-07-30.
+
+* Engine boundary
+
+POO Flow is the general POO-native architecture-semantics composition engine.
+It is not a three-layer, seven-layer, nine-pillar, ten-layer, control-plane,
+data-plane, or enterprise-security architecture.
+
+This document models how independently owned security architectures can be
+represented, related, composed, admitted, projected, and replayed by the
+engine. It does not add a public POO Flow DSL or declare a universal industry
+standard.
+
+* Research finding
+
+The number of layers in an AI-security framework is a projection choice, not
+the ontology of enterprise AI security.
+
+Current frameworks answer different questions:
+
+- what enterprise assets and actors need protection;
+- where an agentic system is structurally decomposed;
+- which design invariants make unsafe states unreachable;
+- which threat paths cross architectural boundaries;
+- how an organization governs risk over a lifecycle;
+- which concrete attack and misuse scenarios must be tested;
+- which evidence is sufficient to claim that a control worked.
+
+Frameworks with different layer counts may therefore be simultaneously valid.
+They must not be collapsed merely because some labels overlap.
+
+* External coordinate systems
+
+** Snowflake Data-Model-Agent
+
+Coordinate kind: enterprise protection-object topology.
+
+Snowflake organizes agentic security into data, model, and agent layers. The
+data layer carries least privilege, masking, data movement, sovereignty,
+resilience, and compliance. The model layer protects the intelligence engine
+and its execution boundary. The agent layer governs identity, tools,
+approvals, behavior, and auditability.
+
+Source:
+[[https://www.snowflake.com/en/blog/securing-the-agentic-enterprise/][Snowflake, Securing the Agentic Enterprise]].
+
+** CSA ten-layer agent reference architecture
+
+Coordinate kind: agent-system reference topology.
+
+The current CSA architecture describes ten layers arranged into three
+operational domains: Infrastructure, Intelligence, and Knowledge; Agency,
+Environment, and Execution; and Governance and Accountability. It overlays
+threat models, controls, maturity, and an
+Identify-Classify-Control-Monitor-Assure lifecycle.
+
+The source was still presented as a peer-review artifact whose review period
+had concluded and whose final release was pending at this research snapshot.
+That publication state is part of the evidence and MUST be retained.
+
+Source:
+[[https://cloudsecurityalliance.org/artifacts/ai-agents-architecture-and-control-plane][CSA, AI Agents: Architecture and Control Plane]].
+
+** MAESTRO
+
+Coordinate kind: cross-layer threat-model topology.
+
+MAESTRO uses seven architectural layers: foundation models, data operations,
+agent frameworks, deployment and infrastructure, evaluation and
+observability, security and compliance, and agent ecosystem. Its important
+semantic contribution is not the number seven; it is that attack paths cross
+layers and that controls at one layer cannot be evaluated in isolation.
+
+Source:
+[[https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro][CSA, Agentic AI Threat Modeling Framework: MAESTRO]].
+
+** ORCHIDEAS
+
+Coordinate kind: secure-by-construction design invariants.
+
+ORCHIDEAS defines nine interlocking design pillars rather than a construction
+sequence. Its security claim is structural: authority attenuation, attested
+intent, context segregation, gateway mediation, human override,
+observability, evaluation, and ecosystem controls should be architectural
+invariants rather than optional runtime checks.
+
+ORCHIDEAS and MAESTRO are orthogonal: pillars organize the design space, while
+layers organize the threat space.
+
+Source:
+[[https://cloudsecurityalliance.org/blog/2026/06/05/designing-agentic-ai-systems-with-the-orchideas-framework][CSA, Designing Agentic AI Systems with ORCHIDEAS]].
+
+** NIST AI RMF Generative AI Profile
+
+Coordinate kind: organizational risk lifecycle and trustworthiness outcomes.
+
+NIST AI 600-1 is a cross-sectoral Generative AI profile of AI RMF 1.0. It
+frames risk across AI actors, lifecycle activities, organizational practices,
+measurement, evaluation, and trustworthiness outcomes. It is not a runtime
+agent topology.
+
+Source:
+[[https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence][NIST AI 600-1, Generative AI Profile]].
+
+** OWASP Agentic Security Initiative
+
+Coordinate kind: attack, misuse, and practitioner-control taxonomy.
+
+OWASP's initiative covers autonomous agents and multi-step workflows and
+publishes the Top 10 for Agentic Applications, MCP guidance, crosswalks,
+threat-model material, reference applications, and a continuously updated
+solutions landscape. These are executable risk scenarios and control
+guidance, not an architectural layer model.
+
+Source:
+[[https://genai.owasp.org/initiatives/agentic-security-initiative/][OWASP Agentic Security Initiative]].
+
+* Coordinate kinds
+
+An architecture package SHOULD preserve the coordinate kind declared by its
+source. The initial open set is:
+
+- =protection-object-topology=;
+- =reference-architecture-topology=;
+- =threat-path-topology=;
+- =secure-design-pillar=;
+- =risk-lifecycle=;
+- =risk-scenario-taxonomy=;
+- =control-objective=;
+- =evidence-and-assurance=;
+- =response-and-recovery=;
+- =accountability-and-ownership=.
+
+This is an extensible semantic set, not an ordered stack. A package may import
+some coordinate kinds and omit others. New frameworks may add kinds without
+changing the POO Flow engine ontology.
+
+* Enterprise guarantee claim
+
+The atomic enterprise-security unit is a guarantee claim, not a layer.
+
+A guarantee claim is modeled conceptually as:
+
+=<source, coordinate, subject, invariant, authority, enforcement, evidence,
+response, owner, validity>=
+
+where:
+
+- =source= binds the external or enterprise architecture identity and version;
+- =coordinate= identifies the architecture coordinate and its kind;
+- =subject= identifies the protected data, model, agent, tool, workflow,
+  environment, organization, or human principal;
+- =invariant= states the property that must hold;
+- =authority= states which capability, identity, delegation, and effect
+  boundaries constrain execution;
+- =enforcement= identifies runtime, policy, data, model, agent, infrastructure,
+  or organizational enforcement points;
+- =evidence= defines the evidence root, observation, proof, evaluation, and
+  replay obligations;
+- =response= defines fail-closed, escalation, containment, recovery, and
+  continuation semantics;
+- =owner= identifies the enterprise and implementation owners allowed to
+  interpret or change the claim;
+- =validity= binds time, deployment, model, data, policy, and artifact versions.
+
+This tuple is a semantic model for RFC work. It is not a new public record DSL.
+
+* Open guarantee families
+
+Enterprise packages need an open family of guarantees. The following families
+are high-value starting points, not universal layers:
+
+- data and knowledge lineage, classification, sovereignty, minimization,
+  derivation, retention, and exfiltration boundaries;
+- model and intelligence integrity, provenance, evaluation, manipulation
+  resistance, routing, and execution-boundary guarantees;
+- agent identity, intent, delegation, autonomy, approval, and action
+  attribution;
+- capability confinement, tool identity, effect containment, and authority
+  attenuation;
+- context, memory, retrieval, instruction/data segregation, and trust-label
+  continuity;
+- ecosystem, MCP/A2A, third-party tool, supply-chain, and multi-agent trust
+  boundaries;
+- infrastructure, deployment, isolation, availability, resilience, and
+  regional execution guarantees;
+- observation, detection, causal continuity, containment, recovery,
+  continuation, and incident-learning guarantees;
+- governance, accountability, human override, compliance, exception, and
+  business-owner acceptance;
+- evidence, proof, evaluation, receipt, unknown, escalation, and independent
+  replay guarantees.
+
+A vendor's layer may map to several guarantee families. A guarantee family may
+also cross every layer in a vendor architecture.
+
+* Data and knowledge are first-class
+
+AI security cannot be reduced to the control plane.
+
+The data and knowledge coordinate must preserve:
+
+- source and derivation lineage;
+- classification and authorized-purpose constraints;
+- regional, contractual, and sovereignty boundaries;
+- training, retrieval, context, memory, and output transformations;
+- trusted instruction versus untrusted content labels;
+- embedding, cache, copy, export, and deletion semantics;
+- model-access and agent-action consequences of data state;
+- evidence that policies remained attached across transformations.
+
+Data governance is therefore not merely one control beneath an agent. It is a
+semantic dependency of model behavior, agent authority, effect admission,
+incident response, and replay.
+
+* Model, agent, and effect closure
+
+An enterprise claim about an agent action is closed only when the evidence
+chain preserves:
+
+=business subject -> human or machine intent -> agent identity -> delegated
+capability -> selected model and context -> tool identity -> admitted effect ->
+observation -> containment or recovery -> evidence root -> accountable owner=
+
+Missing links remain =unknown=. They do not become safe because another layer
+has a green control or because an alert was emitted.
+
+This chain gives precise enterprise meaning to:
+
+- capability confinement;
+- tool identity;
+- effect containment;
+- causal continuity;
+- data and context provenance;
+- human approval and override;
+- replayable operational accountability.
+
+* ADR in the AI era
+
+Traditional detection and response systems primarily turn telemetry into
+alerts, cases, and remediation actions.
+
+In an agentic enterprise, detection is only one observation projection.
+Response must also reason about:
+
+- the acting machine principal and delegated authority;
+- the model, prompt, retrieved content, memory, and tool chain that caused the
+  action;
+- whether the effect is pending, committed, reversible, compensated, or
+  externally irreversible;
+- whether containment invalidates downstream capabilities and continuations;
+- whether recovery restores the violated invariant;
+- whether an independent party can replay the decision from evidence.
+
+POO Flow composes these =ObservationEvent=, =RecoveryDecision=, continuation,
+effect, and evidence-root semantics. It does not become a traditional ADR
+product or own a vendor's telemetry system.
+
+* Cross-coordinate mappings
+
+Mappings MUST use the existing statuses:
+
+- =exact=;
+- =refinement=;
+- =projection=;
+- =partial=;
+- =conflicting=;
+- =unknown=.
+
+Examples:
+
+- Snowflake =data= projects to data/knowledge guarantee claims, but does not by
+  itself equal NIST lifecycle governance;
+- Snowflake =agent= refines identity, tool, approval, and audit coordinates,
+  but does not equal the full CSA agency/execution domain;
+- a MAESTRO cross-layer attack path projects to several OWASP scenarios and
+  ORCHIDEAS invariants;
+- an OWASP risk scenario may refine a threat path without specifying a
+  complete enterprise enforcement architecture;
+- NIST governance outcomes may require evidence from every technical
+  coordinate without becoming a technical layer.
+
+No mapping may erase source identity or silently turn =partial= or =unknown=
+into =exact=.
+
+* Composition and admission rules
+
+An enterprise architecture composition is admissible only if:
+
+- coordinate kinds and source versions remain visible;
+- mapping obligations are explicit and independently checkable;
+- conflicts are either resolved by an authorized profile or remain rejected;
+- unknown evidence fails closed or escalates to a named owner;
+- capabilities and effects do not expand because two frameworks were composed;
+- data, model, context, and tool ownership remain distinct;
+- runtime projections bind the admitted claim to the actual execution;
+- observations and recovery decisions bind to the same causal execution;
+- receipts can be replayed without the original agent session.
+
+Composition produces an enterprise-owned architecture profile. It does not
+claim that the source frameworks have merged into a new industry standard.
+
+* Proof obligations
+
+The next Lean refinement SHOULD include properties equivalent to:
+
+- =CoordinateMappingDoesNotCollapseKinds=;
+- =GuaranteeClaimPreservesSourceAndOwner=;
+- =CrossCoordinateCompositionDoesNotAmplifyAuthority=;
+- =UnknownMappingCannotIncreaseProofCoverage=;
+- =EvidenceProjectionBindsClaimAndExecution=;
+- =RecoveryReceiptClosesCausalContinuity=;
+- =DataTransformationPreservesRequiredPolicyEvidence=;
+- =ReplayDecisionDoesNotDependOnHiddenSessionState=.
+
+These obligations should reuse existing composition identity, bundle evidence,
+authorized-effect evidence, and enterprise proof owners. They must not create a
+second proof infrastructure.
+
+* Metrics
+
+The primary enterprise report retains three independent metric groups:
+
+- proof coverage: which admitted guarantee claims and execution paths entered a
+  proven region;
+- unknown and escalation rate: which claims failed closed because mapping,
+  runtime, data, model, authority, or evidence was insufficient;
+- replay success: which historical claims and decisions can be independently
+  reconstructed from their bundles.
+
+Layer coverage is not proof coverage. Mapping every item in a ten-layer diagram
+to a control catalog does not prove that a high-risk effect was authorized,
+contained, observed, recovered, or replayable.
+
+* Research decisions
+
+- Do not select one external layer count as the engine ontology.
+- Preserve coordinate kinds and publication state as evidence.
+- Treat data and knowledge as first-class semantics, not a control-plane
+  appendix.
+- Model enterprise security as guarantee claims with explicit authority,
+  evidence, response, ownership, and validity.
+- Compile threat research and GitHub incidents into mappings, counterexamples,
+  property tests, Lean obligations, and versioned receipts.
+- Keep architecture packages enterprise-owned and engine-independent.
+- Report proof coverage, unknown/escalation, and replay success separately.
+
+* Lean closure evidence
+
+The first coordinate-algebra proof unit is implemented at:
+
+- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityGuaranteeCoordinateAlgebraClosure.lean=
+
+It closes the eight obligations named above:
+
+1. =CoordinateMappingDoesNotCollapseKinds=
+2. =GuaranteeClaimPreservesSourceAndOwner=
+3. =CrossCoordinateCompositionDoesNotAmplifyAuthority=
+4. =UnknownMappingCannotIncreaseProofCoverage=
+5. =EvidenceProjectionBindsClaimAndExecution=
+6. =RecoveryReceiptClosesCausalContinuity=
+7. =DataTransformationPreservesRequiredPolicyEvidence=
+8. =ReplayDecisionDoesNotDependOnHiddenSessionState=
+
+The proof unit gives a typed kernel for framework-coordinate preservation,
+source and owner binding, authority attenuation, fail-closed proof coverage,
+claim-to-execution evidence binding, recovery continuity, data-policy evidence
+continuity, and bundle-only replay.
+
+Validation receipts:
+
+- focused source check:
+  =lake env lean PooFlowProof/Enterprise/AISecurityGuaranteeCoordinateAlgebraClosure.lean=
+  completed successfully;
+- focused module build:
+  =lake build PooFlowProof.Enterprise.AISecurityGuaranteeCoordinateAlgebraClosure=
+  completed successfully with =2/2= jobs;
+- enterprise aggregate:
+  =lake env lean PooFlowProof/Enterprise.lean=
+  completed successfully;
+- full Lean build:
+  =lake build=
+  completed successfully with =535= jobs and one pre-existing linter warning in
+  =AgentRedTeamProofRegressionClosure.lean=.
+
+This receipt proves only the typed algebra above.  It does not claim that an
+external framework mapping is semantically complete, that a runtime event was
+admitted into the proven region, or that independent replay succeeded for a
+concrete evidence bundle.
+
+* First external-framework bundle
+
+=ASR-FRAMEWORK-MAPPING-005= instantiates this algebra without changing the
+engine ontology:
+
+- Snowflake Data, Model, and Agent are protection-object coordinates;
+- CSA's three operational domains are reference-architecture coordinates;
+- POO Flow guarantee families are target semantics;
+- =partial= and =unknown= mappings remain outside the proven region.
+
+The versioned bundle contains eight claims.  Six enter proof coverage and two
+require escalation.  The corresponding Lean module is:
+
+- =PooFlowProof/Enterprise/AISecurityExternalFrameworkMappingBundleClosure.lean=
+
+The bundle and independent receipt are maintained under:
+
+- =docs/20-29-ai-security/receipts/asr-framework-mapping-005.bundle.v1.json=
+- =docs/20-29-ai-security/receipts/asr-framework-mapping-005.receipt.v1.json=
+
+The proof replay succeeds from the declared bundle fields.  Artifact replay
+remains denied until the exact JSON digest is admitted through a parser-owned
+JSON validation route.
+
+* Evidence attestation and transparency refinement
+
+Artifact validation is not one Boolean.  Enterprise assurance must preserve
+four separate stages:
+
+1. *digest integrity*: the exact subject bytes match the declared digest;
+2. *schema and semantic replay*: a type-specific verifier recomputes claims,
+   admission, and metrics from the subject;
+3. *issuer authentication*: an authenticated envelope binds a responsible
+   issuer to the exact typed statement;
+4. *transparency inclusion*: a receipt binds the envelope to a transparency
+   service, registration policy, and independently auditable inclusion proof.
+
+This follows the useful separation in the in-toto Attestation Framework
+between subject, predicate, statement, envelope, and bundle, while SCITT adds
+registration policy, transparency receipts, and log replay.  These frameworks
+are external evidence coordinates; they do not become the POO Flow engine
+ontology.
+
+The corresponding Lean proof unit is:
+
+- =PooFlowProof/Enterprise/AISecurityEvidenceAttestationAssuranceClosure.lean=
+
+It proves:
+
+- =EvidenceStatementBindsSubjectAndPredicate=;
+- =EvidenceEnvelopeBindsIssuerAndStatement=;
+- =TransparencyReceiptBindsEnvelopeAndLog=;
+- =DigestIntegrityAloneCannotAuthorizeEnterpriseAdmission=;
+- =SemanticReplayWithoutIssuerCannotAuthorizeEnterpriseAdmission=;
+- =AuthenticatedReceiptWithoutTransparencyCannotCloseFullAssurance=;
+- =CompleteAttestationChainCanEnterEnterpriseAdmission=;
+- =ASRFrameworkMapping005RemainsFailClosed=.
+
+ASR-005 currently has digest integrity only.  Its Python semantic replay
+prototype has a parser-owned source identity, but execution remains blocked by
+the repository source-access hook and the Python exact-source provider fails
+to decode its direct selector response.  Therefore schema/semantic replay,
+issuer authentication, and transparency inclusion all remain unproven.
+
+Research references:
+
+- in-toto Attestation Framework:
+  https://github.com/in-toto/attestation/blob/main/spec/README.md
+- IETF SCITT architecture:
+  https://datatracker.ietf.org/doc/draft-ietf-scitt-architecture
+- IETF SCITT reference APIs:
+  https://datatracker.ietf.org/doc/draft-ietf-scitt-scrapi/
+
+* Runtime capability conformance refinement
+
+An enterprise guarantee cannot treat any of these observations as equivalent:
+
+- a manifest declares a capability;
+- a binary is installed or resolved;
+- healthcheck reports green;
+- invocation is accepted;
+- response evidence is decoded;
+- an independent verifier replays the evidence.
+
+These are different assurance coordinates.  Static declaration and runtime
+resolution prove availability metadata, not executable semantic conformance.
+The corresponding profile is implemented in:
+
+- =PooFlowProof/Enterprise/AISecurityCapabilityConformanceAttestationClosure.lean=
+
+=ASR-EXACT-PROJECTION-006= demonstrates the distinction.  ASP healthcheck is
+green, the Rust manifest is contract-valid, and the runtime provider resolves.
+However, the root facade requires =--projection= while the activated provider
+supports the legacy =--code= surface.  Python direct exact output also fails
+response decoding.  Invocation, decoding, and replay therefore remain outside
+proof coverage.
+
+This is not a special ASP layer in the engine.  It is a reusable capability
+conformance semantic package that can be composed for tools, models, data
+connectors, agent runtimes, policy engines, and evidence verifiers.
+
+* Planned implementation frontier
+
+- [ ] Define a POO-native internal guarantee-claim profile without adding a
+  public record DSL.
+- [ ] Add one mapping fixture each for Snowflake, MAESTRO, ORCHIDEAS, NIST, and
+  OWASP.
+- [ ] Prove that coordinate composition preserves kind, source, and owner.
+- [ ] Add data-lineage and context-trust evidence projections.
+- [ ] Bind one OWASP/MAESTRO attack path to a fail-closed runtime effect
+  fixture.
+- [ ] Emit an enterprise receipt reporting the three metric groups.

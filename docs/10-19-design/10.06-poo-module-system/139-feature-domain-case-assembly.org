@@ -9,7 +9,7 @@ connects =FeatureCompositionPlan= to the existing Domain Case algebra.
 It does not define a second Domain Case representation.  Component validation,
 parent ordering, type inheritance, slot/method contract closure, role overlay,
 projection catalog construction, canonical identity, and caching remain owned by
-=src/module-system/domain-case.ss= and =poo-flow-domain-case-close=.
+=src/feature-system/domain-case/interface.ss= and =poo-flow-domain-case-close=.
 
 * Existing owner contract
 

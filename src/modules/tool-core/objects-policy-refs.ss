@@ -37,32 +37,31 @@
           (poo-flow-tool-unique-symbols (cdr values)
                                         (cons (car values) seen))))))
 
-;; : (-> [Symbol] [Symbol] [Symbol] (Cons [Symbol] [Symbol]))
-(def (poo-flow-tool-unique-symbols/accumulate values seen values-rev)
+;; : (-> [Symbol] [Symbol] [Symbol] (Values [Symbol] [Symbol]))
+(def (poo-flow-tool-unique-symbols/accumulate remaining seen values-rev)
   (cond
-   ((null? values) (cons seen values-rev))
-   ((or (eq? (car values) '*)
-        (member (car values) seen))
+   ((null? remaining) (values seen values-rev))
+   ((or (eq? (car remaining) '*)
+        (member (car remaining) seen))
     (poo-flow-tool-unique-symbols/accumulate
-     (cdr values)
+     (cdr remaining)
      seen
      values-rev))
    (else
     (poo-flow-tool-unique-symbols/accumulate
-     (cdr values)
-     (cons (car values) seen)
-     (cons (car values) values-rev)))))
+     (cdr remaining)
+     (cons (car remaining) seen)
+     (cons (car remaining) values-rev)))))
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-tool-merge-policy-tool-refs agent-tool-refs hook-tool-refs)
-  (let* ((agent-bundle
-          (poo-flow-tool-unique-symbols/accumulate agent-tool-refs '() '()))
-         (hook-bundle
-          (poo-flow-tool-unique-symbols/accumulate
-           hook-tool-refs
-           (car agent-bundle)
-           (cdr agent-bundle))))
-    (reverse (cdr hook-bundle))))
+  (let-values (((agent-seen agent-values-rev)
+                (poo-flow-tool-unique-symbols/accumulate
+                 agent-tool-refs '() '())))
+    (let-values (((_ hook-values-rev)
+                  (poo-flow-tool-unique-symbols/accumulate
+                   hook-tool-refs agent-seen agent-values-rev)))
+      (reverse hook-values-rev))))
 
 ;; : (-> PooSessionPolicy [Symbol])
 (def (poo-flow-tool-policy-tool-refs policy)

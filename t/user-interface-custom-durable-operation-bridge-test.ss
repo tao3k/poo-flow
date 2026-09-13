@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/user-interface/custom/my-module/config
@@ -45,5 +44,3 @@
         (check-equal? (test-ref handoff-row 'handoff-ready?) #t)
         (check-equal? (test-ref handoff-row 'operation-count) 7)
         (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-operation-bridge-test)

@@ -4,13 +4,13 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation-config
+        :poo-flow/src/user-interface/init-syntax
+        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case))
 

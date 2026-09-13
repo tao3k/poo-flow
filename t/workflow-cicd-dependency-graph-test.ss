@@ -6,7 +6,7 @@
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
+                 )
         :poo-flow/src/modules/workflow/cicd)
 
 (export workflow-cicd-dependency-graph-test)

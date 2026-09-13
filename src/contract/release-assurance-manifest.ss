@@ -1,11 +1,13 @@
+;;; Boundary: owns canonical release-assurance manifests and their content identity.
+;;; Invariant: validation and digest construction use the same normalized manifest fields.
 (export #t)
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/sort
-        :std/text/hex
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/sort sort)
+        (only-in :std/text/hex hex-encode)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-release-assurance-manifest-schema+
@@ -91,49 +93,44 @@
   (.ref (release-assurance-manifest-assurance manifest) 'gates))
 
 (def (poo-flow-assurance-tcb tcb-id-value family-value components-value)
-  (object<-alist
-   (list (cons 'kind +poo-flow-assurance-tcb-kind+)
-         (cons 'tcb-id tcb-id-value)
-         (cons 'family family-value)
-         (cons 'components components-value))))
+  (.o (kind +poo-flow-assurance-tcb-kind+)
+      (tcb-id tcb-id-value)
+      (family family-value)
+      (components components-value)))
 
 (def (poo-flow-assurance-evidence-reference evidence-id-value owner-value
                                              artifact-value digest-value)
-  (object<-alist
-   (list (cons 'kind +poo-flow-assurance-evidence-reference-kind+)
-         (cons 'evidence-id evidence-id-value)
-         (cons 'owner owner-value)
-         (cons 'artifact artifact-value)
-         (cons 'digest digest-value))))
+  (.o (kind +poo-flow-assurance-evidence-reference-kind+)
+      (evidence-id evidence-id-value)
+      (owner owner-value)
+      (artifact artifact-value)
+      (digest digest-value)))
 
 (def (poo-flow-assurance-claim claim-id-value level-value owner-value tcb-value
                                evidence-value exclusions-value
                                failure-state-value)
-  (object<-alist
-   (list (cons 'kind +poo-flow-assurance-claim-kind+)
-         (cons 'claim-id claim-id-value)
-         (cons 'level level-value)
-         (cons 'owner owner-value)
-         (cons 'tcb tcb-value)
-         (cons 'evidence evidence-value)
-         (cons 'exclusions exclusions-value)
-         (cons 'failure-state failure-state-value))))
+  (.o (kind +poo-flow-assurance-claim-kind+)
+      (claim-id claim-id-value)
+      (level level-value)
+      (owner owner-value)
+      (tcb tcb-value)
+      (evidence evidence-value)
+      (exclusions exclusions-value)
+      (failure-state failure-state-value)))
 
 (def (poo-flow-assurance-gate-result gate-id-value owner-value status-value
                                      evidence-value)
-  (object<-alist
-   (list (cons 'kind +poo-flow-assurance-gate-result-kind+)
-         (cons 'gate-id gate-id-value)
-         (cons 'owner owner-value)
-         (cons 'status status-value)
-         (cons 'evidence evidence-value))))
+  (.o (kind +poo-flow-assurance-gate-result-kind+)
+      (gate-id gate-id-value)
+      (owner owner-value)
+      (status status-value)
+      (evidence evidence-value)))
 
 (def (poo-flow-assurance-abi-decision version-value frozen-value? review-value)
-  (object<-alist
-   (list (cons 'kind +poo-flow-assurance-abi-decision-kind+)
-         (cons 'version version-value)
-         (cons 'frozen? frozen-value?)
-         (cons 'review review-value))))
+  (.o (kind +poo-flow-assurance-abi-decision-kind+)
+      (version version-value)
+      (frozen? frozen-value?)
+      (review review-value)))
 
 (def (poo-flow-release-assurance-manifest release-id-value revision-value
                                            host-value toolchains-value
@@ -144,22 +141,19 @@
    (list (cons 'versioned +poo-flow-versioned-capability-slots+)
          (cons 'revision-bound +poo-flow-revision-bound-capability-slots+)))
   (let ((release-value
-         (object<-alist
-          (list (cons 'kind 'poo-flow.release-assurance-release.v1)
-                (cons 'release-id release-id-value)
-                (cons 'source-revision revision-value))))
+         (.o (kind 'poo-flow.release-assurance-release.v1)
+             (release-id release-id-value)
+             (source-revision revision-value)))
         (environment-value
-         (object<-alist
-          (list (cons 'kind 'poo-flow.release-assurance-environment.v1)
-                (cons 'host host-value)
-                (cons 'toolchains toolchains-value))))
+         (.o (kind 'poo-flow.release-assurance-environment.v1)
+             (host host-value)
+             (toolchains toolchains-value)))
         (assurance-value
-         (object<-alist
-          (list (cons 'kind 'poo-flow.release-assurance-evidence.v1)
-                (cons 'identities identities-value)
-                (cons 'tcbs tcbs-value)
-                (cons 'claims claims-value)
-                (cons 'gates gates-value)))))
+         (.o (kind 'poo-flow.release-assurance-evidence.v1)
+             (identities identities-value)
+             (tcbs tcbs-value)
+             (claims claims-value)
+             (gates gates-value))))
     (poo-core-role-object
      (slots ((kind +poo-flow-release-assurance-manifest-schema+)
              (schema +poo-flow-release-assurance-manifest-schema+)
@@ -276,16 +270,15 @@
          (poo-flow-release-assurance-manifest-abi-decision manifest))))
 
 (def (duplicate-ids values id-of)
-  (let loop ((rest (assurance-sort values id-of))
-             (previous #f)
-             (duplicates '()))
-    (if (null? rest)
-      (reverse duplicates)
-      (let (id (id-of (car rest)))
-        (loop (cdr rest) id
-              (if (and previous (equal? previous id))
-                (cons id duplicates)
-                duplicates))))))
+  (let (sorted (assurance-sort values id-of))
+    (if (or (null? sorted) (null? (cdr sorted)))
+      '()
+      (filter-map
+       (lambda (adjacent)
+         (let ((previous-id (id-of (car adjacent)))
+               (current-id (id-of (cdr adjacent))))
+           (and (equal? previous-id current-id) current-id)))
+       (map cons sorted (cdr sorted))))))
 
 (def (nonempty-id? value)
   (or (symbol? value)
@@ -294,6 +287,7 @@
 (def (diagnostic code path observed)
   (list (cons 'code code) (cons 'path path) (cons 'observed observed)))
 
+;;; Validation boundary: accumulate all manifest diagnostics before returning a decision.
 (def (poo-flow-release-assurance-manifest-validate manifest)
   (let (diagnostics '())
     (def (reject! code path observed)
@@ -385,12 +379,11 @@
                      (nonempty-id?
                       (poo-flow-assurance-abi-decision-review abi)))
           (reject! 'invalid-abi-decision '(abi-decision) abi))))
-    (object<-alist
-     (list
-      (cons 'kind 'poo-flow.release-assurance-validation-receipt.v1)
-      (cons 'accepted? (null? diagnostics))
-      (cons 'code (if (null? diagnostics) 'accepted 'rejected))
-      (cons 'diagnostics (reverse diagnostics))))))
+    (let (diagnostic-values (reverse diagnostics))
+      (.o (kind 'poo-flow.release-assurance-validation-receipt.v1)
+          (accepted? (null? diagnostic-values))
+          (code (if (null? diagnostic-values) 'accepted 'rejected))
+          (diagnostics diagnostic-values)))))
 
 (def (poo-flow-release-assurance-manifest-identity manifest)
   (let (validation (poo-flow-release-assurance-manifest-validate manifest))
@@ -403,12 +396,10 @@
              (sha256
               (call-with-output-string
                (lambda (port) (write canonical port)))))))
-      (object<-alist
-       (list
-        (cons 'kind 'poo-flow.release-assurance-manifest.identity.v1)
-        (cons 'algorithm 'sha256)
-        (cons 'digest digest-value)
-        (cons 'release-id
-              (poo-flow-release-assurance-manifest-release-id manifest))
-        (cons 'source-revision
-              (poo-flow-release-assurance-manifest-source-revision manifest)))))))
+      (.o (kind 'poo-flow.release-assurance-manifest.identity.v1)
+          (algorithm 'sha256)
+          (digest digest-value)
+          (release-id
+           (poo-flow-release-assurance-manifest-release-id manifest))
+          (source-revision
+           (poo-flow-release-assurance-manifest-source-revision manifest))))))

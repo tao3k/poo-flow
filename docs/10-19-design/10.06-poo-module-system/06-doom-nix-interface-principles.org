@@ -86,7 +86,7 @@ Nix is valuable because override and merge behavior are part of the module model
 - option override;
 - option conflict.
 
-These policies are schema vocabulary, not implicit alist order. =src/module-system/projection.ss= projects them into receipts before runtime execution:
+These policies are schema vocabulary, not implicit alist order. =src/module-system/projection/interface.ss= projects them into receipts before runtime execution:
 - append starts with the schema default and then dependency-to-root config values;
 - override uses the root-most configured value after dependency traversal;
 - conflict accepts identical values and returns an invalid receipt for divergent values;
@@ -166,14 +166,14 @@ Implemented helpers and projections:
 - =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
 - =poo-module-option-merge-receipts= for inspectable merge findings;
 - =poo-module-merged-option-alist= for valid final option values.
-The implemented merge owner is =src/module-system/projection.ss=. It keeps append, override, conflict, constant, required, and missing-schema findings as inspectable data before runtime execution.
+The implemented merge owner is =src/module-system/projection/interface.ss=. It keeps append, override, conflict, constant, required, and missing-schema findings as inspectable data before runtime execution.
 ** 10.06.06.90 Implemented Doctor Presentation Layer
 Status: implemented for first-pass user-facing summaries.
 Implemented helpers and projections:
 - =pooModuleDoctorPresentation= for value catalogs;
 - =pooModuleSourceDoctorPresentation= for source refs and loader backends;
 - doctor summaries for module ids, import graph, contribution counts, diagnostics, validation count, merge status, and merged options.
-The implemented doctor owner is =src/module-system/doctor.ss=. It borrows Doom's inspectable doctor experience while preserving the data-only, no-runtime-execution boundary.
+The implemented doctor owner is =src/module-system/diagnostics/doctor.ss=. It borrows Doom's inspectable doctor experience while preserving the data-only, no-runtime-execution boundary.
 ** 10.06.06.100 Maintained User Interface
 Status: implemented.
 =user-interface/= is the root-level downstream configuration surface. It is intentionally thin: users choose modules in =init.ss= and put custom module bodies under =custom/*/config.ss=.

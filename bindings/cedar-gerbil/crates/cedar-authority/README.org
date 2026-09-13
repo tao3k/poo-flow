@@ -1,0 +1,86 @@
+#+title: Cedar native qualification boundary
+
+* Source ownership
+
+The public control-plane model remains Gerbil POO. This crate owns the strict
+runtime authorization projection, signed receipts, and single-use grants. The
+independent Runtime Host owns actual Cedar evaluation. One immutable AOT Host
+artifact contains both evaluator graphs and pins a private copy for each
+isolated worker invocation; this document does not declare native Gerbil
+authorization qualified.
+
+=packages/proof/lean/PooFlowProof/Runtime/CedarNative.lean= owns the one Lean
+outcome projection. The diagnostic native probe and the AOT Host call that same
+exported function; it decodes the upstream protobuf and calls
+=Cedar.Spec.isAuthorized=. Rust's existing =wire::evaluate_rust= evaluates
+those exact bytes independently.
+
+* Explicit native FFI gate
+
+Supply the probe as an explicit build artifact input. For example:
+
+#+begin_src sh
+POO_FLOW_CEDAR_NATIVE_PROBE=/nix/store/...-cedar-native-probe/bin/cedarNativeProbe \
+  cargo test --manifest-path bindings/cedar-gerbil/Cargo.toml \
+  -p poo-flow-cedar-authority \
+  --features native-ffi-qualification --test native_ffi -- --nocapture
+#+end_src
+
+This explicit feature requires a real compiled probe; missing artifacts fail,
+never skip. The C host initializes Lean on one native thread, transfers one
+owned ByteArray into each call, borrows the returned String only while its
+Except owner is alive, and releases every call result on that same thread.
+The host uses no runtime subprocess or signal-disposition change. Its process
+checks that Lean initialization preserved the inherited =SIGCHLD= handler,
+flags, and signal mask using read-only =sigaction= queries. Its
+lifetime owns Lean initialization; it is not an unload/reinitialize API.
+
+The gate compares allow, default deny, and explicit forbid with the Rust
+authorizer, including determining and erroring policy identities. Each valid
+input is called 128 times inside the same native process. A malformed protobuf
+must fail with =cedar-input-invalid= and no success projection. These repetitions
+check stable evaluation and ownership behavior; they are not a leak proof or a
+performance benchmark, and do not establish Gerbil/Lean co-hosting. The probe
+does record monotonic steady-state nanoseconds for all 128 calls and confirms
+that Lean initialization preserved =SIGCHLD=; cold process and initialization
+time remains outside that steady-state figure.
+
+The C declarations follow the generated C for pinned Lean 4.31. A different
+upstream =cedar-lean-ffi= revision has a different initializer signature and
+must not be copied without ABI qualification. Lake's module-native object
+graph owns linking; no hand-maintained Cedar dependency list is introduced.
+
+* Admission properties not relaxed
+
+The normal authority has not switched to the diagnostic probe or an in-process
+backend. It talks only to the independent AOT Runtime Host. For each request the
+Host invokes private copies of itself in internal Rust-worker and Lean-worker
+modes, under one hard deadline. A panic, signal, malformed response, timeout, or
+digest mismatch becomes a typed failure; neither worker is an external engine
+artifact or a public CLI contract. Receipts bind the one Host artifact digest,
+the Host generation, and the two linked component identities.
+
+The truncated-varint counterexample =[0xff]= currently reaches a panic in the
+pinned upstream =Protobuf/Varint.lean=, =find_end_of_varint_helper=. Its empty
+check covers the original cursor, but its unchecked access uses =pos + n=.
+The probe enables exit-on-panic, matching upstream FFI safety intent, so a
+panic cannot continue into an apparent successful projection. The malformed
+input test intentionally requires a typed failure and remains a qualification
+blocker until the actual parser/input-admission owner is repaired. The pinned
+dependency/cache has not been patched in place.
+
+* Runtime Host artifact contract
+
+Cargo emits the Rust runtime core as a static archive. The outer build passes
+that archive explicitly to Lake, which links it with the transitive Cedar/Lean
+object graph into one =cedarRuntimeHost= executable. The authority connects to
+an independently launched instance over a Unix socket. At launch the runtime
+owner supplies the socket, the expected Host digest, the Rust component
+identity, the Lean component identity, and the hard timeout. The handshake
+binds those identities and the Runtime generation before the first request.
+
+Tests accept =POO_FLOW_CEDAR_RUNTIME_HOST= as an explicit artifact input. No
+crate derives a repository root or build-cache path. The variable may point to
+a Nix store output, Bazel executable, or another declared build result; absence
+is an explicit qualification failure. A local Lake output is only a developer
+test input, never a source or production lookup contract.

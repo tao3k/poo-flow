@@ -1,8 +1,11 @@
+;;; Boundary: turns canonical organization bundles into evidence-bearing contracts.
+;;; Invariant: contract identity is derived from the normalized semantic bundle.
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/src/semantic/organization-bundle)
 
+;; : (-> PooFlowOrganizationBundle PooFlowOrganizationBundleContract)
 (def (poo-flow-organization-bundle->contract bundle)
   (let ((canonical-value (poo-flow-organization-bundle-normalize bundle))
         (identity-value (poo-flow-organization-bundle-identity bundle)))
@@ -11,6 +14,7 @@
         (canonical canonical-value)
         (identity identity-value))))
 
+;; : (-> Object Boolean)
 (def (poo-flow-organization-bundle-contract? value)
   (and (object? value)
        (with-catch
@@ -19,6 +23,7 @@
           (eq? (.ref value 'kind)
                'poo-flow.organization-bundle.contract.v1)))))
 
+;; : (-> PooFlowOrganizationBundleContract Symbol Object)
 (def (poo-flow-organization-bundle-contract-ref contract slot)
   (unless (poo-flow-organization-bundle-contract? contract)
     (error "expected organization Bundle contract" contract))

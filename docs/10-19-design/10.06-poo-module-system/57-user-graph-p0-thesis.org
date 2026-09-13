@@ -255,7 +255,7 @@ The drill-down screens can answer:
 - Which type or Lean fact supports this decision?
 *** 10.06.57.70.10 Implemented Slice: Observability Feedback Builder
 The first code slice is now the shared observability feedback builder:
-- =src/observability/objects.ss= defines observability prototypes, diagnostics, receipts, and reusable graph/repair/readiness builders.
+- =src/module-system/observability/objects.ss= defines observability prototypes, diagnostics, receipts, and reusable graph/repair/readiness builders.
 - =src/contract/boundary-namespace.ss= is the first real validator integration.
 - =t/observability-feedback-test.ss= locks the generic receipt shape.
 - =t/boundary-namespace-test.ss= locks a domain-specific validator using the same feedback shape.

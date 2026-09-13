@@ -8,8 +8,18 @@
 (import :gerbil/gambit
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/nono-sandbox/c-binding-runtime
-        :poo-flow/src/module-system/base
-        ./_nono)
+        :poo-flow/src/module-system/declaration/interface
+        (only-in ./_nono
+                 nono_native_apply_null
+                 nono_native_capability_roundtrip
+                 nono_native_close
+                 nono_native_is_loaded
+                 nono_native_last_error
+                 nono_native_open
+                 nono_native_sandbox_is_supported
+                 nono_native_support_details
+                 nono_native_support_is_supported
+                 nono_native_support_platform))
 
 (export +nono-c-binding-native-live-test-receipt-schema+
         +nono-c-binding-selection-live-test-receipt-schema+
@@ -65,6 +75,7 @@
       '())))
 
 ;; nono-c-binding-native-resolve-library
+;;   : (forall (o) (-> [o] (U String #f)))
 ;;   : (-> [Alist] (U String #f))
 ;;   | contract: returns the first existing native library candidate or #f.
 ;;   | doc m%

@@ -405,6 +405,7 @@
 ;;; library after dry-run validation. The default probe is the direct C compile
 ;;; argv; callers may pass a safer or platform-specific command.
 ;; nono-c-binding-smoke-test
+;;   : (forall (c) (-> RuntimeManifest [c] Alist))
 ;;   : (-> RuntimeManifest [Command] Alist)
 ;;   | contract: runs a host probe command only; native sandbox apply is never called
 ;;   | doc m%
@@ -440,6 +441,7 @@
 ;;; its exit status determines success; if it cannot be spawned, the receipt is
 ;;; an explicit skip. The default command is `nono --version`, not sandbox apply.
 ;; nono-c-binding-live-test
+;;   : (forall (c) (-> RuntimeManifest [c] Alist))
 ;;   : (-> RuntimeManifest [Command] Alist)
 ;;   | contract: runs only an installed nono CLI probe; native sandbox apply is never called
 ;;   | doc m%

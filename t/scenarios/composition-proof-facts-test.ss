@@ -1,4 +1,9 @@
-(import :poo-flow/src/module-system/composition-proof-facts)
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/module-system/composition/proof-facts)
+
+(def composition-proof-facts-test
+  (test-suite "composition proof facts"
+    (test-case "projects accepted and rejected composition facts"
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))
@@ -105,4 +110,4 @@
 
 (assert-equal 'runtime-execution-rule
               (alist-ref 'rejection-rule runtime-execution-facts)
-              'composition-rejected-by-runtime-execution)
+              'composition-rejected-by-runtime-execution))))

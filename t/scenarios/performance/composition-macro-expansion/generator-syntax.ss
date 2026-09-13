@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: declarative fixture generator for composition expansion gates.
 
-(import :poo-flow/src/module-system/profile-composition
+(import "../../../../src/module-system/profile-composition/interface"
         (for-syntax :std/stxutil))
 
 (export define-composition-expansion-case)

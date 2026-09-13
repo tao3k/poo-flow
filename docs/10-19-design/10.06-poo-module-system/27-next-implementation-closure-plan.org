@@ -33,7 +33,7 @@ baseline:
 - =pooFlowUserProfilePresentation= and
   =pooFlowUserProfileDoctorPresentation= forward the same workflow CI/CD
   projection surface.
-- =src/module-system/declaration-case.ss= treats the expanded workflow CI/CD
+- =src/user-interface/declaration-case.ss= treats the expanded workflow CI/CD
   trace stages as part of the maintained downstream declaration case.
 - Focused tests now cover Funflow pipeline lowering, workflow check maps,
   user-interface CI/CD presentation, profile presentation, declaration cases,
@@ -220,9 +220,9 @@ Reason:
 Prior M2 owner files:
 - =src/modules/workflow/cicd.ss= for workflow-owned manifest/check-map
   validation if the validation is check-map specific.
-- =src/module-system/base.ss= for user-config presentation validation if the
+- =src/module-system/declaration/interface.ss= for user-config presentation validation if the
   validation consumes module-selected manifest maps and summary rows.
-- =src/module-system/profile-config.ss= only forwards results; it should not own
+- =src/user-interface/profile-config.ss= only forwards results; it should not own
   validation logic.
 
 Prior M2 tests:
@@ -252,8 +252,8 @@ Exit criteria:
 - Generic presentation fixtures with CI/CD intent but no check-map still expose stable empty ABI rows.
 - No provider-specific CI/CD adapter or runtime execution is added.
 Status 2026-06-20:
-- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/base.ss=.
-- Forwarded the new projection through profile and doctor presentations in =src/module-system/profile-config.ss=.
+- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/declaration/interface.ss=.
+- Forwarded the new projection through profile and doctor presentations in =src/user-interface/profile-config.ss=.
 - Added a user-interface result gate in =t/user-interface-cicd-test.ss= that starts from downstream Funflow config and reaches ABI payload data.
 - Updated =t/user-interface-presentation-test.ss= trace stages and empty-fixture coverage.
 *** 10.06.27.46 M6: Tutorial Alignment User-Interface Handoff Gate

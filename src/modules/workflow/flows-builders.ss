@@ -4,8 +4,8 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/core/projection-syntax
-        :poo-flow/src/modules/docker
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/docker/config
+        :poo-flow/src/modules/workflow/store)
 
 (export make-docker-store-run-config
         make-ccompilation-flow
@@ -209,6 +209,7 @@
 ;;; - It serializes request metadata without running Makefile or process work.
 ;; | RuntimeArgumentBuilder = (-> RuntimeEnvelope [String])
 ;; : (-> [Alist] RuntimeArgumentBuilder)
+;; : (forall (o) (-> [o] RuntimeArgumentBuilder))
 ;; make-makefile-tool-runtime-arguments
 ;;   : (-> [Alist] RuntimeArgumentBuilder)
 ;;   | contract: options produce an envelope serializer, not runtime execution

@@ -3,7 +3,7 @@
 ;;; Invariant: declarations validate shape but never execute commands.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        (only-in :poo-flow/src/module-system/durable-policy
+        (only-in :poo-flow/src/modules/memory-core/durable/policy
                  +poo-flow-durable-action-classes+)
         :poo-flow/src/modules/workflow/cicd-projection-syntax)
 

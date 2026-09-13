@@ -16,6 +16,10 @@
         poo-flow-session-validation-granted?
         poo-flow-session-validation-partition/rev
         poo-flow-session-validation-partition
+        poo-flow-session-validation-partition-accepted
+        poo-flow-session-validation-partition-rejected
+        poo-flow-session-validation-partition/with-context/rev
+        poo-flow-session-validation-partition/with-context
         poo-flow-session-reverse-onto
         poo-flow-session-policy-tool-attempt
         poo-flow-session-policy-tool-attempt?
@@ -65,20 +69,11 @@
     (poo-flow-session-validation-alist-ref row key default)
     (poo-flow-session-validation-slot row key default)))
 
-;;; Boundary: policy-validation field rows preserve receipt slot names for
-;;; session policy diagnostics.
-;; poo-flow-session-policy-validation-field-rows
-;; : (-> Syntax Syntax)
-;; | doc m%
-;;   Expands session policy validation fields into diagnostic receipt rows.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-session-policy-validation-field-rows (valid? #t))
-;;   ;; => ((valid? . #t))
-;;   ```
-(defrules poo-flow-session-policy-validation-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+;;; Boundary: callers construct explicit field pairs; this helper preserves
+;;; their order without adding a second syntax layer over ordinary values.
+;; : (-> (List (Pair Symbol Object)) (List (Pair Symbol Object)))
+(def (poo-flow-session-policy-validation-field-rows . rows)
+  rows)
 
 ;; : (-> Datum List Boolean)
 (def (poo-flow-session-validation-member? value values)
@@ -130,7 +125,57 @@
     (list (reverse accepted-values-rev)
           (reverse rejected-values-rev))))
 
+;;; Partition selectors centralize the internal two-list protocol so receipt
+;;; assembly does not repeat shape dispatch for every policy family.
+;; : (-> SessionValidationPartition List)
+(def (poo-flow-session-validation-partition-accepted partition)
+  (car partition))
+
+;; : (-> SessionValidationPartition List)
+(def (poo-flow-session-validation-partition-rejected partition)
+  (cadr partition))
+
+;; : (forall (c a) (-> (-> c a Boolean) c (List a) (List a) (List a) SessionValidationPartition))
+;; : (-> Procedure Object List List List SessionValidationPartition)
+(def (poo-flow-session-validation-partition/with-context/rev predicate
+                                                                context
+                                                                values
+                                                                accepted-rev
+                                                                rejected-rev)
+  (cond
+   ((null? values) (list accepted-rev rejected-rev))
+   ((predicate context (car values))
+    (poo-flow-session-validation-partition/with-context/rev
+     predicate
+     context
+     (cdr values)
+     (cons (car values) accepted-rev)
+     rejected-rev))
+   (else
+    (poo-flow-session-validation-partition/with-context/rev
+     predicate
+     context
+     (cdr values)
+     accepted-rev
+     (cons (car values) rejected-rev)))))
+
+;; : (forall (c a) (-> (-> c a Boolean) c (List a) SessionValidationPartition))
+;; : (-> Procedure Object List SessionValidationPartition)
+(def (poo-flow-session-validation-partition/with-context predicate context values)
+  (let* ((partition
+          (poo-flow-session-validation-partition/with-context/rev
+           predicate
+           context
+           values
+           '()
+           '()))
+         (accepted-values-rev (car partition))
+         (rejected-values-rev (cadr partition)))
+    (list (reverse accepted-values-rev)
+          (reverse rejected-values-rev))))
+
 ;; : (forall (a) (-> (List a) (List a) (List a)))
+;; : (-> List List List)
 (def (poo-flow-session-reverse-onto values tail)
   (foldl cons tail values))
 
@@ -161,18 +206,18 @@
                             (symbol? principal-ref)
                             principal-ref)
   (poo-flow-session-policy-validation-field-rows
-   (kind 'poo-flow.session.policy.tool-attempt)
-   (schema 'poo-flow.modules.session.policy.tool-attempt.v1)
-   (attempt-id attempt-id)
-   (trigger-ref trigger-ref)
-   (tool-ref tool-ref)
-   (action action)
-   (resource-ref resource-ref)
-   (principal-ref principal-ref)
-   (metadata (if (null? maybe-metadata)
-               '()
-               (car maybe-metadata)))
-   (runtime-executed #f)))
+   (cons 'kind 'poo-flow.session.policy.tool-attempt)
+   (cons 'schema 'poo-flow.modules.session.policy.tool-attempt.v1)
+   (cons 'attempt-id attempt-id)
+   (cons 'trigger-ref trigger-ref)
+   (cons 'tool-ref tool-ref)
+   (cons 'action action)
+   (cons 'resource-ref resource-ref)
+   (cons 'principal-ref principal-ref)
+   (cons 'metadata (if (null? maybe-metadata)
+                     '()
+                     (car maybe-metadata)))
+   (cons 'runtime-executed #f)))
 
 ;; : (-> Datum Boolean)
 (def (poo-flow-session-policy-tool-attempt? value)
@@ -180,26 +225,40 @@
        (eq? (poo-flow-session-validation-alist-ref value 'kind #f)
             'poo-flow.session.policy.tool-attempt)))
 
-;;; Generated alist accessors for stable session policy tool attempts.
-(defpoo-session-alist-accessors
-  poo-flow-session-validation-alist-ref
-  (poo-flow-session-policy-tool-attempt-id attempt-id #f)
-  (poo-flow-session-policy-tool-attempt-trigger-ref trigger-ref #f)
-  (poo-flow-session-policy-tool-attempt-tool-ref tool-ref #f)
-  (poo-flow-session-policy-tool-attempt-action action #f)
-  (poo-flow-session-policy-tool-attempt-resource-ref resource-ref #f)
-  (poo-flow-session-policy-tool-attempt-principal-ref principal-ref #f))
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-id attempt)
+  (poo-flow-session-validation-alist-ref attempt 'attempt-id #f))
+
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-trigger-ref attempt)
+  (poo-flow-session-validation-alist-ref attempt 'trigger-ref #f))
+
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-tool-ref attempt)
+  (poo-flow-session-validation-alist-ref attempt 'tool-ref #f))
+
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-action attempt)
+  (poo-flow-session-validation-alist-ref attempt 'action #f))
+
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-resource-ref attempt)
+  (poo-flow-session-validation-alist-ref attempt 'resource-ref #f))
+
+;; : (-> Alist MaybeSymbol)
+(def (poo-flow-session-policy-tool-attempt-principal-ref attempt)
+  (poo-flow-session-validation-alist-ref attempt 'principal-ref #f))
 
 ;; : (-> Symbol Symbol Datum Alist)
 (def (poo-flow-session-policy-diagnostic code scope-ref detail)
   (poo-flow-session-policy-validation-field-rows
-   (kind 'poo-flow.session.policy.diagnostic)
-   (schema 'poo-flow.modules.session.policy.diagnostic.v1)
-   (code code)
-   (scope-ref scope-ref)
-   (detail detail)
-   (severity 'error)
-   (runtime-executed #f)))
+   (cons 'kind 'poo-flow.session.policy.diagnostic)
+   (cons 'schema 'poo-flow.modules.session.policy.diagnostic.v1)
+   (cons 'code code)
+   (cons 'scope-ref scope-ref)
+   (cons 'detail detail)
+   (cons 'severity 'error)
+   (cons 'runtime-executed #f)))
 
 ;; : (-> PooSessionPolicy Symbol Object)
 (def (poo-flow-session-policy-slot-value policy key default)

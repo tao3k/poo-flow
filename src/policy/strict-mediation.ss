@@ -1,6 +1,6 @@
 ;;; Boundary: Strict mediation owns pure nonce/root state transitions.
 ;;; Invariant: a token is consumed at most once and roots never fork silently.
-(import :clan/poo/object
+(import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-strict-mediation-state

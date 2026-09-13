@@ -10,15 +10,14 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-module)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
 
 (export user-interface-cicd-profile-case-test)
@@ -59,10 +58,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-only)))
                          (access . read-only))
                         (cpu . 1)

@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/core/failure
@@ -116,5 +115,3 @@
         (check-equal? (execution-failure? review-failure) #t)
         (check-equal? (execution-failure-code review-failure)
                       'invalid-spec-evolution-review-item)))))
-
-(run-tests! loop-spec-evolution-test)

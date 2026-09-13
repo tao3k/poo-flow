@@ -84,7 +84,7 @@ Precompile a user module explicitly during CI, install, or runtime warmup:
 
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_load_aot \
-  precompile packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  precompile packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -99,7 +99,7 @@ Run the exact AOT benchmark after precompile:
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
   scheme-load-aot --iterations 10 \
-  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --source packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -115,7 +115,7 @@ Scheme datum artifact from a Gerbil-enabled authoring/release lane:
 
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_projection_artifact \
-  export packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  export packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -129,7 +129,7 @@ Benchmark the artifact path explicitly:
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
   scheme-load-aot --iterations 10 --include-artifact --preproject-artifact \
-  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --source packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 

@@ -1,0 +1,665 @@
+#+title: RFC Proof Verification And Gap Closure Plan
+#+startup: overview
+
+* Status
+
+This is the execution plan for verifying the active POO module-system RFC
+cluster.  It is intentionally separate from the design RFCs.
+
+Formal definitions and currently accepted theorems are owned by
+[[../10-19-design/10.06-poo-module-system/45-11-rfc-formal-model-and-lean-proofs.org][RFC 45-11 — POO Module System Formal Model And Lean Proof Obligations]].
+
+=gerbil-poo= is the sole Scheme POO library.  No proof tranche may introduce a
+shadow prototype system, POO evaluator, fixed-point engine, linearizer, or
+fallback object runtime.
+
+The plan does not authorize architecture changes.  A failed proof or runtime
+counterexample starts an RFC discussion; architecture changes require explicit
+approval before the owning RFC, Lean model, or implementation is changed.
+
+* EFF-005CR checkpoint: model proof and external runtime evidence
+
+The original concrete-runtime correspondence obligation is split so that a
+proved contract cannot be confused with an observed runtime implementation.
+
+| Obligation | Owner | State | Closure evidence |
+|-
+| =EFF-005C= | POO Flow formal model | =counterexample-proven= | Raw same-snapshot transitions admit two distinct commits without arbitration. |
+| =EFF-005CR-M= | POO Flow formal model | =theorem-proven= | =RuntimeArbitrationReceipt= refines =AtomicCommitArbitration=; Lean build and AXLE pass. |
+| =EFF-005CR-R= | =marlin-agent-core= runtime | =blocked-external-owner= | Concrete atomic primitive, durable arbitration receipt, and execution-to-model correspondence are not observed in this repository. |
+| =EFF-005CR= | Cross-owner qualification | =blocked= | Closes only when both =EFF-005CR-M= and =EFF-005CR-R= are qualified. |
+
+The current AXLE receipt for the complete =EffectBoundary.lean= model is
+=f7dd396f-d644-4fcc-a39d-07f130f8a4f1= with zero failed declarations, errors,
+or warnings.
+
+#+begin_src typst
+#let EFF_005CR_closed(model_receipt, runtime_receipt) = (
+  model_receipt.refines_atomic_arbitration
+  and runtime_receipt.identifies_atomic_primitive
+  and runtime_receipt.binds_terminal_key
+  and runtime_receipt.binds_before_after
+  and runtime_receipt.binds_arbiter_sequence
+)
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  M["EFF-005CR-M<br/>theorem-proven"]
+  R["EFF-005CR-R<br/>blocked-external-owner"]
+  C["EFF-005CR<br/>cross-owner qualification"]
+  N["Next independent proof tranche<br/>may proceed"]
+
+  M -->|"supplies formal refinement contract"| C
+  R -->|"must supply Marlin runtime receipt"| C
+  C -->|"remains open while runtime evidence is absent"| N
+#+end_src
+
+Implementation checklist:
+
+- [X] Model =accepted=, =duplicate=, and
+  =conflicting-terminal-evidence= decisions.
+- [X] Prove that committed state cannot be overwritten or accepted twice.
+- [X] Define the proof-carrying runtime arbitration receipt contract.
+- [X] Build the Lean package with the pinned Lean 4.31.0 toolchain.
+- [X] Recheck the final module independently with AXLE.
+- [X] Verify that current POO Flow sources stop at a non-executed Marlin handoff.
+- [ ] Obtain the concrete Marlin atomic primitive identity and version.
+- [ ] Obtain a durable Marlin arbitration receipt containing terminal key,
+  before/after state, decision, receipt digests, and arbiter sequence.
+- [ ] Establish the execution-to-=AtomicCommitArbitration= correspondence.
+
+No Scheme fallback is permitted for the unchecked items. =gerbil-poo= remains
+the sole Scheme POO library; the missing evidence belongs to the external
+runtime boundary.
+
+** EFF-006 and EFF-007 stable definitions
+
+The Tranche 3 checklist previously named =EFF-006= and =EFF-007= without
+registering their propositions. Their stable definitions are:
+
+| Obligation | Owner | Proposition | Verification | Current state |
+|-
+| =EFF-006= | =45-08/45-11= | Retry from =failed= or =cancelled= preserves operation identity, references the prior attempt, creates a fresh attempt, and enters that attempt. | Lean + AXLE | =theorem-proven= |
+| =EFF-007= | =45-08/45-11= | Any trace from =indeterminate= that later retries begins with provider reconciliation; retry is enabled only after reconciliation proves no commit. | Lean + AXLE | =theorem-proven= |
+
+The proof owners are:
+
+- =failedRetryPreservesCausalLink=;
+- =cancelledRetryPreservesCausalLink=;
+- =indeterminateRetryRequiresPriorReconciliation=;
+- =reconciliationNoCommitEnablesFreshRetry=.
+
+#+begin_src typst
+#let retry_qualification = (
+  EFF_006.structural_causal_link
+  and EFF_007.reconciliation_barrier
+)
+
+#let retry_policy_qualified = (
+  retry_qualification
+  and policy_evidence_provenance
+)
+#+end_src
+
+The first conjunction is theorem-proven. =policy_evidence_provenance= remains
+open, so this checkpoint MUST NOT be reported as complete recovery-policy
+authorization.
+
+* REC-004 checkpoint: retry policy-evidence provenance
+
+=REC-004= owns the correspondence between an effect-boundary retry and the
+boundary-scoped recovery-policy authority defined by 45-03.
+
+| Sub-obligation | Proposition | State |
+|-
+| =REC-004N= | A bare =policyEvidence= scalar does not identify a recovery-policy root. | =counterexample-proven-local= |
+| =REC-004M= | =PolicyAuthorizedRetry= binds authorization fields to an immutable recovery decision receipt. | =theorem-proven-local= |
+| =REC-004G= | Governed failed/cancelled retry combines causal linkage, freshness, and receipt-bound policy evidence. | =theorem-proven-local= |
+| =REC-004A= | Independent AXLE acceptance of the modular proof owner. | =blocked-verifier-import-boundary= |
+| =REC-004S-P= | Exact generic =gerbil-poo= prototype/object mechanism used by the correspondence. | =symbol-located= |
+| =REC-004S-B= | Behavior-qualify the pinned mechanism for recovery-policy prototype/receipt object construction. | =pending-behavior-proof= |
+| =REC-004S-F= | Concrete POO Flow recovery-policy prototype and receipt constructor/validator owner. | =implementation-unobserved= |
+| =REC-004S= | Exact Scheme/=gerbil-poo= and POO Flow constructor correspondence. | =blocked= |
+| =REC-004= | Cross-layer recovery-policy authorization qualification. | =blocked= |
+
+#+begin_src typst
+#let REC_004_closed = (
+  REC_004N.counterexample_proven
+  and REC_004M.receipt_refinement_proven
+  and REC_004G.governed_retry_proven
+  and REC_004T.typst_lean_capability_sync_proven
+  and REC_004V.non_authoritative_views_proven
+  and REC_004A.independent_verifier_accepted
+  and REC_004S_P.library_mechanism_symbol_located
+  and REC_004S_B.library_mechanism_behavior_proven
+  and REC_004S_F.flow_constructor_qualified
+)
+#+end_src
+
+#+begin_src mermaid
+flowchart TD
+  N["REC-004N<br/>bare evidence counterexample<br/>proven local"]
+  M["REC-004M<br/>receipt refinement<br/>proven local"]
+  G["REC-004G<br/>governed retry<br/>proven local"]
+  T["REC-004T<br/>Typst--Lean capability sync<br/>proven local"]
+  V["REC-004V<br/>receipt + observation authority=false<br/>proven local"]
+  A["REC-004A<br/>AXLE modular import<br/>blocked"]
+  SP["REC-004S-P<br/>gerbil-poo symbols<br/>located"]
+  SB["REC-004S-B<br/>behavior proof<br/>pending"]
+  PE["Provider envelope<br/>incomplete"]
+  SF["REC-004S-F<br/>POO Flow constructor owner<br/>unresolved"]
+  S["REC-004S<br/>Scheme correspondence<br/>blocked"]
+  C["REC-004<br/>cross-layer qualification"]
+
+  N -->|"reject scalar-only authority"| M
+  M -->|"supply proof-carrying receipt"| G
+  G -->|"extend with committed decision + token"| T
+  T -->|"classify authorization views"| V
+  V -->|"local kernel requires capability"| C
+  A -->|"requires verifier-visible project import"| C
+  SP -->|"identifies generic mechanism"| SB
+  SB -->|"must qualify intended object construction"| S
+  PE -->|"blocks parser-owned implementation discovery"| SF
+  SF -->|"must implement and validate domain receipt"| S
+  S -->|"requires library and Flow evidence"| C
+#+end_src
+
+** Approved four-layer internal object boundary
+
+The implementation target is:
+
+| Object | Required implementation evidence |
+|-
+| =RecoveryPolicy= | POO prototype lineage, pure decision slot, boundary-scoped authority, and no continuation invocation. |
+| =RecoveryDecision= | Immutable variant/payload/restart evidence object with no runtime token. |
+| =RecoveryDecisionReceipt= | Immutable accepted/rejected receipt binding policy, boundary, cell, generation, decision, restart set, and effect barrier. |
+| =RetryCapability= | Runtime-local projection of one committed receipt plus opaque single-use token. |
+
+Implementation checklist:
+
+- [X] Approve the four-layer semantic boundary.
+- [X] Keep =RecoveryDecisionReceipt= observable and non-authoritative.
+- [X] Keep the one-shot token outside serializable POO receipt data.
+- [X] Keep recovery syntax out of =user-composition=.
+- [X] Require POO-native construction through pinned =gerbil-poo= mechanisms.
+- [ ] Fix exact internal slot names and prototype ownership.
+- [ ] Define receipt accepted/rejected validation predicates.
+- [ ] Implement the Scheme/runtime atomic =RetryCapability= projection
+  operation.
+- [ ] Implement Scheme/runtime single-use capability consumption and replay
+  rejection.
+- [X] Define =ProjectRetryCapability= and =ConsumeRetryCapability= as
+  synchronized Typst/Lean correspondence predicates.
+- [X] Prove that =RetryCapability= and =RetryCapabilityStep= refine those
+  predicates in the pinned local Lean kernel.
+- [X] Model the abstract =RetryCapabilityStep= consumption transition in Lean.
+- [X] Prove =retryCapabilityCannotBeConsumedTwice= in the pinned local Lean
+  kernel.
+- [X] Extend Lean with receipt-non-authority, observation-non-authority, and
+  at-most-one-consumption theorems.
+- [ ] Behavior-qualify the selected =gerbil-poo= APIs.
+- [ ] Implement focused Scheme constructor/validator tests.
+- [ ] Establish the Scheme-to-Lean correspondence receipt.
+
+No implementation may expose raw alist constructors, public =.put!= mutation,
+caller-supplied receipt/token values, or a standalone
+=RetryAuthorization(policyEvidence)= constructor.
+
+Verification receipts:
+
+- local Lean 4.31.0: 63-job package build passed;
+- AXLE request =645847d4-fce9-4387-a230-e6e117f81f6a=: default import
+  replacement made the dependency unavailable;
+- AXLE request =9a73f9ff-a949-4362-9022-154878b60096=: preserved import could
+  not resolve the local =PooFlowProof= module prefix;
+- combined-source export: not authorized and not performed.
+
+No fallback receipt, duplicate POO model, or scalar-to-authority inference is
+permitted while =REC-004A= or =REC-004S= remains blocked.
+
+** REC-004I checkpoint: Scheme/runtime owner discovery
+
+The parser-owned Gerbil discovery for =RetryCapability=, recovery decision
+receipt, atomic projection, consumption, and effect-boundary ownership ended in
+=typed-terminal-failure=. The provider source envelope is incomplete and named
+the following missing provider ids:
+
+- =rs-harness=;
+- =ts-harness=;
+- =py-harness=;
+- =julia-lang-project-harness=;
+- =orgize=.
+
+This evidence proves that owner discovery is blocked. It does not prove that an
+implementation is absent. Raw source search is not an admissible substitute.
+
+- [X] Attempt parser-owned Gerbil implementation-owner discovery.
+- [X] Record the incomplete provider-envelope blocker.
+- [X] Define the minimum approved correspondence contract in RFC 45-08.
+- [ ] Restore or complete the provider source envelope.
+- [ ] Identify the exact POO Flow constructor and effect-boundary owners.
+- [ ] Verify that the owner uses the canonical =gerbil-poo= mechanisms rather
+  than a duplicate object runtime.
+- [ ] Implement and test POO-native capability projection only after owner
+  identity and the internal slot contract are qualified.
+
+#+begin_src mermaid
+flowchart LR
+  Q["Parser-owned Gerbil owner query"]
+  E["State: provider envelope incomplete"]
+  U["State: implementation owner unresolved"]
+  C["45-08 minimum correspondence contract"]
+  I["Implementation candidate"]
+  V["Scheme/runtime correspondence evidence"]
+  Q -->|"typed-terminal-failure"| E
+  E -->|"cannot infer absence"| U
+  U -->|"restore envelope + resolve exact owner"| I
+  C -->|"constrains projection and consumption"| I
+  I -->|"focused positive + replay tests"| V
+#+end_src
+
+Scheme discovery checkpoint:
+
+- canonical dependency:
+  =github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead=;
+- =proto.ss=: =compose-proto=, =compose-proto*=, =instantiate-proto=, and
+  =instantiate-protos= are =symbol-located=;
+- =object.ss=: =.mix=, =.extend=, =.+=, =.ref/.@=, =.has?=, and
+  =.def/.o= are =symbol-located=;
+- repository-wide and module-system lexical discovery is blocked by an
+  incomplete ASP provider source envelope;
+- the three direct implementation-owner candidates derived from the RFC do not
+  exist;
+- therefore absence is recorded as =implementation-unobserved=, not as proof
+  that no implementation exists anywhere.
+
+* Objective
+
+For every normative architectural proposition, establish an evidence chain:
+
+1. a stable proposition identity and owning RFC;
+2. an explicit mathematical or operational model;
+3. a machine-checked theorem where the proposition is formal;
+4. a correspondence argument from Scheme/=gerbil-poo= to the model;
+5. implementation and runtime evidence;
+6. a durable qualification receipt.
+
+#+begin_src typst
+$
+"Qualified"(p)
+  :=
+  "Modeled"(p)
+  and "TheoremProven"(p)
+  and "CorrespondenceProven"(p)
+  and "RuntimeEvidenceAccepted"(p)
+$
+#+end_src
+
+A proposition that is meaningful only at one layer records =not-applicable=
+for the other layers.  Missing evidence is never treated as success.
+
+* Inventory baseline
+
+The Org parser currently reports:
+
+- 11 active modular owners from =45-01= through =45-11=;
+- 40 explicit unchecked checklist items;
+- no checklist items in =45-08=, =45-09=, or =45-10=, despite their normative
+  state machines and MUST-level requirements;
+- three initial Lean modules accepted locally and by AXLE.
+
+The 40-item count is an inventory baseline, not a completion percentage.
+Several checklist items contain multiple independent propositions, and the
+effect/provider RFCs add implicit obligations below.
+
+* Evidence ladder and proposition states
+
+| State | Meaning | May claim implementation correctness? |
+|---+---+---|
+| =unregistered= | normative prose has no stable obligation id | no |
+| =registered= | owner, proposition, and evidence class are known | no |
+| =modeled= | types and transition relations are explicit | no |
+| =theorem-proven= | Lean kernel accepts the model theorem | no |
+| =correspondence-proven= | concrete macro/runtime operation refines the model | partially |
+| =implementation-qualified= | focused positive and negative tests pass | partially |
+| =operationally-qualified= | installed/runtime evidence and receipt pass | yes, within receipt scope |
+| =counterexample= | theorem, correspondence, or implementation claim failed | no |
+| =blocked= | required API/evidence owner is unavailable | no |
+
+#+begin_src mermaid
+stateDiagram-v2
+  [*] --> Registered: assign proposition id and RFC owner
+  Registered --> Modeled: define types, premises, and transitions
+  Modeled --> TheoremProven: Lean kernel accepts theorem
+  TheoremProven --> CorrespondenceProven: Gerbil and gerbil-poo mapping is established
+  CorrespondenceProven --> ImplementationQualified: positive and negative gates pass
+  ImplementationQualified --> OperationallyQualified: installed/runtime receipt is accepted
+
+  Modeled --> Counterexample: theorem is false or premises are inconsistent
+  TheoremProven --> Counterexample: correspondence mapping fails
+  CorrespondenceProven --> Counterexample: implementation violates the model
+  ImplementationQualified --> Counterexample: runtime or evidence chain violates the claim
+
+  Counterexample --> DiscussionRequired: classify failure and produce minimal witness
+  DiscussionRequired --> Registered: approved RFC clarification
+  DiscussionRequired --> Modeled: approved architecture adjustment
+  DiscussionRequired --> CorrespondenceProven: implementation-only repair
+  Registered --> Blocked: exact API or evidence owner is unavailable
+  Blocked --> Registered: missing evidence becomes available
+#+end_src
+
+* Verification classes
+
+** Formal theorem
+
+Use Lean for:
+
+- identity separation and equality/non-equality properties;
+- state-transition safety and impossible transitions;
+- trace invariants;
+- graph, lineage, fixed-point, and cycle properties;
+- admissibility and evidence-construction rules;
+- concurrency safety when the scheduler assumptions are explicit.
+
+Every theorem must build under the pinned local Lean toolchain and pass AXLE
+with no failed declarations, errors, warnings, =sorry=, new axioms, or unsafe
+declarations.
+
+** Semantic correspondence
+
+Use source/API evidence plus focused Gerbil witnesses for:
+
+- hygienic macro expansion;
+- exact =gerbil-poo= constructors and operators;
+- runtime root and lineage identity;
+- demand-cell and continuation behavior;
+- POO-native capability and refinement semantics.
+
+A correspondence item is blocked, not guessed, while an exact =gerbil-poo=
+symbol remains =semantic-required= or merely =symbol-located=.
+
+** Implementation qualification
+
+Use property, model-based, negative, and integration tests for:
+
+- macro/parser behavior;
+- concurrency and cancellation races;
+- bounded observability and sink failures;
+- runtime handoff and reinjection;
+- provider search resolution;
+- installed dependency and artifact identity.
+
+** Operational evidence
+
+Use durable receipts for:
+
+- resolved dependency revision;
+- proof source and theorem-set digest;
+- installed artifact identity;
+- runtime observation identity;
+- qualification policy identity;
+- freshness, revocation, and supersession.
+
+* Obligation register
+
+** Ownership and G0 qualification
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =OWN-001= | =45-01= | =45-07..45-10= respect the ownership table | owner-graph audit plus RFC trace | registered |
+| =G0-001= | =45-02= | canonical qualification vectors rematerialize deterministically | generated vector equality and digest receipt | registered |
+| =G0-002= | =45-02= | all eleven required G0 instances accept/reject exactly as specified | table-driven negative and positive gate | registered |
+| =G0-003= | =45-02/45-06= | parent declaration, checkout, runtime artifact, and receipt resolve to the pinned =gerbil-poo= source | installed-artifact identity receipt | blocked by complete runtime proof |
+
+** Identity, composition, and macro lowering
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =ID-001= | =45-07/45-11= | lexical rename preserves runtime root | Lean + AXLE | theorem-proven |
+| =ID-002= | =45-07/45-11= | lexical rename preserves demand-cell key | Lean + AXLE | theorem-proven |
+| =ID-003= | =45-07/45-11= | equal content does not imply equal runtime root | Lean + AXLE | theorem-proven |
+| =ID-004= | =45-03/45-07= | runtime-root allocation is fresh and non-reusing within its declared lifetime | Lean allocator model plus Gerbil runtime witness | registered |
+| =ID-005= | =45-07= | import rename and re-export preserve the actual POO object | macro-expansion and runtime identity witness | registered |
+| =CMP-001= | =45-07= | =user-composition= lowers to one boundary-local ordered =gerbil-poo= composition | hygienic macro expansion correspondence | blocked by exact API proof |
+| =CMP-002= | =45-07= | case order is preserved and duplicate case names fail at expansion time | syntax-property tests and expansion proof | registered |
+| =CMP-003= | =45-07= | sibling boundaries have no cross-boundary precedence | Lean partial-order theorem plus concurrent witness | registered |
+| =CMP-004= | =45-07= | derived receipt refinements correspond to actual POO lineage | Lean-to-Gerbil correspondence | registered |
+| =CMP-005= | =45-07= | nested Mix/Profile identities preserve local flat lineages and scoped collisions | algebraic model plus generated nested cases | registered |
+
+** =gerbil-poo= API and fixed-point semantics
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =POO-001= | =45-06= | generated Mix prototypes map to exact pinned =gerbil-poo= calls | symbol-located then behavior-proven API table | blocked by exact API proof |
+| =POO-002= | =45-06= | required semantics work without a local patch or fallback POO runtime | clean pinned-checkout integration gate | registered |
+| =FIX-001= | =45-03/45-05= | one context/root/coordinate has one active demand cell | Lean uniqueness theorem plus atomic runtime test | registered |
+| =FIX-002= | =45-05= | productive recursion is distinguished from non-productive cycles | progress-index or coinductive model plus fixtures | registered |
+| =FIX-003= | =45-05= | cycle detection is complete for direct, long, multi-branch, and deep-submodule cycles | graph theorem plus scenario matrix | registered |
+| =FIX-004= | =45-03/45-05= | recovery restart preserves cell uniqueness and lineage evidence | continuation transition theorem plus runtime witness | registered |
+| =FIX-005= | =45-05= | atomic edge insertion cannot miss or invent a cycle under concurrency | linearizability model plus stress/property tests | registered |
+
+** Recovery, continuation, resources, and observability
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =REC-001= | =45-03= | concrete Gerbil conditions refine the formal condition hierarchy | constructor/projection correspondence tests | registered |
+| =REC-002= | =45-03= | context create, close, and replacement preserve authority isolation | transition theorem plus lifecycle tests | registered |
+| =REC-003= | =45-03= | only boundary-authorized restarts may resume a captured continuation | capability non-forgeability model plus negative tests | registered |
+| =RES-001= | =45-03= | structural/operational budgets fail closed without corrupting context state | resource invariant plus exhaustion tests | registered |
+| =RES-002= | =45-03= | cancellation cannot convert =Indeterminate= into unproved =Failed= | race model plus cancellation matrix | registered |
+| =OBS-001= | =45-04= | observation cannot resume, duplicate, or mutate continuation/effect state | non-interference theorem plus hostile sink tests | registered |
+| =OBS-002= | =45-04= | overflow, sink failure, truncation, and snapshot isolation are bounded | measured property tests | registered |
+| =OBS-003= | =45-04= | selected default limits are justified by measurements | performance evidence receipt | registered |
+| =OBS-004= | =45-04= | event projection maps onto the existing implementation without changing causal order | trace correspondence | registered |
+
+** Realization admission
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =ADM-001= | =45-03/45-11= | context-bound and unresolved dispositions are not eligible | Lean + AXLE | theorem-proven |
+| =ADM-002= | =45-03/45-11= | disposition and payload are type-compatible | Lean + AXLE | theorem-proven |
+| =ADM-003= | =45-03/45-11= | admitted receiving root differs from source root | Lean + AXLE under explicit premise | theorem-proven |
+| =ADM-004= | =45-03= | executable qualification is sound and complete with respect to =Eligible= and =PayloadCompatible= | decidable Lean function and iff theorem | registered |
+| =ADM-005= | =45-03= | provider adapters cannot inject runtime-local values into portable payload | correspondence proof plus adversarial adapters | registered |
+| =ADM-006= | =45-03= | artifact identity, verifier freshness, immutability, and revocation are enforced | typed identity model plus runtime receipts | registered |
+
+** Effect boundary, suspension, and reinjection
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =EFF-001= | =45-08/45-11= | function return cannot establish commit | Lean + AXLE | theorem-proven |
+| =EFF-002= | =45-08/45-11= | =Indeterminate= cannot retry directly | Lean + AXLE | theorem-proven |
+| =EFF-003= | =45-08/45-11= | reconciliation requires matching provider capability | Lean + AXLE at type level | theorem-proven |
+| =EFF-004= | =45-08/45-11= | committed continuation re-entry preserves the original receipt | Lean + AXLE | theorem-proven |
+| =EFF-005= | =45-08/45-11= | every valid finite trace accepts at most one verified commit event | Lean + AXLE | theorem-proven |
+| =EFF-005C= | =45-08/45-11= | combined provider evidence and POO Flow atomic arbitration prevent a second accepted commit | Lean + AXLE | theorem-proven at model level |
+| =EFF-005CR= | =45-08= | concrete concurrent runtime proposals linearize to =AtomicCommitArbitration= | linearizability correspondence plus stress test | registered |
+| =EFF-006= | =45-08= | retry authorization is causally linked and creates a fresh attempt | authorization provenance model plus runtime test | registered |
+| =EFF-007= | =45-08= | idempotency and reconciliation capabilities are independently non-forgeable | capability model and negative provider fixtures | registered |
+| =INT-001= | =45-09= | Profile/Mix/macro normalization cannot invoke an external provider | phase-effect exclusion proof plus expansion tests | registered |
+| =INT-002= | =45-09= | repeated demand coalesces to one operation/attempt rather than duplicating effects | concurrent demand trace theorem plus stress test | registered |
+| =INT-003= | =45-09= | stale, duplicate, mismatched, or unauthorized receipt cannot resume a continuation | receipt/reinjection theorem plus negative matrix | registered |
+| =INT-004= | =45-09= | validated receipt reinjection resumes only the owning demand boundary | lineage/authority correspondence | registered |
+| =INT-005= | =45-09= | wait-graph projection observes suspension without owning fixed-point evaluation | non-interference proof plus graph fixture | registered |
+
+** Provider search closure
+
+| Id | Owner | Proposition | Verification | Current state |
+|---+---+---+---+---|
+| =PRV-001= | =45-10= | search is boundary-scoped and never invents global or cross-root precedence | closure model plus nested Mix fixtures | registered |
+| =PRV-002= | =45-10= | same-root refinement is ordered while unrelated roots remain incomparable | partial-order theorem | registered |
+| =PRV-003= | =45-10= | resolution never selects the first discovered candidate merely by traversal order | permutation-invariance property test | registered |
+| =PRV-004= | =45-10= | selected, missing, and ambiguous outcomes are mutually exclusive and complete | algebraic resolution theorem | registered |
+| =PRV-005= | =45-10= | lazy recursive imports reuse =gerbil-poo= demand/fixed-point/cycle semantics | exact API correspondence and recursive fixtures | blocked by exact API proof |
+| =PRV-006= | =45-10= | recovery recomputes only the affected closure and invalidates stale receipts | dependency/receipt trace theorem | registered |
+| =PRV-007= | =45-10= | handoff cannot proceed with missing or ambiguous provider evidence | gate theorem plus negative runtime tests | registered |
+
+* Dependency graph and proof tranches
+
+#+begin_src mermaid
+flowchart TD
+  T0["Tranche 0: proposition registry and proof receipts"] -->|"stable ids and source digests"| T1["Tranche 1: gerbil-poo API and identity correspondence"]
+  T1 -->|"runtime root, lineage, and demand semantics proven"| T2["Tranche 2: fixed point, cycle, recovery, and cancellation"]
+  T1 -->|"POO capability and macro lowering proven"| T3["Tranche 3: effect intent, commit, reconciliation, and reinjection"]
+  T1 -->|"same-root refinement and lazy imports proven"| T4["Tranche 4: provider search closure"]
+  T2 -->|"continuation and demand invariants"| T5["Tranche 5: observability and realization admission"]
+  T3 -->|"terminal receipts and barriers"| T5
+  T4 -->|"selected/missing/ambiguous evidence"| T5
+  T5 -->|"formal and correspondence gates pass"| T6["Tranche 6: installed runtime qualification"]
+  T6 -->|"all positive and negative receipts accepted"| Q["State: RFC cluster operationally qualified"]
+  T2 -.->|"counterexample"| D["State: owning RFC discussion required"]
+  T3 -.->|"counterexample"| D
+  T4 -.->|"counterexample"| D
+  T5 -.->|"counterexample"| D
+#+end_src
+
+** Tranche 0 — proof infrastructure
+
+- [ ] Add maintained local Lean aggregate command.
+- [ ] Define durable proof receipt schema.
+- [ ] Bind RFC source digest, Lean source digest, theorem set, toolchain, and
+      AXLE request ids.
+- [ ] Reject =sorry=, new axioms, unsafe declarations, warnings, and missing
+      negative cases.
+- [ ] Generate an obligation-status projection from this register.
+
+** Tranche 1 — exact POO correspondence
+
+- [ ] Complete =POO-001= and =POO-002= before inventing any local mechanism.
+- [ ] Prove =ID-004=, =ID-005=, and =CMP-001..005=.
+- [ ] Record every exact =gerbil-poo= symbol as =symbol-located=,
+      =behavior-proven=, then =flow-qualified=.
+- [ ] Stop the tranche if the pinned API cannot express an RFC proposition;
+      discuss whether the general mechanism belongs in =gerbil-poo=.
+
+** Tranche 2 — fixed point and continuation safety
+
+- [ ] Prove =FIX-001..005=.
+- [ ] Prove =REC-001..003= and =RES-001..002=.
+- [ ] Run direct, long, multi-branch, acyclic-share, deep-submodule, recovery,
+      budget, and cancellation negative cases.
+
+** Tranche 3 — effects
+
+- [X] Define finite trace, commit accounting, at-most-one-commit, and
+      committed-receipt preservation.
+- [ ] Lift the remaining =EFF-001..003= properties to finite traces.
+- [X] Resolve the =EFF-005C= same-snapshot double-commit model gap through
+      approved combined provider evidence and POO Flow atomic arbitration.
+- [ ] Prove =EFF-005CR= runtime linearizability and run conflicting-receipt
+      stress cases.
+- [X] Prove =EFF-006= and =EFF-007=.
+- [ ] Prove =INT-001..005=.
+- [ ] Run duplicate invocation, lost response, stale receipt, unauthorized
+      reinjection, continuation re-entry, and crash/reconcile cases.
+
+** Tranche 4 — provider search
+
+- [ ] Prove =PRV-001..007=.
+- [ ] Run candidate-permutation, same-root refinement, unrelated-root
+      ambiguity, missing provider, lazy recursive import, and recovery cases.
+
+** Tranche 5 — admission and observability
+
+- [ ] Prove =ADM-004..006=.
+- [ ] Prove =OBS-001..004=.
+- [ ] Show that observation/admission cannot acquire continuation, effect, or
+      runtime-root authority.
+
+** Tranche 6 — operational qualification
+
+- [ ] Re-materialize =G0-001..003=.
+- [ ] Execute all eleven G0 instances.
+- [ ] Bind Lean, AXLE, Scheme, installed artifact, and runtime evidence into one
+      qualification closure.
+- [ ] Re-run the entire dependent closure after every approved RFC change.
+
+* Failure classification and RFC return protocol
+
+Every failed obligation is classified as exactly one primary kind:
+
+| Failure kind | Meaning | Immediate action |
+|---+---+---|
+| =model-gap= | required entity or relation cannot be expressed | add a proposed type/relation; do not alter RFC yet |
+| =false-theorem= | RFC proposition has a formal counterexample | freeze dependent tranche and start RFC discussion |
+| =missing-premise= | proposition is valid only with an unstated assumption | present the minimal premise for approval |
+| =correspondence-gap= | model is coherent but Scheme/=gerbil-poo= mapping is absent | gather exact API/runtime evidence |
+| =implementation-violation= | implementation contradicts an accepted model | repair implementation after scope confirmation |
+| =evidence-gap= | behavior may be correct but durable proof is insufficient | strengthen receipt/test; do not claim qualification |
+| =tooling-gap= | verifier cannot currently express or execute the obligation | isolate tooling work from architecture semantics |
+
+#+begin_src mermaid
+flowchart LR
+  F["State: failed obligation"] -->|"record minimal counterexample and evidence"| C["State: classified failure"]
+  C -->|"model-gap or missing-premise"| P["State: proposed formal clarification"]
+  C -->|"false-theorem"| A["State: proposed architecture adjustment"]
+  C -->|"correspondence or evidence gap"| E["State: evidence work required"]
+  C -->|"implementation violation"| I["State: implementation repair candidate"]
+  P -->|"discussion and explicit approval"| R["State: owning RFC updated"]
+  A -->|"discussion and explicit approval"| R
+  E -->|"evidence becomes sufficient; no semantic change"| V["State: obligation revalidated"]
+  I -->|"repair stays within approved semantics"| V
+  R -->|"update Lean model, theorem dependencies, tests, and receipts"| V
+  V -->|"rerun dependent proof closure"| Q["State: new qualification decision"]
+#+end_src
+
+Required counterexample record:
+
+- obligation id and owning RFC heading;
+- exact proposition and premises;
+- smallest Lean term, trace, graph, or runtime fixture that fails;
+- whether the failure is model, architecture, correspondence,
+  implementation, evidence, or tooling;
+- downstream obligations invalidated by the failure;
+- candidate alternatives and their semantic cost;
+- explicit statement that no architecture change has yet been approved.
+
+** Resolved model counterexample: EFF-005C
+
+| Field | Evidence |
+|---+---|
+| obligation | =EFF-005C= |
+| owner | =45-08-effect-boundary-commit-reconciliation.org= |
+| Lean witness | =sameSnapshotDoubleCommitCounterexample= |
+| failed proposition | unconditional concurrent executions accept at most one commit |
+| minimal state | one shared =InFlight(operation=11, attempt=5)= snapshot |
+| conflicting results | two distinct receipts differing in verifier evidence |
+| classification | =missing-premise= with approved architecture clarification |
+| invalidated claim | runtime at-most-once commit without a linearization/uniqueness receipt |
+| unaffected theorem | finite traces and explicitly linearizable executions accept at most one commit |
+| approved resolution | provider terminal/idempotency evidence plus POO Flow atomic arbitration, implemented as POO-native semantics through the sole =gerbil-poo= library |
+| remaining gap | concrete runtime linearizability and provider evidence correspondence, tracked as =EFF-005CR= |
+
+* Receipt requirements
+
+Each tranche receipt records:
+
+- obligation ids and owning RFC source digests;
+- Lean toolchain and aggregate build result;
+- theorem names and source digest;
+- AXLE environment, request ids, errors, warnings, and failed declarations;
+- exact =gerbil-poo= revision and API evidence states;
+- focused test commands, counts, and negative-case results;
+- installed artifact and runtime identity where applicable;
+- unresolved, blocked, and counterexample obligations;
+- dependency closure invalidated by any failure.
+
+* Completion criteria
+
+The programme is complete only when:
+
+- every normative proposition has a stable obligation id;
+- every obligation is operationally qualified, explicitly not applicable, or
+  rejected through an approved RFC change;
+- no =blocked=, =counterexample=, or unregistered MUST-level proposition
+  remains;
+- all Lean modules build without =sorry=, new axioms, unsafe declarations,
+  errors, or warnings;
+- AXLE independently accepts the declared theorem set;
+- Scheme/=gerbil-poo= correspondence is proven for every formal constructor;
+- positive and negative runtime gates pass against installed artifacts;
+- durable receipts bind the complete source, theorem, dependency, artifact,
+  and runtime evidence closure.
+
+Passing Lean alone is never closure.

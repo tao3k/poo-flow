@@ -5,12 +5,11 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/session/config)
 
 (export user-interface-custom-session-policy-test)
@@ -257,5 +256,3 @@
          (has-code? 'communication-channel-receipt-not-granted codes)
          #t)
         (check-equal? (test-ref validation 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-policy-test)

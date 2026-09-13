@@ -13,17 +13,16 @@ _SCHEME_LOAD_CACHE_RUNNER_VERSION = 1
 _SCHEME_LOAD_CACHE_LOCK = threading.RLock()
 _SCHEME_LOAD_CACHE: dict[tuple[Any, ...], SchemeRows] = {}
 _SCHEME_LOAD_DEPENDENCIES = (
-    Path("src/module-system/init-syntax.ss"),
-    Path("src/module-system/runtime-load-projection.ss"),
-    Path("src/module-system/profile-composition.ss"),
-    Path("src/module-system/profile-composition-accessors.ss"),
-    Path("src/module-system/profile-composition-builders.ss"),
-    Path("src/module-system/profile-composition-clause-syntax.ss"),
-    Path("src/module-system/profile-composition-core.ss"),
-    Path("src/module-system/profile-composition-inline-runtime.ss"),
-    Path("src/module-system/profile-composition-main-syntax.ss"),
-    Path("src/module-system/profile-composition-profile-syntax.ss"),
-    Path("src/module-system/profile-composition-use-syntax.ss"),
+    Path("src/user-interface/init-syntax.ss"),
+    Path("src/modules/funflow/runtime-load-projection.ss"),
+    Path("src/module-system/profile-composition/interface.ss"),
+    Path("src/module-system/profile-composition/accessors.ss"),
+    Path("src/module-system/profile-composition/builders.ss"),
+    Path("src/module-system/profile-composition/clause-syntax.ss"),
+    Path("src/module-system/profile-composition/core.ss"),
+    Path("src/module-system/profile-composition/inline-runtime.ss"),
+    Path("src/module-system/profile-composition/profile-syntax.ss"),
+    Path("src/module-system/profile-composition/use-syntax.ss"),
     Path("src/modules/funflow/config.ss"),
     Path("src/modules/funflow/config-prototypes.ss"),
 )

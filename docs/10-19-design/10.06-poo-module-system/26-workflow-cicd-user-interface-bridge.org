@@ -11,11 +11,11 @@ live-cases into a second CI/CD DSL.
 
 The current module syntax boundary is thin and upstream-owned:
 
-- =src/module-system/init-syntax.ss= defines =use-module= and =load!=.
+- =src/user-interface/init-syntax.ss= defines =use-module= and =load!=.
 - =use-module= handles sandbox POO =.def= profile forms and a generic live-case
   row with =:inherits=, =:isolation=, =:environment=, =:command=, and =:nono=.
 - There is no =funflow :config (pipeline ...)= branch yet.
-- =src/module-system/base.ss= owns the =use-module= declaration contract gate
+- =src/module-system/declaration/interface.ss= owns the =use-module= declaration contract gate
   so category symbols such as =workflow= cannot silently become custom modules.
 - =load!= wraps downstream fragments so user files can keep declarations pure.
 
@@ -112,13 +112,13 @@ The public downstream shape should be:
 
 The macro expansion should construct a =poo-flow-cicd-check-map= through a new
 Funflow config helper. The helper should live beside the module owner, not in
-=module-system/base.ss=:
+=module-system/declaration/interface.ss=:
 
 - =src/modules/funflow/config.ss= owns the public POO prototypes:
   =funflow-check= and =funflow-pipeline=.
 - =src/modules/workflow/cicd.ss= keeps the shared workflow-domain POO check-map
   object and projections until or unless it becomes Funflow-specific.
-- =src/module-system/init-syntax.ss= only recognizes the syntax and calls the
+- =src/user-interface/init-syntax.ss= only recognizes the syntax and calls the
   Funflow config helper.
 - =src/modules/funflow/config.ss= keeps the default =+cicd= feature payload.
 
@@ -180,7 +180,7 @@ removed. Current implementation uses native POO =.def= declarations with
 
 1. Extend =src/modules/funflow/config.ss= with helpers that turn pipeline/check
    clauses into =poo-flow-cicd-check-map= objects.
-2. Import that helper from =src/module-system/init-syntax.ss= and add only the
+2. Import that helper from =src/user-interface/init-syntax.ss= and add only the
    =funflow :config (pipeline ...)= syntax branch.
 3. Keep the =use-module= contract gate on the new branch so =(use-module
    workflow :config ...)= fails as a category/module boundary error.

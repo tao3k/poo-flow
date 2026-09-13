@@ -6,7 +6,7 @@
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
+                 )
           (only-in :clan/poo/object .ref object?)
           (only-in :poo-flow/src/modules/workflow/flows-alignment-report
                    poo-flow-funflow-tutorial-alignment-report)
@@ -440,9 +440,3 @@
     funflow-tutorial-alignment-index-test
     funflow-tutorial-alignment-proof-test
     funflow-tutorial-alignment-gate-test))
-
-(run-tests! funflow-tutorial-alignment-report-shape-test
-            funflow-tutorial-alignment-runtime-gap-test
-            funflow-tutorial-alignment-index-test
-            funflow-tutorial-alignment-proof-test
-            funflow-tutorial-alignment-gate-test)

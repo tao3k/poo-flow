@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/user-interface/custom/my-module/config
@@ -46,5 +45,3 @@
         (check-equal? (test-ref validation-row 'runtime-owner)
                       "marlin-agent-core")
         (check-equal? (test-ref validation-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-tool-core-test)

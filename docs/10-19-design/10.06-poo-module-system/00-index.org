@@ -61,7 +61,7 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:83-funflow-use-module-macro-ir.org][83 FunFlow use-module Macro IR]]
 - [[file:84-funflow-local-module-composition-ui.org][84 FunFlow Local Module Composition UI]]
 - [[file:85-json-schema-contract-bridge.org][85 JSON Schema Contract Bridge]]
-- [[file:81-utilities-contract-macro-design.org][81 Utilities Contract Macro Design]]
+- [[file:157-native-poo-type-contract-convergence.org][157 Native POO Type and Contract Convergence]]
 - [[file:82-type-contract-performance-benchmarks.org][82 Type Contract Performance Benchmarks]]
 - [[file:58-p0-boundary-namespace-design.org][58 P0 Boundary Namespace Design]]
 - [[file:72-agent-framework-capability-convergence.org][72 Agent Framework Capability Convergence]]

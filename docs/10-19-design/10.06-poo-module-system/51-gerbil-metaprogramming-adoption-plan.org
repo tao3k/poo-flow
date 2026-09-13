@@ -73,7 +73,7 @@ be duplicated by hand.
 ** 10.06.51.40 Ownership Map
 Macro ownership follows the layer whose code is generated:
 
-- =src/module-system/sandbox-backend-object-syntax.ss= owns sandbox backend
+- =src/modules/sandbox-core/backend-object-syntax.ss= owns sandbox backend
   object, profile, field-contract, capability, and backend registry families.
 - =src/modules/session/policy-syntax.ss= owns session policy constructor,
   accessor, predicate, validation, and projection family generation.
@@ -88,7 +88,7 @@ Macro ownership follows the layer whose code is generated:
   snapshot, execution policy, config preflight, runtime response, adapter
   result, and control-plane failure rows, plus fixed flow-strand descriptor and
   registry snapshots.
-- =src/module-system/projection-syntax.ss= owns fixed module-system final
+- =src/module-system/projection/syntax.ss= owns fixed module-system final
   projections for diagnostics, doctor receipts, source refs, resolver catalog
   entries, catalog snapshots, durable policy diagnostics, and durable policy
   receipts, strict observability rows, POO slot-authoring report rows, and
@@ -99,12 +99,12 @@ Macro ownership follows the layer whose code is generated:
   projection rows, plus graph topology, Funflow functional-DAG, sandbox profile,
   sandbox resource contract validation, module object-validation, and
   module field/type validation projection rows.
-- =src/module-system/config-prototype-syntax.ss= owns repeated module config
+- =src/module-system/declaration/config-syntax.ss= owns repeated module config
   POO prototype declarations, kind-slot predicates, and mechanical
   prototype-to-constructor converters for public config prototype objects. It
   must not generate catalog fallback, manifest projection, graph derivation, or
   runtime handoff logic.
-- =src/module-system/runtime-projection-syntax.ss= owns runtime manifest,
+- =src/module-system/projection/runtime-syntax.ss= owns runtime manifest,
   receipt, and Marlin handoff projection generation when the output is a pure
   final boundary projection.
 - =src/modules/workflow/cicd-projection-syntax.ss= owns workflow CI/CD
@@ -114,9 +114,9 @@ Macro ownership follows the layer whose code is generated:
   sandbox profile-support fixed-field rows and bounded row-tail composition
   for derivation, resolve, policy, authoring, validation, and presentation
   payloads. It must not hide policy decisions or backend capability semantics.
-- =src/module-system/init-syntax.ss= owns public =use-module= syntax and any
+- =src/user-interface/init-syntax.ss= owns public =use-module= syntax and any
   private branch-generation helpers.
-- =src/module-system/load-syntax.ss= owns source-aware =load!= fragment
+- =src/module-system/loader/fragment-syntax.ss= owns source-aware =load!= fragment
   resolution, compile-time fragment reading, object-fragment wrapping, and
   generated custom-module binding names. It must not own runtime module
   selection, descriptor realization, benchmark payloads, or public scenario
@@ -317,7 +317,7 @@ Phase 3: deepen session policy generation.
 - Completed module-system row helper slice: module-system projection syntax now owns reusable fixed row/tail helpers, and use-module contract diagnostics, loop-engine result-contract diagnostics/projections, durable runtime-store bridge metadata/options, and resolver missing-source detail rows route through those helpers instead of ad hoc =append= or fixed =list (cons ...)= frames.
 - Completed core/workflow/sandbox config projection slice: core run-config receipts, custom/Docker/workflow builder option prefixes, sandbox backend config flags, Funflow workflow agreement/DAG metadata, CI/CD dependency/runtime/pipeline/Marlin ABI rows, and Nono C binding runtime validation/capability plans now use bounded field-row or value-tail helpers instead of ad hoc =append= or fixed =list (cons ...)= frames, while preserving scenario benchmark and runtime handoff order.
 Phase 4: broaden runtime projection generation carefully.
-- Keep =src/module-system/runtime-projection-syntax.ss= limited to pure
+- Keep =src/module-system/projection/runtime-syntax.ss= limited to pure
   projection families.
 - Generate lineage, selector, resource-dispatch, memory, compression,
   capability, and handoff receipt projections only when the payload shape is
@@ -583,7 +583,7 @@ Phase 4: broaden runtime projection generation carefully.
   projection name; the old singular =->alist= route was removed because this is
   a batch serializer, not one fixed final row.
 - Completed final projection batch helper slice:
-  =src/module-system/projection-syntax.ss= exports
+  =src/module-system/projection/syntax.ss= exports
   =defpoo-module-final-projection-batch= for the shared list guard plus map
   frame. Durable policy, runtime-store contract, backend negotiation,
   runtime-store operation, recovery scenario, memory durable job, and module
@@ -595,7 +595,7 @@ Phase 4: broaden runtime projection generation carefully.
   =src/modules/session/receipt-syntax.ss= and
   =src/modules/session/policy-syntax.ss=.
 - Completed module config prototype slice:
-  =src/module-system/config-prototype-syntax.ss= now declares POO config
+  =src/module-system/declaration/config-syntax.ss= now declares POO config
   prototype objects, kind predicates, and mechanical prototype converters.
   =src/modules/tool-core/config.ss= and
   =src/modules/memory-core/config.ss= use it for their public =tool-spec=,
@@ -623,7 +623,7 @@ Phase 4: broaden runtime projection generation carefully.
   field subset in one accumulator pass instead of scanning
   =loop-engine-intent-rows= once per public doctor slot.
 Phase 4b: keep user fragment loading source-aware and compile-time bounded.
-- Keep =src/module-system/load-syntax.ss= as the syntax owner for =load!=
+- Keep =src/module-system/loader/fragment-syntax.ss= as the syntax owner for =load!=
   fragment includes.
 - Keep the generated public surface boring: one binding, a wrapped fragment
   body, and an export.

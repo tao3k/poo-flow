@@ -10,14 +10,15 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/profile-candidate)
 
-(run-tests!
+(export agent-sandbox-profile-candidate-test)
+
+(def agent-sandbox-profile-candidate-test
  (test-suite "agent sandbox profile candidates"
    (test-case "builds nono candidates through POO descriptors and macros"
      (let* ((choice

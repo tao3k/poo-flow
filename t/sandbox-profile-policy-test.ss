@@ -4,11 +4,10 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :poo-flow/src/module-system/durable-policy
+        (only-in :poo-flow/src/modules/memory-core/durable/policy
                  poo-flow-durable-policy)
         :poo-flow/src/modules/sandbox-core/profile-support/policy)
 
@@ -183,5 +182,3 @@
         (check-equal? (test-ref validation 'durable-valid? #t) #f)
         (check-equal? (test-diagnostic-codes validation)
                       '(invalid-durable-placement-policy))))))
-
-(run-tests! sandbox-profile-policy-test)

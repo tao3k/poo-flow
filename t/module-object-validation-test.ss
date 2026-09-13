@@ -2,29 +2,26 @@
 ;;; Boundary: module object validation receipts bridge POO Flow objects to the
 ;;; Gerbil harness structural validation vocabulary.
 
-(import (only-in :std/test
+(import (only-in :clan/poo/object .ref object?)
+        (only-in :std/test
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/object-validation
+                 check-exception
+                 )
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/objects)
 
 (export module-object-validation-test)
 
-;; : (-> HashTable Symbol Value)
+;; : (-> POOObject Symbol Value)
 (def (receipt-ref receipt key)
-  (hash-get receipt key))
-
-;; : (-> Alist Symbol Value Value)
-(def (alist-ref entries key default)
-  (let (entry (assoc key entries))
-    (if entry (cdr entry) default)))
+  (.ref receipt key))
 
 ;;; Receipt projection boundary: keep the field list assertion independent from
 ;;; harness-private receipt nesting.
-;; : (-> [HashTable] [Symbol])
+;; : (-> [POOObject] [Symbol])
 (def (field-contract-validation-fields validations)
   (map (lambda (validation) (receipt-ref validation 'field))
        validations))
@@ -36,9 +33,9 @@
    '()
    (list
     (poo-flow-module-field-contract
-     'flags 'List 'override '() '((scope . validation)))
+     'flags PooFlowModuleListType 'override '() '((scope . validation)))
     (poo-flow-module-field-contract
-     'runtime-args 'List 'override '() '((scope . validation))))
+     'runtime-args PooFlowModuleListType 'override '() '((scope . validation))))
    '((domain . validation))))
 
 ;; : PooModuleObject
@@ -48,9 +45,9 @@
    (list validation-shared-sandbox-object)
    (list
     (poo-flow-module-field-contract
-     'backend 'Symbol 'override 'nono '((scope . validation)))
+     'backend PooFlowModuleSymbolType 'override 'nono '((scope . validation)))
     (poo-flow-module-field-contract
-     'binding 'Symbol 'override 'native-ffi '((scope . validation))))
+     'binding PooFlowModuleSymbolType 'override 'native-ffi '((scope . validation))))
    '((domain . validation))))
 
 ;;; Suite boundary: these tests pin the downstream adapter contract while
@@ -91,6 +88,14 @@
              (harness-dependency
               (receipt-ref source-ref 'dependency)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
+        (check-equal?
+         (and (object? validation)
+              (object? harness-validation)
+              (object? source-ref)
+              (andmap object? field-contract-validations)
+              (andmap object? field-origins)
+              (andmap object? validation-phases))
+         #t)
         (check-equal? (receipt-ref validation 'kind)
                       poo-flow-module-object-validation-kind)
         (check-equal? (receipt-ref validation 'schema)
@@ -105,16 +110,16 @@
         (check-equal? (receipt-ref validation 'resolved-field-identities)
                       '(flags runtime-args backend binding))
         (check-equal? (map (lambda (origin)
-                             (cons (alist-ref origin 'field #f)
-                                   (alist-ref origin 'origin #f)))
+                             (cons (receipt-ref origin 'field)
+                                   (receipt-ref origin 'origin)))
                            field-origins)
                       '((flags . inherited)
                         (runtime-args . inherited)
                         (backend . direct)
                         (binding . direct)))
         (check-equal? (map (lambda (origin)
-                             (cons (alist-ref origin 'field #f)
-                                   (alist-ref origin 'provider #f)))
+                             (cons (receipt-ref origin 'field)
+                                   (receipt-ref origin 'provider)))
                            field-origins)
                       '((flags . objects.validation.shared)
                         (runtime-args . objects.validation.shared)
@@ -171,62 +176,25 @@
                                  checked-signals)))
                       #t)
         (check-equal? harness-dependency
-                      "github.com/tao3k/gerbil-scheme-language-project-harness")
+                      "github.com/tao3k/asp-gerbil-scheme")
         (check-equal? (poo-flow-module-object-validation-valid? validation)
                       #t)
         (check-equal? (poo-flow-module-object-validation-diagnostics
                        validation)
                       '())))
 
-    (test-case "fails invalid TypeSpec fields through upstream type validation"
-      (let* ((broken-field
-              (poo-flow-module-field-contract
-               'broken 'Unknown 'override #f '((scope . validation))))
-             (broken-object
-              (poo-flow-module-object
-               'objects.validation.bad-type
-               '()
-               (list broken-field)
-               '((domain . validation))))
-             (validation
-              (poo-flow-module-object-validation broken-object))
-             (field-validation
-              (car (receipt-ref validation 'fieldContractValidations)))
-             (type-validation
-              (receipt-ref field-validation 'typeValidation))
-             (validation-alist
-              (poo-flow-module-object-validation->alist validation))
-             (field-alist
-              (car (cdr (assoc 'field-validations validation-alist))))
-             (type-alist
-              (cdr (assoc 'type-validation field-alist)))
-             (summary
-              (poo-flow-module-objects-validation-summary
-               (list validation))))
-        (check-equal? (poo-flow-module-object-validation-valid? validation)
-                      #f)
-        (check-equal? (receipt-ref type-validation 'kind)
-                      "poo-object-type-spec-validation")
-        (check-equal? (receipt-ref type-validation 'valid) #f)
-        (check-equal? (receipt-ref type-validation 'diagnostics)
-                      '("unknown-type"))
-        (check-equal? (poo-flow-module-object-validation-diagnostics
-                       validation)
-                      '("unknown-type"))
-        (check-equal? (cdr (assoc 'invalid-fields validation-alist))
-                      '(broken))
-        (check-equal? (cdr (assoc 'valid type-alist)) #f)
-        (check-equal? (cdr (assoc 'diagnostics type-alist))
-                      '("unknown-type"))
-        (check-equal? (receipt-ref summary 'invalid-objects)
-                      '(objects.validation.bad-type))))
+    (test-case "rejects symbolic field kinds at the native Type boundary"
+      (check-exception
+       (poo-flow-module-field-contract
+        'broken 'Unknown 'override #f '((scope . validation)))
+       true))
 
     (test-case "reports upstream contract diagnostics without dropping harness evidence"
       ;; Broken field metadata, defaults, and merge strategy should all be
       ;; reported by the harness facade rather than reimplemented in poo-flow.
       (let* ((broken-field
               (poo-flow-module-field-contract
-               'broken 'String 'merge-strategy 42 'not-an-alist))
+               'broken PooFlowModuleStringType 'merge-strategy 42 'not-an-alist))
              (broken-object
               (poo-flow-module-object
                'objects.validation.broken
@@ -266,7 +234,7 @@
     (test-case "requires catalog objects to pass upstream harness validation"
       (let* ((broken-field
               (poo-flow-module-field-contract
-               'broken 'String 'merge-strategy 42 'not-an-alist))
+               'broken PooFlowModuleStringType 'merge-strategy 42 'not-an-alist))
              (broken-object
               (poo-flow-module-object
                'objects.validation.broken

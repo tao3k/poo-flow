@@ -5,14 +5,14 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/support/funflow-config-pipeline-performance)
+        "./support/funflow-config-pipeline-performance")
 
 (export funflow-config-pipeline-performance-test)
 

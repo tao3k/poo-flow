@@ -3,8 +3,8 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation
@@ -177,9 +177,7 @@
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-sandbox-profile-object-profile? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (equal? (.ref value 'kind) poo-flow-sandbox-profile-kind)))
+  (poo-flow-sandbox-profile? value))
 
 ;;; Backend config modules call this with their inherited POO profile object.
 ;;; This is the only constructor that turns profile rows into merged profiles.

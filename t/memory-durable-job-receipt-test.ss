@@ -5,11 +5,10 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/memory-core/config)
 
@@ -180,5 +179,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'memory-intent-commit-denied)
          #t)))))
-
-(run-tests! memory-durable-job-receipt-test)

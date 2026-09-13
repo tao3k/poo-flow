@@ -1,8 +1,6 @@
 (import :clan/poo/object :std/test
-        :gslph/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (five-facet-bundle . overrides)
   (let* ((bad-protocol? (memq 'bad-protocol overrides))
@@ -48,7 +46,7 @@
   (map (lambda (entry) (cdr (assq 'code entry)))
        (poo-flow-organization-validation-diagnostics receipt)))
 
-(def five-facet-tests
+(def organization-bundle-five-facets-test
   (test-suite
    "five typed organization facets"
    (test-case "five facets validate and normalize deterministically"
@@ -77,5 +75,3 @@
                       (.ref base 'context) (.ref base 'protocol) #f)))
        (check-equal? (poo-flow-organization-validation-accepted?
                       (poo-flow-organization-bundle-validate invalid)) #f)))))
-
-(run-tests! five-facet-tests)

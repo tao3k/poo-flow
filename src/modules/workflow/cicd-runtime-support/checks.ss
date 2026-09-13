@@ -30,6 +30,7 @@
 ;; Durable fields are a bounded runtime receipt projection. They are derived
 ;; from validated POO check metadata once, then copied into runtime handoff
 ;; alists so Marlin never has to inspect the POO object graph.
+;; : (forall (a) (-> PooFlowCicdCheck [a]))
 ;; : (-> PooFlowCicdCheck [Alist])
 (def (poo-flow-cicd-check-artifact-provenance check)
   (let ((producer-check (poo-flow-cicd-check-name check))

@@ -2,17 +2,15 @@
 ;;; Scenario: user-interface LangChain and LangGraph composition instances.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :std/test check-equal? run-tests! test-case test-suite)
-        :gslph/src/testing/memory-profile
+        (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-analysis
         :poo-flow/src/graph/runtime-executor
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/profile-composition-accessors)
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/module-system/profile-composition/interface
+        :poo-flow/src/module-system/profile-composition/accessors)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def langchain
   (eval (call-with-input-file "user-interface/profiles/langchain.ss" read)))
@@ -198,7 +196,7 @@
 (def (single-stage composition)
   (car (poo-flow-composition-stages composition)))
 
-(run-tests!
+(def langchain-langgraph-core-test
  (test-suite "langchain and langgraph user compositions"
   (test-case "langchain linear chain declares one production stage"
     (let* ((stage (single-stage langchain-composition))

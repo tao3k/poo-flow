@@ -3,7 +3,7 @@
 ;;; Invariant: groups reusable profile declarations without loading scenario
 ;;; cases into the same compiled module.
 
-(import :poo-flow/src/module-system/init-syntax)
+(import :poo-flow/src/user-interface/init-syntax)
 
 (load! "session")
 (load! "task")

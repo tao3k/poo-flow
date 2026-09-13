@@ -4,6 +4,7 @@
 (import :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/session/receipt-syntax
+        :poo-flow/src/modules/session/receipt-projection
         :poo-flow/src/modules/session/policy-validation-support
         :poo-flow/src/modules/session/policy-validation-communication
         :poo-flow/src/modules/session/policy-validation-catalog)
@@ -95,6 +96,9 @@
    metadata)
   transparent: #t)
 
+;;; Admission boundary: partition every requested capability and retain both allowed and denied evidence.
+;;; Invariant: construction records runtime ownership but never executes the runtime.
+;; : (forall (p s a m) (-> Symbol Symbol p p p p p p p p p p p [s] [s] [s] [s] [a] [a] [m] PooSessionPolicyValidationReceipt))
 ;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
 (def (poo-flow-session-policy-validation-receipt validation-id
                                                 scope-ref
@@ -169,82 +173,96 @@
           (poo-flow-session-policy-partition-refs
            requested-context-refs
            (poo-flow-session-policy-context-allowed context-policy)))
-         (allowed-context-refs (car context-ref-partition))
-         (denied-context-refs (cadr context-ref-partition))
+         (allowed-context-refs
+          (poo-flow-session-validation-partition-accepted
+           context-ref-partition))
+         (denied-context-refs
+          (poo-flow-session-validation-partition-rejected
+           context-ref-partition))
          (history-record-partition
           (poo-flow-session-policy-partition-refs
            requested-history-records
            (poo-flow-session-policy-history-allowed history-policy)))
-         (allowed-history-records (car history-record-partition))
-         (denied-history-records (cadr history-record-partition))
+         (allowed-history-records
+          (poo-flow-session-validation-partition-accepted
+           history-record-partition))
+         (denied-history-records
+          (poo-flow-session-validation-partition-rejected
+           history-record-partition))
          (communication-channel-partition
           (poo-flow-session-policy-partition-refs
            requested-channel-refs
            (poo-flow-session-policy-channel-allowed communication-policy)))
          (allowed-communication-channels
-          (car communication-channel-partition))
+          (poo-flow-session-validation-partition-accepted
+           communication-channel-partition))
          (denied-communication-channels
-          (cadr communication-channel-partition))
+          (poo-flow-session-validation-partition-rejected
+           communication-channel-partition))
          (resource-ref-partition
           (poo-flow-session-policy-partition-refs
            requested-resource-refs
            (poo-flow-session-policy-resource-capabilities resource-policy)))
-         (allowed-resource-refs (car resource-ref-partition))
-         (denied-resource-refs (cadr resource-ref-partition))
+         (allowed-resource-refs
+          (poo-flow-session-validation-partition-accepted
+           resource-ref-partition))
+         (denied-resource-refs
+          (poo-flow-session-validation-partition-rejected
+           resource-ref-partition))
          (agent-tool-attempt-partition
-          (poo-flow-session-validation-partition
-           (lambda (attempt)
-             (poo-flow-session-agent-tool-attempt-allowed?
-              agent-tool-policy
-              attempt))
+          (poo-flow-session-validation-partition/with-context
+           poo-flow-session-agent-tool-attempt-allowed?
+           agent-tool-policy
            agent-tool-attempts))
          (allowed-agent-tool-attempts
-          (car agent-tool-attempt-partition))
+          (poo-flow-session-validation-partition-accepted
+           agent-tool-attempt-partition))
          (denied-agent-tool-attempts
-          (cadr agent-tool-attempt-partition))
+          (poo-flow-session-validation-partition-rejected
+           agent-tool-attempt-partition))
          (hook-tool-attempt-partition
-          (poo-flow-session-validation-partition
-           (lambda (attempt)
-             (poo-flow-session-hook-tool-attempt-allowed?
-              hook-tool-policy
-              attempt))
+          (poo-flow-session-validation-partition/with-context
+           poo-flow-session-hook-tool-attempt-allowed?
+           hook-tool-policy
            hook-tool-attempts))
          (allowed-hook-tool-attempts
-          (car hook-tool-attempt-partition))
+          (poo-flow-session-validation-partition-accepted
+           hook-tool-attempt-partition))
          (denied-hook-tool-attempts
-          (cadr hook-tool-attempt-partition))
+          (poo-flow-session-validation-partition-rejected
+           hook-tool-attempt-partition))
          (metadata
-          (if (null? maybe-metadata)
-            '()
-            (car maybe-metadata)))
+          (match maybe-metadata
+            ([] '())
+            ([value . _] value)))
          (communication-channel-receipt-rows
           (poo-flow-session-policy-communication-channel-receipt-rows
            (poo-flow-session-policy-communication-channel-receipts metadata)))
          (communication-channel-receipt-partition
-          (poo-flow-session-validation-partition
-           (lambda (row)
-             (poo-flow-session-policy-communication-channel-receipt-allowed?
-              communication-policy
-              row))
+          (poo-flow-session-validation-partition/with-context
+           poo-flow-session-policy-communication-channel-receipt-allowed?
+           communication-policy
            communication-channel-receipt-rows))
          (allowed-communication-channel-receipts
-          (car communication-channel-receipt-partition))
+          (poo-flow-session-validation-partition-accepted
+           communication-channel-receipt-partition))
          (denied-communication-channel-receipts
-          (cadr communication-channel-receipt-partition))
+          (poo-flow-session-validation-partition-rejected
+           communication-channel-receipt-partition))
          (communication-receipt-rows
           (poo-flow-session-policy-communication-receipt-rows
            (poo-flow-session-policy-communication-receipts metadata)))
          (communication-receipt-partition
-          (poo-flow-session-validation-partition
-           (lambda (row)
-             (poo-flow-session-policy-communication-receipt-allowed?
-              communication-policy
-              row))
+          (poo-flow-session-validation-partition/with-context
+           poo-flow-session-policy-communication-receipt-allowed?
+           communication-policy
            communication-receipt-rows))
          (allowed-communication-receipts
-          (car communication-receipt-partition))
+          (poo-flow-session-validation-partition-accepted
+           communication-receipt-partition))
          (denied-communication-receipts
-          (cadr communication-receipt-partition))
+          (poo-flow-session-validation-partition-rejected
+           communication-receipt-partition))
          (tool-catalog-validation
           (poo-flow-session-tool-catalog-validation metadata))
          (tool-catalog-diagnostics
@@ -261,9 +279,11 @@
            tool-catalog-validation
            allowed-attempt-tool-refs))
          (tool-catalog-allowed-attempt-tool-refs
-          (car catalog-attempt-ref-partition))
+          (poo-flow-session-validation-partition-accepted
+           catalog-attempt-ref-partition))
          (tool-catalog-unresolved-attempt-tool-refs
-          (cadr catalog-attempt-ref-partition))
+          (poo-flow-session-validation-partition-rejected
+           catalog-attempt-ref-partition))
          (memory-catalog-validation
           (poo-flow-session-memory-catalog-validation metadata))
          (memory-catalog-diagnostics
@@ -794,7 +814,8 @@
      (poo-flow-session-policy-validation-receipt-record-metadata receipt)))))
 
 ;; : (-> [PooSessionPolicyValidationReceipt] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-policy-validation-receipts->alists (receipts)
-  (projector poo-flow-session-policy-validation-receipt->alist)
-  (error-message "session policy validation projection requires a list"))
+(def (poo-flow-session-policy-validation-receipts->alists receipts)
+  (poo-flow-session-receipt-projection-batch
+   receipts
+   poo-flow-session-policy-validation-receipt->alist
+   "session policy validation projection requires a list"))

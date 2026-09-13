@@ -1,8 +1,14 @@
-(import :clan/poo/object
+;;; Boundary: binds resolved feature requirements to adapter and projection objects.
+;;; Invariant: binding consumes declared capabilities without widening requested policy.
+(import (only-in :clan/poo/object
+                 .ref
+                 make-object
+                 object-slots-set!
+                 object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
         :poo-flow/src/feature-system/policy-strategy-binding
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/utilities/functional)
 
 (export +feature-adapter-capability-catalog-kind+
@@ -19,11 +25,13 @@
 (def +feature-adapter-capability-catalog-kind+
   'poo-flow.feature-adapter-capability-catalog.v1)
 
+;; : (-> Alist POOObject)
 (def (constant-feature-capability-binding-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> Symbol Symbol Object Object Object Alist)
 (def (feature-capability-binding-diagnostic
       code channel subject expected observed)
   (constant-feature-capability-binding-object
@@ -34,6 +42,7 @@
      (expected . ,expected)
      (observed . ,observed))))
 
+;; : (-> Object Boolean)
 (def (feature-adapter-capability-catalog? value)
   (with-catch
    (lambda (_failure) #f)
@@ -42,6 +51,7 @@
           (eq? (.ref value 'kind)
                +feature-adapter-capability-catalog-kind+)))))
 
+;; : (-> [Object] Procedure Symbol Symbol Symbol [Alist])
 (def (feature-invalid-value-diagnostics
       values predicate code channel expected-kind)
   (poo-flow-filter-map
@@ -51,11 +61,14 @@
            code channel value expected-kind value)))
    values))
 
+;; : (forall (a) (-> (List a) (-> a Boolean) (List a)))
+;; : (-> [Object] Procedure [Object])
 (def (feature-valid-values values predicate)
   (poo-flow-filter-map
    (lambda (value) (and (predicate value) value))
    values))
 
+;; : (-> [POOObject] Symbol Symbol Symbol [Alist])
 (def (feature-duplicate-id-diagnostics
       values id-slot code channel)
   (let ((seen (make-hash-table))
@@ -78,6 +91,7 @@
       '()
       values))))
 
+;; : (-> [POOObject] Symbol HashTable)
 (def (feature-index-values values id-slot)
   (let (index (make-hash-table))
     (for-each
@@ -85,6 +99,7 @@
      values)
     index))
 
+;; : (-> Symbol [PooFeatureAdapterCapability] PooFeatureAdapterCapabilityCatalog)
 (def (feature-adapter-capability-catalog catalog-id capabilities)
   (let* ((valid-capabilities
           (feature-valid-values
@@ -117,22 +132,26 @@
        (status . ,(if accepted? 'ready 'rejected))
        (diagnostics . ,diagnostics)))))
 
+;; : (-> PooFeatureAdapterCapabilityCatalog Symbol MaybeFeatureAdapterCapability)
 (def (feature-adapter-capability-catalog-ref catalog capability-id)
   (and (feature-adapter-capability-catalog? catalog)
        (.ref catalog 'accepted?)
        (hash-get (.ref catalog 'capability-index) capability-id)))
 
+;; : (-> PooFeatureAdapterCapabilityCatalog PooFeatureAdapterCapabilityCatalog)
 (def (require-valid-feature-adapter-capability-catalog catalog)
   (if (and (feature-adapter-capability-catalog? catalog)
            (.ref catalog 'accepted?))
     catalog
     (error "feature adapter capability catalog rejected" catalog)))
 
+;; : (-> PooFeatureAdapterCapabilityCatalog Symbol PooFeatureAdapterCapability)
 (def (require-feature-adapter-capability-catalog-ref catalog capability-id)
   (or (feature-adapter-capability-catalog-ref catalog capability-id)
       (error "feature adapter capability is not declared"
              capability-id catalog)))
 
+;; : (-> Object List)
 (def (feature-policy-strategy-binding-state binding)
   (with-catch
    (lambda (_failure)
@@ -148,6 +167,7 @@
          (list #f 'feature-policy-strategy-binding-rejected #f #f))
        (list #f 'invalid-feature-policy-strategy-binding #f #f)))))
 
+;; : (-> Object List)
 (def (feature-catalog-state catalog)
   (cond
    ((not (feature-adapter-capability-catalog? catalog))
@@ -156,12 +176,14 @@
     (list #f 'adapter-capability-catalog-rejected))
    (else (list #t #f))))
 
+;; : (-> PooFeatureAdapterRequirement PooFeatureAdapterCapability Boolean)
 (def (feature-adapter-contract-matches? requirement capability)
   (and (equal? (.ref requirement 'contract-id)
                (.ref capability 'contract-id))
        (equal? (.ref requirement 'contract-version)
                (.ref capability 'contract-version))))
 
+;; : (-> PooFeatureAdapterRequirement PooFeatureAdapterCapability PooFeatureAdapterCapabilityBinding)
 (def (feature-adapter-capability-binding requirement capability)
   (constant-feature-capability-binding-object
    `((kind . poo-flow.feature-adapter-capability-binding.v1)
@@ -173,6 +195,8 @@
      (contract-id . ,(.ref capability 'contract-id))
      (contract-version . ,(.ref capability 'contract-version)))))
 
+;;; Binding boundary: partition malformed, unresolved, and uniquely resolved adapter requirements.
+;; : (-> PooFeatureAdapterCapabilityCatalog [PooFeatureAdapterRequirement] List)
 (def (feature-bind-adapter-requirements catalog requirements)
   (let* ((valid-requirements
           (feature-valid-values requirements feature-adapter-requirement?))
@@ -234,6 +258,7 @@
              valid-requirements))
         (list (reverse (car state)) (reverse (cadr state)))))))
 
+;; : (-> PooFeatureProjectionRequest PooCaseProjection PooFeatureProjectionBinding)
 (def (feature-projection-binding request projection)
   (constant-feature-capability-binding-object
    `((kind . poo-flow.feature-projection-binding.v1)
@@ -243,6 +268,8 @@
      (projection-id . ,(.ref projection 'projection-id))
      (schema-id . ,(.ref projection 'schema-id)))))
 
+;;; Binding boundary: resolve projection requests only against the closed domain-case catalog.
+;; : (-> PooDomainCase [PooFeatureProjectionRequest] List)
 (def (feature-bind-projection-requests domain-case requests)
   (let* ((valid-requests
           (feature-valid-values requests feature-projection-request?))
@@ -307,6 +334,7 @@
                valid-requests)))
         (list (reverse (car state)) (reverse (cadr state)))))))
 
+;; : (-> PooFeatureAdapterCapabilityCatalog PooFeaturePolicyStrategyBinding PooFeatureAdapterProjectionBinding)
 (def (feature-adapter-projection-binding catalog policy-strategy-binding)
   (let* ((binding-state
           (feature-policy-strategy-binding-state policy-strategy-binding))
@@ -367,12 +395,26 @@
            (status . ,(if accepted? 'ready 'rejected))
            (diagnostics . ,diagnostics)))))))
 
+;; : (-> PooFeatureAdapterProjectionBinding PooFeatureAdapterProjectionBinding)
 (def (require-feature-adapter-projection-binding binding)
   (if (.ref binding 'accepted?)
     binding
     (error "feature adapter/projection binding rejected"
            (.ref binding 'diagnostics))))
 
+;; defpoo-feature-adapter-capability-catalog
+;;   : (-> Identifier Clauses FeatureAdapterCapabilityCatalogBinding)
+;;   | doc m%
+;;       Bind a validated adapter capability catalog.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-adapter-capability-catalog catalog
+;;         (catalog-id runtime) (capabilities adapter))
+;;       ;; => binds catalog
+;;       ```
+;;     %
 (defrules defpoo-feature-adapter-capability-catalog
   (catalog-id capabilities)
   ((_ binding
@@ -382,6 +424,19 @@
      (feature-adapter-capability-catalog
       semantic-id (list capability ...)))))
 
+;; defpoo-feature-adapter-projection-binding
+;;   : (-> Identifier Clauses FeatureAdapterProjectionBindingBinding)
+;;   | doc m%
+;;       Bind adapters and projections against an accepted strategy binding.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-adapter-projection-binding binding
+;;         (using-catalog catalog) (from-binding policy-strategy))
+;;       ;; => binds binding
+;;       ```
+;;     %
 (defrules defpoo-feature-adapter-projection-binding
   (using-catalog from-binding)
   ((_ binding

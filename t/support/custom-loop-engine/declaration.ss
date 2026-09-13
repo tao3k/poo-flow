@@ -2,7 +2,7 @@
 ;;; Declaration and spec-evolution checks for custom loop-engine tests.
 
 (import (only-in :std/test check-equal?)
-        :poo-flow/t/support/custom-loop-engine/fixtures)
+        "./fixtures")
 
 (export check-custom-loop-concrete-declaration)
 

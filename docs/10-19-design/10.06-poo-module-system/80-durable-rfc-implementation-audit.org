@@ -93,7 +93,7 @@ OK: 20 checks
 gxpkg env gxtest t/durable-runtime-store-contract-test.ss
 OK: 31 checks
 
-gxpkg env gxc src/module-system/durable-runtime-store-backend.ss
+gxpkg env gxc src/modules/memory-core/durable/store-backend.ss
 gxpkg env gxtest t/durable-runtime-store-backend-test.ss
 OK: 48 checks
 

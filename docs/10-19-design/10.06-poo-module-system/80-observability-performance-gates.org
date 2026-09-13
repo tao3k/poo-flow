@@ -15,11 +15,14 @@ Composition scenarios must separate construction from hot-path validation.
 
 #+begin_src scheme
 (let (composition (poo-performance-composition-profile-declaration))
-  (poo-performance-family-run-gate
-   +poo-performance-benchmark-receipt-family+
-   poo-performance-composition-profile-declaration-fixture
-   (lambda ()
-     (poo-performance-composition-valid-count composition rounds))))
+  (let-values (((receipt selected-result)
+                (benchmark-run/result
+                 poo-performance-composition-profile-declaration-fixture
+                 (lambda ()
+                   (poo-performance-composition-valid-count
+                    composition
+                    rounds)))))
+    (values receipt selected-result)))
 #+end_src
 
 The construction counter is the hard observability repair:
@@ -58,15 +61,21 @@ The current policy scenarios are:
 - user-interface composition
 - runtime boundary
 
-The POO performance fixture policy is still enforced at the benchmark boundary:
-- the upstream benchmark fixture contract must pass
-- =maxRssMb= and memory metric fields must be valid
-- canonical input/expected timing phases must be present
-- =expectedOutcome= must state the semantic result of the measured POO path
-- required POO form evidence must be present
-- required POO usage-call evidence must be present
+The POO performance fixture policy is enforced as an extension of the ASP
+benchmark boundary:
+- =benchmarkKind= is =scenario-e2e=;
+- =sampleCount= is at least 20 and admission uses nearest-rank P95;
+- =max_total = target_total + regression_budget= and remains below one second;
+- =expectedOutcome= states the semantic result of the measured POO path;
+- =measurementPhases= includes =assert-time-gate= and
+  =observe-runtime-memory=;
+- required POO form and usage-call evidence remains present where the POO
+  scenario policy applies.
 
-This policy gates =poo-performance-run-gate=. A fixture missing local POO policy evidence is rejected before benchmark execution.
+ASP's =benchmark-run/result= owns timing, sample statistics, selected-result
+identity, runtime memory observations, and pass/fail.  POO Flow does not layer
+an =observed_total=, static =observedTimings=, best-of-N selector, or a second
+timing gate on top of that receipt.
 
 ** Build Cache Gate
 The build cache must not treat a stage stamp or receipt as proof that every module output is current. A stage stamp proves only that the stage was assessed. It does not prove that each generated =.ssi=, =.scm=, or native object is newer than the source that owns it.
@@ -122,14 +131,46 @@ above. Without those gates, splitting a builder can improve modularity while
 silently making every build slower.
 
 ** Current Baseline
+*** Lazy-slot observability
+
+The lazy-slot observability gate now presents one semantic sample procedure to
+ASP.  ASP executes 20 independent samples, records =samplesNs=, =minNs=,
+=p50Ns=, =p95Ns=, =maxNs=, the selected sample's =elapsedNs= and
+=runtimeStats=, and admits P95 against the unchanged 50 ms hard limit.  The
+selected result proves construction counts, cold and traced checksums, warm
+cache checksums, one-time lazy evaluation, and prototype placement.  It does
+not contain local stopwatch fields.
+
+The former scenario nested best-of-three timers and excluded substantial setup
+from its phase clocks.  Those clocks were removed instead of translated.  A
+single ASP receipt now owns the complete measured boundary, while the POO result
+owns semantics only.  Dynamic POO initializer bindings continue to use distinct
+=*-value= lexical names so receipt construction cannot recursively demand its
+own slots.
+
+Prototype lookup and composition are not inferred from this millisecond-scale
+end-to-end scenario.  Two dedicated micro-kernels import the public
+=:asp-gerbil-scheme/build-api= facade, emit only V1 receipts, and measure the
+native operations in batched CPU nanoseconds per operation.  Current calibrated
+hard ceilings are 200 ns/op for prototype lookup and 2000 ns/op for one
+composition.  P95 and maximum batch values remain scheduler/jitter diagnostics;
+the intrinsic gate admits P50 after bracketed no-op baseline subtraction.
+
 *** Focused Test Runner
 
 Use the test runner that owns test process lifecycle for focused package tests:
 
 #+begin_src sh
-gxpkg env gxtest -q t/model-core-test.ss
-gxpkg env gxtest -q t/object-family-syntax-performance-test.ss
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest -q t/model-core-test.ss
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest -q t/object-family-syntax-performance-test.ss
 #+end_src
+
+The checked-in =.devenv/devenv-profile-exec= launcher is the canonical
+non-interactive project entry.  It reuses the captured devenv export without
+reevaluating =.envrc= for every command and is the normal test and benchmark
+path.
 
 Do not use =gxpkg env gxi t/<test-file>.ss= as the normal focused-test gate.
 That shape can execute the assertions successfully while retaining the direct
@@ -154,8 +195,8 @@ Use bare =gxi= for trivial interpreter probes.  Use =gxpkg env= only when a
 package registry import is required, and use =gxtest= for package test files.
 
 The current composition gate baseline after the fix:
-- =gxpkg build -g= passes
-- hot-cache =gxpkg build -g= is about 3.6 seconds
+- =./.devenv/devenv-profile-exec gxpkg build -g= passes
+- the hot-cache form through =.devenv/devenv-profile-exec= is about 3.6 seconds
 - tests stage strict skip is about 55 ms
 - composition performance suite passes
 - gate rounds remain at 1000

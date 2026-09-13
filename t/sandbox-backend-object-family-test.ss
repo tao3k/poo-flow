@@ -5,10 +5,9 @@
 (import (only-in :std/test
                  check-eq?
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/modules/sandbox-core/objects
         :poo-flow/src/modules/sandbox-core/profile-support/policy
         :poo-flow/src/modules/nono-sandbox/objects
@@ -33,8 +32,9 @@
 
 ;; : (-> PooModuleObject Symbol Symbol)
 (def (field-value-kind object field)
-  (poo-flow-module-field-contract-value-kind
-   (required-field object field)))
+  (poo-flow-module-value-type-kind
+   (poo-flow-module-field-contract-value-type
+    (required-field object field))))
 
 ;; : (-> PooModuleObject Symbol Alist)
 (def (field-metadata object field)
@@ -51,7 +51,9 @@
   (check-eq? (poo-flow-sandbox-backend-capability/backend-kind capability)
              key))
 
-(run-tests!
+(export sandbox-backend-object-family-test)
+
+(def sandbox-backend-object-family-test
  (test-suite "sandbox backend object family macro contracts"
    (test-case "generates backend object identities and metadata"
      (check-equal? (poo-flow-module-object? poo-flow-nono-sandbox-object) #t)

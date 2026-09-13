@@ -3,9 +3,10 @@
 ;;; Invariant: communication receipts describe routing intent only; Scheme does
 ;;; not deliver messages or mutate source/target sessions.
 
-(import :poo-flow/src/module-system/durable-policy
+(import :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/receipt-syntax)
+        :poo-flow/src/modules/session/receipt-syntax
+        :poo-flow/src/modules/session/receipt-projection)
 
 (export +poo-flow-session-communication-receipt-kind+
         +poo-flow-session-communication-receipt-schema+
@@ -334,10 +335,11 @@
       receipt)))))
 
 ;; : (-> [PooSessionCommunicationChannelReceipt] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-communication-channel-receipts->alists (receipts)
-  (projector poo-flow-session-communication-channel-receipt->alist)
-  (error-message "session communication channel serialization requires a list"))
+(def (poo-flow-session-communication-channel-receipts->alists receipts)
+  (poo-flow-session-receipt-projection-batch
+   receipts
+   poo-flow-session-communication-channel-receipt->alist
+   "session communication channel serialization requires a list"))
 
 ;; : PooSessionCommunicationReceiptRecordStruct
 (defstruct poo-flow-session-communication-receipt-record
@@ -582,7 +584,8 @@
       receipt)))))
 
 ;; : (-> [PooSessionCommunicationReceipt] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-communication-receipts->alists (receipts)
-  (projector poo-flow-session-communication-receipt->alist)
-  (error-message "session communication receipt serialization requires a list"))
+(def (poo-flow-session-communication-receipts->alists receipts)
+  (poo-flow-session-receipt-projection-batch
+   receipts
+   poo-flow-session-communication-receipt->alist
+   "session communication receipt serialization requires a list"))

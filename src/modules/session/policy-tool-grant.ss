@@ -4,14 +4,14 @@
 (import :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax
         :poo-flow/src/modules/session/policy-core
-        (only-in "../../utilities/contracts.ss"
+        (only-in "../../module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
-                 poo-flow-object-type-contract->alist)
-        (only-in "../../utilities/contract-syntax.ss"
-                 defcontract-family))
+                 poo-flow-contract-slot
+                 poo-flow-contract-value-type
+                 poo-flow-native-contract
+                 poo-flow-native-contract->alist))
 
-(export +poo-flow-session-tool-grant-slot-contracts+
-        +poo-flow-session-tool-grant-type-contract+
+(export PooFlowSessionToolGrantContract
         poo-flow-session-tool-grant
         poo-flow-session-tool-grant?
         poo-flow-session-tool-grant-type-contract->alist
@@ -77,93 +77,97 @@
             'poo-flow.session.tool-grant)))
 
 ;;; Boundary: generated tool-grant accessors keep the alist receipt API stable.
-(defpoo-session-alist-accessors
-  poo-flow-session-alist-ref
-  (poo-flow-session-tool-grant-id grant-id #f)
-  (poo-flow-session-tool-grant-tool-ref tool-ref #f)
-  (poo-flow-session-tool-grant-actions actions '())
-  (poo-flow-session-tool-grant-resource-refs resource-refs '())
-  (poo-flow-session-tool-grant-trigger-refs trigger-refs '()))
+(def (poo-flow-session-tool-grant-id grant)
+  (poo-flow-session-alist-ref grant 'grant-id #f))
 
-(defcontract-family
-  +poo-flow-session-tool-grant-slot-contracts+
-  +poo-flow-session-tool-grant-type-contract+
-  'session/tool-grant
-  'session
-  'PooSessionToolGrant
-  '((boundary . session-policy) (runtime . marlin-agent-core))
-  ((+poo-flow-session-tool-grant-kind-contract+
-    'session.tool-grant/kind
-    'kind
-    'Symbol
-    'poo-flow-session-tool-grant-kind-value?
-    poo-flow-session-tool-grant-kind-value?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-schema-contract+
-    'session.tool-grant/schema
-    'schema
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-grant-id-contract+
-    'session.tool-grant/grant-id
-    'grant-id
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-tool-ref-contract+
-    'session.tool-grant/tool-ref
-    'tool-ref
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-actions-contract+
-    'session.tool-grant/actions
-    'actions
-    '[Symbol]
-    'poo-flow-session-symbol-list?
-    poo-flow-session-symbol-list?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-resource-refs-contract+
-    'session.tool-grant/resource-refs
-    'resource-refs
-    '[Symbol/String]
-    'poo-flow-session-policy-ref-list?
-    poo-flow-session-policy-ref-list?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-trigger-refs-contract+
-    'session.tool-grant/trigger-refs
-    'trigger-refs
-    '[Symbol]
-    'poo-flow-session-symbol-list?
-    poo-flow-session-symbol-list?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-metadata-contract+
-    'session.tool-grant/metadata
-    'metadata
-    'Alist
-    'poo-flow-session-policy-alist?
-    poo-flow-session-policy-alist?
-    #t
-    '())
-   (+poo-flow-session-tool-grant-runtime-executed-contract+
-    'session.tool-grant/runtime-executed
-    'runtime-executed
-    'Boolean
-    'poo-flow-session-policy-boolean?
-    poo-flow-session-policy-boolean?
-    #t
-    '())))
+(def (poo-flow-session-tool-grant-tool-ref grant)
+  (poo-flow-session-alist-ref grant 'tool-ref #f))
+
+(def (poo-flow-session-tool-grant-actions grant)
+  (poo-flow-session-alist-ref grant 'actions '()))
+
+(def (poo-flow-session-tool-grant-resource-refs grant)
+  (poo-flow-session-alist-ref grant 'resource-refs '()))
+
+(def (poo-flow-session-tool-grant-trigger-refs grant)
+  (poo-flow-session-alist-ref grant 'trigger-refs '()))
+
+(def PooFlowSessionToolGrantKindType
+  (poo-flow-contract-value-type
+   'SessionToolGrantKind poo-flow-session-tool-grant-kind-value? 'Symbol))
+(def PooFlowSessionToolGrantSymbolType
+  (poo-flow-contract-value-type 'Symbol symbol? 'Symbol))
+(def PooFlowSessionToolGrantSymbolListType
+  (poo-flow-contract-value-type
+   '[Symbol] poo-flow-session-symbol-list? '[Symbol]))
+(def PooFlowSessionToolGrantRefListType
+  (poo-flow-contract-value-type
+   '[Symbol/String] poo-flow-session-policy-ref-list? '[Symbol/String]))
+(def PooFlowSessionToolGrantAlistType
+  (poo-flow-contract-value-type
+   'Alist poo-flow-session-policy-alist? 'Alist))
+(def PooFlowSessionToolGrantBooleanType
+  (poo-flow-contract-value-type
+   'Boolean poo-flow-session-policy-boolean? 'Boolean))
+
+(def (poo-flow-session-tool-grant-slot-contract key slot value-type)
+  (poo-flow-contract-slot key slot value-type #t '()))
+
+(def PooFlowSessionToolGrantKindSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/kind 'kind PooFlowSessionToolGrantKindType))
+(def PooFlowSessionToolGrantSchemaSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/schema 'schema PooFlowSessionToolGrantSymbolType))
+(def PooFlowSessionToolGrantIdSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/grant-id 'grant-id PooFlowSessionToolGrantSymbolType))
+(def PooFlowSessionToolGrantToolRefSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/tool-ref 'tool-ref PooFlowSessionToolGrantSymbolType))
+(def PooFlowSessionToolGrantActionsSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/actions 'actions PooFlowSessionToolGrantSymbolListType))
+(def PooFlowSessionToolGrantResourceRefsSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/resource-refs
+   'resource-refs
+   PooFlowSessionToolGrantRefListType))
+(def PooFlowSessionToolGrantTriggerRefsSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/trigger-refs
+   'trigger-refs
+   PooFlowSessionToolGrantSymbolListType))
+(def PooFlowSessionToolGrantMetadataSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/metadata 'metadata PooFlowSessionToolGrantAlistType))
+(def PooFlowSessionToolGrantRuntimeExecutedSlot
+  (poo-flow-session-tool-grant-slot-contract
+   'session.tool-grant/runtime-executed
+   'runtime-executed
+   PooFlowSessionToolGrantBooleanType))
+
+(def PooFlowSessionToolGrantSlots
+  (list PooFlowSessionToolGrantKindSlot
+        PooFlowSessionToolGrantSchemaSlot
+        PooFlowSessionToolGrantIdSlot
+        PooFlowSessionToolGrantToolRefSlot
+        PooFlowSessionToolGrantActionsSlot
+        PooFlowSessionToolGrantResourceRefsSlot
+        PooFlowSessionToolGrantTriggerRefsSlot
+        PooFlowSessionToolGrantMetadataSlot
+        PooFlowSessionToolGrantRuntimeExecutedSlot))
+
+(def PooFlowSessionToolGrantContract
+  (poo-flow-native-contract
+   'session/tool-grant
+   'session
+   'PooSessionToolGrant
+   poo-flow-session-tool-grant?
+   PooFlowSessionToolGrantSlots
+   (lambda (grant slot) (if (assoc slot grant) #t #f))
+   (lambda (grant slot) (poo-flow-session-alist-ref grant slot #f))
+   '((boundary . session-policy) (runtime . marlin-agent-core))))
 
 ;; poo-flow-session-tool-grant-type-contract->alist
 ;;   | contract: adjacent machine contract below defines the projection.
@@ -176,8 +180,7 @@
 ;;     %
 ;; : (-> Unit Alist)
 (def (poo-flow-session-tool-grant-type-contract->alist)
-  (poo-flow-object-type-contract->alist
-   +poo-flow-session-tool-grant-type-contract+))
+  (poo-flow-native-contract->alist PooFlowSessionToolGrantContract))
 
 ;; : (-> PooFlowSlotContract PooFlowValue PooFlowValue)
 (def (poo-flow-session-tool-grant-check-slot! contract value)
@@ -205,31 +208,31 @@
                                                  metadata
                                                  runtime-executed?)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-kind-contract+
+   PooFlowSessionToolGrantKindSlot
    kind)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-schema-contract+
+   PooFlowSessionToolGrantSchemaSlot
    schema)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-grant-id-contract+
+   PooFlowSessionToolGrantIdSlot
    grant-id)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-tool-ref-contract+
+   PooFlowSessionToolGrantToolRefSlot
    tool-ref)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-actions-contract+
+   PooFlowSessionToolGrantActionsSlot
    actions)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-resource-refs-contract+
+   PooFlowSessionToolGrantResourceRefsSlot
    resource-refs)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-trigger-refs-contract+
+   PooFlowSessionToolGrantTriggerRefsSlot
    trigger-refs)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-metadata-contract+
+   PooFlowSessionToolGrantMetadataSlot
    metadata)
   (poo-flow-session-tool-grant-check-slot!
-   +poo-flow-session-tool-grant-runtime-executed-contract+
+   PooFlowSessionToolGrantRuntimeExecutedSlot
    runtime-executed?)
   #t)
 

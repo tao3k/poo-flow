@@ -1,4 +1,10 @@
-(import :clan/poo/object
+;;; Boundary: owns the POO prototypes for features, profiles, selections, and receipts.
+;;; Invariant: model objects remain inert values; resolution and runtime effects live elsewhere.
+(import (only-in :clan/poo/object
+                 .ref
+                 .slot?
+                 make-object
+                 object-slots-set!)
         :poo-flow/src/core/roles
         :poo-flow/src/utilities/functional)
 

@@ -1,8 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: memory policy/catalog validation receipts.
 
-(import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
+(import (only-in :std/srfi/1 fold)
+        (only-in :std/sugar cut)
+        (only-in :clan/poo/object .o .ref object? object<-alist)
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects-core
@@ -46,6 +48,7 @@
    runtime-executed
    metadata)
   transparent: #t)
+;; : (-> Symbol PooSessionMemoryIntent Alist)
 (def (poo-flow-memory-diagnostic code intent)
   (poo-flow-memory-field-rows
    (kind 'poo-flow.memory-core.diagnostic)
@@ -147,19 +150,49 @@
     (cons store-ref refs-rev)
     refs-rev))
 
+;; : (-> PooMemoryCatalog PooSessionMemoryIntent List List)
+(def (poo-flow-memory-policy-catalog-validation-summary-step catalog intent state)
+  (match state
+    ([seen-store-refs intent-count intent-store-refs-rev
+      resolved-store-refs-rev unresolved-store-refs-rev diagnostics-rev]
+     (let* ((store-ref (poo-flow-session-memory-intent-store-ref intent))
+            (already-seen? (member store-ref seen-store-refs))
+            (spec (poo-flow-memory-catalog-find catalog store-ref))
+            (intent-diagnostics
+             (poo-flow-memory-policy-catalog-intent-diagnostics spec intent)))
+       (list
+        (poo-flow-memory-policy-catalog-seen-store-refs
+         already-seen? store-ref seen-store-refs)
+        (+ intent-count 1)
+        (poo-flow-memory-policy-catalog-intent-store-refs/rev
+         already-seen? store-ref intent-store-refs-rev)
+        (poo-flow-memory-policy-catalog-resolved-store-refs/rev
+         already-seen? spec store-ref resolved-store-refs-rev)
+        (poo-flow-memory-policy-catalog-unresolved-store-refs/rev
+         already-seen? spec store-ref unresolved-store-refs-rev)
+        (poo-flow-memory-reverse-onto intent-diagnostics diagnostics-rev))))))
+
 ;; poo-flow-memory-policy-catalog-validation-summary/rev
+;;   : (forall (a d) (-> PooMemoryCatalog (List a) [Symbol] Integer [Symbol] [Symbol] [Symbol] (List d) Alist))
 ;;   : (-> PooMemoryCatalog [PooSessionMemoryIntent] [Symbol] Integer [Symbol] [Symbol] [Symbol] [Alist] Alist)
+;;   | result: ordered validation summary alist
 ;;   | doc m%
-;;       Fold session memory intents against a memory catalog while preserving
+;;       `poo-flow-memory-policy-catalog-validation-summary/rev` folds session
+;;       memory intents against a memory catalog while preserving
 ;;       declaration order and diagnostic provenance. This helper owns the
 ;;       accumulator state for catalog validation; runtime recall, commit, and
 ;;       persistence stay outside Scheme.
+;;
 ;;       # Examples
+;;
 ;;       ```scheme
 ;;       (poo-flow-memory-policy-catalog-validation-summary/rev
 ;;        catalog intents '() 0 '() '() '() '())
+;;       ;; => validation summary alist
 ;;       ```
+;;
 ;;       # Result
+;;
 ;;       A validation summary alist with intent, resolved-store, unresolved-store,
 ;;       and diagnostic rows.
 ;;     %
@@ -171,54 +204,25 @@
                                                             resolved-store-refs-rev
                                                             unresolved-store-refs-rev
                                                             diagnostics-rev)
-  (let loop ((remaining-intents memory-intents)
-             (seen-store-refs seen-store-refs)
-             (intent-count intent-count)
-             (intent-store-refs-rev intent-store-refs-rev)
-             (resolved-store-refs-rev resolved-store-refs-rev)
-             (unresolved-store-refs-rev unresolved-store-refs-rev)
-             (diagnostics-rev diagnostics-rev))
-    (cond
-     ((null? remaining-intents)
+  (match (fold
+          (cut poo-flow-memory-policy-catalog-validation-summary-step
+               catalog <> <>)
+          (list seen-store-refs
+                intent-count
+                intent-store-refs-rev
+                resolved-store-refs-rev
+                unresolved-store-refs-rev
+                diagnostics-rev)
+          memory-intents)
+    ([_ final-intent-count final-intent-store-refs-rev
+      final-resolved-store-refs-rev final-unresolved-store-refs-rev
+      final-diagnostics-rev]
       (poo-flow-memory-policy-catalog-validation-summary-finish
-       intent-count
-       intent-store-refs-rev
-       resolved-store-refs-rev
-       unresolved-store-refs-rev
-       diagnostics-rev))
-     (else
-      (let* ((intent (car remaining-intents))
-             (store-ref
-              (poo-flow-session-memory-intent-store-ref intent))
-             (already-seen? (member store-ref seen-store-refs))
-             (spec (poo-flow-memory-catalog-find catalog store-ref))
-             (intent-diagnostics
-              (poo-flow-memory-policy-catalog-intent-diagnostics
-               spec
-               intent)))
-        (loop
-         (cdr remaining-intents)
-         (poo-flow-memory-policy-catalog-seen-store-refs
-          already-seen?
-          store-ref
-          seen-store-refs)
-         (+ intent-count 1)
-         (poo-flow-memory-policy-catalog-intent-store-refs/rev
-          already-seen?
-          store-ref
-          intent-store-refs-rev)
-         (poo-flow-memory-policy-catalog-resolved-store-refs/rev
-          already-seen?
-          spec
-          store-ref
-          resolved-store-refs-rev)
-         (poo-flow-memory-policy-catalog-unresolved-store-refs/rev
-          already-seen?
-          spec
-          store-ref
-          unresolved-store-refs-rev)
-         (poo-flow-memory-reverse-onto intent-diagnostics
-                                       diagnostics-rev)))))))
+       final-intent-count
+       final-intent-store-refs-rev
+       final-resolved-store-refs-rev
+       final-unresolved-store-refs-rev
+       final-diagnostics-rev))))
 
 ;; : (-> PooMemoryCatalog [PooSessionMemoryIntent] Alist)
 (def (poo-flow-memory-policy-catalog-validation-summary catalog memory-intents)

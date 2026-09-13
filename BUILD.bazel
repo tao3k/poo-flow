@@ -1,8 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
+    "gerbil-dependencies.MODULE.bazel",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
-    "tools/validate-runtime-v0-symbol-surface.ss",
 ])
 
 filegroup(
@@ -22,38 +22,6 @@ filegroup(
 )
 
 filegroup(
-    name = "runtime_wasm_generator_build_script",
-    srcs = ["runtime-wasm-generator-build.ss"],
-)
-
-filegroup(
-    name = "runtime_wasm_generator_scheme_sources",
-    srcs = [
-        "gerbil.pkg",
-        "src/core/failure.ss",
-        "src/core/flow.ss",
-        "src/core/flow-declarations.ss",
-        "src/core/flow-strand.ss",
-        "src/core/object-syntax.ss",
-        "src/core/plan.ss",
-        "src/core/projection-syntax.ss",
-        "src/core/roles.ss",
-        "src/core/task.ss",
-        "src/feature-system/bundle-v1-composition-writer.ss",
-        "src/feature-system/bundle-v1-foreign-arena.ss",
-        "src/feature-system/bundle-v1-lowering.ss",
-        "src/module-system/profile-composition.ss",
-        "src/module-system/profile-composition-accessors.ss",
-        "src/module-system/profile-composition-builders.ss",
-        "src/module-system/profile-composition-inline-runtime.ss",
-        "src/module-system/profile-composition-syntax-plan.ss",
-        "src/module-system/profile-composition-use-syntax.ss",
-        "src/projection-syntax-support.ss",
-        "src/utilities/functional.ss",
-    ],
-)
-
-filegroup(
     name = "scheme_source_root_marker",
     srcs = ["gerbil.pkg"],
 )
@@ -65,20 +33,30 @@ filegroup(
         ":scheme_runtime_sources",
     ] + glob([
         "bindings/nono-c/**/*.h",
+        "t/**/*.ss",
         "user-interface/**/*.ss",
     ]),
 )
 
 filegroup(
     name = "runtime_load_projection_source",
-    srcs = ["src/module-system/runtime-load-projection.ss"],
+    srcs = ["src/modules/funflow/runtime-load-projection.ss"],
 )
 
 filegroup(
-    name = "scheme_test_sources",
-    srcs = [":scheme_build_sources"] + glob([
-        "README.org",
-        "docs/**/*.org",
-        "t/**",
-    ]),
+    name = "json_schema_native_contract_test_support",
+    srcs = [
+        "schemas/json/github-workflow.json",
+        "t/funflow-github-ci-json-schema-contract-test.ss",
+        "t/json-schema-contract-bridge-test.ss",
+        "t/json-schema-native-contract-test.ss",
+    ],
+)
+
+filegroup(
+    name = "type_contract_performance_test_support",
+    srcs = [
+        "t/support/performance.ss",
+        "t/support/type-contract-performance.ss",
+    ],
 )

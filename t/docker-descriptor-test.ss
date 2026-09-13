@@ -10,12 +10,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/docker
+        :poo-flow/src/modules/docker/config
         :poo-flow/src/modules/agent-sandbox/resource)
 
 (export docker-descriptor-test)

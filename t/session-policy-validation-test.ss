@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -431,5 +430,3 @@
          (poo-flow-session-policy-validation-receipt-runtime-executed?
           receipt)
          #f)))))
-
-(run-tests! session-policy-validation-test)

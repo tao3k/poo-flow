@@ -2,8 +2,8 @@
 ;;; Boundary: durable memory job validation and receipts.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects-core

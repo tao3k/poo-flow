@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/config
@@ -40,7 +39,9 @@
                 (thunk)
                 #f)))
 
-(run-tests!
+(export sandbox-core-profile-derivation-test)
+
+(def sandbox-core-profile-derivation-test
  (test-suite "sandbox-core profile derivation"
    (test-case "derives session and task profiles through POO row merges"
      (let* ((project-profile

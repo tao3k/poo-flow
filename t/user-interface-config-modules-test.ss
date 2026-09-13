@@ -10,11 +10,10 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
         test-case
         test-error
         test-suite)
-        :poo-flow/src/module-system/facade
+        :poo-flow/src/user-interface/facade
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module
@@ -79,10 +78,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-only)))
                          (access . read-only))
                         (cpu . 2)
@@ -103,10 +101,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-write)))
                          (mounts . declared)
                          (access . read-write))

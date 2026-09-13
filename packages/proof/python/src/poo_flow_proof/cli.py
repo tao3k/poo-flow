@@ -5,6 +5,13 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .axle_receipt_authority import (
+    LiveAxleClosureReceiptAuthorityV1,
+)
+from .proof_base_receipt_graph_audit import (
+    decode_proof_base_receipt_graph_audit_v1,
+)
+
 from .lean_emit import manifest_to_lean
 from .model import canonical_loop_engine_manifest
 from .proof_case_emit import write_generated_artifacts
@@ -33,6 +40,22 @@ def _emit_proof_case_artifacts(args: argparse.Namespace) -> int:
     return 0
 
 
+def _verify_receipt_graph_audit(args: argparse.Namespace) -> int:
+    authority = LiveAxleClosureReceiptAuthorityV1(
+        lean_root=args.lean_root,
+        lean_export_timeout_seconds=args.lean_export_timeout_seconds,
+        axle_operation_timeout_seconds=args.axle_operation_timeout_seconds,
+        axle_base_timeout_seconds=args.axle_base_timeout_seconds,
+    )
+    decoded = decode_proof_base_receipt_graph_audit_v1(
+        args.input.read_bytes(),
+        authority=authority,
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_bytes(decoded.canonical_audit_bytes)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="poo-flow-proof")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -49,6 +72,43 @@ def build_parser() -> argparse.ArgumentParser:
     )
     emit_proof_case.add_argument("--check", action="store_true")
     emit_proof_case.set_defaults(func=_emit_proof_case_artifacts)
+    verify_receipt_graph_audit = subparsers.add_parser(
+        "verify-receipt-graph-audit"
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--lean-root",
+        type=Path,
+        required=True,
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--lean-export-timeout-seconds",
+        type=float,
+        default=60.0,
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--axle-operation-timeout-seconds",
+        type=float,
+        default=30.0,
+    )
+    verify_receipt_graph_audit.add_argument(
+        "--axle-base-timeout-seconds",
+        type=float,
+        default=10.0,
+    )
+    verify_receipt_graph_audit.set_defaults(
+        func=_verify_receipt_graph_audit
+    )
+
     return parser
 
 

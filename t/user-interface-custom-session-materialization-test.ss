@@ -5,12 +5,11 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-session-materialization-test)
 
@@ -68,5 +67,3 @@
         (check-equal? (test-ref failed 'diagnostic-count) 0)
         (check-equal? (test-ref pending 'runtime-executed) #f)
         (check-equal? (test-ref failed 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-materialization-test)

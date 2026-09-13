@@ -1,0 +1,71 @@
+#+TITLE: POO Observability Slot Guard Performance Scenario
+
+* Purpose
+
+This scenario keeps the native POO lazy-slot observability path measurable and
+teachable.  It separates prototype authoring, guarded-object construction,
+first demand, cached demand, and traced demand instead of collapsing them into
+one opaque elapsed value.
+
+* Scenario contract
+
+The ASP benchmark framework executes 20 independent complete scenario samples,
+records upstream nanosecond and process-memory evidence for every sample, and
+admits the nearest-rank P95 sample against the 50 ms maximum.  The selected
+sample result carries the semantic evidence; there is no nested stopwatch,
+best-of-N selector, or downstream timing receipt.
+
+One sample performs these bounded operations:
+
+- construction creates 16 guarded objects without demanding their slots;
+- cold demand uses one independently constructed batch;
+- warm demand evaluates one guarded source once and reads its cache 1,000 times;
+- trace demand uses fresh sources and bounded output-string ports; and
+- prototype placement remains semantic evidence only; the primitive lookup and
+  one-composition costs are measured by separate ASP micro-kernel receipts.
+
+Checksums and the one-time evaluation count are the semantic gate.  The ASP P95
+receipt is the sole end-to-end time gate.  The lookup and composition tests use
+the public =:asp-gerbil-scheme/build-api= micro-kernel API and V1 receipts; they
+warm up, batch operations, subtract bracketed no-op CPU baselines, and admit the
+P50 intrinsic nanoseconds per operation while retaining P95 and maximum jitter.
+
+* Authoring rule
+
+Do not write a dynamic receipt field as =slot: slot=.  POO initializer scope
+binds declared slot names, so that form can recursively demand itself.  Use a
+distinct lexical binding such as =slot-value= and write =slot: slot-value=.
+The executable classification policy is documented in
+=../poo-dynamic-slot-binding-leak/README.org=.
+
+Likewise, repeated constructors should bind a stable Contract prototype once
+before the repetition and compose with that binding.  The reader-only source
+gate reports direct =(.ref Contract 'proto)= expressions inside =.o= super
+clauses as repair advice; it does not claim the source was executed.
+
+* Baseline
+
+The end-to-end fixture declares a 20 ms target plus 30 ms regression budget and
+a 50 ms hard limit.  It contains no static observed timing fields or phase-local
+stopwatches.  Live ASP receipts are the only observations.  Separate calibration
+of the actual native primitives measured prototype lookup at 67 ns/op and one
+prototype composition at 1438 ns/op; their checked hard ceilings are 200 ns/op
+and 2000 ns/op respectively.  Process startup and scheduler suspension are not
+reported as POO primitive cost.
+
+Measure the scenario with the native Gerbil test runner through the captured
+project environment:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest \
+  t/observability-slot-performance-test.ss
+#+end_src
+
+The native ASP V1 receipts' =elapsedNs=, =p50Ns=, =p95Ns=, =maxNs=,
+=nsPerOpNumerator=, =nsPerOpDenominator=, =runtimeStats=, and =status= fields
+are the performance evidence.  Bazel may run
+the same test as a dependency-closure and acceptance gate, but its sandbox,
+compilation, and launcher wall time must not be reported as POO performance.
+Project documentation and automation use the checked-in
+=.devenv/devenv-profile-exec= launcher contract.

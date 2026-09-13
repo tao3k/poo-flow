@@ -1,8 +1,8 @@
 ;;; Boundary: Scheme POO owns semantic roots and one-shot effect capabilities.
 ;;; Invariant: validation and consumption are pure immutable transitions.
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex)
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/text/hex hex-encode))
 
 (export poo-flow-semantic-root
         poo-flow-effect-binding

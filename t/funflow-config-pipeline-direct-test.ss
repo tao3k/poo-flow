@@ -3,9 +3,9 @@
 
 (import (only-in :std/sugar match)
         (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/workflow-cicd-config
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/modules/workflow/cicd-config
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-pipeline-runtime-command-manifests)
@@ -36,7 +36,7 @@
                               runtime-mode)
       check-name: 'build
       profile-ref: 'ci/build
-      command-vector: '("gxpkg" "build")
+      command-vector: '("gerbil" "build")
       artifact-outputs: '(build-log)
       cache-intents: '(gerbil-build-cache)
       result-protocol: '(read :lines)
@@ -48,7 +48,7 @@
                                     runtime-mode dependency-refs)
       check-name: 'integration
       profile-ref: '(ci/check agent/poo-object-extension)
-      command-vector: '("gxtest" "t/unit-tests.ss")
+      command-vector: '("gerbil" "env" "./unit-tests.ss")
       artifact-outputs: '(test-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -74,7 +74,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 4)
@@ -92,7 +91,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-only)))
                 (access . read-only))
                (cpu . 1)
@@ -168,10 +166,10 @@
     (check-equal? (length manifests) 2)
     (check-equal? (funflow-config-direct-alist-ref integration-manifest
                                                   'executable)
-                  "gxtest")
+                  "gerbil")
     (check-equal? (funflow-config-direct-alist-ref integration-manifest
                                                   'arguments)
-                  '("t/unit-tests.ss"))
+                  '("env" "./unit-tests.ss"))
     (check-equal? (funflow-config-direct-alist-ref integration-request
                                                   'check)
                   'integration)

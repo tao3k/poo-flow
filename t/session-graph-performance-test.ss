@@ -7,11 +7,11 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/modules/session/objects
                  poo-flow-session-chunk
                  poo-flow-session-lineage

@@ -1,7 +1,8 @@
-;;; Boundary: Cedar evaluates policy; Scheme POO owns semantic/token meaning.
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex
+;;; Boundary: Cedar evaluates policy while Scheme POO owns semantic token meaning.
+;;; Invariant: a Cedar decision cannot mint or reinterpret authorized-effect evidence.
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/text/hex hex-encode)
         :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-cedar-decision

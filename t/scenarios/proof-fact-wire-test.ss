@@ -1,7 +1,12 @@
-(import :poo-flow/src/proof/proof-fact-wire
-        :poo-flow/src/module-system/composition-proof-facts
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
+        :poo-flow/src/module-system/composition/proof-facts
         :poo-flow/src/graph/control-plane-handoff-facts
         :poo-flow/src/graph/scenario-gap-rejection-facts)
+
+(def proof-fact-wire-test
+  (test-suite "proof fact wire"
+    (test-case "validates composition handoff and scenario wires"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -121,4 +126,4 @@
               'poo-flow.proof.scenario-gap.runtime-row)
 (assert-equal 'scenario-rejection-rule
               (poo-flow-proof-fact-ref 'rejection-rule scenario-wire)
-              'runtime-row-rejected-by-accepted)
+              'runtime-row-rejected-by-accepted))))

@@ -95,3 +95,66 @@ gerbil_project_projection = rule(
     },
     toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
+
+def _gerbil_project_contract_projection_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
+    project = ctx.attr.project[GerbilProjectInfo]
+    project_dependency_roots = project.dependency_roots.to_list()
+    artifact = ctx.actions.declare_file(ctx.attr.output_name)
+
+    arguments = ctx.actions.args()
+    arguments.add(ctx.file.projector.path)
+    arguments.add(artifact.path)
+
+    environment = dict(toolchain.environment)
+    environment.update({
+        "GERBIL_PATH": project.project_root.path + "/.gerbil",
+        "GERBIL_LOADPATH": ":".join(
+            [project.project_root.path + "/.gerbil/lib"] +
+            [
+                root.path + "/.gerbil/lib"
+                for root in project_dependency_roots
+            ] +
+            [toolchain.dependency_library_root.path],
+        ),
+        "POO_FLOW_GERBIL_NATIVE_ABI": toolchain.native_abi_fingerprint,
+    })
+    ctx.actions.run(
+        arguments = [arguments],
+        executable = toolchain.gxi,
+        env = environment,
+        inputs = depset(
+            direct = [
+                ctx.file.projector,
+                project.project_root,
+                toolchain.dependency_library_root,
+                toolchain.native_abi_fingerprint_file,
+            ],
+            transitive = [
+                project.dependency_roots,
+                toolchain.dependency_libraries,
+                toolchain.runfiles,
+            ],
+        ),
+        mnemonic = "GerbilProjectContractProjection",
+        outputs = [artifact],
+        progress_message = "Projecting POO contract %{label}",
+        tools = [toolchain.gxi],
+    )
+    return [DefaultInfo(files = depset([artifact]))]
+
+gerbil_project_contract_projection = rule(
+    implementation = _gerbil_project_contract_projection_impl,
+    attrs = {
+        "output_name": attr.string(mandatory = True),
+        "project": attr.label(
+            mandatory = True,
+            providers = [GerbilProjectInfo],
+        ),
+        "projector": attr.label(
+            allow_single_file = [".ss"],
+            mandatory = True,
+        ),
+    },
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
+)

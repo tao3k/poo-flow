@@ -20,10 +20,10 @@ Evidence snapshot:
   - =.data/OpenRath/CONTRIBUTING.md:5-95=
   - =.data/OpenRath/example/README.md:1-160=
 - Current POO Flow evidence:
-  - =src/module-system/presentation.ss:80-304=
+  - =src/user-interface/presentation.ss:80-304=
   - =src/core/flow.ss:429-516=
   - =src/modules/sandbox-core/profile.ss:135-212=
-  - =src/module-system/workflow-cicd-config.ss:573-649=
+  - =src/modules/workflow/cicd-config.ss:573-649=
 
 This is a design audit, not a dependency proposal. OpenRath is Python
 runtime-oriented; POO Flow remains Scheme control-plane and object-system

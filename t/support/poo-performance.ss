@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: shared fixtures and helpers for POO performance scenario tests.
 
-(import (only-in :gslph/src/benchmark/gate
+(import (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance-object-scenarios
+        "./poo-performance-fixtures"
+        "./poo-performance-object-scenarios"
         (only-in :clan/poo/object
                  .all-slots
                  .def
@@ -18,11 +18,10 @@
                  .ref
                  .setslot!
                  $constant-slot-spec)
-        :poo-flow/src/module-system/indexed-family
+        :poo-flow/src/module-system/object-family/indexed
         (only-in :std/sugar ormap))
 
-(export benchmark-fixture-memory-contract-pass?
-        poo-performance-fixture-policy-contract-pass?
+(export poo-performance-fixture-policy-contract-pass?
         poo-performance-display-receipt
         poo-performance-run-gate
         poo-performance-required-form-evidence
@@ -61,42 +60,21 @@
         poo-performance-generated-receipt-boundary-valid-count
         poo-performance-generated-receipt-boundary-gate-receipt)
 
-;; : (-> Alist Boolean)
-(def (benchmark-fixture-memory-contract-pass? fixture)
-  (let (max-rss-mb (poo-performance-slot-ref/default
-                    fixture
-                    'maxRssMb
-                    #f))
-    (and (integer? max-rss-mb)
-         (> max-rss-mb 0))))
-
 ;; : [Symbol]
 (def poo-performance-required-policy-keys
-  '(max_total
-    maxCollectMs
-    maxParseMs
-    maxFileMs
-    maxPhaseMs
-    observedCollectMs
-    observedParseMs
-    observedFileMs
-    observedPhaseMs
-    observed_total
+  '(benchmarkKind
+    max_total
     target_total
     regression_budget
     expected_over_input_budget
-    observedTimings
     targetRationale
-    maxRssMb
-    memoryMetric
-    memoryUnit
-    iterations
-    unit
+    sampleCount
     sourcePath
     rule
     feature
     optimizationFocus
     inputShape
+    expectedOutcome
     expectedRepair
     pooFormEvidence
     pooUsageCallEvidence
@@ -108,11 +86,6 @@
   (not (ormap (lambda (key)
                 (not (assoc key fixture)))
               keys)))
-
-;; : (-> Alist Symbol Boolean)
-(def (poo-performance-fixture-positive-integer? fixture key)
-  (let (value (poo-performance-slot-ref/default fixture key #f))
-    (and (integer? value) (> value 0))))
 
 ;; : (-> Alist Symbol Boolean)
 (def (poo-performance-fixture-nonempty-string? fixture key)
@@ -130,59 +103,13 @@
          (file-exists? source-path))))
 
 ;; : (-> Alist Boolean)
-(def (poo-performance-timing-budget-contract-pass? fixture)
-  (and (poo-performance-fixture-positive-integer? fixture 'maxCollectMs)
-       (poo-performance-fixture-positive-integer? fixture 'maxParseMs)
-       (poo-performance-fixture-positive-integer? fixture 'maxFileMs)
-       (poo-performance-fixture-positive-integer? fixture 'maxPhaseMs)
-       (poo-performance-fixture-positive-integer? fixture 'observedCollectMs)
-       (poo-performance-fixture-positive-integer? fixture 'observedParseMs)
-       (poo-performance-fixture-positive-integer? fixture 'observedFileMs)
-       (poo-performance-fixture-positive-integer? fixture 'observedPhaseMs)
-       (poo-performance-fixture-positive-integer? fixture 'iterations)))
-
-;; : (-> Alist Boolean)
-(def (poo-performance-memory-metric-contract-pass? fixture)
-  (and (eq? (poo-performance-slot-ref/default
-             fixture
-             'memoryMetric
-             #f)
-            'resident-set-size)
-       (equal? (poo-performance-slot-ref/default
-                fixture
-                'memoryUnit
-                #f)
-               "MB")
-       (benchmark-fixture-memory-contract-pass? fixture)))
-
-;; : (-> Alist Boolean)
 (def (poo-performance-text-policy-contract-pass? fixture)
   (and (poo-performance-fixture-nonempty-string? fixture 'targetRationale)
        (poo-performance-fixture-nonempty-string? fixture 'optimizationFocus)
        (poo-performance-fixture-nonempty-string? fixture 'inputShape)
        (poo-performance-fixture-nonempty-string? fixture 'expectedRepair)
-       (equal? (poo-performance-slot-ref/default fixture 'unit #f) "ms")
        (symbol? (poo-performance-slot-ref/default fixture 'rule #f))
        (symbol? (poo-performance-slot-ref/default fixture 'feature #f))))
-
-;; : (-> Alist Boolean)
-(def (poo-performance-observed-timing-entry-contract-pass? entry)
-  (and (list? entry)
-       (poo-performance-fixture-nonempty-string? entry 'name)
-       (poo-performance-fixture-positive-integer? entry 'durationMs)))
-
-;; : (-> Alist Boolean)
-(def (poo-performance-observed-timings-contract-pass? fixture)
-  (let (timings (poo-performance-slot-ref/default
-                 fixture
-                 'observedTimings
-                 #f))
-    (and (list? timings)
-         (not (null? timings))
-         (not (ormap (lambda (entry)
-                       (not (poo-performance-observed-timing-entry-contract-pass?
-                             entry)))
-                     timings)))))
 
 ;; : (-> Alist Boolean)
 (def (poo-performance-measurement-phase-contract-pass? fixture)
@@ -192,7 +119,7 @@
                 #f))
     (and (list? phases)
          (poo-performance-symbol-member? phases 'assert-time-gate)
-         (poo-performance-symbol-member? phases 'assert-memory-gate))))
+         (poo-performance-symbol-member? phases 'observe-runtime-memory))))
 
 ;; : (-> Alist Boolean)
 (def (poo-performance-tags-contract-pass? fixture)
@@ -205,14 +132,10 @@
 (def (poo-performance-fixture-policy-contract-pass? fixture)
   (and (benchmark-fixture-contract-pass? fixture)
        (poo-performance-fixture-keys-present?
-        fixture
-        poo-performance-required-policy-keys)
-       (benchmark-fixture-memory-contract-pass? fixture)
+       fixture
+       poo-performance-required-policy-keys)
        (poo-performance-source-path-contract-pass? fixture)
-       (poo-performance-timing-budget-contract-pass? fixture)
-       (poo-performance-memory-metric-contract-pass? fixture)
        (poo-performance-text-policy-contract-pass? fixture)
-       (poo-performance-observed-timings-contract-pass? fixture)
        (poo-performance-measurement-phase-contract-pass? fixture)
        (poo-performance-tags-contract-pass? fixture)
        (poo-performance-api-evidence-contract-pass? fixture)))

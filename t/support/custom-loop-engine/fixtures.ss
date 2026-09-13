@@ -2,8 +2,8 @@
 ;;; Shared fixtures for custom loop-engine user-interface tests.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        :poo-flow/src/user-interface/facade
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
         (only-in :poo-flow/src/modules/cubeSandbox/config

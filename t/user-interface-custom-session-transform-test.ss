@@ -5,13 +5,12 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-session-transform-test)
 
@@ -80,5 +79,3 @@
         (check-equal? (test-ref handoff-intent 'memory-intent-count) 1)
         (check-equal? (test-ref handoff-intent 'runtime-executed) #f)
         (check-equal? (.ref receipt 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-transform-test)

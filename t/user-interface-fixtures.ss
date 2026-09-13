@@ -3,11 +3,11 @@
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/profile-core
-        :poo-flow/src/module-system/profiles/kernel)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/user-interface/profile-config
+        :poo-flow/src/user-interface/profile-core
+        :poo-flow/src/profiles/kernel/interface)
 
 (defrules poo-flow-profile-set (default profiles)
   ((_ name (default default-name) (profiles profile ...))
@@ -52,15 +52,6 @@
 
 (def (poo-flow-user-module-bundles->modules bundles)
   (apply append bundles))
-
-(defrules poo-flow-custom-module-bundles ()
-  ((_ (name path feature ...) ...)
-   (list
-    (list
-     (poo-flow-user-module-selection 'custom
-                                     'name
-                                     '(feature ...)))
-    ...)))
 
 (def poo-flow-default-user-setting-keys
   '(surface profile flow-mode loop-strategy sandbox-policy sandbox-backends mode-lock))
@@ -141,7 +132,8 @@
 
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def test-poo-flow-user-custom-module-bundles
-  (poo-flow-custom-module-bundles
+  (poo-flow-modules!
+   :custom
    (my-module "./custom/my-module" +private +doctor)))
 
 ;; : (-> Unit PooUserProfile)
@@ -196,11 +188,7 @@
 
 ;; : (-> Unit PooUserConfig)
 (def test-poo-flow-user-config
-  (.o kind: "poo-flow.modules.user-config.v1"
-      user-modules: (apply append
-                           (.ref test-poo-flow-user-profile
-                                 'profile-selection-bundles))
-      user-settings: (.ref test-poo-flow-user-profile 'user-settings)))
+  (pooFlowUserConfigFromProfile test-poo-flow-user-profile))
 
 ;; : (-> UserInterfaceEntry Alist MaybeValue)
 (def (alist-value key entries)

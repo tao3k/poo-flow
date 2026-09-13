@@ -175,10 +175,10 @@ placing every obligation in the scenario bridge:
 The current Scheme owners for these boundaries are:
 
 | Boundary | Scheme owner selectors |
-| profile | src/module-system/profiles/kernel-bundles.ss; src/modules/funflow/config.ss |
+| profile | src/profiles/kernel/bundles.ss; src/modules/funflow/config.ss |
 | sandbox | src/modules/agent-sandbox/api.ss; src/modules/agent-sandbox/profile-validation.ss; src/modules/agent-sandbox/profile-descriptor.ss |
 | session | src/modules/session/objects-core.ss; src/modules/session/objects-handoff.ss; src/modules/session/objects-graph.ss; src/modules/session/agent.ss; src/modules/session/config-session-runtime.ss |
-| loop | src/module-system/loop-engine-core.ss; src/module-system/loop-engine-object-rows.ss; src/module-system/loop-engine-contract.ss |
+| loop | src/modules/loop-engine/core.ss; src/modules/loop-engine/object-rows.ss; src/modules/loop-engine/contract.ss |
 | functional flow | src/modules/funflow/config-prototypes.ss; src/modules/funflow/config.ss; src/core/flow-strand.ss; src/core/runner.ss |
 
 #+begin_src mermaid

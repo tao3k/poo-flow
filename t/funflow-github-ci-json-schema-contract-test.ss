@@ -9,9 +9,9 @@
                  member)
         (only-in :clan/poo/object
                  object<-alist)
-        (only-in "../src/utilities/contracts.ss"
-                 poo-flow-object-type-contract-slots
-                 poo-flow-slot-contract-slot)
+        (only-in "../src/module-system/descriptor/contracts.ss"
+                 poo-flow-contract-slot-name
+                 poo-flow-native-contract-slots)
         (only-in "../src/contract/json-schema-source.ss"
                  poo-flow-json-schema-read-file)
         (only-in "../src/contract/json-schema-receipt.ss"
@@ -115,8 +115,8 @@
               (poo-flow-json-schema-contract-artifact->alist artifact))
              (slots
               (map
-               poo-flow-slot-contract-slot
-               (poo-flow-object-type-contract-slots
+               poo-flow-contract-slot-name
+               (poo-flow-native-contract-slots
                 (poo-flow-json-schema-contract-artifact-object-contract
                  artifact)))))
         (check-equal? (funflow-github-ci-test-ref receipt 'valid?) #t)

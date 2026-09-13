@@ -41,7 +41,12 @@
                  loop-governor-state-key
                  loop-governor-strategy))
 
-(import ./governor-policy-sets.ss)
+(import (only-in ./governor-policy-sets.ss
+                 loop-governor-member?
+                 loop-governor-pattern-conflicted-by-set?
+                 loop-governor-pattern-denied-by-set?
+                 loop-governor-pattern-open?
+                 loop-governor-value-set))
 
 (export loop-governor-state-field
         loop-governor-budget-limit

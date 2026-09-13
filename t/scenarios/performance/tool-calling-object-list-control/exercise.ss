@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: executable exercise for tool-calling object-list performance.
 
-(import :poo-flow/src/module-system/tool-calling-control)
+(import :poo-flow/src/modules/tool-core/calling-control)
 
 (def (tool-calling-performance-symbol prefix index)
   (string->symbol (string-append prefix "-" (number->string index))))

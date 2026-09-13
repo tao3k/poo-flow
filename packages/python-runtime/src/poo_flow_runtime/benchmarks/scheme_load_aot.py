@@ -15,7 +15,7 @@ from ._scheme_load_aot_types import (
 
 
 SCHEME_LOAD_AOT_DEFAULT_SOURCE = Path(
-    "packages/python-runtime/tests/fixtures/funflow_user_module.ss"
+    "packages/python-runtime/t/fixtures/funflow_user_module.ss"
 )
 
 

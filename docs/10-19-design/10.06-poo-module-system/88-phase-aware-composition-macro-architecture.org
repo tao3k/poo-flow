@@ -230,14 +230,15 @@ The evidence matrix contains:
 | cold expansion | Full module-context, runtime/meta generation, and compiler path |
 | warm expansion | Module-context reuse and no duplicate expansion |
 | generated forms | Linear output-size assertion |
-| repeated runs | RSS stability and absence of monotonic growth |
+| repeated runs | elapsed stability without reducing scenario scale |
 
 The pre-refactor implementation is measured first and stored as the baseline.
-The replacement must not regress elapsed time or peak RSS at 1,000 profiles,
-must complete the 5,000-profile case without monotonic RSS growth, and must show
-module-context reuse on the warm path.  Thresholds are recorded from the real
-baseline receipt; profile count, iteration count, and build concurrency are not
-reduced to pass the gate.
+The replacement must not regress elapsed time at 1,000 profiles, must complete
+the 5,000-profile case, and must show module-context reuse on the warm path.
+Test-process memory enforcement is supplied declaratively by the ASP Gerbil
+Scheme POO Testing Profile; this compiler benchmark does not duplicate it with
+a platform-specific process wrapper.  Profile count, iteration count, and build
+concurrency are not reduced to pass the gate.
 
 * Harness Evidence
 
@@ -317,18 +318,11 @@ hygiene, duplicate rejection, and expansion-time rejection of alias-only legacy
 syntax.
 
 The real expansion gate lives in
-=t/scenarios/performance/composition-macro-expansion/=.  Its current receipt is:
-
-| Case | Gerbil elapsed | Peak RSS | Result |
-|------+----------------+----------+--------|
-| 1,000 profiles | 1.000 s | 124.75 MiB | pass |
-| 5,000 profiles, first run | 2.850 s | 192.77 MiB | pass |
-| 5,000 profiles, second run | 2.570 s | 193.41 MiB | pass |
-
-Repeated 5,000-profile RSS drift is 0.64 MiB.  The gate uses =gxc -S= so it
-measures Gerbil expansion and Scheme generation without attributing Gambit C
-compiler memory to the composition macro.  Full native compilation remains a
-separate package-build backend gate.
+=t/scenarios/performance/composition-macro-expansion/=.  It uses =gxc -S= and
+the upstream =:clan/timestamp#call-with-timing= clock, so it measures Gerbil
+expansion and Scheme generation without a platform-specific =/usr/bin/time=
+parser.  Full native compilation remains a separate package-build backend gate,
+while runtime heap limits remain owned by the ASP POO Testing Profile.
 
 The upstream Harness owns three corresponding policy scenarios:
 

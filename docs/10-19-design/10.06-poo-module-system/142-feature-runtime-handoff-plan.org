@@ -22,7 +22,7 @@ Cedar, invoke a projector, run Lean, or emit evidence.
 * Existing owner boundary
 
 Gerbil compiled-module metadata shows that
-=src/module-system/loop-engine-runtime.ss= already owns user-intent runtime
+=src/modules/loop-engine/runtime.ss= already owns user-intent runtime
 envelopes and runtime-handoff facts.  It does not export a generic Feature
 handoff planner.  Likewise, =src/core/policy.ss= and =src/core/strategy.ss= own
 runner-facing execution snapshots and planners, not Feature composition.

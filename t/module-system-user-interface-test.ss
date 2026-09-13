@@ -11,12 +11,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/user-interface/facade)
 
 (export module-system-user-interface-test)
 

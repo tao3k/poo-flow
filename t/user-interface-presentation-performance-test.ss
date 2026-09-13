@@ -7,19 +7,19 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/base
+        "./support/performance"
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules
                  pooFlowUserConfig)
-        (only-in :poo-flow/src/module-system/presentation-config
+        (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
         (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
                  poo-flow-custom-my-module-loop-engine-case))

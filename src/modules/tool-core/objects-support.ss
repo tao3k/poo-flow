@@ -11,9 +11,8 @@
         poo-flow-tool-alist?
         poo-flow-tool-valid-sandbox-profile-ref?)
 
-(defrules poo-flow-tool-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+(def (poo-flow-tool-field-rows . rows)
+  rows)
 
 (def (poo-flow-tool-slot object key default-value)
   (with-catch

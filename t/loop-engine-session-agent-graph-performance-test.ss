@@ -7,13 +7,13 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :poo-flow/src/module-system/loop-engine-runtime-agent
+        (only-in :poo-flow/src/modules/loop-engine/runtime-agent
                  poo-flow-user-loop-engine-intent-session-agent-topology-trace)
-        (only-in :poo-flow/src/module-system/loop-engine-session-agent-graph
+        (only-in :poo-flow/src/modules/loop-engine/session-agent-graph
                  poo-flow-user-loop-engine-intent-session-agent-graph))
 
 (export loop-engine-session-agent-graph-performance-test)

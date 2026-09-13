@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -215,5 +214,3 @@
                         tool-spec-missing-sandbox-profile
                         tool-grant-action-not-supported))
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! tool-core-test)

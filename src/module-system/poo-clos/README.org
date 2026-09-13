@@ -1,0 +1,74 @@
+#+title: POO-native CLOS implementation status
+
+* Status
+
+This owner implements the admitted ANSI CLOS profile over native POO objects.
+Logical CLOS precedence follows ANSI 4.3.5 while the underlying prototype graph
+may use C3.  It remains opt-in and is not part of the
+default module selection.  The separate =MOP-EXTENDED v1= profile is a sealed,
+read-only reflection surface and is not counted as ANSI closure.
+
+The implementation provides:
+
+- POO-native generic-function, method, specializer, effective-method, invocation
+  frame, and typed-failure values;
+- =class=, =eql=, and universal specializers;
+- multiple-dispatch applicability and =argument-precedence-order=;
+- identity-preserving method addition, replacement, and removal;
+- the standard =around=, =before=, primary, and =after= method combination;
+- lexical next-method checks, including replacement-argument applicability.
+- POO-native class, direct-slot, effective-slot, instance-state, and slot-cell
+  metaobjects;
+- ANSI CLOS class precedence with diamond, non-monotonic, and inconsistency handling;
+- instance- and class-allocated slots, inherited option merging, initforms,
+  initargs, default initargs, and shared initialization;
+- slot value, bound-state, makunbound, missing, and unbound protocols;
+- reader and writer methods that participate in the ordinary dispatch kernel.
+- immutable lambda-list descriptors with required, optional, rest, key,
+  allow-other-keys, supplied-p, and generic/method congruence;
+- expansion-time =.defclass=, =.defgeneric=, and =.defmethod= declaration IRs with
+  binding-aware grammar markers and source-located rejection;
+- a POO-native parenthesized method head, lexical =call-next-method= and
+  =next-method-p=, and an explicit generic-binding generation owner.
+- POO method-combination and generic-protocol metaobjects, all nine ANSI simple
+  built-ins, declarative short and long combination forms, qualifier groups,
+  required/order checks, and lexical =call-method= execution;
+- identity-preserving =change-class=, lazy obsolete-instance migration,
+  dependent-class redefinition cascades, retained shared-slot cells, and both
+  instance-update hooks;
+- explicit generic bindings with atomic =ensure-generic-function=
+  reinitialization and dispatch-generation invalidation;
+- read-only class, slot, method, specializer, generic and generation readers.
+- two-phase =make-load-form= and =make-load-form-saving-slots= protocols with
+  cycle-safe reference resolution, bound-slot preservation, and no initform
+  replay.
+
+The public factor is =interface.ss=.  The functional kernel keeps an explicit
+POO invocation-frame API for low-level construction, while ordinary
+=.defmethod= bodies receive hygienic lexical =call-next-method= and
+=next-method-p= bindings over the same runtime object.  There is no second
+evaluator.
+
+* Scheme and POO adaptations
+
+- ANSI class redefinition mutates the same POO class object, increments its
+  generation, and retains layout history for lazy migration.  Class and
+  instance object identity are both preserved.
+- CLOS =eql= specializers use Scheme =eqv?= without serialization or numeric
+  canonicalization.
+- Keyword/initarg names accept native Gerbil keyword values and symbols.
+- Multiple values are carried by the native Scheme values protocol.
+
+The executable clause ledger and interpreted/AOT qualification are owned by
+=t/qualification/poo-clos/=.  Its exhaustive 41-entry CLHS 7.7 manifest maps
+every operator to a source-owned evidence fixture and currently has no open
+required ANSI row.  Qualification still fails closed if any row becomes open,
+if a fixture has no attributable assertions, or if interpreted and fresh-AOT
+counts diverge.  Receipts retain =performance-claim? #f= until a user approves
+a workload and SLA.
+
+* Compatibility boundary
+
+The admitted v1 implementation under =poo-method-combination/= remains a
+separate compatibility surface.  Nothing in this directory changes its frozen
+single-receiver contract or its historical qualification receipt.

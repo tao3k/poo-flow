@@ -113,9 +113,9 @@ The current codebase already has the correct direction:
   runtime command descriptor schemas.
 - =src/core/receipt.ss= turns receipt trees into compact audit events without
   storing raw input/output values in the audit stream.
-- =src/module-system/durable-runtime-store-operation.ss= defines durable
+- =src/modules/memory-core/durable/store-operation.ss= defines durable
   operation receipts and Marlin handoff manifests.
-- =src/module-system/durable-runtime-store-operation-bridge.ss= maps rows into
+- =src/modules/memory-core/durable/store-operation-bridge.ss= maps rows into
   append-fact, append-communication-event, claim-job-lease, retain-artifact,
   and attach-sandbox-handle operation receipts while keeping Scheme side-effect
   free.
