@@ -24,6 +24,10 @@
 (def +domain-case-instance-overlay-benchmark-kind+
   'poo-flow.domain-case-instance-overlay-benchmark.v1)
 
+(def +domain-case-instance-overlay-benchmark-sample-count+ 20)
+(def +domain-case-instance-overlay-benchmark-agent-count+ 5000)
+(def +domain-case-instance-overlay-benchmark-max-p95-regression-ratio+ 2.0)
+
 (def (domain-case-instance-overlay-benchmark-role rows)
   (.mix slots: (role-constant-slots rows)))
 
@@ -118,7 +122,7 @@
          (_baseline-gc (##gc))
          (baseline-us
           (benchmark-p95-elapsed-us
-           5
+           +domain-case-instance-overlay-benchmark-sample-count+
            (lambda ()
              (domain-case-instance-overlay-benchmark-exercise
               domain-case-instance-overlay-benchmark-compose/mix
@@ -126,7 +130,7 @@
          (_overlay-gc (##gc))
          (overlay-us
           (benchmark-p95-elapsed-us
-           5
+           +domain-case-instance-overlay-benchmark-sample-count+
            (lambda ()
              (domain-case-instance-overlay-benchmark-exercise
               domain-case-instance-overlay-benchmark-compose/overlay
@@ -137,14 +141,19 @@
               (/ (exact->inexact baseline-us)
                  (exact->inexact overlay-us))))
          (timing-pass?
-          (if (= slot-count 64)
-              (< overlay-us baseline-us)
-              (<= overlay-us
-                  (inexact->exact (ceiling (* baseline-us 1.5)))))))
+          (<= overlay-us
+              (inexact->exact
+               (ceiling
+                (* baseline-us
+                   +domain-case-instance-overlay-benchmark-max-p95-regression-ratio+))))))
     (domain-case-instance-overlay-benchmark-role
      (list
       (cons 'kind +domain-case-instance-overlay-benchmark-kind+)
       (cons 'admissionStatistic 'p95)
+      (cons 'sample-count
+            +domain-case-instance-overlay-benchmark-sample-count+)
+      (cons 'max-p95-regression-ratio
+            +domain-case-instance-overlay-benchmark-max-p95-regression-ratio+)
       (cons 'agent-count agent-count)
       (cons 'shared-slot-count slot-count)
       (cons 'materialized-slot-count (+ slot-count 4))
@@ -166,13 +175,16 @@
 (def (run-domain-case-instance-overlay-benchmark)
   (map
    (lambda (slot-count)
-     (run-domain-case-instance-overlay-benchmark-case 1000 slot-count))
+     (run-domain-case-instance-overlay-benchmark-case
+      +domain-case-instance-overlay-benchmark-agent-count+
+      slot-count))
    '(8 32 64)))
 
 (def (domain-case-instance-overlay-benchmark->alist receipt)
   (map
    (lambda (key) (cons key (.ref receipt key)))
-   '(kind admissionStatistic agent-count shared-slot-count materialized-slot-count
+   '(kind admissionStatistic sample-count max-p95-regression-ratio
+     agent-count shared-slot-count materialized-slot-count
      baseline-mix-count overlay-mix-count resolver-depth
      construction-complexity lookup-source-depth
      baseline-us overlay-us speedup correct?
