@@ -44,6 +44,21 @@
    (list (poo-flow-graph-edge 'a 'a)
          (poo-flow-graph-edge 'a 'b))))
 
+;; Two SCCs with two concrete edges that project to one condensation edge.
+(def graph-algorithm-condensation-dedup-sample
+  (poo-flow-graph
+   'condensation-dedup-sample
+   (list (poo-flow-graph-node 'a)
+         (poo-flow-graph-node 'b)
+         (poo-flow-graph-node 'c)
+         (poo-flow-graph-node 'd))
+   (list (poo-flow-graph-edge 'a 'b)
+         (poo-flow-graph-edge 'b 'a)
+         (poo-flow-graph-edge 'c 'd)
+         (poo-flow-graph-edge 'd 'c)
+         (poo-flow-graph-edge 'a 'c)
+         (poo-flow-graph-edge 'b 'd))))
+
 ;; : TestSuite
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
@@ -146,4 +161,11 @@
                        graph-algorithm-self-loop-sample)))
         (check-equal? (.ref analysis 'components) '((a) (b)))
         (check-equal? (.ref analysis 'cyclic-components) '((a)))
+        (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))
+    (test-case "deduplicates projected condensation edges"
+      (let ((analysis
+             (poo-flow-graph-loop-analysis-receipt
+              graph-algorithm-condensation-dedup-sample)))
+        (check-equal? (.ref analysis 'components) '((a b) (c d)))
+        (check-equal? (.ref analysis 'cyclic-components) '((a b) (c d)))
         (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))))
