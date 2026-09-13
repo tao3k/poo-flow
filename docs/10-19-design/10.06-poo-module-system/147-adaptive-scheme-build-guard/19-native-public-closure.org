@@ -14,10 +14,10 @@ The verified conclusion is narrower than the original scheduler hypothesis:
 - The complete 387-entry root build can converge to zero native compilation.
 - Its zero-work scan still takes 63.46 seconds and therefore fails the
   30-second warm-build gate.
-- The three public entry interfaces have a 44-module all-phase closure.  That
-  closure produced three consecutive zero-work builds below 30 seconds.
-- The next repair belongs in the ASP Build API package-closure owner and the
-  POO Flow package declaration, not in Gerbil's scheduler.
+- The three public entry interfaces currently have a 45-module all-phase
+  closure.  The integrated zero-work build now completes near five seconds.
+- ASP Build API owns root-only Import Model traversal; POO Flow declares only
+  its public entries.  Gerbil =std/make= remains the planner and executor.
 
 * Verified execution receipts
 
@@ -31,6 +31,11 @@ The verified conclusion is narrower than the original scheduler hypothesis:
 | Public closure warm replay 1 | 22.65 s | zero compile jobs | Passed latency and work gates. |
 | Public closure warm replay 2 | 19.40 s | zero compile jobs | Passed latency and work gates. |
 | Public closure warm replay 3 | 20.70 s | zero compile jobs | Passed latency and work gates. |
+| Full 489-target warm replay before root projection | 96.90 s | zero compile jobs | Reproduced excessive native planning input. |
+| Direct 45-target =std/make= control | 2.68 s | zero compile jobs | Upstream planner is fast for the correct input shape. |
+| Integrated 45-target warm build | 3.76 s | zero compile jobs | Passed the eight-second acceptance ceiling and five-second target. |
+| Isolated 45-target clean build | 40.57 s | 45 compile jobs | Proved the closure is complete without prior POO Flow outputs. |
+| ASP three-target process Scenario | 1.50 s | projection only | Exact =a,b,c= closure excludes the unrelated module. |
 
 The project-path metadata audit observed 387 loadable modules and 1,861 direct
 POO dependency edges.  Before the recovery build it reported 121 timestamp
@@ -87,43 +92,36 @@ must move behind explicit feature ownership.  Directory membership alone is
 not a closure rule; each feature target must be validated from its public entry
 interfaces and all syntax/runtime dependency phases.
 
-* ASP Build API gap
+* ASP Build API resolution
 
-The installed ASP API exposes:
+The PackageSpec prototype now exposes =public-entry-modules=.  Its projector
+derives package identity from the downstream =gerbil.pkg=, imports only the
+declared roots, and traverses Gerbil's native =module-context-import= graph once
+with an identity-keyed visited table.  External package contexts remain owned
+by =gxpkg= and are not traversed into the downstream build target set.
 
-#+begin_src scheme
-(asp-gerbil-scheme-source-dependency-order workspace-root entry-files)
-#+end_src
+This is intentionally different from the removed historical implementation,
+which called =import-module= for every catalog member before calculating extra
+inputs.  The root-only algorithm is O(V+E) in the reachable local graph and
+does not parse source, schedule compilation, or inspect =GERBIL_PATH= outputs.
 
-The verified two-argument interface cannot accept a downstream package
-identity.  Its current component-closure module exposes an ASP-specific package
-prefix.  Calling it for POO Flow public entries returned only the three entry
-files instead of their real dependency closure.  Gerbil compiler metadata
-showed that the same entries currently have a 44-module POO closure.
-
-The owner repair is to parameterize package identity in the ASP Build API and
-derive it from =gerbil.pkg= or an explicit package object slot.  POO Flow must
-not fork that algorithm or introduce a =poo-flow= constant into a generic
-library.
-
-The stable downstream shape remains one POO-native declaration:
+The stable downstream declaration is:
 
 #+begin_src scheme
 (asp-gerbil-scheme-package-spec!
-  poo-flow-library-package-spec
-  (role 'library)
-  (profile 'development)
-  (native-spec
-   (package-source-closure
-    package: 'poo-flow
-    entries: '("src/core/api.ss"
-               "src/module-system/interface.ss"
-               "src/feature-system/interface.ss"))))
+ (poo-flow-library-package-spec
+  @ asp-gerbil-scheme-library-package-prototype)
+ (spec poo-flow-library-spec)
+ (public-entry-modules
+  '("src/core/api.ss"
+    "src/module-system/interface.ss"
+    "src/feature-system/interface.ss")))
 #+end_src
 
-The exact final constructor name is owned by the ASP API review.  The example
-defines required semantics; it must not be copied into POO Flow before the
-upstream public interface exists.
+The ASP process Scenario additionally starts without package-local outputs in
+the acceptance environment.  The projector mirrors =std/make='s native
+=add-load-path! srcdir= acquisition before importing roots, which prevents warm
+artifacts from hiding a clean-build resolution failure.
 
 * Promotion gates
 
@@ -135,8 +133,10 @@ A change is promotable only when all of the following hold:
    and syntax-phase dependency.
 3. POO Flow =build.ss= declares only package role, profile, public entries, and
    explicit feature targets.
-4. Three consecutive native public-library warm builds take at most 30 seconds
-   and start no Gerbil or GCC compilation job.
+4. The ASP downstream closure Scenario takes at most five seconds; the bounded
+   POO public-library warm receipt takes at most eight seconds and starts no
+   Gerbil or GCC compilation job.  Comparative gates use the existing same-host
+   relative receipt contract instead of manual replay loops.
 5. The full release target still builds and tests all explicitly owned tools,
    bindings, fixtures, and user-interface scenarios.
 6. Scheme observability emits JSON receipts with package identity, profile,
@@ -145,6 +145,6 @@ A change is promotable only when all of the following hold:
 7. The tracked Bazel module lock contains both Linux and Darwin entries for the
    pinned ASP revision.
 
-Until these gates pass, the current POO Flow dependency/profile changes remain
-uncommitted.  A zero-work 63.46-second full-root scan is evidence of correct
-incrementality, but it is not a passing warm-build result.
+The public-library build gates now pass.  Full release target coverage, JSON
+receipt emission, and the cross-platform Bazel lock remain separate promotion
+requirements; a fast public build does not make those gates implicitly green.
