@@ -10,8 +10,8 @@ in =MODULE.bazel= and passes the values through =gerbil.auto=; a commit-only
 pin change is not a valid provider update.
 
 Normal development and CI commands use =lockfile_mode=error=.  Lock mutation
-is available only through the explicit =lock_update= configuration and the
-maintained =just lock-update= entrypoint.  The cross-platform lock is produced
+is available only through Bazel's explicit =lockfile_mode=update= mode and the
+maintained =just bazel-update= entrypoint.  The cross-platform lock is produced
 by a manual, ordered GitHub Actions chain: Linux creates the seed, Darwin
 merges its module-extension evaluation, and Linux verifies the merged result
 without mutation.  Ordinary pushes and pull requests run the project gates
@@ -34,7 +34,7 @@ The local Darwin convergence pass produced the following bounded evidence:
 
 | Gate | Receipt |
 |------+---------|
-| =just lock-update= followed by =just lock-check= | passed |
+| =just bazel-update= followed by =just lock-check= | passed |
 | =bazelisk query //...= | passed |
 | Native ABI fingerprint | =05391a946fd76212f5da97e041fd7b266d7c4d74= |
 | Shared Gerbil capability | 1/1 passed |

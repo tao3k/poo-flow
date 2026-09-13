@@ -2,7 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "gerbil-dependencies.MODULE.bazel",
-    "unit-tests.ss",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
 ])
 
@@ -42,18 +41,6 @@ filegroup(
 filegroup(
     name = "runtime_load_projection_source",
     srcs = ["src/modules/funflow/runtime-load-projection.ss"],
-)
-
-filegroup(
-    name = "scheme_test_sources",
-    srcs = [
-        ":scheme_build_sources",
-    ] + glob(
-        [
-            "t/**",
-        ],
-        exclude = ["t/**/*.ss"],
-    ),
 )
 
 filegroup(

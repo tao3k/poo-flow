@@ -141,12 +141,13 @@ check: build test
 lock-check:
     {{ bazel }} mod deps --lockfile_mode=error
 
-# Explicitly refresh the host-platform module-extension evaluation.
+# Refresh the host-platform module-extension evaluation with Bazel's native
+# lock update mode. Cross-platform CI merges Linux and Darwin evaluations.
 [group('dependency')]
-lock-update:
-    {{ bazel }} mod deps --config=lock_update
+bazel-update:
+    {{ bazel }} mod deps --lockfile_mode=update
 
 # Normalize MODULE.bazel declarations while explicitly updating the lock.
 [group('dependency')]
 mod-tidy:
-    {{ bazel }} mod tidy --config=lock_update
+    {{ bazel }} mod tidy --lockfile_mode=update
