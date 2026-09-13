@@ -453,31 +453,24 @@
                         diagnostics))))))))
 
 (def (domain-case-projection-conflicts projections)
-  (cdr
-   (poo-flow-fold-left
-    (lambda (candidate state)
-      (let* ((seen (car state))
-             (diagnostics (cdr state))
-             (id (.ref candidate 'projection-id))
-             (existing
-              (poo-flow-find
-               (lambda (projection)
-                 (equal? id (.ref projection 'projection-id)))
-               seen)))
-        (cons
-         (if existing seen (cons candidate seen))
+  (let ((seen (make-hash-table))
+        (diagnostics-rev '()))
+    (for-each
+     (lambda (candidate)
+       (let* ((id (.ref candidate 'projection-id))
+              (existing (hash-get seen id)))
          (if existing
-             (append
-              diagnostics
-              (list
-               (domain-case-diagnostic
-                'projection-name-conflict
-                (list 'projections id)
-                (list (.ref existing 'owner-id)
-                      (.ref candidate 'owner-id)))))
-             diagnostics))))
-    (cons '() '())
-    projections)))
+           (set! diagnostics-rev
+                 (cons
+                  (domain-case-diagnostic
+                   'projection-name-conflict
+                   (list 'projections id)
+                   (list (.ref existing 'owner-id)
+                         (.ref candidate 'owner-id)))
+                  diagnostics-rev))
+           (hash-put! seen id candidate))))
+     projections)
+    (reverse diagnostics-rev)))
 
 (def (domain-case-single-algebra components slot code)
   (let (algebras
@@ -490,82 +483,85 @@
         (values (and (pair? algebras) (car algebras)) '()))))
 
 (def (domain-case-parent-diagnostics components)
-  (cdr
-   (poo-flow-fold-left
-    (lambda (component state)
-      (let* ((seen (car state))
-             (diagnostics (cdr state))
-             (id (.ref component 'component-id))
-             (new-diagnostics
-              (poo-flow-filter-map
-               (lambda (parent-id)
-                 (and (not (poo-flow-member? parent-id seen))
-                      (domain-case-diagnostic
-                       'missing-or-forward-parent-component
-                       (list 'components id 'parents)
-                       parent-id)))
-               (.ref component 'parent-component-ids))))
-        (cons (cons id seen) (append diagnostics new-diagnostics))))
-    (cons '() '())
-    components)))
+  (let ((seen (make-hash-table))
+        (diagnostics-rev '()))
+    (for-each
+     (lambda (component)
+       (let (id (.ref component 'component-id))
+         (for-each
+          (lambda (parent-id)
+            (unless (hash-key? seen parent-id)
+              (set! diagnostics-rev
+                    (cons
+                     (domain-case-diagnostic
+                      'missing-or-forward-parent-component
+                      (list 'components id 'parents)
+                      parent-id)
+                     diagnostics-rev))))
+          (.ref component 'parent-component-ids))
+         (hash-put! seen id #t)))
+     components)
+    (reverse diagnostics-rev)))
 
 (def (domain-case-type-diagnostics components)
-  (cdr
-   (poo-flow-fold-left
-    (lambda (component state)
-      (let* ((seen (car state))
-             (diagnostics (cdr state))
-             (type-contract (.ref component 'type-contract))
-             (type-id (.ref type-contract 'type-id))
-             (existing (assoc type-id seen))
-             (identity-diagnostic
-              (and existing
-                   (not (eq? (cdr existing) type-contract))
-                   (domain-case-diagnostic
-                    'type-identity-conflict
-                    (list 'types type-id)
-                    (list (.ref (cdr existing) 'parent-type-ids)
-                          (.ref type-contract 'parent-type-ids)))))
-             (parent-diagnostics
-              (poo-flow-filter-map
-               (lambda (parent-id)
-                 (and (not (assoc parent-id seen))
-                      (domain-case-diagnostic
-                       'missing-or-forward-parent-type
-                       (list 'types type-id 'parents)
-                       parent-id)))
-               (.ref type-contract 'parent-type-ids))))
-        (cons
-         (if existing seen (cons (cons type-id type-contract) seen))
-         (append diagnostics
-                 (if identity-diagnostic
-                     (list identity-diagnostic)
-                     '())
-                 parent-diagnostics))))
-    (cons '() '())
-    components)))
+  (let ((seen (make-hash-table))
+        (diagnostics-rev '()))
+    (for-each
+     (lambda (component)
+       (let* ((type-contract (.ref component 'type-contract))
+              (type-id (.ref type-contract 'type-id))
+              (existing (hash-get seen type-id)))
+         (when (and existing (not (eq? existing type-contract)))
+           (set! diagnostics-rev
+                 (cons
+                  (domain-case-diagnostic
+                   'type-identity-conflict
+                   (list 'types type-id)
+                   (list (.ref existing 'parent-type-ids)
+                         (.ref type-contract 'parent-type-ids)))
+                  diagnostics-rev)))
+         (for-each
+          (lambda (parent-id)
+            (unless (hash-key? seen parent-id)
+              (set! diagnostics-rev
+                    (cons
+                     (domain-case-diagnostic
+                      'missing-or-forward-parent-type
+                      (list 'types type-id 'parents)
+                      parent-id)
+                     diagnostics-rev))))
+          (.ref type-contract 'parent-type-ids))
+         (unless existing
+           (hash-put! seen type-id type-contract))))
+     components)
+    (reverse diagnostics-rev)))
 
 (def (domain-case-select-projections projections selected-ids)
-  (let (catalog+diagnostics
+  (let ((projection-index (make-hash-table)))
+    (for-each
+     (lambda (projection)
+       (let* ((id (.ref projection 'projection-id))
+              (entry (hash-get projection-index id)))
+         (if entry
+           (vector-set! entry 0 (+ 1 (vector-ref entry 0)))
+           (hash-put! projection-index id (vector 1 projection)))))
+     projections)
+    (let (catalog+diagnostics
         (poo-flow-fold-right
          (lambda (id state)
            (let* ((catalog (car state))
                   (diagnostics (cdr state))
-                  (matches
-                   (poo-flow-filter-map
-                    (lambda (projection)
-                      (and (equal? id (.ref projection 'projection-id))
-                           projection))
-                    projections)))
+                  (entry (hash-get projection-index id)))
              (cond
-              ((null? matches)
+              ((not entry)
                (cons catalog
                      (cons (domain-case-diagnostic
                             'unknown-projection
                             (list 'selected-projections id) #f)
                            diagnostics)))
-              ((> (length matches) 1) state)
-              (else (cons (cons (car matches) catalog) diagnostics)))))
+              ((> (vector-ref entry 0) 1) state)
+              (else
+               (cons (cons (vector-ref entry 1) catalog) diagnostics)))))
          (cons '() '())
          selected-ids))
-    (values (car catalog+diagnostics) (cdr catalog+diagnostics))))
+      (values (car catalog+diagnostics) (cdr catalog+diagnostics)))))

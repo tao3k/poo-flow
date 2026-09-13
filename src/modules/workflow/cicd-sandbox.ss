@@ -222,7 +222,7 @@
 ;;   %
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-runtime-manifest-readiness-fields check profile-catalog)
-  (poo-flow-core-field-rows
+  (poo-flow-product-field-rows
    (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
    (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
    (check (poo-flow-cicd-check-name check))

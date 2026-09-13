@@ -3,6 +3,8 @@
 (export #t)
 
 (import (only-in :clan/poo/object .o .ref)
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-set-subset?)
         :poo-flow/src/contract/release-assurance-manifest)
 
 (def +poo-flow-assurance-levels+
@@ -11,9 +13,6 @@
 
 (def +poo-flow-assurance-tcb-families+
   '(bundle-semantic authorization actual-effect evidence-history lean-claim))
-
-(def (assurance-subset? required present)
-  (andmap (lambda (value) (member value present)) required))
 
 (def (assurance-any? required present)
   (ormap (lambda (value) (member value present)) required))
@@ -33,25 +32,25 @@
 (def (assurance-tcb-components-valid? family components)
   (case family
     ((bundle-semantic)
-     (assurance-subset? '(canonical-schema bundle-validator digest)
-                        components))
+     (poo-flow-set-subset? '(canonical-schema bundle-validator digest)
+                           components))
     ((authorization)
-     (assurance-subset?
+     (poo-flow-set-subset?
       '(bundle-to-cedar-projector cedar-evaluator token-issuer digest
                                   revocation-state)
       components))
     ((actual-effect)
-     (and (assurance-subset? '(c-abi-transition-engine runtime adapter)
-                             components)
+     (and (poo-flow-set-subset? '(c-abi-transition-engine runtime adapter)
+                                components)
           (assurance-any? '(isolation independent-observation measurement
                                       attestation)
                           components)))
     ((evidence-history)
-     (assurance-subset?
+     (poo-flow-set-subset?
       '(canonical-event-hashing replay-protection batch-root)
       components))
     ((lean-claim)
-     (assurance-subset?
+     (poo-flow-set-subset?
       '(lean-kernel theorem-statement typed-decoder locked-import-environment
                     digest-binding)
       components))

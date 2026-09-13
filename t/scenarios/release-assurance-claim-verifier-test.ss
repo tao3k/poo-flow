@@ -3,6 +3,7 @@
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier)
 
+(export release-assurance-claim-verifier-test)
 
 (def (evidence id owner)
   (poo-flow-assurance-evidence-reference id owner "artifact" "digest"))

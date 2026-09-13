@@ -3,7 +3,7 @@
 ;;; Invariant: this executor records graph semantics; it never calls tools/models.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/graph/types)
+        :poo-flow/src/graph/types-core)
 
 (export +poo-flow-graph-branch-choice-kind+
         +poo-flow-graph-runtime-policy-kind+

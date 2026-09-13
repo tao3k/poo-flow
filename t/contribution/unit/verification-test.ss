@@ -30,4 +30,18 @@
   (test-case "an operation cannot change the value it is attesting"
     (let ((adapter (poo-flow-verification-adapter "mutating"
                      (lambda (v now until) (.put! v 'claim "changed") #t) snapshot)))
-      (check-exception (poo-flow-verify adapter (.o claim: "trusted") 0 10) Error?)))))
+      (check-exception (poo-flow-verify adapter (.o claim: "trusted") 0 10) Error?)))
+  (test-case "one indexed admission rejects omitted, cloned and subsequently revoked receipts"
+    (let* ((adapter (poo-flow-verification-adapter "indexed" operation snapshot))
+           (trusted (.o claim: "trusted"))
+           (other (.o claim: "other"))
+           (receipt (poo-flow-verify adapter trusted 0 10))
+           (empty (poo-flow-verification-admission adapter '() 1))
+           (cloned (poo-flow-verification-admission adapter (list (.o (:: @ receipt))) 1))
+           (admission (poo-flow-verification-admission adapter (list receipt) 1)))
+      (check-equal? (poo-flow-verification-admission-valid? empty trusted) #f)
+      (check-equal? (poo-flow-verification-admission-valid? cloned trusted) #f)
+      (check-equal? (poo-flow-verification-admission-valid? admission other) #f)
+      (check-equal? (poo-flow-verification-admission-valid? admission trusted) #t)
+      (poo-flow-revoke-verification! adapter receipt)
+      (check-equal? (poo-flow-verification-admission-valid? admission trusted) #f)))))

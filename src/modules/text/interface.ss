@@ -80,7 +80,7 @@
     (make-run-config 'text-local
                      (make-text-enabled-strategy)
                      (make-request-only-adapter)
-                     (poo-flow-core-field-rows/tail
+                     (poo-flow-product-field-rows/tail
                       options
                       (runtime 'gerbil)
                       (extension 'text))

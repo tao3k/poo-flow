@@ -16,7 +16,7 @@ concurrency must not be reduced to obtain a passing receipt.
 
 #+begin_src sh
 gerbil build
-gerbil env gerbil test t/profile-composition-performance-test.ss
+gerbil env gerbil test t/performance/profile-composition-performance-test.ss
 #+end_src
 
 The focused test records compiler elapsed time with the upstream

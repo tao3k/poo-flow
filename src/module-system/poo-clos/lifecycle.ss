@@ -4,9 +4,9 @@
 (import (only-in :clan/poo/object .o .ref .slot? .put! object?)
         (only-in :clan/poo/mop element?)
         (only-in :std/misc/hash hash-ref/default)
-        (only-in :std/srfi/1 filter find iota)
+        (only-in :std/srfi/1 filter find)
         "types.ss" "objects.ss" "classes.ss" "dispatch.ss"
-        "instance-state.ss")
+        "instance-state.ss" "funcs.ss")
 
 (export ClosInstanceState ClosSlotCell poo-clos-instance?
         poo-clos-class-of poo-clos-allocate-instance poo-clos-make-instance
@@ -93,6 +93,23 @@
            (hash-ref/default
             (.ref (.ref instance-value '%poo-clos-state) 'storage)
             slot-name (lambda () #f))))))
+
+;; Initialization already traverses effective slot definitions.  Resolve the
+;; cell directly instead of searching the full effective-slot list again.
+(def (effective-slot-cell state slot)
+  (if (eq? (.ref slot 'allocation) 'class)
+    (poo-clos-class-slot-cell (.ref slot 'storage-class)
+                              (.ref slot 'identity))
+    (hash-ref/default (.ref state 'storage) (.ref slot 'identity)
+                      (lambda () #f))))
+
+(def (bind-effective-slot! state slot value)
+  (let (cell (effective-slot-cell state slot))
+    (unless cell
+      (clos-fail 'slot-missing slot: (.ref slot 'identity)
+                 operation: 'initialize-instance))
+    (.put! cell 'value value)
+    (.put! cell 'bound? #t)))
 
 ;; : (-> SchemeValue (Maybe Symbol))
 (def (failure-name value)
@@ -220,38 +237,20 @@
     instance-value))
 
 ;; : (-> [SchemeValue] Boolean)
-(def (initialization-argument-list? values)
-  (and (list? values)
-       (even? (length values))
-       (andmap (lambda (index)
-                 (let (name (list-ref values (* 2 index)))
-                   (or (symbol? name) (keyword? name))))
-               (iota (/ (length values) 2)))))
+(def initialization-argument-list? poo-clos-initarg-list?)
 
 ;; : (-> [SchemeValue] [SchemeValue])
-(def (initialization-argument-names values)
-  (map (lambda (index) (list-ref values (* 2 index)))
-       (iota (/ (length values) 2))))
+(def initialization-argument-names poo-clos-initarg-names)
 
 ;; : (-> [SchemeValue] SchemeValue (values Boolean SchemeValue))
-(def (initialization-argument-ref arguments name)
-  (let (position
-        (find (lambda (index)
-                (eq? (list-ref arguments (* 2 index)) name))
-              (iota (/ (length arguments) 2))))
-    (if position
-      (values #t (list-ref arguments (+ 1 (* 2 position))))
-      (values #f #f))))
+(def initialization-argument-ref poo-clos-initarg-ref)
+
+;; One ordered index replaces a full initarg scan for every effective slot.
+;; Each entry retains the leftmost position because CLOS initarg lookup does.
+(def initialization-argument-index poo-clos-initarg-index)
 
 ;; : (-> [SchemeValue] [SchemeValue] (values Boolean SchemeValue))
-(def (slot-initialization-argument arguments names)
-  (let (position
-        (find (lambda (index)
-                (memq (list-ref arguments (* 2 index)) names))
-              (iota (/ (length arguments) 2))))
-    (if position
-      (values #t (list-ref arguments (+ 1 (* 2 position))))
-      (values #f #f))))
+(def slot-initialization-argument poo-clos-initarg-index-first-of)
 
 ;; : (-> SchemeValue Boolean)
 (def (allow-other-keys-name? value)
@@ -261,16 +260,10 @@
 
 ;; : (-> [SchemeValue] Boolean)
 (def (allow-other-keys? values)
-  (let (position
-        (find (lambda (index)
-                (allow-other-keys-name?
-                 (list-ref values (* 2 index))))
-              (iota (/ (length values) 2))))
-    (and position (list-ref values (+ 1 (* 2 position))))))
-
-;; : (forall (a) (-> a [a] [a]))
-(def (adjoin/identity value values)
-  (if (memq value values) values (cons value values)))
+  (let loop ((rest values))
+    (cond ((null? rest) #f)
+          ((allow-other-keys-name? (car rest)) (cadr rest))
+          (else (loop (cddr rest))))))
 
 ;; : (-> ClosClass ClosSpecializer Boolean)
 (def (specializer-admits-class? class-value specializer)
@@ -289,28 +282,31 @@
          (specializer-admits-class? class-value (car specializers)))))
 
 ;; : (-> ClosClass ClosMethod [Symbol] [Symbol])
-(def (add-method-initargs class-value method-value names)
+(def (add-method-initargs! class-value method-value index)
   (let (lambda-list-value (.ref method-value 'lambda-list))
-    (if (and lambda-list-value
-             (method-admits-class? class-value method-value))
-      (foldl adjoin/identity names (.ref lambda-list-value 'keys))
-      names)))
+    (when (and lambda-list-value
+               (method-admits-class? class-value method-value))
+      (for-each (lambda (name) (hash-put! index name #t))
+                (.ref lambda-list-value 'keys)))
+    index))
 
 ;; : (-> ClosClass ClosGenericFunction [Symbol] [Symbol])
-(def (add-generic-initargs class-value generic-value names)
+(def (add-generic-initargs! class-value generic-value index)
   (foldl (lambda (method-value current)
-           (add-method-initargs class-value method-value current))
-         names (.ref generic-value 'methods)))
+           (add-method-initargs! class-value method-value current))
+         index (.ref generic-value 'methods)))
 
 ;; : (-> ClosClass [SchemeValue])
-(def (valid-slot-initargs class-value)
-  (let (slot-names
-        (foldl (lambda (slot result)
-                 (foldl adjoin/identity result (.ref slot 'initargs)))
-               '() (poo-clos-class-effective-slots class-value)))
+(def (valid-slot-initarg-index class-value)
+  (let (index (make-hash-table-eq))
+    (for-each
+     (lambda (slot)
+       (for-each (lambda (name) (hash-put! index name #t))
+                 (.ref slot 'initargs)))
+     (poo-clos-class-effective-slots class-value))
     (foldl (lambda (generic-value result)
-             (add-generic-initargs class-value generic-value result))
-           slot-names
+             (add-generic-initargs! class-value generic-value result))
+           index
            (list poo-clos-initialize-instance-generic
                  poo-clos-shared-initialize-generic
                  poo-clos-reinitialize-instance-generic
@@ -323,12 +319,10 @@
     (clos-fail 'malformed-initialization-arguments
                class: (.ref class-value 'identity)))
   (unless (allow-other-keys? values)
-    (let* ((valid-names (valid-slot-initargs class-value))
+    (let* ((valid-index (valid-slot-initarg-index class-value))
            (invalid-name
-           (find (lambda (name)
-                   (and (not (allow-other-keys-name? name))
-                        (not (memq name valid-names))))
-                 (initialization-argument-names values))))
+            (poo-clos-first-invalid-initarg
+             values valid-index allow-other-keys-name?)))
       (when invalid-name
         (clos-fail 'invalid-initialization-argument
                    class: (.ref class-value 'identity)
@@ -362,25 +356,25 @@
 
 ;; : (-> ClosInstance (U Boolean [Symbol]) [SchemeValue] ClosInstance)
 (def (shared-initialize/list instance-value slot-names initargs)
-  (let (class-value (poo-clos-class-of instance-value))
+  (let* ((state (ensure-current-instance-state! instance-value))
+         (class-value (.ref state 'class))
+         (initarg-index (initialization-argument-index initargs))
+         (slot-name-index
+          (and (list? slot-names) (poo-clos-identity-index slot-names))))
     (require-initialization-arguments class-value initargs)
     (for-each
      (lambda (slot)
        (let-values (((supplied? supplied-value)
                      (slot-initialization-argument
-                      initargs (.ref slot 'initargs))))
+                      initarg-index (.ref slot 'initargs))))
          (cond
           (supplied?
-           (poo-clos-set-slot-value!
-            instance-value (.ref slot 'identity) supplied-value))
+           (bind-effective-slot! state slot supplied-value))
           ((and (or (eq? slot-names #t)
-                    (memq (.ref slot 'identity) slot-names))
-                (not (poo-clos-slot-bound?
-                      instance-value (.ref slot 'identity)))
+                    (hash-key? slot-name-index (.ref slot 'identity)))
+                (not (.ref (effective-slot-cell state slot) 'bound?))
                 (.ref slot 'initfunction))
-           (poo-clos-set-slot-value!
-            instance-value (.ref slot 'identity)
-            ((.ref slot 'initfunction)))))))
+           (bind-effective-slot! state slot ((.ref slot 'initfunction)))))))
      (poo-clos-class-effective-slots class-value))
     instance-value))
 

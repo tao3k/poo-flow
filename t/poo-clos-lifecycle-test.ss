@@ -373,6 +373,18 @@
                   (poo-clos-make-instance
                    class-value unknown: 1 allow-other-keys: #t))
                  => #t)))
+      (let* ((slot (poo-clos-direct-slot-definition
+                    'aliased initargs: (list primary: alias:)))
+             (class-value (poo-clos-class 'indexed-initargs
+                            direct-slots: (list slot)))
+             (leftmost-alias
+              (poo-clos-make-instance class-value alias: 'first primary: 'second))
+             (leftmost-duplicate
+              (poo-clos-make-instance class-value primary: 'first primary: 'second)))
+        ;; The linear index preserves the previous leftmost argument behavior,
+        ;; including when multiple initarg aliases name the same slot.
+        (check-equal? (poo-clos-slot-value leftmost-alias 'aliased) 'first)
+        (check-equal? (poo-clos-slot-value leftmost-duplicate 'aliased) 'first))
       (let* ((x (poo-clos-class 'precedence-x))
              (y (poo-clos-class 'precedence-y))
              (xy (poo-clos-class 'precedence-xy

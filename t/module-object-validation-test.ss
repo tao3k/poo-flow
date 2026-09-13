@@ -61,6 +61,9 @@
       (let* ((validation
               (poo-flow-module-object-validation
                validation-nono-sandbox-object))
+             (cached-validation
+              (poo-flow-module-object-validation
+               validation-nono-sandbox-object))
              (harness-validation
               (receipt-ref validation 'harnessValidation))
              (source-ref
@@ -88,6 +91,7 @@
              (harness-dependency
               (receipt-ref source-ref 'dependency)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
+        (check-equal? (eq? validation cached-validation) #t)
         (check-equal?
          (and (object? validation)
               (object? harness-validation)

@@ -164,7 +164,7 @@ Use the test runner that owns test process lifecycle for focused package tests:
 ./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
   gxtest -q t/model-core-test.ss
 ./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
-  gxtest -q t/object-family-syntax-performance-test.ss
+  gxtest -q t/performance/object-family-syntax-performance-test.ss
 #+end_src
 
 The checked-in =.devenv/devenv-profile-exec= launcher is the canonical

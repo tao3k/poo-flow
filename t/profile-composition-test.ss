@@ -7,6 +7,8 @@
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/profile-composition/funcs
+                 poo-flow-composition-leftmost-index-by)
         (only-in :poo-flow/src/module-system/profile-composition/syntax-plan
                  parse-poo-flow-composition-syntax-plan))
 
@@ -99,6 +101,14 @@
 (def profile-composition-test
   (test-suite
    "profile composition"
+   (test-case
+    "target indexes retain the first source declaration"
+    (let* ((first '(profile report step))
+           (second '(case report handoff))
+           (index
+            (poo-flow-composition-leftmost-index-by
+             cadr (list first second))))
+      (check (hash-get index 'report) => first)))
    (test-case
     "canonical grammar lowers to reusable POO objects"
     (let* ((profiles (.ref canonical-composition 'profiles))

@@ -35,7 +35,7 @@
 
 ;; : (-> Symbol String Value Value Alist)
 (def (poo-flow-use-module-contract-diagnostic code message subject evidence)
-  (poo-flow-module-field-rows
+  (poo-flow-product-field-rows
    (code code)
    (message message)
    (subject subject)
@@ -67,7 +67,7 @@
 ;;; only against the derived `(custom . workflow)` selection row.
 ;; : (-> Symbol [PooUserModuleSelection] [Alist])
 (def (poo-flow-use-module-contract-module-diagnostics module selections)
-  (poo-flow-module-rows/tail
+  (poo-flow-product-rows/tail
    (if (symbol? module)
      '()
      (list
@@ -76,7 +76,7 @@
        "use-module expects a concrete module symbol"
        module
        selections)))
-   (poo-flow-module-rows/tail
+   (poo-flow-product-rows/tail
     (if (and (symbol? module)
              (poo-flow-use-module-category-symbol? module))
       (list
@@ -123,7 +123,7 @@
      'use-module-group-mismatch
      "use-module selection group must match module routing"
      module
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (group group)
       (module selected-module)
       (expected-group expected-group)))))

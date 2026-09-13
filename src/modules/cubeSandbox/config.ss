@@ -27,9 +27,9 @@
 ;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-cubeSandbox-config-flags profiles . maybe-user-config)
   (if (null? maybe-user-config)
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:config profiles))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

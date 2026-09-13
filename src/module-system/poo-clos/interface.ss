@@ -1,11 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; Public POO-native CLOS facade.  Syntax declarations are a later factor.
 
-(import "types.ss" "objects.ss" "generic-evolution.ss" "classes.ss"
+(import "types.ss" "objects.ss" "funcs.ss" "generic-evolution.ss" "classes.ss"
         "evolution.ss" "lifecycle.ss" "reflection.ss" "dispatch.ss"
         "load-form.ss" "mop.ss" "syntax.ss")
 
-(export ClosSpecializer ClosLambdaList ClosMethod ClosMethodGroup
+(export ClosSpecializer ClosLambdaList ClosMethod ClosMethodBundle ClosMethodGroup
         ClosMethodCombination
         ClosGenericProtocol ClosGenericFunction ClosGenericBinding ClosEffectiveMethod
         ClosInvocationFrame ClosFailure ClosUnboundSlotFailure
@@ -26,6 +26,8 @@
         poo-clos-resolve-method-combination
         poo-clos-method-combination-admits-qualifier?
         poo-clos-generic-protocol poo-clos-default-generic-protocol
+        poo-clos-method-bundle poo-clos-compose-method-bundle
+        poo-clos-compose-method-bundles
         poo-clos-generic-binding poo-clos-generic-binding-current
         poo-clos-generic-binding-add-method!
         poo-clos-register-generic-function! poo-clos-find-generic-function
@@ -87,5 +89,6 @@
         poo-clos-generic-documentation
         poo-clos-generic-function-class poo-clos-generic-method-class
         poo-clos-mop-extended-profile poo-clos-mop-profile-admits?
-        .defclass .defgeneric .defmethod .with-slots .with-accessors
+        .defclass .defgeneric .defmethod .defmethod-bundle
+        .with-slots .with-accessors
         .define-method-combination)

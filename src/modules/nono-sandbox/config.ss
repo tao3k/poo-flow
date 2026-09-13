@@ -40,10 +40,10 @@
 ;; : (-> Symbol [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-nono-sandbox-config-flags binding-value profiles . maybe-user-config)
   (if (null? maybe-user-config)
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
      (:config profiles))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
      (:config profiles)
      (:user-config (car maybe-user-config)))))

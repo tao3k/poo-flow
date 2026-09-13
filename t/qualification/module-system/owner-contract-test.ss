@@ -62,6 +62,16 @@
          (.ref manifest 'required-api))
         #t)
        (check-equal?
-        (poo-flow-gerbil-poo-api-closed?
+       (poo-flow-gerbil-poo-api-closed?
          (cdr (.ref manifest 'required-api)))
+        #f)
+       (check-equal?
+        (poo-flow-gerbil-poo-api-closed?
+         (append (cdr (.ref manifest 'required-api))
+                 (list (car (.ref manifest 'required-api)))))
+        #t)
+       (check-equal?
+        (poo-flow-gerbil-poo-api-closed?
+         (cons (car (.ref manifest 'required-api))
+               (.ref manifest 'required-api)))
         #f)))))

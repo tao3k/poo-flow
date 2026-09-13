@@ -33,6 +33,7 @@
         poo-flow-any?
         poo-flow-all?
         poo-flow-member?
+        poo-flow-set-subset?
         poo-flow-stable-duplicates
         poo-flow-alist?
         poo-flow-list-of?
@@ -206,6 +207,21 @@
 ;;     %
 (def (poo-flow-member? value values)
   (if (member value values) #t #f))
+
+;; poo-flow-set-subset?
+;;   : (-> [Object] [Object] Boolean)
+;;   | contract: compare list-shaped sets without rescanning the allowed set
+;;   | complexity: O(requested + allowed) expected time
+(def (poo-flow-set-subset? requested allowed)
+  (let (allowed-index (make-hash-table))
+    (for-each
+     (lambda (value)
+       (hash-put! allowed-index value #t))
+     allowed)
+    (poo-flow-all?
+     (lambda (value)
+       (hash-key? allowed-index value))
+     requested)))
 
 ;; poo-flow-stable-duplicates
 ;;   : (-> [Object] [Object])

@@ -2,7 +2,8 @@
 ;;; Functional argument binding helpers for hygienically lowered CLOS methods.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/srfi/1 drop iota find))
+        (only-in :std/srfi/1 drop)
+        "funcs.ss")
 
 (export poo-clos-positional-supplied? poo-clos-positional-argument
         poo-clos-rest-arguments poo-clos-key-argument
@@ -29,14 +30,10 @@
 
 ;; : (-> [SchemeValue] Natural InitargName (Pair Boolean SchemeValue))
 (def (poo-clos-key-argument arguments start name)
-  (let* ((tail (poo-clos-rest-arguments arguments start))
-         (position
-          (find (lambda (index)
-                  (eq? (list-ref tail (* 2 index)) name))
-                (iota (quotient (length tail) 2)))))
-    (if position
-      (cons #t (list-ref tail (+ 1 (* 2 position))))
-      (cons #f #f))))
+  (call-with-values
+   (lambda ()
+     (poo-clos-initarg-ref (poo-clos-rest-arguments arguments start) name))
+   cons))
 
 ;; : (-> [SchemeValue] Natural Natural Boolean Boolean [InitargName]
 ;;        Boolean Boolean)
@@ -48,19 +45,18 @@
     (and (>= count required)
          (or open-tail? (<= count start))
          (or (not key?)
-             (let (tail (poo-clos-rest-arguments arguments start))
-               (and (even? (length tail))
-                    (andmap
-                     (lambda (index)
-                       (let (name (list-ref tail (* 2 index)))
-                         (and (or (symbol? name) (keyword? name))
-                              (or allow-other-keys?
-                                  (memq name keys)
-                                  (eq? name 'allow-other-keys)
-                                  (and (keyword? name)
-                                       (string=? (keyword->string name)
-                                                 "allow-other-keys"))))))
-                     (iota (quotient (length tail) 2)))))))))
+             (let* ((tail (poo-clos-rest-arguments arguments start))
+                    (valid-index (poo-clos-identity-index keys)))
+               (and (poo-clos-initarg-list? tail)
+                    (or allow-other-keys?
+                        (not
+                         (poo-clos-first-invalid-initarg
+                          tail valid-index
+                          (lambda (name)
+                            (or (eq? name 'allow-other-keys)
+                                (and (keyword? name)
+                                     (string=? (keyword->string name)
+                                               "allow-other-keys")))))))))))))
 
 ;; : (-> ClosGenericFunction [SchemeValue] Natural SchemeValue)
 (def (poo-clos-combination-required-argument generic arguments index)

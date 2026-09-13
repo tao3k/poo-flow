@@ -261,12 +261,33 @@
               reason: 'predicate-rejected)))
        context))))
 
+;;; Predicate Types specialize the upstream boolean protocol without weakening
+;;; POO refinement. A descriptor extended with a different classifier falls
+;;; back to the evidence path, so `.cc` keeps one authoritative semantic
+;;; decision while unrefined primitive checks avoid receipt allocation.
+;; : (-> PooFlowPredicateType Object Boolean)
+(def (poo-flow-predicate-type-element? type candidate)
+  (if (eq? (.ref type '.classify)
+           (.ref type '.predicate-classify))
+    ((.ref type '.predicate) candidate)
+    (poo-flow-type-element? type candidate)))
+
+(define-type (PooFlowPredicateType. @ PooFlowType.
+                                    identity
+                                    .classify
+                                    .predicate
+                                    .predicate-classify)
+  .element?: (cut poo-flow-predicate-type-element? @ <>))
+
 ;; : (-> Symbol Procedure PooFlowType)
 (def (poo-flow-predicate-type identity predicate)
-  (.cc PooFlowType.
-       'identity identity
-       '.classify (poo-flow-predicate-classifier identity predicate)
-       'sexp identity))
+  (let (classifier (poo-flow-predicate-classifier identity predicate))
+    (.cc PooFlowPredicateType.
+         'identity identity
+         '.classify classifier
+         '.predicate predicate
+         '.predicate-classify classifier
+         'sexp identity)))
 
 ;; : (-> Symbol Procedure Procedure PooFlowContract)
 (def (poo-flow-predicate-contract identity predicate obligations)

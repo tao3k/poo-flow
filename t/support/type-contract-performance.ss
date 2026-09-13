@@ -91,12 +91,10 @@
 ;;       ```
 ;;     %
 (def (type-contract-performance-check-slots-once object-contract values)
-  (length
-   (map (lambda (slot-contract value)
-          (poo-flow-contract-check-slot! slot-contract value)
-          slot-contract)
-        (poo-flow-native-contract-slots object-contract)
-        values)))
+  (for-each poo-flow-contract-check-slot!
+            (poo-flow-native-contract-slots object-contract)
+            values)
+  (length values))
 
 ;; type-contract-performance-repeat
 ;;   : (-> Integer (-> Integer) Integer)

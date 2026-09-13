@@ -33,6 +33,9 @@ The implementation provides:
 - POO method-combination and generic-protocol metaobjects, all nine ANSI simple
   built-ins, declarative short and long combination forms, qualifier groups,
   required/order checks, and lexical =call-method= execution;
+- checked method bundles bound to an exact generic-protocol object, functional
+  bundle composition through ordinary method admission, and the thin hygienic
+  =.defmethod-bundle= projection;
 - identity-preserving =change-class=, lazy obsolete-instance migration,
   dependent-class redefinition cascades, retained shared-slot cells, and both
   instance-update hooks;
@@ -48,6 +51,20 @@ POO invocation-frame API for low-level construction, while ordinary
 =.defmethod= bodies receive hygienic lexical =call-next-method= and
 =next-method-p= bindings over the same runtime object.  There is no second
 evaluator.
+
+The closed authoring path is:
+
+#+begin_example
+ClosGenericProtocol -> ClosMethodBundle -> native define-type POO values
+                    -> .defmethod-bundle -> existing generic admission/dispatch
+#+end_example
+
+The macro creates one ordinary =ClosMethodBundle= value.  Protocol identity,
+method ownership, replacement, ordering and execution remain in the checked
+runtime functions.  The CPL implementation similarly delegates reusable graph
+work to =funcs.ss=; the CLOS class factor supplies only ANSI ambiguity policy.
+The A/B scenario under =t/scenarios/performance/poo-clos-cpl-index/= requires
+identical ordered results before accepting an indexed timing improvement.
 
 * Scheme and POO adaptations
 

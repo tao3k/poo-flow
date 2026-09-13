@@ -14,8 +14,7 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/projection/interface
+        :poo-flow/src/module-system/api
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)
 

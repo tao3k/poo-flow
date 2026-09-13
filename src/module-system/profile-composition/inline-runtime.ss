@@ -5,8 +5,9 @@
 
 (import (only-in :clan/poo/object .all-slots .mix .o .ref object<-alist)
         (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 append-map filter-map find fold)
-        :poo-flow/src/core/plan)
+        (only-in :std/srfi/1 append-map filter-map fold)
+        :poo-flow/src/core/plan
+        :poo-flow/src/module-system/profile-composition/funcs)
 
 (export poo-flow-composition-inline-section-slot
         poo-flow-composition-inline-alist-ref
@@ -187,25 +188,11 @@
 (def (composition-plan-clause-kind clause) (.ref clause 'clause-kind))
 (def (composition-plan-clause-payload clause) (.ref clause 'payload))
 
-(def (composition-plan-stage-by-name stages name)
-  (let loop ((rest stages))
-    (cond
-     ((null? rest) #f)
-     ((eq? (composition-plan-stage-name (car rest)) name) (car rest))
-     (else (loop (cdr rest))))))
-
-(def (composition-plan-binding-by-name bindings name)
-  (let loop ((rest bindings))
-    (cond
-     ((null? rest) #f)
-     ((eq? (.ref (car rest) 'slot) name) (car rest))
-     (else (loop (cdr rest))))))
-
 (def (composition-plan-target-clause? kind)
   (or (eq? kind 'step) (eq? kind 'handoff)))
 
-;; : (-> PooCompositionClause PooCompositionStage [PooCompositionStage] [PooProfileBinding] MaybeTarget)
-(def (composition-plan-stage-target clause stage stages bindings)
+;; : (-> PooCompositionClause PooCompositionStage HashTable HashTable MaybeTarget)
+(def (composition-plan-stage-target clause stage stage-index binding-index)
   (let (kind (composition-plan-clause-kind clause))
     (if (not (composition-plan-target-clause? kind))
       #f
@@ -217,18 +204,18 @@
                  (composition-plan-stage-name stage) kind payload))
         (let (target (car payload))
           (cond
-           ((composition-plan-stage-by-name stages target)
+           ((hash-get stage-index target)
             (list 'case target kind))
-           ((composition-plan-binding-by-name bindings target)
+           ((hash-get binding-index target)
             (list 'profile target kind))
            (else
             (error "POO-FLOW-PLAN-E102 unknown Case or Profile target"
                    (composition-plan-stage-name stage) kind target))))))))
 
-(def (composition-plan-stage-targets stage stages bindings)
+(def (composition-plan-stage-targets stage stage-index binding-index)
   (filter-map
    (lambda (clause)
-     (composition-plan-stage-target clause stage stages bindings))
+     (composition-plan-stage-target clause stage stage-index binding-index))
    (composition-plan-stage-clauses stage)))
 
 (def (composition-plan-explicit-edges stage)
@@ -249,29 +236,33 @@
         (composition-plan-clause-payload clause))))
    (composition-plan-stage-clauses stage)))
 
-(def (composition-plan-case-target-names stage stages bindings)
+(def (composition-plan-case-target-names stage stage-index binding-index)
   (filter-map
    (lambda (target)
      (and (eq? (car target) 'case)
           (cadr target)))
-   (composition-plan-stage-targets stage stages bindings)))
+   (composition-plan-stage-targets stage stage-index binding-index)))
 
-(def (composition-plan-referenced-case-names stages bindings)
+(def (composition-plan-referenced-case-names stages stage-index binding-index)
   (delete-duplicates/hash
    (append-map
     (lambda (stage)
-      (composition-plan-case-target-names stage stages bindings))
+      (composition-plan-case-target-names stage stage-index binding-index))
     stages)
    table: (make-hash-table-eq)
    from-end?: #t))
 
-(def (composition-plan-root-stage-names stages bindings)
-  (let ((referenced
-         (composition-plan-referenced-case-names stages bindings)))
+(def (composition-plan-root-stage-names stages stage-index binding-index)
+  (let* ((referenced
+          (composition-plan-referenced-case-names
+           stages stage-index binding-index))
+         (referenced-index
+          (poo-flow-composition-leftmost-index-by
+           (lambda (name) name) referenced)))
     (filter-map
      (lambda (stage)
        (let (name (composition-plan-stage-name stage))
-         (and (not (memq name referenced)) name)))
+         (and (not (hash-key? referenced-index name)) name)))
      stages)))
 
 ;; Descriptor = (key name kind source)
@@ -288,11 +279,8 @@
 (def (composition-plan-profile-key path name)
   (string-append "profile:" (composition-plan-path-child path name)))
 
-(def (composition-plan-target-by-name targets name)
-  (find (lambda (target) (eq? (cadr target) name)) targets))
-
-(def (composition-plan-target-key path targets name stage-name)
-  (let (target (composition-plan-target-by-name targets name))
+(def (composition-plan-target-key path target-index name stage-name)
+  (let (target (hash-get target-index name))
     (unless target
       (error "POO-FLOW-PLAN-E104 edge endpoint is not a direct target"
              stage-name name))
@@ -301,14 +289,16 @@
       (composition-plan-profile-key path name))))
 
 (def (composition-plan-stage-edges stage path targets)
-  (map
-   (lambda (edge)
-     (list
-      (composition-plan-target-key
-       path targets (car edge) (composition-plan-stage-name stage))
-      (composition-plan-target-key
-       path targets (cadr edge) (composition-plan-stage-name stage))))
-   (composition-plan-explicit-edges stage)))
+  (let (target-index
+        (poo-flow-composition-leftmost-index-by cadr targets))
+    (map
+     (lambda (edge)
+       (list
+        (composition-plan-target-key
+         path target-index (car edge) (composition-plan-stage-name stage))
+        (composition-plan-target-key
+         path target-index (cadr edge) (composition-plan-stage-name stage))))
+     (composition-plan-explicit-edges stage))))
 
 ;; Prepend a forward-ordered chunk to reversed accumulated state.  The final
 ;; boundary performs one reverse, avoiding quadratic append growth while
@@ -319,13 +309,15 @@
   (fold cons reversed chunk))
 
 (def (composition-plan-build-case
-      stage-name path parent-key stages bindings active)
+      stage-name path parent-key stage-index binding-index active)
   (when (memq stage-name active)
     (error "POO-FLOW-PLAN-E105 recursive Case cycle"
            (reverse (cons stage-name active))))
-  (let* ((stage (composition-plan-stage-by-name stages stage-name))
+  (let* ((stage (hash-get stage-index stage-name))
          (key (composition-plan-case-key path))
-         (targets (composition-plan-stage-targets stage stages bindings))
+         (targets
+          (composition-plan-stage-targets
+           stage stage-index binding-index))
          (descriptor (composition-plan-descriptor key stage-name 'case stage)))
     (let (descriptors+edges
           (fold
@@ -340,15 +332,14 @@
                    (let-values
                        (((child-descriptors child-edges)
                          (composition-plan-build-case
-                          target-name child-path key stages bindings
+                          target-name child-path key stage-index binding-index
                           (cons stage-name active))))
                      (list
                       (composition-plan-accumulate
                        child-descriptors descriptors)
                       (composition-plan-accumulate child-edges edges))))
                  (let* ((binding
-                         (composition-plan-binding-by-name
-                          bindings target-name))
+                         (hash-get binding-index target-name))
                         (profile-key
                          (composition-plan-profile-key path target-name))
                         (profile-descriptor
@@ -440,10 +431,18 @@
   (let* ((name (.ref composition 'name))
          (stages (.ref composition 'stages))
          (bindings (.ref composition 'profile-bindings))
+         (stage-index
+          (poo-flow-composition-leftmost-index-by
+           composition-plan-stage-name stages))
+         (binding-index
+          (poo-flow-composition-leftmost-index-by
+           (lambda (binding) (.ref binding 'slot)) bindings))
          (root-key (string-append "composition:" (symbol->string name)))
          (root-descriptor
           (composition-plan-descriptor root-key name 'composition composition))
-         (roots (composition-plan-root-stage-names stages bindings)))
+         (roots
+          (composition-plan-root-stage-names
+           stages stage-index binding-index)))
     (when (null? roots)
       (error "POO-FLOW-PLAN-E107 composition has no acyclic root Case" name))
     (let (descriptors+edges
@@ -453,7 +452,8 @@
                (let-values
                    (((case-descriptors case-edges)
                      (composition-plan-build-case
-                      root-name root-path root-key stages bindings '())))
+                      root-name root-path root-key
+                      stage-index binding-index '())))
                  (list
                   (composition-plan-accumulate case-descriptors (car state))
                   (composition-plan-accumulate case-edges (cadr state))))))

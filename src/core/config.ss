@@ -153,11 +153,11 @@
     (cond
      ((eq? kind 'literal) value)
      ((eq? kind 'placeholder)
-      (poo-flow-core-field-rows
+      (poo-flow-product-field-rows
        (placeholder value)))
      ((or (eq? kind 'env) (eq? kind 'file))
       (if (config-argument-secret? argument)
-        (poo-flow-core-field-rows
+        (poo-flow-product-field-rows
          (source kind)
          (key value)
          (secret #t))
@@ -167,7 +167,7 @@
        'config
        'unsupported-config-argument
        "unsupported config argument kind"
-       (poo-flow-core-field-rows
+       (poo-flow-product-field-rows
         (kind kind)
         (value value)))))))
 
@@ -244,7 +244,7 @@
 ;;; creating runtime adapter requests.
 ;; : (-> RunConfig Alist)
 (def (run-config-registry-policy config)
-  (poo-flow-core-field-rows
+  (poo-flow-product-field-rows
    (task-registry
     (task-family-registry-name
      (run-config-task-registry config)))
@@ -320,7 +320,7 @@
     (make-run-config 'rust
                      (make-local-eager-strategy)
                      (make-rust-adapter command)
-                     (poo-flow-core-field-rows/tail
+                     (poo-flow-product-field-rows/tail
                       options
                       (runtime 'rust)))))
 
@@ -418,7 +418,7 @@
    'config
    'missing-config-keys
    "missing config key"
-   (poo-flow-core-field-rows
+   (poo-flow-product-field-rows
     (status 'missing)
     (missing
      (list (config-requirement->alist

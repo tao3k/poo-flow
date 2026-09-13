@@ -7,8 +7,16 @@
                     "declaration-ir.ss"
                     (only-in :std/srfi/1 filter-map find iota)))
 
-(export .defclass .defgeneric .defmethod .define-method-combination
+(export .defclass .defgeneric .defmethod .defmethod-bundle
+        .define-method-combination
         .with-slots .with-accessors)
+
+;;; Thin declaration sugar: expansion is one ordinary checked POO bundle.
+;;; Protocol identity and all method admission remain runtime-owned by objects.ss.
+(defrules .defmethod-bundle ()
+  ((_ name protocol method ...)
+   (def name
+     (poo-clos-method-bundle 'name protocol (list method ...)))))
 
 (begin-syntax
   ;; : (-> Syntax Syntax)

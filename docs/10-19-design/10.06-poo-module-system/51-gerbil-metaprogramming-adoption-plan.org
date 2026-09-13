@@ -283,7 +283,7 @@ Phase 3: deepen session policy generation.
   =user-interface/custom/my-module/cases/loop-engine.ss= now keeps selector
   and materialization profile slots as session receipt objects until the
   loop-engine owner projects them. The existing
-  =t/user-interface-custom-scenario-batch-performance-test.ss= benchmark
+  =t/performance/user-interface-custom-scenario-batch-performance-test.ss= benchmark
   imports and runs under the performance gate.
 - Completed selector/materialization diagnostic projection slice:
   session selector and materialization diagnostic rows now use owner-local
@@ -543,7 +543,7 @@ Phase 4: broaden runtime projection generation carefully.
   This stays functional because the runtime-owner/deferred sets are
   data-dependent report values, not static declaration frames.
 - Completed Funflow scenario benchmark gate slice:
-  =t/funflow-config-pipeline-performance-test.ss= now runs the real
+  =t/performance/funflow-config-pipeline-performance-test.ss= now runs the real
   32-config user-interface Funflow CI/CD presentation summary through
   =benchmark-run/result= instead of only smoke-checking the fixture contract.
   The benchmark support is parameterized over module bundles, so =load!=
@@ -723,4 +723,4 @@ gxpkg build -R -O
 
 Do not run broad verification as a substitute for owner-boundary tests. The
 focused tests are what prove the macro did not move the model boundary.
-- Completed user-interface sandbox config benchmark slice: =t/user-interface-sandbox-config-performance-test.ss= and =t/scenarios/performance/user-interface-sandbox-config/benchmark.ss= now give sandbox module feature lookup and default profile presentation an owner-local performance gate, while =user-interface/= remains a POO-native declaration surface with no benchmark payloads.
+- Completed user-interface sandbox config benchmark slice: =t/performance/user-interface-sandbox-config-performance-test.ss= and =t/scenarios/performance/user-interface-sandbox-config/benchmark.ss= now give sandbox module feature lookup and default profile presentation an owner-local performance gate, while =user-interface/= remains a POO-native declaration surface with no benchmark payloads.

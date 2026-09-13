@@ -2,13 +2,12 @@
 ;;; Boundary: graph facts are POO-native control-plane values.
 ;;; Invariant: graph objects describe topology; they never schedule or run it.
 
-(import (only-in :clan/poo/object .ref .slot? object? object<-alist)
+(import (only-in :clan/poo/object .ref .slot?)
         (only-in "../module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
                  poo-flow-native-contract
-                 poo-flow-native-contract->alist)
-        :poo-flow/src/module-system/projection/syntax)
+                 poo-flow-native-contract->alist))
 
 (import :poo-flow/src/graph/types-core)
 

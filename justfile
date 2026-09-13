@@ -81,6 +81,12 @@ toolchain:
 test:
     gerbil env ./unit-tests.ss
 
+# Run wall-clock performance scenarios through the native ASP scheduler,
+# outside the ordinary unit-test batches.
+[group('test')]
+test-performance:
+    gerbil env ./performance-tests.ss
+
 # Run only hermetic Bazel qualifications; `just test` owns Scheme unit tests.
 [group('test')]
 test-bazel:

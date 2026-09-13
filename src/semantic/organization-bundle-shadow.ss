@@ -4,7 +4,8 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :std/sort sort)
-        :poo-flow/src/semantic/organization-bundle)
+        :poo-flow/src/semantic/organization-bundle
+        :poo-flow/src/semantic/funcs)
 
 (def +poo-flow-organization-shadow-receipt-schema+
   'poo-flow.organization-bundle-shadow-receipt.draft.1)
@@ -96,9 +97,6 @@
   (member (list (.ref fact 'facet) (.ref fact 'path))
           (.ref profile 'entries)))
 
-(def (shadow-find identity facts)
-  (find (lambda (fact) (equal? identity (shadow-fact-identity fact))) facts))
-
 (def (shadow-duplicate-identities facts)
   (let (previous+duplicates
         (foldl
@@ -138,6 +136,9 @@
 (def (poo-flow-organization-bundle-shadow-compare state current-facts profile)
   (let* ((bundle-facts (poo-flow-organization-bundle-shadow-facts state))
          (all-facts (append current-facts bundle-facts))
+         (profile-entry-index
+          (poo-flow-semantic-index-by (lambda (entry) entry)
+                                      (.ref profile 'entries)))
          (invalid-facts
           (filter (lambda (fact) (not (shadow-valid-fact? fact)))
                   all-facts))
@@ -150,7 +151,10 @@
                               (pair? (cadr entry)))))
                   (.ref profile 'entries)))
          (uncovered
-          (filter (lambda (fact) (not (shadow-profile-covers? profile fact)))
+          (filter (lambda (fact)
+                    (not (hash-key?
+                          profile-entry-index
+                          (list (.ref fact 'facet) (.ref fact 'path)))))
                   all-facts))
          (profile-facets
           (filter (lambda (facet)
@@ -179,10 +183,14 @@
              uncovered)))
       (let ((missing-current '()) (missing-bundle '())
             (mismatches '()) (matched '()))
+        (let ((current-index
+               (poo-flow-semantic-index-by shadow-fact-identity current-facts))
+              (bundle-index
+               (poo-flow-semantic-index-by shadow-fact-identity bundle-facts)))
         (for-each
          (lambda (bundle-fact)
-           (let (current (shadow-find (shadow-fact-identity bundle-fact)
-                                      current-facts))
+           (let (current (hash-get current-index
+                                  (shadow-fact-identity bundle-fact)))
              (cond
               ((not current)
                (set! missing-current (cons (shadow-fact-identity bundle-fact)
@@ -198,7 +206,7 @@
                                         matched)))))) bundle-facts)
         (for-each
          (lambda (current)
-           (unless (shadow-find (shadow-fact-identity current) bundle-facts)
+           (unless (hash-key? bundle-index (shadow-fact-identity current))
              (set! missing-bundle
                    (cons (shadow-fact-identity current) missing-bundle))))
          current-facts)
@@ -206,4 +214,4 @@
                                (null? missing-bundle) (null? mismatches)))
           (shadow-receipt state #t equivalent? profile-facets
                           (reverse matched) (reverse missing-current)
-                          (reverse missing-bundle) (reverse mismatches) '()))))))
+                          (reverse missing-bundle) (reverse mismatches) '())))))))

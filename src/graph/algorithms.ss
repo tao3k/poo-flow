@@ -10,7 +10,7 @@
                  make-queue
                  queue-empty?)
         (only-in :std/srfi/1 filter)
-        :poo-flow/src/graph/types)
+        :poo-flow/src/graph/types-core)
 
 (export poo-flow-graph-node-ids
         poo-flow-graph-edge-pairs
@@ -336,14 +336,16 @@
 
 ;; : (-> [Object] [Object] [Object])
 (def (poo-flow-graph-analysis-start-ids roots maybe-start+target)
-  (if (null? maybe-start+target)
+  (if (or (null? maybe-start+target)
+          (not (car maybe-start+target)))
     roots
     (car maybe-start+target)))
 
 ;; : (-> [Object] [Object] [Object])
 (def (poo-flow-graph-analysis-target-ids terminals maybe-start+target)
   (if (or (null? maybe-start+target)
-          (null? (cdr maybe-start+target)))
+          (null? (cdr maybe-start+target))
+          (not (cadr maybe-start+target)))
     terminals
     (cadr maybe-start+target)))
 

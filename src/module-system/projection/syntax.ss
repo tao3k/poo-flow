@@ -3,72 +3,14 @@
 ;;; Invariant: generated functions are inspection, receipt, or presentation
 ;;; boundaries only; module activation and resolver logic stay explicit.
 
-(export poo-flow-module-rows/tail
-        poo-flow-module-rows-into/rev
-        poo-flow-module-field-rows
-        poo-flow-module-field-rows/tail
+(import :poo-flow/src/utilities/product-syntax)
+
+(export poo-flow-product-rows/tail
+        poo-flow-product-rows-into/rev
+        poo-flow-product-field-rows
+        poo-flow-product-field-rows/tail
         defpoo-module-final-projection
         defpoo-module-final-projection-batch)
-
-;; poo-flow-module-rows/tail
-;;   : (-> List List List)
-;;   | contract: append fixed projection rows before already-owned tail rows
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-module-rows/tail '((kind . module)) '((name . core)))
-;;       ;; => ((kind . module) (name . core))
-;;       ```
-;;     %
-(def (poo-flow-module-rows/tail rows tail)
-  (append rows tail))
-
-;; poo-flow-module-rows-into/rev
-;;   : (-> List List List)
-;;   | contract: prepend rows in reverse order onto an existing reversed spine
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-module-rows-into/rev '(a b) '(tail))
-;;       ;; => (b a tail)
-;;       ```
-;;     %
-(def (poo-flow-module-rows-into/rev rows rows-rev)
-  (append (reverse rows) rows-rev))
-
-;; poo-flow-module-field-rows
-;;   : (-> FieldRow... Alist)
-;;   | contract: lower fixed field clauses to ordered alist rows
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-module-field-rows (kind 'module) (name 'core))
-;;       ;; => ((kind . module) (name . core))
-;;       ```
-;;     %
-(defrules poo-flow-module-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
-
-;; poo-flow-module-field-rows/tail
-;;   : (-> List FieldRow... Alist)
-;;   | contract: lower fixed field clauses and append caller-owned tail rows
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-module-field-rows/tail '((tail . value)) (kind 'module))
-;;       ;; => ((kind . module) (tail . value))
-;;       ```
-;;     %
-(defrules poo-flow-module-field-rows/tail ()
-  ((_ tail (field value) ...)
-   (poo-flow-module-rows/tail
-    (poo-flow-module-field-rows (field value) ...)
-    tail)))
 
 ;; defpoo-module-final-projection
 ;;   : (-> ProjectionDeclaration Syntax)

@@ -400,7 +400,7 @@ Current implementation:
 - =t/session-multi-agent-graph-test.ss= proves graph topology and registry correlation without executing agents or delivering messages.
 - =src/modules/loop-engine/runtime-agent.ss= now projects loop-engine agent/judge/human-audit rows into the same =poo-flow-session-agent-graph= topology instead of maintaining a parallel agent/session graph.
 - =src/modules/loop-engine/runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/user-interface/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
-- =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph and that topology trace profile/session ids stay aligned; =t/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
+- =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph and that topology trace profile/session ids stay aligned; =t/performance/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
 *** 10.06.42.70.30 P3 Session Communication Receipt
 Add a report-only communication object between sessions:
 - =project-id=;
@@ -484,7 +484,7 @@ Current implementation:
 - =t/session-policy-contract-test.ss= projects the foundational isolation, sandbox, context, history, communication, session-sharing, and resource policy rows so sandbox and session-sharing cannot remain untested constructor surfaces.
 - =user-interface/custom/my-module/cases/session-policy.ss= projects isolation, sandbox, and session-sharing policy rows beside the effective validation receipt, keeping the downstream custom module on the same POO-native object path.
 - =src/modules/session/policy-validation.ss= treats isolation and sandbox as first-class effective policy inputs: bounded projection includes =effective-isolation-mode=, isolation sibling/parent/peer controls, =effective-sandbox-profile-ref=, sandbox inheritance mode, and sandbox sharing mode. Metadata-provided sibling session refs drive explicit =sibling-context-not-granted= diagnostics so child sessions cannot read sibling context through a generic context-policy fallback.
-- =t/scenarios/performance/session-policy-family/benchmark.ss= and =t/session-policy-family-performance-test.ss= keep the foundational constructor family as a hot benchmark gate before effective validation.
+- =t/scenarios/performance/session-policy-family/benchmark.ss= and =t/performance/session-policy-family-performance-test.ss= keep the foundational constructor family as a hot benchmark gate before effective validation.
 - =src/modules/session/policy-validation.ss= owns the defstruct-backed
   =poo-flow-session-policy-validation-receipt= constructor, explicit receipt
   accessors, =poo-flow-session-policy-validation-receipt->alist=, and bounded
@@ -515,7 +515,7 @@ Current implementation:
   denied agent tool, denied hook tool, hook permission non-inheritance, and
   missing resource accounting paths.
 - =t/scenarios/performance/session-policy-validation/benchmark.ss= and
-  =t/session-policy-validation-performance-test.ss= make this scenario a hot
+  =t/performance/session-policy-validation-performance-test.ss= make this scenario a hot
   benchmark gate. The gate validates 240 agent attempts and 240 hook attempts
   through POO-authored policy objects and bounded receipt projection.
 *** 10.06.42.70.50 P5 AgentParam Contract Object
@@ -549,7 +549,7 @@ Current implementation:
 - =t/session-agent-param-contract-test.ss= proves the P2/P4-derived contract
   shape.
 - =t/scenarios/performance/session-agent-param-contract/benchmark.ss= and
-  =t/session-agent-param-contract-performance-test.ss= make AgentParam
+  =t/performance/session-agent-param-contract-performance-test.ss= make AgentParam
   projection a hot benchmark gate over 200 bounded contract projections.
 
 *** 10.06.42.70.60 P6 Selector Receipt
@@ -585,7 +585,7 @@ Current implementation:
 - =t/session-selector-receipt-test.ss= proves pending selector routing and the
   explicit no-candidate fallback path without runtime dispatch.
 - =t/scenarios/performance/session-selector-receipt/benchmark.ss= and
-  =t/session-selector-receipt-performance-test.ss= make selector projection a
+  =t/performance/session-selector-receipt-performance-test.ss= make selector projection a
   hot benchmark gate over 300 candidate objects.
 
 *** 10.06.42.70.70 P7 Runtime Materialization Receipt
@@ -618,7 +618,7 @@ Current implementation:
 - =t/session-materialization-receipt-test.ss= covers pending, materialized, and
   failed receipts.
 - =t/scenarios/performance/session-materialization-receipt/benchmark.ss= and
-  =t/session-materialization-receipt-performance-test.ss= make defstruct
+  =t/performance/session-materialization-receipt-performance-test.ss= make defstruct
   materialization projection a hot benchmark gate over 300 receipts.
 
 ** 10.06.42.80 Verification Gates
@@ -628,15 +628,15 @@ loop-engine surface:
 2. =gxtest t/session-multi-agent-graph-test.ss=
 3. =gxtest t/session-communication-receipt-test.ss=
 4. =gxtest t/session-policy-contract-test.ss=
-5. =gxtest t/session-policy-family-performance-test.ss=
+5. =gxtest t/performance/session-policy-family-performance-test.ss=
 6. =gxtest t/session-policy-validation-test.ss=
-7. =gxtest t/session-policy-validation-performance-test.ss=
+7. =gxtest t/performance/session-policy-validation-performance-test.ss=
 8. =gxtest t/session-agent-param-contract-test.ss=
-9. =gxtest t/session-agent-param-contract-performance-test.ss=
+9. =gxtest t/performance/session-agent-param-contract-performance-test.ss=
 10. =gxtest t/session-selector-receipt-test.ss=
-11. =gxtest t/session-selector-receipt-performance-test.ss=
+11. =gxtest t/performance/session-selector-receipt-performance-test.ss=
 12. =gxtest t/session-materialization-receipt-test.ss=
-13. =gxtest t/session-materialization-receipt-performance-test.ss=
+13. =gxtest t/performance/session-materialization-receipt-performance-test.ss=
 14. =gxtest t/user-interface-custom-loop-engine-test.ss=
 15. =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=
 16. =gxtest t/user-interface-presentation-test.ss=
@@ -670,11 +670,11 @@ Each gate should prove:
 Current tool-core application:
 - =src/modules/tool-core/*= turns built-in tools, custom tools, and MCP tool rows into report-only POO specs and handoff manifests.
 - Session and hook tool grants are validated against concrete catalog specs before runtime handoff.
-- =t/user-interface-custom-tool-core-test.ss= is the user-facing scenario gate; =t/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
+- =t/user-interface-custom-tool-core-test.ss= is the user-facing scenario gate; =t/performance/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
 Current memory-core application:
 - =src/modules/memory-core/*= turns local, durable, and custom memory stores into report-only POO specs and handoff manifests.
 - Session memory intents are validated against concrete store catalogs before selector, transform, or materialization receipts consume those refs.
-- =t/user-interface-custom-memory-core-test.ss= is the user-facing scenario gate; =t/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
+- =t/user-interface-custom-memory-core-test.ss= is the user-facing scenario gate; =t/performance/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
 - hook-triggered tools do not inherit main-agent or sub-agent permissions implicitly;
 - model, prompt, context, history, tool, hook, and resource policy can differ per sub-agent and remain visible in presentation.
 

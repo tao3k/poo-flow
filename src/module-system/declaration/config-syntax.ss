@@ -46,12 +46,11 @@
 ;;   (defpoo-module-config-kind-predicate workflow-config? 'workflow)
 ;;   ;; => workflow-config? accepts objects whose kind is workflow
 ;;   ```
-(defrules defpoo-module-config-kind-predicate ()
-  ((_ predicate kind-expr)
-   (def (predicate value)
-     (and (object? value)
-          (.slot? value 'kind)
-          (eq? (.ref value 'kind) kind-expr)))))
+(defrule (defpoo-module-config-kind-predicate predicate kind-expr)
+  (def (predicate value)
+    (and (object? value)
+         (.slot? value 'kind)
+         (eq? (.ref value 'kind) kind-expr))))
 
 ;;; Converter macros project prototype slots and literals into constructors.
 ;; defpoo-module-config-converter

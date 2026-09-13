@@ -45,7 +45,7 @@ flowchart LR
 ** 10.06.82.20 Implementation Owners
 The benchmark implementation is split by responsibility:
 - =t/support/type-contract-performance.ss= owns reusable benchmark workloads.
-- =t/type-contract-performance-test.ss= owns regression budgets and receipts.
+- =t/performance/type-contract-performance-test.ss= owns regression budgets and receipts.
 - =t/performance-tests.ss= includes the suite in the broader performance root.
 - =src/testing/project.ss= registers the support file for harness-aware test selection.
 

@@ -86,7 +86,7 @@
       (docker-enable-strategy (make-local-eager-strategy)))
      (make-store-enabled-adapter
       (make-docker-enabled-adapter (make-rust-adapter command)))
-     (poo-flow-core-field-rows/tail
+     (poo-flow-product-field-rows/tail
       options
       (runtime 'rust)
       (extensions '(docker store)))
@@ -283,7 +283,7 @@
                      options
                      'arguments
                      (make-makefile-tool-runtime-arguments options)))
-         (metadata (poo-flow-core-field-rows/tail
+         (metadata (poo-flow-product-field-rows/tail
                     (workflow-options-without options 'arguments)
                     (workflow 'makefile-tool)
                     (runtime 'rust-cli-compatible))))

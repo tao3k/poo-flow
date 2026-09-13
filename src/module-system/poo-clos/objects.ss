@@ -4,7 +4,7 @@
 (import (only-in :clan/poo/object .o .ref .put!)
         (only-in :clan/poo/mop element?)
         (only-in :std/srfi/1 find iota)
-        "types.ss")
+        "types.ss" "funcs.ss")
 
 (export poo-clos-any-specializer poo-clos-class-specializer
         poo-clos-eql-specializer poo-clos-method poo-clos-generic-function
@@ -20,6 +20,8 @@
         poo-clos-resolve-method-combination
         poo-clos-method-combination-admits-qualifier?
         poo-clos-generic-protocol poo-clos-default-generic-protocol
+        poo-clos-method-bundle poo-clos-compose-method-bundle
+        poo-clos-compose-method-bundles
         poo-clos-generic-binding poo-clos-generic-binding-current
         poo-clos-generic-binding-add-method!
         poo-clos-register-generic-function! poo-clos-find-generic-function
@@ -42,6 +44,8 @@
 (def ClosMethodGroup. (.ref ClosMethodGroup 'proto))
 ;; : POOObject
 (def ClosGenericProtocol. (.ref ClosGenericProtocol 'proto))
+;; : POOObject
+(def ClosMethodBundle. (.ref ClosMethodBundle 'proto))
 ;;; Generic clones preserve this prototype while changing methods and generation.
 ;; : POOObject
 (def ClosGenericFunction. (.ref ClosGenericFunction 'proto))
@@ -405,15 +409,44 @@
                compute-effective-method: compute-effective-value)
            'invalid-generic-protocol))
 
-;;; Precedence order is a true permutation: duplicates and missing positions
-;;; fail before the generic POO value is constructed.
-;; : (-> [Natural] Natural Boolean)
-(def (permutation? values size)
-  (and (= (length values) size)
-       (let loop ((index 0))
-         (or (= index size)
-             (and (= 1 (length (filter (lambda (value) (= value index)) values)))
-                  (loop (+ index 1)))))))
+;;; Method families remain ordinary checked POO values.  The protocol object
+;;; is retained by identity so bundles cannot drift onto a generic configured
+;;; with a lookalike protocol.
+;; : (-> Symbol ClosGenericProtocol [ClosMethod]
+;;        documentation: (Maybe String) ClosMethodBundle)
+(def (poo-clos-method-bundle identity-value protocol-value method-values
+                             documentation: (documentation-value #f))
+  (checked ClosMethodBundle
+           (.o (:: @ ClosMethodBundle.)
+               identity: identity-value
+               protocol: protocol-value
+               methods: method-values
+               documentation: documentation-value)
+           'invalid-method-bundle))
+
+;;; Bundle composition delegates every method admission to the existing CLOS
+;;; generic owner.  It adds no second registry, ordering rule, or evaluator.
+;; : (-> ClosGenericFunction ClosMethodBundle ClosGenericFunction)
+(def (poo-clos-compose-method-bundle generic-source bundle-value)
+  (let (generic-value (require-clos-generic generic-source))
+    (unless (element? ClosMethodBundle bundle-value)
+      (clos-fail 'invalid-method-bundle
+                 generic: (.ref generic-value 'identity)))
+    (unless (eq? (.ref generic-value 'protocol)
+                 (.ref bundle-value 'protocol))
+      (clos-fail 'method-bundle-protocol-mismatch
+                 generic: (.ref generic-value 'identity)))
+    (for-each (lambda (method-value)
+                (poo-clos-add-method generic-value method-value))
+              (.ref bundle-value 'methods))
+    generic-value))
+
+;; : (-> ClosGenericFunction [ClosMethodBundle] ClosGenericFunction)
+(def (poo-clos-compose-method-bundles generic-source bundle-values)
+  (foldl (lambda (bundle-value generic-value)
+           (poo-clos-compose-method-bundle generic-value bundle-value))
+         (require-clos-generic generic-source)
+         bundle-values))
 
 ;; | ClosGenericFunction = POOObject
 ;; poo-clos-generic-function
@@ -450,7 +483,7 @@
   (let (precedence-order
         (or precedence-order-value
             (iota required-value)))
-    (unless (permutation? precedence-order required-value)
+    (unless (poo-clos-natural-permutation? precedence-order required-value)
       (clos-fail 'invalid-argument-precedence-order generic: identity-value))
     (let* ((combination-object
             (poo-clos-resolve-method-combination combination-value))

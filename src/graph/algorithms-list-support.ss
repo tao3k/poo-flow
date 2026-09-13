@@ -2,7 +2,7 @@
 ;;; Boundary: pure graph algorithms over composed POO graph facts.
 ;;; Invariant: algorithms emit analysis facts only; runtime execution is out.
 
-(import :poo-flow/src/graph/types)
+(import :poo-flow/src/graph/types-core)
 
 (export poo-flow-graph-node-ids/rev
         poo-flow-graph-node-ids

@@ -153,7 +153,7 @@
        'module-system
        'missing-module-source
        "poo-flow module source was not found in catalog"
-       (poo-flow-module-field-rows
+       (poo-flow-product-field-rows
         (catalog (poo-flow-module-catalog-name catalog))
         (source (poo-flow-module-source-ref->alist source-ref)))))))
 

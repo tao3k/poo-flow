@@ -48,10 +48,10 @@
 ;; : (-> Object [Symbol] Alist)
 (def (bridge-options target-ref causal-refs)
   (if target-ref
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (target-ref target-ref)
      (causal-refs (bridge-symbol-refs causal-refs)))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (causal-refs (bridge-symbol-refs causal-refs)))))
 
 ;; : (-> Alist Symbol Symbol Symbol Alist Object [Symbol] Object)
@@ -66,7 +66,7 @@
    operation-id
    operation-kind
    negotiation
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source-kind source-kind)
     (source-row row))
    (bridge-options target-ref causal-refs)))
@@ -132,7 +132,7 @@
    artifact-ref
    'retain-artifact
    'workflow-artifact
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (artifact-ref artifact-ref))
    #f
    (list artifact-ref)))
@@ -144,7 +144,7 @@
    sandbox-ref
    'attach-sandbox-handle
    'sandbox-handle
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (sandbox-ref sandbox-ref))
    #f
    (list sandbox-ref)))

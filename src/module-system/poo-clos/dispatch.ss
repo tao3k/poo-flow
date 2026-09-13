@@ -4,8 +4,10 @@
 (import (only-in :clan/poo/object
                  .ref .slot? object? compute-precedence-list!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/srfi/1 drop filter-map find iota list-index)
-        "types.ss" "objects.ss" "classes.ss" "method-combination.ss")
+        (only-in :std/srfi/1 drop filter-map find list-index)
+        (only-in :std/sort stable-sort)
+        "types.ss" "objects.ss" "classes.ss" "method-combination.ss"
+        "funcs.ss")
 
 (export poo-clos-compute-applicable-methods poo-clos-call
         poo-clos-compute-effective-method
@@ -31,31 +33,32 @@
 
 ;;; Logical class precedence follows class-generation successors while native
 ;;; POO prototypes remain the sole source of each generation's C3 order.
-;; : (-> SchemeValue (Maybe [ClosClass]))
-(def (argument-class-precedence argument)
+;; : (-> SchemeValue (Maybe ClosClass))
+(def (argument-clos-class argument)
   (and (clos-instance-state-bearing? argument)
-       (poo-clos-class-precedence-list
-        (poo-clos-current-class
-         (.ref (.ref argument '%poo-clos-state) 'class)))))
+       (poo-clos-current-class
+        (.ref (.ref argument '%poo-clos-state) 'class))))
 
 ;; : (-> SchemeValue SchemeValue (Maybe Natural))
 (def (class-target-distance target argument)
   (and (object? argument)
-       (let* ((logical-cpl (argument-class-precedence argument))
-              (values
+       (let* ((argument-class (argument-clos-class argument))
+              (index
                (if (element? ClosClass target)
-                 logical-cpl (compute-precedence-list! argument)))
-              (target-value
-               (if (element? ClosClass target)
-                 (poo-clos-current-class target) target))
-              (index (and values (identity-index target-value values))))
+                 (and argument-class
+                      (poo-clos-class-precedence-position
+                       argument-class target))
+                 (identity-index target
+                                 (compute-precedence-list! argument)))))
          (and index (+ index 1)))))
 
 ;; : (-> SchemeValue Natural)
 (def (universal-specializer-distance argument)
   (+ 2 (if (object? argument)
-         (length (or (argument-class-precedence argument)
-                     (compute-precedence-list! argument)))
+         (let (argument-class (argument-clos-class argument))
+           (length (if argument-class
+                     (poo-clos-class-precedence-list argument-class)
+                     (compute-precedence-list! argument))))
          0)))
 
 ;;; Eql ranks before every class; a class rank is its native C3 distance; the
@@ -97,27 +100,15 @@
             ((> left-distance right-distance) #f)
             (else (loop (cdr remaining))))))))
 
-;;; Stable insertion preserves the source generation's order only when two
-;;; methods have indistinguishable specializer precedence.
-;; : (forall (a) (-> (Pair a [Natural]) [(Pair a [Natural])]
-;;        [Natural] [(Pair a [Natural])]))
-(def (insert-ranked ranked sorted precedence-order)
-  (cond
-   ((null? sorted) (list ranked))
-   ((distances-before? (cdr ranked) (cdar sorted) precedence-order)
-    (cons ranked sorted))
-   (else
-    (cons (car sorted)
-          (insert-ranked ranked (cdr sorted) precedence-order)))))
-
-;;; The fold is intentionally stable and allocation-only; it never mutates the
-;;; generic's source method list.
+;;; Gerbil std owns the stable O(n log n) merge sort. Equal method distances
+;;; retain source-generation order without the former insertion-sort O(n²).
 ;; : (forall (a) (-> [(Pair a [Natural])] [Natural]
 ;;        [(Pair a [Natural])]))
 (def (sort-ranked ranked precedence-order)
-  (foldl (lambda (entry sorted)
-           (insert-ranked entry sorted precedence-order))
-         '() ranked))
+  (stable-sort
+   ranked
+   (lambda (left right)
+     (distances-before? (cdr left) (cdr right) precedence-order))))
 
 ;;; Applicability is a pure projection from one immutable generic generation;
 ;;; no cache or registry can change the method set during this computation.
@@ -163,11 +154,9 @@
 
 ;; : (-> [SchemeValue] InitargName (Maybe SchemeValue))
 (def (keyword-value arguments name)
-  (let (position
-        (list-index (lambda (index)
-                      (eq? (list-ref arguments (* 2 index)) name))
-                    (iota (quotient (length arguments) 2))))
-    (and position (list-ref arguments (+ 1 (* 2 position))))))
+  (call-with-values
+   (lambda () (poo-clos-initarg-ref arguments name))
+   (lambda (present? value) (and present? value))))
 
 ;;; An explicit =allow-other-keys= argument admits unknown keys only when its
 ;;; leftmost value is true.  Absence and an explicit false value are both
@@ -192,11 +181,7 @@
       (let* ((start (+ (.ref lambda-list 'required)
                        (.ref lambda-list 'optional)))
              (tail (keyword-tail arguments start)))
-        (unless (and (even? (length tail))
-                     (andmap (lambda (index)
-                               (keyword-name?
-                                (list-ref tail (* 2 index))))
-                             (iota (quotient (length tail) 2))))
+        (unless (poo-clos-initarg-list? tail)
           (clos-fail 'malformed-keyword-arguments
                      generic: (.ref generic 'identity)))
         (let* ((valid-keys
@@ -211,12 +196,10 @@
                     (find (lambda (method-list)
                             (.ref method-list 'allow-other-keys?))
                           method-lists)))
+               (valid-key-index (poo-clos-identity-index valid-keys))
                (invalid-key
-                (find (lambda (index)
-                        (let (name (list-ref tail (* 2 index)))
-                          (and (not (allow-other-keys-name? name))
-                               (not (memq name valid-keys)))))
-                      (iota (quotient (length tail) 2)))))
+                (poo-clos-first-invalid-initarg
+                 tail valid-key-index allow-other-keys-name?)))
           (when (and invalid-key (not allow-other?))
             (clos-fail 'invalid-keyword-argument
                        generic: (.ref generic 'identity))))))))

@@ -21,7 +21,7 @@
         (only-in :poo-flow/src/profiles/kernel/interface
                  poo-flow-kernel-profile)
         (only-in :poo-flow/src/module-system/projection/syntax
-                 poo-flow-module-field-rows/tail)
+                 poo-flow-product-field-rows/tail)
         (only-in :poo-flow/src/modules/memory-core/durable/artifact-policy
                  artifact-module
                  database-module
@@ -143,7 +143,7 @@
           (length macro-extra-module-bundles))))
     (test-case "field-row tail projection preserves fixed-first ordering"
       (check-equal?
-       (poo-flow-module-field-rows/tail
+       (poo-flow-product-field-rows/tail
         '((tail . value))
         (kind 'module)
         (name 'syntax-surface))

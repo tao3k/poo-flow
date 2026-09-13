@@ -9,8 +9,8 @@ The package script declares its native entry through the upstream macro:
 #+begin_src scheme
 (asp-gerbil-scheme-package-spec!
  (my-package @ asp-gerbil-scheme-library-package-prototype)
- (modules (all-gerbil-modules))
- (spec spec))
+ (spec spec)
+ (public-entry-modules '("interface.ss" "user-interface/interface.ss")))
 (defbuild-script (spec))
 #+end_src
 
@@ -50,9 +50,10 @@ No contributor runtime, backend or implicit registration is installed by import.
 * Directory build
 
 The child =build.ss= declares one PackageSpec and one =defbuild-script=. Source
-discovery is the upstream =clan/building#all-gerbil-modules= value supplied to
-that PackageSpec; POO Flow performs no second scan, import-order check,
-preflight, compiler dispatch, or scenario build.
+selection is the upstream ASP Build API's native Gerbil import closure from
+those public entries. The child does not declare =modules=, call
+=all-gerbil-modules=, enumerate implementation files, perform a second scan,
+or own compiler dispatch.
 
 
 * Qualification boundary

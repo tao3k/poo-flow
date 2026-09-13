@@ -78,7 +78,7 @@
     (make-run-config 'custom-local
                      (make-custom-enabled-strategy)
                      (make-request-only-adapter)
-                     (poo-flow-core-field-rows/tail
+                     (poo-flow-product-field-rows/tail
                       options
                       (runtime 'gerbil)
                       (extension 'custom-task))

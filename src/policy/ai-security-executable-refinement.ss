@@ -6,7 +6,9 @@
 (import (only-in :clan/poo/object .def .mix .o .ref)
         (only-in :std/srfi/1 every filter-map)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode))
+        (only-in :std/text/hex hex-encode)
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-set-subset?))
 
 (export poo-flow-agent-action-evidence-envelope
         poo-flow-agent-action-evidence-envelope->projection
@@ -30,11 +32,6 @@
     (sha256
      (call-with-output-string
       (lambda (port) (write value port)))))))
-
-;; : (forall (a) (-> (List a) (List a) Boolean))
-;; : (-> List List Boolean)
-(def (set-subset? requested allowed)
-  (every (lambda (value) (if (member value allowed) #t #f)) requested))
 
 ;; : (-> Symbol MaybeSymbol Symbol Symbol Symbol Symbol Symbol Symbol String String [Symbol] [Symbol] PooAgentActionEvidenceEnvelope)
 (def (poo-flow-agent-action-evidence-envelope
@@ -172,8 +169,8 @@
          (effect-ok
           (and (member (.ref envelope 'effect-domain)
                        (.ref policy 'allowed-effect-domains))
-               (set-subset? (.ref envelope 'requested-effects)
-                            (.ref envelope 'allowed-effects))))
+               (poo-flow-set-subset? (.ref envelope 'requested-effects)
+                                     (.ref envelope 'allowed-effects))))
          (causal-ok
           (and (equal? (.ref envelope 'parent-action-id)
                        (.ref policy 'expected-parent-action-id))

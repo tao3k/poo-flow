@@ -98,7 +98,7 @@
    ((and (eq? workflow-ref 'funflow-cicd)
          (null? check-maps))
     (list
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (field 'workflow-ref)
       (code 'missing-funflow-workflow-pipeline)
       (workflow-ref workflow-ref))))
@@ -106,7 +106,7 @@
 
 ;; : (-> [PooFlowCicdCheckMap] Alist)
 (def (poo-flow-funflow-workflow-agreement-summary check-maps)
-  (poo-flow-module-field-rows
+  (poo-flow-product-field-rows
    (pipeline-count (length check-maps))
    (pipeline-names (map poo-flow-cicd-check-map-name check-maps))
    (functional-dag-rows
@@ -127,7 +127,7 @@
           (poo-flow-funflow-workflow-agreement-summary check-maps))
          (functional-dag-rows
           (poo-flow-cicd-alist-ref summary 'functional-dag-rows '())))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (kind 'funflow-workflow-agreement)
      (contract +poo-flow-funflow-workflow-agreement-contract+)
      (workflow-ref workflow-ref)
@@ -284,7 +284,7 @@
   (poo-flow-funflow-dag-edge
    (poo-flow-cicd-alist-ref edge 'from #f)
    (poo-flow-cicd-alist-ref edge 'to #f)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'workflow-cicd-dependency-graph))))
 
 ;; : (-> [Alist] [PooFlowFunflowDagEdge])
@@ -304,7 +304,7 @@
    node
    #f
    #f
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'funflow-functional-kernel))))
 
 ;; : (-> PooFlowFunflowDagEdge PooFlowFunflowCompositionStep)
@@ -314,7 +314,7 @@
    #f
    (.ref edge 'from)
    (.ref edge 'to)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'funflow-functional-kernel)
     (edge-composition-style
      (.ref edge 'composition-style)))))
@@ -432,7 +432,7 @@
    "funflow runtime projection requires a plan"
    (poo-flow-funflow-plan? plan)
    plan)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
    (kind 'poo-flow.funflow.plan-projection)
    (schema 'poo-flow.funflow-plan-projection.v1)
    (origin (.ref plan 'origin))
@@ -496,7 +496,7 @@
       (cons 'valid?
             (poo-flow-cicd-alist-ref graph 'valid? #f))
       (cons 'metadata
-            (poo-flow-module-field-rows
+            (poo-flow-product-field-rows
              (source 'funflow-functional-kernel)
              (dependency-graph-kind
               (poo-flow-cicd-alist-ref graph 'kind #f))))
@@ -514,7 +514,7 @@
    ((null? stages) '())
    ((pair? stages)
     (cons
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (stage (car stages))
       (source 'use-module-funflow)
       (path (list 'use-module 'funflow flow-name (car stages))))
@@ -552,7 +552,7 @@
 (def (poo-flow-funflow-check-map->normalized-flow check-map)
   (let* ((dag (poo-flow-funflow-check-map->functional-dag check-map))
          (metadata
-          (poo-flow-module-field-rows
+          (poo-flow-product-field-rows
            (source 'use-module-funflow)
            (check-map (poo-flow-cicd-check-map-name check-map)))))
     (poo-flow-funflow-functional-dag->normalized-flow dag metadata)))
@@ -568,7 +568,7 @@
    ((null? nodes) '())
    ((pair? nodes)
     (cons
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (name (car nodes))
       (kind 'funflow-step)
       (runtime-executed #f))
@@ -609,7 +609,7 @@
             (list->vector (poo-flow-funflow-edge-table-rows edges)))
       (cons 'policy-table
             (vector
-             (poo-flow-module-field-rows
+             (poo-flow-product-field-rows
               (policy-family (.ref flow 'policy-family)))))
       (cons 'effect-table '#())
       (cons 'runtime-contract (.ref flow 'runtime-contract))

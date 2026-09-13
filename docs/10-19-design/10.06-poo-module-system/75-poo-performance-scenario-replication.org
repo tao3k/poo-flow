@@ -94,7 +94,7 @@ The internal receipt is a generated struct/accessor surface. The exported test h
 Key verification after this implementation:
 
 #+begin_src shell
-env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/module-system-poo-performance-test.ss
+env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/performance/module-system-poo-performance-test.ss
 #+end_src
 
 Result:

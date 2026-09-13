@@ -121,7 +121,7 @@
      pipeline-name
      (poo-flow-funflow-poo-checks->cicd-checks
       (.ref pipeline 'checks))
-     (poo-flow-module-field-rows/tail
+     (poo-flow-product-field-rows/tail
       metadata
       (source 'funflow-poo-config)
       (pipeline pipeline-name)))))

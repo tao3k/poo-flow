@@ -6,11 +6,12 @@
         (only-in :std/misc/hash hash-ref/default hash-remove!)
         (only-in :std/misc/list delete-duplicates/hash)
         (only-in :std/srfi/1 find filter filter-map foldl)
-        "types.ss" "objects.ss")
+        "types.ss" "objects.ss" "funcs.ss")
 
 (export ClosDirectSlotDefinition ClosEffectiveSlotDefinition ClosClass
         poo-clos-standard-object-class poo-clos-direct-slot-definition
         poo-clos-class poo-clos-class-precedence-list
+        poo-clos-class-precedence-position
         poo-clos-find-class poo-clos-set-find-class! poo-clos-resolve-class
         poo-clos-class-effective-slots poo-clos-find-effective-slot
         poo-clos-class-subclass? poo-clos-class-specializer
@@ -231,19 +232,21 @@
 (def (reachable-classes class-value)
   ;; This is a two-list graph queue.  It preserves breadth-first source order
   ;; without repeatedly copying the pending frontier with append.
-  (let walk ((front (list class-value)) (rear '()) (seen '()))
+  (let ((seen-index (make-hash-table-eq)))
+  (let walk ((front (list class-value)) (rear '()) (seen-rev '()))
     (cond
      ((null? front)
       (if (null? rear)
-        (reverse seen)
-        (walk (reverse rear) '() seen)))
-     ((memq (car front) seen)
-      (walk (cdr front) rear seen))
+        (reverse seen-rev)
+        (walk (reverse rear) '() seen-rev)))
+     ((hash-key? seen-index (car front))
+      (walk (cdr front) rear seen-rev))
      (else
       (let (candidate (car front))
+        (hash-put! seen-index candidate #t)
         (walk (cdr front)
               (enqueue-reversed (.ref candidate 'direct-superclasses) rear)
-              (cons candidate seen)))))))
+              (cons candidate seen-rev))))))))
 
 ;; : (-> [ClosClass] [Pair])
 (def (precedence-constraints classes)
@@ -253,63 +256,46 @@
                  (cons candidate (.ref candidate 'direct-superclasses))))
               classes)))
 
-;; : (-> ClosClass [Pair] Boolean)
-(def (class-has-predecessor? class-value constraints)
-  (if (find (lambda (constraint)
-              (eq? (cdr constraint) class-value))
-            constraints)
-    #t #f))
-
 ;; : (-> [ClosClass] [ClosClass] (Maybe ClosClass))
-(def (select-ambiguous-class candidates result)
+(def (select-ambiguous-class candidate? result)
   ;; `result` is accumulated in reverse, so its head is precisely the
   ;; rightmost class in the logical CPL constructed so far.
   (let loop ((owners result))
     (and (pair? owners)
-         (or (find (lambda (superclass)
-                     (if (memq superclass candidates) #t #f))
+         (or (find (lambda (superclass) (candidate? superclass))
                    (.ref (car owners) 'direct-superclasses))
              (loop (cdr owners))))))
 
 ;; : (-> ClosClass [ClosClass])
 (def (compute-class-precedence-list class-value)
   (let* ((classes (reachable-classes class-value))
-         (initial-constraints (precedence-constraints classes)))
-    (let loop ((remaining classes)
-               (constraints initial-constraints)
-               (result '()))
-      (if (null? remaining)
-        (reverse result)
-        (let* ((candidates
-                (filter (lambda (candidate)
-                          (not (class-has-predecessor?
-                                candidate constraints)))
-                        remaining))
-               (next
-                (cond
-                 ((null? candidates) #f)
-                 ((null? (cdr candidates)) (car candidates))
-                 (else (select-ambiguous-class candidates result)))))
-          (unless next
-            (clos-fail 'inconsistent-class-precedence
-                       class: (.ref class-value 'identity)))
-          (loop (filter (lambda (candidate) (not (eq? candidate next)))
-                        remaining)
-                (filter (lambda (constraint)
-                          (not (eq? (car constraint) next)))
-                        constraints)
-                (cons next result)))))))
+         (constraints (precedence-constraints classes))
+         (ordered
+          (poo-clos-topological-order/identity
+           classes constraints select-ambiguous-class)))
+    (or ordered
+        (clos-fail 'inconsistent-class-precedence
+                   class: (.ref class-value 'identity)))))
 
-;; : (-> ClosClass Symbol [Pair])
-(def (slot-descriptions class-value slot-name)
-  (filter-map
+;; Each owner index retains its first direct declaration for a slot name.  The
+;; outer list stays in CPL order, so option inheritance remains ANSI ordered.
+;; : (-> ClosClass [Pair])
+(def (class-direct-slot-indexes class-value)
+  (map
    (lambda (owner-class)
-     (let (direct-slot
-           (find (lambda (candidate)
-                   (eq? (.ref candidate 'identity) slot-name))
-                 (.ref owner-class 'direct-slots)))
-       (and direct-slot (cons owner-class direct-slot))))
+     (cons owner-class
+           (poo-clos-leftmost-index-by
+            (lambda (slot) (.ref slot 'identity))
+            (.ref owner-class 'direct-slots))))
    (.ref class-value 'class-precedence-list)))
+
+;; : (-> [Pair] Symbol [Pair])
+(def (slot-descriptions owner-indexes slot-name)
+  (filter-map
+   (lambda (owner+index)
+     (let (direct-slot (hash-get (cdr owner+index) slot-name))
+       (and direct-slot (cons (car owner+index) direct-slot))))
+   owner-indexes))
 
 ;; : (-> [Pair] Symbol (Maybe SchemeValue))
 (def (first-slot-option descriptions option)
@@ -323,9 +309,9 @@
    (apply append
           (map (lambda (entry) (.ref (cdr entry) option)) descriptions))))
 
-;; : (-> ClosClass Symbol ClosEffectiveSlotDefinition)
-(def (compute-effective-slot class-value slot-name)
-  (let* ((descriptions (slot-descriptions class-value slot-name))
+;; : (-> [Pair] Symbol ClosEffectiveSlotDefinition)
+(def (compute-effective-slot owner-indexes slot-name)
+  (let* ((descriptions (slot-descriptions owner-indexes slot-name))
          (most-specific (car descriptions))
          (most-specific-slot (cdr most-specific))
          (allocation-value (.ref most-specific-slot 'allocation))
@@ -352,15 +338,16 @@
 
 ;; : (-> ClosClass [ClosEffectiveSlotDefinition])
 (def (compute-effective-slots class-value)
-  (let (slot-names
-        (unique/identity
-         (apply append
-                (map (lambda (owner-class)
-                       (map (lambda (slot) (.ref slot 'identity))
-                            (.ref owner-class 'direct-slots)))
-                     (.ref class-value 'class-precedence-list)))))
+  (let* ((owner-indexes (class-direct-slot-indexes class-value))
+         (slot-names
+          (unique/identity
+           (apply append
+                  (map (lambda (owner-class)
+                         (map (lambda (slot) (.ref slot 'identity))
+                              (.ref owner-class 'direct-slots)))
+                       (.ref class-value 'class-precedence-list))))))
     (map (lambda (slot-name)
-           (compute-effective-slot class-value slot-name))
+           (compute-effective-slot owner-indexes slot-name))
          slot-names)))
 
 ;; : (-> ClosSlotCell)
@@ -458,6 +445,9 @@
             class-storage: (make-hash-table-eq)
             instance-prototype: (make-instance-prototype self)
             class-precedence-list: (compute-class-precedence-list self)
+            class-precedence-index:
+            (poo-clos-position-index/identity
+             (.ref self 'class-precedence-list))
             effective-slots: (compute-effective-slots self)))
     (let (class-value
           (initialize-direct-class-slots!
@@ -511,6 +501,9 @@
            (make-instance-prototype class-value))
     (.put! class-value 'class-precedence-list
            (compute-class-precedence-list class-value))
+    (.put! class-value 'class-precedence-index
+           (poo-clos-position-index/identity
+            (.ref class-value 'class-precedence-list)))
     (.put! class-value 'effective-slots
            (compute-effective-slots class-value))
     (for-each
@@ -569,6 +562,14 @@
 (def (poo-clos-class-precedence-list class-value)
   (unless (element? ClosClass class-value) (clos-fail 'invalid-class))
   (.ref class-value 'class-precedence-list))
+
+;; : (-> ClosClass ClosClass (Maybe Natural))
+(def (poo-clos-class-precedence-position class-value target-value)
+  (unless (and (element? ClosClass class-value)
+               (element? ClosClass target-value))
+    (clos-fail 'invalid-class))
+  (hash-get (.ref class-value 'class-precedence-index)
+            (poo-clos-current-class target-value)))
 
 ;; : (-> ClosClass [ClosEffectiveSlotDefinition])
 (def (poo-clos-class-effective-slots class-value)

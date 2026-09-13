@@ -13,6 +13,7 @@
                  poo-flow-append-map
                  poo-flow-any?
                  poo-flow-all?
+                 poo-flow-set-subset?
                  poo-flow-stable-duplicates
                  poo-flow-list-of?
                  poo-flow-predicate-and
@@ -79,6 +80,14 @@
       (check-equal?
        (poo-flow-stable-duplicates '((a . 1) (b . 2) (a . 1)))
        '((a . 1))))
+    (test-case "checks list-shaped set inclusion through one hash index"
+      (check-equal? (poo-flow-set-subset? '(alpha gamma)
+                                          '(alpha beta gamma))
+                    #t)
+      (check-equal? (poo-flow-set-subset? '(alpha missing)
+                                          '(alpha beta gamma))
+                    #f)
+      (check-equal? (poo-flow-set-subset? '() '(alpha)) #t))
     (test-case "projects and merges association lists deterministically"
       (let ((base '((owner . kernel)
                     (budget . 100)

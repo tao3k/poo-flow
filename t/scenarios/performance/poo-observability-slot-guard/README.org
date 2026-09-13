@@ -59,7 +59,7 @@ project environment:
 #+begin_src sh
 ./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
   gxtest \
-  t/observability-slot-performance-test.ss
+  t/performance/observability-slot-performance-test.ss
 #+end_src
 
 The native ASP V1 receipts' =elapsedNs=, =p50Ns=, =p95Ns=, =maxNs=,

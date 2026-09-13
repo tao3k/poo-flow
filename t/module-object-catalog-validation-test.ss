@@ -36,6 +36,10 @@
              (validations
               (poo-flow-module-objects-validation objects)))
         (check-equal? (length validations) 9)
+        (check-equal?
+         (eq? (car validations)
+              (car (poo-flow-module-objects-validation objects)))
+         #t)
         (check-equal? (andmap object? validations) #t)
         (check-equal? (map poo-flow-module-object-validation-valid?
                            validations)

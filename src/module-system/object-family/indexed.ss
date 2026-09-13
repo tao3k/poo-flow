@@ -1,13 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; Reusable indexed POO family layout for large, stable object families.
 
-(import (only-in :clan/poo/object .o .ref))
+(import (only-in :clan/poo/object .o .ref)
+        "funcs.ss")
 
 (export #t)
 
-;; : (-> (Listof Symbol) Alist)
+;; : (-> (Listof Symbol) HashTable)
 (def (poo-index-slots slot-names)
-  (map cons slot-names (iota (length slot-names))))
+  (poo-object-family-position-index slot-names))
 
 ;; : (-> Symbol Symbol (Listof Symbol) POOObject)
 (def (poo-indexed-family family-name source-tag slot-names)
@@ -23,8 +24,7 @@
 
 ;; : (-> POOObject Symbol (Maybe Fixnum))
 (def (poo-indexed-family-slot-index family-object slot-name)
-  (let (entry (assoc slot-name (.ref family-object 'slot-index)))
-    (if entry (cdr entry) #f)))
+  (hash-get (.ref family-object 'slot-index) slot-name))
 
 ;; : (-> POOObject (List Value) POOObject)
 (def (poo-indexed-family-object family-object values)

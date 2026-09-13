@@ -6,7 +6,9 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object object<-alist object?)
-        (only-in :std/srfi/13 string-index string-prefix?))
+        (only-in :std/srfi/13 string-index string-prefix?)
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-set-subset?))
 
 (def +runtime-batches+ '(1 8 32 128 1024))
 (def +runtime-payloads+ '(0 1024 65536 1048576))
@@ -101,8 +103,7 @@
             (cons (list (cons 'code code) (cons 'observed observed-value))
                   diagnostics)))
     (unless (and (= (length runtime-blocks-value) 140)
-                 (andmap (lambda (signature) (member signature observed))
-                         expected))
+                 (poo-flow-set-subset? expected observed))
       (reject! 'incomplete-runtime-cartesian-matrix
                (length runtime-blocks-value)))
     (unless (and (line-present? runtime-lines

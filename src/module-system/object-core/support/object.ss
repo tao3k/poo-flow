@@ -25,6 +25,7 @@
         poo-flow-module-object-fields
         poo-flow-module-object-metadata
         poo-flow-module-object-inheritance-chain-cache
+        poo-flow-module-object-validation-cache
         poo-flow-module-object-constant-slot
         poo-flow-module-object-fields-slot
         poo-flow-module-object-constant-slot-ref
@@ -90,7 +91,10 @@
               metadata-value)
              (poo-flow-module-object-constant-slot
               'inheritance-chain-cache
-              (vector #f '()))))))
+              (vector #f '()))
+             (poo-flow-module-object-constant-slot
+              'validation-cache
+              (vector #f #f))))))
 
 ;; : (-> PooModuleObjectCandidate Boolean)
 (def (poo-flow-module-object? value)
@@ -119,6 +123,10 @@
 ;; : (-> PooModuleObject Vector)
 (def (poo-flow-module-object-inheritance-chain-cache object)
   (poo-flow-module-object-constant-slot-ref object 'inheritance-chain-cache))
+
+;; : (-> PooModuleObject Vector)
+(def (poo-flow-module-object-validation-cache object)
+  (poo-flow-module-object-constant-slot-ref object 'validation-cache))
 
 ;; : (-> Symbol Value PooModuleObjectSlotSpec)
 ;;; Descriptor slots are plain POO constant slot specs. Read them from the POO

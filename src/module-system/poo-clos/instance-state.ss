@@ -5,7 +5,7 @@
         (only-in :clan/poo/mop element?)
         (only-in :std/misc/hash hash-ref/default)
         (only-in :std/srfi/1 filter find foldl)
-        "types.ss" "objects.ss" "classes.ss")
+        "types.ss" "objects.ss" "classes.ss" "funcs.ss")
 
 (export poo-clos-instance?
         make-slot-cell instance-state-value class-generation
@@ -84,10 +84,12 @@
 ;; : (-> [ClosEffectiveSlotDefinition] [ClosEffectiveSlotDefinition]
 ;;        (values [Symbol] [Symbol]))
 (def (effective-slot-difference old-slots new-slots)
-  (let ((old-names (effective-instance-slot-names old-slots))
-        (new-names (effective-instance-slot-names new-slots)))
-    (values (filter (lambda (name) (not (memq name old-names))) new-names)
-            (filter (lambda (name) (not (memq name new-names))) old-names))))
+  (let* ((old-names (effective-instance-slot-names old-slots))
+        (new-names (effective-instance-slot-names new-slots))
+        (old-index (poo-clos-identity-index old-names))
+        (new-index (poo-clos-identity-index new-names)))
+    (values (filter (lambda (name) (not (hash-key? old-index name))) new-names)
+            (filter (lambda (name) (not (hash-key? new-index name))) old-names))))
 
 ;; : (-> ClosClass ClosClass (values [Symbol] [Symbol]))
 (def (class-slot-difference old-class new-class)
@@ -110,14 +112,15 @@
 
 ;; : (-> ClosInstanceState [Symbol] [SchemeValue])
 (def (discarded-slot-property-list state discarded)
-  (foldl
-   (lambda (slot-name result)
-     (let (cell
-           (hash-ref/default (.ref state 'storage) slot-name (lambda () #f)))
-       (if (and cell (.ref cell 'bound?))
-         (append result (list slot-name (.ref cell 'value)))
-         result)))
-   '() discarded))
+  (reverse
+   (foldl
+    (lambda (slot-name result-rev)
+      (let (cell
+            (hash-ref/default (.ref state 'storage) slot-name (lambda () #f)))
+        (if (and cell (.ref cell 'bound?))
+          (cons (.ref cell 'value) (cons slot-name result-rev))
+          result-rev)))
+    '() discarded)))
 
 ;; : (-> ClosInstanceState ClosClass HashTable)
 (def (migrated-instance-storage state new-class)
@@ -132,5 +135,3 @@
            (hash-put! new-storage slot-name (or old-cell (make-slot-cell))))))
      (poo-clos-class-effective-slots new-class))
     new-storage))
-
-

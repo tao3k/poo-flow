@@ -9,13 +9,28 @@
 
 (def +public-entry-modules+
   '("src/core/api.ss"
-    "src/module-system/interface.ss"
+    "src/module-system/api.ss"
     "src/feature-system/interface.ss"))
+
+(def +nono-c-include-option+
+  (string-append
+   "-I"
+   (path-expand "bindings/nono-c" (current-directory))))
+
+(def +nono-c-link-option+
+  (cond-expand
+   (darwin "-Wl,-undefined,dynamic_lookup")
+   (else "-lc -ldl")))
 
 (asp-gerbil-scheme-package-spec!
  (poo-flow-library-package-spec
-  @ asp-gerbil-scheme-library-package-prototype)
+ @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
- (public-entry-modules +public-entry-modules+))
+ (public-entry-modules +public-entry-modules+)
+ (native-prelude-spec
+  `((gsc: "src/modules/nono-sandbox/_nono"
+          "-cc-options" ,+nono-c-include-option+
+          "-ld-options" ,+nono-c-link-option+)
+    (ssi: "src/modules/nono-sandbox/_nono"))))
 
 (defbuild-script (poo-flow-library-spec))

@@ -9,7 +9,8 @@
         (only-in :clan/poo/mop define-type Type. element?)
         (only-in :std/sugar cut))
 
-(export ClosSpecializer ClosLambdaList ClosMethod ClosMethodGroup ClosMethodCombination
+(export ClosSpecializer ClosLambdaList ClosMethod ClosMethodBundle
+        ClosMethodGroup ClosMethodCombination
         ClosGenericProtocol ClosGenericFunction ClosGenericBinding ClosEffectiveMethod
         ClosInvocationFrame ClosFailure ClosUnboundSlotFailure
         ClosDirectSlotDefinition
@@ -194,6 +195,17 @@
 (define-type (ClosGenericProtocol @ ClosType.)
   proto: (clos-prototype ClosGenericProtocol 'poo-clos/generic-protocol)
   .element?: clos-generic-protocol-element?)
+
+(def (clos-method-bundle-element? candidate)
+  (and (clos-instance? (.ref ClosMethodBundle 'proto) candidate)
+       (fields? candidate '(identity protocol methods documentation)
+                (list symbol? generic-protocol? methods? string-or-false?))))
+
+;;; A bundle is the checked composition unit between one generic protocol and
+;;; a method family.  It owns no registry and performs no dispatch itself.
+(define-type (ClosMethodBundle @ ClosType.)
+  proto: (clos-prototype ClosMethodBundle 'poo-clos/method-bundle)
+  .element?: clos-method-bundle-element?)
 
 (def (clos-generic-function-element? candidate)
   (and (clos-instance? (.ref ClosGenericFunction 'proto) candidate)

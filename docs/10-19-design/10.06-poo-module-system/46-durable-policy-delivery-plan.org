@@ -566,14 +566,14 @@ Delivered:
   for child build/audit agents;
 - focused tests cover durable refs in graph and registry receipts;
 - durable batch projection performance gate:
-  =t/durable-policy-performance-test.ss= and
+  =t/performance/durable-policy-performance-test.ss= and
   =t/scenarios/performance/durable-policy-batch-projection/benchmark.ss=.
 
 Verified:
 - =gxtest t/session-policy-contract-test.ss=
 - =gxtest t/session-multi-agent-graph-test.ss=
 - =gxtest t/session-registry-receipt-test.ss=
-- =gxtest t/durable-policy-performance-test.ss=
+- =gxtest t/performance/durable-policy-performance-test.ss=
 
 Still out of scope for this slice:
 - runtime store implementation;
@@ -609,7 +609,7 @@ Verified:
 - =gxtest t/session-policy-contract-test.ss=
 - =gxtest t/session-multi-agent-graph-test.ss=
 - =gxtest t/session-registry-receipt-test.ss=
-- =gxtest t/durable-policy-performance-test.ss=
+- =gxtest t/performance/durable-policy-performance-test.ss=
 - =gxpkg build -R -O=
 
 Still out of scope for this slice:

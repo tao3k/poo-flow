@@ -4,7 +4,8 @@
 
 ;;; Graph control analysis receipts and diagnostics.
 ;;; - Keep graph traversal evidence explicit before projecting bounded analysis receipts.
-(import :poo-flow/src/graph/types
+(import (only-in :clan/poo/object .ref)
+        :poo-flow/src/graph/types-core
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-utils)
 
@@ -191,23 +192,27 @@
 (def (poo-flow-graph-control-analysis-receipt graph-value
                                              . maybe-entry+finish)
   (let* ((node-ids (poo-flow-graph-node-ids graph-value))
-         (root-ids (poo-flow-graph-root-ids graph-value))
-         (terminal-ids (poo-flow-graph-terminal-ids graph-value))
-         (entry-ids
-          (poo-flow-graph-control-entry-ids graph-value
-                                            root-ids
-                                            maybe-entry+finish))
-         (finish-ids
-          (poo-flow-graph-control-finish-ids graph-value
-                                             terminal-ids
-                                             maybe-entry+finish))
-         (cycle-path (poo-flow-graph-cycle-path graph-value))
-         (topological-order
-          (poo-flow-graph-control-topological-order graph-value cycle-path))
-         (reachable-ids (poo-flow-graph-reachable-ids graph-value
-                                                       entry-ids))
-         (dependency-cone (poo-flow-graph-dependency-cone graph-value
-                                                          finish-ids))
+         (requested-entry-ids
+          (if (null? maybe-entry+finish)
+            (graph-entry-ids graph-value #f)
+            (car maybe-entry+finish)))
+         (requested-finish-ids
+          (if (or (null? maybe-entry+finish)
+                  (null? (cdr maybe-entry+finish)))
+            (graph-finish-ids graph-value #f)
+            (cadr maybe-entry+finish)))
+         (base-analysis
+          (poo-flow-graph-analysis-receipt graph-value
+                                           requested-entry-ids
+                                           requested-finish-ids))
+         (root-ids (.ref base-analysis 'root-ids))
+         (terminal-ids (.ref base-analysis 'terminal-ids))
+         (entry-ids (or requested-entry-ids root-ids))
+         (finish-ids (or requested-finish-ids terminal-ids))
+         (cycle-path (.ref base-analysis 'cycle-path))
+         (topological-order (.ref base-analysis 'topological-order))
+         (reachable-ids (.ref base-analysis 'reachable-ids))
+         (dependency-cone (.ref base-analysis 'dependency-cone))
          (conditional-edge-pairs
           (edge-pairs-by-kinds graph-value
                                +poo-flow-graph-conditional-edge-kinds+))

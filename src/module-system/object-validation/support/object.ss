@@ -198,11 +198,12 @@
 ;;; edge for module-system, object behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject MaybeHashTable MaybeHashTable MaybeHashTable MaybeHashTable POOObject)
-(def (poo-flow-module-object-validation/catalog-caches object
-                                                       field-cache
-                                                       harness-cache
-                                                       harness-fields-cache
-                                                       field-origins-cache)
+(def (poo-flow-module-object-validation/catalog-caches/uncached
+      object
+      field-cache
+      harness-cache
+      harness-fields-cache
+      field-origins-cache)
   (let* ((inherits
           (poo-flow-module-object-inherits object))
          (direct-fields
@@ -310,6 +311,30 @@
              object-field-origin-contract
              object-inheritance-chain-contract
              object-validation-phase-contract)))))
+
+;;; Module objects have constant schema, ancestry, fields, and metadata. Cache
+;;; the complete native receipt on the object so repeated catalog admission
+;;; reuses immutable field evidence instead of rebuilding thousands of POO
+;;; receipt objects and producing GC-tail latency.
+;; : (-> PooModuleObject MaybeHashTable MaybeHashTable MaybeHashTable MaybeHashTable POOObject)
+(def (poo-flow-module-object-validation/catalog-caches object
+                                                       field-cache
+                                                       harness-cache
+                                                       harness-fields-cache
+                                                       field-origins-cache)
+  (let (cache (poo-flow-module-object-validation-cache object))
+    (if (vector-ref cache 0)
+      (vector-ref cache 1)
+      (let (validation
+            (poo-flow-module-object-validation/catalog-caches/uncached
+             object
+             field-cache
+             harness-cache
+             harness-fields-cache
+             field-origins-cache))
+        (vector-set! cache 0 #t)
+        (vector-set! cache 1 validation)
+        validation))))
 
 ;; : (-> PooFlowModuleObjectValidationReceipt Boolean)
 (def (poo-flow-module-object-validation? value)

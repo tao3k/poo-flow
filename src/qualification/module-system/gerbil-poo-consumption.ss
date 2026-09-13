@@ -1,11 +1,12 @@
 ;;; Boundary: records the concrete gerbil-poo provider surface consumed by POO Flow.
 ;;; Invariant: provider validation uses native POO objects rather than parallel adapters.
-(import (only-in :std/srfi/1 every)
-        (only-in :clan/poo/object
+(import (only-in :clan/poo/object
                  .o
                  .@
                  .ref
-                 object?))
+                 object?)
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-set-subset?))
 
 (export +poo-flow-gerbil-poo-provider-label+
         +poo-flow-gerbil-poo-resolution-receipt-label+
@@ -53,6 +54,6 @@
 (def (poo-flow-gerbil-poo-api-closed? observed-api)
   (and (= (length observed-api)
           (length +poo-flow-gerbil-poo-required-api+))
-       (every (lambda (required)
-                (if (member required observed-api) #t #f))
-              +poo-flow-gerbil-poo-required-api+)))
+       (poo-flow-set-subset?
+        +poo-flow-gerbil-poo-required-api+
+        observed-api)))

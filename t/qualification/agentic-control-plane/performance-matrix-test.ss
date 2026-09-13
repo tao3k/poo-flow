@@ -2,6 +2,7 @@
         :clan/poo/object
         :poo-flow/src/qualification/performance-matrix)
 
+(export performance-matrix-test)
 
 (def performance-matrix-test
   (test-suite "AC-10 S5 performance matrix"
