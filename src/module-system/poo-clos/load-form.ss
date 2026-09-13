@@ -8,7 +8,8 @@
 ;;; procedure accepting an optional reference resolver.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/srfi/1 filter filter-map foldl)
+        (only-in :std/misc/list duplicates)
+        (only-in :std/srfi/1 every filter filter-map)
         "types.ss" "objects.ss" "classes.ss" "lifecycle.ss"
         "dispatch.ss")
 
@@ -20,11 +21,8 @@
 ;; : (-> [SchemeValue] Boolean)
 (def (unique-symbol-list? values)
   (and (list? values)
-       (if (foldl (lambda (value seen)
-                    (and seen (symbol? value) (not (memq value seen))
-                         (cons value seen)))
-                  '() values)
-         #t #f)))
+       (every symbol? values)
+       (null? (duplicates values eq?))))
 
 ;;; Local slots are effective instance-allocated slots.  Shared class cells do
 ;;; not belong to an individual object's default saved state.

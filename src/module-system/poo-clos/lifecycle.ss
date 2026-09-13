@@ -339,23 +339,26 @@
 ;; : (-> ClosClass [SchemeValue] [SchemeValue])
 (def (default-initialization-arguments class-value supplied-values)
   (let* ((supplied-names (initialization-argument-names supplied-values))
-         (state
+         (seen (make-hash-table-eq))
+         (_seed-seen
+          (for-each (lambda (name) (hash-put! seen name #t)) supplied-names))
+         (defaults-rev
           (foldl
-           (lambda (owner-class current)
+           (lambda (owner-class defaults-rev)
              (foldl
-              (lambda (entry inner)
-                (let ((seen (car inner))
-                      (defaults (cdr inner))
-                      (name (car entry)))
-                  (if (memq name seen)
-                    inner
-                    (cons (cons name seen)
-                          (append defaults
-                                  (list name ((cdr entry))))))))
-              current (.ref owner-class 'default-initargs)))
-           (cons supplied-names '())
+              (lambda (entry defaults-rev)
+                (let (name (car entry))
+                  (if (hash-key? seen name)
+                    defaults-rev
+                    (begin
+                      (hash-put! seen name #t)
+                      (cons ((cdr entry))
+                            (cons name defaults-rev))))))
+              defaults-rev
+              (.ref owner-class 'default-initargs)))
+           '()
            (poo-clos-class-precedence-list class-value))))
-    (append supplied-values (cdr state))))
+    (append supplied-values (reverse defaults-rev))))
 
 ;; : (-> ClosInstance (U Boolean [Symbol]) [SchemeValue] ClosInstance)
 (def (shared-initialize/list instance-value slot-names initargs)
@@ -577,4 +580,3 @@
                 poo-clos-update-instance-for-different-class-generic
                 poo-clos-change-class-generic
                 poo-clos-make-instance-generic))
-

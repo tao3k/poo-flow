@@ -1,7 +1,9 @@
 ;;; Boundary: analyzes composition lineage for cycles and productive recursion.
 ;;; Invariant: analysis reports lineage facts without mutating the composed objects.
 (import (only-in :poo-flow/src/module-system/object-family/syntax
-                 defpoo-object-family))
+                 defpoo-object-family)
+        (only-in :std/misc/list duplicates)
+        (only-in :std/srfi/1 any))
 
 (export poo-flow-lineage-analysis-prototype
         poo-flow-lineage-cycle?
@@ -11,20 +13,21 @@
 
 ;; : (-> [PooFlowLineageIdentity] Boolean)
 (def (poo-flow-lineage-cycle? lineage)
-  (car
-   (foldl (lambda (identity state)
-            (cons (or (car state)
-                      (and (member identity (cdr state)) #t))
-                  (cons identity (cdr state))))
-          (cons #f '())
-          lineage)))
+  (if (pair? (duplicates lineage)) #t #f))
 
 ;; : (-> [PooFlowLineageIdentity] [PooFlowLineageIdentity] Boolean)
 (def (poo-flow-productive-recursion? lineage productive-identities)
   (and (poo-flow-lineage-cycle? lineage)
-       (ormap (lambda (identity)
-                (if (member identity productive-identities) #t #f))
-              lineage)))
+       (let (productive-table (make-hash-table))
+         (for-each
+          (lambda (identity)
+            (hash-put! productive-table identity #t))
+          productive-identities)
+         (if (any (lambda (identity)
+                    (hash-key? productive-table identity))
+                  lineage)
+             #t
+             #f))))
 
 ;; : (-> [PooFlowLineageIdentity] [PooFlowLineageIdentity] PooFlowLineageAnalysis)
 (def (poo-flow-lineage-analysis-values lineage-value productive-identities)
