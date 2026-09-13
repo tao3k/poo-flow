@@ -81,6 +81,13 @@ toolchain:
 test:
     gerbil env ./unit-tests.ss
 
+# Run only hermetic Bazel qualifications; `just test` owns Scheme unit tests.
+[group('test')]
+test-bazel:
+    just test-gerbil-capability
+    just test-module-system-ownership
+    just test-external-bazel-module
+
 # Validate the shared Gerbil toolchain and dependency-install capabilities.
 [group('test')]
 test-gerbil-capability:
@@ -89,8 +96,8 @@ test-gerbil-capability:
 # Validate POO Flow as a clean external Bzlmod dependency.
 [group('test')]
 test-external-bazel-module:
-    python3 -m unittest discover -s t/qualification/external_bazel -p 'external_module_test.py' -v
-    python3 t/qualification/external_bazel/external_module.py
+    {{ devenv_exec }} python3 -m unittest discover -s t/qualification/external_bazel -p 'external_module_test.py' -v
+    {{ devenv_exec }} python3 t/qualification/external_bazel/external_module.py
 
 # Validate the single source-owned RFC45 module-system ownership map.
 [group('test')]
@@ -141,8 +148,7 @@ check: build test
 lock-check:
     {{ bazel }} mod deps --lockfile_mode=error
 
-# Refresh the host-platform module-extension evaluation with Bazel's native
-# lock update mode. Cross-platform CI merges Linux and Darwin evaluations.
+# Refresh this host's native Bazel lock; CI merges Linux and Darwin evaluations.
 [group('dependency')]
 bazel-update:
     {{ bazel }} mod deps --lockfile_mode=update
