@@ -143,7 +143,11 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/build-api :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'; then
-            gerbil deps --update
+            if [ "${{ steps.native-gerbil-pkg-cache.outputs.cache-hit }}" = "true" ]; then
+              gerbil deps --update
+            else
+              gerbil deps --install
+            fi
           fi
 
       - name: Save native Gerbil package cache
