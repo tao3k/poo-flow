@@ -9,7 +9,9 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype))
+                 asp-gerbil-scheme-library-package-prototype
+                 all-gerbil-modules
+                 default-exclude-dirs))
 
 ;;; PackageSpec owns the complete maintained source closure.  These bootstrap
 ;;; roots stay explicit because build.ss must load after `gerbil clean`, before
@@ -54,6 +56,24 @@
    +maintained-public-entry-modules+
    +maintained-module-entry-modules+))
 
+;;; Public entries define the supported import surface; the native catalog is
+;;; intentionally broader because tests and runtime contracts dynamically load
+;;; maintained leaf modules.  Catalog acquisition is the ASP projection of
+;;; clan/filesystem find-files and std/make remains the sole build executor.
+(def +native-exclude-dirs+
+  (append '("lambda-episteme"
+            "bindings"
+            "packages"
+            "target"
+            "user-interface/cases"
+            "user-interface/profiles"
+            "user-interface/custom/my-module/cases"
+            "user-interface/custom/my-module/profiles")
+          default-exclude-dirs))
+
+(def (poo-flow-native-modules)
+  (all-gerbil-modules exclude-dirs: +native-exclude-dirs+))
+
 (def +nono-c-include-option+
   (string-append
    "-I"
@@ -68,7 +88,10 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
+ (modules poo-flow-native-modules)
  (public-entry-modules +public-entry-modules+)
+ (exclude-dirs +native-exclude-dirs+)
+ (exclude-modules '("src/modules/nono-sandbox/_nono.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
