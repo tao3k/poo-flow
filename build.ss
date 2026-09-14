@@ -23,6 +23,7 @@
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
  (exclude-dirs (cons "lambda-episteme" default-exclude-dirs))
+ (exclude-modules '("src/modules/nono-sandbox/_nono.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
