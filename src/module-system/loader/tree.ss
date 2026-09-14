@@ -1,9 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: lazy plans, auto-import graphs, and catalog loading for module trees.
 ;;; Invariant: static entrypoint metadata lives in module-registry and stays loader-free.
 
 (import :poo-flow/src/core/failure
         :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/resolver
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/loader/backend
@@ -18,6 +24,10 @@
         poo-flow-module-auto-imports-mk-merge
         poo-flow-module-auto-imports-result-source-refs
         poo-flow-user-tree-lazy-load-plans
+        poo-flow-module-selection-source-refs
+        poo-flow-module-bundles-source-refs
+        poo-flow-module-selection-lazy-load-plans
+        poo-flow-module-bundles-lazy-load-plans
         poo-flow-module-load-source
         poo-flow-module-load-sources
         poo-flow-module-load-catalog)
@@ -79,6 +89,22 @@
      backends
      (poo-flow-user-tree-source-refs user-root-path)
      metadata)))
+
+;; : (-> [PooModuleLoaderBackend] PooModuleLoadPath PooUserModuleSelection [PooFlowLazyLoadPlan])
+(def (poo-flow-module-selection-lazy-load-plans backends load-path selection
+                                                . maybe-metadata)
+  (poo-flow-module-source-refs->lazy-load-plans
+   backends
+   (poo-flow-module-selection-source-refs load-path selection)
+   (if (null? maybe-metadata) '() (car maybe-metadata))))
+
+;; : (-> [PooModuleLoaderBackend] PooModuleLoadPath [[PooUserModuleSelection]] [PooFlowLazyLoadPlan])
+(def (poo-flow-module-bundles-lazy-load-plans backends load-path module-bundles
+                                              . maybe-metadata)
+  (poo-flow-module-source-refs->lazy-load-plans
+   backends
+   (poo-flow-module-bundles-source-refs load-path module-bundles)
+   (if (null? maybe-metadata) '() (car maybe-metadata))))
 
 ;;; Boundary: auto-import plans are POO nodes over source refs, not evaluator IO.
 ;; : PooFlowModuleAutoImportRootIdentity
