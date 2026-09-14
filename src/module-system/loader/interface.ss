@@ -12,9 +12,34 @@
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree)
 
-(export (except-out
-         (import: :poo-flow/src/module-system/loader/collection)
-         poo-flow-module-source-collection-role-entrypoints)
+(export poo-flow-module-source-collection-prototype
+        make-poo-flow-module-source-collection
+        poo-flow-module-source-collection?
+        poo-flow-module-source-collection-identity
+        poo-flow-module-source-collection-owner
+        poo-flow-module-source-collection-source-root
+        poo-flow-module-source-collection-modules-directory
+        poo-flow-module-source-collection-modules-root
+        poo-flow-module-source-collection-locate
+        poo-flow-module-style-policy-prototype
+        poo-flow-default-module-style-policy
+        poo-flow-module-required-role-files
+        poo-flow-module-allowed-entrypoint-roles
+        poo-flow-module-source-collection-validate!
+        poo-flow-load-modules
+        poo-flow-module-load-path-prototype
+        make-poo-flow-module-load-path
+        extend-poo-flow-module-load-path
+        poo-flow-module-load-path?
+        poo-flow-module-load-path-identity
+        poo-flow-module-load-path-collections
+        poo-flow-module-load-path-locate
+        make-poo-flow-contribution-module-source
+        make-poo-flow-contribution-module-load-path
+        make-poo-flow-user-interface-module-source
+        make-poo-flow-user-interface-module-load-path
+        poo-flow-maintained-module-source
+        poo-flow-default-module-load-path
         (import: :poo-flow/src/module-system/loader/contribution-registry)
         poo-flow-module-loader-entry-prototype
         make-poo-flow-module-loader-entry
