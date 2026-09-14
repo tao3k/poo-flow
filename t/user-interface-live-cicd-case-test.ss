@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: test entrypoint for root user-interface CI/CD live cases.
 ;;; Invariant: live execution cases are test fixtures, not user module syntax.
 
@@ -6,7 +10,7 @@
         (only-in "../src/testing/module-system-live-case"
                  poo-flow-module-system-live-case-test-suite
                  pooFlowModuleSystemLiveCaseFromModuleSelection)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-cicd-case
                  poo-flow-custom-my-module-cicd-module))
 

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Executable POO-CLOS and separately scoped MOP-EXTENDED clause inventory.
 
 (import (only-in :clan/poo/object .o .ref)
@@ -144,7 +148,7 @@
                    "t/poo-clos-method-combination-test.ss"
                    'poo-clos-method-combination-test 13)
    (evidence-suite 'evolution "t/poo-clos-evolution-test.ss"
-                   'poo-clos-evolution-test 6)
+                   'poo-clos-evolution-test 7)
    (evidence-suite 'generic-evolution
                    "t/poo-clos-generic-evolution-test.ss"
                    'poo-clos-generic-evolution-test 3)

@@ -1,10 +1,22 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream session policy case loaded by custom/my-module/config.ss.
-;;; Invariant: loaded config fragments are expressions; they describe
-;;; permissions only and never execute tools, hooks, providers, or sandboxes.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(use-module session-core
-  :config
+;;; Boundary: downstream session policy case.
+;;; Invariant: declarations describe permissions only and never execute tools,
+;;; hooks, providers, or sandboxes.
+
+(import :poo-flow/src/modules/session/syntax
+        :poo-flow/src/modules/tool-core/config
+        :poo-flow/src/modules/memory-core/config
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-flag-entry))
+
+(export poo-flow-custom-my-module-session-policy-case)
+
+(def poo-flow-custom-my-module-session-policy-case
+  (poo-flow-session-cases
   (session-case custom-session-policy-case
     (metadata (source . user-interface)
               (case . session-policy))
@@ -63,8 +75,7 @@
              (inherits-agent-tools? . #f))))
          (custom-session-tool-selection
           (car
-           (use-module tool-core
-             :config
+           (poo-flow-tool-configs
              (.def (session-policy-read-tool @ tool-spec
                                               tool-ref tool-kind actions
                                               input-schema output-schema
@@ -129,8 +140,7 @@
                (case . session-policy)))))
          (custom-session-memory-selection
           (car
-           (use-module memory-core
-             :config
+           (poo-flow-memory-configs
              (.def (session-policy-memory-store @ memory-store-spec
                                                  store-ref store-kind
                                                  namespace scopes
@@ -399,4 +409,4 @@
           (session-policy-row custom-session-resource-policy)
           (session-policy-row custom-session-capability-policy)
           (session-policy-row custom-session-agent-execution-policy)
-          (session-policy-validation-row custom-session-validation))))
+          (session-policy-validation-row custom-session-validation)))))

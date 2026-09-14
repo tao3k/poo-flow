@@ -1,14 +1,20 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused custom runtime-adjacent scenario owner.
 ;;; Invariant: tool, memory, and sandbox-durable cases can be imported without
 ;;; compiling CI/CD, loop-engine, or durable artifact scenarios.
 
 (import :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/config
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/user-interface/custom/my-module/profiles/all)
+        "session-memory-durable"
+        "tool-core"
+        "memory-core"
+        "sandbox-durable")
 
-(load! "tool-core")
-(load! "memory-core")
-(load! "session-memory-durable")
-(load! "sandbox-durable")
+(export (import: "session-memory-durable")
+        (import: "tool-core")
+        (import: "memory-core")
+        (import: "sandbox-durable"))

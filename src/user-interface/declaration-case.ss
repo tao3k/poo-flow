@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: upstream case contracts for downstream declaration practice files.
 ;;; Invariant: cases consume config declarations; root user-facing files remain declarations only.
 
@@ -93,7 +97,7 @@
 ;;        'developer
 ;;        "src/user-interface/declaration-case.ss"
 ;;        "user-interface/init.ss"
-;;        "user-interface/custom/my-module/config.ss"
+;;        "user-interface/custom/my-module/interface.ss"
 ;;        config
 ;;        setting-keys
 ;;        module-keys
@@ -150,7 +154,7 @@
    'developer
    "src/user-interface/declaration-case.ss"
    "user-interface/init.ss"
-   "user-interface/custom/my-module/config.ss"
+   "user-interface/custom/my-module/interface.ss"
    config
    (poo-flow-declaration-case-default-setting-keys)
    (poo-flow-declaration-case-default-module-keys)

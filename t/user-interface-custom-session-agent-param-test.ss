@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface AgentParam scenario.
 ;;; Invariant: AgentParam rows bind topology to effective policy validation
 ;;; without opening providers, tools, memory stores, streams, or sandboxes.
@@ -8,12 +12,12 @@
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax)
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-agent-param"
+                 poo-flow-custom-my-module-session-agent-param-case))
 
 (export user-interface-custom-session-agent-param-test)
-
-(load! "../user-interface/custom/my-module/cases/session-agent-param")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -31,11 +35,12 @@
 (def user-interface-custom-session-agent-param-test
   (test-suite "poo-flow custom user-interface session-agent-param case"
     (test-case "projects custom AgentParam contract without runtime work"
-      (let* ((selection (car poo-flow-custom-module-session-agent-param-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-agent-param-case))
              (row
               (car
                (module-config-rows
-                poo-flow-custom-module-session-agent-param-case))))
+                poo-flow-custom-my-module-session-agent-param-case))))
         (check-equal? (poo-flow-user-module-selection-key selection)
                       '(session . session-core))
         (check-equal? (test-ref row 'kind)

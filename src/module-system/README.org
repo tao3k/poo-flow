@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO Flow module-system feature layout
 
 * Boundary
@@ -30,7 +34,7 @@ features such as POO-native CLOS and Loader observability live here, under
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension, multiple dispatch, and method combination |
 | observability | =observability/interface.ss= | module authoring and observation |
 
-The mechanism may consume the declarative maintained-module list from
-=src/modules/init.ss= as Loader input.  It must not import maintained module
-implementations.  User profile and presentation composition belongs to
-=src/user-interface/=, not to this directory.
+The mechanism consumes =poo-flow-load-modules= directory discovery as its
+maintained-module input.  It must not import maintained module implementations.
+User profile and presentation composition belongs to =src/user-interface/=,
+not to this directory.

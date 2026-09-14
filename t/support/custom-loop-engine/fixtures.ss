@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Shared fixtures for custom loop-engine user-interface tests.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
@@ -10,7 +14,7 @@
                  poo-flow-cubeSandbox-module-bundles)
         (only-in :poo-flow/src/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
+        (only-in "../../../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export test-ref

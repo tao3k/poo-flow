@@ -1,15 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused custom CI/CD and introspection scenario owner.
 ;;; Invariant: scenario declarations stay separate from the full custom module
 ;;; facade so tests and imports do not compile every user-interface case.
 
-(import :poo-flow/src/user-interface/init-syntax
-        :poo-flow/user-interface/custom/my-module/profiles/all)
+(import "../profiles/all"
+        "cicd"
+        "funflow-cicd"
+        "poo-introspection")
 
-(export poo-flow-custom-my-module-cicd-case
-        poo-flow-custom-my-module-cicd-module
-        poo-flow-custom-my-module-funflow-cicd-case)
-
-(load! "cicd")
-(load! "funflow-cicd")
-(load! "poo-introspection")
+(export poo-flow-custom-my-module-cicd-module
+        (import: "cicd")
+        (import: "funflow-cicd")
+        (import: "poo-introspection"))

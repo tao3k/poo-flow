@@ -1,11 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream session communication case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream session communication case.
 ;;; Invariant: communication rows are report-only; Scheme does not deliver
 ;;; messages, mutate sessions, or open runtime channels.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-communication-case)
+
+(def poo-flow-custom-my-module-session-communication-case
+  (poo-flow-session-cases
   (session-case custom-session-communication-case
     (metadata (source . user-interface)
               (case . session-communication))
@@ -124,4 +131,4 @@
                                          build-root-channel
                                          build-audit-channel
                                          audit-release-channel)
-     (session-communication-rows parent-child child-parent sibling cross-root))))
+     (session-communication-rows parent-child child-parent sibling cross-root)))))

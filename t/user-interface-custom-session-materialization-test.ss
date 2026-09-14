@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-materialization scenario.
 ;;; Invariant: materialization receipts are handoff state only; Scheme never
 ;;; waits on futures, opens sandboxes, or replays IO.
@@ -8,12 +12,12 @@
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax)
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-materialization"
+                 poo-flow-custom-my-module-session-materialization-case))
 
 (export user-interface-custom-session-materialization-test)
-
-(load! "../user-interface/custom/my-module/cases/session-materialization")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -32,10 +36,10 @@
   (test-suite "poo-flow custom user-interface session-materialization case"
     (test-case "projects custom materialization receipts without runtime work"
       (let* ((selection
-              (car poo-flow-custom-module-session-materialization-case))
+              (car poo-flow-custom-my-module-session-materialization-case))
              (rows
               (module-config-rows
-               poo-flow-custom-module-session-materialization-case))
+               poo-flow-custom-my-module-session-materialization-case))
              (pending (car rows))
              (failed (cadr rows)))
         (check-equal? (poo-flow-user-module-selection-key selection)

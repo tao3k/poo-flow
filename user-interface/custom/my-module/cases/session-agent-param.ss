@@ -1,11 +1,21 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream AgentParam contract case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream AgentParam contract case.
 ;;; Invariant: this binds session topology to effective policy validation;
 ;;; provider, tool, memory, stream, and sandbox runtime stay behind Marlin.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax
+        :poo-flow/src/modules/memory-core/config
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-flag-entry))
+
+(export poo-flow-custom-my-module-session-agent-param-case)
+
+(def poo-flow-custom-my-module-session-agent-param-case
+  (poo-flow-session-cases
   (session-case custom-session-agent-param-case
     (metadata (source . user-interface)
               (case . session-agent-param))
@@ -146,8 +156,7 @@
               ()))
            (memory-selection
             (car
-             (use-module memory-core
-               :config
+             (poo-flow-memory-configs
                (.def (agent-param-memory-store @ memory-store-spec
                                                 store-ref store-kind namespace
                                                 scopes recall-policies
@@ -240,4 +249,4 @@
                                           events-receipt-only
                                           '((source . user-interface)
                                             (case . session-agent-param)))))
-    (rows (session-agent-param-row contract))))
+    (rows (session-agent-param-row contract)))))

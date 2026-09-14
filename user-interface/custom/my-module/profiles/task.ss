@@ -1,8 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream task sandbox profile declarations.
-;;; Invariant: included by ../config.ss; it declares data only.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(let ((task-capabilities
+;;; Boundary: downstream task sandbox profile declarations.
+;;; Invariant: standalone module; it declares data only.
+
+(import :poo-flow/src/user-interface/init-syntax)
+
+(export poo-flow-custom-my-module-task-module)
+
+(def poo-flow-custom-my-module-task-module
+  (let ((task-capabilities
        '(process-run filesystem-read tmpdir))
       (cache-capabilities
        '(cache-mount))
@@ -33,4 +42,4 @@
                            (append super-capabilities cache-capabilities))
         resources: =>.+ task-cache-resources
         metadata: => (lambda (super-metadata)
-                       (append super-metadata task-cache-metadata))))))
+                       (append super-metadata task-cache-metadata)))))))

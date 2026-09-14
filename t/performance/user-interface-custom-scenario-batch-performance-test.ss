@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface scenarios keep a real performance fixture.
 ;;; Invariant: user modules stay POO-native; benchmark contracts live under t/.
 
@@ -13,36 +17,49 @@
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection?)
-        :poo-flow/src/user-interface/init-syntax
+                 poo-flow-user-module-selection?
+                 poo-flow-user-module-selection-flag-entry)
         :poo-flow/src/modules/session/config
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-cicd-case
-                 poo-flow-custom-my-module-funflow-cicd-case
-                 poo-flow-custom-my-module-loop-engine-case
-                 poo-flow-custom-my-module-poo-introspection-case
-                 poo-flow-custom-my-module-tool-core-case
+        (only-in "../../user-interface/custom/my-module/cases/cicd"
+                 poo-flow-custom-my-module-cicd-case)
+        (only-in "../../user-interface/custom/my-module/cases/loop-engine-owner"
+                 poo-flow-custom-my-module-loop-engine-case)
+        (only-in "../../user-interface/custom/my-module/cases/funflow-cicd"
+                 poo-flow-custom-my-module-funflow-cicd-case)
+        (only-in "../../user-interface/custom/my-module/cases/poo-introspection"
+                 poo-flow-custom-my-module-poo-introspection-case)
+        (only-in "../../user-interface/custom/my-module/cases/tool-core"
+                 poo-flow-custom-my-module-tool-core-case)
+        (only-in "../../user-interface/custom/my-module/cases/memory-core"
                  poo-flow-custom-my-module-memory-core-case)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-recovery
+        (only-in "../../user-interface/custom/my-module/cases/durable-recovery"
                  poo-flow-custom-my-module-durable-recovery-case)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-handoff
+        (only-in "../../user-interface/custom/my-module/cases/durable-runtime-store-handoff"
                  poo-flow-custom-my-module-durable-runtime-store-handoff-case)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations
+        (only-in "../../user-interface/custom/my-module/cases/durable-runtime-store-operations"
                  poo-flow-custom-my-module-durable-runtime-store-operations-case)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-operation-bridge
-                 poo-flow-custom-my-module-durable-operation-bridge-case))
+        (only-in "../../user-interface/custom/my-module/cases/durable-operation-bridge"
+                 poo-flow-custom-my-module-durable-operation-bridge-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-transform"
+                 poo-flow-custom-my-module-session-transform-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-policy"
+                 poo-flow-custom-my-module-session-policy-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-registry"
+                 poo-flow-custom-my-module-session-registry-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-agent-graph"
+                 poo-flow-custom-my-module-session-agent-graph-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-communication"
+                 poo-flow-custom-my-module-session-communication-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-selector"
+                 poo-flow-custom-my-module-session-selector-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-materialization"
+                 poo-flow-custom-my-module-session-materialization-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-agent-param"
+                 poo-flow-custom-my-module-session-agent-param-case)
+        (only-in "../../user-interface/custom/my-module/cases/session-memory-durable"
+                 poo-flow-custom-my-module-session-memory-durable-case))
 
 (export user-interface-custom-scenario-batch-performance-test)
-
-(load! "../user-interface/custom/my-module/cases/session-policy")
-(load! "../user-interface/custom/my-module/cases/session-transform")
-(load! "../user-interface/custom/my-module/cases/session-registry")
-(load! "../user-interface/custom/my-module/cases/session-agent-graph")
-(load! "../user-interface/custom/my-module/cases/session-communication")
-(load! "../user-interface/custom/my-module/cases/session-selector")
-(load! "../user-interface/custom/my-module/cases/session-materialization")
-(load! "../user-interface/custom/my-module/cases/session-agent-param")
-(load! "../user-interface/custom/my-module/cases/session-memory-durable")
 
 ;; : String
 (def user-interface-custom-scenario-batch-fixture-path
@@ -59,19 +76,19 @@
    (cons 'funflow-cicd poo-flow-custom-my-module-funflow-cicd-case)
    (cons 'loop-engine poo-flow-custom-my-module-loop-engine-case)
    (cons 'poo-introspection poo-flow-custom-my-module-poo-introspection-case)
-   (cons 'session-transform poo-flow-custom-module-session-transform-case)
-   (cons 'session-policy poo-flow-custom-module-session-policy-case)
-   (cons 'session-registry poo-flow-custom-module-session-registry-case)
-   (cons 'session-agent-graph poo-flow-custom-module-session-agent-graph-case)
+   (cons 'session-transform poo-flow-custom-my-module-session-transform-case)
+   (cons 'session-policy poo-flow-custom-my-module-session-policy-case)
+   (cons 'session-registry poo-flow-custom-my-module-session-registry-case)
+   (cons 'session-agent-graph poo-flow-custom-my-module-session-agent-graph-case)
    (cons 'session-communication
-         poo-flow-custom-module-session-communication-case)
-   (cons 'session-selector poo-flow-custom-module-session-selector-case)
+         poo-flow-custom-my-module-session-communication-case)
+   (cons 'session-selector poo-flow-custom-my-module-session-selector-case)
    (cons 'session-materialization
-         poo-flow-custom-module-session-materialization-case)
+         poo-flow-custom-my-module-session-materialization-case)
    (cons 'session-agent-param
-         poo-flow-custom-module-session-agent-param-case)
+         poo-flow-custom-my-module-session-agent-param-case)
    (cons 'session-memory-durable
-         poo-flow-custom-module-session-memory-durable-case)
+         poo-flow-custom-my-module-session-memory-durable-case)
    (cons 'tool-core poo-flow-custom-my-module-tool-core-case)
    (cons 'memory-core poo-flow-custom-my-module-memory-core-case)
    (cons 'durable-recovery poo-flow-custom-my-module-durable-recovery-case)

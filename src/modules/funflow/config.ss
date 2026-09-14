@@ -1,9 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
         :poo-flow/src/module-system/projection/syntax
         (only-in :poo-flow/src/modules/workflow/cicd-core
                  poo-flow-cicd-alist-ref
@@ -12,6 +17,7 @@
         :poo-flow/src/modules/workflow/cicd)
 
 (export poo-flow-funflow-cicd-default-payload
+        poo-flow-funflow-configs
         +poo-flow-funflow-workflow-agreement-contract+
         funflow-check
         funflow-pipeline
@@ -51,6 +57,17 @@
         poo-flow-funflow-pipeline-runtime-command-manifests
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles)
+
+;;; Module-owned user syntax delegates to the one generic config lowering.
+(defsyntax (poo-flow-funflow-configs stx)
+  (syntax-case stx ()
+    ((_ config-form ...)
+     (syntax
+      (poo-flow-module-configs
+       funflow
+       poo-flow-funflow-poo-config-flags
+       (quoted :config config-form ...)
+       config-form ...)))))
 
 ;;; The CI/CD payload is a Funflow feature, not a new top-level category. It is
 ;;; inspectable module data; adapters such as GitHub, Docker, or Nix stay out.

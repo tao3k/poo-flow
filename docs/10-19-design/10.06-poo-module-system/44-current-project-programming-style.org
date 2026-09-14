@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.44 Current Project Programming Style
 This document is the current programming contract for =poo-flow=.  It is not a
 general Gerbil style guide.  It tells agents how to write and repair code in
@@ -42,6 +46,23 @@ New code must follow these rules:
 5. A module has a closed kernel and declared extension surfaces.
    Users should select modules and public factors.  They should not compose
    kernel hooks by hand to make a module work.
+
+6. Every maintained, contributor, and user module has one public entrypoint.
+   The stable shell is =modules/<module-name>/{types,objects,funs,config,interface}.ss=.
+   =interface.ss= imports and re-exports the four role owners; an optional
+   =syntax.ss= is also imported and re-exported when present.  Consumers and
+   build declarations load the module through =poo-flow-load-modules= and may
+   not substitute =config.ss=, =objects.ss=, or a hand-maintained source list
+   as a parallel public entrypoint.
+
+The =poo-flow-load-modules= hygienic form accepts exactly one source-collection
+expression.  It validates the required role files, rejects a module-local
+=init.ss=, checks the role dependency direction, and projects one
+=interface.ss= source reference per direct child module.  Domain authors may
+add focused files and may choose native Gerbil dispatch, MOP/CLOS composition,
+POO prototypes, pure functions, or a small hygienic rule according to the
+behavior.  The loader constrains the public shell and dependency direction; it
+does not prescribe one low-level dispatch pattern for every module.
 
 ** 10.06.44.20 Upstream Gerbil Feature Baseline
 The harness research identifies stable high-yield Gerbil owners:

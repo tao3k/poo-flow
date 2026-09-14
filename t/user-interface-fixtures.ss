@@ -1,11 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared fixtures for root user-interface tests.
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/user-interface/profile-config
+        (only-in :poo-flow/src/module-system/load
+                 poo-flow-modules!)
+        :poo-flow/src/modules/loop-engine/config
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/profiles/kernel/interface)
 
@@ -97,34 +102,33 @@
   (poo-flow-user-module-bundles-extend
    poo-flow-kernel-profile-module-bundles
    (list
-    (use-module loop-engine
-      :config
-      (.def (test-loop @ loop-engine-use-case name)
-        name: 'test-loop)
+    (poo-flow-loop-engine-configs
+     (.def (test-loop @ loop-engine-use-case name)
+       name: 'test-loop)
 
-      (.def (test-loop-governor @ loop-engine-governor capabilities)
-        capabilities: '(+strategy +policy))
+     (.def (test-loop-governor @ loop-engine-governor capabilities)
+       capabilities: '(+strategy +policy))
 
-      (.def (test-loop-judges @ loop-engine-agent-judges
-                              auditor verifier governor)
-        auditor: 'repo-audit-agent
-        verifier: 'repo-verifier-agent
-        governor: 'repo-governor)
+     (.def (test-loop-judges @ loop-engine-agent-judges
+                             auditor verifier governor)
+       auditor: 'repo-audit-agent
+       verifier: 'repo-verifier-agent
+       governor: 'repo-governor)
 
-      (.def (test-loop-human-audit @ loop-engine-human-audit actions)
-        actions: '(+approval +changes-requested))
+     (.def (test-loop-human-audit @ loop-engine-human-audit actions)
+       actions: '(+approval +changes-requested))
 
-      (.def (test-loop-runtime @ loop-engine-runtime capabilities)
-        capabilities: '(+manifest-handoff))
+     (.def (test-loop-runtime @ loop-engine-runtime capabilities)
+       capabilities: '(+manifest-handoff))
 
-      (.def (test-loop-profile @ loop-engine-profile
-                               use-case governor agent-judges
-                               human-audit runtime)
-        use-case: test-loop
-        governor: test-loop-governor
-        agent-judges: test-loop-judges
-        human-audit: test-loop-human-audit
-        runtime: test-loop-runtime)))))
+     (.def (test-loop-profile @ loop-engine-profile
+                              use-case governor agent-judges
+                              human-audit runtime)
+       use-case: test-loop
+       governor: test-loop-governor
+       agent-judges: test-loop-judges
+       human-audit: test-loop-human-audit
+       runtime: test-loop-runtime)))))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def test-poo-flow-user-modules
@@ -134,7 +138,7 @@
 (def test-poo-flow-user-custom-module-bundles
   (poo-flow-modules!
    :custom
-   (my-module "./custom/my-module" +private +doctor)))
+   (my-module @ "./custom/my-module" +private +doctor)))
 
 ;; : (-> Unit PooUserProfile)
 (def test-poo-flow-user-custom-profile

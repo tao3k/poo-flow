@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow user-interface pipeline benchmark gate.
 
 (import (only-in :std/test
@@ -9,7 +13,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
         "../support/funflow-config-pipeline-performance")

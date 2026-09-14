@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-registry scenario.
 ;;; Invariant: registry receipts index declared sessions; they are not live
 ;;; runtime stores.
@@ -9,12 +13,12 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax)
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-registry"
+                 poo-flow-custom-my-module-session-registry-case))
 
 (export user-interface-custom-session-registry-test)
-
-(load! "../user-interface/custom/my-module/cases/session-registry")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -32,9 +36,11 @@
 (def user-interface-custom-session-registry-test
   (test-suite "poo-flow custom user-interface session-registry case"
     (test-case "projects custom session registry receipt"
-      (let* ((selection (car poo-flow-custom-module-session-registry-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-registry-case))
              (rows
-              (module-config-rows poo-flow-custom-module-session-registry-case))
+              (module-config-rows
+               poo-flow-custom-my-module-session-registry-case))
              (registry (car rows))
              (entries (.ref registry 'entries))
              (build-entry (cadr entries)))

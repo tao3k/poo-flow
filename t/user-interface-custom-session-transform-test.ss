@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-transform scenario.
 ;;; Invariant: transform rows are report-only handoff receipts; Scheme never
 ;;; invokes a provider, memory backend, sandbox runtime, or tool.
@@ -9,12 +13,13 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax)
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        :poo-flow/src/modules/session/config
+        (only-in "../user-interface/custom/my-module/cases/session-transform"
+                 poo-flow-custom-my-module-session-transform-case))
 
 (export user-interface-custom-session-transform-test)
-
-(load! "../user-interface/custom/my-module/cases/session-transform")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -31,10 +36,12 @@
 ;; : TestSuite
 (def user-interface-custom-session-transform-test
   (test-suite "poo-flow custom user-interface session-transform case"
-    (test-case "projects transform declarations through use-module session-core"
-      (let* ((selection (car poo-flow-custom-module-session-transform-case))
+    (test-case "projects transform declarations through session-owned syntax"
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-transform-case))
              (rows
-              (module-config-rows poo-flow-custom-module-session-transform-case))
+              (module-config-rows
+               poo-flow-custom-my-module-session-transform-case))
              (memory-intent (car rows))
              (transform (cadr rows))
              (root-session (list-ref rows 2))

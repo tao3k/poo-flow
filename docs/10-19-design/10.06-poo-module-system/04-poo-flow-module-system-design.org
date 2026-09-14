@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: 10.06.04 poo-flow Module System Design
 
 * 10.06.04 poo-flow Module System Design
@@ -61,21 +65,19 @@ Module identity follows Doom's qualified key shape =(:category . module)=.
 is no second =base/core/extension= tier layered over them. Load depth and module
 dependencies express ordering, while profiles independently select defaults.
 
-The ownership split is also explicit: =src/module-system/= is the source-neutral
-loader mechanism, =src/modules/init.ss= declares the collection maintained by
-this repository, and downstream/user-contributed module roots use the same
-hygienic =poo-flow-modules!= syntax through =poo-flow!=. The maintained list does
-not repeat roots or phase filenames: =src/modules/<module>/config.ss= is the
-canonical entrypoint and imports its owned factors.
+The ownership split is explicit: =src/module-system/= is the source-neutral
+loader mechanism, while maintained, contributor and user collections all enter
+through =poo-flow-load-modules=.  It discovers direct module directories and
+projects only =src/modules/<module>/interface.ss=; no maintained init file or
+parallel list repeats module roots or role filenames.
 
-=src/modules/init.ss= is the only Scheme file permitted directly under
-=src/modules/=. Every concrete maintained module owns a directory and exposes
-at least =config.ss= plus =interface.ss=. A module adds =types.ss=,
-=objects.ss=, =funcs.ss=, and =plugins/*= when those roles exist; =config.ss=
-orders the factors and =interface.ss= defines the public POO-native surface.
-The Loader derives =src/modules/<module>/config.ss= from the hygienic qualified
-declaration. Missing required entrypoints therefore fail at source loading or
-build expansion instead of being repaired by duplicate profile metadata.
+No Scheme file is permitted directly under =src/modules/=. Every concrete
+maintained module owns a directory and supplies =types.ss=, =objects.ss=,
+=funs.ss=, =config.ss= and =interface.ss=. Optional =syntax.ss= and focused
+implementation files may extend that shell.  =interface.ss= imports and
+re-exports each role and is the sole public entrypoint. Missing roles, a
+module-local =init.ss=, reversed role dependencies, or incomplete interface
+exports fail during loader projection before native build execution.
 
 Default flags and module bundles have exactly one owner: the module's own
 =config.ss=. Kernel and user profiles compose those exports; they do not copy

@@ -1,13 +1,115 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic macros for module config POO prototype declarations.
 ;;; Invariant: generated forms are ordinary POO objects and predicates; public
 ;;; config authoring remains prototype composition plus named conversion helpers.
 
-(import (only-in :clan/poo/object .o .ref .slot? object?))
+(import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
+        (only-in :poo-flow/src/module-system/declaration/contract
+                 poo-flow-modules-system-use-module/contract))
 
 (export defpoo-module-config-prototype
         defpoo-module-config-kind-predicate
-        defpoo-module-config-converter)
+        defpoo-module-config-converter
+        poo-flow-module-configs
+        poo-flow-module-inherited-config)
+
+;;; One runtime lowering owns inherited external execution declarations.
+;;; Values remain inert module-selection facts; no sandbox or command runs here.
+(def (poo-flow-module-inherited-config module-key
+                                       inherited-profile
+                                       isolation
+                                       environment
+                                       command
+                                       backend)
+  (poo-flow-modules-system-use-module/contract
+   module-key
+   (list (cons ':inherits inherited-profile)
+         (cons ':isolation isolation)
+         (cons ':environment environment)
+         (cons ':command command)
+         (cons ':nono backend))))
+
+(begin-syntax
+  (def (poo-flow-config-syntax-keyword-slots/elements ctx elements)
+    (match elements
+      ([] '())
+      ([slot-key slot-value . more]
+       (let (key (syntax->datum slot-key))
+         (and (keyword? key)
+              (let (rest
+                    (poo-flow-config-syntax-keyword-slots/elements ctx more))
+                (and rest
+                     (cons (list (datum->syntax
+                                  ctx
+                                  (string->symbol (keyword->string key)))
+                                 slot-value)
+                           rest))))))
+      (else #f)))
+
+  (def (poo-flow-config-syntax-keyword-slots ctx slot-specs)
+    (let (elements (syntax->list slot-specs))
+      (and elements
+           (poo-flow-config-syntax-keyword-slots/elements ctx elements))))
+
+  (def (poo-flow-config-syntax-keyword-slot-groups ctx slot-def-groups)
+    (map (lambda (slot-specs)
+           (poo-flow-config-syntax-keyword-slots ctx slot-specs))
+         (syntax->list slot-def-groups)))
+
+  (def (poo-flow-config-syntax-all? values)
+    (not (member #f values)))
+
+  (def (poo-flow-config-syntax-definition-heads? heads)
+    (andmap (lambda (head)
+              (eq? (syntax->datum head) '.def))
+            (syntax->list heads))))
+
+;;; One lowering owns POO prototype config declarations for every module.
+;;; Module-specific syntax supplies only its module key and config projector.
+(defsyntax (poo-flow-module-configs stx)
+  (syntax-case stx (quoted)
+    ((ctx module-key config-flags
+          (quoted quoted-form ...)
+          (definition-head
+           (prototype-name prototype-self prototype-super prototype-slot ...)
+           slot-def ...)
+          ...)
+     (let* ((definition-heads?
+             (poo-flow-config-syntax-definition-heads?
+              (syntax (definition-head ...))))
+            (slot-groups
+             (poo-flow-config-syntax-keyword-slot-groups
+              (syntax ctx)
+              (syntax ((slot-def ...) ...)))))
+       (unless definition-heads?
+         (error "poo-flow module config expects native .def forms"))
+       (if (poo-flow-config-syntax-all? slot-groups)
+         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
+           (syntax
+            (let* ((prototype-name
+                    (object<-alist
+                     (list (cons 'slot-name slot-value) ...)
+                     supers: prototype-super))
+                   ...)
+              (poo-flow-modules-system-use-module/contract
+               'module-key
+               (config-flags
+                (list prototype-name ...)
+                '(quoted-form ...))))))
+         (syntax
+          (let* ((prototype-name
+                  (.o (:: prototype-self prototype-super prototype-slot ...)
+                      slot-def ...))
+                 ...)
+            (poo-flow-modules-system-use-module/contract
+             'module-key
+             (config-flags
+              (list prototype-name ...)
+              '(quoted-form ...))))))))))
 
 ;;; Prototype macros define named POO config objects from bounded slot rows.
 ;; defpoo-module-config-prototype

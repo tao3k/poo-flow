@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream session transform case.
-;;; Invariant: loaded by ../config.ss; it derives session receipts only.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(use-module session-core
-  :config
+;;; Boundary: downstream session transform case.
+;;; Invariant: importing this module derives session receipts only.
+
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-transform-case)
+
+(def poo-flow-custom-my-module-session-transform-case
+  (poo-flow-session-cases
   (session-case custom-session-transform-case
     (metadata (source . user-interface)
               (case . session-transform))
@@ -44,4 +52,4 @@
     (rows custom-session-review-memory
           custom-session-review-transform
           custom-session-transform-root
-          custom-session-transform-receipt)))
+          custom-session-transform-receipt))))

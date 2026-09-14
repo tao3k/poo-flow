@@ -1,6 +1,13 @@
 ;;; -*- Gerbil -*-
-;;; Public session module interface.
-;;; Engineering note: this facade preserves one import path across the
-;;; session object's policy, selector, communication, and receipt leaf owners.
-(import "config.ss")
-(export (import: "config.ss"))
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Public session module interface; all internal roles close through this file.
+
+(import "types.ss" "objects.ss" "funs.ss" "syntax.ss" "config.ss")
+(export (import: "types.ss")
+        (import: "objects.ss")
+        (import: "funs.ss")
+        (import: "syntax.ss")
+        (import: "config.ss"))

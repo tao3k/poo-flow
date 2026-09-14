@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface memory-core scenario.
 ;;; Invariant: user config declares memory specs and validation receipts only.
 
@@ -6,7 +10,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-memory-core-case))
 
 (export user-interface-custom-memory-core-test)

@@ -1,5 +1,9 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: tests custom user config fragments loaded by `load!`.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: tests custom user config profile modules.
 ;;; Invariant: user fragments remain declarative module selections.
 
 (import (only-in :std/test
@@ -15,7 +19,7 @@
         test-suite)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/modules/agent-sandbox/config
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-session-module
                  poo-flow-custom-my-module-task-module
                  poo-flow-custom-my-module-cicd-module
@@ -40,7 +44,7 @@
 ;;; remains owned by upstream modules.
 (def user-interface-config-modules-test
   (test-suite "poo-flow user interface config modules"
-    (test-case "loads custom profile fragments with load!"
+    (test-case "imports custom profile modules through their owner"
       (let* ((session-profiles
               (config-module-profiles
                (car poo-flow-custom-my-module-session-module)))

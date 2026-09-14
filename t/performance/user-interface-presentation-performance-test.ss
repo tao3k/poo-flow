@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user-interface presentation hot path stays bounded.
 ;;; Invariant: public authoring remains POO-native; generated runtime receipts
 ;;; are fixed structs until Marlin ABI handoff serialization.
@@ -21,7 +25,7 @@
                  pooFlowUserConfigPresentation)
         (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
+        (only-in "../../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-presentation-performance-test)

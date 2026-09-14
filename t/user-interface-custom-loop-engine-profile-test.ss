@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify profile-style loop-engine user declarations.
 ;;; Invariant: profile projection is report-only and never executes loops.
 
@@ -8,7 +12,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/user-interface/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-loops-module))
 
 (export user-interface-custom-loop-engine-profile-test)

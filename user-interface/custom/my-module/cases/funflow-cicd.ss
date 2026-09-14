@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream Funflow CI/CD pipeline declaration.
 ;;; Invariant: this file declares POO workflow objects only; no runtime work.
 
-(use-module funflow
-  :config
+(import :poo-flow/src/modules/funflow/config)
+
+(export poo-flow-custom-my-module-funflow-cicd-case)
+
+(def poo-flow-custom-my-module-funflow-cicd-case
+  (poo-flow-funflow-configs
   (.def (funflow/build @ funflow-check
                        check-name profile-ref command-vector
                        artifact-outputs cache-intents result-protocol
@@ -56,4 +64,4 @@
     pipeline-name: 'default
     checks: (list funflow/build funflow/test funflow/package)
     metadata: '((scenario . funflow-cicd)
-                (authoring-style . gerbil-poo-native))))
+                (authoring-style . gerbil-poo-native)))))

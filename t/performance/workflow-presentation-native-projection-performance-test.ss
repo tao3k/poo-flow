@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: workflow presentation uses one native POO projection constructor.
 
 (import (only-in :std/test check-equal? test-case test-suite)
@@ -12,7 +16,7 @@
                  pooFlowUserConfig)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
+        (only-in "../../user-interface/custom/my-module/cases/cicd-owner"
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case))
 

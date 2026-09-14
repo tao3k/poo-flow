@@ -1,11 +1,22 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for module loader source declarations.
 ;;; Invariant: backend receipts and tree/catalog declarations live in leaf owners.
 
 (import :poo-flow/src/module-system/loader/backend
+        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/module-system/loader/contribution-registry
+        :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree)
 
-(export poo-flow-module-loader-entry-prototype
+(export (except-out
+         (import: :poo-flow/src/module-system/loader/collection)
+         poo-flow-module-source-collection-role-entrypoints)
+        (import: :poo-flow/src/module-system/loader/contribution-registry)
+        poo-flow-module-loader-entry-prototype
         make-poo-flow-module-loader-entry
         poo-flow-module-loader-entry?
         poo-flow-module-loader-entry-source
@@ -44,21 +55,11 @@
         poo-flow-module-load-source-receipt
         poo-flow-module-load-source-receipts
         poo-flow-module-load-receipt->alist
-        poo-flow-module-tree-entrypoint
-        poo-flow-module-tree-source
-        poo-flow-module-tree-config-source
-        poo-flow-module-tree-objects-source
         poo-flow-module-tree-source-refs
         poo-flow-module-tree-lazy-load-plans
         poo-flow-src-modules-root
-        poo-flow-src-module-tree-entrypoints
         poo-flow-module-system-source
         poo-flow-module-system-source-refs
-        poo-flow-module-category-names
-        poo-flow-module-tree-entrypoint-module-name
-        poo-flow-module-tree-entrypoint-name-conflict?
-        poo-flow-module-tree-entrypoint-conflicts
-        poo-flow-src-module-tree-entrypoint-conflicts
         poo-flow-src-modules-source-refs
         poo-flow-src-modules-lazy-load-plans
         poo-flow-module-auto-import-root-identity
@@ -79,6 +80,10 @@
         poo-flow-user-tree-modules-config-source
         poo-flow-user-tree-source-refs
         poo-flow-user-tree-lazy-load-plans
+        poo-flow-module-selection-source-refs
+        poo-flow-module-bundles-source-refs
+        poo-flow-module-selection-lazy-load-plans
+        poo-flow-module-bundles-lazy-load-plans
         poo-flow-module-load-source
         poo-flow-module-load-sources
         poo-flow-module-load-catalog)

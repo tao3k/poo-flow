@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests the public CI/CD POO authoring gate user config.
 ;;; Invariant: assertions inspect formal use-module data, not runtime work.
 
@@ -10,7 +14,7 @@
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/workflow/cicd
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-poo-introspection-case))
 
 (export user-interface-poo-introspection-case-test)

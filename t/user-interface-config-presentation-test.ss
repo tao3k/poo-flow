@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: use-module config must be inspectable before runtime.
 ;;; Invariant: presentation is inert; no module descriptors or runtimes execute.
 
@@ -10,9 +14,9 @@
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/agent-sandbox/config)
-
-(load! "../user-interface/custom/my-module/profiles/agent-sandbox-audit")
+        :poo-flow/src/modules/agent-sandbox/config
+        (only-in "../user-interface/custom/my-module/profiles/agent-sandbox-audit"
+                 poo-flow-custom-module-agent-sandbox-audit-module))
 
 ;; : (-> Symbol PresentationAlist MaybePresentationValue)
 (def (alist-value key entries)

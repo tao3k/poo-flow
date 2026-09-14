@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable recovery scenario.
 ;;; Invariant: recovery rows describe crash/replay/repair handoff data only;
 ;;; Scheme never replays logs, claims leases, repairs state, or runs workflow.
@@ -7,7 +11,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-recovery
+        (only-in "../user-interface/custom/my-module/cases/durable-recovery"
                  poo-flow-custom-my-module-durable-recovery-case))
 
 (export user-interface-custom-durable-recovery-test)

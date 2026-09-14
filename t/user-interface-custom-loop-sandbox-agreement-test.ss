@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused tests for loop-engine sandbox handoff agreement receipts.
 ;;; Invariant: sandbox agreement projection is report-only and never starts runtime.
 
@@ -9,7 +13,7 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-sandbox-agreement-test)

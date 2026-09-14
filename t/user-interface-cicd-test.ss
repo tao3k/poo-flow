@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify Funflow CI/CD user intent presentation.
 ;;; Invariant: CI/CD facts stay declarative and never execute adapters.
 
@@ -11,7 +15,7 @@
         :poo-flow/src/user-interface/presentation-config
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/workflow/cicd-config
-        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
+        (only-in "../user-interface/custom/my-module/cases/cicd-owner"
                  poo-flow-custom-my-module-cicd-case
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
@@ -58,7 +62,7 @@
         (check-equal? (alist-value 'runtime-owner intent)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed intent) #f)))
-    (test-case "loads downstream CI/CD case through load! and use-module"
+    (test-case "imports downstream CI/CD case through its module owner"
       (let* ((selection (car poo-flow-custom-my-module-cicd-case))
              (inherits
               (poo-flow-user-module-selection-flag-entry selection ':inherits))

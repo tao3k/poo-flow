@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for tool-core specs and catalog receipts.
 ;;; Invariant: users author POO tool specs; runtime execution remains external.
 
@@ -18,7 +22,18 @@
         poo-flow-tool-core-poo-spec->tool-spec
         poo-flow-tool-core-poo-catalog->catalog
         poo-flow-tool-core-poo-config-flags
+        poo-flow-tool-configs
         poo-flow-tool-core-module-bundles)
+
+(defsyntax (poo-flow-tool-configs stx)
+  (syntax-case stx ()
+    ((_ config-form ...)
+     (syntax
+      (poo-flow-module-configs
+       tool-core
+       poo-flow-tool-core-poo-config-flags
+       (quoted :config config-form ...)
+       config-form ...)))))
 
 ;; : PooToolSpecPrototype
 (defpoo-module-config-prototype

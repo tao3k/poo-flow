@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify concrete loop-engine runtime manifest projection.
 ;;; Invariant: manifest rows are inert Marlin handoff data, not execution.
 
@@ -18,7 +22,7 @@
                  poo-flow-nono-sandbox-module-bundles)
         (only-in "./support/loop-engine-runtime-manifest-receipts"
                  check-custom-loop-runtime-manifest-request-receipts)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
+        (only-in "../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-engine-runtime-manifest-test)

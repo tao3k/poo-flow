@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: core cases exercise the thin declarative user-interface surface.
 ;;; These checks intentionally stop before sandbox realization or runtime work.
 
@@ -160,12 +164,12 @@
         (check-equal? (poo-flow-user-module-selection-flags custom-module)
                       '(+private +doctor))
         (check-equal? (poo-flow-user-module-selection-entrypoint custom-module)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (poo-flow-module-source-ref-kind custom-source) 'local)
         (check-equal? (poo-flow-module-source-ref-value custom-source)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'entrypoint custom-fact)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'declaration-index custom-fact)
                       7)
         (check-equal? (alist-value 'declaration-phase custom-fact)
@@ -210,4 +214,4 @@
         (check-equal? (poo-flow-user-module-selection-key root-custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-entrypoint root-custom-module)
-                      "./custom/my-module/config.ss")))))
+                      "./custom/my-module/interface.ss")))))

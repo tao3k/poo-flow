@@ -1,28 +1,21 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: lightweight module entrypoint registry.
-;;; Invariant: this owner is data-only; it never imports loaders, resolvers, or POO graphs.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: maintained and user module entrypoint registry.
+;;; Invariant: maintained modules enter through validated public interfaces.
 
 (import (only-in :std/sugar filter)
         :poo-flow/src/module-system/loader/source
-        (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        (only-in "../../modules/init.ss"
-                 poo-flow-maintained-module-bundles))
+        (only-in :poo-flow/src/module-system/loader/collection
+                 poo-flow-load-modules
+                 poo-flow-maintained-module-source))
 
-(export poo-flow-module-tree-entrypoint
-        poo-flow-module-tree-source
-        poo-flow-module-tree-config-source
-        poo-flow-module-tree-objects-source
-        poo-flow-module-tree-source-refs
+(export poo-flow-module-tree-source-refs
         poo-flow-src-modules-root
-        poo-flow-src-module-tree-entrypoints
         poo-flow-module-system-source
         poo-flow-module-system-source-refs
-        poo-flow-module-category-names
-        poo-flow-module-tree-entrypoint-module-name
-        poo-flow-module-tree-entrypoint-name-conflict?
-        poo-flow-module-tree-entrypoint-conflicts
-        poo-flow-src-module-tree-entrypoint-conflicts
         poo-flow-src-modules-source-refs
         poo-flow-user-tree-source
         poo-flow-user-tree-entrypoint-policy
@@ -47,7 +40,7 @@
       (string-append module-root-path leaf)
       (string-append module-root-path "/" leaf))))
 
-;;; Boundary: a module tree contributes separate config and objects entrypoints.
+;;; Boundary: a module tree contributes one public interface entrypoint.
 ;; : (-> Path Symbol PooModuleSourceRef)
 (def (poo-flow-module-tree-source module-root-path entrypoint-role)
   (let (entrypoint
@@ -61,31 +54,16 @@
            (cons 'entrypoint-role entrypoint-role)))))
 
 ;; : (-> Path PooModuleSourceRef)
-(def (poo-flow-module-tree-config-source module-root-path)
-  (poo-flow-module-tree-source module-root-path 'config))
-
-;; : (-> Path PooModuleSourceRef)
-(def (poo-flow-module-tree-objects-source module-root-path)
-  (poo-flow-module-tree-source module-root-path 'objects))
+(def (poo-flow-module-tree-interface-source module-root-path)
+  (poo-flow-module-tree-source module-root-path 'interface))
 
 ;; : (-> Path [PooModuleSourceRef])
 (def (poo-flow-module-tree-source-refs module-root-path)
-  (list (poo-flow-module-tree-config-source module-root-path)
-        (poo-flow-module-tree-objects-source module-root-path)))
+  (list (poo-flow-module-tree-interface-source module-root-path)))
 
-;;; Boundary: src/modules is a declared package module tree, not a filesystem scan root.
+;;; Boundary: src/modules is the maintained source collection root.
 ;; : Path
 (def poo-flow-src-modules-root "src/modules")
-
-;;; The maintained declaration lists module keys only. The loader applies the
-;;; canonical config.ss entrypoint convention instead of repeating paths.
-;; : [(Path Symbol...)]
-(def poo-flow-src-module-tree-entrypoints
-  (map (lambda (bundle)
-         (let* ((selection (car bundle))
-                (key (poo-flow-user-module-selection-key selection)))
-           (cons (symbol->string (cdr key)) '(config))))
-       poo-flow-maintained-module-bundles))
 
 ;;; Boundary: framework source refs are explicit front-end entrypoints. They
 ;;; are metadata consumed by the Loader and never import their implementations.
@@ -114,13 +92,6 @@
    (poo-flow-module-system-source
     'declaration-case "src/user-interface/declaration-case.ss")))
 
-;;; Boundary: category names are registry vocabulary. They are keyword markers
-;;; in declarations, while module names occur inside rows, so equal spellings do
-;;; not collide in a qualified (:category . module) key.
-;; : [Symbol]
-(def poo-flow-module-category-names
-  '(core flow session loop sandbox custom))
-
 ;;; Boundary: module registry member predicate is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
@@ -136,66 +107,11 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-;; : (-> (Path Symbol...) Symbol)
-(def (poo-flow-module-tree-entrypoint-module-name entrypoint-spec)
-  (string->symbol (car entrypoint-spec)))
-
-;; : (-> (Path Symbol...) Boolean)
-(def (poo-flow-module-tree-entrypoint-name-conflict? entrypoint-spec)
-  ;; Retained for compatibility: qualified category/module keys cannot collide.
-  (begin entrypoint-spec #f))
-
-;;; Conflict receipts are data so doctors can report naming drift without
-;;; forcing source loading or descriptor realization.
-;; : (forall (path role) (-> [(Pair path [role])] [Alist]))
-;; : (-> [(Path Symbol...)] [Alist])
-(def (poo-flow-module-tree-entrypoint-conflicts entrypoint-specs)
-  (map (lambda (entrypoint-spec)
-         (list (cons 'code 'module-category-name-conflict)
-               (cons 'module-name
-                     (poo-flow-module-tree-entrypoint-module-name
-                      entrypoint-spec))
-               (cons 'module-root (car entrypoint-spec))
-               (cons 'categories poo-flow-module-category-names)))
-       (filter poo-flow-module-tree-entrypoint-name-conflict?
-               entrypoint-specs)))
-
-;; : (-> Unit [Alist])
-(def (poo-flow-src-module-tree-entrypoint-conflicts)
-  (poo-flow-module-tree-entrypoint-conflicts
-   poo-flow-src-module-tree-entrypoints))
-
-;;; Internal path join stays string-only so this owner never probes the filesystem.
-;; : (-> Path Path)
-(def (poo-flow-src-module-tree-root module-name)
-  (string-append poo-flow-src-modules-root "/" module-name))
-
-;;; Internal expansion keeps module entrypoints ordered for stable diagnostics.
-;; : (forall (path role) (-> (Pair path [role]) [PooModuleSourceRef]))
-;; : (-> (Path Symbol...) [PooModuleSourceRef])
-(def (poo-flow-src-module-tree-entrypoint-source-refs entrypoint-spec)
-  (let ((module-root
-        (poo-flow-src-module-tree-root (car entrypoint-spec)))
-        (entrypoint-roles (cdr entrypoint-spec)))
-    (map (lambda (entrypoint-role)
-           (poo-flow-module-tree-source module-root entrypoint-role))
-         entrypoint-roles)))
-
-;;; Internal recursion flattens the declared tree without forcing source loads.
-;; : (forall (a b) (-> [(Pair a [b])] [PooModuleSourceRef]))
-;; : (-> [(Path Symbol...)] [PooModuleSourceRef])
-(def (poo-flow-src-module-tree-entrypoint-source-refs* entrypoint-specs)
-  (foldr append
-         '()
-         (map poo-flow-src-module-tree-entrypoint-source-refs
-              entrypoint-specs)))
-
 ;;; Boundary: upstream module sources are declared and lazy by default.
 ;; : (-> [PooModuleSourceRef])
 (def (poo-flow-src-modules-source-refs)
   (append
-   (poo-flow-src-module-tree-entrypoint-source-refs*
-    poo-flow-src-module-tree-entrypoints)
+   (poo-flow-load-modules poo-flow-maintained-module-source)
    (poo-flow-module-system-source-refs)))
 
 ;;; Boundary: user-root trees have a different shape from upstream modules.

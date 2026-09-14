@@ -1,9 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: init/profile declaration syntax lives outside core profile data.
 ;;; Invariant: macros expand to profile-config data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o object<-alist)
         :poo-flow/src/module-system/loader/fragment-syntax
+        :poo-flow/src/module-system/declaration/config-syntax
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
@@ -22,11 +27,13 @@
         :poo-flow/src/modules/funflow/config
         :poo-flow/src/modules/memory-core/config
         :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/session/syntax
         :poo-flow/src/modules/tool-core/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
         :poo-flow/src/loops/spec-evolution
         (only-in :poo-flow/src/modules/loop-engine/config
+                 poo-flow-loop-engine-configs
                  poo-flow-user-loop-engine-poo-config-flags)
         (only-in :poo-flow/src/modules/loop-engine/prototypes
                  loop-engine-use-case
@@ -54,6 +61,7 @@
                  loop-engine-safety-policy-extension)
         :poo-flow/src/modules/sandbox-core/profile
         :poo-flow/src/modules/sandbox-core/profile-interface
+        :poo-flow/src/user-interface/init-declaration-syntax
         :poo-flow/src/user-interface/profile-config
         :poo-flow/src/module-system/load
         :poo-flow/src/module-system/declaration/contract)
@@ -63,8 +71,9 @@
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
+        poo-flow-module-configs
         (import: :poo-flow/src/module-system/loader/fragment-syntax)
-        poo-flow!
+        (import: :poo-flow/src/user-interface/init-declaration-syntax)
         poo-flow-profile-set
         poo-flow-profile-extend
         poo-flow-profile
@@ -75,6 +84,7 @@
         (import: :poo-flow/src/modules/funflow/config)
         (import: :poo-flow/src/modules/memory-core/config)
         (import: :poo-flow/src/modules/session/config)
+        (import: :poo-flow/src/modules/session/syntax)
         (import: :poo-flow/src/modules/tool-core/config)
         (import: :poo-flow/src/loops/spec-evolution)
         loop-engine-use-case
@@ -152,51 +162,6 @@
 
   (def (poo-flow-all? values)
     (not (member #f values))))
-
-;; poo-flow-use-module-poo-config
-;;   : (-> Syntax Syntax)
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (use-module memory-core :config (.def (store @ spec field) field: x))
-;;       ;; => module selection
-;;       ```
-;;     %
-(defsyntax (poo-flow-use-module-poo-config stx)
-  (syntax-case stx (quoted .def)
-    ((ctx module-key config-flags
-          (quoted quoted-form ...)
-          (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                slot-def ...)
-          ...)
-     (let* ((slot-groups
-             (poo-flow-simple-keyword-slot-groups
-              (syntax ctx)
-              (syntax ((slot-def ...) ...)))))
-       (if (poo-flow-all? slot-groups)
-         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
-           (syntax
-            (let* ((prototype-name
-                    (object<-alist
-                     (list (cons 'slot-name slot-value) ...)
-                     supers: prototype-super))
-                   ...)
-              (poo-flow-modules-system-use-module/contract
-               'module-key
-               (config-flags
-                (list prototype-name ...)
-                '(quoted-form ...))))))
-         (syntax
-          (let* ((prototype-name
-                  (.o (:: prototype-self prototype-super prototype-slot ...)
-                      slot-def ...))
-                 ...)
-            (poo-flow-modules-system-use-module/contract
-             'module-key
-             (config-flags
-              (list prototype-name ...)
-              '(quoted-form ...))))))))))
 
 ;; poo-flow-use-module-sandbox-profile-config
 ;;   : (-> Syntax Syntax)
@@ -309,13 +274,7 @@
               slot-def ...)
         ...)
      (syntax
-      (poo-flow-use-module-poo-config
-       funflow
-       poo-flow-funflow-poo-config-flags
-       (quoted :config
-               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                     slot-def ...)
-               ...)
+      (poo-flow-funflow-configs
        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
              slot-def ...)
        ...)))
@@ -333,28 +292,13 @@
           (row-groups row-group-expr ...))
         ...)
      (syntax
-      (let* ((case-name
-              (let* ((object-name object-expr) ...)
-                (object<-alist
-                 (list
-                  (cons 'rows
-                        (append (list row-expr ...)
-                                row-group-expr ...
-                                '()))
-                  (cons 'metadata '(metadata-entry ...)))
-                 supers: session-config)))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'session-core
-         (poo-flow-session-core-poo-config-flags
-          (list case-name ...)
-          '(:config
-            (session-case case-name
-              (metadata metadata-entry ...)
-              (objects (object-name object-expr) ...)
-              (rows row-expr ...)
-              (row-groups row-group-expr ...))
-            ...))))))
+      (poo-flow-session-cases
+       (session-case case-name
+         (metadata metadata-entry ...)
+         (objects (object-name object-expr) ...)
+         (rows row-expr ...)
+         (row-groups row-group-expr ...))
+       ...)))
     ((_ session-core
         :config
         (session-case case-name
@@ -363,24 +307,12 @@
           (rows row-expr ...))
         ...)
      (syntax
-      (let* ((case-name
-              (let* ((object-name object-expr) ...)
-                (object<-alist
-                 (list
-                  (cons 'rows (list row-expr ...))
-                  (cons 'metadata '(metadata-entry ...)))
-                 supers: session-config)))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'session-core
-         (poo-flow-session-core-poo-config-flags
-          (list case-name ...)
-          '(:config
-            (session-case case-name
-              (metadata metadata-entry ...)
-              (objects (object-name object-expr) ...)
-              (rows row-expr ...))
-            ...))))))
+      (poo-flow-session-cases
+       (session-case case-name
+         (metadata metadata-entry ...)
+         (objects (object-name object-expr) ...)
+         (rows row-expr ...))
+       ...)))
     ((_ session-core
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
@@ -396,13 +328,7 @@
               slot-def ...)
         ...)
      (syntax
-      (poo-flow-use-module-poo-config
-       tool-core
-       poo-flow-tool-core-poo-config-flags
-       (quoted :config
-               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                     slot-def ...)
-               ...)
+      (poo-flow-tool-configs
        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
              slot-def ...)
        ...)))
@@ -412,13 +338,7 @@
               slot-def ...)
         ...)
      (syntax
-      (poo-flow-use-module-poo-config
-       memory-core
-       poo-flow-memory-core-poo-config-flags
-       (quoted :config
-               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                     slot-def ...)
-               ...)
+      (poo-flow-memory-configs
        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
              slot-def ...)
        ...)))
@@ -428,13 +348,7 @@
               slot-def ...)
         ...)
      (syntax
-      (poo-flow-use-module-poo-config
-       loop-engine
-       poo-flow-user-loop-engine-poo-config-flags
-       (quoted :config
-               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                     slot-def ...)
-               ...)
+      (poo-flow-loop-engine-configs
        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
              slot-def ...)
        ...)))
@@ -509,14 +423,13 @@
         :command command-clause
         :nono nono-clause)
      (syntax
-      (poo-flow-modules-system-use-module/contract
+      (poo-flow-module-inherited-config
        'module
-       (list
-        (cons ':inherits 'inherited-profile)
-        (cons ':isolation 'isolation-clause)
-        (cons ':environment 'environment-clause)
-        (cons ':command 'command-clause)
-        (cons ':nono 'nono-clause)))))
+       'inherited-profile
+       'isolation-clause
+       'environment-clause
+       'command-clause
+       'nono-clause)))
     ((_ module :config bad-clause ...)
      (error "use-module :config DSL has been removed; module configs use native POO .def forms"))
     ((_ module flag ...)
@@ -745,73 +658,6 @@
    (cons (poo-flow-user-module-bundle
           (custom module module-root-path flag ...))
          (poo-flow-init-custom-bundles init-clause ...))))
-
-;;; Root user init macro. This is intentionally closer to Doom's `doom!` block
-;;; than to constructor-oriented profile code: users list category/module/feature
-;;; Low-level profile init macro. Root init files declare module rows; the
-;;; facade creates the canonical `users` profile.
-;; | PooFlowProfileInit = (poo-flow! ProfileBinding ProfileSetBinding (profile Name [(extends BaseProfile)]) :Category Row...)
-;; poo-flow!
-;;   : (-> ModuleRows CustomRows PooUserProfileSet)
-;;   | contract: defines call-site profile and profile-set bindings
-;;   | doc m%
-;;       The root form declares one reusable profile object and its profile-set
-;;       binding without realizing modules or any runtime adapter.
-;;
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow! poo-flow-user-profile poo-flow-user-profile-set
-;;         (profile users (extends poo-flow-kernel-profile)) :workflow
-;;         (funflow (+cicd (checks +parallel))) :custom
-;;         (my-module "./custom/my-module" +private))
-;;       ;; => profile-bindings
-;;       ```
-;;     %
-(defsyntax (poo-flow! stx)
-  (syntax-case stx (profile extends)
-    ((_ profile-binding
-        profile-set-binding
-        (profile profile-name (extends base-profile))
-        init-clause ...)
-     (syntax
-      (begin
-        (def profile-binding
-          (pooFlowUserProfileExtend
-           'profile-name
-           base-profile
-           (poo-flow-modules! init-clause ...)))
-        (def profile-set-binding
-          (pooFlowUserProfileSet
-           'user
-           'profile-name
-           (list profile-binding))))))
-    ((_ profile-binding
-        profile-set-binding
-        (profile profile-name)
-        init-clause ...)
-     (syntax
-      (begin
-        (def profile-binding
-          (pooFlowUserProfile
-           'profile-name
-           (poo-flow-modules! init-clause ...)
-           (pooFlowDefaultUserSettings 'profile-name)
-           poo-flow-default-user-setting-keys))
-        (def profile-set-binding
-          (pooFlowUserProfileSet
-           'user
-           'profile-name
-           (list profile-binding))))))
-    ((ctx init-clause ...)
-     (with-syntax ((module-bundles-binding
-                    (datum->syntax (syntax ctx)
-                                   'poo-flow-user-module-bundles)))
-       (syntax
-        (begin
-          (def module-bundles-binding
-            (poo-flow-modules! init-clause ...))
-          (export module-bundles-binding)))))))
 
 ;;; Compact profile-set syntax borrows Doom's profiles.el shape but restricts
 ;;; the surface to profile registry data.

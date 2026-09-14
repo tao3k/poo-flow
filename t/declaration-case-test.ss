@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify maintained root declaration cases.
 ;;; Invariant: cases are downstream declarations and report data, never runtime work.
 
@@ -73,7 +77,7 @@
                       "user-interface/init.ss")
         (check-equal? (poo-flow-declaration-case-custom-module-file
                        case-object)
-                      "user-interface/custom/my-module/config.ss")
+                      "user-interface/custom/my-module/interface.ss")
         (check-equal? (.ref case-object 'declaration-owned?) #t)
         (check-equal? (.ref case-object 'declarative-only?) #t)
         (check-equal? (.ref case-object 'runtime-owner) "marlin-agent-core")
@@ -116,7 +120,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'entrypoint
                        custom-module)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (poo-flow-declaration-case-alist-value
                        'flags
                        custom-module)

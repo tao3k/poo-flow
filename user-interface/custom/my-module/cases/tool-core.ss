@@ -1,12 +1,24 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream tool-core case loaded by custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: standalone downstream tool-core case module.
 ;;; Invariant: this declares tool specs and policy validation receipts only;
 ;;; no shell, filesystem, or MCP runtime is started.
 
-(let* ((selection
+(import :poo-flow/src/modules/session/syntax
+        :poo-flow/src/modules/tool-core/config
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-flag-entry
+                 poo-flow-user-module-selection->alist))
+
+(export poo-flow-custom-my-module-tool-core-case)
+
+(def poo-flow-custom-my-module-tool-core-case
+  (let* ((selection
         (car
-         (use-module tool-core
-           :config
+         (poo-flow-tool-configs
            (.def (calculator-tool @ tool-spec
                                   tool-ref tool-kind actions
                                   input-schema output-schema
@@ -73,4 +85,4 @@
   (list
    (poo-flow-user-module-selection->alist selection)
    (poo-flow-tool-catalog->alist catalog)
-   (tool-catalog-validation-row validation)))
+   (tool-catalog-validation-row validation))))

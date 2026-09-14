@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-communication scenario.
 ;;; Invariant: communication receipts are route declarations only; Scheme does
 ;;; not deliver messages or mutate session state.
@@ -8,12 +12,12 @@
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax)
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-communication"
+                 poo-flow-custom-my-module-session-communication-case))
 
 (export user-interface-custom-session-communication-test)
-
-(load! "../user-interface/custom/my-module/cases/session-communication")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -31,10 +35,11 @@
 (def user-interface-custom-session-communication-test
   (test-suite "poo-flow custom user-interface session-communication case"
     (test-case "projects custom session communication receipt rows"
-      (let* ((selection (car poo-flow-custom-module-session-communication-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-communication-case))
              (rows
               (module-config-rows
-               poo-flow-custom-module-session-communication-case))
+               poo-flow-custom-my-module-session-communication-case))
              (root-build-channel (car rows))
              (audit-release-channel (cadddr rows))
              (communication-rows (cddddr rows))

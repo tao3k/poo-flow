@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface multi-agent session graph scenario.
 ;;; Invariant: graph, registry, and communication receipts are declarative;
 ;;; Scheme never delivers messages or starts agents.
@@ -11,12 +15,11 @@
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/session/config)
+        :poo-flow/src/modules/session/config
+        (only-in "../user-interface/custom/my-module/cases/session-agent-graph"
+                 poo-flow-custom-my-module-session-agent-graph-case))
 
 (export user-interface-custom-session-agent-graph-test)
-
-(load! "../user-interface/custom/my-module/cases/session-agent-graph")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -47,10 +50,11 @@
 (def user-interface-custom-session-agent-graph-test
   (test-suite "poo-flow custom user-interface session-agent-graph case"
     (test-case "projects custom session graph and communication receipts"
-      (let* ((selection (car poo-flow-custom-module-session-agent-graph-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-agent-graph-case))
              (rows
               (module-config-rows
-               poo-flow-custom-module-session-agent-graph-case))
+               poo-flow-custom-my-module-session-agent-graph-case))
              (registry-entry-count (.ref (car rows) 'entry-count))
              (graph (poo-flow-session-agent-graph->alist (cadr rows)))
              (build-audit-channel

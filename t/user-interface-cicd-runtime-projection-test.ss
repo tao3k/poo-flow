@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests inspect Funflow CI/CD runtime projection from user config.
 ;;; Invariant: projection remains declarative; no runtime adapter is executed.
 
@@ -10,7 +14,7 @@
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/presentation-config
         :poo-flow/src/modules/workflow/cicd-config
-        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
+        (only-in "../user-interface/custom/my-module/cases/cicd-owner"
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
         "./user-interface-fixtures")

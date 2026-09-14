@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable runtime store operation scenario.
 ;;; Invariant: user config projects operation receipts and handoff data only;
 ;;; Marlin owns runtime store execution.
@@ -9,7 +13,7 @@
                  test-suite)
         (only-in :poo-flow/src/modules/memory-core/durable/store-operation
                  +poo-flow-durable-runtime-store-operation-specs+)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations
+        (only-in "../user-interface/custom/my-module/cases/durable-runtime-store-operations"
                  poo-flow-custom-my-module-durable-runtime-store-operations-case))
 
 (export user-interface-custom-durable-runtime-store-operations-test)
