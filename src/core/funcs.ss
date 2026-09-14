@@ -1,13 +1,39 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Reusable algorithmic functions for the POO Flow core.
+
+(import (only-in :std/sort sort))
 
 (export poo-flow-memoize
         poo-flow-make-value-index
         poo-flow-value-index-put!
         poo-flow-value-index-ref
+        poo-flow-directory-files-recursive
         poo-flow-make-frontier-state
         poo-flow-frontier-state-ready-ids
         poo-flow-frontier-state-complete!)
+
+;;; One deterministic tree walk shared by source observability, build
+;;; projection, and User Interface discovery. The tail accumulator avoids
+;;; repeatedly appending complete child result lists on broad directory trees.
+(def (poo-flow-directory-files-recursive/into path tail)
+  (let (info (file-info path))
+    (cond
+     ((eq? (file-info-type info) 'regular) (cons path tail))
+     ((eq? (file-info-type info) 'directory)
+      (foldr (lambda (name rest)
+               (poo-flow-directory-files-recursive/into
+                (path-expand name path)
+                rest))
+             tail
+             (sort (directory-files path) string<?)))
+     (else tail))))
+
+(def (poo-flow-directory-files-recursive path)
+  (poo-flow-directory-files-recursive/into path '()))
 
 ;; Presence is checked separately so an explicitly cached #f remains cached.
 (def (poo-flow-memoize key-of compute)
