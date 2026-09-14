@@ -4,7 +4,7 @@
 (import (only-in :clan/poo/object
                  .ref .slot? object? compute-precedence-list!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/srfi/1 drop filter-map find list-index)
+        (only-in :std/srfi/1 append-map drop filter-map find list-index)
         (only-in :std/sort stable-sort)
         "types.ss" "objects.ss" "classes.ss" "method-combination.ss"
         "funcs.ss")
@@ -71,24 +71,24 @@
     ((any) (universal-specializer-distance argument))
     (else #f)))
 
-;; : (-> ClosMethod [SchemeValue] (Maybe [Natural]))
+;; : (-> ClosMethod [SchemeValue] (Maybe (Vector Natural)))
 (def (method-distances method arguments)
   (let (distances
         (map specializer-distance
              (.ref method 'specializers)
              arguments))
     (and (andmap (lambda (distance) (if distance #t #f)) distances)
-         distances)))
+         (list->vector distances))))
 
 ;;; Ranked method entries keep distances in required-argument order; lookup is
 ;;; bounded by the generic's admitted arity.
-;; : (-> [Natural] Natural Natural)
+;; : (-> (Vector Natural) Natural Natural)
 (def (distance-at distances index)
-  (list-ref distances index))
+  (vector-ref distances index))
 
 ;;; Argument precedence is a generic-owned permutation.  The first unequal
 ;;; distance is the complete lexicographic method-order decision.
-;; : (-> [Natural] [Natural] [Natural] Boolean)
+;; : (-> (Vector Natural) (Vector Natural) [Natural] Boolean)
 (def (distances-before? left right precedence-order)
   (let loop ((remaining precedence-order))
     (and (pair? remaining)
@@ -101,8 +101,8 @@
 
 ;;; Gerbil std owns the stable O(n log n) merge sort. Equal method distances
 ;;; retain source-generation order without the former insertion-sort O(n²).
-;; : (forall (a) (-> [(Pair a [Natural])] [Natural]
-;;        [(Pair a [Natural])]))
+;; : (forall (a) (-> [(Pair a (Vector Natural))] [Natural]
+;;        [(Pair a (Vector Natural))]))
 (def (sort-ranked ranked precedence-order)
   (stable-sort
    ranked
@@ -111,7 +111,8 @@
 
 ;;; Applicability is a pure projection from one immutable generic generation;
 ;;; no cache or registry can change the method set during this computation.
-;; : (-> ClosGenericFunction [SchemeValue] [(Pair ClosMethod [Natural])])
+;; : (-> ClosGenericFunction [SchemeValue]
+;;        [(Pair ClosMethod (Vector Natural))])
 (def (applicable-ranked-methods generic arguments)
   (sort-ranked
    (filter-map
@@ -167,7 +168,7 @@
     (or (if symbol-value #t #f)
         (if keyword-value* #t #f))))
 
-;; : (-> ClosGenericFunction [(Pair ClosMethod [Natural])]
+;; : (-> ClosGenericFunction [(Pair ClosMethod (Vector Natural))]
 ;;        [SchemeValue] Unit)
 (def (keyword-arguments-valid! generic ranked arguments)
   (let* ((lambda-list (.ref generic 'lambda-list))
@@ -184,11 +185,11 @@
           (clos-fail 'malformed-keyword-arguments
                      generic: (.ref generic 'identity)))
         (let* ((valid-keys
-                (apply append
-                       (cons (.ref lambda-list 'keys)
-                             (map (lambda (method-list)
-                                    (.ref method-list 'keys))
-                                  method-lists))))
+                (append
+                 (.ref lambda-list 'keys)
+                 (append-map
+                  (lambda (method-list) (.ref method-list 'keys))
+                  method-lists)))
                (allow-other?
                 (or (.ref lambda-list 'allow-other-keys?)
                     (call-allows-other-keys? tail)
@@ -213,19 +214,17 @@
          (hook (.ref (.ref generic 'protocol) 'compute-applicable-methods)))
     (if (not hook)
       ranked
-      (let (methods (hook generic arguments (map car ranked)))
+      (let ((methods (hook generic arguments (map car ranked)))
+            (ranked-index (poo-clos-leftmost-index-by car ranked)))
         (unless (and (list? methods)
                      (andmap
                       (lambda (method)
                         (and (element? ClosMethod method)
-                             (memq method (.ref generic 'methods))
-                             (method-distances method arguments)))
+                             (hash-get ranked-index method)))
                       methods))
           (clos-fail 'invalid-compute-applicable-methods-result
                      generic: (.ref generic 'identity)))
-        (map (lambda (method)
-               (cons method (method-distances method arguments)))
-             methods)))))
+        (map (lambda (method) (hash-get ranked-index method)) methods)))))
 
 ;;; Standard and short combinations share the immutable effective-method carrier. A
 ;;; short combination uses the primary field for methods bearing its name.

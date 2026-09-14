@@ -10,25 +10,25 @@
 
 (def +poo-clos-unspecified+ (cons 'poo-clos 'unspecified))
 
-;; : (forall (a) (-> a [a] Boolean))
-(def (identity-member? value values)
-  (if (memq value values) #t #f))
-
 ;; : (-> ClosClass [ClosClass])
 (def (live-direct-subclasses class-value)
   (.ref class-value 'direct-subclasses))
 
 ;; : (-> ClosClass [ClosClass])
 (def (dependent-closure root)
-  ;; This recursive fold is dependency-graph reachability, not a transform
-  ;; accumulator: identity admission prevents revisiting diamond descendants.
-  (letrec ((visit
-            (lambda (class-value seen)
-              (if (identity-member? class-value seen)
-                seen
-                (foldl visit (cons class-value seen)
-                       (live-direct-subclasses class-value))))))
-    (reverse (visit root '()))))
+  ;; Class identity is the graph key. The index makes diamond admission O(1)
+  ;; while the returned list remains the stable, functional traversal value.
+  (let (visited (make-hash-table-eq))
+    (letrec ((visit
+              (lambda (class-value result-rev)
+                (if (hash-key? visited class-value)
+                  result-rev
+                  (begin
+                    (hash-put! visited class-value #t)
+                    (foldl visit
+                           (cons class-value result-rev)
+                           (live-direct-subclasses class-value)))))))
+      (reverse (visit root '())))))
 
 ;; : (-> ClosClass Natural)
 (def (class-depth class-value)

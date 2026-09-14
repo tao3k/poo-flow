@@ -145,6 +145,25 @@
         (check (eq? first second) => #t)
         (check-equal? (poo-clos-class-generation class-value) 2)))
 
+    (test-case "diamond dependents are reinitialized exactly once"
+      (let* ((root (poo-clos-class 'evolution-diamond-root))
+             (left
+              (poo-clos-class
+               'evolution-diamond-left
+               direct-superclasses: (list root)))
+             (right
+              (poo-clos-class
+               'evolution-diamond-right
+               direct-superclasses: (list root)))
+             (leaf
+              (poo-clos-class
+               'evolution-diamond-leaf
+               direct-superclasses: (list left right))))
+        (poo-clos-redefine-class root)
+        (check-equal?
+         (map poo-clos-class-generation (list root left right leaf))
+         '(1 1 1 1))))
+
     (test-case "MOP-EXTENDED is a sealed read-only capability profile"
       (let (profile (poo-clos-mop-extended-profile))
         (check (poo-clos-mop-profile-admits? profile 'generic-methods) => #t)

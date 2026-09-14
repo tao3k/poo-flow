@@ -6,7 +6,7 @@
         (only-in :clan/poo/mop element?)
         (only-in :std/misc/hash hash-ref/default hash-remove!)
         (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 find filter filter-map)
+        (only-in :std/srfi/1 append-map find filter filter-map)
         "types.ss" "objects.ss" "funcs.ss")
 
 (export ClosDirectSlotDefinition ClosEffectiveSlotDefinition ClosClass
@@ -241,8 +241,9 @@
 ;; : (-> [Pair] Symbol [SchemeValue])
 (def (merged-slot-list descriptions option)
   (unique/identity
-   (apply append
-          (map (lambda (entry) (.ref (cdr entry) option)) descriptions))))
+   (append-map
+    (lambda (entry) (.ref (cdr entry) option))
+    descriptions)))
 
 ;; : (-> [Pair] Symbol ClosEffectiveSlotDefinition)
 (def (compute-effective-slot owner-indexes slot-name)
@@ -276,14 +277,26 @@
   (let* ((owner-indexes (class-direct-slot-indexes class-value))
          (slot-names
           (unique/identity
-           (apply append
-                  (map (lambda (owner-class)
-                         (map (lambda (slot) (.ref slot 'identity))
-                              (.ref owner-class 'direct-slots)))
-                       (.ref class-value 'class-precedence-list))))))
+           (append-map
+            (lambda (owner-class)
+              (map (lambda (slot) (.ref slot 'identity))
+                   (.ref owner-class 'direct-slots)))
+            (.ref class-value 'class-precedence-list)))))
     (map (lambda (slot-name)
            (compute-effective-slot owner-indexes slot-name))
          slot-names)))
+
+;;; Effective slots and their lookup projection change atomically at the two
+;;; existing class-mutation boundaries: construction and redefinition.
+;; : (-> ClosClass ClosClass)
+(def (refresh-effective-slots! class-value)
+  (let (slots (compute-effective-slots class-value))
+    (.put! class-value 'effective-slots slots)
+    (.put! class-value 'effective-slot-index
+           (poo-clos-leftmost-index-by
+            (lambda (slot) (.ref slot 'identity))
+            slots))
+    class-value))
 
 ;; : (-> ClosSlotCell)
 (def (make-slot-cell)
@@ -381,10 +394,12 @@
             class-precedence-index:
             (poo-clos-position-index/identity
              (.ref self 'class-precedence-list))
-            effective-slots: (compute-effective-slots self)))
+            effective-slots: '()
+            effective-slot-index: (make-hash-table-eq)))
     (let (class-value
           (initialize-direct-class-slots!
-           (checked ClosClass candidate 'invalid-class)))
+           (refresh-effective-slots!
+            (checked ClosClass candidate 'invalid-class))))
       (for-each
        (lambda (superclass)
          (.put! superclass 'direct-subclasses
@@ -436,8 +451,7 @@
     (.put! class-value 'class-precedence-index
            (poo-clos-position-index/identity
             (.ref class-value 'class-precedence-list)))
-    (.put! class-value 'effective-slots
-           (compute-effective-slots class-value))
+    (refresh-effective-slots! class-value)
     (for-each
      (lambda (superclass)
        (.put! superclass 'direct-subclasses
@@ -509,12 +523,14 @@
 
 ;; : (-> ClosClass Symbol (Maybe ClosEffectiveSlotDefinition))
 (def (poo-clos-find-effective-slot class-value slot-name)
-  (find (lambda (slot) (eq? (.ref slot 'identity) slot-name))
-        (poo-clos-class-effective-slots class-value)))
+  (unless (element? ClosClass class-value) (clos-fail 'invalid-class))
+  (hash-get (.ref class-value 'effective-slot-index) slot-name))
 
 ;; : (-> ClosClass ClosClass Boolean)
 (def (poo-clos-class-subclass? class-value superclass-value)
   (and (element? ClosClass class-value)
        (element? ClosClass superclass-value)
-       (if (memq superclass-value
-                 (poo-clos-class-precedence-list class-value)) #t #f)))
+       (if (hash-key? (.ref class-value 'class-precedence-index)
+                      superclass-value)
+         #t
+         #f)))

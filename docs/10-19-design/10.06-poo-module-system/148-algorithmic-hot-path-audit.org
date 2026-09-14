@@ -22,6 +22,11 @@ first choice when it already owns the algorithm: this pass uses
 | Flow memoization | cache hit used =assoc= over every earlier input | =core/funcs.ss= owns a hash-backed memoizer, including correct cached =#f= behavior |
 | Indexed object family | its slot index was an alist and every lens lookup used =assoc= | =object-family/funcs.ss= builds a leftmost identity-to-position hash |
 | CLOS effective slots | every effective slot rescanned every owner's direct slot declarations | =poo-clos/funcs.ss= builds one leftmost direct-slot index per native C3 owner; C3 and declaration order remain authoritative |
+| CLOS effective slot access | every slot operation linearly searched the class effective-slot list | construction and redefinition publish one identity index beside the canonical effective-slot value; lookup remains a projection of native C3-derived slots |
+| CLOS applicability ordering | every stable-sort comparison used =list-ref= over required-argument distances | each admitted method stores one distance vector and comparison uses constant-time =vector-ref= in the generic's argument-precedence order |
+| CLOS protocol customization | hook output rescanned the generic method list and recomputed applicability distances | one leftmost identity index projects hook-selected methods from the already validated ranked set |
+| CLOS dependent evolution | diamond reachability used =memq= against the growing result list | one =make-hash-table-eq= visited set admits each class generation once before Gerbil =stable-sort= orders it by native C3 depth |
+| JSON Schema fast validation | every declared property rescanned all candidate rows at every recursive object node | one candidate identity index per node changes property admission from properties times rows to properties plus rows |
 | Runner DAG execution | each dependency edge used =assoc= against prior values and every node rescanned the complete plan to reconstruct its frontier | =core/funcs.ss= owns structural-id values plus an incremental dependency-count frontier; receipts retain canonical plan order and stored =#f= values |
 | Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =profile-composition/funcs.ss= builds leftmost target, stage, and binding indexes once per owning scope |
 | Set-shaped contract checks | each required value rescanned the complete observed/allowed list | =utilities/functional.ss= builds one hash membership index and preserves the existing list-shaped public contract |
@@ -43,6 +48,11 @@ domain operation or reusable method bundle.
 
 Single-pattern syntax uses =defrule=.  =defrules= remains reserved for genuine
 alternative grammars such as guarded versus unguarded final projections.
+
+This batch also replaced map-plus-=apply append= construction in effective-slot
+and method-key projection with SRFI-1 =append-map=.  The change removes the
+intermediate list of lists while leaving order, duplicate resolution, and the
+POO-owned public values unchanged.
 
 The POO CLOS runtime remains outside =src/module-system/api.ss= and is loaded
 only through its explicit module owner.  Its metadata-only =config.ss= is the
@@ -79,6 +89,34 @@ execution loop no longer rescans source nodes.
 3. Repeated local alist readers in UI, loader, loop, and session modules need
    call-site cardinality measurements. Small fixed metadata remains a legitimate
    projection alist; only repeated hot-loop lookup should become an index.
+4. =poo-clos/syntax.ss= lowers required and optional lexical bindings to
+   repeated list-position reads.  High-arity methods can make binding quadratic
+   in argument count, but ordinary CLOS arities are small; require a high-arity
+   invocation fixture before paying a vector allocation on every method body.
+
+* Current CR and CI evidence
+
+The post-change focused native batch passed class lifecycle, class evolution,
+dispatch, method-combination, recursive GitHub workflow validation, JSON Schema
+bridge validation, and the JSON Schema performance gate.  The evolution fixture
+now includes a native-POO diamond and proves that redefining the root increments
+the shared leaf generation exactly once.
+
+One local post-change p95 receipt reported =63.19 ms= for 80 alist workflow
+validations and =92.64 ms= for the equivalent POO-root validations.  The
+single-job micro paths reported =14.88 us= fast-validation average and =16.06
+us= receipt average.  These are host-local regression evidence, not a portable
+hardware claim; the existing budgets were not relaxed.
+
+Run =34847512726= separates the CI bottleneck from Testing: Ubuntu spent =6m17s=
+in native package build, =23s= in the single native unit entrypoint, and =1m14s=
+in isolated performance scenarios.  The macOS lane remained in =gerbil build=
+before either test step began.  ASP's pinned Build API already initializes
+=GERBIL_BUILD_CORES= from =##cpu-count= and assigns Gerbil compiler
+=__available-cores= before =std/make=.  Therefore no downstream scheduler,
+test batching override, or guessed fixed worker count is added here; macOS build
+receipts must establish whether the remaining gap is compiler throughput or
+host contention.
 
 * Build boundary
 

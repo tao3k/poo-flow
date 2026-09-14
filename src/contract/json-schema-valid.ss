@@ -7,6 +7,8 @@
                  .all-slots
                  .ref
                  object?)
+        (only-in :gerbil/runtime/hash
+                 list->hash-table-eq)
         (only-in "./functional.ss"
                  poo-flow-contract-all?
                  poo-flow-contract-any?
@@ -77,14 +79,22 @@
       (car tail)
       tail)))
 
-(def (poo-flow-json-schema-candidate-row-slot rows slot)
-  (let (row (assq slot rows))
-    (if row
-      (poo-flow-json-schema-row-value row)
-      (poo-flow-contract-object-ref
-       rows
-       slot
-       +poo-flow-json-schema-validation-missing+))))
+;; Normalize a candidate object once per recursive object validation. Reversing
+;; the rows before the native constructor preserves leftmost JSON-key binding.
+;; : (-> JsonSchemaCandidateRows HashTable)
+(def (poo-flow-json-schema-candidate-row-index rows)
+  (list->hash-table-eq
+   (reverse
+    (map (lambda (row)
+           (cons (poo-flow-contract-key->symbol (car row))
+                 (poo-flow-json-schema-row-value row)))
+         rows))))
+
+;; : (-> HashTable Symbol JsonSchemaCandidateSlotValue)
+(def (poo-flow-json-schema-candidate-index-slot index slot)
+  (if (hash-key? index slot)
+    (hash-get index slot)
+    +poo-flow-json-schema-validation-missing+))
 
 ;; : (-> JsonSchemaCandidateSlotValue Boolean)
 (def (poo-flow-json-schema-schema-guided-array? value)
@@ -355,11 +365,11 @@
             (poo-flow-json-schema-node-valid? item-node item))
           items))))
 
-;; : (-> PooFlowJsonSchemaProperty JsonSchemaCandidateRows Boolean)
-(def (poo-flow-json-schema-property-valid/rows? property rows)
+;; : (-> PooFlowJsonSchemaProperty HashTable Boolean)
+(def (poo-flow-json-schema-property-valid/index? property candidate-index)
   (let (value
-        (poo-flow-json-schema-candidate-row-slot
-         rows
+        (poo-flow-json-schema-candidate-index-slot
+         candidate-index
          (poo-flow-json-schema-property-name property)))
     (if (eq? value +poo-flow-json-schema-validation-missing+)
       (not (poo-flow-json-schema-property-required? property))
@@ -445,13 +455,18 @@
                (poo-flow-json-schema-node-value node))
               (properties
                (poo-flow-json-schema-object-properties object))
+              (candidate-index
+               (and (pair? properties)
+                    (poo-flow-json-schema-candidate-row-index rows)))
               (declared-index
                (poo-flow-json-schema-object-property-index object)))
          (and
           (poo-flow-json-schema-object-node-rows-shape-valid? node rows)
           (poo-flow-contract-all?
            (lambda (property)
-             (poo-flow-json-schema-property-valid/rows? property rows))
+             (poo-flow-json-schema-property-valid/index?
+              property
+              candidate-index))
            properties)
           (poo-flow-contract-all?
            (lambda (row)
