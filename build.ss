@@ -5,12 +5,8 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype))
-
-(def +public-entry-modules+
-  '("src/core/api.ss"
-    "src/module-system/api.ss"
-    "src/feature-system/interface.ss"))
+                 asp-gerbil-scheme-library-package-prototype
+                 default-exclude-dirs))
 
 (def +nono-c-include-option+
   (string-append
@@ -26,7 +22,7 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
- (public-entry-modules +public-entry-modules+)
+ (exclude-dirs (cons "lambda-episteme" default-exclude-dirs))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
