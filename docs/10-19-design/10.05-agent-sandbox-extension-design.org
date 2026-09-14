@@ -168,6 +168,25 @@ POO Flow must not maintain a parallel raw =.scm= plus =.ssi= target pair for
 this module.  Besides duplicating Gerbil's normal module lifecycle, a raw
 =gsc:= target has no deterministic output before its first compilation and
 therefore cannot satisfy the native =gerbil clean= contract on a fresh package.
+This is a decision about the source shape of =_nono=, not a ban on raw Gambit
+FFI.  The native build scenarios remain distinct:
+
+| Scenario | Source owner and shape | Native =std/make= declaration | Qualification boundary |
+|----------+------------------------+--------------------------------+------------------------|
+| Gerbil-managed FFI | Gerbil =.ss= module using =:std/foreign= and =begin-ffi=, as in POO Flow =_nono= | one =gxc:= target with host flags | =gxc= owns generated =.scm=, =.ssi=, and object outputs; fresh =gerbil clean= must succeed |
+| Raw Gambit FFI | checked-in =.scm= plus =.ssi=, as in =gerbil-mysql/db/_mysql= | paired =gsc:= and =ssi:= targets followed by the Gerbil facade module | valid when the package intentionally owns Gambit source and interface; its current fresh-clean limitation belongs to upstream =std/make= output discovery |
+| Gerbil standard-library raw FFI | platform-specialized raw sources such as =std/os/_socket= or optional =std/db/_sqlite= | =cond-expand= or configure-selected =gsc:/ssi:= forms | platform and external-library selection remain with the package's native build spec |
+| Runtime-loaded ABI | a compiled Gerbil FFI shim using =dlopen=/=dlsym=, as in =_nono= | the same =gxc:= module target; runtime library path is not a build target | build qualification proves compilation; live-library availability and ABI probes remain runtime receipts |
+
+ASP may preserve and compose these BuildSpec values in a PackageSpec, but it
+must not normalize them into one invented FFI form, invoke a second compiler
+pipeline, or repair native clean semantics through a downstream wrapper.  An
+ASP extension is admissible only when a neutral fixture demonstrates a strict
+gain over the direct native declaration: fewer repeated declarations, a
+portable profile composition unavailable in the native value alone, or an
+additional typed receipt.  Merely reproducing =defbuild-script= or =std/make=
+is not a gain.
+
 The remaining boundaries are unchanged:
 - =src/modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory;
 - =src/modules/nono-sandbox/c-binding-build.ss= owns the POO build/probe object

@@ -1,19 +1,30 @@
-;;; -*- Scheme -*-
+;;; -*- Gerbil -*-
 ;;; Owner: native Gerbil FFI shim for nono's C ABI.
 ;;; Boundary: this file owns dlopen/dlsym and safe symbol probes only.
 
-(declare
-  (block)
-  (standard-bindings)
-  (extended-bindings)
-  (not safe))
+(import :std/foreign)
 
-(namespace ("poo-flow/src/modules/nono-sandbox/_nono#"))
-(##namespace ("" define-macro define quasiquote unquote c-lambda c-declare))
+(export nono_native_open
+        nono_native_close
+        nono_native_is_loaded
+        nono_native_last_error
+        nono_native_sandbox_is_supported
+        nono_native_support_is_supported
+        nono_native_support_platform
+        nono_native_support_details
+        nono_native_capability_roundtrip
+        nono_native_apply_null)
 
-(define-macro (define-c-lambda id args ret name)
-  `(define ,id
-     (c-lambda ,args ,ret ,name)))
+(begin-ffi (nono_native_open
+            nono_native_close
+            nono_native_is_loaded
+            nono_native_last_error
+            nono_native_sandbox_is_supported
+            nono_native_support_is_supported
+            nono_native_support_platform
+            nono_native_support_details
+            nono_native_capability_roundtrip
+            nono_native_apply_null)
 
 (c-declare #<<END-C
 #include <stdbool.h>
@@ -265,4 +276,4 @@ END-C
 (define-c-lambda nono_native_capability_roundtrip () int
   "ffi_nono_native_capability_roundtrip")
 (define-c-lambda nono_native_apply_null () int
-  "ffi_nono_native_apply_null")
+  "ffi_nono_native_apply_null"))
