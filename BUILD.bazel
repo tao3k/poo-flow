@@ -17,9 +17,7 @@ filegroup(
     srcs = glob([
         "gerbil.pkg",
         "src/**/*.inc",
-        "src/**/*.scm",
         "src/**/*.ss",
-        "src/**/*.ssi",
     ]),
 )
 
