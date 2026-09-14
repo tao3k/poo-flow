@@ -81,16 +81,16 @@ metaobject identity while recording construction and warm-query latency.
 - Multiple values are carried by the native Scheme values protocol.
 
 The executable clause ledger and interpreted/AOT qualification are owned by
-=t/qualification/poo-clos/=.  Its exhaustive 41-entry CLHS 7.7 manifest maps
-every operator to a source-owned evidence fixture and currently has no open
-required ANSI row.  Qualification still fails closed if any row becomes open,
+=t/qualification/poo-clos/=.  Its exhaustive 41-entry CLHS 7.7 reference
+manifest maps every operator to a source-owned evidence fixture and currently
+has no open required POO CLOS row.  Qualification still fails closed if any row becomes open,
 if a fixture has no attributable assertions, or if interpreted and fresh-AOT
 counts diverge.  Receipts retain =performance-claim? #f= until a user approves
 a workload and SLA.
 
-* Convergence boundary
+* Single-owner boundary
 
-The older =poo-method-combination/= module is migration input, not a second
-standard.  New qualifiers, frames, effective-method rules, and public authoring
-work belong here.  Reusable single-receiver behavior must converge into this
-owner before the older module and its registry entry are removed.
+New qualifiers, frames, effective-method rules, and public authoring work belong
+here.  The active Loader, kernel profile, Funflow dependency, and user-facing
+module key all resolve to =poo-clos=; no compatibility alias participates in
+selection or dispatch.

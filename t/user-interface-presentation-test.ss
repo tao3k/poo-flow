@@ -174,7 +174,7 @@
                       poo-flow-user-config-presentation-kind)
         (check-equal? (.ref presentation 'module-count) 8)
         (check-equal? (.ref presentation 'module-keys)
-                      '((core . poo-method-combination)
+                      '((core . poo-clos)
                         (flow . funflow)
                         (session . session-core)
                         (loop . governor)
@@ -211,7 +211,7 @@
                                    (car feature-facts))
                       'init-selection)
         (check-equal? (alist-value 'key (car feature-facts))
-                      '(core . poo-method-combination))
+                      '(core . poo-clos))
         (check-equal? (alist-value 'dependency-installation?
                                    (car feature-facts))
                       #f)
@@ -220,7 +220,7 @@
                       #f)
         (check-equal? (.ref presentation 'setting-count) 7)
         (check-equal? (alist-value 'flags (car modules))
-                      '(+standard))
+                      '(+native))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (alist-value 'checks cicd-intent)
                       '(+parallel +typed-receipts))
@@ -405,7 +405,7 @@
                       0)
         (check-equal? (alist-value 'key
                                    (car (.ref presentation 'feature-facts)))
-                      '(core . poo-method-combination))
+                      '(core . poo-clos))
         (check-equal? (not
                        (not
                         (member "poo-flow-profile"

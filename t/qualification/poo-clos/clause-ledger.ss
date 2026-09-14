@@ -1,12 +1,12 @@
 ;;; -*- Gerbil -*-
-;;; Executable ANSI-CLOS and separately scoped MOP-EXTENDED clause inventory.
+;;; Executable POO-CLOS and separately scoped MOP-EXTENDED clause inventory.
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/srfi/1 filter))
 
 (export poo-clos-clause-ledger poo-clos-operator-ledger
-        poo-clos-required-ansi-rows poo-clos-required-ansi-operators
-        poo-clos-open-required-ansi-rows poo-clos-ledger-row-valid?
+        poo-clos-required-rows poo-clos-required-operators
+        poo-clos-open-required-rows poo-clos-ledger-row-valid?
         poo-clos-operator-row-valid? poo-clos-evidence-id-resolves?)
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol POOObject)
@@ -24,90 +24,90 @@
 (def poo-clos-clause-ledger
   (list
    ;; Class definition, inheritance, slots, and construction.
-   (closed-clause 'C43-class-metaobjects 'ansi-clos 'classes
+   (closed-clause 'C43-class-metaobjects 'poo-clos 'classes
            'native-class-metaobjects 'invalid-class)
-   (closed-clause 'C432-class-definition 'ansi-clos 'syntax
+   (closed-clause 'C432-class-definition 'poo-clos 'syntax
            'defclass-lowering 'duplicate-class-declarations)
-   (closed-clause 'C432-slot-options 'ansi-clos 'classes
+   (closed-clause 'C432-slot-options 'poo-clos 'classes
            'slot-option-projection 'invalid-slot-options)
-   (closed-clause 'C433-make-instance 'ansi-clos 'lifecycle
+   (closed-clause 'C433-make-instance 'poo-clos 'lifecycle
            'make-instance-initialization 'invalid-initargs)
-   (closed-clause 'C434-inheritance 'ansi-clos 'classes
+   (closed-clause 'C434-inheritance 'poo-clos 'classes
            'diamond-inheritance 'duplicate-direct-superclass)
-   (closed-clause 'C435-class-precedence 'ansi-clos 'classes
+   (closed-clause 'C435-class-precedence 'poo-clos 'classes
            'native-c3-order 'inconsistent-c3)
-   (closed-clause 'C436-class-redefinition 'ansi-clos 'evolution
+   (closed-clause 'C436-class-redefinition 'poo-clos 'evolution
            'successor-generation 'obsolete-generation-redefinition)
-   (closed-clause 'C436-dependent-propagation 'ansi-clos 'evolution
+   (closed-clause 'C436-dependent-propagation 'poo-clos 'evolution
            'dependent-generation-cascade 'stale-superclass-generation)
-   (closed-clause 'C436-lazy-instance-update 'ansi-clos 'lifecycle
+   (closed-clause 'C436-lazy-instance-update 'poo-clos 'lifecycle
            'lazy-instance-convergence 'discarded-slot-property-list)
-   (closed-clause 'C436-shared-slot-transition 'ansi-clos 'evolution
+   (closed-clause 'C436-shared-slot-transition 'poo-clos 'evolution
            'shared-slot-cell-preservation 'allocation-transition)
-   (closed-clause 'C436-make-instances-obsolete 'ansi-clos 'evolution
+   (closed-clause 'C436-make-instances-obsolete 'poo-clos 'evolution
            'explicit-obsolescence 'obsolete-generation-redefinition)
-   (closed-clause 'C437-class-specialized-types 'ansi-clos 'dispatch
+   (closed-clause 'C437-class-specialized-types 'poo-clos 'dispatch
            'class-specializer-inheritance 'invalid-specializer)
 
    ;; Creation, reinitialization, class change, and slot protocols.
-   (closed-clause 'C71-allocation-initialization 'ansi-clos 'lifecycle
+   (closed-clause 'C71-allocation-initialization 'poo-clos 'lifecycle
            'allocate-initialize-shared 'malformed-initialization-arguments)
-   (closed-clause 'C71-default-initargs 'ansi-clos 'lifecycle
+   (closed-clause 'C71-default-initargs 'poo-clos 'lifecycle
            'leftmost-default-initargs 'unknown-initarg)
-   (closed-clause 'C72-change-class 'ansi-clos 'lifecycle
+   (closed-clause 'C72-change-class 'poo-clos 'lifecycle
            'identity-preserving-change-class 'invalid-target-class)
-   (closed-clause 'C72-update-different-class 'ansi-clos 'lifecycle
+   (closed-clause 'C72-update-different-class 'poo-clos 'lifecycle
            'previous-current-hook-views 'invalid-change-initargs)
-   (closed-clause 'C73-reinitialize-instance 'ansi-clos 'lifecycle
+   (closed-clause 'C73-reinitialize-instance 'poo-clos 'lifecycle
            'reinitialize-supplied-slots 'reinitialize-does-not-run-initforms)
-   (closed-clause 'C75-slot-value 'ansi-clos 'lifecycle
+   (closed-clause 'C75-slot-value 'poo-clos 'lifecycle
            'slot-read-write 'slot-missing)
-   (closed-clause 'C75-slot-boundp-makunbound 'ansi-clos 'lifecycle
+   (closed-clause 'C75-slot-boundp-makunbound 'poo-clos 'lifecycle
            'bound-and-makunbound 'slot-unbound)
-   (closed-clause 'C752-generated-accessors 'ansi-clos 'syntax
+   (closed-clause 'C752-generated-accessors 'poo-clos 'syntax
            'reader-writer-method-dispatch 'missing-accessor-slot)
-   (closed-clause 'C752-with-slots 'ansi-clos 'syntax
+   (closed-clause 'C752-with-slots 'poo-clos 'syntax
            'live-with-slots-read 'invalid-slot-name)
-   (closed-clause 'C752-with-accessors 'ansi-clos 'syntax
+   (closed-clause 'C752-with-accessors 'poo-clos 'syntax
            'live-with-accessors-dispatch 'missing-accessor-method)
-   (closed-clause 'C753-slot-inheritance 'ansi-clos 'classes
+   (closed-clause 'C753-slot-inheritance 'poo-clos 'classes
            'effective-slot-option-merge 'duplicate-direct-slot)
-   (closed-clause 'C753-class-allocation 'ansi-clos 'classes
+   (closed-clause 'C753-class-allocation 'poo-clos 'classes
            'shared-and-shadowed-slots 'invalid-slot-allocation)
 
    ;; Generic functions, methods, selection, and combination.
-   (closed-clause 'C761-generic-function 'ansi-clos 'objects
+   (closed-clause 'C761-generic-function 'poo-clos 'objects
            'generic-function-metaobject 'invalid-generic-function)
-   (closed-clause 'C762-method-metaobject 'ansi-clos 'objects
+   (closed-clause 'C762-method-metaobject 'poo-clos 'objects
            'method-metaobject 'invalid-method)
-   (closed-clause 'C763-specializer-qualifier-agreement 'ansi-clos 'objects
+   (closed-clause 'C763-specializer-qualifier-agreement 'poo-clos 'objects
            'method-replacement-agreement 'invalid-method-qualifier)
-   (closed-clause 'C764-lambda-list-congruence 'ansi-clos 'objects
+   (closed-clause 'C764-lambda-list-congruence 'poo-clos 'objects
            'congruent-lambda-lists 'incongruent-method-lambda-list)
-   (closed-clause 'C765-applicable-keyword-union 'ansi-clos 'dispatch
+   (closed-clause 'C765-applicable-keyword-union 'poo-clos 'dispatch
            'applicable-method-keyword-union 'invalid-keyword-argument)
-   (closed-clause 'C766-no-applicable-first 'ansi-clos 'dispatch
+   (closed-clause 'C766-no-applicable-first 'poo-clos 'dispatch
            'no-applicable-before-keywords 'no-applicable-method)
-   (closed-clause 'C766-applicable-methods 'ansi-clos 'dispatch
+   (closed-clause 'C766-applicable-methods 'poo-clos 'dispatch
            'multiple-dispatch-ranking 'changed-applicable-methods)
-   (closed-clause 'C766-argument-precedence-order 'ansi-clos 'dispatch
+   (closed-clause 'C766-argument-precedence-order 'poo-clos 'dispatch
            'argument-precedence-order 'invalid-argument-precedence-order)
-   (closed-clause 'C766-standard-combination 'ansi-clos 'dispatch
+   (closed-clause 'C766-standard-combination 'poo-clos 'dispatch
            'standard-method-combination 'no-primary-method)
-   (closed-clause 'C766-next-method 'ansi-clos 'dispatch
+   (closed-clause 'C766-next-method 'poo-clos 'dispatch
            'call-next-method 'no-next-method)
-   (closed-clause 'C7663-declarative-combination 'ansi-clos 'method-combination
+   (closed-clause 'C7663-declarative-combination 'poo-clos 'method-combination
            'short-and-long-combinations 'required-method-group-empty)
-   (closed-clause 'C7664-built-in-combinations 'ansi-clos 'method-combination
+   (closed-clause 'C7664-built-in-combinations 'poo-clos 'method-combination
            'all-nine-built-ins 'unsupported-combination-operator)
-   (closed-clause 'C767-method-inheritance 'ansi-clos 'dispatch
+   (closed-clause 'C767-method-inheritance 'poo-clos 'dispatch
            'superclass-method-applicability 'no-applicable-method)
-   (closed-clause 'D-ensure-generic-function 'ansi-clos 'generic-evolution
+   (closed-clause 'D-ensure-generic-function 'poo-clos 'generic-evolution
            'ensure-generic-binding 'generic-binding-identity-mismatch)
-   (closed-clause 'D-generic-reinitialization 'ansi-clos 'generic-evolution
+   (closed-clause 'D-generic-reinitialization 'poo-clos 'generic-evolution
            'atomic-generic-reconfiguration 'method-required-argument-mismatch)
 
-   ;; This row is evidence but cannot satisfy or dilute an ANSI requirement.
+   ;; This row is evidence but cannot satisfy or dilute a POO CLOS requirement.
    (closed-clause 'MOP-portable-read-only-profile 'mop-extended 'mop
            'sealed-capability-profile 'unadmitted-operation)))
 
@@ -121,7 +121,7 @@
   (and id (if (memq id poo-clos-evidence-ids) #t #f)))
 
 (def (operator name status-name evidence-name gap-name)
-  (.o id: name profile: 'ansi-clos status: status-name
+  (.o id: name profile: 'poo-clos status: status-name
       evidence-id: evidence-name gap-id: gap-name))
 (def (covered name evidence) (operator name 'closed evidence #f))
 (def (missing name gap) (operator name 'open #f gap))
@@ -170,23 +170,23 @@
    (covered 'unbound-slot 'lifecycle)
    (covered 'unbound-slot-instance 'lifecycle)))
 
-(def (poo-clos-required-ansi-operators) poo-clos-operator-ledger)
+(def (poo-clos-required-operators) poo-clos-operator-ledger)
 
 ;; : (-> [POOObject])
-(def (poo-clos-required-ansi-rows)
-  (filter (lambda (row) (eq? (.ref row 'profile) 'ansi-clos))
+(def (poo-clos-required-rows)
+  (filter (lambda (row) (eq? (.ref row 'profile) 'poo-clos))
           poo-clos-clause-ledger))
 
 ;; : (-> [POOObject])
-(def (poo-clos-open-required-ansi-rows)
+(def (poo-clos-open-required-rows)
   (filter (lambda (row) (not (eq? (.ref row 'status) 'closed)))
-          (append (poo-clos-required-ansi-rows)
-                  (poo-clos-required-ansi-operators))))
+          (append (poo-clos-required-rows)
+                  (poo-clos-required-operators))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-clos-ledger-row-valid? row)
   (and (memq (.ref row 'status) '(closed open))
-       (memq (.ref row 'profile) '(ansi-clos mop-extended))
+       (memq (.ref row 'profile) '(poo-clos mop-extended))
        (symbol? (.ref row 'id))
        (symbol? (.ref row 'owner))
        (symbol? (.ref row 'positive-test))
@@ -196,7 +196,7 @@
   (let ((status (.ref row 'status))
         (evidence (.ref row 'evidence-id))
         (gap (.ref row 'gap-id)))
-    (and (equal? (.ref row 'profile) 'ansi-clos)
+    (and (equal? (.ref row 'profile) 'poo-clos)
          (or (symbol? (.ref row 'id)) (pair? (.ref row 'id)))
          (case status
            ((closed) (and (poo-clos-evidence-id-resolves? evidence) (not gap)))

@@ -18,7 +18,7 @@
 ;;     registering new metaclasses or changing native POO dispatch.
 ;;   | doc m%
 ;;       `poo-clos-mop-extended-profile` separates de facto MOP capabilities
-;;       from the ANSI CLOS conformance profile.
+;;       from the POO CLOS core profile.
 ;;
 ;;       # Examples
 ;;       ```scheme

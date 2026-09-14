@@ -44,10 +44,10 @@ domain operation or reusable method bundle.
 Single-pattern syntax uses =defrule=.  =defrules= remains reserved for genuine
 alternative grammars such as guarded versus unguarded final projections.
 
-The experimental =poo-clos= and =poo-method-combination= leaf packages are no
-longer re-exported by =src/module-system/api.ss=.  Their direct leaf tests can
-continue to qualify them as extensions, but ASP's build closure no longer
-mistakes them for mandatory Module System core capabilities.
+The POO CLOS runtime remains outside =src/module-system/api.ss= and is loaded
+only through its explicit module owner.  Its metadata-only =config.ss= is the
+kernel profile entrypoint; selecting the module does not pull dispatch,
+lifecycle, or declaration syntax into ASP's mandatory build closure.
 
 The 250/500/1000-item five-sample median check, with a collection before each
 sample, observed these milliseconds:

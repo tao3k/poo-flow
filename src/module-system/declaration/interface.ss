@@ -103,7 +103,7 @@
 ;; : (-> Symbol Symbol)
 (def (poo-flow-modules-system-use-module-group module)
   (cond
-   ((eq? module 'poo-method-combination) 'core)
+   ((eq? module 'poo-clos) 'core)
    ((eq? module 'funflow) 'flow)
    ((eq? module 'loop-engine) 'flow)
    ((eq? module 'workflow) 'flow)

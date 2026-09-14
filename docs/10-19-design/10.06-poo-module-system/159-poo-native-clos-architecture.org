@@ -27,11 +27,8 @@ Acceptance is executable and fail-closed:
 
 The POO-native CLOS owner is =src/module-system/poo-clos/=.  Public values are
 native Gerbil POO objects, and declarations lower hygienically to those objects
-plus functional dispatch operations.  The earlier
-=src/module-system/poo-method-combination/= module is a migration source only;
-it must not grow a second method model, execution kernel, or public standard.
-Its reusable semantics converge into POO CLOS before that older owner is
-removed.
+plus functional dispatch operations.  No second method-combination module is
+part of the active Loader, profile, Funflow, or user-interface graph.
 
 This owner is a POO-native CLOS metaprotocol extension, not an ANSI
 compatibility layer.  It is opt-in and is not imported or re-exported by
@@ -76,7 +73,7 @@ flowchart LR
 | Load forms | two-phase creation/initialization, cycle-safe reference resolution, selected-slot saving, unbound preservation, and class-name association |
 | Declaration surface | POO-native =.defclass=, =.defgeneric=, =.defmethod=, and =.define-method-combination= |
 | Reflection | defensive class, slot, method, generic, specializer, dependency, and generation projections |
-| MOP-EXTENDED | sealed read-only portable profile that remains outside ANSI acceptance |
+| MOP-EXTENDED | sealed read-only portable profile outside the POO CLOS core acceptance denominator |
 
 The executable clause and operator manifests live in
 =t/qualification/poo-clos/clause-ledger.ss=.  Ledger rows contain semantic
@@ -139,7 +136,7 @@ resource observation and interpreted/AOT attribution:
 - declaration surface;
 - method combination;
 - evolution, reflection, and load form;
-- ANSI clause ledger.
+- POO CLOS reference-clause ledger.
 
 Fixture names describe durable evidence boundaries, not delivery stages.  The
 qualifier applies heap ceilings, elapsed-time guards, the shared process-tree

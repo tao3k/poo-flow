@@ -211,7 +211,7 @@
           (check-equal? (car source-values)
                         "src/modules/funflow/config.ss")
           (check-equal?
-           (if (member "src/module-system/poo-method-combination/config.ss"
+           (if (member "src/module-system/poo-clos/config.ss"
                        source-values)
              #t
              #f)

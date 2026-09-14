@@ -84,7 +84,7 @@
 ;;
 ;;       # Examples
 ;;       ```scheme
-;;       (poo-flow-modules! :core (poo-method-combination) :flow (funflow +dag))
+;;       (poo-flow-modules! :core (poo-clos) :flow (funflow +dag))
 ;;       ;; => core and flow selection bundles in declaration order
 ;;       ```
 ;;     %

@@ -3,7 +3,7 @@
 This directory owns CLOS-specific test data and optional observation helpers.
 Build and test execution remain owned by the package's =build.ss= and its
 single upstream =unit-tests.ss=/=:clan/testing= path.  The =mop-extended= row is
-deliberately outside the ANSI denominator.
+deliberately outside the POO CLOS core denominator.
 
 | File | Responsibility |
 |------+----------------|

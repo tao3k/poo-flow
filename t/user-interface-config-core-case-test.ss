@@ -35,7 +35,7 @@
 
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
-  '((core . poo-method-combination)
+  '((core . poo-clos)
     (flow . funflow)
     (session . session-core)
     (loop . governor)
@@ -96,11 +96,11 @@
       (check-equal? (poo-flow-user-module-selection->alist
                      (car test-poo-flow-user-modules))
                     '((group . core)
-                      (module . poo-method-combination)
-                      (key core . poo-method-combination)
+                      (module . poo-clos)
+                      (key core . poo-clos)
                       (source-ref . #f)
                       (entrypoint . #f)
-                      (flags +standard)
+                      (flags +native)
                       (enabled? . #t))))
     (test-case "validates use-module declarations before projection"
       (let* ((valid-selections (use-module nono-sandbox +nono +doctor))

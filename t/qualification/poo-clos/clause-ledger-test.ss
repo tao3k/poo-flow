@@ -39,16 +39,16 @@
 (def clause-ledger-test
   (test-suite "POO-native CLOS executable clause ledger"
     (test-case "semantic clause rows remain explicit and structurally valid"
-      (let (required (poo-clos-required-ansi-rows))
+      (let (required (poo-clos-required-rows))
         (check (> (length required) 30) => #t)
         (check-equal? (.ref (car required) 'id) 'C43-class-metaobjects)
         (check (andmap poo-clos-ledger-row-valid? required) => #t)
         (check (unique-symbols?
                 (map (lambda (row) (.ref row 'id)) required)) => #t)))
     (test-case "the CLHS Objects Dictionary is exhaustive and fail-closed"
-      (let* ((operators (poo-clos-required-ansi-operators))
+      (let* ((operators (poo-clos-required-operators))
              (names (map (lambda (row) (.ref row 'id)) operators))
-             (open (poo-clos-open-required-ansi-rows)))
+             (open (poo-clos-open-required-rows)))
         (check-equal? (length operators) 41)
         (check (andmap poo-clos-operator-row-valid? operators) => #t)
         (check-equal?
@@ -83,10 +83,10 @@
         (check-equal? (cdr (assoc 'code (car diagnostics)))
                       'poo-slot-initializer-shadows-slot)
         (check-equal? (cdr (assoc 'slot (car diagnostics))) 'status)))
-    (test-case "MOP evidence remains outside the ANSI acceptance denominator"
+    (test-case "MOP evidence remains outside the POO CLOS core denominator"
       (let (extended
             (filter (lambda (row) (eq? (.ref row 'profile) 'mop-extended))
                     poo-clos-clause-ledger))
         (check-equal? (length extended) 1)
-        (check (not (memq (car extended) (poo-clos-required-ansi-rows)))
+        (check (not (memq (car extended) (poo-clos-required-rows)))
                => #t)))))

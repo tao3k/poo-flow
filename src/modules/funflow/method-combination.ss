@@ -1,6 +1,6 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: Funflow declares its dependency on the shared method-combination
-;;; standard without importing that module's private implementation factors.
+;;; Boundary: Funflow declares its dependency on POO CLOS without importing
+;;; runtime implementation factors.
 
 (import (only-in :poo-flow/src/module-system/loader/source
                  poo-flow-standard-library-source))
@@ -11,4 +11,4 @@
 ;;; descriptor realization remains owned by the Loader.
 ;; : PooModuleSourceRef
 (def poo-flow-funflow-method-combination-module-ref
-  (poo-flow-standard-library-source 'poo-method-combination))
+  (poo-flow-standard-library-source 'poo-clos))

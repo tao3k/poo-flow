@@ -104,7 +104,7 @@
   (list
    (poo-flow-module-system-source
     'method-combination
-    "src/module-system/poo-method-combination/config.ss")
+    "src/module-system/poo-clos/config.ss")
    (poo-flow-module-system-source
     'profile-config "src/user-interface/profile-config.ss")
    (poo-flow-module-system-source

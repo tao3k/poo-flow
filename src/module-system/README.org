@@ -8,8 +8,8 @@ package-level entrypoints; each implementation feature owns a directory with an
 
 Maintained product modules live in =src/modules/<module>/=.  In particular,
 workflow implementation belongs to =src/modules/workflow/=.  Module-system
-features such as native method combination and Loader observability live here,
-under =poo-method-combination/= and =observability/= respectively.
+features such as POO-native CLOS and Loader observability live here, under
+=poo-clos/= and =observability/= respectively.
 
 * Feature owners
 
@@ -27,7 +27,7 @@ under =poo-method-combination/= and =observability/= respectively.
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | object family | =object-family/interface.ss= | hygienic object-family declarations |
 | semantic module | =semantic-module/interface.ss= | semantic module objects and types |
-| method combination | =poo-method-combination/interface.ss= | qualified native POO methods |
+| POO CLOS | =poo-clos/interface.ss= | native MOP extension, multiple dispatch, and method combination |
 | observability | =observability/interface.ss= | module authoring and observation |
 
 The mechanism may consume the declarative maintained-module list from

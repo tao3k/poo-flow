@@ -3,7 +3,6 @@
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  +testing-discovery-profile+
-                 +testing-process-isolation-profile+
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-add-profile
@@ -16,15 +15,8 @@
          "module-system-lazy-loader-test.ss"
          "module-system-observability-test.ss")))
 
-(def +poo-flow-process-isolation-test-selectors+
-  (list (testing-test-selector 'contains "poo-method-combination")))
-
 (def +poo-flow-testing-interface+
   (foldl
-   (lambda (selector testing)
-     (testing-interface-map-profile
-      testing selector +testing-process-isolation-profile+))
-   (foldl
     (lambda (selector testing)
       (testing-interface-map-profile
        testing selector +testing-serial-resource-profile+))
@@ -34,7 +26,6 @@
           ignoreDirectories: '("lambda-episteme"
                                "t/performance"
                                "t/module-system-poo-performance-test-support")))
-    +poo-flow-serial-test-selectors+)
-   +poo-flow-process-isolation-test-selectors+))
+    +poo-flow-serial-test-selectors+))
 
 (init-profiled-test-environment! +poo-flow-testing-interface+)

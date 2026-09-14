@@ -1,0 +1,104 @@
+;;; -*- Gerbil -*-
+;;; POO CLOS first-class module boundary and lazy runtime contract.
+
+(import (only-in :std/test test-suite test-case check-equal?)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-modules-system-use-module-group
+                 poo-flow-user-module-selection-flags
+                 poo-flow-user-module-selection-key)
+        (only-in :poo-flow/src/module-system/descriptor/interface
+                 poo-flow-module-depth
+                 poo-flow-module-descriptor?
+                 poo-flow-module-extensions
+                 poo-flow-module-group
+                 poo-flow-module-interface-object
+                 poo-flow-module-name)
+        (only-in :poo-flow/src/module-system/interface
+                 poo-flow-module-interface-id)
+        (only-in :poo-flow/src/module-system/loader/registry
+                 poo-flow-src-modules-source-refs)
+        (only-in :poo-flow/src/module-system/loader/source
+                 poo-flow-module-source-ref-kind
+                 poo-flow-module-source-ref-value)
+        "../src/module-system/load.ss"
+        (only-in "../src/module-system/poo-clos/config.ss"
+                 poo-clos-module
+                 poo-clos-module-default-selection)
+        (only-in "../src/modules/funflow/method-combination.ss"
+                 poo-flow-funflow-method-combination-module-ref))
+
+(export poo-clos-module-test)
+
+(def module-system-feature-interface-paths
+  '("src/module-system/composition/interface.ss"
+    "src/module-system/declaration/interface.ss"
+    "src/module-system/descriptor/interface.ss"
+    "src/module-system/diagnostics/interface.ss"
+    "src/module-system/extension/interface.ss"
+    "src/module-system/loader/interface.ss"
+    "src/module-system/object-core/interface.ss"
+    "src/module-system/object-family/interface.ss"
+    "src/module-system/object-validation/interface.ss"
+    "src/module-system/observability/interface.ss"
+    "src/module-system/poo-clos/interface.ss"
+    "src/module-system/profile-composition/interface.ss"
+    "src/module-system/projection/interface.ss"
+    "src/module-system/semantic-module/interface.ss"))
+
+(def (all-files-exist? paths)
+  (or (null? paths)
+      (and (file-exists? (car paths))
+           (all-files-exist? (cdr paths)))))
+
+(def poo-clos-module-test
+  (test-suite "POO CLOS first-class module boundary"
+    (test-case "declaration syntax selects the POO-native core owner"
+      (let (bundles
+            (poo-flow-modules!
+             :core (poo-clos +native)
+             :flow (funflow +dag)))
+        (check-equal?
+         (map (lambda (bundle)
+                (poo-flow-user-module-selection-key (car bundle)))
+              bundles)
+         '((core . poo-clos) (flow . funflow)))))
+    (test-case "module-system feature layout exposes the POO CLOS owner"
+      (check-equal? (all-files-exist? module-system-feature-interface-paths) #t))
+    (test-case "registry resolves the lightweight POO CLOS config"
+      (let (paths
+            (map poo-flow-module-source-ref-value
+                 (poo-flow-src-modules-source-refs)))
+        (check-equal?
+         (if (member "src/module-system/poo-clos/config.ss" paths) #t #f)
+         #t)
+        (check-equal?
+         (if (member "src/module-system/poo-method-combination/config.ss"
+                     paths)
+           #t #f)
+         #f)))
+    (test-case "descriptor declares native MOP ownership without runtime load"
+      (check-equal? (poo-flow-module-descriptor? poo-clos-module) #t)
+      (check-equal? (poo-flow-module-name poo-clos-module) 'poo-clos)
+      (check-equal? (poo-flow-module-group poo-clos-module) 'core)
+      (check-equal? (poo-flow-module-depth poo-clos-module)
+                    (cons -110 -110))
+      (check-equal?
+       (poo-flow-module-interface-id
+        (poo-flow-module-interface-object poo-clos-module))
+       "PooClos")
+      (check-equal? (poo-flow-module-extensions poo-clos-module) '()))
+    (test-case "default selection is POO-native"
+      (let (default (car poo-clos-module-default-selection))
+        (check-equal? (poo-flow-modules-system-use-module-group 'poo-clos)
+                      'core)
+        (check-equal? (poo-flow-user-module-selection-flags default)
+                      '(+native))))
+    (test-case "Funflow references the sole method-combination owner"
+      (check-equal?
+       (poo-flow-module-source-ref-kind
+        poo-flow-funflow-method-combination-module-ref)
+       'standard-library)
+      (check-equal?
+       (poo-flow-module-source-ref-value
+        poo-flow-funflow-method-combination-module-ref)
+       'poo-clos))))
