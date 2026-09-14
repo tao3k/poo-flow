@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: module source refs and structured import values.
 ;;; Invariant: imports describe source refs or inline profiles.
 ;;; They never load files, query registries, or evaluate modules.
@@ -25,14 +29,15 @@
         poo-flow-module-source-ref-value
         poo-flow-module-source-ref-metadata
         make-poo-flow-module-local-source
-        make-poo-flow-module-custom-config-source
+        make-poo-flow-module-custom-interface-source
+        make-poo-flow-module-custom-collection-source
         make-poo-flow-module-package-source
         make-poo-flow-module-standard-library-source
         make-poo-flow-module-registry-source
         make-poo-flow-module-generated-source
         poo-flow-module-source-ref=?
         poo-flow-module-source-ref->alist
-        poo-flow-module-custom-config-entrypoint
+        poo-flow-module-custom-interface-entrypoint
         poo-flow-local-source
         poo-flow-custom-source
         poo-flow-standard-library-source
@@ -71,28 +76,40 @@
   (make-poo-flow-module-source-ref 'local path '()))
 
 ;;; Boundary: custom module directories are user-owned; the module-system only
-;;; records the config.ss entrypoint that a future loader may consume.
+;;; records the interface.ss entrypoint that a future loader may consume.
 ;; : (-> Path Path)
-(def (poo-flow-module-custom-config-entrypoint module-root-path)
+(def (poo-flow-module-custom-interface-entrypoint module-root-path)
   (let ((path-length (string-length module-root-path)))
     (if (and (> path-length 0)
              (char=? (string-ref module-root-path (- path-length 1)) #\/))
-      (string-append module-root-path "config.ss")
-      (string-append module-root-path "/config.ss"))))
+      (string-append module-root-path "interface.ss")
+      (string-append module-root-path "/interface.ss"))))
 
 ;;; Boundary: custom sources stay local source refs so loader matching remains
 ;;; deterministic; root/entrypoint details live in metadata.
 ;; : (-> Path PooModuleSourceRef)
-(def (make-poo-flow-module-custom-config-source module-root-path)
+(def (make-poo-flow-module-custom-interface-source module-root-path)
   (let ((entrypoint
-         (poo-flow-module-custom-config-entrypoint module-root-path)))
+         (poo-flow-module-custom-interface-entrypoint module-root-path)))
     (make-poo-flow-module-source-ref 'local entrypoint
                                      (list
                                       (cons 'kind
                                             poo-flow-module-import-local-source-kind)
                                       (cons 'custom-module-root module-root-path)
                                       (cons 'entrypoint entrypoint)
-                                      (cons 'entrypoint-role 'config)))))
+                                      (cons 'entrypoint-role 'interface)))))
+
+;;; Boundary: an explicit @ modules path selects a directory collection. The
+;;; loader expands its direct child module trees; the declaration macro does no
+;;; filesystem discovery itself.
+;; : (-> Path PooModuleSourceRef)
+(def (make-poo-flow-module-custom-collection-source modules-root-path)
+  (make-poo-flow-module-source-ref
+   'local
+   modules-root-path
+   (list (cons 'kind 'custom-module-collection)
+         (cons 'modules-root modules-root-path)
+         (cons 'entrypoint-role 'discover))))
 
 ;;; Boundary: package sources are symbolic references for future loaders.
 ;; : (-> Symbol PooModuleSourceRef)
@@ -142,7 +159,7 @@
 ;;; Boundary: user-facing shorthand for a custom module directory.
 ;; : (-> Path PooModuleSourceRef)
 (def (poo-flow-custom-source module-root-path)
-  (make-poo-flow-module-custom-config-source module-root-path))
+  (make-poo-flow-module-custom-interface-source module-root-path))
 
 ;;; Boundary: shorthand for upstream standard-library module source refs.
 ;; : (-> Symbol PooModuleSourceRef)

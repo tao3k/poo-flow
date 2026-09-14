@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: module-system base facts for hot-plug module selection.
 ;;; Invariant: this module stays below profile/doctor presentation logic.
 ;;; Descriptor realization stays in package-root modules.
@@ -37,6 +41,7 @@
         poo-flow-user-module-selection-feature-fact
         poo-flow-user-module-selection
         poo-flow-user-custom-module-selection
+        poo-flow-user-custom-modules-selection
         poo-flow-user-module-selection-feature?
         poo-flow-user-modules-feature?
         poo-flow-user-config-feature?
@@ -87,15 +92,25 @@
   (poo-flow-user-module-selection/source group module flags 'none 'none))
 
 ;;; Custom module selections mirror Doom private modules: init.ss selects the
-;;; module, and the user-owned directory contributes config.ss as entrypoint.
+;;; module, and the user-owned directory contributes interface.ss as entrypoint.
 ;; : (-> Symbol Path [Symbol] POOObject)
 (def (poo-flow-user-custom-module-selection module module-root-path flags)
   (poo-flow-user-module-selection/source
    'custom
    module
    flags
-   (make-poo-flow-module-custom-config-source module-root-path)
-   (poo-flow-module-custom-config-entrypoint module-root-path)))
+   (make-poo-flow-module-custom-interface-source module-root-path)
+   (poo-flow-module-custom-interface-entrypoint module-root-path)))
+
+;;; An anonymous @ row denotes a complete modules directory. It remains one
+;;; declaration value until poo-flow-load-modules discovers its child module trees.
+(def (poo-flow-user-custom-modules-selection modules-root-path flags)
+  (poo-flow-user-module-selection/source
+   'custom
+   'modules
+   flags
+   (make-poo-flow-module-custom-collection-source modules-root-path)
+   'discover))
 
 ;;; Module-name routing keeps the user DSL on concrete modules such as
 ;;; `(use-module nono-sandbox ...)`, while the profile data still stores the

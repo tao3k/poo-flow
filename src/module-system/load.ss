@@ -1,10 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic Doom-style module selection syntax.
 ;;; Invariant: expansion produces POO selection values only; source discovery,
 ;;; descriptor realization, and runtime effects stay behind loader boundaries.
 
 (import (only-in :poo-flow/src/module-system/declaration/interface
-                 poo-flow-user-module-bundle))
+                 poo-flow-user-module-bundle
+                 poo-flow-user-custom-modules-selection
+                 poo-flow-user-module-selection))
 
 (export poo-flow-modules!)
 
@@ -39,25 +45,25 @@
    (cons (poo-flow-user-module-bundle (category module flag ...))
          (poo-flow-modules/category category row ...))))
 
-;;; Engineering note: custom rows carry an explicit source root, but still
-;;; lower through the same POO selection constructor as maintained modules.
+;;; Engineering note: ordinary custom rows are source-neutral. A user-owned
+;;; private directory is the explicit `(module @ root flags ...)` escape hatch.
 ;;   : (forall (module root flag) (-> [(Pair module (Pair root [flag]))] [[PooUserModuleSelection]]))
 ;; poo-flow-modules/custom
 ;;   : (-> CustomModuleRows ModuleSelectionBundles)
-;;   | contract: lower custom module rows with explicit roots into POO bundles
+;;   | contract: lower source-neutral rows and explicit @ roots into POO bundles
 ;;   | result: ordered custom bundles followed by any later qualified categories
 ;;   | doc m%
-;;       The source root remains declaration data. Expansion never probes the
-;;       filesystem or realizes a descriptor.
+;;       Ordinary rows carry no source. An explicit root remains declaration
+;;       data. Expansion never probes the filesystem or realizes a descriptor.
 ;;
 ;;       # Examples
 ;;       ```scheme
-;;       (poo-flow-modules/custom (my-module "./modules/my-module" +doctor))
+;;       (poo-flow-modules/custom (my-module @ "./modules/my-module" +doctor))
 ;;       ;; => one ((custom . my-module)) selection bundle
 ;;       ```
 ;;     %
 (defrules poo-flow-modules/custom
-  (:core :flow :workflow :session :loop :sandbox :custom)
+  (:core :flow :workflow :session :loop :sandbox :custom @)
   ((_) '())
   ((_ :core row ...) (poo-flow-modules! :core row ...))
   ((_ :flow row ...) (poo-flow-modules! :flow row ...))
@@ -66,8 +72,16 @@
   ((_ :loop row ...) (poo-flow-modules! :loop row ...))
   ((_ :sandbox row ...) (poo-flow-modules! :sandbox row ...))
   ((_ :custom row ...) (poo-flow-modules/custom row ...))
-  ((_ (module root flag ...) row ...)
+  ((_ (@ root flag ...) row ...)
+   (cons (list (poo-flow-user-custom-modules-selection
+                root (list 'flag ...)))
+         (poo-flow-modules/custom row ...)))
+  ((_ (module @ root flag ...) row ...)
    (cons (poo-flow-user-module-bundle (custom module root flag ...))
+         (poo-flow-modules/custom row ...)))
+  ((_ (module flag ...) row ...)
+   (cons (list (poo-flow-user-module-selection
+                'custom 'module (list 'flag ...)))
          (poo-flow-modules/custom row ...))))
 
 ;;; One macro serves the maintained collection and downstream init.ss files.
