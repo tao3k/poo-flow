@@ -402,9 +402,12 @@
                                  direct-superclasses: (list x y)))
              (yx (poo-clos-class 'precedence-yx
                                  direct-superclasses: (list y x))))
-        ;; The upstream POO C3 owner rejects the graph directly. POO CLOS does
-        ;; not translate that failure through a second precedence subsystem.
+        ;; Upstream POO remains the sole C3 owner. The public CLOS boundary
+        ;; translates its rejection without recomputing precedence.
         (check-exception
          (poo-clos-class 'inconsistent
                          direct-superclasses: (list xy yx))
-         (lambda (error) (not (poo-clos-failure? error))))))))
+         (lambda (error)
+           (and (poo-clos-failure? error)
+                (eq? (.ref error 'code)
+                     'inconsistent-class-precedence))))))))

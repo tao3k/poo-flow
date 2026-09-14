@@ -3,6 +3,7 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop element?)
+        (only-in :std/sort stable-sort)
         "types.ss" "objects.ss" "classes.ss")
 
 (export poo-clos-redefine-class poo-clos-make-instances-obsolete)
@@ -33,18 +34,14 @@
 (def (class-depth class-value)
   (length (poo-clos-class-precedence-list class-value)))
 
-;; : (-> ClosClass [ClosClass] [ClosClass])
-(def (insert-by-depth class-value classes)
-  (cond
-   ((null? classes) (list class-value))
-   ((< (class-depth class-value) (class-depth (car classes)))
-    (cons class-value classes))
-   (else
-    (cons (car classes) (insert-by-depth class-value (cdr classes))))))
-
 ;; : (-> [ClosClass] [ClosClass])
 (def (sort-by-depth classes)
-  (foldl insert-by-depth '() classes))
+  (map cdr
+       (stable-sort
+        (map (lambda (class-value)
+               (cons (class-depth class-value) class-value))
+             classes)
+        (lambda (left right) (< (car left) (car right))))))
 
 ;; : (forall (a) (-> Boolean a a a))
 (def (redefinition-option root? supplied fallback)

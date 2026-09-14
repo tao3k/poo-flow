@@ -18,10 +18,13 @@ Acceptance is executable and fail-closed:
 
 - every supported reference operator has a source-owned evidence fixture;
 - every semantic clause names an owner plus positive and negative tests;
-- interpreted and freshly compiled AOT fixtures have identical nonzero
-  assertion counts;
-- all inputs and generated artifacts remain unchanged across qualification;
-- no accepted receipt is written while a required POO CLOS row is open.
+- every closed evidence identity resolves to an exact exported =std/test= suite
+  whose declared case cardinality matches and whose cases contain checks;
+- no semantic acceptance is reported while a required POO CLOS row is open.
+
+Package compilation and artifact ownership remain exclusively in the native
+=build.ss=/=std/make= graph.  The semantic ledger neither recompiles fixtures nor
+makes an artifact-provenance claim.
 
 * Ownership boundary
 
@@ -31,10 +34,11 @@ plus functional dispatch operations.  No second method-combination module is
 part of the active Loader, profile, Funflow, or user-interface graph.
 
 This owner is a POO-native CLOS metaprotocol extension, not an ANSI
-compatibility layer.  It is opt-in and is not imported or re-exported by
-=src/module-system/api.ss=.  Importing the general Module System facade must not
-load CLOS dispatch, lifecycle generics, declaration IR, or method-combination
-code.
+compatibility layer.  Its lightweight descriptor participates in the kernel
+selection, while the runtime facade is lazy and opt-in and is not imported or
+re-exported by =src/module-system/api.ss=.  Importing the general Module System
+facade must not load CLOS dispatch, lifecycle generics, declaration IR, or
+method-combination code.
 
 Native POO owns object identity, Type/Class/Slot metaobjects, prototype
 inheritance, slots, and C3.  The CLOS extension owns only the semantics that
@@ -128,7 +132,7 @@ next-method operations without exposing the frame argument.
 * Qualification fixtures
 
 Qualification groups tests only where a stable semantic fixture needs its own
-resource observation and interpreted/AOT attribution:
+source-owned executable evidence boundary:
 
 - method-combination compatibility;
 - generic dispatch;
@@ -139,10 +143,11 @@ resource observation and interpreted/AOT attribution:
 - POO CLOS reference-clause ledger.
 
 Fixture names describe durable evidence boundaries, not delivery stages.  The
-qualifier applies heap ceilings, elapsed-time guards, the shared process-tree
-memory anomaly guard, SHA-256 input/artifact snapshots, dependency checking,
-and exact interpreted/AOT assertion agreement.  Receipts state
-=performance-claim? #f= unless a separately approved workload and SLA exist.
+ledger resolves them to exact exported native test suites and verifies case and
+check presence with the Scheme reader.  ASP Testing owns optional memory and
+machine observation profiles at the test-process boundary.  The ledger makes
+neither an artifact-provenance nor a performance claim; performance requires a
+separately approved workload and SLA.
 
 * Sources
 

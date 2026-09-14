@@ -5,8 +5,9 @@
 This owner implements a POO-native CLOS metaprotocol extension.  The Common
 Lisp HyperSpec supplies semantic conformance vectors, but it does not own the
 runtime architecture.  Class precedence is the upstream Gerbil POO prototype
-C3, projected back to the exact CLOS class metaobjects.  The extension remains
-opt-in and is not part of the default module selection.
+C3, projected back to the exact CLOS class metaobjects.  Its lightweight module
+descriptor participates in the kernel selection, but the CLOS runtime facade
+remains lazy and opt-in; importing the general Module System API does not load it.
 
 The implementation provides:
 
@@ -80,13 +81,13 @@ metaobject identity while recording construction and warm-query latency.
 - Keyword/initarg names accept native Gerbil keyword values and symbols.
 - Multiple values are carried by the native Scheme values protocol.
 
-The executable clause ledger and interpreted/AOT qualification are owned by
-=t/qualification/poo-clos/=.  Its exhaustive 41-entry CLHS 7.7 reference
-manifest maps every operator to a source-owned evidence fixture and currently
-has no open required POO CLOS row.  Qualification still fails closed if any row becomes open,
-if a fixture has no attributable assertions, or if interpreted and fresh-AOT
-counts diverge.  Receipts retain =performance-claim? #f= until a user approves
-a workload and SLA.
+The executable clause ledger is owned by =t/qualification/poo-clos/=.  Its
+exhaustive 41-entry CLHS 7.7 reference manifest maps every operator to an exact
+source-owned =std/test= suite.  The gate reads those Scheme sources through the
+native reader and verifies the exported suite binding, test-case cardinality,
+and nonzero checks in every case.  Package AOT remains owned exclusively by the
+native =build.ss= graph; this semantic ledger does not create another compiler,
+artifact scanner, or test runner and makes no artifact-provenance claim.
 
 * Single-owner boundary
 

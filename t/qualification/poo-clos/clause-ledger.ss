@@ -2,12 +2,25 @@
 ;;; Executable POO-CLOS and separately scoped MOP-EXTENDED clause inventory.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/1 filter))
+        (only-in :std/srfi/1 filter find))
 
 (export poo-clos-clause-ledger poo-clos-operator-ledger
         poo-clos-required-rows poo-clos-required-operators
         poo-clos-open-required-rows poo-clos-ledger-row-valid?
-        poo-clos-operator-row-valid? poo-clos-evidence-id-resolves?)
+        poo-clos-operator-row-valid?
+        poo-clos-evidence-suites poo-clos-evidence-suite
+        poo-clos-evidence-id-resolves?)
+
+(def (owner-evidence-id owner)
+  (case owner
+    ((classes lifecycle) 'lifecycle)
+    ((objects dispatch) 'dispatch)
+    ((syntax) 'syntax)
+    ((method-combination) 'method-combination)
+    ((evolution mop) 'evolution)
+    ((generic-evolution) 'generic-evolution)
+    ((load-form) 'load-form)
+    (else #f)))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol POOObject)
 (def (clause status-name row-id profile-name owner-name positive-name negative-name)
@@ -15,6 +28,7 @@
       profile: profile-name
       status: status-name
       owner: owner-name
+      evidence-id: (owner-evidence-id owner-name)
       positive-test: positive-name
       negative-test: negative-name))
 
@@ -37,7 +51,7 @@
    (closed-clause 'C435-class-precedence 'poo-clos 'classes
            'native-c3-order 'inconsistent-c3)
    (closed-clause 'C436-class-redefinition 'poo-clos 'evolution
-           'successor-generation 'obsolete-generation-redefinition)
+           'identity-preserved-generation 'invalid-class-redefinition)
    (closed-clause 'C436-dependent-propagation 'poo-clos 'evolution
            'dependent-generation-cascade 'stale-superclass-generation)
    (closed-clause 'C436-lazy-instance-update 'poo-clos 'lifecycle
@@ -45,7 +59,7 @@
    (closed-clause 'C436-shared-slot-transition 'poo-clos 'evolution
            'shared-slot-cell-preservation 'allocation-transition)
    (closed-clause 'C436-make-instances-obsolete 'poo-clos 'evolution
-           'explicit-obsolescence 'obsolete-generation-redefinition)
+           'explicit-layout-generation 'invalid-obsolescence-target)
    (closed-clause 'C437-class-specialized-types 'poo-clos 'dispatch
            'class-specializer-inheritance 'invalid-specializer)
 
@@ -111,14 +125,38 @@
    (closed-clause 'MOP-portable-read-only-profile 'mop-extended 'mop
            'sealed-capability-profile 'unadmitted-operation)))
 
-;; Exact CLHS 7.7 dictionary surface.  A closed operator must point at a
-;; source-owned executable suite; an open operator must name its blocking gap.
-(def poo-clos-evidence-ids
-  '(dispatch lifecycle syntax method-combination evolution generic-evolution
-    load-form))
+;;; Evidence identities resolve to exact source-owned std/test suite bindings.
+;;; The ledger test reads these Scheme sources with the native reader and
+;;; verifies the export, suite definition, case cardinality, and nonzero checks.
+(def (evidence-suite id-value path-value binding-value case-count)
+  (.o id: id-value path: path-value binding: binding-value
+      caseCount: case-count))
+
+(def poo-clos-evidence-suites
+  (list
+   (evidence-suite 'dispatch "t/poo-clos-dispatch-test.ss"
+                   'poo-clos-dispatch-test 11)
+   (evidence-suite 'lifecycle "t/poo-clos-lifecycle-test.ss"
+                   'poo-clos-lifecycle-test 14)
+   (evidence-suite 'syntax "t/poo-clos-syntax-test.ss"
+                   'poo-clos-syntax-test 10)
+   (evidence-suite 'method-combination
+                   "t/poo-clos-method-combination-test.ss"
+                   'poo-clos-method-combination-test 13)
+   (evidence-suite 'evolution "t/poo-clos-evolution-test.ss"
+                   'poo-clos-evolution-test 6)
+   (evidence-suite 'generic-evolution
+                   "t/poo-clos-generic-evolution-test.ss"
+                   'poo-clos-generic-evolution-test 3)
+   (evidence-suite 'load-form "t/poo-clos-load-form-test.ss"
+                   'poo-clos-load-form-test 5)))
+
+(def (poo-clos-evidence-suite id)
+  (find (lambda (suite) (eq? (.ref suite 'id) id))
+        poo-clos-evidence-suites))
 
 (def (poo-clos-evidence-id-resolves? id)
-  (and id (if (memq id poo-clos-evidence-ids) #t #f)))
+  (and id (if (poo-clos-evidence-suite id) #t #f)))
 
 (def (operator name status-name evidence-name gap-name)
   (.o id: name profile: 'poo-clos status: status-name
@@ -189,6 +227,7 @@
        (memq (.ref row 'profile) '(poo-clos mop-extended))
        (symbol? (.ref row 'id))
        (symbol? (.ref row 'owner))
+       (poo-clos-evidence-id-resolves? (.ref row 'evidence-id))
        (symbol? (.ref row 'positive-test))
        (symbol? (.ref row 'negative-test))))
 

@@ -2,7 +2,7 @@
 ;;; Clause ledger completeness and profile-separation checks.
 
 (import (only-in :std/test test-suite test-case check-equal? check)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref)
         (only-in :std/srfi/1 filter foldl)
         (only-in :std/srfi/13 string-prefix? string-suffix?)
         (only-in "../../../src/module-system/observability/module-presentation.ss"
@@ -36,6 +36,68 @@
   (poo-flow-poo-slot-authoring-diagnostics
    (poo-flow-poo-slot-authoring-file-observations 'poo-clos path)))
 
+(def (read-source-forms path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (let loop ((forms '()))
+       (let (form (read port))
+         (if (eof-object? form)
+           (reverse forms)
+           (loop (cons form forms))))))))
+
+(def (source-exports-binding? forms binding)
+  (and (find (lambda (form)
+               (and (pair? form) (eq? (car form) 'export)
+                    (memq binding (cdr form))))
+             forms)
+       #t))
+
+(def (source-suite-form forms binding)
+  (find (lambda (form)
+          (and (pair? form) (eq? (car form) 'def)
+               (pair? (cdr form)) (eq? (cadr form) binding)
+               (pair? (cddr form))
+               (pair? (caddr form))
+               (eq? (car (caddr form)) 'test-suite)))
+        forms))
+
+(def (suite-test-case-forms suite-form)
+  (filter (lambda (form)
+            (and (pair? form) (eq? (car form) 'test-case)
+                 (pair? (cdr form)) (string? (cadr form))))
+          (cddr (caddr suite-form))))
+
+(def (check-form-count datum)
+  (cond
+   ((pair? datum)
+    (+ (if (and (symbol? (car datum))
+                (or (eq? (car datum) 'check)
+                    (string-prefix? "check-"
+                                    (symbol->string (car datum)))))
+         1 0)
+       (check-form-count (car datum))
+       (check-form-count (cdr datum))))
+   ((vector? datum)
+    (foldl (lambda (value count) (+ count (check-form-count value)))
+           0 (vector->list datum)))
+   (else 0)))
+
+(def (poo-clos-evidence-suite-valid? suite)
+  (let* ((path (.ref suite 'path))
+         (binding (.ref suite 'binding))
+         (forms (and (file-exists? path) (read-source-forms path)))
+         (suite-form (and forms (source-suite-form forms binding)))
+         (cases (and suite-form (suite-test-case-forms suite-form))))
+    (and forms
+         (source-exports-binding? forms binding)
+         suite-form
+         (= (length cases) (.ref suite 'caseCount))
+         (> (length cases) 0)
+         (andmap (lambda (test-case-form)
+                   (> (check-form-count test-case-form) 0))
+                 cases))))
+
 (def clause-ledger-test
   (test-suite "POO-native CLOS executable clause ledger"
     (test-case "semantic clause rows remain explicit and structurally valid"
@@ -67,6 +129,31 @@
            class-name (setf class-name) class-of unbound-slot
            unbound-slot-instance))
         (check-equal? open '())))
+    (test-case "closed evidence resolves to executable source-owned suites"
+      (check (unique-symbols?
+              (map (lambda (suite) (.ref suite 'id))
+                   poo-clos-evidence-suites))
+             => #t)
+      (check (andmap poo-clos-evidence-suite-valid?
+                     poo-clos-evidence-suites)
+             => #t)
+      (check (andmap
+              (lambda (row)
+                (poo-clos-evidence-id-resolves? (.ref row 'evidence-id)))
+              (poo-clos-required-rows))
+             => #t))
+    (test-case "evidence binding fails closed on removed or emptied suites"
+      (check
+       (poo-clos-evidence-suite-valid?
+        (.o id: 'removed path: "t/poo-clos-removed-test.ss"
+            binding: 'poo-clos-removed-test caseCount: 1))
+       => #f)
+      (let (dispatch (poo-clos-evidence-suite 'dispatch))
+        (check
+         (poo-clos-evidence-suite-valid?
+          (.o id: 'dispatch path: (.ref dispatch 'path)
+              binding: (.ref dispatch 'binding) caseCount: 0))
+         => #f)))
     (test-case "all CLOS-owned POO slot initializers pass the source gate"
       (check-equal?
        (apply append (map poo-clos-authoring-diagnostics

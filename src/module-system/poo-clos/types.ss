@@ -291,9 +291,6 @@
 (def (class-references? value)
   (and (list? value) (andmap class-reference? value)))
 
-(def (class-reference-or-false? value)
-  (or (not value) (class-reference? value)))
-
 (def (clos-effective-slot-definition-element? candidate)
   (and (clos-instance? (.ref ClosEffectiveSlotDefinition 'proto) candidate)
        (fields? candidate
@@ -325,13 +322,11 @@
        (fields? candidate
                 '(identity direct-superclasses direct-slots default-initargs
                            generation slot-missing-handler slot-unbound-handler
-                           predecessor successor direct-subclasses
-                           redefinition-update-handler
+                           direct-subclasses redefinition-update-handler
                            different-class-update-handler documentation metaclass)
                 (list symbol? class-references? direct-slot-definitions?
                       default-initargs? natural? procedure-or-false?
-                      procedure-or-false? class-reference-or-false?
-                      class-reference-or-false? class-references?
+                      procedure-or-false? class-references?
                       procedure-or-false? procedure-or-false?
                       string-or-false? any-value?))))
 

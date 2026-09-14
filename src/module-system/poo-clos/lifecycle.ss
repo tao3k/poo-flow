@@ -78,8 +78,7 @@
 
 ;; : (-> ClosClass ClosInstance)
 (def (%poo-clos-allocate-instance class-value . _initargs)
-  (let (current-value
-        (poo-clos-current-class (poo-clos-resolve-class class-value)))
+  (let (current-value (poo-clos-resolve-class class-value))
     (.o (:: @ (.ref current-value 'instance-prototype))
         %poo-clos-state: (make-instance-state current-value))))
 
@@ -399,8 +398,7 @@
 (def (%poo-clos-change-class instance-value new-class-value . supplied-initargs)
   (let* ((state (ensure-current-instance-state! instance-value))
          (old-class (.ref state 'class))
-         (new-class
-          (poo-clos-current-class (poo-clos-resolve-class new-class-value))))
+         (new-class (poo-clos-resolve-class new-class-value)))
     (if (eq? old-class new-class)
       (apply poo-clos-reinitialize-instance instance-value supplied-initargs)
       (let-values (((added _discarded)
@@ -432,8 +430,7 @@
 ;;   | doc m%
 ;;   | result: the initialized identity-bearing native POO instance.
 (def (%poo-clos-make-instance class-value . supplied-initargs)
-  (let (current-value
-        (poo-clos-current-class (poo-clos-resolve-class class-value)))
+  (let (current-value (poo-clos-resolve-class class-value))
     (unless (initialization-argument-list? supplied-initargs)
       (clos-fail 'malformed-initialization-arguments
                  class: (.ref current-value 'identity)))

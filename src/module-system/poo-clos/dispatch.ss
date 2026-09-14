@@ -31,13 +31,12 @@
        (.slot? value '%poo-clos-state)
        (element? ClosInstanceState (.ref value '%poo-clos-state))))
 
-;;; Logical class precedence follows class-generation successors while native
-;;; POO prototypes remain the sole source of each generation's C3 order.
+;;; Logical class precedence follows the identity-preserved class generation;
+;;; native POO prototypes remain the sole source of its C3 order.
 ;; : (-> SchemeValue (Maybe ClosClass))
 (def (argument-clos-class argument)
   (and (clos-instance-state-bearing? argument)
-       (poo-clos-current-class
-        (.ref (.ref argument '%poo-clos-state) 'class))))
+       (.ref (.ref argument '%poo-clos-state) 'class)))
 
 ;; : (-> SchemeValue SchemeValue (Maybe Natural))
 (def (class-target-distance target argument)

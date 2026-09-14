@@ -45,15 +45,11 @@
              (new-base
               (poo-clos-redefine-class
                base direct-slots: (list x-slot z-slot)))
-             (new-child (poo-clos-current-class child)))
+             (new-child child))
         (check (eq? new-base base) => #t)
         (check (eq? new-child child) => #t)
-        (check (poo-clos-class-obsolete? base) => #f)
-        (check (poo-clos-class-obsolete? child) => #f)
         (check-equal? (poo-clos-class-generation new-base) 1)
         (check-equal? (poo-clos-class-generation new-child) 1)
-        (check-equal? (poo-clos-class-predecessor new-base) #f)
-        (check-equal? (poo-clos-class-successor base) #f)
         (check (eq? (car (poo-clos-class-direct-superclasses new-child))
                     new-base)
                => #t)
@@ -142,7 +138,7 @@
         (check-equal? receipt '(change-a 5 change-b (only-b: 9)))))
 
     (test-case "successive redefinitions retain the exact class object"
-      (let* ((class-value (poo-clos-class 'single-successor))
+      (let* ((class-value (poo-clos-class 'stable-generation))
              (first (poo-clos-redefine-class class-value))
              (second (poo-clos-redefine-class class-value)))
         (check (eq? class-value first) => #t)

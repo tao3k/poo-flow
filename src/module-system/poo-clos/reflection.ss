@@ -12,8 +12,7 @@
         poo-clos-class-direct-superclasses poo-clos-class-direct-subclasses
         poo-clos-class-direct-slots poo-clos-class-default-initargs
         poo-clos-class-documentation poo-clos-class-metaclass
-        poo-clos-class-predecessor poo-clos-class-successor
-        poo-clos-class-obsolete? poo-clos-instance-slot-names
+        poo-clos-instance-slot-names
         poo-clos-slot-name poo-clos-slot-allocation poo-clos-slot-initargs
         poo-clos-slot-readers poo-clos-slot-writers
         poo-clos-slot-defining-classes poo-clos-slot-storage-class
@@ -95,18 +94,6 @@
 
 (def (poo-clos-class-metaclass class-value)
   (.ref (require-class class-value) 'metaclass))
-
-;; : (-> ClosClass (Maybe ClosClass))
-(def (poo-clos-class-predecessor class-value)
-  (.ref (require-class class-value) 'predecessor))
-
-;; : (-> ClosClass (Maybe ClosClass))
-(def (poo-clos-class-successor class-value)
-  (.ref (require-class class-value) 'successor))
-
-;; : (-> ClosClass Boolean)
-(def (poo-clos-class-obsolete? class-value)
-  (if (poo-clos-class-successor class-value) #t #f))
 
 ;; : (-> ClosInstance [Symbol])
 (def (poo-clos-instance-slot-names instance-value)

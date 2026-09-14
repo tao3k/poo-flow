@@ -48,7 +48,7 @@
         poo-clos-class poo-clos-class-precedence-list
         poo-clos-find-class poo-clos-set-find-class! poo-clos-resolve-class
         poo-clos-class-effective-slots poo-clos-find-effective-slot
-        poo-clos-class-subclass? poo-clos-current-class
+        poo-clos-class-subclass?
         poo-clos-redefine-class poo-clos-make-instances-obsolete
         poo-clos-instance? poo-clos-class-of
         poo-clos-allocate-instance poo-clos-make-instance
@@ -73,8 +73,7 @@
         poo-clos-class-direct-superclasses poo-clos-class-direct-subclasses
         poo-clos-class-direct-slots poo-clos-class-default-initargs
         poo-clos-class-documentation poo-clos-class-metaclass
-        poo-clos-class-predecessor poo-clos-class-successor
-        poo-clos-class-obsolete? poo-clos-instance-slot-names
+        poo-clos-instance-slot-names
         poo-clos-slot-name poo-clos-slot-allocation poo-clos-slot-initargs
         poo-clos-slot-readers poo-clos-slot-writers
         poo-clos-slot-defining-classes poo-clos-slot-storage-class

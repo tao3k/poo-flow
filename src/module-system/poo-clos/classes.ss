@@ -16,7 +16,7 @@
         poo-clos-find-class poo-clos-set-find-class! poo-clos-resolve-class
         poo-clos-class-effective-slots poo-clos-find-effective-slot
         poo-clos-class-subclass? poo-clos-class-specializer
-        poo-clos-class-slot-cell poo-clos-current-class
+        poo-clos-class-slot-cell
         %poo-clos-make-class-generation %poo-clos-reinitialize-class!
         %poo-clos-set-class-name!)
 
@@ -185,25 +185,6 @@
 (def (class-direct-superclasses class-value)
   (.ref class-value 'direct-superclasses))
 
-;; poo-clos-current-class
-;;   : (-> ClosClass ClosClass)
-;;   | contract: follows only single-assignment successor edges and never
-;;     recomputes or substitutes native POO C3 precedence.
-;;   | doc m%
-;;       `poo-clos-current-class` follows a finite historical chain.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-clos-current-class historical-class)
-;;       ;; => current-class
-;;       ```
-;;
-;;       result: the final reachable class generation.
-;;     %
-(def (poo-clos-current-class class-value)
-  (unless (element? ClosClass class-value) (clos-fail 'invalid-class))
-  class-value)
-
 ;; : (-> ClosClass POOObject)
 (def (make-instance-prototype class-value)
   (let (superclass-prototypes
@@ -216,12 +197,20 @@
 ;;; metaobject. Projecting upstream C3 preserves identity without a second
 ;;; class graph or linearization algorithm.
 ;; : (-> ClosClass [ClosClass])
-(def (compute-class-precedence-list class-value)
-  (filter-map
-   (lambda (prototype)
-     (and (.slot? prototype '%poo-clos-class)
-          (.ref prototype '%poo-clos-class)))
-   (compute-precedence-list! (.ref class-value 'instance-prototype))))
+(def (compute-class-precedence-list class-value identity-value)
+  (with-catch
+   (lambda (failure)
+     (if (poo-clos-failure? failure)
+       (raise failure)
+       (clos-fail 'inconsistent-class-precedence
+                  class: identity-value
+                  operation: 'compute-class-precedence-list)))
+   (lambda ()
+     (filter-map
+      (lambda (prototype)
+        (and (.slot? prototype '%poo-clos-class)
+             (.ref prototype '%poo-clos-class)))
+      (compute-precedence-list! (.ref class-value 'instance-prototype))))))
 
 ;; Each owner index retains its first direct declaration for a slot name.  The
 ;; outer list stays in native C3 order, so option inheritance follows POO.
@@ -329,7 +318,7 @@
 ;; | ClosClass = POOObject
 ;; %poo-clos-make-class-generation
 ;;   : (-> Symbol [ClosClass] [ClosDirectSlotDefinition] [Pair] Natural
-;;        (Maybe Procedure) (Maybe Procedure) (Maybe ClosClass)
+;;        (Maybe Procedure) (Maybe Procedure)
 ;;        (Maybe Procedure) (Maybe Procedure) ClosClass)
 ;;   | contract: validates and finalizes one native-POO class generation before
 ;;     registering its direct dependency edges.
@@ -339,7 +328,7 @@
 ;;       # Examples
 ;;       ```scheme
 ;;       (%poo-clos-make-class-generation 'root '() '() '() 0
-;;                                        #f #f #f #f #f)
+;;                                        #f #f #f #f)
 ;;       ;; => class-generation
 ;;       ```
 ;;
@@ -350,7 +339,7 @@
       identity-value superclass-values direct-slot-values
       default-initarg-values generation-value
       slot-missing-handler-value slot-unbound-handler-value
-      predecessor-value redefinition-handler-value different-handler-value)
+      redefinition-handler-value different-handler-value)
   (unless (symbol? identity-value)
     (clos-fail 'invalid-class-name class: identity-value))
   (let ((superclass-values (require-direct-superclasses superclass-values))
@@ -359,8 +348,6 @@
          (require-default-initargs default-initarg-values)))
   (unless (and (exact-integer? generation-value) (>= generation-value 0))
     (clos-fail 'invalid-class-generation class: identity-value))
-  (unless (or (not predecessor-value) (element? ClosClass predecessor-value))
-    (clos-fail 'invalid-class-predecessor class: identity-value))
   (unless (or (not slot-missing-handler-value)
               (procedure? slot-missing-handler-value))
     (clos-fail 'invalid-slot-missing-handler class: identity-value))
@@ -382,7 +369,6 @@
             generation: generation-value
             slot-missing-handler: slot-missing-handler-value
             slot-unbound-handler: slot-unbound-handler-value
-            predecessor: predecessor-value successor: #f
             direct-subclasses: '()
             layout-history: '()
             redefinition-update-handler: redefinition-handler-value
@@ -390,7 +376,8 @@
             documentation: #f metaclass: 'standard-class
             class-storage: (make-hash-table-eq)
             instance-prototype: (make-instance-prototype self)
-            class-precedence-list: (compute-class-precedence-list self)
+            class-precedence-list:
+            (compute-class-precedence-list self identity-value)
             class-precedence-index:
             (poo-clos-position-index/identity
              (.ref self 'class-precedence-list))
@@ -441,12 +428,11 @@
     (.put! class-value 'redefinition-update-handler redefinition-handler-value)
     (.put! class-value 'different-class-update-handler different-handler-value)
     (.put! class-value 'generation (+ 1 (.ref class-value 'generation)))
-    (.put! class-value 'predecessor #f)
-    (.put! class-value 'successor #f)
     (.put! class-value 'instance-prototype
            (make-instance-prototype class-value))
     (.put! class-value 'class-precedence-list
-           (compute-class-precedence-list class-value))
+           (compute-class-precedence-list
+            class-value (.ref class-value 'identity)))
     (.put! class-value 'class-precedence-index
            (poo-clos-position-index/identity
             (.ref class-value 'class-precedence-list)))
@@ -463,7 +449,7 @@
 ;;; superclass list inherit from this exact class and native POO prototype.
 (def poo-clos-standard-object-class
   (%poo-clos-make-class-generation
-   'standard-object '() '() '() 0 #f #f #f #f #f))
+   'standard-object '() '() '() 0 #f #f #f #f))
 
 (hash-put! poo-clos-class-registry 'standard-object
            poo-clos-standard-object-class)
@@ -496,7 +482,7 @@
          (map poo-clos-resolve-class
               (or superclass-values (list poo-clos-standard-object-class)))
          direct-slot-values default-initarg-values 0
-         slot-missing-handler-value slot-unbound-handler-value #f
+         slot-missing-handler-value slot-unbound-handler-value
          redefinition-handler-value different-handler-value))
     (.put! class-value 'documentation documentation-value)
     (.put! class-value 'metaclass metaclass-value)
@@ -514,7 +500,7 @@
                (element? ClosClass target-value))
     (clos-fail 'invalid-class))
   (hash-get (.ref class-value 'class-precedence-index)
-            (poo-clos-current-class target-value)))
+            target-value))
 
 ;; : (-> ClosClass [ClosEffectiveSlotDefinition])
 (def (poo-clos-class-effective-slots class-value)
@@ -530,6 +516,5 @@
 (def (poo-clos-class-subclass? class-value superclass-value)
   (and (element? ClosClass class-value)
        (element? ClosClass superclass-value)
-       (if (memq (poo-clos-current-class superclass-value)
-                 (poo-clos-class-precedence-list
-                  (poo-clos-current-class class-value))) #t #f)))
+       (if (memq superclass-value
+                 (poo-clos-class-precedence-list class-value)) #t #f)))

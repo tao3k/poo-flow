@@ -157,8 +157,8 @@
            (.o (:: @ ClosSpecializer.) kind: 'any target: #f)
            'invalid-specializer))
 
-;;; A CLOS class target remains a class metaobject so successor generations can
-;;; participate in dispatch.  Raw native prototypes remain an explicit bridge.
+;;; A CLOS class target remains the identity-preserved class metaobject across
+;;; generations. Raw native prototypes remain an explicit bridge.
 ;; : (-> (U ClosClass POOObject) ClosSpecializer)
 (def (poo-clos-class-specializer target-value)
   (checked ClosSpecializer

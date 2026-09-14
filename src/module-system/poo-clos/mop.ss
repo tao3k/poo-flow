@@ -36,7 +36,6 @@
        operations:
        '(class-name class-generation class-direct-superclasses
          class-direct-subclasses class-direct-slots class-default-initargs
-         class-predecessor class-successor class-obsolete?
          slot-name slot-allocation slot-initargs slot-readers slot-writers
          slot-defining-classes slot-storage-class
          specializer-kind specializer-object
@@ -45,8 +44,7 @@
          generic-argument-precedence-order generic-method-combination
          generic-generation)
        dependency-readers:
-       '(class-direct-superclasses class-direct-subclasses
-         class-predecessor class-successor)
+       '(class-direct-superclasses class-direct-subclasses)
        customization-protocols:
        '(no-applicable-method no-next-method compute-applicable-methods
          compute-effective-method update-instance-for-redefined-class
