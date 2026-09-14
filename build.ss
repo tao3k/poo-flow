@@ -9,18 +9,12 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype)
-        (only-in :poo-flow/src/module-system/loader/collection
-                 poo-flow-load-modules
-                 poo-flow-maintained-module-source)
-        (only-in :poo-flow/src/module-system/loader/source
-                 poo-flow-module-source-ref-value))
+                 asp-gerbil-scheme-library-package-prototype))
 
-;;; PackageSpec owns the complete maintained source closure.  Module collection
-;;; entrypoints are discovered by the same public loader used at runtime, while
-;;; public roots outside src/modules remain explicit because they do not belong
-;;; to that collection.  Downstream examples under user-interface/custom are
-;;; intentionally excluded from the library package.
+;;; PackageSpec owns the complete maintained source closure.  These bootstrap
+;;; roots stay explicit because build.ss must load after `gerbil clean`, before
+;;; any :poo-flow library module exists.  Runtime module discovery still uses
+;;; the public collection loader; the build script does not duplicate it.
 (def +maintained-public-entry-modules+
   '("src/core/api.ss"
     "src/module-system/api.ss"
@@ -36,11 +30,29 @@
     "src/user-interface/config-discovery-syntax.ss"
     "src/user-interface/declaration-case.ss"))
 
+(def +maintained-module-entry-modules+
+  '("src/modules/agent-sandbox/interface.ss"
+    "src/modules/cubeSandbox/interface.ss"
+    "src/modules/custom-task/interface.ss"
+    "src/modules/docker-sandbox/interface.ss"
+    "src/modules/docker/interface.ss"
+    "src/modules/funflow/interface.ss"
+    "src/modules/governor/interface.ss"
+    "src/modules/loop-engine/interface.ss"
+    "src/modules/memory-core/interface.ss"
+    "src/modules/model-core/interface.ss"
+    "src/modules/nono-sandbox/interface.ss"
+    "src/modules/sandbox-core/interface.ss"
+    "src/modules/session-core/interface.ss"
+    "src/modules/session/interface.ss"
+    "src/modules/text/interface.ss"
+    "src/modules/tool-core/interface.ss"
+    "src/modules/workflow/interface.ss"))
+
 (def +public-entry-modules+
   (append
    +maintained-public-entry-modules+
-   (map poo-flow-module-source-ref-value
-        (poo-flow-load-modules poo-flow-maintained-module-source))))
+   +maintained-module-entry-modules+))
 
 (def +nono-c-include-option+
   (string-append
