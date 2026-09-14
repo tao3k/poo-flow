@@ -1,6 +1,12 @@
 ;;; -*- Gerbil -*-
-;;; Public governor module interface.
-;;; Engineering note: consumers use this stable facade so configuration can be
-;;; split internally without exposing its leaf-owner layout.
-(import "config.ss")
-(export (import: "config.ss"))
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Public governor module interface; all internal roles close through this file.
+
+(import "types.ss" "objects.ss" "funs.ss" "config.ss")
+(export (import: "types.ss")
+        (import: "objects.ss")
+        (import: "funs.ss")
+        (import: "config.ss"))

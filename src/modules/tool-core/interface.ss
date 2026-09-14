@@ -1,6 +1,12 @@
 ;;; -*- Gerbil -*-
-;;; Public tool-core module interface.
-;;; Engineering note: tool declarations remain inspectable module data here;
-;;; runtime tool dispatch stays outside the Scheme facade.
-(import "config.ss")
-(export (import: "config.ss"))
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Public tool-core module interface; all internal roles close through this file.
+
+(import "types.ss" "objects.ss" "funs.ss" "config.ss")
+(export (import: "types.ss")
+        (import: "objects.ss")
+        (import: "funs.ss")
+        (import: "config.ss"))

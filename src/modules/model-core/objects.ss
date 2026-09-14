@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: declarative model catalog, policy, and receipt POO values;
 ;;; provider invocation and runtime routing stay behind the handoff boundary.
 (export +poo-flow-model-core-spec-kind+

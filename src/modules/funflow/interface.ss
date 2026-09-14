@@ -1,8 +1,12 @@
 ;;; -*- Gerbil -*-
-;;; Public Funflow module interface.
-;;; Engineering note: the facade preserves the established Funflow API while
-;;; config.ss remains the single owner of default module selection data.
-(import "config.ss"
-        "method-combination.ss")
-(export (import: "config.ss")
-        (import: "method-combination.ss"))
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Public funflow module interface; all internal roles close through this file.
+
+(import "types.ss" "objects.ss" "funs.ss" "config.ss")
+(export (import: "types.ss")
+        (import: "objects.ss")
+        (import: "funs.ss")
+        (import: "config.ss"))
