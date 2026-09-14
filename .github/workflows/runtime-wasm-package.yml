@@ -38,7 +38,7 @@ concurrency:
 jobs:
   source-build:
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -105,7 +105,7 @@ jobs:
         # A dependency revision invalidates the complete native package action;
         # keep the warm gate in Bazel's cache receipts, while allowing one
         # source-complete generation to populate that cache.
-        timeout-minutes: 25
+        timeout-minutes: 35
         shell: bash
         run: |
           cp LICENSE bindings/runtime-wasm/LICENSE

@@ -135,6 +135,15 @@ jobs:
           "$GERBIL_PREFIX/bin/gerbil" --version
           "$GERBIL_PREFIX/bin/gerbil" interactive -e '(displayln "gerbil-ready")'
 
+      - name: Declare native Gerbil build capacity
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_cores="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)"
+          [[ "$build_cores" =~ ^[1-9][0-9]*$ ]]
+          echo "GERBIL_BUILD_CORES=$build_cores" >> "$GITHUB_ENV"
+          echo "Native Gerbil build capacity: $build_cores"
+
       - name: Restore native Gerbil package cache
         id: native-gerbil-pkg-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -834,11 +843,11 @@ jobs:
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
             external-module-mode: analysis
-            compile-timeout-minutes: 25
-            compile-runaway-timeout-seconds: 1440
+            compile-timeout-minutes: 35
+            compile-runaway-timeout-seconds: 2040
             acceptance-timeout-minutes: 15
             acceptance-runaway-timeout-seconds: 840
-            job-timeout-minutes: 45
+            job-timeout-minutes: 55
     steps: *native-steps
 
   python-runtime-wheel:
