@@ -266,7 +266,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
-        "usagesDigest": "b5ErQlqqoNDqXPGISh+xO98rg3v1Vl8uFnCjEXU/zC8=",
+        "usagesDigest": "75inEQ9BXzNsaSdOcr95tXv/NdDRHjnrNEZTNmKFkqk=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
