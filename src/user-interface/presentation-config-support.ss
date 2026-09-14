@@ -19,15 +19,9 @@
         poo-flow-user-config-presentation-field-values
         poo-flow-user-config-presentation-field-values-ref
         poo-flow-user-config-presentation-loop-engine-slots
-        +poo-flow-user-config-presentation-loop-engine-fields+
-        poo-flow-user-config-presentation-constant-slot
-        poo-flow-user-config-presentation-computed-slot
-        poo-flow-user-config-presentation-memo)
+        +poo-flow-user-config-presentation-loop-engine-fields+)
 
-(import (only-in :clan/poo/object
-                 $constant-slot-spec
-                 $computed-slot-spec)
-        :poo-flow/src/modules/sandbox-core/profile-support/policy
+(import :poo-flow/src/modules/sandbox-core/profile-support/policy
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile?
                  poo-flow-sandbox-profile-name
@@ -378,23 +372,3 @@
     sandbox-handoff-agreement
     sandbox-unresolved-profile-refs
     runtime-snapshot))
-
-;; : (-> Symbol SlotValue SlotSpec)
-(def (poo-flow-user-config-presentation-constant-slot key value)
-  (cons key ($constant-slot-spec value)))
-
-;; : (-> Symbol SlotThunk SlotSpec)
-(def (poo-flow-user-config-presentation-computed-slot key thunk)
-  (cons key
-        ($computed-slot-spec
-         (lambda (_self _superfun)
-           (thunk)))))
-
-;; : (-> MemoCell Symbol SlotThunk SlotValue)
-(def (poo-flow-user-config-presentation-memo cache key thunk)
-  (let (entry (assq key (vector-ref cache 0)))
-    (if entry
-      (cdr entry)
-      (let (value (thunk))
-        (vector-set! cache 0 (cons (cons key value) (vector-ref cache 0)))
-        value))))

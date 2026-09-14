@@ -51,6 +51,10 @@
 (def +poo-flow-json-schema-compiled-pattern-cache+
   '())
 
+;; : HashTable
+(def +poo-flow-json-schema-property-index-cache+
+  (make-hash-table-eq))
+
 ;; : (-> JsonSchemaCandidateObject JsonSchemaCandidateRows)
 (def (poo-flow-json-schema-candidate-rows candidate)
   (cond
@@ -383,7 +387,7 @@
      (else #f)))
 
 ;; : (-> PooFlowJsonSchemaObject JsonSchemaObjectRow [Symbol] Boolean)
-(def (poo-flow-json-schema-object-row-valid? object object-row declared)
+(def (poo-flow-json-schema-object-row-valid? object object-row declared-index)
   (let* ((row-key
           (poo-flow-json-schema-row-key-symbol object-row))
          (row-key-string
@@ -395,7 +399,7 @@
            object-row)))
     (and
      (not (eq? pattern-state 'invalid))
-     (or (poo-flow-contract-member? row-key declared)
+     (or (hash-key? declared-index row-key)
          (eq? pattern-state 'matched)
          (poo-flow-json-schema-additional-property-valid?
           (poo-flow-json-schema-object-additional-properties object)
@@ -419,6 +423,19 @@
    'unmatched
    pattern-properties))
 
+;; : (-> PooFlowJsonSchemaObject HashTable)
+(def (poo-flow-json-schema-object-property-index object)
+  (or (hash-get +poo-flow-json-schema-property-index-cache+ object)
+      (let (index (make-hash-table))
+        (for-each
+         (lambda (property)
+           (hash-put! index
+                      (poo-flow-json-schema-property-name property)
+                      #t))
+         (poo-flow-json-schema-object-properties object))
+        (hash-put! +poo-flow-json-schema-property-index-cache+ object index)
+        index)))
+
 ;; : (-> PooFlowJsonSchemaNode JsonSchemaCandidateObject Boolean)
 (def (poo-flow-json-schema-object-node-valid? node candidate)
   (and (poo-flow-json-schema-schema-guided-object? candidate)
@@ -428,10 +445,8 @@
                (poo-flow-json-schema-node-value node))
               (properties
                (poo-flow-json-schema-object-properties object))
-              (declared
-               (poo-flow-contract-project-list
-                poo-flow-json-schema-property-name
-                properties)))
+              (declared-index
+               (poo-flow-json-schema-object-property-index object)))
          (and
           (poo-flow-json-schema-object-node-rows-shape-valid? node rows)
           (poo-flow-contract-all?
@@ -443,7 +458,7 @@
              (poo-flow-json-schema-object-row-valid?
               object
               row
-              declared))
+              declared-index))
            rows)))))
 
 ;; : (-> PooFlowJsonSchemaContractArtifact JsonSchemaCandidateObject Boolean)

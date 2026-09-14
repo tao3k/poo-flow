@@ -28,8 +28,8 @@
         (iota (- node-count 1)))))
 
 (def (graph-algorithm-performance-summary graph-value)
-  (let ((receipt (poo-flow-graph-analysis-receipt graph-value))
-        (loop-receipt (poo-flow-graph-loop-analysis-receipt graph-value)))
+  (let-values (((receipt loop-receipt)
+                (poo-flow-graph-analysis-receipts graph-value)))
     (list (cons 'node-count (.ref receipt 'node-count))
           (cons 'edge-count (.ref receipt 'edge-count))
           (cons 'root-ids (.ref receipt 'root-ids))

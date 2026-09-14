@@ -3,9 +3,9 @@
 ;;; Domain files own policy; this factor owns traversal and indexing mechanics.
 
 (import (only-in :std/misc/plist plist?)
-        (only-in :std/misc/list delete-duplicates/hash)
+        (only-in :gerbil/runtime/hash list->hash-table-eq)
         (only-in :std/misc/hash
-                 hash-ref/default hash-ensure-modify!
+                 hash-ref/default
                  invert-hash<-vector)
         (only-in :std/srfi/1 filter))
 
@@ -40,13 +40,13 @@
 
 ;; Retain each key's leftmost position and value, matching CLOS semantics.
 (def (poo-clos-initarg-index arguments)
-  (let (index (make-hash-table-eq))
-    (let loop ((rest arguments) (position 0))
-      (unless (null? rest)
-        (unless (hash-key? index (car rest))
-          (hash-put! index (car rest) (cons position (cadr rest))))
-        (loop (cddr rest) (+ position 1))))
-    index))
+  ;; The runtime constructor writes duplicate keys from left to right.  Build
+  ;; entries in reverse call order so the original leftmost occurrence wins.
+  (let loop ((rest arguments) (position 0) (entries '()))
+    (if (null? rest)
+      (list->hash-table-eq entries)
+      (loop (cddr rest) (+ position 1)
+            (cons (cons (car rest) (cons position (cadr rest))) entries)))))
 
 ;; A slot can name several initargs; call order decides which value wins.
 (def (poo-clos-initarg-index-first-of index names)
@@ -61,24 +61,16 @@
     (if selected (values #t (cdr selected)) (values #f #f))))
 
 (def (poo-clos-identity-index values)
-  (let (index (make-hash-table-eq))
-    ;; The supplied table is populated by Gerbil std's O(n) identity-deduper.
-    ;; Its returned list is intentionally unnecessary for this set projection.
-    (delete-duplicates/hash values table: index from-end?: #t)
-    index))
+  (list->hash-table-eq
+   (map (lambda (value) (cons value #t)) values)))
 
 ;; Index domain objects once while preserving the first declaration selected
 ;; by the former linear `find` traversal.
 (def (poo-clos-leftmost-index-by key-of values)
-  (let ((seen (make-hash-table-eq))
-        (index (make-hash-table-eq)))
-    (for-each
-     (lambda (value)
-       (hash-put! index (key-of value) value))
-     ;; std owns identity deduplication; this second linear projection records
-     ;; the domain object rather than the boolean stored in `seen`.
-     (delete-duplicates/hash values table: seen key: key-of from-end?: #t))
-    index))
+  ;; Reversing makes the runtime constructor's final write for a duplicate key
+  ;; the declaration that appeared first in the source list.
+  (list->hash-table-eq
+   (reverse (map (lambda (value) (cons (key-of value) value)) values))))
 
 (def (poo-clos-position-index/identity values)
   ;; CLOS precedence inputs are uniqueness-admitted. Gerbil std performs the
@@ -120,9 +112,11 @@
     (for-each
      (lambda (edge)
        (let ((source (car edge)) (target (cdr edge)))
-         (hash-ensure-modify! outgoing source (lambda () '())
-                              (lambda (targets) (cons target targets)))
-         (hash-ensure-modify! indegree target (lambda () 0) 1+)))
+         ;; Gambit's native update primitive avoids the generic ensure helper's
+         ;; second lookup and closure chain in this edge-count hot loop.
+         (hash-update! outgoing source (lambda (targets) (cons target targets))
+                       '())
+         (hash-update! indegree target 1+ 0)))
      edges)
     (def initial-candidates
       (filter (lambda (node) (= (hash-get indegree node) 0)) nodes))

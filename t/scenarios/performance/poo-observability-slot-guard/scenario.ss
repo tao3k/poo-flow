@@ -6,6 +6,7 @@
         (only-in :poo-flow/src/module-system/observability/debug
                  PooFlowDebugSlotPolicyContract
                  poo-flow-debug-poo
+                 poo-flow-debug-poos
                  poo-flow-debug-slot-policy))
 
 (export observability-slot-performance-scenario
@@ -22,10 +23,8 @@
 (def (source index) (.o payload: (+ index 1)))
 (def (sources count) (map source (iota count)))
 (def (guards policy inputs port emit?)
-  (map (lambda (input)
-         (poo-flow-debug-poo
-          policy 'performance-receiver input port: port emit?: emit?))
-       inputs))
+  (poo-flow-debug-poos
+   policy 'performance-receiver inputs port: port emit?: emit?))
 (def (sum-payload objects)
   (let loop ((rest objects) (sum 0))
     (if (null? rest) sum

@@ -28,9 +28,13 @@
 ;;; Invariant: derived roles share one mixing path with leftmost POO precedence.
 ;; : (forall (a) (-> [a] [a] [a]))
 (import (only-in :clan/poo/object
-                 object<-fun .all-slots object-slots object-supers
+                 object<-fun .all-slots object-slots object-supers make-object
                  $constant-slot-spec?))
-(export role-instance-overlay-compatible? role-instance-overlay)
+(export role-instance-overlay-compatible?
+        role-instance-overlay-defaults
+        role-instance-overlay/compatible
+        role-instance-overlay3/compatible
+        role-instance-overlay)
 
 (def (role-values/tail values tail)
   (append values tail))
@@ -214,10 +218,11 @@
             fallback)
         slot))
 
-(def (role-instance-overlay . roles)
-  (unless (and (pair? roles)
-               (role-instance-overlay-compatible-list? roles '()))
-    (error "role instance overlay requires constant-slot POO roles" roles))
+;;; Preconditioned construction lane for owners that already admitted every
+;;; role.  In particular, DomainCase validates its shared prototype once when
+;;; closing the case and only needs to validate each small local override at
+;;; instantiation time; rescanning the shared graph per Agent is quadratic work.
+(def (role-instance-overlay/compatible . roles)
   (let* ((owners
           (role-instance-overlay-owner-index roles (make-hash-table)))
          (fallback (role-instance-overlay-last roles)))
@@ -225,6 +230,27 @@
      (lambda (slot)
        (role-instance-overlay-resolve owners fallback slot))
      keys: (role-instance-overlay-keys roles))))
+
+;;; Once a shared prototype has passed the constant-slot admission check, its
+;;; effective values can be reused as native POO defaults by every instance.
+(def (role-instance-overlay-defaults shared)
+  (map (lambda (slot) (cons slot (.ref shared slot)))
+       (.all-slots shared)))
+
+;;; Three-role specialization used by DomainCase instances.  SHARED-DEFAULTS
+;;; is projected once per closed case; every instance shares that immutable
+;;; list and only installs its small marker/local override slot lists.
+(def (role-instance-overlay3/compatible marker local shared-defaults)
+  (make-object
+   defaults: shared-defaults
+   slots: (append (object-slots local)
+                  (object-slots marker))))
+
+(def (role-instance-overlay . roles)
+  (unless (and (pair? roles)
+               (role-instance-overlay-compatible-list? roles '()))
+    (error "role instance overlay requires constant-slot POO roles" roles))
+  (apply role-instance-overlay/compatible roles))
 
 ;; : (-> Role Boolean)
 (def (role-object? role)

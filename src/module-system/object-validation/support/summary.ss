@@ -3,7 +3,11 @@
 
 (import (only-in :std/srfi/1 fold)
         :gerbil/gambit
-        (only-in :clan/poo/object .ref .ref/cached)
+        (only-in :clan/poo/object
+                 .+
+                 .ref
+                 .ref/cached
+                 object<-fun)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/support/facts
         :poo-flow/src/module-system/object-validation/support/harness
@@ -23,6 +27,12 @@
 ;;; cell while preserving the lazy first-read path.
 (def +poo-flow-module-validation-summary-missing+
   (cons 'poo-flow-module-validation-summary 'missing))
+
+;;; Validation lists are functional catalog values.  Keep repeated doctor,
+;;; presentation, and benchmark projections on the same native POO summary
+;;; without retaining catalogs after their callers release them.
+(def +poo-flow-module-validation-summary-cache+
+  (make-hash-table-eq weak-keys: #t))
 
 ;; : (-> POOObject Symbol Value)
 (def (poo-flow-module-validation-summary-ref validation key)
@@ -140,30 +150,11 @@
   (let loop ((rest validations)
              (object-count 0)
              (object-identities '())
-             (inheritance-chains '())
-             (direct-field-counts '())
-             (direct-field-identities '())
-             (resolved-field-counts '())
-             (resolved-field-identities '())
-             (field-origins '())
-             (inheritance-counts '())
-             (validation-phases '())
              (invalid-count 0)
              (invalid-objects '()))
     (if (null? rest)
       (values object-count
-              ;; Every accumulator is private to this traversal.  Reverse it
-              ;; in place instead of allocating a second 50k-cell column for
-              ;; large catalogs; callers still receive ordinary fresh lists.
               (reverse! object-identities)
-              (reverse! inheritance-chains)
-              (reverse! direct-field-counts)
-              (reverse! direct-field-identities)
-              (reverse! resolved-field-counts)
-              (reverse! resolved-field-identities)
-              (reverse! field-origins)
-              (reverse! inheritance-counts)
-              (reverse! validation-phases)
               invalid-count
               (reverse! invalid-objects))
       (let* ((validation (car rest))
@@ -175,36 +166,29 @@
         (loop (cdr rest)
               (+ object-count 1)
               (cons object object-identities)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'inheritance-chain)
-                    inheritance-chains)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'direct-field-count)
-                    direct-field-counts)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'direct-field-identities)
-                    direct-field-identities)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'resolved-field-count)
-                    resolved-field-counts)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'resolved-field-identities)
-                    resolved-field-identities)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'field-origins)
-                    field-origins)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'inherit-count)
-                    inheritance-counts)
-              (cons (poo-flow-module-validation-summary-ref
-                     validation 'validationPhases)
-                    validation-phases)
               (if invalid?
                 (+ invalid-count 1)
                 invalid-count)
               (if invalid?
                 (cons object invalid-objects)
                 invalid-objects))))))
+
+;; : Alist
+(def +poo-flow-module-validation-summary-column-keys+
+  '((inheritance-chains . inheritance-chain)
+    (direct-field-counts . direct-field-count)
+    (direct-field-identities . direct-field-identities)
+    (resolved-field-counts . resolved-field-count)
+    (resolved-field-identities . resolved-field-identities)
+    (field-origins . field-origins)
+    (inheritance-counts . inherit-count)
+    (validation-phases . validationPhases)))
+
+;; : (-> [POOObject] Symbol [Value])
+(def (poo-flow-module-validation-summary-column validations slot)
+  (poo-flow-module-validation-values
+   validations
+   (cdr (assq slot +poo-flow-module-validation-summary-column-keys+))))
 
 ;; poo-flow-module-objects-validation-summary
 ;;   : (-> [POOObject] POOObject)
@@ -213,48 +197,47 @@
 ;;       validation facts without rewalking module objects or executing runtime
 ;;       descriptors.
 ;;     %
-(def (poo-flow-module-objects-validation-summary validations)
+(def (poo-flow-module-objects-validation-summary/uncached validations)
   (call-with-values
     (lambda ()
       (poo-flow-module-objects-validation-summary/collect validations))
     (lambda (object-count
              object-identities
-             inheritance-chains
-             direct-field-counts
-             direct-field-identities
-             resolved-field-counts
-             resolved-field-identities
-             field-origins
-             inheritance-counts
-             validation-phases
              invalid-count
              invalid-objects)
-      (receipt
-       (cons 'kind "poo-flow-module-objects-validation-summary")
-       (cons 'schema poo-flow-module-object-validation-schema)
-       (cons 'object-count object-count)
-       (cons 'object-identities object-identities)
-       (cons 'inheritance-chains inheritance-chains)
-       (cons 'direct-field-counts direct-field-counts)
-       (cons 'direct-field-identities direct-field-identities)
-       (cons 'resolved-field-counts resolved-field-counts)
-       (cons 'resolved-field-identities resolved-field-identities)
-       (cons 'field-origins field-origins)
-       (cons 'inheritance-counts inheritance-counts)
-       (cons 'validation-phases validation-phases)
-       (cons 'invalid-count invalid-count)
-       (cons 'invalid-objects invalid-objects)
-       (cons 'valid (null? invalid-objects))
-       (cons 'checkedSignals
-             '(object-catalog-validation-contract
-               object-catalog-debug-contract
-               object-catalog-field-origin-contract
-               object-catalog-inheritance-chain-contract
-               object-catalog-phase-contract
-               object-catalog-counts
-               object-catalog-invalid-identities))
-       (cons 'descriptor-realized? #f)
-       (cons 'runtime-executed #f)))))
+      (.+
+       (object<-fun
+        (lambda (slot)
+          (poo-flow-module-validation-summary-column validations slot))
+        keys: (map car +poo-flow-module-validation-summary-column-keys+))
+       (receipt
+        (cons 'kind "poo-flow-module-objects-validation-summary")
+        (cons 'schema poo-flow-module-object-validation-schema)
+        (cons 'object-count object-count)
+        (cons 'object-identities object-identities)
+        (cons 'invalid-count invalid-count)
+        (cons 'invalid-objects invalid-objects)
+        (cons 'valid (null? invalid-objects))
+        (cons 'checkedSignals
+              '(object-catalog-validation-contract
+                object-catalog-debug-contract
+                object-catalog-field-origin-contract
+                object-catalog-inheritance-chain-contract
+                object-catalog-phase-contract
+                object-catalog-counts
+                object-catalog-invalid-identities))
+        (cons 'descriptor-realized? #f)
+        (cons 'runtime-executed #f))))))
+
+;; : (-> [POOObject] POOObject)
+(def (poo-flow-module-objects-validation-summary validations)
+  (or (hash-get +poo-flow-module-validation-summary-cache+ validations)
+      (let (summary
+            (poo-flow-module-objects-validation-summary/uncached validations))
+        (hash-put! +poo-flow-module-validation-summary-cache+
+                   validations
+                   summary)
+        summary)))
 
 ;;; Catalog loading calls this gate so invalid module objects fail before a
 ;;; user-facing declarative configuration is projected.

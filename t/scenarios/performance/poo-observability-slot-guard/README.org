@@ -9,7 +9,7 @@ one opaque elapsed value.
 
 * Scenario contract
 
-The ASP benchmark framework executes 20 independent complete scenario samples,
+The ASP benchmark framework executes 40 independent complete scenario samples,
 records upstream nanosecond and process-memory evidence for every sample, and
 admits the nearest-rank P95 sample against the 50 ms maximum.  The selected
 sample result carries the semantic evidence; there is no nested stopwatch,

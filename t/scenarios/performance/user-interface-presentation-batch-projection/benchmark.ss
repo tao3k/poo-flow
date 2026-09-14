@@ -13,7 +13,7 @@
  (purpose . "observe user-interface presentation projection over repeated loop-engine modules")
  (feature . user-interface-presentation-batch-projection)
  (rule . POO-FLOW-USER-INTERFACE-PERFORMANCE-001)
- (optimizationFocus . "POO lazy loop-engine-only presentation fast path with batch field projection for runtime receipt slots")
+ (optimizationFocus . "single Gerbil :clan/poo loop-engine-only presentation projection with batch field extraction")
  (inputShape . "eight real custom loop-engine user-interface module declarations projected through pooFlowUserConfigPresentation")
  (expectedOutcome . "the user-interface-presentation-batch-projection scenario preserves its declared semantic result under the ASP P95 gate")
  (expectedRepair . "use focused POO presentation owners so loop-engine-only configs do not force unrelated CI/CD, session, sandbox, or workflow projection families")
@@ -24,16 +24,16 @@
  (hotPathEvidence native-poo-authoring
                   defstruct-runtime-receipt
                   user-interface-presentation
-                  poo-lazy-presentation
+                  clan-poo-object-fun-projection
                   batch-field-projection
                   scalar-summary
                   adapter-boundary
                   benchmark-contract)
- (optimizerVisibility . "presentation-config names field sets, routes loop-engine-only configs through a memoized POO lazy fast path, and performs one batch projection per row family instead of one traversal per public slot")
+ (optimizerVisibility . "presentation-config routes loop-engine-only configs through :clan/poo object<-fun caching, shares row-family projections with Gerbil promises, and performs one batch projection per row family")
  (expectedQualitySignals batch-field-projection
                          struct-capability-receipts
                          serialized-runtime-handoff-boundary
-                         poo-lazy-presentation
+                         clan-poo-object-fun-projection
                          user-interface-performance-gate)
  (learnedStyleSources
   "agent-semantic-protocols/languages/gerbil-scheme-language-project-harness/t/scenarios/policy/list-random-access-loop-performance/benchmark.ss"

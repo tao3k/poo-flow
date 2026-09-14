@@ -77,6 +77,22 @@
     (stage scenario
       (step collect))))
 
+(def github-profile (.o kind: 'github-actions name: 'github-workflow))
+(def nasa-sdlc-profile (.o kind: 'sdlc-standard name: 'nasa-7150-2d))
+(def multi-module-composition
+  (use-composition github-workflow
+    (modules
+      (use-module github as github
+        (profile github-profile))
+      (use-module sdlc as sdlc
+        (profile nasa-sdlc-profile)))
+    (compose
+      (profile github github-profile)
+      (profile sdlc nasa-sdlc-profile))
+    (stage production
+      (prove nasa-release-gates)
+      (handoff github-actions))))
+
 (def (composition-syntax-error-message module-datum . maybe-form-data)
   (let* ((module-form (datum->syntax #f module-datum))
          (forms
@@ -140,6 +156,15 @@
       (check-equal? (length stages) 1)
       (check-equal? (.ref stage 'name) 'production)
       (check-equal? (length (.ref stage 'clauses)) 4)))
+   (test-case
+    "one composition declares and selects multiple POO modules"
+    (let ((bindings (.ref multi-module-composition 'modules))
+          (profiles (.ref multi-module-composition 'profiles)))
+      (check-equal? (map (lambda (value) (.ref value 'alias)) bindings)
+                    '(github sdlc))
+      (check-equal? (length profiles) 2)
+      (check-equal? (car profiles) github-profile)
+      (check-equal? (cadr profiles) nasa-sdlc-profile)))
    (test-case
     "composition multiplicity uses compact launch ranges"
     (let* ((alpha

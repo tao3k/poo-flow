@@ -63,6 +63,13 @@ The macro creates one ordinary =ClosMethodBundle= value.  Protocol identity,
 method ownership, replacement, ordering and execution remain in the checked
 runtime functions.  The CPL implementation similarly delegates reusable graph
 work to =funcs.ss=; the CLOS class factor supplies only ANSI ambiguity policy.
+That functional factor reuses Gerbil std =invert-hash<-vector= for admitted CPL
+position indexes and =stable-sort= for method ordering, plus Gambit's native
+hash update/removal primitives in the edge-count hot loop.  Its remaining hash
+passes project CLOS-specific values such as leftmost declaration objects; using
+=delete-duplicates/hash= there would allocate an unused list and require a
+second projection.  List-producing identity deduplication remains owned by the
+POO Flow =delete-duplicates/hash= implementation in =classes.ss=.
 The A/B scenario under =t/scenarios/performance/poo-clos-cpl-index/= requires
 identical ordered results before accepting an indexed timing improvement.
 

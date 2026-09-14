@@ -92,14 +92,18 @@
       (display "baseline-p50-ms=") (display baseline-p50) (newline)
       (display "indexed-p50-ms=") (display indexed-p50) (newline)
       (let-values (((large-nodes large-edges) (linear-graph 20000)))
-        (let-values (((large-result large-ms)
-                      (elapsed-ms
-                       (lambda ()
-                         (poo-clos-topological-order/identity
-                          large-nodes large-edges
-                          (lambda (_candidate? _result) #f))))))
+        (def (large-indexed-order)
+          (poo-clos-topological-order/identity
+           large-nodes large-edges (lambda (_candidate? _result) #f)))
+        ;; Warm allocation and hash growth, then report a median so a single GC
+        ;; pause cannot become the capacity receipt.
+        (large-indexed-order)
+        (let-values (((large-result large-times)
+                      (sample large-indexed-order 5)))
+          (let (large-p50 (median large-times))
           (unless (= (length large-result) 20000)
             (error "large indexed CPL lost nodes"))
           (display "large-node-count=20000\n")
-          (display "large-indexed-ms=") (display large-ms) (newline)))
+          (display "large-indexed-p50-ms=")
+          (display large-p50) (newline))))
       (display "result-equivalent=#t\naccepted=#t\n"))))

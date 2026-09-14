@@ -22,6 +22,14 @@
     (check-equal? (poo-flow-model? Positive (.o (:: @ good) value: -1)) #f)
     (check-equal? (poo-flow-model? Positive (.o (:: @ good) value: 1.5)) #f))
   (test-case "shape and copied class markers cannot impersonate ancestry"
+    (check-equal?
+     (poo-flow-model-validation-failure
+      Positive (.o (:: @ good) value: 'bad))
+     '(type-predicate-failed value bad))
+    (check-equal?
+     (poo-flow-model-validation-failure
+      Positive (.o (:: @ (poo-flow-model-prototype Positive))))
+     '(missing-slot value))
     (check-equal? (poo-flow-model? Positive (.o value: 2 %poo-clos-class: Positive)) #f)
     (check-equal? (poo-flow-model? Positive (.o (:: @ (poo-flow-model-prototype Positive)))) #f)
     (check-equal? (poo-flow-model? Positive #f) #f)

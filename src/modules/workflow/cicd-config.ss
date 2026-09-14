@@ -2,7 +2,8 @@
 ;;; Boundary: workflow CI/CD user-module projection for the module system.
 ;;; Invariant: this owner emits POO control-plane data and never executes checks.
 
-(import :poo-flow/src/module-system/declaration/interface
+(import (only-in :clan/poo/object .ref object<-fun)
+        :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/projection/runtime-syntax
         (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-alist-ref)
@@ -41,6 +42,7 @@
         poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
         poo-flow-user-config-workflow-cicd-marlin-handoff-receipt-bundle
         poo-flow-user-config-workflow-cicd-receipts
+        poo-flow-user-config-workflow-cicd-runtime-projection-object
         poo-flow-user-config-workflow-cicd-runtime-projection
         poo-flow-user-alist-ref
         poo-flow-user-workflow-cicd-readiness-checks
@@ -74,7 +76,7 @@
 ;; : (-> [PooUserModuleSelection] [PooFlowCicdCheckMap])
 ;;; Config-level check-map discovery keeps the user interface on the declared
 ;;; POO object graph: sandbox profile resolution happens against selected
-;;; module config plus upstream defaults, not by probing the filesystem.
+;;; module config plus standard defaults, not by probing the filesystem.
 ;; : (-> PooUserConfig [PooFlowCicdCheckMap])
 ;;; Functional DAG discovery stays in the Funflow owner. This layer only
 ;;; projects check-map values into POO DAG objects and final presentation rows.
@@ -392,97 +394,137 @@
           (poo-flow-user-workflow-cicd-check-map-names
            (cdr check-maps))))))
 
-;;; Runtime projection batches the CI/CD handoff rows that share the same
-;;; check-map list and sandbox profile catalog. Presentation layers can then
-;;; reuse one owner-local receipt instead of rebuilding each public slot by
-;;; rediscovering the same module selections.
+;;; The runtime projection is POO-native and demand driven. Each field family is
+;;; computed at most once, and unrelated readiness/receipt families stay cold.
+(def +poo-flow-user-workflow-cicd-runtime-projection-keys+
+  '(check-maps
+    pipeline-count
+    pipeline-names
+    runtime-readiness
+    readiness-checks
+    sandbox-runtime-summaries
+    sandbox-handoff-summaries
+    sandbox-unresolved-profile-refs
+    runtime-command-manifests
+    runtime-command-manifest-summaries
+    runtime-command-manifest-agreement
+    marlin-runtime-handoff-abis
+    marlin-runtime-handoff-summaries
+    receipts
+    marlin-handoff-receipt-bundle
+    runtime-executed))
+
+;; : (-> PooUserConfig POOObject)
+(def (poo-flow-user-config-workflow-cicd-runtime-projection-object config)
+  (let* ((selected-modules (poo-flow-user-config-modules config))
+         (profile-catalog/promise
+          (delay
+            (poo-flow-user-config-sandbox-profile-catalog selected-modules)))
+         (check-maps/promise
+          (delay (poo-flow-user-config-workflow-cicd-check-maps config)))
+         (readiness-rows/promise
+          (delay
+            (poo-flow-user-workflow-cicd-runtime-readiness/add
+             (force check-maps/promise)
+             (force profile-catalog/promise))))
+         (readiness-check-summary/promise
+          (delay
+            (poo-flow-user-workflow-cicd-readiness-check-summary
+             (force readiness-rows/promise))))
+         (manifest-maps/promise
+          (delay
+            (poo-flow-user-workflow-cicd-runtime-command-manifests/add
+             (force check-maps/promise)
+             (force profile-catalog/promise))))
+         (manifest-summary-projection/promise
+          (delay
+            (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
+             (force manifest-maps/promise))))
+         (manifest-summaries/promise
+          (delay
+            (poo-flow-user-alist-ref
+             (force manifest-summary-projection/promise)
+             'summaries
+             '())))
+         (manifest-agreement/promise
+          (delay
+            (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
+             (poo-flow-user-alist-ref
+              (force manifest-summary-projection/promise)
+              'manifests
+              '())
+             (force manifest-summaries/promise))))
+         (handoff-abis/promise
+          (delay
+            (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
+             (force manifest-maps/promise))))
+         (handoff-summaries/promise
+          (delay
+            (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
+             (force handoff-abis/promise))))
+         (receipts/promise
+          (delay
+            (poo-flow-user-workflow-cicd-receipts/add
+             (force check-maps/promise)
+             (force profile-catalog/promise))))
+         (handoff-bundle/promise
+          (delay
+            (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+             (force manifest-maps/promise)
+             (force manifest-summaries/promise)
+             (force manifest-agreement/promise)
+             (force handoff-abis/promise)
+             (force handoff-summaries/promise)
+             (force receipts/promise)))))
+    (object<-fun
+     (lambda (key)
+       (case key
+        ((check-maps) (force check-maps/promise))
+        ((pipeline-count) (length (force check-maps/promise)))
+        ((pipeline-names)
+         (poo-flow-user-workflow-cicd-check-map-names
+          (force check-maps/promise)))
+        ((runtime-readiness) (force readiness-rows/promise))
+        ((readiness-checks)
+         (poo-flow-user-alist-ref
+          (force readiness-check-summary/promise) 'checks '()))
+        ((sandbox-runtime-summaries)
+         (poo-flow-user-alist-ref
+          (force readiness-check-summary/promise)
+          'sandbox-runtime-summaries
+          '()))
+        ((sandbox-handoff-summaries)
+         (poo-flow-user-alist-ref
+          (force readiness-check-summary/promise)
+          'sandbox-handoff-summaries
+          '()))
+        ((sandbox-unresolved-profile-refs)
+         (poo-flow-user-alist-ref
+          (force readiness-check-summary/promise)
+          'sandbox-unresolved-profile-refs
+          '()))
+        ((runtime-command-manifests) (force manifest-maps/promise))
+        ((runtime-command-manifest-summaries)
+         (force manifest-summaries/promise))
+        ((runtime-command-manifest-agreement)
+         (force manifest-agreement/promise))
+        ((marlin-runtime-handoff-abis) (force handoff-abis/promise))
+        ((marlin-runtime-handoff-summaries)
+         (force handoff-summaries/promise))
+        ((receipts) (force receipts/promise))
+        ((marlin-handoff-receipt-bundle) (force handoff-bundle/promise))
+        ((runtime-executed) #f)
+        (else (error "unknown workflow runtime projection slot" key))))
+     keys: +poo-flow-user-workflow-cicd-runtime-projection-keys+)))
+
+;;; Alist materialization remains an explicit outer adapter for existing report
+;;; surfaces. New POO consumers use the object projection above.
 ;; : (-> PooUserConfig Alist)
 (def (poo-flow-user-config-workflow-cicd-runtime-projection config)
-  (let* ((selected-modules (poo-flow-user-config-modules config))
-         (profile-catalog
-          (poo-flow-user-config-sandbox-profile-catalog selected-modules))
-         (check-maps
-          (poo-flow-user-config-workflow-cicd-check-maps config))
-         (readiness-rows
-          (poo-flow-user-workflow-cicd-runtime-readiness/add
-           check-maps
-           profile-catalog))
-         (readiness-check-summary
-          (poo-flow-user-workflow-cicd-readiness-check-summary
-           readiness-rows))
-         (manifest-maps
-          (poo-flow-user-workflow-cicd-runtime-command-manifests/add
-           check-maps
-           profile-catalog))
-         (manifest-summary-projection
-          (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
-           manifest-maps))
-         (manifests
-          (poo-flow-user-alist-ref
-           manifest-summary-projection
-           'manifests
-           '()))
-         (manifest-summaries
-          (poo-flow-user-alist-ref
-           manifest-summary-projection
-           'summaries
-           '()))
-         (manifest-agreement
-          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
-           manifests
-           manifest-summaries))
-         (handoff-abis
-          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
-           manifest-maps))
-         (handoff-summaries
-          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
-           handoff-abis))
-         (receipts
-          (poo-flow-user-workflow-cicd-receipts/add
-           check-maps
-           profile-catalog))
-         (handoff-bundle
-          (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
-           manifest-maps
-           manifest-summaries
-           manifest-agreement
-           handoff-abis
-           handoff-summaries
-           receipts)))
-    (list
-     (cons 'check-maps check-maps)
-     (cons 'pipeline-count (length check-maps))
-     (cons 'pipeline-names
-           (poo-flow-user-workflow-cicd-check-map-names check-maps))
-     (cons 'runtime-readiness readiness-rows)
-     (cons 'readiness-checks
-           (poo-flow-user-alist-ref
-            readiness-check-summary
-            'checks
-            '()))
-     (cons 'sandbox-runtime-summaries
-           (poo-flow-user-alist-ref
-            readiness-check-summary
-            'sandbox-runtime-summaries
-            '()))
-     (cons 'sandbox-handoff-summaries
-           (poo-flow-user-alist-ref
-            readiness-check-summary
-            'sandbox-handoff-summaries
-            '()))
-     (cons 'sandbox-unresolved-profile-refs
-           (poo-flow-user-alist-ref
-            readiness-check-summary
-            'sandbox-unresolved-profile-refs
-            '()))
-     (cons 'runtime-command-manifests manifest-maps)
-     (cons 'runtime-command-manifest-summaries manifest-summaries)
-     (cons 'runtime-command-manifest-agreement manifest-agreement)
-     (cons 'marlin-runtime-handoff-abis handoff-abis)
-     (cons 'marlin-runtime-handoff-summaries handoff-summaries)
-     (cons 'receipts receipts)
-     (cons 'marlin-handoff-receipt-bundle handoff-bundle)
-     (cons 'runtime-executed #f))))
+  (let (projection
+        (poo-flow-user-config-workflow-cicd-runtime-projection-object config))
+    (map (lambda (key) (cons key (.ref projection key)))
+         +poo-flow-user-workflow-cicd-runtime-projection-keys+)))
 
 ;;; Shared alist lookup is total by design: presentation and agreement checks
 ;;; need to report partial payloads instead of failing on the first missing key.

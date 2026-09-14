@@ -328,6 +328,16 @@
           (check-equal? (framework-contains? output "slot-resolved") #t)
           (check-equal? (framework-contains? output private-value) #f))))
 
+    (test-case "slot guard batch admits one policy over independent lazy caches"
+      (let* ((policy (poo-flow-debug-slot-policy 'slot-batch 4))
+             (guarded
+              (poo-flow-debug-poos
+               policy 'batch
+               (list (.o payload: 1) (.o payload: 2) (.o payload: 3))
+               emit?: #f)))
+        (check-equal? (map (lambda (object) (.ref object 'payload)) guarded)
+                      '(1 2 3))))
+
     (test-case "slot guard propagates exceptions without disclosing them"
       (let* ((canary "SYNTHETIC-PRIVATE-SLOT-FAILURE")
              (failure (list canary))

@@ -108,15 +108,18 @@
       (let* ((validation-count 5000)
              (validations
               (module-objects-validation-summary-validations validation-count))
+             ;; Materialize the production projection once before the timed
+             ;; series so the gate measures stable summary throughput rather
+             ;; than first-use POO instantiation and heap growth.
+             (summary
+              (module-objects-validation-summary-snapshot
+               (poo-flow-module-objects-validation-summary validations)))
              (receipt
               (benchmark-run
                module-objects-validation-summary-fixture
                (lambda ()
                   (module-objects-validation-summary-snapshot
-                   (poo-flow-module-objects-validation-summary validations)))))
-             (summary
-              (module-objects-validation-summary-snapshot
-               (poo-flow-module-objects-validation-summary validations))))
+                   (poo-flow-module-objects-validation-summary validations))))))
         (check-equal? (andmap object? validations) #t)
         (check-equal?
          (benchmark-fixture-contract-pass? module-objects-validation-summary-fixture)

@@ -8,13 +8,22 @@ its five-sample median is lower.  Wall time is a local qualification receipt;
 the durable improvement is the replacement of repeated constraint rebuilding
 with one outgoing-edge and indegree index.
 
-The same process then runs only the production algorithm over a 20,000-node
-linear graph.  This separates comparison scale, where the old implementation
-must still terminate, from capacity scale, where rerunning the cubic baseline
-would make the qualification itself unusable.
+The same process then warms and samples only the production algorithm over a
+20,000-node linear graph, reporting the median of five complete runs.  This
+separates comparison scale, where the old implementation must still terminate,
+from capacity scale, where rerunning the cubic baseline would make the
+qualification itself unusable; the median also prevents one GC pause from
+becoming the capacity receipt.
 
 Run from the repository root:
 
 #+begin_src sh
 gxi t/scenarios/performance/poo-clos-cpl-index/scenario.ss
 #+end_src
+
+The 2026-09-14 local receipt compared 180 nodes and 179 edges, observed
+4,940,400 baseline constraint inspections, and measured a 541.08 ms baseline
+median against a 0.19 ms indexed median.  The warmed five-run median for the
+20,000-node indexed capacity lane was 182.62 ms.  These wall times are
+host-specific; result equivalence and the removal of repeated constraint scans
+are the durable acceptance facts.

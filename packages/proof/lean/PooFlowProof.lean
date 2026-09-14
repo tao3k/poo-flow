@@ -55,6 +55,7 @@ import PooFlowProof.PooC3.ContributorRepositoryQualification
 import PooFlowProof.Enterprise
 import PooFlowProof.Export.DeclarationClosureModel
 import PooFlowProof.PooC3.GerbilPooPhysicalRefinement
+import PooFlowProof.PooC3.NativeProjectionPipeline
 import PooFlowProof.PooC3.ProfileBundleStableIdentity
 import PooFlowProof.PooC3.CedarDualEngineArbitration
 import PooFlowProof.PooC3.CedarAuthorizationSemantics

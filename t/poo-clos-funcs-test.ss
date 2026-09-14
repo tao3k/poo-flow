@@ -61,5 +61,3 @@
         (check (poo-clos-natural-permutation? '(2 0 1) 3) => #t)
         (check (poo-clos-natural-permutation? '(2 0 2) 3) => #f)
         (check (poo-clos-natural-permutation? '(3 0 1) 3) => #f)))))
-
-(run-tests! poo-clos-funcs-test)

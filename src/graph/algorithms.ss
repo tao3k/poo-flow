@@ -26,6 +26,7 @@
         poo-flow-graph-acyclic?
         poo-flow-graph-topological-order
         poo-flow-graph-topological-order/acyclic
+        poo-flow-graph-analysis-receipts
         poo-flow-graph-analysis-receipt
         poo-flow-graph-loop-analysis-receipt)
 
@@ -362,13 +363,11 @@
     (list (cons 'cycle-path cycle-path))
     '()))
 
-;; : (-> PooFlowGraph PooFlowGraphAnalysis)
-(def (poo-flow-graph-analysis-receipt graph-value . maybe-start+target)
-  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
-         (edge-pairs (poo-flow-graph-edge-pairs graph-value)))
-    (let-values (((outgoing-index incoming-index)
-                  (graph-adjacency-indexes edge-pairs)))
-      (let* ((roots
+;; : (-> PooFlowGraph [Object] [[Object Object]] HashTable HashTable List PooFlowGraphAnalysis)
+(def (graph-analysis-receipt/indexed graph-value node-ids edge-pairs
+                                     outgoing-index incoming-index
+                                     maybe-start+target)
+  (let* ((roots
               (filter
                (lambda (id)
                  (null? (graph-adjacency-ref incoming-index id)))
@@ -400,13 +399,22 @@
          (walk-adjacency/indexed incoming-index target-ids)
          topological-order
          cycle-path
-         diagnostics)))))
+         diagnostics)))
 
-;; : (-> PooFlowGraph PooFlowGraphLoopAnalysis)
-(def (poo-flow-graph-loop-analysis-receipt graph-value)
-  (let* ((outgoing-index (poo-flow-graph-outgoing-index graph-value))
-         (node-ids (poo-flow-graph-node-ids graph-value)))
-    (let-values (((components component-index)
+;; : (-> PooFlowGraph PooFlowGraphAnalysis)
+(def (poo-flow-graph-analysis-receipt graph-value . maybe-start+target)
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value)))
+    (let-values (((outgoing-index incoming-index)
+                  (graph-adjacency-indexes edge-pairs)))
+      (graph-analysis-receipt/indexed
+       graph-value node-ids edge-pairs outgoing-index incoming-index
+       maybe-start+target))))
+
+;; : (-> PooFlowGraph [Object] [[Object Object]] HashTable PooFlowGraphLoopAnalysis)
+(def (graph-loop-analysis-receipt/indexed graph-value node-ids edge-pairs
+                                          outgoing-index)
+  (let-values (((components component-index)
                   (order-components/indexed
                    node-ids
                    (graph-strong-components/indexed node-ids outgoing-index))))
@@ -414,7 +422,7 @@
               (select-cyclic-components components outgoing-index))
              (condensation-edges
               (graph-condensation-edges
-               (poo-flow-graph-edge-pairs graph-value)
+               edge-pairs
                component-index))
              (diagnostics
               (poo-flow-graph-loop-analysis-diagnostics cyclic-components)))
@@ -423,7 +431,32 @@
          components
          cyclic-components
          condensation-edges
-         diagnostics)))))
+         diagnostics))))
+
+;; Build the shared graph projection and adjacency indexes once when callers
+;; require both the ordinary and loop-analysis receipts.
+;; : (-> PooFlowGraph (Values PooFlowGraphAnalysis PooFlowGraphLoopAnalysis))
+(def (poo-flow-graph-analysis-receipts graph-value . maybe-start+target)
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value)))
+    (let-values (((outgoing-index incoming-index)
+                  (graph-adjacency-indexes edge-pairs)))
+      (values
+       (graph-analysis-receipt/indexed
+        graph-value node-ids edge-pairs outgoing-index incoming-index
+        maybe-start+target)
+       (graph-loop-analysis-receipt/indexed
+        graph-value node-ids edge-pairs outgoing-index)))))
+
+;; : (-> PooFlowGraph PooFlowGraphLoopAnalysis)
+(def (poo-flow-graph-loop-analysis-receipt graph-value)
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value))
+         (outgoing-index
+          (edge-pairs->outgoing-index (reverse edge-pairs)
+                                      (make-hash-table))))
+    (graph-loop-analysis-receipt/indexed
+     graph-value node-ids edge-pairs outgoing-index)))
 
 (def (poo-flow-graph-loop-analysis-diagnostics cyclic-components)
   (if (null? cyclic-components)

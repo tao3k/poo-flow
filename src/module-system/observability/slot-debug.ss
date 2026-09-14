@@ -28,6 +28,7 @@
         poo-flow-debug-slot-receipt
         poo-flow-debug-slot-receipt-sexp
         poo-flow-debug-poo
+        poo-flow-debug-poos
         PooFlowDebugSlotAnomaly?
         PooFlowDebugSlotAnomaly-receipt)
 
@@ -126,6 +127,33 @@
      (.all-slots source))
     guarded))
 
+;; : (-> PooFlowDebugSlotPolicy Symbol PooObject OutputPort Boolean PooObject)
+(def (poo-flow-debug-poo/validated policy receiver source port emit?)
+  (poo-flow-debug-install-slot-guards!
+   policy receiver source port emit?))
+
+;; : (-> PooFlowDebugSlotPolicy Symbol [PooObject] port: OutputPort emit?: Boolean [PooObject])
+;; poo-flow-debug-poos
+;;   : (-> PooFlowDebugSlotPolicy Symbol [PooObject] port: OutputPort emit?: Boolean [PooObject])
+;;   | doc m%
+;;       Install the same slot policy over a batch of native POO values. The
+;;       shared policy is admitted once at the batch boundary; each returned
+;;       receiver still owns independent :clan/poo lazy-slot caches.
+;;     %
+(def (poo-flow-debug-poos policy receiver sources
+                          port: (port (current-error-port))
+                          emit?: (emit? #t))
+  (unless (and (symbol? receiver) (list? sources)
+               (andmap object? sources)
+               (output-port? port) (boolean? emit?))
+    (error "invalid POO Flow slot debug batch request" receiver))
+  (unless (eq? (validate PooFlowDebugSlotPolicyContract policy) policy)
+    (error "invalid POO Flow debug slot policy"))
+  (map (lambda (source)
+         (poo-flow-debug-poo/validated
+          policy receiver source port emit?))
+       sources))
+
 ;; : (forall (a) (-> PooFlowDebugSlotPolicy Symbol a port: OutputPort emit?: Boolean a))
 ;; poo-flow-debug-poo
 ;;   : (-> PooFlowDebugSlotPolicy Symbol PooObject port: OutputPort emit?: Boolean PooObject)
@@ -156,5 +184,4 @@
     (error "invalid POO Flow slot debug request" receiver))
   (unless (eq? (validate PooFlowDebugSlotPolicyContract policy) policy)
     (error "invalid POO Flow debug slot policy"))
-  (poo-flow-debug-install-slot-guards!
-   policy receiver source port emit?))
+  (poo-flow-debug-poo/validated policy receiver source port emit?))

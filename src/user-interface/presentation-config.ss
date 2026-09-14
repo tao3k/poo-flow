@@ -61,7 +61,7 @@
         (public-setting-keys
          (if (null? maybe-setting-keys) '() (car maybe-setting-keys))))
     (if (poo-flow-user-config-loop-engine-only? selected-modules)
-      (poo-flow-user-config-loop-engine-only-presentation/summary
+      (poo-flow-user-config-loop-engine-only-presentation
        config
        selected-modules
        setting-object

@@ -5,7 +5,7 @@
 (export #t (import: "contracts.ss"))
 
 (import "contracts.ss"
-        (only-in :clan/poo/object .ref object?)
+        (only-in :clan/poo/object .all-slots .ref object?)
         (only-in :std/crypto/digest sha256)
         (only-in :std/sort sort)
         (only-in :std/text/hex hex-encode)
@@ -189,6 +189,8 @@
      (strategy-algebra strategy-algebra)
      (canonical-descriptor descriptor)
      (metrics (vector 0 0))
+     (instance-marker-cache (vector #f #f))
+     (instance-overlay-defaults-cache (vector #f))
      (closed? #t)))
    (supers)))
 
@@ -323,6 +325,40 @@
 (def (domain-case-instance-diagnostic code owner observed)
   (domain-case-diagnostic code (list 'instance owner) observed))
 
+;; : (-> PooDomainCase Boolean PooRole)
+(def (domain-case-instance-marker-role domain-case overlay-compatible?)
+  (let* ((cache (.ref domain-case 'instance-marker-cache))
+         (index (if overlay-compatible? 1 0))
+         (cached (vector-ref cache index)))
+    (or cached
+        (let (marker
+              (poo-core-role-object
+               (slots ((domain-case/ref domain-case)
+                       (domain-case/key (.ref domain-case 'key))
+                       (domain-case/instance-overlay-kind
+                        (and overlay-compatible?
+                             'poo-flow.role-instance-overlay.v1))
+                       (domain-case/instance-composition-kind
+                        (if overlay-compatible?
+                          'poo-flow.role-instance-overlay.v1
+                          'poo-flow.role-compose-mix.v1))
+                       (domain-case/instance-overlay-resolver-depth
+                        (and overlay-compatible? 1))))
+               (supers)))
+          (vector-set! cache index marker)
+          marker))))
+
+;; : (-> PooDomainCase Alist)
+(def (domain-case-instance-overlay-defaults domain-case)
+  (let* ((cache (.ref domain-case 'instance-overlay-defaults-cache))
+         (cached (vector-ref cache 0)))
+    (or cached
+        (let (defaults
+              (role-instance-overlay-defaults
+               (.ref domain-case 'shared-prototype)))
+          (vector-set! cache 0 defaults)
+          defaults))))
+
 ;; : (-> PooRole PooCaseSlotContract MaybeAlist)
 (def (domain-case-slot-instance-diagnostic instance slot-contract)
   (let* ((missing-marker (list 'missing-slot))
@@ -405,8 +441,10 @@
    (lambda ()
      (if overlay-compatible?
        (values 'overlay
-               (role-instance-overlay
-                case-marker-role local-role shared-prototype))
+               (role-instance-overlay3/compatible
+                case-marker-role
+                local-role
+                (domain-case-instance-overlay-defaults domain-case)))
        (values 'mix
                (role-compose case-marker-role local-role shared-prototype))))))
 
@@ -437,19 +475,7 @@
           (and (.ref domain-case 'instance-overlay-compatible?)
                (role-instance-overlay-compatible? local-role)))
          (case-marker-role
-          (poo-core-role-object
-           (slots ((domain-case/ref domain-case)
-                   (domain-case/key (.ref domain-case 'key))
-                   (domain-case/instance-overlay-kind
-                    (and overlay-compatible?
-                         'poo-flow.role-instance-overlay.v1))
-                   (domain-case/instance-composition-kind
-                    (if overlay-compatible?
-                      'poo-flow.role-instance-overlay.v1
-                      'poo-flow.role-compose-mix.v1))
-                   (domain-case/instance-overlay-resolver-depth
-                   (and overlay-compatible? 1))))
-           (supers))))
+          (domain-case-instance-marker-role domain-case overlay-compatible?)))
     (let-values (((mode result)
                   (domain-case-compose-instance
                    domain-case overlay-compatible? case-marker-role
