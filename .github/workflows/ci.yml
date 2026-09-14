@@ -316,8 +316,8 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
-            compile-timeout-minutes: 8
-            compile-runaway-timeout-seconds: 420
+            compile-timeout-minutes: 12
+            compile-runaway-timeout-seconds: 660
             acceptance-timeout-minutes: 10
             acceptance-runaway-timeout-seconds: 540
             external-module-mode: analysis
@@ -834,8 +834,8 @@ jobs:
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
             external-module-mode: analysis
-            compile-timeout-minutes: 15
-            compile-runaway-timeout-seconds: 840
+            compile-timeout-minutes: 25
+            compile-runaway-timeout-seconds: 1440
             acceptance-timeout-minutes: 15
             acceptance-runaway-timeout-seconds: 840
             job-timeout-minutes: 45
