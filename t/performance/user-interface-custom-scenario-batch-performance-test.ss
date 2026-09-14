@@ -22,9 +22,14 @@
                  poo-flow-custom-my-module-loop-engine-case
                  poo-flow-custom-my-module-poo-introspection-case
                  poo-flow-custom-my-module-tool-core-case
-                 poo-flow-custom-my-module-memory-core-case
-                 poo-flow-custom-my-module-durable-runtime-store-handoff-case
-                 poo-flow-custom-my-module-durable-runtime-store-operations-case
+                 poo-flow-custom-my-module-memory-core-case)
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-recovery
+                 poo-flow-custom-my-module-durable-recovery-case)
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-handoff
+                 poo-flow-custom-my-module-durable-runtime-store-handoff-case)
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations
+                 poo-flow-custom-my-module-durable-runtime-store-operations-case)
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-operation-bridge
                  poo-flow-custom-my-module-durable-operation-bridge-case))
 
 (export user-interface-custom-scenario-batch-performance-test)
@@ -38,7 +43,6 @@
 (load! "../user-interface/custom/my-module/cases/session-materialization")
 (load! "../user-interface/custom/my-module/cases/session-agent-param")
 (load! "../user-interface/custom/my-module/cases/session-memory-durable")
-(load! "../user-interface/custom/my-module/cases/durable-recovery")
 
 ;; : String
 (def user-interface-custom-scenario-batch-fixture-path
@@ -70,7 +74,7 @@
          poo-flow-custom-module-session-memory-durable-case)
    (cons 'tool-core poo-flow-custom-my-module-tool-core-case)
    (cons 'memory-core poo-flow-custom-my-module-memory-core-case)
-   (cons 'durable-recovery poo-flow-custom-module-durable-recovery-case)
+   (cons 'durable-recovery poo-flow-custom-my-module-durable-recovery-case)
    (cons 'durable-runtime-store-handoff
          poo-flow-custom-my-module-durable-runtime-store-handoff-case)
    (cons 'durable-runtime-store-operations

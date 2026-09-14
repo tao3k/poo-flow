@@ -8,7 +8,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-artifact
                  poo-flow-custom-my-module-durable-artifact-case))
 
 (export user-interface-custom-durable-artifact-test)

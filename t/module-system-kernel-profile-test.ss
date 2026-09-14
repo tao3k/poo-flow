@@ -6,7 +6,7 @@
                  test-suite
                  test-case
                  check-equal?)
-        (only-in :poo-flow/src/user-interface/profile-config
+        (only-in :poo-flow/src/user-interface/profile-core
                  poo-flow-user-profile-name
                  poo-flow-user-profile-set-name
                  poo-flow-user-profile-set-default-profile-name

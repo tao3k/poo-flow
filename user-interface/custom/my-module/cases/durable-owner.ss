@@ -3,16 +3,14 @@
 ;;; Invariant: durable scenarios stay importable without compiling every custom
 ;;; user-interface case into one generated C module.
 
-(import (only-in :poo-flow/src/modules/memory-core/durable/store-operation-bridge
-                 poo-flow-durable-runtime-store-operations-from-rows
-                 poo-flow-durable-runtime-store-rows->marlin-handoff)
-        :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/user-interface/custom/my-module/profiles/all)
+(import :poo-flow/user-interface/custom/my-module/cases/durable-artifact
+        :poo-flow/user-interface/custom/my-module/cases/durable-recovery
+        :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-handoff
+        :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations
+        :poo-flow/user-interface/custom/my-module/cases/durable-operation-bridge)
 
-(load! "durable-artifact")
-(load! "durable-recovery")
-(load! "durable-runtime-store-handoff")
-(load! "durable-runtime-store-operations")
-(load! "durable-operation-bridge")
+(export (import: :poo-flow/user-interface/custom/my-module/cases/durable-artifact)
+        (import: :poo-flow/user-interface/custom/my-module/cases/durable-recovery)
+        (import: :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-handoff)
+        (import: :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations)
+        (import: :poo-flow/user-interface/custom/my-module/cases/durable-operation-bridge))

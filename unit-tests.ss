@@ -7,7 +7,9 @@
                  testing-test-selector
                  testing-interface-add-profile
                  testing-interface-map-profile
-                 init-profiled-test-environment!))
+                 init-profiled-test-environment!)
+        (only-in :poo-flow/src/module-system/observability/testing-extension
+                 poo-flow-testing-observability-extension))
 
 (def +poo-flow-serial-test-selectors+
   (map (lambda (fragment) (testing-test-selector 'contains fragment))
@@ -21,7 +23,7 @@
       (testing-interface-map-profile
        testing selector +testing-serial-resource-profile+))
     (testing-interface-add-profile
-     +asp-testing-interface+
+     (poo-flow-testing-observability-extension +asp-testing-interface+)
      (.cc +testing-discovery-profile+
           ignoreDirectories: '("lambda-episteme"
                                "t/performance"

@@ -489,6 +489,7 @@
      (active-path . ,ObservationPath)
      (operator-kind . ,ObservationSymbol)
      (outcome . ,ObservationSymbol)
+     (elapsed-nanoseconds . ,ObservationNatural)
      (accepted? . ,ObservationBoolean)
      (reason . ,ObservationSymbol))))
 

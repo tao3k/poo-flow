@@ -7,7 +7,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-operation-bridge
                  poo-flow-custom-my-module-durable-operation-bridge-case))
 
 (export user-interface-custom-durable-operation-bridge-test)

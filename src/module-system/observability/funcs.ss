@@ -170,9 +170,10 @@
         label: label-value
         maximum-depth: maximum-depth-value)))
 
-;; : (-> PooFlowDebugCallPolicy Symbol Natural [Symbol] Symbol Symbol PooFlowDebugCallReceipt)
+;; : (-> PooFlowDebugCallPolicy Symbol Natural [Symbol] Symbol Symbol Natural PooFlowDebugCallReceipt)
 (def (poo-flow-debug-call-receipt policy call-value depth-value path-value
-                                  operator-kind-value outcome-value)
+                                  operator-kind-value outcome-value
+                                  (elapsed-nanoseconds-value 0))
   (validate PooFlowDebugCallPolicyContract policy)
   (let* ((policy-value policy)
          (accepted-value (memq outcome-value '(admitted returned)))
@@ -180,7 +181,7 @@
           (case outcome-value
             ((admitted) 'call-admitted)
             ((returned) 'call-returned)
-            ((raised) 'operator-raised)
+            ((raised) 'call-raised)
             ((rejected-non-procedure) 'non-procedure-operator)
             ((rejected-cycle) 'recursive-call-cycle)
             ((rejected-depth) 'maximum-call-depth-exceeded)
@@ -193,6 +194,7 @@
           active-path: path-value
           operator-kind: operator-kind-value
           outcome: outcome-value
+          elapsed-nanoseconds: elapsed-nanoseconds-value
           accepted?: (if accepted-value #t #f)
           reason: reason-value))))
 
@@ -207,6 +209,7 @@
         (list 'active-path (.ref receipt 'active-path))
         (list 'operator-kind (.ref receipt 'operator-kind))
         (list 'outcome (.ref receipt 'outcome))
+        (list 'elapsed-nanoseconds (.ref receipt 'elapsed-nanoseconds))
         (list 'accepted? (.ref receipt 'accepted?))
         (list 'reason (.ref receipt 'reason))))
 

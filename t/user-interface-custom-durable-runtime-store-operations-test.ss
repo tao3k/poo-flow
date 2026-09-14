@@ -9,7 +9,7 @@
                  test-suite)
         (only-in :poo-flow/src/modules/memory-core/durable/store-operation
                  +poo-flow-durable-runtime-store-operation-specs+)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/durable-runtime-store-operations
                  poo-flow-custom-my-module-durable-runtime-store-operations-case))
 
 (export user-interface-custom-durable-runtime-store-operations-test)

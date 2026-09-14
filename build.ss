@@ -5,8 +5,28 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype
-                 default-exclude-dirs))
+                 asp-gerbil-scheme-library-package-prototype))
+
+(def +core-public-entry-modules+
+  '("src/core/api.ss"
+    "src/module-system/api.ss"
+    "src/feature-system/interface.ss"
+    "src/loops/agent.ss"
+    "src/profiles/kernel/interface.ss"
+    "src/module-system/loader/fragment-syntax.ss"
+    "src/module-system/observability/module-presentation.ss"
+    "src/module-system/observability/testing-extension.ss"
+    "src/user-interface/init-declaration-syntax.ss"
+    "src/user-interface/config-discovery-syntax.ss"
+    "user-interface/custom/my-module/cases/durable-artifact.ss"
+    "user-interface/custom/my-module/cases/durable-recovery.ss"
+    "user-interface/custom/my-module/cases/durable-runtime-store-handoff.ss"
+    "user-interface/custom/my-module/cases/durable-runtime-store-operations.ss"
+    "user-interface/custom/my-module/cases/durable-operation-bridge.ss"
+    "user-interface/custom/my-module/cases/durable-owner.ss"))
+
+(def +public-entry-modules+
+  +core-public-entry-modules+)
 
 (def +nono-c-include-option+
   (string-append
@@ -22,24 +42,7 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
- (exclude-dirs
-  (append '("lambda-episteme"
-            "bindings"
-            "packages"
-            "target"
-            "user-interface/cases"
-            "user-interface/profiles"
-            "user-interface/custom/my-module/cases"
-            "user-interface/custom/my-module/profiles")
-          default-exclude-dirs))
- (exclude-modules '("src/modules/nono-sandbox/_nono.ss"))
- (extra-spec
-  '("user-interface/custom/my-module/profiles/all.ss"
-    "user-interface/custom/my-module/cases/cicd-owner.ss"
-    "user-interface/custom/my-module/cases/loop-engine-owner.ss"
-    "user-interface/custom/my-module/cases/session-owner.ss"
-    "user-interface/custom/my-module/cases/runtime-owner.ss"
-    "user-interface/custom/my-module/cases/durable-owner.ss"))
+ (public-entry-modules +public-entry-modules+)
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+

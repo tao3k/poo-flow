@@ -57,6 +57,11 @@
 ;; : (Parameter [Symbol])
 (def poo-flow-debug-active-call-path (make-parameter '()))
 
+;; : (-> Integer Natural)
+(def (poo-flow-debug-elapsed-nanoseconds started-jiffy)
+  (quotient (* (- (current-jiffy) started-jiffy) 1000000000)
+            (jiffies-per-second)))
+
 ;; : (-> Value Symbol)
 (def (poo-flow-debug-operator-kind operator)
   (cond ((procedure? operator) 'procedure)
@@ -112,6 +117,7 @@
   (unless (eq? (validate PooFlowDebugCallPolicyContract policy) policy)
     (error "invalid POO Flow debug call policy"))
   (let* ((path (poo-flow-debug-active-call-path))
+         (started-jiffy (current-jiffy))
          (depth (length path))
          (operator-kind (poo-flow-debug-operator-kind operator))
          (rejected-outcome
@@ -143,7 +149,8 @@
              (when emit?
                (poo-flow-debug-emit-call-receipt
                 (poo-flow-debug-call-receipt
-                 policy call-id depth path operator-kind 'raised)
+                 policy call-id depth path operator-kind 'raised
+                 (poo-flow-debug-elapsed-nanoseconds started-jiffy))
                 port))
              (raise failure))
            (lambda ()
@@ -156,7 +163,8 @@
       (when emit?
         (poo-flow-debug-emit-call-receipt
          (poo-flow-debug-call-receipt
-          policy call-id depth path operator-kind 'returned)
+          policy call-id depth path operator-kind 'returned
+          (poo-flow-debug-elapsed-nanoseconds started-jiffy))
          port))
       (apply values result-values))))
 

@@ -1,10 +1,21 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream durable operation bridge case loaded by
-;;; custom/my-module/config.ss.
+;;; Boundary: downstream durable operation bridge case.
 ;;; Invariant: this bridges user-visible durable rows to Marlin operation
 ;;; receipts only; Scheme does not execute runtime store side effects.
 
-(let* ((durable-policy
+(import :poo-flow/src/modules/memory-core/config
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend
+        :poo-flow/src/modules/memory-core/durable/store-operation
+        :poo-flow/src/modules/memory-core/durable/store-operation-bridge
+        :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/config)
+
+(export poo-flow-custom-my-module-durable-operation-bridge-case)
+
+(def poo-flow-custom-my-module-durable-operation-bridge-case
+  (let* ((durable-policy
         (poo-flow-durable-policy
          'durable/custom-operation-bridge
          'objects.shared.durable
@@ -110,5 +121,5 @@
   (list
    (poo-flow-durable-runtime-store-negotiation-receipt->alist negotiation)
    (poo-flow-durable-runtime-store-operation-receipts->alists operations)
-   (poo-flow-durable-runtime-store-operations->marlin-handoff negotiation
-                                                                 operations)))
+    (poo-flow-durable-runtime-store-operations->marlin-handoff negotiation
+                                                                operations))))
