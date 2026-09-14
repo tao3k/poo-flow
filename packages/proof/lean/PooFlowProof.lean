@@ -10,6 +10,7 @@ import PooFlowProof.PooC3.SlotDemandIdentity
 import PooFlowProof.PooC3.EvaluationContextNarrowing
 import PooFlowProof.PooC3.CapabilityRoleIsolation
 import PooFlowProof.PooC3.PhasedSlotResolution
+import PooFlowProof.PooC3.DomainCaseIndexedResolution
 import PooFlowProof.PooC3.ResultContractAccumulation
 import PooFlowProof.PooC3.EffectIntentHandoff
 import PooFlowProof.PooC3.EffectDagAtomicity

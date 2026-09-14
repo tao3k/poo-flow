@@ -1,6 +1,6 @@
 ;;; Boundary: composes resolved feature manifests into an immutable plan object.
 ;;; Invariant: composition order is explicit and preserves POO role precedence.
-(import (only-in :clan/poo/object .ref make-object object-slots-set!)
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/feature-manifest
         :poo-flow/src/utilities/functional)
@@ -9,11 +9,6 @@
         defpoo-feature-composition-plan)
 
 ;; : (-> Alist POOObject)
-(def (constant-composition-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; Accumulators are kept in reverse order so every contribution is visited once
 ;; without append-driven quadratic growth.  The final reverse restores the
 ;; resolver-defined feature order and each feature's declaration order.
@@ -72,7 +67,7 @@
                    adapter-requirements
                    projections)
                   (feature-composition-contributions manifests)))
-      (constant-composition-object
+      (object<-alist
        `((kind . feature-composition-plan)
          (schema-version . 1)
          (bundle-id . ,(.ref bundle 'bundle-id))

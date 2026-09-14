@@ -2,8 +2,7 @@
 ;;; Invariant: contribution composition preserves declared precedence and provenance.
 (import (only-in :clan/poo/object
                  .ref
-                 make-object
-                 object-slots-set!
+                 object<-alist
                  object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/domain-case-assembly
@@ -28,14 +27,9 @@
   'poo-flow.feature-strategy-contribution.v1)
 
 ;; : (-> Alist POOObject)
-(def (constant-feature-binding-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> Symbol Symbol Symbol POOObject PooFeatureAlgebraContribution)
 (def (feature-algebra-contribution kind contribution-id algebra-id prototype)
-  (constant-feature-binding-object
+  (object<-alist
    `((kind . ,kind)
      (schema-version . 1)
      (contribution-id . ,contribution-id)
@@ -86,7 +80,7 @@
 
 ;; : (-> Symbol Symbol Object Alist)
 (def (feature-binding-diagnostic code channel observed)
-  (constant-feature-binding-object
+  (object<-alist
    `((kind . poo-flow.feature-policy-strategy-binding-diagnostic.v1)
      (code . ,code)
      (channel . ,channel)
@@ -227,7 +221,7 @@
          (composition-diagnostics (caddr composition))
          (all-diagnostics (append diagnostics composition-diagnostics))
          (accepted? (and (car composition) (null? all-diagnostics))))
-    (constant-feature-binding-object
+    (object<-alist
      `((kind . ,kind)
        (schema-version . 1)
        (channel . ,channel)
@@ -256,7 +250,7 @@
          (assembly-accepted? (car assembly-state))
          (domain-case (cadr assembly-state)))
     (if (not assembly-accepted?)
-      (constant-feature-binding-object
+      (object<-alist
        `((kind . feature-policy-strategy-binding)
          (schema-version . 1)
          (assembly . ,assembly)
@@ -287,7 +281,7 @@
               (append (.ref policy-binding 'diagnostics)
                       (.ref strategy-binding 'diagnostics)))
              (accepted? (null? diagnostics)))
-        (constant-feature-binding-object
+        (object<-alist
          `((kind . feature-policy-strategy-binding)
            (schema-version . 1)
            (assembly . ,assembly)

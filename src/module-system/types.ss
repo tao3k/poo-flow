@@ -1,6 +1,6 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: POO Flow domain specialization of upstream gerbil-poo types.
-;;; Invariant: upstream owns primitive Type validation and prototype dispatch;
+;;; Boundary: POO Flow domain specialization of standard gerbil-poo types.
+;;; Invariant: gerbil-poo owns primitive Type validation and prototype dispatch;
 ;;; this module owns only evidence-bearing POO Flow classification/contracts.
 
 (import (only-in :clan/poo/object
@@ -40,10 +40,6 @@
         poo-flow-validation-evidence-accepted?
         poo-flow-validation-evidence->alist)
 
-;;; Keep the upstream metaobject type behind one explicit local ancestry name.
-;;; Domain descriptors below then mention only POO Flow-owned abstractions.
-(def PooFlowUpstreamType. Type.)
-
 ;; Open POO protocols dispatch through descriptor slots.  They are intentionally
 ;; sparse: fixed accessors and final receipt encoders remain ordinary functions.
 (.defgeneric (poo-flow-type-classify type candidate context)
@@ -80,7 +76,7 @@
        (poo-flow-type-identity? (.ref value 'type-identity))))
 
 ;;; Evidence type: accepts only classification receipts with the required typed slots.
-(define-type (PooFlowClassificationEvidence @ PooFlowUpstreamType.)
+(define-type (PooFlowClassificationEvidence @ Type.)
   .element?: poo-flow-classification-evidence-element?)
 
 ;; : (-> Object Boolean)
@@ -101,7 +97,7 @@
                  (null? (.ref value 'obligation-evidence))))))
 
 ;;; Evidence type: accepts only validation receipts with the required typed slots.
-(define-type (PooFlowValidationEvidence @ PooFlowUpstreamType.)
+(define-type (PooFlowValidationEvidence @ Type.)
   .element?: poo-flow-validation-evidence-element?)
 
 ;; : (-> Object Object Boolean [Alist] Object PooFlowClassificationEvidence)

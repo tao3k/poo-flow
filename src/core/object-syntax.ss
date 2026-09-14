@@ -3,8 +3,7 @@
 ;;; Invariant: generated code is ordinary role-backed POO object construction;
 ;;; public descriptor and registry APIs remain in their owner modules.
 
-(import (only-in :clan/poo/object .mix)
-        :poo-flow/src/core/roles)
+(import (only-in :clan/poo/object object<-alist))
 
 (export poo-core-role-object)
 
@@ -15,7 +14,7 @@
 ;; | type RoleSupersSyntax = Syntax
 ;; | type RoleObjectSyntax = Syntax
 ;; | contract: accepts literal slot rows or a row expression plus zero or more supers
-;; | warning: keep inheritance semantics in `.mix`; this macro only prepares slots
+;; | warning: inheritance remains owned by gerbil-poo `object<-alist`; this macro only prepares syntax
 ;; | doc m%
 ;;   Builds a POO role object from constant slots and parent prototypes.
 ;;   # Examples
@@ -27,10 +26,8 @@
   (slots slot-rows supers)
   ((_ (slots ((slot-key slot-value) ...))
       (supers super ...))
-   (.mix slots: (role-constant-slots
-                 (list (cons 'slot-key slot-value) ...))
-         super ...))
+   (object<-alist (list (cons 'slot-key slot-value) ...)
+                  supers: (list super ...)))
   ((_ (slot-rows slot-rows-expr)
       (supers super ...))
-   (.mix slots: (role-constant-slots slot-rows-expr)
-         super ...)))
+   (object<-alist slot-rows-expr supers: (list super ...))))

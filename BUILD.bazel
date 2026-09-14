@@ -37,6 +37,7 @@ filegroup(
         "t/module-system-poo-performance-test-support/composition-large-library.ss",
         "t/module-system-poo-performance-test-support/composition-scenarios.ss",
         "t/scenarios/performance/composition-macro-expansion/benchmark.ss",
+        "t/scenarios/performance/domain-case-indexed-resolution/benchmark.ss",
         "t/user-interface-fixtures.ss",
     ] + glob(["t/support/**/*.ss"]),
 )

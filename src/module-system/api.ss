@@ -15,7 +15,6 @@
         :poo-flow/src/module-system/object-family/interface
         :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/observability/interface
-        :poo-flow/src/module-system/poo-clos/interface
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/module-system/projection/interface
         :poo-flow/src/module-system/semantic-module/interface)
@@ -32,7 +31,6 @@
         (import: :poo-flow/src/module-system/object-family/interface)
         (import: :poo-flow/src/module-system/object-validation/interface)
         (import: :poo-flow/src/module-system/observability/interface)
-        (import: :poo-flow/src/module-system/poo-clos/interface)
         (import: :poo-flow/src/module-system/profile-composition/interface)
         (import: :poo-flow/src/module-system/projection/interface)
         (import: :poo-flow/src/module-system/semantic-module/interface))

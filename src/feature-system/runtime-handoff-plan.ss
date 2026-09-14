@@ -2,8 +2,7 @@
 ;;; Invariant: handoff planning records requirements but performs no runtime effects.
 (import (only-in :clan/poo/object
                  .ref
-                 make-object
-                 object-slots-set!
+                 object<-alist
                  object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/adapter-projection-binding
@@ -48,16 +47,11 @@
   'poo-flow.feature-runtime-handoff-manifest.v1)
 
 ;; : (-> Alist POOObject)
-(def (constant-feature-runtime-handoff-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Integer Symbol PooFeatureRuntimeHandoff)
 (def (feature-runtime-handoff-value
       kind handoff-id adapter-requirement-id projection-request-id
       contract-id contract-version schema-id)
-  (constant-feature-runtime-handoff-object
+  (object<-alist
    `((kind . ,kind)
      (schema-version . 1)
      (handoff-id . ,handoff-id)
@@ -135,7 +129,7 @@
 ;; : (-> Symbol Symbol Object Object Object Alist)
 (def (feature-runtime-handoff-diagnostic
       code channel subject expected observed)
-  (constant-feature-runtime-handoff-object
+  (object<-alist
    `((kind . poo-flow.feature-runtime-handoff-diagnostic.v1)
      (code . ,code)
      (channel . ,channel)
@@ -208,7 +202,7 @@
          (index
           (and accepted?
                (feature-runtime-handoff-index valid-handoffs 'handoff-id))))
-    (constant-feature-runtime-handoff-object
+    (object<-alist
      `((kind . ,+feature-runtime-handoff-manifest-kind+)
        (schema-version . 1)
        (manifest-id . ,manifest-id)
@@ -338,7 +332,7 @@
 ;; : (-> PooFeatureRuntimeHandoff PooFeatureAdapterBinding PooFeatureProjectionBinding PooFeatureResolvedRuntimeHandoff)
 (def (feature-resolved-runtime-handoff
       handoff adapter-binding projection-binding)
-  (constant-feature-runtime-handoff-object
+  (object<-alist
    `((kind . poo-flow.feature-resolved-runtime-handoff.v1)
      (handoff-kind . ,(.ref handoff 'kind))
      (handoff-id . ,(.ref handoff 'handoff-id))
@@ -393,7 +387,7 @@
   (let ((binding-state (feature-runtime-handoff-binding-state binding))
         (manifest-state (feature-runtime-handoff-manifest-state manifest)))
     (if (or (not (car binding-state)) (not (car manifest-state)))
-      (constant-feature-runtime-handoff-object
+      (object<-alist
        `((kind . feature-runtime-handoff-plan)
          (schema-version . 1)
          (adapter-projection-binding . ,binding)
@@ -425,7 +419,7 @@
               (feature-resolve-runtime-handoffs binding manifest))
              (diagnostics (cadr resolution))
              (accepted? (null? diagnostics)))
-        (constant-feature-runtime-handoff-object
+        (object<-alist
          `((kind . feature-runtime-handoff-plan)
            (schema-version . 1)
            (adapter-projection-binding . ,binding)

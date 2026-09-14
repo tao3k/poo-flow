@@ -5,7 +5,7 @@
                  hash-put!
                  hash-ref
                  make-hash-table-eq)
-        (only-in :clan/poo/object .ref make-object object-slots-set!)
+        (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/model
         :poo-flow/src/feature-system/resolver
@@ -23,18 +23,9 @@
 (def feature-manifest-index-storage-slot
   (gensym 'feature-manifest-index-storage))
 
-;; Manifest and bundle values deliberately use the same constant-slot POO
-;; representation as the feature model. The local mutation is restricted to
-;; constructing a fresh object whose public slots are immutable afterwards.
-;; : (-> Alist POOObject)
-(def (constant-manifest-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> HashTable Integer PooFeatureManifestIndex)
 (def (feature-manifest-index-object storage size)
-  (constant-manifest-object
+  (object<-alist
    `((kind . feature-manifest-index)
      (size . ,size)
      (,feature-manifest-index-storage-slot . ,storage))))
@@ -47,7 +38,7 @@
 
 ;; : (-> FeatureDescriptor PooFeatureManifest)
 (def (feature-manifest descriptor)
-  (constant-manifest-object
+  (object<-alist
    `((kind . feature-manifest)
      (schema-version . ,(.ref descriptor 'schema-version))
      (feature-id . ,(.ref descriptor 'feature-id))
@@ -125,7 +116,7 @@
             (append (.ref activation-plan 'diagnostics)
                     structural-diagnostics))
            (status (if (null? diagnostics) 'ready 'rejected)))
-      (constant-manifest-object
+      (object<-alist
        `((kind . feature-manifest-bundle)
          (schema-version . 1)
          (bundle-id . ,bundle-id)

@@ -16,9 +16,7 @@
                  poo-flow-fold-left
                  poo-flow-fold-right
                  poo-flow-map
-                 poo-flow-find
                  poo-flow-filter-map
-                 poo-flow-remove
                  poo-flow-append-map
                  poo-flow-all?
                  poo-flow-stable-duplicates
@@ -352,48 +350,70 @@
                          (.ref candidate 'override-owner-ids))
        (.ref candidate 'compatibility-witness-id)))
 
+;; Resolution entries let an override retire the former winner in O(1) while
+;; retaining the exact source-order projection of the reference algorithm.
+(def (domain-case-resolution-entry value)
+  (vector value #t))
+
+(def (domain-case-resolution-entry-value entry)
+  (vector-ref entry 0))
+
+(def (domain-case-resolution-entry-active? entry)
+  (vector-ref entry 1))
+
+(def (domain-case-resolution-retire! entry)
+  (vector-set! entry 1 #f))
+
+(def (domain-case-resolution-values entries-rev)
+  (poo-flow-filter-map
+   (lambda (entry)
+     (and (domain-case-resolution-entry-active? entry)
+          (domain-case-resolution-entry-value entry)))
+   (reverse entries-rev)))
+
 (def (domain-case-resolve-slots slots)
-  (let loop ((rest slots) (effective '()) (diagnostics '()))
+  (let ((winner-index (make-hash-table)))
+    (let loop ((rest slots) (entries-rev '()) (diagnostics '()))
     (if (null? rest)
-        (values (reverse effective) (reverse diagnostics))
+        (values (domain-case-resolution-values entries-rev)
+                (reverse diagnostics))
         (let* ((candidate (car rest))
+               (slot-id (.ref candidate 'slot-id))
+               (existing-entry (hash-get winner-index slot-id))
                (existing
-                (poo-flow-find
-                 (lambda (slot)
-                   (equal? (.ref slot 'slot-id)
-                           (.ref candidate 'slot-id)))
-                 effective)))
+                (and existing-entry
+                     (domain-case-resolution-entry-value existing-entry))))
           (cond
            ((not existing)
-            (loop (cdr rest) (cons candidate effective) diagnostics))
+            (let (entry (domain-case-resolution-entry candidate))
+              (hash-put! winner-index slot-id entry)
+              (loop (cdr rest) (cons entry entries-rev) diagnostics)))
            ((domain-case-slot-equivalent? existing candidate)
-            (loop (cdr rest) effective diagnostics))
+            (loop (cdr rest) entries-rev diagnostics))
            ((and (domain-case-explicit-override? candidate existing)
                  (domain-case-explicit-override? existing candidate))
-            (loop (cdr rest) effective
+            (loop (cdr rest) entries-rev
                   (cons (domain-case-diagnostic
                          'ambiguous-slot-override
-                         (list 'slots (.ref candidate 'slot-id))
+                         (list 'slots slot-id)
                          (list (.ref existing 'owner-id)
                                (.ref candidate 'owner-id)))
                         diagnostics)))
            ((domain-case-explicit-override? candidate existing)
-            (loop (cdr rest)
-                  (cons candidate
-                        (poo-flow-remove
-                         (lambda (value) (eq? value existing))
-                         effective))
-                  diagnostics))
+            (domain-case-resolution-retire! existing-entry)
+            (let (entry (domain-case-resolution-entry candidate))
+              (hash-put! winner-index slot-id entry)
+              (loop (cdr rest) (cons entry entries-rev) diagnostics)))
            ((domain-case-explicit-override? existing candidate)
-            (loop (cdr rest) effective diagnostics))
+            (loop (cdr rest) entries-rev diagnostics))
            (else
-            (loop (cdr rest) effective
+            (loop (cdr rest) entries-rev
                   (cons (domain-case-diagnostic
                          'slot-contract-conflict
-                         (list 'slots (.ref candidate 'slot-id))
+                         (list 'slots slot-id)
                          (list (case-slot-contract-normalize existing)
                                (case-slot-contract-normalize candidate)))
-                        diagnostics))))))))
+                        diagnostics)))))))))
 
 (def (domain-case-contract-equivalent? left right)
   (equal? (case-method-contract-normalize left)
@@ -407,50 +427,52 @@
         (.ref candidate 'compatibility-witness) candidate inherited)))
 
 (def (domain-case-resolve-method-contracts contracts)
-  (let loop ((rest contracts) (effective '()) (diagnostics '()))
+  (let ((winner-index (make-hash-table)))
+    (let loop ((rest contracts) (entries-rev '()) (diagnostics '()))
     (if (null? rest)
-        (values (reverse effective) (reverse diagnostics))
+        (values (domain-case-resolution-values entries-rev)
+                (reverse diagnostics))
         (let* ((candidate (car rest))
                (kind (.ref candidate 'contract-kind))
-               (existing
+               (subject-id (.ref candidate 'subject-id))
+               (existing-entry
                 (and (eq? kind 'method)
-                     (poo-flow-find
-                      (lambda (contract)
-                        (and (eq? (.ref contract 'contract-kind) 'method)
-                             (equal? (.ref contract 'subject-id)
-                                     (.ref candidate 'subject-id))))
-                      effective))))
+                     (hash-get winner-index subject-id)))
+               (existing
+                (and existing-entry
+                     (domain-case-resolution-entry-value existing-entry))))
           (cond
            ((or (eq? kind 'state) (not existing))
-            (loop (cdr rest) (cons candidate effective) diagnostics))
+            (let (entry (domain-case-resolution-entry candidate))
+              (when (eq? kind 'method)
+                (hash-put! winner-index subject-id entry))
+              (loop (cdr rest) (cons entry entries-rev) diagnostics)))
            ((domain-case-contract-equivalent? existing candidate)
-            (loop (cdr rest) effective diagnostics))
+            (loop (cdr rest) entries-rev diagnostics))
            ((and (domain-case-contract-refines? candidate existing)
                  (domain-case-contract-refines? existing candidate))
-            (loop (cdr rest) effective
+            (loop (cdr rest) entries-rev
                   (cons (domain-case-diagnostic
                          'ambiguous-contract-refinement
-                         (list 'contracts (.ref candidate 'subject-id))
+                         (list 'contracts subject-id)
                          (list (.ref existing 'contract-id)
                                (.ref candidate 'contract-id)))
                         diagnostics)))
            ((domain-case-contract-refines? candidate existing)
-            (loop (cdr rest)
-                  (cons candidate
-                        (poo-flow-remove
-                         (lambda (value) (eq? value existing))
-                         effective))
-                  diagnostics))
+            (domain-case-resolution-retire! existing-entry)
+            (let (entry (domain-case-resolution-entry candidate))
+              (hash-put! winner-index subject-id entry)
+              (loop (cdr rest) (cons entry entries-rev) diagnostics)))
            ((domain-case-contract-refines? existing candidate)
-            (loop (cdr rest) effective diagnostics))
+            (loop (cdr rest) entries-rev diagnostics))
            (else
-            (loop (cdr rest) effective
+            (loop (cdr rest) entries-rev
                   (cons (domain-case-diagnostic
                          'contract-refinement-conflict
-                         (list 'contracts (.ref candidate 'subject-id))
+                         (list 'contracts subject-id)
                          (list (.ref existing 'contract-id)
                                (.ref candidate 'contract-id)))
-                        diagnostics))))))))
+                        diagnostics)))))))))
 
 (def (domain-case-projection-conflicts projections)
   (let ((seen (make-hash-table))

@@ -2,8 +2,7 @@
 ;;; catalog indexing and adapter resolution remain separate owners.
 (import (only-in :clan/poo/object
                  .ref
-                 make-object
-                 object-slots-set!
+                 object<-alist
                  object?)
         :poo-flow/src/core/roles)
 
@@ -30,11 +29,6 @@
   'poo-flow.feature-projection-request.v1)
 
 ;; : (-> Alist POOObject)
-(def (constant-feature-capability-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> Object Symbol [Symbol] Boolean)
 (def (feature-capability-object-kind? value expected-kind required-slots)
   (with-catch
@@ -51,7 +45,7 @@
 ;; : (-> Symbol Symbol Symbol Integer PooFeatureAdapterCapability)
 (def (feature-adapter-capability capability-id provider-module-id
                                  contract-id contract-version)
-  (constant-feature-capability-object
+  (object<-alist
    `((kind . ,+feature-adapter-capability-kind+)
      (schema-version . 1)
      (capability-id . ,capability-id)
@@ -69,7 +63,7 @@
 ;; : (-> Symbol Symbol Symbol Integer PooFeatureAdapterRequirement)
 (def (feature-adapter-requirement requirement-id capability-id
                                   contract-id contract-version)
-  (constant-feature-capability-object
+  (object<-alist
    `((kind . ,+feature-adapter-requirement-kind+)
      (schema-version . 1)
      (requirement-id . ,requirement-id)
@@ -86,7 +80,7 @@
 
 ;; : (-> Symbol Symbol Symbol PooFeatureProjectionRequest)
 (def (feature-projection-request request-id projection-id schema-id)
-  (constant-feature-capability-object
+  (object<-alist
    `((kind . ,+feature-projection-request-kind+)
      (schema-version . 1)
      (request-id . ,request-id)

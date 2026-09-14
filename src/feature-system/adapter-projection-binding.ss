@@ -2,8 +2,7 @@
 ;;; Invariant: binding consumes declared capabilities without widening requested policy.
 (import (only-in :clan/poo/object
                  .ref
-                 make-object
-                 object-slots-set!
+                 object<-alist
                  object?)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
@@ -26,15 +25,10 @@
   'poo-flow.feature-adapter-capability-catalog.v1)
 
 ;; : (-> Alist POOObject)
-(def (constant-feature-capability-binding-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> Symbol Symbol Object Object Object Alist)
 (def (feature-capability-binding-diagnostic
       code channel subject expected observed)
-  (constant-feature-capability-binding-object
+  (object<-alist
    `((kind . poo-flow.feature-adapter-projection-binding-diagnostic.v1)
      (code . ,code)
      (channel . ,channel)
@@ -121,7 +115,7 @@
          (index
           (and accepted?
                (feature-index-values valid-capabilities 'capability-id))))
-    (constant-feature-capability-binding-object
+    (object<-alist
      `((kind . ,+feature-adapter-capability-catalog-kind+)
        (schema-version . 1)
        (catalog-id . ,catalog-id)
@@ -185,7 +179,7 @@
 
 ;; : (-> PooFeatureAdapterRequirement PooFeatureAdapterCapability PooFeatureAdapterCapabilityBinding)
 (def (feature-adapter-capability-binding requirement capability)
-  (constant-feature-capability-binding-object
+  (object<-alist
    `((kind . poo-flow.feature-adapter-capability-binding.v1)
      (requirement . ,requirement)
      (capability . ,capability)
@@ -260,7 +254,7 @@
 
 ;; : (-> PooFeatureProjectionRequest PooCaseProjection PooFeatureProjectionBinding)
 (def (feature-projection-binding request projection)
-  (constant-feature-capability-binding-object
+  (object<-alist
    `((kind . poo-flow.feature-projection-binding.v1)
      (request . ,request)
      (projection . ,projection)
@@ -340,7 +334,7 @@
           (feature-policy-strategy-binding-state policy-strategy-binding))
          (catalog-state (feature-catalog-state catalog)))
     (if (or (not (car binding-state)) (not (car catalog-state)))
-      (constant-feature-capability-binding-object
+      (object<-alist
        `((kind . feature-adapter-projection-binding)
          (schema-version . 1)
          (policy-strategy-binding . ,policy-strategy-binding)
@@ -382,7 +376,7 @@
              (diagnostics
               (append (cadr adapter-result) (cadr projection-result)))
              (accepted? (null? diagnostics)))
-        (constant-feature-capability-binding-object
+        (object<-alist
          `((kind . feature-adapter-projection-binding)
            (schema-version . 1)
            (policy-strategy-binding . ,policy-strategy-binding)

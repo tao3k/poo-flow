@@ -159,6 +159,27 @@
               (lambda (component) (.ref component 'role-prototype))
               components))))))
 
+(def (domain-case-index-by values key-of predicate)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (value)
+       (when (predicate value)
+         (hash-put! index (key-of value) value)))
+     values)
+    index))
+
+(def (domain-case-method-index effective-contracts)
+  (domain-case-index-by
+   effective-contracts
+   (lambda (contract) (.ref contract 'subject-id))
+   (lambda (contract) (eq? (.ref contract 'contract-kind) 'method))))
+
+(def (domain-case-projection-index projection-catalog)
+  (domain-case-index-by
+   projection-catalog
+   (lambda (projection) (.ref projection 'projection-id))
+   (lambda (_projection) #t)))
+
 ;; : (-> Symbol Integer Object List List [Symbol] PooRole List List List Object Object PooDomainCase)
 (def (domain-case-make-closed-value schema-id-value schema-version-value
                                     key descriptor components local-overrides
@@ -183,7 +204,11 @@
        components))
      (effective-slots effective-slots)
      (effective-contracts effective-contracts)
+     (method-contract-index
+      (domain-case-method-index effective-contracts))
      (projection-catalog projection-catalog)
+     (projection-index
+      (domain-case-projection-index projection-catalog))
      (selected-projection-ids selected-projection-ids)
      (policy-algebra policy-algebra)
      (strategy-algebra strategy-algebra)
@@ -494,12 +519,8 @@
 (def (poo-flow-domain-case-check-method domain-case subject-id-value context)
   (let (contract
         (and (poo-flow-domain-case? domain-case)
-             (poo-flow-find
-              (lambda (candidate)
-                (and (eq? (.ref candidate 'contract-kind) 'method)
-                     (equal? (.ref candidate 'subject-id)
-                             subject-id-value)))
-              (.ref domain-case 'effective-contracts))))
+             (hash-get (.ref domain-case 'method-contract-index)
+                       subject-id-value)))
     (let (accepted?
           (and contract
                (domain-case-safe-call (.ref contract 'validator) context)))
@@ -522,11 +543,8 @@
 (def (poo-flow-domain-case-project domain-case projection-id-value instance)
   (let (projection
         (and (poo-flow-domain-case? domain-case)
-             (poo-flow-find
-              (lambda (candidate)
-                (equal? projection-id-value
-                        (.ref candidate 'projection-id)))
-              (.ref domain-case 'projection-catalog))))
+             (hash-get (.ref domain-case 'projection-index)
+                       projection-id-value)))
     (if (not projection)
         (poo-core-role-object
          (slots ((kind +poo-flow-domain-case-projection-receipt-kind+)

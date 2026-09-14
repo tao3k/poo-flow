@@ -1,6 +1,6 @@
 ;;; Boundary: assembles accepted feature plans into one DomainCase receipt;
 ;;; component closure semantics remain owned by module-system/domain-case.
-(import (only-in :clan/poo/object .ref make-object object-slots-set!)
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
         :poo-flow/src/feature-system/composition
@@ -12,14 +12,9 @@
         defpoo-feature-domain-case-assembly)
 
 ;; : (-> Alist POOObject)
-(def (constant-domain-case-assembly-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 ;; : (-> Object Alist)
 (def (feature-domain-case-projection-request-diagnostic request)
-  (constant-domain-case-assembly-object
+  (object<-alist
    `((kind . poo-flow.feature-domain-case-assembly-diagnostic.v1)
      (code . invalid-feature-projection-request)
      (channel . projections)
@@ -38,7 +33,7 @@
       domain-case-id domain-case-version composition-plan components
       projection-requests selected-projection-ids closure-receipt
       accepted? key domain-case diagnostics)
-  (constant-domain-case-assembly-object
+  (object<-alist
    `((kind . feature-domain-case-assembly)
      (schema-version . 1)
      (domain-case-id . ,domain-case-id)

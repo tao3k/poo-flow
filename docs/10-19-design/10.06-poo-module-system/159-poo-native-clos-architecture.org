@@ -30,6 +30,12 @@ frozen at v1.  The CLOS owner is =src/module-system/poo-clos/=.  Public values
 are native Gerbil POO objects, and declarations lower hygienically to those
 objects plus functional dispatch operations.
 
+This owner is an explicit ANSI compatibility extension.  It is not imported or
+re-exported by =src/module-system/api.ss=.  Ordinary POO Flow code uses
+=:clan/poo/mop= directly; importing the general Module System facade must not
+load the ANSI class registry, generic registry, lifecycle generics, declaration
+IR, or method-combination engine.
+
 Native POO owns object identity, prototype inheritance, slots, and C3.  The
 CLOS extension owns the semantics that coordinate multiple arguments,
 specializers, effective methods, ANSI class precedence, class generations, and
