@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tutorial feature batch tests public APIs, not test-local helpers.
 ;;; Invariant: each case maps to a visible Funflow notebook result or descriptor.
 
@@ -14,9 +18,9 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/custom-task/config
-        :poo-flow/src/modules/docker/config
-        :poo-flow/src/modules/text/config
+        :poo-flow/src/modules/custom-task/interface
+        :poo-flow/src/modules/docker/interface
+        :poo-flow/src/modules/text/interface
         :poo-flow/src/modules/workflow/flows
         :poo-flow/src/modules/workflow/store)
 

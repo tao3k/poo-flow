@@ -1,10 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: composed workflow builders for Docker, Store, Tensorflow, and makefile examples.
 ;;; Invariant: builders produce descriptors and runtime command manifests only.
 
 (import :poo-flow/src/core/api
         :poo-flow/src/core/projection-syntax
-        :poo-flow/src/modules/docker/config
+        :poo-flow/src/modules/docker/funs
         :poo-flow/src/modules/workflow/store)
 
 (export make-docker-store-run-config

@@ -1,5 +1,9 @@
 ;;; -*- Gerbil -*-
-;;; Canonical text task module entrypoint.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "interface.ss")
-(export (import: "interface.ss"))
+;;; Boundary: text currently has no independent configuration facts.
+;;; Public behavior is owned by funs.ss and composed only by interface.ss.
+
+(export)
