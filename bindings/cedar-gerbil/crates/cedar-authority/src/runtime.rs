@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 pub const HOST_SCHEMA: &str = "poo-flow.cedar-runtime-host.v1";
+pub const HOST_READY_SCHEMA: &str = "poo-flow.cedar-runtime-ready.v1";
 pub const REPLY_SCHEMA: &str = "poo-flow.cedar-runtime-reply.v1";
 pub const MAX_FRAME_BYTES: usize = canonical::MAX_PROJECTION_BYTES;
 
@@ -23,6 +24,13 @@ pub struct RuntimeHello {
     pub runtime_artifact_digest: String,
     pub rust_component_digest: String,
     pub lean_component_digest: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeReady {
+    pub schema_id: String,
+    pub endpoint: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

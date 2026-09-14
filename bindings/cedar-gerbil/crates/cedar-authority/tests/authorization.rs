@@ -1,3 +1,5 @@
+mod support;
+
 use poo_flow_cedar_authority::authority::{Authority, ConsumeRequest, verify_signature};
 use poo_flow_cedar_authority::canonical;
 use poo_flow_cedar_authority::projection::{Bootstrap, HandoffInput, Proposal, Snapshot};
@@ -101,22 +103,11 @@ fn spawn_runtime(timeout_ms: u64) -> TestRuntime {
             &timeout_ms.to_string(),
         ])
         .stdin(Stdio::null())
-        .stdout(Stdio::null())
+        .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !endpoint.exists() {
-        assert!(
-            Instant::now() < deadline,
-            "Runtime Host readiness timed out"
-        );
-        assert!(
-            child.try_wait().unwrap().is_none(),
-            "Runtime Host exited early"
-        );
-        std::thread::sleep(Duration::from_millis(2));
-    }
+    support::wait_for_runtime_ready(&mut child, &endpoint);
     TestRuntime {
         deployment: Deployment {
             runtime_endpoint: endpoint,

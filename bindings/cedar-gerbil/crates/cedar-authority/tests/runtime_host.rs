@@ -1,10 +1,11 @@
 //! Independent Host protocol: typed admission, pinned children, and recovery.
 
+mod support;
+
 use cedar_policy::{Context, Entities, Policy, PolicyId, PolicySet, Request};
 use poo_flow_cedar_authority::runtime::{HOST_SCHEMA, RuntimeClient};
 use poo_flow_cedar_authority::{canonical, wire};
 use std::process::{Command, Stdio};
-use std::time::{Duration, Instant};
 
 fn artifact(path: &std::path::Path) -> String {
     canonical::raw_digest(&std::fs::read(path).unwrap())
@@ -86,22 +87,11 @@ fn long_lived_host_rejects_bad_input_then_authorizes_with_pinned_witnesses() {
             "10000",
         ])
         .stdin(Stdio::null())
-        .stdout(Stdio::null())
+        .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !endpoint.exists() {
-        assert!(
-            Instant::now() < deadline,
-            "Runtime Host readiness timed out"
-        );
-        assert!(
-            child.try_wait().unwrap().is_none(),
-            "Runtime Host exited early"
-        );
-        std::thread::sleep(Duration::from_millis(2));
-    }
+    support::wait_for_runtime_ready(&mut child, &endpoint);
     let mut runtime = RuntimeClient::connect(
         &endpoint,
         &runtime_digest,

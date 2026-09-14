@@ -1,7 +1,8 @@
 //! Runtime Host logic embedded into the Lean-linked AOT executable.
 
 use crate::runtime::{
-    HOST_SCHEMA, REPLY_SCHEMA, RuntimeHello, RuntimeReply, RuntimeWitness, read_frame, write_frame,
+    HOST_READY_SCHEMA, HOST_SCHEMA, REPLY_SCHEMA, RuntimeHello, RuntimeReady, RuntimeReply,
+    RuntimeWitness, read_frame, write_frame,
 };
 use crate::wire::{CEDAR_VERSION, LEAN_REVISION, Outcome, evaluate_rust, validate_native_input};
 use crate::{Error, Result, canonical};
@@ -199,6 +200,18 @@ fn serve(args: &[String]) -> Result<()> {
         rust_component_digest: args[4].clone(),
         lean_component_digest: args[5].clone(),
     };
+    let ready = RuntimeReady {
+        schema_id: HOST_READY_SCHEMA.into(),
+        endpoint: endpoint.to_string_lossy().into_owned(),
+    };
+    let mut readiness = std::io::stdout().lock();
+    serde_json::to_writer(&mut readiness, &ready)
+        .map_err(|error| Error::new("cedar-runtime-ready-failed", error.to_string()))?;
+    readiness
+        .write_all(b"\n")
+        .and_then(|()| readiness.flush())
+        .map_err(|error| Error::new("cedar-runtime-ready-failed", error.to_string()))?;
+    drop(readiness);
     let (stream, _) = listener
         .accept()
         .map_err(|e| Error::new("cedar-runtime-accept-failed", e.to_string()))?;
