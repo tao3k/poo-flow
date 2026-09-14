@@ -1,11 +1,12 @@
 ;;; -*- Gerbil -*-
 ;;; POO-native CLOS classes and direct/effective slot projection.
 
-(import (only-in :clan/poo/object .o .ref .put!)
+(import (only-in :clan/poo/object
+                 .o .ref .put! .slot? compute-precedence-list!)
         (only-in :clan/poo/mop element?)
         (only-in :std/misc/hash hash-ref/default hash-remove!)
         (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 find filter filter-map foldl)
+        (only-in :std/srfi/1 find filter filter-map)
         "types.ss" "objects.ss" "funcs.ss")
 
 (export ClosDirectSlotDefinition ClosEffectiveSlotDefinition ClosClass
@@ -210,75 +211,20 @@
              (class-direct-superclasses class-value)))
     (instance-prototype-value class-value superclass-prototypes)))
 
-;;; ANSI Common Lisp 4.3.5 defines the CLOS CPL as a topological sort over the
-;;; union of every reachable class's local precedence order.  Its ambiguity
-;;; rule chooses the candidate having a direct subclass rightmost in the CPL
-;;; accumulated so far.  This is deliberately not C3: the native POO prototype
-;;; may retain C3 for ordinary POO lookup, while every CLOS semantic consumer
-;;; reads this independently computed logical CPL.
-
-;; : (-> [ClosClass] [Pair])
-(def (adjacent-precedence-pairs classes)
-  (if (or (null? classes) (null? (cdr classes)))
-    '()
-    (cons (cons (car classes) (cadr classes))
-          (adjacent-precedence-pairs (cdr classes)))))
-
-;; : (forall (a) (-> [a] [a] [a]))
-(def (enqueue-reversed values rear)
-  (foldl cons rear values))
-
-;; : (-> ClosClass [ClosClass])
-(def (reachable-classes class-value)
-  ;; This is a two-list graph queue.  It preserves breadth-first source order
-  ;; without repeatedly copying the pending frontier with append.
-  (let ((seen-index (make-hash-table-eq)))
-  (let walk ((front (list class-value)) (rear '()) (seen-rev '()))
-    (cond
-     ((null? front)
-      (if (null? rear)
-        (reverse seen-rev)
-        (walk (reverse rear) '() seen-rev)))
-     ((hash-key? seen-index (car front))
-      (walk (cdr front) rear seen-rev))
-     (else
-      (let (candidate (car front))
-        (hash-put! seen-index candidate #t)
-        (walk (cdr front)
-              (enqueue-reversed (.ref candidate 'direct-superclasses) rear)
-              (cons candidate seen-rev))))))))
-
-;; : (-> [ClosClass] [Pair])
-(def (precedence-constraints classes)
-  (apply append
-         (map (lambda (candidate)
-                (adjacent-precedence-pairs
-                 (cons candidate (.ref candidate 'direct-superclasses))))
-              classes)))
-
-;; : (-> [ClosClass] [ClosClass] (Maybe ClosClass))
-(def (select-ambiguous-class candidate? result)
-  ;; `result` is accumulated in reverse, so its head is precisely the
-  ;; rightmost class in the logical CPL constructed so far.
-  (let loop ((owners result))
-    (and (pair? owners)
-         (or (find (lambda (superclass) (candidate? superclass))
-                   (.ref (car owners) 'direct-superclasses))
-             (loop (cdr owners))))))
-
+;;; Native POO is the sole precedence owner. Every class generation owns one
+;;; instance prototype, and each prototype points back to that exact class
+;;; metaobject. Projecting upstream C3 preserves identity without a second
+;;; class graph or linearization algorithm.
 ;; : (-> ClosClass [ClosClass])
 (def (compute-class-precedence-list class-value)
-  (let* ((classes (reachable-classes class-value))
-         (constraints (precedence-constraints classes))
-         (ordered
-          (poo-clos-topological-order/identity
-           classes constraints select-ambiguous-class)))
-    (or ordered
-        (clos-fail 'inconsistent-class-precedence
-                   class: (.ref class-value 'identity)))))
+  (filter-map
+   (lambda (prototype)
+     (and (.slot? prototype '%poo-clos-class)
+          (.ref prototype '%poo-clos-class)))
+   (compute-precedence-list! (.ref class-value 'instance-prototype))))
 
 ;; Each owner index retains its first direct declaration for a slot name.  The
-;; outer list stays in CPL order, so option inheritance remains ANSI ordered.
+;; outer list stays in native C3 order, so option inheritance follows POO.
 ;; : (-> ClosClass [Pair])
 (def (class-direct-slot-indexes class-value)
   (map
@@ -397,8 +343,8 @@
 ;;       ;; => class-generation
 ;;       ```
 ;;
-;;       result: a complete class generation with an ANSI CLOS logical CPL and
-;;       effective slots over a native POO prototype.
+;;       result: a complete class generation whose class and slot precedence
+;;       are projected from its native POO prototype C3.
 ;;     %
 (def (%poo-clos-make-class-generation
       identity-value superclass-values direct-slot-values
@@ -529,8 +475,7 @@
 ;;         default-initargs: [Pair] slot-missing-handler: (Maybe Procedure)
 ;;         slot-unbound-handler: (Maybe Procedure) ClosClass)
 ;;   | contract: creates one finalized class generation whose instance
-;;     prototype is lowered to native POO inheritance while CLOS semantics use
-;;     the independently computed ANSI class precedence list.
+;;     prototype is the single native POO inheritance and precedence owner.
 ;;   | doc m%
 ;;   | result: a POO class metaobject with lazy effective slots.
 (def (poo-clos-class

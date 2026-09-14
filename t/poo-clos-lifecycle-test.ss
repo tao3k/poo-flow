@@ -4,6 +4,7 @@
 (import (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref object?)
+        (only-in :clan/poo/mop Type element?)
         "../src/module-system/poo-clos/interface.ss")
 
 (export poo-clos-lifecycle-test)
@@ -23,7 +24,18 @@
 
 (def poo-clos-lifecycle-test
   (test-suite "POO-native CLOS class and instance lifecycle"
-    (test-case "ANSI CPL closes a diamond and effective slot options merge"
+    (test-case "class descriptors and identities stay on the native MOP spine"
+      (let (class-value (poo-clos-class 'native-mop-spine))
+        (check (element? Type ClosClass) => #t)
+        (check (eq? (.ref (.ref class-value 'instance-prototype)
+                          '%poo-clos-class)
+                    class-value)
+               => #t)
+        (check (eq? (car (poo-clos-class-precedence-list class-value))
+                    class-value)
+               => #t)))
+
+    (test-case "native POO C3 closes a diamond and effective slot options merge"
       (let* ((root-slot
               (poo-clos-direct-slot-definition
                'payload initargs: (list root:)
@@ -55,11 +67,10 @@
         (check-equal? (poo-clos-slot-value instance-value 'payload) 'right)
         (check (poo-clos-class-subclass? leaf root) => #t)))
 
-    (test-case "ANSI CPL preserves the specified non-monotonic pedalo order"
-      ;; Barrett et al., figure 2, is the canonical counterexample separating
-      ;; the ANSI CLOS topological sort from C3.  In particular wheel-boat must
-      ;; precede day-boat in pedalo even though each direct superclass orders
-      ;; day-boat before wheel-boat in its own CPL.
+    (test-case "native POO C3 preserves monotonic pedalo precedence"
+      ;; Barrett et al., figure 2, separates the historical ANSI topological
+      ;; order from C3. POO CLOS intentionally follows upstream prototype
+      ;; linearization, so day-boat remains before wheel-boat in pedalo.
       (let* ((boat (poo-clos-class 'boat))
              (day-boat
               (poo-clos-class 'day-boat direct-superclasses: (list boat)))
@@ -92,8 +103,8 @@
          '(small-catamaran small-multihull day-boat boat standard-object))
         (check-equal?
          (class-identities pedalo)
-         '(pedalo pedal-wheel-boat engineless wheel-boat small-catamaran
-                  small-multihull day-boat boat standard-object))))
+         '(pedalo pedal-wheel-boat engineless small-catamaran
+                  small-multihull day-boat wheel-boat boat standard-object))))
 
     (test-case "explicit and default initargs precede initforms with leftmost wins"
       (let ((default-count 0)
@@ -391,7 +402,9 @@
                                  direct-superclasses: (list x y)))
              (yx (poo-clos-class 'precedence-yx
                                  direct-superclasses: (list y x))))
+        ;; The upstream POO C3 owner rejects the graph directly. POO CLOS does
+        ;; not translate that failure through a second precedence subsystem.
         (check-exception
          (poo-clos-class 'inconsistent
                          direct-superclasses: (list xy yx))
-         (failure-code? 'inconsistent-class-precedence))))))
+         (lambda (error) (not (poo-clos-failure? error))))))))

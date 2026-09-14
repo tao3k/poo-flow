@@ -2,11 +2,11 @@
 
 * Status
 
-This owner implements the admitted ANSI CLOS profile over native POO objects.
-Logical CLOS precedence follows ANSI 4.3.5 while the underlying prototype graph
-may use C3.  It remains opt-in and is not part of the
-default module selection.  The separate =MOP-EXTENDED v1= profile is a sealed,
-read-only reflection surface and is not counted as ANSI closure.
+This owner implements a POO-native CLOS metaprotocol extension.  The Common
+Lisp HyperSpec supplies semantic conformance vectors, but it does not own the
+runtime architecture.  Class precedence is the upstream Gerbil POO prototype
+C3, projected back to the exact CLOS class metaobjects.  The extension remains
+opt-in and is not part of the default module selection.
 
 The implementation provides:
 
@@ -19,7 +19,8 @@ The implementation provides:
 - lexical next-method checks, including replacement-argument applicability.
 - POO-native class, direct-slot, effective-slot, instance-state, and slot-cell
   metaobjects;
-- ANSI CLOS class precedence with diamond, non-monotonic, and inconsistency handling;
+- native POO C3 class precedence with diamond, monotonicity, and upstream
+  inconsistency handling;
 - instance- and class-allocated slots, inherited option merging, initforms,
   initargs, default initargs, and shared initialization;
 - slot value, bound-state, makunbound, missing, and unbound protocols;
@@ -61,17 +62,13 @@ ClosGenericProtocol -> ClosMethodBundle -> native define-type POO values
 
 The macro creates one ordinary =ClosMethodBundle= value.  Protocol identity,
 method ownership, replacement, ordering and execution remain in the checked
-runtime functions.  The CPL implementation similarly delegates reusable graph
-work to =funcs.ss=; the CLOS class factor supplies only ANSI ambiguity policy.
-That functional factor reuses Gerbil std =invert-hash<-vector= for admitted CPL
-position indexes and =stable-sort= for method ordering, plus Gambit's native
-hash update/removal primitives in the edge-count hot loop.  Its remaining hash
-passes project CLOS-specific values such as leftmost declaration objects; using
-=delete-duplicates/hash= there would allocate an unused list and require a
-second projection.  List-producing identity deduplication remains owned by the
-POO Flow =delete-duplicates/hash= implementation in =classes.ss=.
-The A/B scenario under =t/scenarios/performance/poo-clos-cpl-index/= requires
-identical ordered results before accepting an indexed timing improvement.
+runtime functions.  There is no CLOS CPL implementation: =classes.ss= maps the
+upstream =compute-precedence-list!= result back to its exact class metaobjects.
+=funcs.ss= retains only CLOS-owned indexing mechanics and reuses Gerbil std
+=invert-hash<-vector= for position indexes and =stable-sort= for method
+ordering.  The 40-sample Scenario under
+=t/scenarios/performance/poo-clos-native-c3/= checks native order and =eq?=
+metaobject identity while recording construction and warm-query latency.
 
 * Scheme and POO adaptations
 
@@ -91,8 +88,9 @@ if a fixture has no attributable assertions, or if interpreted and fresh-AOT
 counts diverge.  Receipts retain =performance-claim? #f= until a user approves
 a workload and SLA.
 
-* Compatibility boundary
+* Convergence boundary
 
-The admitted v1 implementation under =poo-method-combination/= remains a
-separate compatibility surface.  Nothing in this directory changes its frozen
-single-receiver contract or its historical qualification receipt.
+The older =poo-method-combination/= module is migration input, not a second
+standard.  New qualifiers, frames, effective-method rules, and public authoring
+work belong here.  Reusable single-receiver behavior must converge into this
+owner before the older module and its registry entry are removed.

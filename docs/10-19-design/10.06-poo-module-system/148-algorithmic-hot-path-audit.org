@@ -21,7 +21,7 @@ first choice when it already owns the algorithm: this pass uses
 | Organization shadow | current and bundle facts were cross-scanned | each side and the profile are indexed once |
 | Flow memoization | cache hit used =assoc= over every earlier input | =core/funcs.ss= owns a hash-backed memoizer, including correct cached =#f= behavior |
 | Indexed object family | its slot index was an alist and every lens lookup used =assoc= | =object-family/funcs.ss= builds a leftmost identity-to-position hash |
-| CLOS effective slots | every effective slot rescanned every owner's direct slot declarations | =poo-clos/funcs.ss= builds one leftmost direct-slot index per CPL owner; CPL and declaration order remain authoritative |
+| CLOS effective slots | every effective slot rescanned every owner's direct slot declarations | =poo-clos/funcs.ss= builds one leftmost direct-slot index per native C3 owner; C3 and declaration order remain authoritative |
 | Runner DAG execution | each dependency edge used =assoc= against prior values and every node rescanned the complete plan to reconstruct its frontier | =core/funcs.ss= owns structural-id values plus an incremental dependency-count frontier; receipts retain canonical plan order and stored =#f= values |
 | Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =profile-composition/funcs.ss= builds leftmost target, stage, and binding indexes once per owning scope |
 | Set-shaped contract checks | each required value rescanned the complete observed/allowed list | =utilities/functional.ss= builds one hash membership index and preserves the existing list-shaped public contract |
@@ -70,17 +70,13 @@ execution loop no longer rescans source nodes.
 
 * Next measured candidates
 
-1. =poo-clos/classes.ss=: the ANSI precedence calculation repeatedly scans
-   constraints and uses list membership for the reachable set. Measure deep
-   and wide class graphs before replacing it with an indexed Kahn frontier;
-   the ANSI ambiguity rule must retain the accumulated-CPL tie break.
-2. =poo-clos/dispatch.ss=: effective-method membership scans all method groups
+1. =poo-clos/dispatch.ss=: effective-method membership scans all method groups
    and each group's methods. Index only after a fixture shows large long-form
    combinations; ordinary qualifier counts are bounded and should stay simple.
-3. =core/plan.ss=: public ad hoc frontier queries intentionally remain pure and
+2. =core/plan.ss=: public ad hoc frontier queries intentionally remain pure and
    list-shaped. If scheduler callers invoke them repeatedly outside =runner=,
    add a reusable immutable indexed plan view rather than hiding a process cache.
-4. Repeated local alist readers in UI, loader, loop, and session modules need
+3. Repeated local alist readers in UI, loader, loop, and session modules need
    call-site cardinality measurements. Small fixed metadata remains a legitimate
    projection alist; only repeated hot-loop lookup should become an index.
 

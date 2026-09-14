@@ -6,8 +6,7 @@
                  poo-clos-identity-index poo-clos-leftmost-index-by
                  poo-clos-first-invalid-initarg
                  poo-clos-position-index/identity
-                 poo-clos-natural-permutation?
-                 poo-clos-topological-order/identity))
+                 poo-clos-natural-permutation?))
 
 (export poo-clos-funcs-test)
 
@@ -39,20 +38,6 @@
              (index
               (poo-clos-leftmost-index-by car (list first second))))
         (check (hash-get index 'payload) => first)))
-    (test-case "identity topology indexes edges once and delegates ambiguity"
-      (let ((a (cons 'a '())) (b (cons 'b '()))
-            (c (cons 'c '())) (d (cons 'd '())))
-        (check
-         (poo-clos-topological-order/identity
-          (list a b c d)
-          (list (cons a b) (cons a c) (cons b d) (cons c d))
-          (lambda (candidate? _result) (if (candidate? b) b #f)))
-         => (list a b c d))
-        (check
-         (poo-clos-topological-order/identity
-          (list a b) (list (cons a b) (cons b a))
-         (lambda (_candidate? _result) #f))
-         => #f)))
     (test-case "positions and natural permutations use bounded native indexes"
       (let* ((a (cons 'a '())) (b (cons 'b '()))
              (positions (poo-clos-position-index/identity (list a b))))

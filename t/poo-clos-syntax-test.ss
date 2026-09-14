@@ -139,6 +139,10 @@
         (check
          (if (poo-clos-find-generic-function
               '(setf standard-value) error?: #f) #t #f)
+         => #t)
+        (check
+         (if (poo-clos-find-generic-function
+              (list 'setf 'standard-value) error?: #f) #t #f)
          => #t)))
 
     (test-case "SETF function names are valid generic declarations"

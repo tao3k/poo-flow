@@ -3,7 +3,8 @@
 
 (import (only-in :clan/poo/object .o .ref .put!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/srfi/1 find iota)
+        (only-in :std/misc/hash hash-ref/default)
+        (only-in :std/srfi/1 iota)
         "types.ss" "funcs.ss")
 
 (export poo-clos-any-specializer poo-clos-class-specializer
@@ -58,26 +59,36 @@
 ;; : POOObject
 (def ClosInvocationFrame. (.ref ClosInvocationFrame 'proto))
 
-;;; Function names use ANSI identity, including `(setf name)`.  An alist is
-;;; intentional here because freshly reconstructed SETF names require `equal?`
-;;; rather than symbol identity.
-(def poo-clos-generic-function-registry '())
+;;; Name lookup is a binding projection, not a second generic-function owner.
+;;; Two native identity tables preserve O(1) lookup for both symbols and fresh
+;;; `(setf name)` designators without an equal?-scanned alist.
+(def poo-clos-generic-function-registry (make-hash-table-eq))
+(def poo-clos-setf-generic-function-registry (make-hash-table-eq))
+
+(def (generic-function-registry+key name)
+  (cond
+   ((symbol? name)
+    (values poo-clos-generic-function-registry name))
+   ((and (list? name) (= (length name) 2)
+         (eq? (car name) 'setf) (symbol? (cadr name)))
+    (values poo-clos-setf-generic-function-registry (cadr name)))
+   (else
+    (clos-fail 'invalid-generic-function-name generic: name))))
 
 (def (poo-clos-register-generic-function! generic-source)
   (let* ((generic-value (require-clos-generic generic-source))
          (name (.ref generic-value 'identity)))
-    (set! poo-clos-generic-function-registry
-          (cons (cons name generic-source)
-                (filter (lambda (entry) (not (equal? (car entry) name)))
-                        poo-clos-generic-function-registry)))
-    generic-source))
+    (let-values (((registry key) (generic-function-registry+key name)))
+      (hash-put! registry key generic-source)
+      generic-source)))
 
 (def (poo-clos-find-generic-function name error?: (error-value #t))
-  (let (entry (find (lambda (candidate) (equal? (car candidate) name))
-                    poo-clos-generic-function-registry))
-    (when (and (not entry) error-value)
-      (clos-fail 'generic-function-not-found generic: name))
-    (and entry (cdr entry))))
+  (let-values (((registry key) (generic-function-registry+key name)))
+    (let (generic-source
+          (hash-ref/default registry key (lambda () #f)))
+      (when (and (not generic-source) error-value)
+        (clos-fail 'generic-function-not-found generic: name))
+      generic-source)))
 ;;; Raised CLOS conditions share one payload-minimizing failure prototype.
 ;; : POOObject
 (def ClosFailure. (.ref ClosFailure 'proto))

@@ -4,18 +4,14 @@
 
 (import (only-in :std/misc/plist plist?)
         (only-in :gerbil/runtime/hash list->hash-table-eq)
-        (only-in :std/misc/hash
-                 hash-ref/default
-                 invert-hash<-vector)
-        (only-in :std/srfi/1 filter))
+        (only-in :std/misc/hash invert-hash<-vector))
 
 (export poo-clos-initarg-list? poo-clos-initarg-names
         poo-clos-initarg-ref poo-clos-initarg-index
         poo-clos-initarg-index-first-of poo-clos-identity-index
         poo-clos-leftmost-index-by poo-clos-first-invalid-initarg
         poo-clos-position-index/identity
-        poo-clos-natural-permutation?
-        poo-clos-topological-order/identity)
+        poo-clos-natural-permutation?)
 
 (def (poo-clos-initarg-list? values)
   (and (plist? values)
@@ -98,62 +94,3 @@
           ((or (exempt? (car rest)) (hash-key? valid-index (car rest)))
            (loop (cddr rest)))
           (else (car rest)))))
-
-;; Identity graph ordering indexes outgoing edges and indegrees once.  The
-;; caller owns domain-specific ambiguity selection; #f means a cycle or an
-;; ambiguity for which the caller supplied no admissible next node.
-;; : (forall (a) (-> [a] [(Pair a a)]
-;;        (-> (-> a Boolean) [a] (Maybe a)) (Maybe [a])))
-(def (poo-clos-topological-order/identity nodes edges select-ambiguous)
-  (let ((outgoing (make-hash-table-eq))
-        (indegree (make-hash-table-eq))
-        (candidate-index (make-hash-table-eq)))
-    (for-each (lambda (node) (hash-put! indegree node 0)) nodes)
-    (for-each
-     (lambda (edge)
-       (let ((source (car edge)) (target (cdr edge)))
-         ;; Gambit's native update primitive avoids the generic ensure helper's
-         ;; second lookup and closure chain in this edge-count hot loop.
-         (hash-update! outgoing source (lambda (targets) (cons target targets))
-                       '())
-         (hash-update! indegree target 1+ 0)))
-     edges)
-    (def initial-candidates
-      (filter (lambda (node) (= (hash-get indegree node) 0)) nodes))
-    (for-each (lambda (node) (hash-put! candidate-index node #t))
-              initial-candidates)
-    (def (candidate? node) (hash-key? candidate-index node))
-    ;; Selected candidates may remain below the frontier head.  Discard each
-    ;; stale entry at most once instead of searching and rebuilding the list.
-    (def (active-frontier frontier)
-      (if (and (pair? frontier) (not (candidate? (car frontier))))
-        (active-frontier (cdr frontier)) frontier))
-    (let loop ((remaining (length nodes))
-               (candidate-count (length initial-candidates))
-               (frontier initial-candidates)
-               (result-rev '()))
-      (cond
-       ((= remaining 0) (reverse result-rev))
-       ((= candidate-count 0) #f)
-       (else
-        (let* ((frontier (active-frontier frontier))
-               (next
-                (if (= candidate-count 1)
-                  (and (pair? frontier) (car frontier))
-                  (select-ambiguous candidate? result-rev))))
-          (if (not (and next (candidate? next)))
-            #f
-            (let ((next-count (- candidate-count 1))
-                  (next-frontier frontier))
-              (hash-remove! candidate-index next)
-              (for-each
-               (lambda (target)
-                 (let (degree (- (hash-get indegree target) 1))
-                   (hash-put! indegree target degree)
-                   (when (= degree 0)
-                     (hash-put! candidate-index target #t)
-                     (set! next-count (+ next-count 1))
-                     (set! next-frontier (cons target next-frontier)))))
-               (hash-ref/default outgoing next (lambda () '())))
-              (loop (- remaining 1) next-count next-frontier
-                    (cons next result-rev))))))))))
