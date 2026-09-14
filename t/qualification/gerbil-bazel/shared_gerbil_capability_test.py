@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-MAX_PACKAGE_PEAK_RSS_BYTES = 5 * 1024 * 1024 * 1024
 TOOLCHAIN_SCHEMAS = {
     "gerbil-bazel.local-toolchain-receipt.v1",
     "gerbil-bazel.prebuilt-toolchain-receipt.v1",
@@ -99,11 +98,21 @@ def validate_project(receipt: dict[str, Any]) -> None:
         "project resource guard did not complete",
     )
     peak_rss = resource_guard.get("peakRssBytes")
+    max_rss = resource_guard.get("maxRssBytes")
+    effective_cores = resource_guard.get("effectiveBuildCoreCount")
+    memory_per_core = resource_guard.get("memoryPerCoreBytes")
+    resource_plan_values = (max_rss, effective_cores, memory_per_core)
     _require(
         isinstance(peak_rss, int)
         and not isinstance(peak_rss, bool)
-        and peak_rss < MAX_PACKAGE_PEAK_RSS_BYTES,
-        "project peak RSS reached the 5 GiB rejection boundary",
+        and all(
+            isinstance(value, int)
+            and not isinstance(value, bool)
+            and value > 0
+            for value in resource_plan_values
+        )
+        and peak_rss < min(max_rss, effective_cores * memory_per_core),
+        "project peak RSS reached the adaptive resource-plan rejection boundary",
     )
     resolutions = receipt.get("dependencySourceResolutions")
     _require(

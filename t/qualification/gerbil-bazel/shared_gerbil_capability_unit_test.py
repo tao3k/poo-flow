@@ -6,7 +6,6 @@ import copy
 import unittest
 
 from shared_gerbil_capability_test import (
-    MAX_PACKAGE_PEAK_RSS_BYTES,
     ReceiptValidationError,
     validate_project,
     validate_toolchain,
@@ -27,6 +26,9 @@ class SharedGerbilCapabilityUnitTest(unittest.TestCase):
             "resourceGuard": {
                 "outcome": "completed",
                 "peakRssBytes": 64 * 1024 * 1024,
+                "maxRssBytes": 12 * 1024 * 1024 * 1024,
+                "effectiveBuildCoreCount": 4,
+                "memoryPerCoreBytes": 2 * 1024 * 1024 * 1024,
             },
             "dependencySourceResolutions": [
                 {
@@ -53,9 +55,18 @@ class SharedGerbilCapabilityUnitTest(unittest.TestCase):
         with self.assertRaises(ReceiptValidationError):
             validate_project(receipt)
 
-    def test_peak_rss_boundary_fails_closed(self) -> None:
+    def test_adaptive_peak_rss_boundary_fails_closed(self) -> None:
         receipt = copy.deepcopy(self.project)
-        receipt["resourceGuard"]["peakRssBytes"] = MAX_PACKAGE_PEAK_RSS_BYTES
+        receipt["resourceGuard"]["peakRssBytes"] = 8 * 1024 * 1024 * 1024
+        with self.assertRaises(ReceiptValidationError):
+            validate_project(receipt)
+
+    def test_peak_rss_budget_scales_with_effective_build_cores(self) -> None:
+        receipt = copy.deepcopy(self.project)
+        receipt["resourceGuard"]["peakRssBytes"] = 3 * 1024 * 1024 * 1024
+        receipt["resourceGuard"]["effectiveBuildCoreCount"] = 2
+        validate_project(receipt)
+        receipt["resourceGuard"]["effectiveBuildCoreCount"] = 1
         with self.assertRaises(ReceiptValidationError):
             validate_project(receipt)
 
