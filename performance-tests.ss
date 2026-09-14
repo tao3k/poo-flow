@@ -7,24 +7,28 @@
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-map-profile
-                 testing-interface-run-test-batch!
-                 testing-interface-test-file-serial?
-                 testing-interface-test-file-batches)
-        (only-in :std/srfi/1 filter partition)
+                 testing-interface-run-test-files!)
+        (only-in :std/srfi/1 filter foldl)
         (only-in :std/srfi/13 string-prefix?))
 
+;;; Scenario end-to-end benchmarks admit on wall-clock p95, so every file in
+;;; the performance lane needs an uncontended process.  This is a test-owned
+;;; POO declaration; non-benchmark support files still use ASP's native core
+;;; capacity, while CPU-time micro-kernels can later opt out through a distinct
+;;; lane.
+(def +poo-flow-performance-serial-test-fragments+
+  '("./t/performance/"
+    "module-system-poo-performance-test-support/objects-test.ss"))
+
 (def +poo-flow-performance-testing-interface+
-  (testing-interface-map-profile
-   (testing-interface-map-profile
-    +asp-testing-interface+
-    (testing-test-selector
-     'contains
-     "module-system-poo-performance-test-support/objects-test.ss")
-    +testing-serial-resource-profile+)
-   (testing-test-selector
-    'contains
-    "module-objects-validation-summary-performance-test.ss")
-   +testing-serial-resource-profile+))
+  (foldl
+   (lambda (fragment testing)
+     (testing-interface-map-profile
+      testing
+      (testing-test-selector 'contains fragment)
+      +testing-serial-resource-profile+))
+   +asp-testing-interface+
+   +poo-flow-performance-serial-test-fragments+))
 
 (def +poo-flow-performance-test-files+
   (filter
@@ -37,33 +41,6 @@
 
 (displayln "[poo-performance-testing] phase=entry-ready")
 (force-output)
-(let-values (((serial-files parallel-files)
-              (partition
-               (lambda (test-file)
-                 (testing-interface-test-file-serial?
-                  +poo-flow-performance-testing-interface+
-                  test-file))
-               +poo-flow-performance-test-files+)))
-  (let (batches
-        (append
-         (testing-interface-test-file-batches
-          +poo-flow-performance-testing-interface+
-          parallel-files)
-         (map list serial-files)))
-  (displayln "[poo-performance-testing] phase=batch-plan fileCount="
-             (length +poo-flow-performance-test-files+)
-             " batchCount=" (length batches)
-             " coreBudget="
-             (or (getenv "GERBIL_BUILD_CORES" #f) "host"))
-  (force-output)
-  ;; Performance samples execute without inter-batch CPU contention. Batch
-  ;; count and widths still come entirely from the ASP core-capacity policy.
-  (for-each
-   (lambda (batch)
-     (testing-interface-run-test-batch!
-      +poo-flow-performance-testing-interface+
-      batch))
-   batches)
-  (displayln "[poo-performance-testing] phase=all-batches-complete fileCount="
-             (length +poo-flow-performance-test-files+))
-  (force-output)))
+(testing-interface-run-test-files!
+ +poo-flow-performance-testing-interface+
+ +poo-flow-performance-test-files+)

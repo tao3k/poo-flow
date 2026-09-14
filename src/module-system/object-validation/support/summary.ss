@@ -3,6 +3,7 @@
 
 (import (only-in :std/srfi/1 fold)
         :gerbil/gambit
+        (only-in :clan/poo/object .ref .ref/cached)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/support/facts
         :poo-flow/src/module-system/object-validation/support/harness
@@ -16,6 +17,23 @@
         poo-flow-module-objects-validation-summary
         poo-flow-require-module-object-validation!
         poo-flow-require-module-objects-validation!)
+
+;;; Summary inputs are native POO receipts.  Their slots are normally already
+;;; realized by admission; avoid allocating `.ref` fallback closures for every
+;;; cell while preserving the lazy first-read path.
+(def +poo-flow-module-validation-summary-missing+
+  (cons 'poo-flow-module-validation-summary 'missing))
+
+;; : (-> POOObject Symbol Value)
+(def (poo-flow-module-validation-summary-ref validation key)
+  (let (value
+        (.ref/cached validation
+                     key
+                     (lambda ()
+                       +poo-flow-module-validation-summary-missing+)))
+    (if (eq? value +poo-flow-module-validation-summary-missing+)
+      (.ref validation key)
+      value)))
 
 ;;; Boundary: module objects validation is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
@@ -130,41 +148,60 @@
              (field-origins '())
              (inheritance-counts '())
              (validation-phases '())
+             (invalid-count 0)
              (invalid-objects '()))
     (if (null? rest)
       (values object-count
-              (reverse object-identities)
-              (reverse inheritance-chains)
-              (reverse direct-field-counts)
-              (reverse direct-field-identities)
-              (reverse resolved-field-counts)
-              (reverse resolved-field-identities)
-              (reverse field-origins)
-              (reverse inheritance-counts)
-              (reverse validation-phases)
-              (reverse invalid-objects))
+              ;; Every accumulator is private to this traversal.  Reverse it
+              ;; in place instead of allocating a second 50k-cell column for
+              ;; large catalogs; callers still receive ordinary fresh lists.
+              (reverse! object-identities)
+              (reverse! inheritance-chains)
+              (reverse! direct-field-counts)
+              (reverse! direct-field-identities)
+              (reverse! resolved-field-counts)
+              (reverse! resolved-field-identities)
+              (reverse! field-origins)
+              (reverse! inheritance-counts)
+              (reverse! validation-phases)
+              invalid-count
+              (reverse! invalid-objects))
       (let* ((validation (car rest))
-             (object (poo-flow-validation-ref validation 'object))
-             (invalid? (not (poo-flow-module-object-validation-valid? validation))))
+             (object
+              (poo-flow-module-validation-summary-ref validation 'object))
+             (invalid?
+              (not
+               (poo-flow-module-validation-summary-ref validation 'valid))))
         (loop (cdr rest)
               (+ object-count 1)
               (cons object object-identities)
-              (cons (poo-flow-validation-ref validation 'inheritance-chain)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'inheritance-chain)
                     inheritance-chains)
-              (cons (poo-flow-validation-ref validation 'direct-field-count)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'direct-field-count)
                     direct-field-counts)
-              (cons (poo-flow-validation-ref validation 'direct-field-identities)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'direct-field-identities)
                     direct-field-identities)
-              (cons (poo-flow-validation-ref validation 'resolved-field-count)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'resolved-field-count)
                     resolved-field-counts)
-              (cons (poo-flow-validation-ref validation 'resolved-field-identities)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'resolved-field-identities)
                     resolved-field-identities)
-              (cons (poo-flow-validation-ref validation 'field-origins)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'field-origins)
                     field-origins)
-              (cons (poo-flow-validation-ref validation 'inherit-count)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'inherit-count)
                     inheritance-counts)
-              (cons (poo-flow-validation-ref validation 'validationPhases)
+              (cons (poo-flow-module-validation-summary-ref
+                     validation 'validationPhases)
                     validation-phases)
+              (if invalid?
+                (+ invalid-count 1)
+                invalid-count)
               (if invalid?
                 (cons object invalid-objects)
                 invalid-objects))))))
@@ -190,6 +227,7 @@
              field-origins
              inheritance-counts
              validation-phases
+             invalid-count
              invalid-objects)
       (receipt
        (cons 'kind "poo-flow-module-objects-validation-summary")
@@ -204,7 +242,7 @@
        (cons 'field-origins field-origins)
        (cons 'inheritance-counts inheritance-counts)
        (cons 'validation-phases validation-phases)
-       (cons 'invalid-count (length invalid-objects))
+       (cons 'invalid-count invalid-count)
        (cons 'invalid-objects invalid-objects)
        (cons 'valid (null? invalid-objects))
        (cons 'checkedSignals
