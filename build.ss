@@ -22,8 +22,24 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
- (exclude-dirs (cons "lambda-episteme" default-exclude-dirs))
+ (exclude-dirs
+  (append '("lambda-episteme"
+            "bindings"
+            "packages"
+            "target"
+            "user-interface/cases"
+            "user-interface/profiles"
+            "user-interface/custom/my-module/cases"
+            "user-interface/custom/my-module/profiles")
+          default-exclude-dirs))
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"))
+ (extra-spec
+  '("user-interface/custom/my-module/profiles/all.ss"
+    "user-interface/custom/my-module/cases/cicd-owner.ss"
+    "user-interface/custom/my-module/cases/loop-engine-owner.ss"
+    "user-interface/custom/my-module/cases/session-owner.ss"
+    "user-interface/custom/my-module/cases/runtime-owner.ss"
+    "user-interface/custom/my-module/cases/durable-owner.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
