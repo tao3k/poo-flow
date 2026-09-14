@@ -34,14 +34,7 @@
           default-exclude-dirs))
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"))
  (extra-spec
-  '("t/support/performance.ss"
-    "t/support/poo-performance.ss"
-    "t/support/poo-performance-fixtures.ss"
-    "t/support/poo-performance-object-scenarios.ss"
-    "t/support/type-contract-performance.ss"
-    "t/support/funflow-config-pipeline-performance.ss"
-    "t/support/json-schema-contract-performance.ss"
-    "user-interface/custom/my-module/profiles/all.ss"
+  '("user-interface/custom/my-module/profiles/all.ss"
     "user-interface/custom/my-module/cases/cicd-owner.ss"
     "user-interface/custom/my-module/cases/loop-engine-owner.ss"
     "user-interface/custom/my-module/cases/session-owner.ss"

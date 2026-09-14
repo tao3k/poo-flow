@@ -1,6 +1,6 @@
 (import :std/test
         :clan/poo/object
-        ../support/performance)
+        "../support/performance")
 
 (export domain-case-instance-overlay-performance-test)
 
