@@ -8,6 +8,12 @@
                  asp-gerbil-scheme-library-package-prototype
                  default-exclude-dirs))
 
+(def +public-entry-modules+
+  '("src/core/api.ss"
+    "src/module-system/api.ss"
+    "src/feature-system/interface.ss"
+    "user-interface/init.ss"))
+
 (def +nono-c-include-option+
   (string-append
    "-I"
@@ -22,6 +28,7 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-library-spec)
+ (public-entry-modules +public-entry-modules+)
  (exclude-dirs
   (append '("lambda-episteme"
             "bindings"
