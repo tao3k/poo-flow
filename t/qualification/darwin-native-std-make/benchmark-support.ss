@@ -50,23 +50,31 @@
   (displayln "[std-make-benchmark] phase=" label " event=process-start")
   (force-output)
   (let* ((started (current-jiffy))
+         (exit-status 0)
          (output
           (run-process (benchmark-command image timeout arguments)
                        directory: directory
                        stderr-redirection: #t
-                       coprocess: read-all-as-string))
+                       coprocess: read-all-as-string
+                       check-status:
+                       (lambda (status _)
+                         (set! exit-status status))))
          (elapsed-ns
           (quotient (* (- (current-jiffy) started) 1000000000)
                     (jiffies-per-second)))
          (sample
           `((phase . ,label)
             (elapsedNs . ,elapsed-ns)
+            (exitStatus . ,exit-status)
             (compileCount . ,(benchmark-compile-count output)))))
     (display output)
     (displayln "[std-make-benchmark] phase=" label
                " event=process-returned elapsed-ns=" elapsed-ns
+               " exit-status=" exit-status
                " compile-count=" (cdr (assq 'compileCount sample)))
     (force-output)
+    (unless (zero? exit-status)
+      (error "native std/make benchmark process failed" label exit-status))
     sample))
 
 (def (benchmark-sample-ref sample key)

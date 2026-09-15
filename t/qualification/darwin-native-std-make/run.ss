@@ -15,7 +15,9 @@
                        (getenv "RUNNER_TEMP" run-root))))
     (create-directory* image)
     (let* ((command [(benchmark-gxi) "./build.ss"])
-           (cold (benchmark-measure 'cold image scenario-root command))
+           (cold
+            (benchmark-measure 'cold image scenario-root command
+                               timeout: "60s"))
            (warm
             (map (lambda (index)
                    (benchmark-measure
