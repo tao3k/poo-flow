@@ -25,6 +25,7 @@
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/user-interface/profile-config
         :poo-flow/src/user-interface/root-profile
+        :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/declaration/contract)
 
 (export user-interface-config-core-case-test)

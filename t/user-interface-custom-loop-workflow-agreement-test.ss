@@ -11,6 +11,7 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
+        :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
         (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-funflow-cicd-case

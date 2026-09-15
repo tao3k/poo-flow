@@ -12,7 +12,7 @@
                  testing-interface-add-profile
                  testing-interface-map-profile
                  init-profiled-test-environment!)
-        (only-in :poo-flow/src/module-system/observability/testing-extension
+        (only-in "src/module-system/observability/testing-extension.ss"
                  poo-flow-testing-observability-extension))
 
 (def +poo-flow-serial-test-selectors+

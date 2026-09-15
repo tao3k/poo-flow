@@ -93,6 +93,12 @@ aggregate framework surface emits
 evaluates module source. Its repository gate covers all maintained module role
 files, including nonstandard private helpers below the canonical role owners.
 
+The native unit-test entrypoint does not rely on the production PackageSpec to
+publish test-only owners. =unit-tests.ss= imports
+=observability/testing-extension.ss= through its relative source owner, so the
+extension is expanded only inside the test process. No test BuildSpec, alternate
+builder, or added production root is needed.
+
 The package-env receipt is the removed cost center. Native runner startup is sub-second; focused tests remain bounded by =gxtest= and the module/test load graph, while the millisecond gate lives inside the registry scenario so the test distinguishes module catalog expansion from runner startup and Gerbil compilation work.
 
 ** 40.55 Fast Gate Entrypoint
