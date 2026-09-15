@@ -29,7 +29,7 @@
             (entrypoint . "build.ss")
             (measurement-owner . asp-gerbil-scheme/benchmark-api)
             (executor . "gerbil build")
-            (elapsed-ms . ,elapsed-ms)
+            (elapsed-ms . ,(exact->inexact elapsed-ms))
             (status . 0))))
     (call-with-output-file
      receipt-path

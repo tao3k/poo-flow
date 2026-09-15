@@ -120,7 +120,7 @@ jobs:
           fi
 
           echo "::notice::The pinned v19 release omits the official tools build target; completing it from the same upstream revision"
-          tools_build="$RUNNER_TEMP/gerbil-v19-tools-build.ss"
+          tools_build="$GERBIL_PREFIX/src/tools/build.ss"
           curl --fail --location --retry 3 \
             "https://git.cons.io/mighty-gerbils/gerbil/raw/commit/$RELEASE_REVISION/src/tools/build.ss" \
             --output "$tools_build"
@@ -130,7 +130,7 @@ jobs:
             cd "$GERBIL_PREFIX/src/tools"
             GERBIL_BUILD_PREFIX="$GERBIL_PREFIX" \
               GERBIL_BUILD_FLAGS="-j$build_workers" \
-              gxi "$tools_build"
+              gxi ./build.ss
           )
           gxi -e '(begin (import :gerbil/tools/gxpkg) (displayln "darwin-gerbil-tools-ready"))'
 
