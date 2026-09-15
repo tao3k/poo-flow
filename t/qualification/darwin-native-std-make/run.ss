@@ -46,6 +46,6 @@
                  " classification=" classification
                  " receipt=" receipt-path)
       (unless (= warm-compile-count 0)
-        (error "warm runs unexpectedly recompiled targets" warm))
+        (error "warm native leaf unexpectedly recompiled" warm))
       (when (eq? classification 'warm-budget-exceeded)
         (error "warm p50 exceeded Scenario budget" warm-p50)))))

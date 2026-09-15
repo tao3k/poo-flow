@@ -209,6 +209,11 @@ jobs:
           {
             echo "### Darwin Gerbil build: $TOOLCHAIN"
             echo
+            if [[ -s "$RUNNER_TEMP/darwin-native-std-make-one-target-receipt.ss" ]]; then
+              echo '```scheme'
+              cat "$RUNNER_TEMP/darwin-native-std-make-one-target-receipt.ss"
+              echo '```'
+            fi
             if [[ -s "$RUNNER_TEMP/cold-build.ss" ]]; then
               cold_ms="$(sed -nE 's/.*\(elapsed-ms \. ([0-9.]+)\).*/\1/p' "$RUNNER_TEMP/cold-build.ss")"
               echo "- cold: ${cold_ms:-receipt-unavailable} ms"
