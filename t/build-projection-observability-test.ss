@@ -3,18 +3,20 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal?)
+(import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/srfi/13 string-contains string-prefix?)
         (only-in :clan/poo/object .o)
         (only-in :gerbil/gambit spawn thread-join! thread-sleep!)
         (only-in "../src/module-system/observability/config.ss"
                  poo-flow-default-build-observability-policy)
+        (only-in "../src/module-system/observability/interface.ss"
+                 poo-flow-make-observed-package-spec-projector
+                 poo-flow-admit-build-package-spec!
+                 poo-flow-observe-build-projection)
         (only-in "../src/module-system/observability/build-projection.ss"
                  poo-flow-write-observation-line!
-                 poo-flow-build-elapsed-milliseconds
-                 poo-flow-make-observed-package-spec-projector
-                 poo-flow-observe-build-projection)
+                 poo-flow-build-elapsed-milliseconds)
         (only-in "../src/module-system/observability/testing-extension.ss"
                  make-poo-flow-testing-observability-profile
                  poo-flow-testing-observability-profile-source-load-paths))
@@ -45,6 +47,23 @@
           (check-equal?
            (contains? output "owner=asp-build-api/native-import-closure")
            #t))))
+
+    (test-case "public interface rejects malformed roots before projection"
+      (let ((projected? #f)
+            (package-spec (.o (public-entry-modules 'malformed))))
+        (check-exception
+         (poo-flow-admit-build-package-spec!
+          package-spec poo-flow-default-build-observability-policy)
+         (lambda (_failure) #t))
+        (check-exception
+         ((poo-flow-make-observed-package-spec-projector
+           (lambda (_package-spec)
+             (set! projected? #t)
+             '())
+           poo-flow-default-build-observability-policy)
+          package-spec)
+         (lambda (_failure) #t))
+        (check-equal? projected? #f)))
 
     (test-case "package build source declares complete public closure roots"
       (let (source (call-with-input-file "build.ss" read-all-as-string))
