@@ -6,10 +6,7 @@
 ;;; Boundary: reusable workloads for recursive JSON Schema contract gates.
 ;;; Invariant: workloads measure Scheme-side contract validation only.
 
-(import (only-in :std/srfi/1
-                 fold
-                 iota)
-        (only-in :clan/poo/object
+(import (only-in :clan/poo/object
                  object<-alist)
         (only-in "./performance.ss"
                  poo-flow-performance-build-list)
@@ -80,12 +77,12 @@
 
 ;; : (-> Integer (-> Integer) Integer)
 (def (json-schema-contract-performance-repeat rounds workload)
-  (if (<= rounds 0)
-    0
-    (fold (lambda (_round total)
-            (+ total (workload)))
-          0
-          (iota rounds))))
+  (let loop ((remaining rounds)
+             (total 0))
+    (if (<= remaining 0)
+      total
+      (loop (- remaining 1)
+            (+ total (workload))))))
 
 ;; : (-> Object Integer Integer)
 (def (json-schema-contract-performance-validate-rounds workflow rounds)
