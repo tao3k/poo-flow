@@ -492,7 +492,8 @@
   (let* ((slots
           (poo-flow-native-contract-slots object-contract))
          (shape-diagnostics
-          (if (or (poo-flow-contract-json-object? candidate)
+          (if (or (hash-table? candidate)
+                  (poo-flow-contract-json-object? candidate)
                   (object? candidate))
             '()
             (list
@@ -518,7 +519,8 @@
          (poo-flow-json-schema-normalization-schema
           (poo-flow-json-schema-contract-artifact-normalization artifact)))
         (shape-diagnostics
-          (if (or (poo-flow-contract-json-object? candidate)
+          (if (or (hash-table? candidate)
+                  (poo-flow-contract-json-object? candidate)
                   (object? candidate))
             '()
             (list

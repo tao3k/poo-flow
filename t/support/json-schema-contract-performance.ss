@@ -8,6 +8,8 @@
 
 (import (only-in :clan/poo/object
                  object<-alist)
+        (only-in :gerbil/runtime/hash
+                 list->hash-table)
         (only-in "./performance.ss"
                  poo-flow-performance-build-list)
         (only-in "../../src/contract/json-schema-ir.ss"
@@ -24,6 +26,9 @@
         json-schema-contract-performance-step
         json-schema-contract-performance-job
         json-schema-contract-performance-workflow
+        json-schema-contract-performance-native-step
+        json-schema-contract-performance-native-job
+        json-schema-contract-performance-native-workflow
         json-schema-contract-performance-poo-workflow
         json-schema-contract-performance-valid-receipt?
         json-schema-contract-performance-repeat
@@ -64,6 +69,43 @@
           job-count
           (lambda (index)
             (json-schema-contract-performance-job index step-count))))))
+
+;; : (-> Integer HashTable)
+(def (json-schema-contract-performance-native-step index)
+  (list->hash-table
+   (list
+    (cons "id"
+          (string-append "step_" (number->string index)))
+    (cons "run" "echo poo-flow-json-schema-contract"))))
+
+;; : (-> Integer Integer Pair)
+(def (json-schema-contract-performance-native-job index step-count)
+  (cons
+   (string-append "job_" (number->string index))
+   (list->hash-table
+    (list
+     (cons "runs-on" "ubuntu-latest")
+     (cons "steps"
+           (poo-flow-performance-build-list
+            step-count
+            json-schema-contract-performance-native-step))))))
+
+;; This is Gerbil's default :std/text/json native representation: string-keyed
+;; hash tables for objects and lists for arrays.
+;; : (-> Integer Integer HashTable)
+(def (json-schema-contract-performance-native-workflow job-count step-count)
+  (list->hash-table
+   (list
+    (cons "name" "POO Flow recursive contract benchmark")
+    (cons "on" "push")
+    (cons "jobs"
+          (list->hash-table
+           (poo-flow-performance-build-list
+            job-count
+            (lambda (index)
+              (json-schema-contract-performance-native-job
+               index
+               step-count))))))))
 
 ;; : (-> Integer Integer PooFlowObject)
 (def (json-schema-contract-performance-poo-workflow job-count step-count)

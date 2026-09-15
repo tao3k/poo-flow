@@ -13,6 +13,9 @@
                  member)
         (only-in :clan/poo/object
                  object<-alist)
+        (only-in :std/text/json
+                 read-json-key-as-symbol?
+                 string->json-object)
         (only-in "../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot-name
                  poo-flow-native-contract-slots)
@@ -91,6 +94,10 @@
                        (steps . (((id . "bad id")
                                   (run . "gxpkg build -g"))))))))))
 
+;; : String
+(def funflow-github-ci-native-json
+  "{\"name\":\"POO Flow CI\",\"on\":\"push\",\"jobs\":{\"build\":{\"runs-on\":\"ubuntu-latest\",\"steps\":[{\"run\":\"gxpkg build -g\"}]}}}")
+
 ;; : TestSuite
 (def funflow-github-ci-json-schema-contract-test
   (test-suite "funflow github-ci json schema contract"
@@ -140,6 +147,26 @@
         (check-equal? (funflow-github-ci-test-ref alist-receipt 'checked-slots)
                       '(name run-name on env defaults concurrency permissions jobs))
         (check-equal? (funflow-github-ci-test-ref poo-receipt 'valid?) #t)))
+    (test-case "validates std/text/json native hash objects directly"
+      (let* ((string-key-workflow
+              (string->json-object funflow-github-ci-native-json))
+             (symbol-key-workflow
+              (parameterize ((read-json-key-as-symbol? #t))
+                (string->json-object funflow-github-ci-native-json)))
+             (string-key-receipt
+              (poo-flow-funflow-github-ci-validate-workflow->alist
+               string-key-workflow))
+             (symbol-key-receipt
+              (poo-flow-funflow-github-ci-validate-workflow->alist
+               symbol-key-workflow)))
+        (check-equal? (hash-table? string-key-workflow) #t)
+        (check-equal? (hash-table? symbol-key-workflow) #t)
+        (check-equal?
+         (funflow-github-ci-test-ref string-key-receipt 'valid?)
+         #t)
+        (check-equal?
+         (funflow-github-ci-test-ref symbol-key-receipt 'valid?)
+         #t)))
     (test-case "rejects missing and empty required workflow slots"
       (let ((missing-receipt
              (poo-flow-funflow-github-ci-validate-workflow->alist

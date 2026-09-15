@@ -21,6 +21,7 @@
     "src/module-system/api.ss"
     "src/feature-system/interface.ss"
     "src/feature-system/bundle-v1-composition-writer.ss"
+    "src/modules/funflow/interface.ss"
     "src/contract/runtime-v0-abi-schema.ss"
     "src/policy/cedar-authority.ss"
     "src/proof/proof-case-vector.ss"

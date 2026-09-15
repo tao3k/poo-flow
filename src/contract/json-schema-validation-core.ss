@@ -63,6 +63,17 @@
 ;; : (-> JsonSchemaCandidateObject Symbol JsonSchemaCandidateSlotValue)
 (def (poo-flow-json-schema-candidate-slot candidate slot)
   (cond
+   ((hash-table? candidate)
+    (let* ((string-slot (and (symbol? slot) (symbol->string slot)))
+           (string-value
+            (if string-slot
+              (hash-ref candidate
+                        string-slot
+                        +poo-flow-json-schema-validation-missing+)
+              +poo-flow-json-schema-validation-missing+)))
+      (if (eq? string-value +poo-flow-json-schema-validation-missing+)
+        (hash-ref candidate slot +poo-flow-json-schema-validation-missing+)
+        string-value)))
    ((poo-flow-contract-json-object? candidate)
     (poo-flow-contract-object-ref
      candidate
@@ -76,6 +87,7 @@
 ;; : (-> JsonSchemaCandidateObject JsonSchemaCandidateRows)
 (def (poo-flow-json-schema-candidate-rows candidate)
   (cond
+   ((hash-table? candidate) (hash->list candidate))
    ((poo-flow-contract-json-object? candidate)
     candidate)
    ((object? candidate)
@@ -169,7 +181,8 @@
 
 ;; : (-> JsonSchemaCandidateSlotValue Boolean)
 (def (poo-flow-json-schema-schema-guided-object? value)
-  (or (poo-flow-contract-json-object? value)
+  (or (hash-table? value)
+      (poo-flow-contract-json-object? value)
       (object? value)))
 
 ;; : (-> PooFlowJsonSchemaNode Alist)
