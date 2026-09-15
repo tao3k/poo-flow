@@ -172,6 +172,19 @@ As with ordinary POO evaluation, input prototype code is trusted: this adapter
 is a data-projection boundary, not an execution sandbox for malicious computed
 slots.
 
+* Build projection admission
+
+The POO Build Observability extension rejects a PackageSpec whose
+=public-entry-modules= slot is non-empty.  That slot asks ASP to materialize a
+complete native import closure before std/make and therefore duplicates the
+upstream compiler's dependency ownership.  Declare stable build roots through
+=modules= instead.  Rejection occurs before the wrapped projector runs and
+emits =reason=eager-public-entry-modules= with =expected-slot=modules=.
+
+The =package-spec-root-mode-ab= Scenario keeps both unwrapped projection lanes
+as performance evidence; the production extension admits only the direct-root
+lane.
+
 * Development memory diagnosis
 
 =debug.ss= also owns an explicit in-band memory observation slice:

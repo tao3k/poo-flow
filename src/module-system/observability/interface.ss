@@ -22,6 +22,7 @@
                  poo-flow-default-build-observability-policy)
         (only-in "build-projection.ss"
                  poo-flow-make-observed-package-spec-projector
+                 poo-flow-admit-build-package-spec!
                  poo-flow-observe-build-projection-start
                  poo-flow-observe-build-projection)
         "source-authoring.ss"
@@ -37,6 +38,7 @@
         poo-flow-build-observability-policy-prototype
         poo-flow-default-build-observability-policy
         poo-flow-make-observed-package-spec-projector
+        poo-flow-admit-build-package-spec!
         poo-flow-observe-build-projection-start
         poo-flow-observe-build-projection
         (import: "source-authoring.ss")

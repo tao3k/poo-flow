@@ -1,0 +1,8 @@
+((schema . poo-flow.package-spec-root-mode-ab.v1)
+ (scenarioKind . package-spec-projection-ab)
+ (rootCount . 4)
+ (minimumClosureTargetCount . 100)
+ (minimumSpeedupRatio . 3)
+ (maxModulesSpecNanoseconds . 5000000000)
+ (rule . POO-FLOW-PACKAGE-SPEC-ROOT-MODE-001)
+ (expectedOutcome . "four declared roots remain native std/make inputs; eager public-entry closure is measurably slower and rejected by the POO build extension"))
