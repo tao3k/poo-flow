@@ -174,16 +174,16 @@ slots.
 
 * Build projection admission
 
-The POO Build Observability extension rejects a PackageSpec whose
-=public-entry-modules= slot is non-empty.  That slot asks ASP to materialize a
-complete native import closure before std/make and therefore duplicates the
-upstream compiler's dependency ownership.  Declare stable build roots through
-=modules= instead.  Rejection occurs before the wrapped projector runs and
-emits =reason=eager-public-entry-modules= with =expected-slot=modules=.
+The POO Build Observability extension validates the PackageSpec boundary before
+calling its projector.  A malformed =public-entry-modules= slot is rejected at
+that boundary.  A valid slot remains owned by ASP revision
+=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062=, whose native Import Model projects
+the complete production closure before handing the BuildSpec to =std/make=.
 
-The =package-spec-root-mode-ab= Scenario keeps both unwrapped projection lanes
-as performance evidence; the production extension admits only the direct-root
-lane.
+The =package-spec-root-mode-ab= Scenario retains both unwrapped projection lanes
+as diagnostic evidence.  Four direct =modules= targets project faster but are
+an incomplete package; the production entry therefore uses
+=public-entry-modules= and reports its full target count.
 
 * Development memory diagnosis
 

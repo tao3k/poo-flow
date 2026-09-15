@@ -130,16 +130,22 @@ When a new module family is needed, add manifest data to =module-registry.ss=, a
 
 =build.ss= is the unique package build entry.  It declares one POO PackageSpec
 and delegates to the same ASP Build API and =std/make= executor for development,
-CI, Bazel, and release builds.  Its =modules= slot contains only the four stable
-public interface roots: core API, module-system API, feature-system interface,
-and User Interface facade.  Native Gerbil compilation owns their imports.  The
-entry contains no =all-gerbil-modules= scan, eager Import Model closure, test
-PackageSpec, or second build script.
+CI, Bazel, and release builds.  Its =public-entry-modules= slot names four
+stable interfaces: core API, module-system API, feature-system interface, and
+User Interface facade.  ASP revision
+=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062= projects the native import
+closure and =std/make= compiles that result.  The entry contains no
+=all-gerbil-modules= scan, package-local owner import, test PackageSpec, or
+second build script.
 
-Native unit CI builds this package once and then invokes =unit-tests.ss=.  Its
-ASP Testing Interface discovers atomic files and delegates selected batches to
-native =gxtest=.  Because the unique package build publishes every production
-owner, test imports do not require a parallel package graph.
+Native unit CI builds the public package once and then invokes =unit-tests.ss=.
+Its ASP Testing Interface discovers atomic files and delegates selected batches
+to native =gxtest=.  The POO testing profile projects =.gerbil/lib= before the
+repository source root into the child Gerbil load path.  Compiled public and
+FFI owners therefore win, while qualification, policy, evidence, and scenario
+owners outside the public package closure resolve from source for the selected
+atomic test.  This source-root decision is Scheme POO configuration; no
+user-facing environment setting or =build-test.ss= exists.
 
 The build entry must not import a =:poo-flow= or =./src= owner.  Such an import
 loads the package module before the same =std/make= invocation checks it; macOS
@@ -155,13 +161,27 @@ Repository-owned command helpers and user configuration are not package
 artifacts.  The PackageSpec excludes the two contribution observation commands
 and =user-interface/custom/my-module/config.ss= explicitly; atomic tests still
 load the user-owned configuration by its relative source boundary.
-=build.ss= remains the sole =defbuild-script= entry.  The rejected native source
+=build.ss= remains the sole =defbuild-script= entry.  The default native source
 catalog projected 512 targets and its isolated Bazel action exceeded the local
-180-second bound.  The rejected =public-entry-modules= route eagerly loaded 231
-package modules before =std/make= and retained the same currentness hazard.
-Passing four interface roots through PackageSpec =modules= produced five native
-targets including the explicit nono-C prelude.  On the same macOS host, the
-isolated Bazel action completed in 129.43 seconds (92 seconds inside the Gerbil
-project receipt), used 12 effective cores, and peaked at 2,736,209,920 bytes;
-the immediately repeated Bazel build was a cache hit.  These receipts establish
-the build-root correction without claiming a replacement scheduler.
+180-second bound.  Passing four interfaces through PackageSpec =modules=
+produced five native targets including the nono-C prelude, but current CI then
+failed while importing =src/core/api.ssi=: =std/make= does not compile the
+transitive package closure from those four strings.  The smaller count was an
+incomplete artifact, not a performance improvement.
+
+The corrected =public-entry-modules= projection produces 230 package modules
+before the explicit nono-C prelude.  The same-host A/B Scenario measured the
+invalid four-root projection at 0.960 seconds and the complete native import
+projection at 26.741 seconds.  That interval occurs before =std/make= and is
+owned by ASP's Gerbil Import Model projection; it must not be reported as an
+=std/make= fixed cost.  The 227-file POO test run then completed successfully in
+about 82 seconds with 12 native batches and three serialized tests.
+
+The Runtime-WASM workflow separately materializes
+=//gerbil:dependency_packages= before the package action.  This exposes and
+caches =gerbil-utils=, =gerbil-poo=, and ASP compilation instead of charging
+their cold build to POO Flow.  Existing 30-minute job and 25-minute package
+timeouts remain unchanged.  A local verbose probe that changed Bazel
+=action_env= was discarded as performance evidence because Bazel explicitly
+invalidated its analysis cache and spent 213 seconds only on external
+dependencies before the probe was stopped.

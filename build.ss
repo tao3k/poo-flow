@@ -13,10 +13,9 @@
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support
                  default-exclude-dirs))
 
-;;; These stable public interface roots are the only explicit build inputs.
-;;; std/make and Gerbil compilation own their native import dependencies; the
-;;; PackageSpec does not eagerly import the complete package into the build
-;;; process merely to reconstruct that same graph.
+;;; These stable public interfaces are the only declared package roots.  ASP's
+;;; native Import Model projects their complete production closure before the
+;;; resulting BuildSpec is handed to std/make.
 (def +poo-flow-public-entry-modules+
   '("src/core/api.ss"
     "src/module-system/api.ss"
@@ -48,7 +47,7 @@
  (poo-flow-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-native-spec)
- (modules +poo-flow-public-entry-modules+)
+ (public-entry-modules +poo-flow-public-entry-modules+)
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "observe-contribute-import.ss"

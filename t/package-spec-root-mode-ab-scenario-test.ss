@@ -25,8 +25,8 @@
     (values elapsed-nanoseconds spec)))
 
 (def package-spec-root-mode-ab-scenario-test
-  (test-suite "POO PackageSpec native roots versus eager closure Scenario"
-    (test-case "declared roots retain a significant projection advantage"
+  (test-suite "POO PackageSpec direct roots versus complete package closure"
+    (test-case "small direct-root specs are evidence of incomplete packaging"
       (let (contract
             (call-with-input-file
              (path-expand "contract.ss" +scenario-root+) read))
@@ -39,16 +39,12 @@
              (modules (elapsedNs . ,modules-ns)
                       (targetCount . ,(length modules-spec)))
              (closure (elapsedNs . ,closure-ns)
-                      (targetCount . ,(length closure-spec)))
-             (speedupRatio . ,(/ closure-ns modules-ns))))
+                      (targetCount . ,(length closure-spec)))))
           (check (length modules-spec) => (contract-ref contract 'rootCount))
           (check (>= (length closure-spec)
                      (contract-ref contract 'minimumClosureTargetCount))
                  => #t)
-          (check (>= closure-ns
-                     (* modules-ns
-                        (contract-ref contract 'minimumSpeedupRatio)))
-                 => #t)
+          (check (> (length closure-spec) (length modules-spec)) => #t)
           (check (< modules-ns
                     (contract-ref contract 'maxModulesSpecNanoseconds))
                  => #t))))))

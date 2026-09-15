@@ -4,10 +4,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: bootstrap-safe observation of ASP PackageSpec projection.
-;;; This owner depends only on gerbil-poo and its module-owned configuration
-;;; because build.ss loads it before the POO Flow package image exists.  It
-;;; observes and rejects; ASP PackageSpec and std/make retain projection and
-;;; execution ownership.
+;;; This owner depends only on gerbil-poo and its module-owned configuration so
+;;; an external package coordinator can load it before the POO Flow image
+;;; exists.  build.ss does not import its own package observers.  ASP PackageSpec
+;;; and std/make retain projection and execution ownership.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :gerbil/gambit spawn thread-sleep! write-substring)
@@ -48,9 +48,9 @@
         (poo-flow-observe-build-executor-handoff policy target-count)
         spec))))
 
-;;; A non-empty `public-entry-modules` slot asks ASP to materialize the full
-;;; native import closure before std/make. Under this POO extension that is an
-;;; inadmissible duplicate BuildSpec graph; stable roots belong in `modules`.
+;;; Validate only the declared PackageSpec boundary.  ASP owns expansion of
+;;; `public-entry-modules` into the complete native import closure; the observer
+;;; must not replace that closure with a smaller, incomplete target list.
 (def (poo-flow-admit-build-package-spec! package-spec policy)
   (unless (object? package-spec)
     (error "POO Flow build projection requires a POO PackageSpec"
@@ -60,15 +60,13 @@
       (unless (list? roots)
         (error "POO Flow PackageSpec public-entry-modules must be a list"
                roots))
-      (when (pair? roots)
+      (when (and (pair? roots)
+                 (poo-flow-build-policy-ref policy 'enabled?))
         (poo-flow-write-observation-line!
-         "[poo-flow] phase=spec-rejected profile=~a reason=eager-public-entry-modules slot=public-entry-modules expected-slot=modules declared-root-count=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+         "[poo-flow] phase=spec-input profile=~a mode=public-entry-modules declared-root-count=~a policy=~a owner=asp-build-api/native-import-closure executor=asp-build-api/std-make"
          (poo-flow-build-policy-ref policy 'profile)
          (length roots)
-         (poo-flow-build-policy-ref policy 'id))
-        (error
-         "POO Flow Build Contract rejects eager public-entry-modules; declare stable roots with modules"
-         roots)))))
+         (poo-flow-build-policy-ref policy 'id))))))
 
 (def (poo-flow-build-policy-ref policy slot)
   (unless (object? policy)
