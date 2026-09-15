@@ -24,6 +24,7 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             dependency_marker = root / "dependencies" / ".root"
             project_dependency_root = root / "package"
             loadpath_capture = root / "loadpath.txt"
+            runner_capture = root / "runner.ss"
             output = root / "flow.ss.poo-flow-projection.sexp"
             fake_gxi = root / "gxi"
 
@@ -36,6 +37,7 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             fake_gxi.write_text(
                 "#!/bin/sh\n"
                 f"printf '%s' \"$GERBIL_LOADPATH\" >'{loadpath_capture}'\n"
+                f"cat \"$1\" >'{runner_capture}'\n"
                 "printf '%s\\n' '((\"schema\" \"projection.v1\") "
                 "(\"name\" \"smoke\"))'\n",
                 encoding="utf-8",
@@ -92,6 +94,15 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             self.assertEqual(
                 artifact["rows"],
                 (("schema", "projection.v1"), ("name", "smoke")),
+            )
+            runner_source = runner_capture.read_text(encoding="utf-8")
+            self.assertIn(
+                ":poo-flow/src/module-system/profile-composition/interface",
+                runner_source,
+            )
+            self.assertNotIn(
+                ":poo-flow/src/user-interface/init-syntax",
+                runner_source,
             )
 
 

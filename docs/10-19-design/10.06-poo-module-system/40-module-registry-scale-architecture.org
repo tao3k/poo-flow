@@ -125,3 +125,28 @@ Reject future changes that do any of the following:
 - make tests pass by relying on facade to leak concrete owner symbols.
 
 When a new module family is needed, add manifest data to =module-registry.ss=, add loader/action behavior to =loader-tree.ss= or the real owner, and keep facade imports bounded to stable module-system contracts.
+
+** 40.70 Native build profiles
+
+The package build exposes two projections from the same ASP PackageSpec and
+the same =std/make= executor.  The default =library= profile contains the three
+stable framework entry interfaces.  The =release= profile is selected with
+=POO_FLOW_BUILD_PROFILE=release= by CI and Bazel; it adds every maintained
+=src/modules/<name>/interface.ss= plus the explicit Bundle v1, runtime-load,
+Nono binding, and contribution product entries.  It does not enumerate role
+implementation files and does not call =all-gerbil-modules=.
+
+Native unit CI selects the separate =test= profile.  That PackageSpec inherits
+ASP's standard package source catalog so test-only direct imports cannot widen
+the =library= or =release= closure.  Test execution remains owned by the ASP
+Testing Interface in =unit-tests.ss=; the profile only prepares its isolated
+compiled source image and does not introduce another runner or scheduler.
+
+With =GERBIL_BUILD_VERBOSE=1= the package emits =spec-start= before ASP import
+projection and =spec-projected= with profile, target count, and elapsed
+nanoseconds before handing the result to =std/make=.  On the 2026-09-15 Darwin
+receipt, the unchanged =library= profile projected 48 targets in 0.58 seconds
+and completed in 2.39 seconds with zero compile jobs.  The isolated Bazel
+=release= action projected 318 targets, completed in 101.385 seconds, peaked at
+3,902,980,096 bytes, and successfully produced both Bundle v1 variants and the
+wheel smoke projection artifact.

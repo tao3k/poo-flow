@@ -90,6 +90,10 @@ gerbil_project_compile(
     args = ["compile"],
     build_script = "//:build.ss",
     deps = [":asp_gerbil_scheme_package"],
+    env = {
+        "GERBIL_BUILD_VERBOSE": "1",
+        "POO_FLOW_BUILD_PROFILE": "release",
+    },
 )
 
 gerbil_project_environment(
