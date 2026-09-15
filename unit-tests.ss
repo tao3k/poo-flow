@@ -19,7 +19,11 @@
   (map (lambda (fragment) (testing-test-selector 'contains fragment))
        '("module-object-practice-test.ss"
          "module-system-lazy-loader-test.ss"
-         "module-system-observability-test.ss")))
+         "module-system-observability-test.ss"
+         ;; This suite deliberately drives a non-returning lazy POO slot until
+         ;; the memory monitor contains it.  Give it a fresh native process so
+         ;; its heap budget is independent of earlier batch allocations.
+         "observability-framework-test.ss")))
 
 (def +poo-flow-testing-interface+
   (foldl
