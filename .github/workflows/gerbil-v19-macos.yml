@@ -197,7 +197,7 @@ jobs:
       - name: Validate v0.19 JSON capability
         if: matrix.install == 'release'
         run: |
-          gerbil env gxi -e \
+          gxi -e \
             '(begin (import :std/encoding/json) (unless (hash-table? (string->json "{\"native\":true}" (JSONReadOptions object-as-hash: #t))) (error "v19 JSON object-as-hash must decode to a native HashTable")))'
 
       - name: Publish build comparison summary
