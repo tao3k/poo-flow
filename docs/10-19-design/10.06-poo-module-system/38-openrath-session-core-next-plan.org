@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.38 OpenRath Session Core Next Plan
 ** 10.06.38.10 Purpose
 This plan uses OpenRath's session-first user ladder as design evidence for the

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: JSON Schema recursive contract benchmark gates.
 ;;; Invariant: benchmark thunks exclude gxi startup, package install, schema
 ;;; download, Python execution, GitHub Actions execution, and external IO.

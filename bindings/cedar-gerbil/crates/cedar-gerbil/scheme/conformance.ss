@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Real POO object construction used only by native conformance qualification.
 (import (only-in :std/foreign begin-ffi c-define)
         (only-in :std/text/json json-object->string)

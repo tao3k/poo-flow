@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user module selection flag merge helpers.
 ;;; Invariant: helpers normalize declaration rows only; they do not realize
 ;;; descriptors, load modules, or inspect runtime capabilities.

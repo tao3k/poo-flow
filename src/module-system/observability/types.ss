@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: native POO type and contract descriptors for observability.
 ;;; Invariant: validation dispatches through gerbil-poo descriptors; contract
 ;;; evidence is projected only after the semantic decision has been made.

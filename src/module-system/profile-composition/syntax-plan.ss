@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: phase-owned parser and immutable plan for use-composition.
 ;;; Invariant: syntax remains syntax until the public macro lowers the plan.
 

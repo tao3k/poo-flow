@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: analyzes composition lineage for cycles and productive recursion.
 ;;; Invariant: analysis reports lineage facts without mutating the composed objects.
 (import (only-in :poo-flow/src/module-system/object-family/syntax

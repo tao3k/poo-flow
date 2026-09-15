@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile core owns reusable profile objects before
 ;;; backend-specific modules specialize filesystem, network, and resource policy.
 ;;; Invariant: profile objects must remain composable through POO inheritance.

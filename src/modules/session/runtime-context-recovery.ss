@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: models runtime context demand cells and recovery decisions as POO values.
 ;;; Invariant: recovery transitions preserve context identity and explicit evidence state.
 (import (only-in :clan/poo/object .ref object<-alist object?))

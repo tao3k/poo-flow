@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 //! Explicit qualification: a C-owned thread calls Lean's compiled library.
 //! This does not claim authorization-grant, timeout, or crash isolation closure.
 use cedar_policy::{Context, Entities, Policy, PolicyId, PolicySet, Request};

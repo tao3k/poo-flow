@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for workflow CI/CD declarations and runtime handoff facts.
 ;;; Invariant: CI/CD remains a workflow feature backed by POO objects.
 

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only multi-agent session topology objects.
 ;;; Invariant: agent topology names sessions, policies, and channels; it never
 ;;; dispatches providers, tools, memory stores, or messages.

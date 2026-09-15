@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: loop-engine runtime agent row/list projection helpers.
 ;;; Invariant: helpers are pure datum transforms over already-materialized
 ;;; receipt rows; they do not realize runtime sessions or tool calls.

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user-interface tests import only the public module-system facade.
 ;;; Invariant: leaf owner names must not become part of the user contract.
 ;;; Intent: this file protects the surface that module authors actually call.

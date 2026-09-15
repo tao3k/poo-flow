@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Gerbil-Bazel PR 29 Downstream Performance Receipt
 #+author: POO Flow maintainers
 #+date: 2026-07-25

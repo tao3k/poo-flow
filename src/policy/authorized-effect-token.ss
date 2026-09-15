@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Scheme POO owns semantic roots and one-shot effect capabilities.
 ;;; Invariant: validation and consumption are pure immutable transitions.
 (import (only-in :clan/poo/object .o .ref object<-alist)

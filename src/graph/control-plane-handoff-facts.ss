@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Control-plane handoff proof fact projection.
 ;;; - Keep serialized proof facts stable while control-plane objects evolve upstream.
 (export poo-flow-control-plane-handoff-contract->proof-facts)

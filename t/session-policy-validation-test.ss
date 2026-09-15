@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: effective multi-agent session policy validation.
 ;;; Invariant: validation inspects composed POO policies and bounded attempts;
 ;;; it does not run tools, hooks, providers, sandboxes, or communication.

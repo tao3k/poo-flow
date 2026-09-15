@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Observability: POO Flow feedback evidence object protocol.
 ;;; Invariant: diagnostics and receipts are Scheme-side evidence products;
 ;;; runtime manifests and proof rows are projections, not semantic owners.

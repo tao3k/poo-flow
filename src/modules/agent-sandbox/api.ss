@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Agent sandbox facade and task/flow opt-in live here.
 ;;; Boundary: profile, request, and bridge contracts live in leaf modules.
 ;;; Import contract: users opt in through =:poo-flow/src/modules/agent-sandbox= exports.

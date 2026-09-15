@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 from poo_flow_proof.lean_emit import manifest_to_lean
 from poo_flow_proof.model import canonical_loop_engine_manifest
 

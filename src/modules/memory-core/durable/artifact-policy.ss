@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable artifact policy owns the Scheme-side artifact/profile
 ;;; contract before runtime, database, and Marlin handoff layers consume it.
 ;;; Invariant: this module must keep profile objects POO-native while emitting

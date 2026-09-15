@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: CI/CD runtime command projection prepares declarative handoff
 ;;; payloads for runtime owners and never invokes CI commands from Scheme.
 ;;; Invariant: manifest summaries preserve declaration order and record only

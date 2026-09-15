@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Authoritative CI acceptance receipt (2026-07-19)
 
 GitHub Actions run =29685015556= at POO Flow revision

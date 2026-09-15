@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: encodes fixed-layout Runtime v0 batches from validated bundle events.
 ;;; Invariant: batching preserves canonical order and never changes event identity.
 (export #t)

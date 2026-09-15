@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Run: ./.devenv/devenv-profile-exec gxi t/scenarios/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)

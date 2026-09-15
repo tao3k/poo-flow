@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO Flow Agentic Control Plane Owner and Test Matrix
 #+subtitle: RFC 90--94 implementation ownership, validation lanes, and readiness gates
 #+author: POO Flow Contributors

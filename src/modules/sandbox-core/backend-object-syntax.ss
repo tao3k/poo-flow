@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic macros for repeated sandbox backend module object families.
 ;;; Invariant: macros expand to ordinary POO module objects and field contracts.
 

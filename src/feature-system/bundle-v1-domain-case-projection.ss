@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: projects closed domain cases into Bundle v1 descriptor rows.
 ;;; Invariant: missing capability, policy, strategy, adapter, and projection IDs stay explicit.
 (export +feature-bundle-v1-domain-case-projection-kind+

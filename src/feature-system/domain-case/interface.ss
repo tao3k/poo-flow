@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: DomainCase runtime closure, cache, instance, method, and projection operations.
 ;;; Invariant: public bindings from contracts.ss remain re-exported by this owner.
 

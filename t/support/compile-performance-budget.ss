@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Test-owned relative performance contract; no build execution or scheduling.
 ;;; Boundary: compare two same-host Scheme compile sample sets.
 ;;; Invariant: absolute wall-clock limits are not performance budgets.  The

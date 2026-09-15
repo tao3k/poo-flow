@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 40 Module Registry Scale Architecture
 ** 40.10 Problem
 The module-system facade became the largest build hotspot because it acted as a compile-time fan-in point. A public facade that imports concrete modules, large POO object owners, presentation code, and loader behavior will grow slower as the module catalog grows. A Doom Emacs sized catalog cannot depend on a facade that recompiles the world whenever the catalog gets wider.

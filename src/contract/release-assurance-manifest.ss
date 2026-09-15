@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: owns canonical release-assurance manifests and their content identity.
 ;;; Invariant: validation and digest construction use the same normalized manifest fields.
 (export #t)

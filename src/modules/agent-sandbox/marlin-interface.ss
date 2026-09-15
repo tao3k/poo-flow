@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Marlin-facing agent sandbox backend dispatch lives here.
 ;;; Boundary: this module selects backend interface manifests, not runtimes.
 ;;; Runtime contract: Marlin owns all native/Cube API execution after handoff.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Phased Slot Resolution, Contract Roles, and Failure Taxonomy
 #+subtitle: Structural projection, semantic admission, priority, lazy evaluation, runtime effects, and disclosure
 #+startup: overview

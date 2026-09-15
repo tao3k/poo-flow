@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: pure helpers for contract-boundary normalization.
 ;;; Invariant: this module owns contract data plumbing, not JSON Schema
 ;;; semantics, object contracts, or runtime execution.

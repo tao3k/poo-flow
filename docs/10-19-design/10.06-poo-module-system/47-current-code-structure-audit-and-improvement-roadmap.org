@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.47 Current Code Structure Audit And Complete Improvement Plan
 This document is the complete project advancement plan for the current =poo-flow= codebase. It is broader than a next-step list: it defines the target structure, workstreams, dependency order, application scenarios, deliverables, validation gates, and risk controls.
 

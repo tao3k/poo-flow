@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Producer-mode restoration Git-pin local acceptance receipt (2026-07-19)
 
 Revision =3ca0db5a557da483c28649dacc4f692fe017f7f9= restores the installed

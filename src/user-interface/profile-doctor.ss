@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Doom-style profile doctor diagnostics for module-system profiles.
 ;;; Invariant: diagnostics are data and never realize descriptors or runtimes.
 

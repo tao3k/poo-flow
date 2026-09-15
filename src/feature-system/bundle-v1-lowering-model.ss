@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: declarative Bundle v1 wire-model constructors and validators;
 ;;; lowering algorithms and arena mutation remain in their dedicated owners.
 (import (only-in :std/crypto/digest sha256)

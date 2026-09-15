@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Doom-style module context predicates and phase projections.
 ;;; Invariant: this owner reads descriptor metadata and never loads module files.
 ;;; Intent: flag and phase helpers stay out of descriptor construction code.

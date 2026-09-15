@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: pure graph runtime receipts for proof-backed UI cases.
 ;;; Invariant: this executor records graph semantics; it never calls tools/models.
 

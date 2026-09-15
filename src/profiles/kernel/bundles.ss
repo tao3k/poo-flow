@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: modules enabled by the upstream kernel profile.
 ;;; Invariant: every module owns its default flags and bundle in config.ss;
 ;;; this profile only composes those module-owned values.

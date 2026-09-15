@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile validation is the policy gate between inherited
 ;;; profile objects and runtime sandbox execution.
 ;;; Invariant: profile validation must reject unsafe partial profiles before a

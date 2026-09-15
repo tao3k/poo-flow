@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 //! Native owner of strict, source-bound Cedar authorization.
 //!
 //! The normal public model is Gerbil POO. This crate receives its explicit

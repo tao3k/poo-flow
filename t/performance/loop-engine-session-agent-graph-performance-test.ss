@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: loop-engine to session-agent graph projection performance gate.
 ;;; Invariant: projection stays report-only and does not duplicate topology
 ;;; outside the session module graph owner.

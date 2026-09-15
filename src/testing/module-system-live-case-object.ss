@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: inert test fixtures for downstream module-system live cases.
 ;;; Invariant: no sandbox execution or process work here.
 ;;; Note: this is not the module-system POO object model. That model is owned by

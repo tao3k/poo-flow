@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: evaluates G0 requirements and observations into a qualification decision.
 ;;; Invariant: resolution records missing evidence and never treats absence as acceptance.
 (import (only-in :clan/poo/object .ref object<-alist object?))

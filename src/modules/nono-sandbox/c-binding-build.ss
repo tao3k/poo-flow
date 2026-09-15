@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono-sandbox C binding build/probe metadata lives here.
 ;;; Boundary: this module describes host-side compile probes and include policy.
 ;;; Runtime contract: native loading lives in native.ss; irreversible apply is gated.

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: pure bounded inspection of existing Contract evidence.
 ;;; Never re-evaluates the observed candidate, reads a clock, or prints a value.
 (import (only-in :clan/poo/object .o .ref .slot? object?)

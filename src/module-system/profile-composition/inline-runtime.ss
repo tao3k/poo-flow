@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime helpers used by user-facing composition macros.
 ;;; Invariant: keep POO object construction and hook normalization outside
 ;;; macro parser modules so macro expansion remains shallow and reusable.

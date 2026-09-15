@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: converts accepted loop-engine intent into runtime request and receipt objects.
 ;;; Invariant: intent projection preserves policy, capability, proof, and session evidence.
 (import :poo-flow/src/core/runtime-protocol

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: loop-engine sandbox profile refs and handoff agreement receipts.
 ;;; Invariant: missing or invalid profiles become diagnostics, never runtime IO.
 

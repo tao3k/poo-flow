@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Canonical Composition Surface Closure Design
 
 * Status
@@ -10,6 +14,28 @@ every subsequent contextual-clause refinement below.  The unchecked delivery
 items remain open until their current source and execution evidence are
 recorded.  Neither this historical status nor a parser-only check closes the
 runtime qualification, Cedar authorization, or recovery gates of 45-08.
+
+** 2026-09-14 multi-module correction
+
+The normal user surface now admits several independently owned modules in one
+composition, matching the design in [[file:62-poo-flow-composition-interface.org][the composition interface]]:
+
+#+begin_src scheme
+(use-composition github-workflow
+  (modules
+    (use-module funflow as github
+      (profile github-ci))
+    (use-module sdlc as sdlc
+      (profile nasa-sdlc)))
+  (compose
+    (profile github github-ci)
+    (profile sdlc nasa-sdlc)))
+#+end_src
+
+Each row lowers to its own POO module binding. Profile references resolve only
+through declared aliases, and duplicate aliases fail during macro expansion.
+The older single-module examples below record the preceding implementation and
+must not be used to design a new User Interface.
 
 * Objective
 

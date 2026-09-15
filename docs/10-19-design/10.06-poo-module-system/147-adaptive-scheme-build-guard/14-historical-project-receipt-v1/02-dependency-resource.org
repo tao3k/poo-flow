@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Adaptive dependency-install resource receipt (2026-07-22)
 
 POO Flow consumes the pinned gerbil-bazel =install_dependencies= capability. Native =gxpkg deps --install= remains the package-lifecycle owner; gerbil-bazel only projects the validated =GERBIL_BUILD_CORES= budget, applies the memory cap, runs the child beneath the Scheme resource guard, and records the JSON receipt.

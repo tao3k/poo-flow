@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: nono-sandbox C binding tests cover ABI contracts and manifest projection.
 ;;; Invariant: tests do not load or execute the C library.
 

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: session-core presentation rows for the module system.
 ;;; Invariant: this module projects selected session-core features only; session
 ;;; values and graph receipts stay in src/modules/session.

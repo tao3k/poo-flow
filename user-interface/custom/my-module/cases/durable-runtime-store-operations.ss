@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream durable runtime store operation case.
 ;;; Invariant: this declares operation receipts only; Marlin owns all durable
 ;;; store side effects.

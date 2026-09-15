@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream durable runtime store backend handoff case.
 ;;; Invariant: this declares backend negotiation data only; Marlin owns the
 ;;; store implementation and all durable side effects.

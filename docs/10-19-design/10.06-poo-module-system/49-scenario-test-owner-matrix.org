@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.49 Scenario Test Owner Matrix
 This document is P0 for the execution plan in =10.06.48=. It makes implementation measurable by tying each real scenario to a user-facing surface, source owner, validation surface, status, and next work package.
 ** 10.06.49.10 Ground Rules

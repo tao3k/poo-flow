@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: serializes validated feature compositions as Bundle v1 images.
 ;;; Invariant: writing preserves the lowering result and canonical content identity.
 (export poo-flow-composition->bundle-v1-image

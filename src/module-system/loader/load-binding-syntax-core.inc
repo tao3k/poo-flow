@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Include-only compile-time helpers for load!/use-profile binding names.
 
 (def (poo-flow-load-binding-string-prefix? prefix value)

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Single source of truth for RFC45 module-system qualification ownership."""
 
 OWNER_MAP_SCHEMA = "poo-flow.module-system-qualification-ownership.v1"

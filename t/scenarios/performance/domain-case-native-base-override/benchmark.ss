@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ((benchmarkKind . scenario-ab)
  (schema . poo-flow.domain-case-native-base-override.v1)
  (sourcePath . "t/scenarios/performance/domain-case-native-base-override/scenario.ss")

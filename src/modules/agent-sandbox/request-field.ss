@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: agent-sandbox request field contracts live here.
 ;;; Boundary: this module validates named builder fields, not normalized requests.
 ;;; Runtime contract: accepted field names are inert data until request assembly.

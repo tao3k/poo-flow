@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tool-core catalog policy validation performance gate.
 ;;; Invariant: validation resolves POO tool specs and policy refs without
 ;;; runtime execution or backend startup.

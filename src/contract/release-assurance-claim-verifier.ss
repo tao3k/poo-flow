@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: verifies release-assurance claims against manifest evidence.
 ;;; Invariant: verification can reject claims but never upgrades their assurance level.
 (export #t)

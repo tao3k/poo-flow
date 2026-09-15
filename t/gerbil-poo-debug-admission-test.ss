@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: direct upstream debug consumption, never semantic evidence authority.
 ;;; All output uses in-memory ports and synthetic canaries, never real secrets.
 (import (only-in :std/test test-suite test-case check-equal?)

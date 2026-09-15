@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.82 Contract Migration Performance Evidence
 This document preserves historical utilities record-contract measurements and
 records qualified native =gerbil-poo= Type/Contract measurements.  The legacy

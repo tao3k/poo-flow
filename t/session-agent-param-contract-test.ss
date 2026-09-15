@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: POO-native AgentParam contracts derived from session topology.
 ;;; Invariant: AgentParam contracts are report-only policy/topology bindings;
 ;;; Scheme never opens providers, tools, memory stores, streams, or sandboxes.

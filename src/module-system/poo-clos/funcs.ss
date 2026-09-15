@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Reusable linear-time list and initarg algorithms for the POO CLOS module.
 ;;; Domain files own policy; this factor owns traversal and indexing mechanics.
 

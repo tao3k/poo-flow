@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime manifest tests cover durable CLI handoff consumption.
 ;;; Invariant: manifests remain request-bound so Rust can run the same argv.
 

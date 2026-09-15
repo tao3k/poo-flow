@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Digest-bound replay for an AI security framework mapping bundle.
 
 This is an internal proof verifier, not a public POO Flow module API.  It

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: projects policy evidence into named proof obligations and case vectors.
 ;;; Invariant: proof cases retain source identities and explicit discharge status.
 (import (only-in :clan/poo/object .o .ref object<-alist)

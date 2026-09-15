@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session selector receipts.
 ;;; Invariant: selector receipts describe routing intent only; Scheme never
 ;;; scores candidates, calls a model, dispatches workflows, or mutates sessions.

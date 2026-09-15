@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.48 Execution Plan
 This is the executable advancement plan for =poo-flow=. It starts from the structure audit in =10.06.47= and turns the project direction into ordered work packages.
 

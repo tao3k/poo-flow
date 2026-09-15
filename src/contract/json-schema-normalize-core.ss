@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: owns the core JSON Schema normalization parser entry points and
 ;;; parser registry plumbing used by the contract harness.
 ;;; Invariant: callers should trust this owner for parser-visible diagnostics

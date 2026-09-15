@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: native POO observation, authoring, quality, and development
 ;;; performance interface. Debug effects remain opt-in function calls; loading
 ;;; this interface only makes their bounded contracts available by default.

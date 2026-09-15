@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: lowers POO feature compositions into the fixed Bundle v1 layout.
 ;;; Invariant: symbol interning and row emission are deterministic for canonical input.
 (export +feature-bundle-v1-schema+

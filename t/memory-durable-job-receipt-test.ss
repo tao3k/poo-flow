@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable memory job receipts for Rust/Marlin handoff.
 ;;; Invariant: Scheme validates and projects memory jobs only; it never recalls,
 ;;; commits, consolidates, persists, or repairs memory stores.

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable policy manifests keep the Scheme control-plane receipt stable
 ;;; across runtime handoff code and parser-owned policy checks.
 ;;; Invariant: this module must describe durable policy surfaces without

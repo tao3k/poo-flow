@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: governor policy projection, validation, and Marlin contract facts.
 ;;; Invariant: runtime snapshots are inputs; this owner never locks or mutates them.
 

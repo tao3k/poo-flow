@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Bounded diagnostic matrix for the Gerbil POO dynamic slot leak.
 
 This runner is intentionally opt-in. Use --list to inspect the matrix and

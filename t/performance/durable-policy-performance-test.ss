@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable policy projection hot path stays bounded.
 ;;; Invariant: authoring stays POO-native; runtime handoff sees struct receipts
 ;;; and bounded alist serialization.

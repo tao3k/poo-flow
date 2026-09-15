@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: large native POO profile-library composition performance helpers.
 ;;; Invariant: keeps 1000+ profile object construction outside macro-expansion
 ;;; scenario modules so macro benchmarks, native POO object families,

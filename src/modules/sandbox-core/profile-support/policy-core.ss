@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox policy core owns shared policy facts that backend and
 ;;; profile modules inherit through POO object composition.
 ;;; Invariant: core policy defaults must remain backend-neutral and safe for

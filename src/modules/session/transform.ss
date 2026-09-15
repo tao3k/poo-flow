@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session transform objects.
 ;;; Invariant: transforms derive session values and handoff receipts; they never
 ;;; execute providers, tools, memory stores, selectors, or sandbox runtimes.

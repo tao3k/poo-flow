@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Frozen identities for the POO Flow Runtime Language ABI promotion lane."""
 
 REQUEST_SCHEMA = "poo-flow.runtime-language.promotion-request.1"

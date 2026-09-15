@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Profiles Strategy Facets and Pure Demand Boundary
 #+subtitle: Construction, demand resolution, evidence projection, and externally supplied live evaluation
 #+startup: overview

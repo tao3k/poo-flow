@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: executable admission evidence for the pinned gerbil-poo surface.
 ;;; This test exercises upstream mechanics directly; it does not introduce a
 ;;; POO Flow object, dispatch, precedence, or inherited-computation adapter.

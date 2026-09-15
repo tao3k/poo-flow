@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime helpers for user-facing session topology syntax.
 ;;; Invariant: syntax modules expand to these pure constructors, not directly
 ;;; to the wider session object graph.

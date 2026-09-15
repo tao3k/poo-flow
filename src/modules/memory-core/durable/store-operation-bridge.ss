@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: bridge durable rows into runtime-store operation receipts.
 ;;; Invariant: this is a functional projection layer only; Scheme does not
 ;;; append logs, claim leases, retain artifacts, or attach sandbox handles.

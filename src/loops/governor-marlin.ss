@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Marlin-facing loop governor ABI projections live here.
 ;;; Responsibility: publish ABI manifests from validated governor contracts.
 ;;; Responsibility: publish Marlin request envelopes for =govern-loop=.

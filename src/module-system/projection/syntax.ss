@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic macros for module-system final alist projections.
 ;;; Invariant: generated functions are inspection, receipt, or presentation
 ;;; boundaries only; module activation and resolver logic stay explicit.

@@ -1,4 +1,9 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Module boundary: workflow-CI presentation code owns runtime handoff projection
+
 ;;; slots while the facade keeps only scenario selection.
 
 (export poo-flow-user-config-workflow-cicd-focused-presentation)

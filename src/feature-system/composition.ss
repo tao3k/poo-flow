@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: composes resolved feature manifests into an immutable plan object.
 ;;; Invariant: composition order is explicit and preserves POO role precedence.
 (import (only-in :clan/poo/object .ref object<-alist)

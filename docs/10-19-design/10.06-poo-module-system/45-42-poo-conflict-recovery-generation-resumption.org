@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO Conflict Recovery, Generation Transition, and Bounded Resumption
 #+subtitle: Pure conflict evidence, live recovery authority, and continuable Scheme execution
 #+startup: overview

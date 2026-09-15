@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: generates the approved POO object-family predicate and accessor surface.
 ;;; Invariant: expansion produces ordinary POO-native bindings with no runtime registry.
 (export defpoo-object-family)

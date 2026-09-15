@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared durable policy POO capability objects.
 ;;; Invariant: this layer validates and projects durable intent only; Rust or
 ;;; Marlin owns fact logs, checkpoints, indexes, leases, replay, and repair.

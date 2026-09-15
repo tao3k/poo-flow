@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: CubeSandbox interface projection lives in this backend leaf.
 ;;; Boundary: this module emits API lifecycle manifests only.
 ;;; Runtime contract: Marlin owns Cube API calls, remote sessions, and snapshots.

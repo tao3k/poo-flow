@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: structured type facts for POO Flow validation layers.
 ;;; Invariant: facts are Scheme control-plane data; Lean and runtime payloads
 ;;; are final projections, not semantic owners.

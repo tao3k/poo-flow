@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono-sandbox C binding descriptor contract projection lives here.
 ;;; Boundary: this module emits ABI descriptor data only.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.

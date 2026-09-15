@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: workflow CI/CD pipeline run/result projection for user config.
 ;;; Invariant: this owner emits handoff-readiness data and never executes CI.
 

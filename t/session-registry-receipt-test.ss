@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session registry receipts.
 ;;; Invariant: registry receipts index declared sessions; they are not runtime
 ;;; stores and never retain live execution state.

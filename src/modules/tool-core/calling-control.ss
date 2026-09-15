@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tool-calling control owns the policy-visible proof surface between
 ;;; Scheme workflow intent and runtime tool execution.
 ;;; Invariant: validation proof facts must stay deterministic and independent

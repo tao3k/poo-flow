@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.59.10 Purpose
 This document records the proof gate for AI strategy/policy lifecycle safety.
 It covers the path from a created session to sandbox placement, loop policy,

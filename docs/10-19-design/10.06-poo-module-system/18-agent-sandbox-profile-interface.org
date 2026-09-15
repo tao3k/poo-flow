@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.18 Agent Sandbox Profile Interface
 ** 10.06.18.10 Bass-Derived User Interface Rule
 Bass keeps user work visible as small, inspectable recipes before a runtime executes them. The important lesson for =poo-flow= sandbox work is not the Bass language implementation. The lesson is the user-facing shape:

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: projects user loop-engine configuration into runtime-owned inputs.
 ;;; Invariant: projection is pure and leaves execution to the runtime handoff boundary.
 (import (only-in "../funflow/config.ss"

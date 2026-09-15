@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable runtime store contract receipts for Rust/Marlin handoff.
 ;;; Invariant: Scheme validates and projects store contracts only; the runtime
 ;;; owns storage, locking, leases, fsync, backfill, replay, and side effects.

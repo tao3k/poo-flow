@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: turns canonical organization bundles into evidence-bearing contracts.
 ;;; Invariant: contract identity is derived from the normalized semantic bundle.
 (export #t)

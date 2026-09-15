@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Pure POO values governed by existing CLOS class and effective-slot metadata.
 ;;; These are snapshots, not mutable CLOS lifecycle instances.
 (import (only-in :clan/poo/object .o .ref .slot? object? compute-precedence-list!)

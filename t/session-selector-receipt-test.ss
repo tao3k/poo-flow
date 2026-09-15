@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only selector receipts over workflow/transform candidates.
 ;;; Invariant: Scheme never scores candidates, calls a model, dispatches a
 ;;; workflow, or returns an EmptyWorkflow; it emits pending routing receipts.

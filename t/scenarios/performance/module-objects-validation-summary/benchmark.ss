@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ((benchmarkKind . scenario-e2e)
  (max_total . 20ms)
  (target_total . 15ms)

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable artifact object construction, visibility, and lifecycle.
 ;;; Invariant: this module owns artifact policy data only; validation receipts
 ;;; and runtime handoff manifests stay in durable-artifact-policy.

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Proof fact wire schema validators and FFI projection.
 ;;; - Keep serialized proof facts bounded before they cross the external verifier boundary.
 (export poo-flow-proof-fact-ref

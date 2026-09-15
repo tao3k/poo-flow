@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused tests for loop-engine POO-native policy extensions.
 ;;; Invariant: extension receipts are report-only and runtime-owned by Marlin.
 

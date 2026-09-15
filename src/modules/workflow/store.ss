@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Store/CAS workflow alignment lives in this workflow module.
 ;;; Boundary: core provides generic task, strategy, config, and adapter slots.
 ;;; Import contract: users opt in through =:poo-flow/src/modules/workflow/store= exports.

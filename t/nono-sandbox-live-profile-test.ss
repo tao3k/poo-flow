@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: live nono profile checks use native FFI, not the nono CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by package tests.
 

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: sandbox resource bindings live in this domain module.
 ;;; Boundary: backend extensions consume these POO data objects and project them
 ;;; into Docker, Cube, nono, or Marlin-specific request shapes.

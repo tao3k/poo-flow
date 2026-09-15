@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: utilities/type-contract benchmark gates cover hot Scheme paths.
 ;;; Invariant: benchmark thunks exclude gxi startup, package install, Lean
 ;;; execution, Marlin runtime work, and external IO.

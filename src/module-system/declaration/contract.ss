@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: contract gate for public `use-module` declarations.
 ;;; Invariant: macros may stay ergonomic, but every expansion must produce
 ;;; concrete module selections rather than category aliases or loose data.

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Proof gate receipt projection.
 ;;; - Convert module receipts into bounded proof facts before bundling verifier inputs.
 (import :poo-flow/src/proof/proof-gate-bundle

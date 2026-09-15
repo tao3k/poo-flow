@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: explicit effectful DEVELOPMENT output over aggregate projections.
 ;;; Upstream owns tracing and typed printing. No global hook or tracer is copied.
 (import (only-in :clan/base λ)

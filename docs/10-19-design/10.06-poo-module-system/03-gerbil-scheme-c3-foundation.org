@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.03 Gerbil Scheme C3 Foundation
 ** 10.06.03.10 Why Gerbil Scheme Matters
 =poo-flow= uses Gerbil Scheme because the control plane benefits from a Lisp where executable configuration, inspectable data, and object composition are available in the same language.

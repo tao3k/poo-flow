@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable runtime store backend negotiation and Marlin handoff ABI.
 ;;; Invariant: Scheme selects and projects backend contracts only; the runtime
 ;;; owns append, fsync, leases, checkpoint IO, index rebuild, and repair jobs.

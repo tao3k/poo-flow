@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 
 (import :std/test
         (only-in :std/srfi/13 string-contains)
@@ -8,7 +12,7 @@
                  testing-interface-run-test-batch!)
         (only-in :poo-flow/src/module-system/observability/testing-extension
                  poo-flow-native-observability-enabled?
-                 poo-flow-testing-heartbeat-interval-seconds
+                 make-poo-flow-testing-observability-profile
                  poo-flow-testing-observability-extension))
 
 (export testing-observability-extension-test)
@@ -52,11 +56,12 @@
           (lambda () (setenv "GERBIL_BUILD_VERBOSE" "1"))
           (lambda ()
             (parameterize
-                ((current-error-port port)
-                 (poo-flow-testing-heartbeat-interval-seconds 0.01))
+                ((current-error-port port))
               (testing-interface-call-with-operation
                (poo-flow-testing-observability-extension
-                +asp-testing-interface+)
+                +asp-testing-interface+
+                (make-poo-flow-testing-observability-profile
+                 'testing/fast-heartbeat 0.01))
                'native-test-batch
                (lambda () (thread-sleep! 0.03))))
             (let (output (get-output-string port))

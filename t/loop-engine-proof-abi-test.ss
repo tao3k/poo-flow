@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: proof ABI tests pin the Scheme-to-Lean proof-case vector shape.
 ;;; Invariant: these tests do not execute runtime work or call the proof checker.
 

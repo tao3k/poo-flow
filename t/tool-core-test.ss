@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: POO-native tool specs and policy-catalog validation.
 ;;; Invariant: Scheme builds tool handoff receipts only; no tool runtime starts.
 

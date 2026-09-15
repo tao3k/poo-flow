@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO 核心约束下的 Gerbil 宏治理
 #+subtitle: 公共宏准入、展开闭包与组合语义权力边界
 #+startup: overview

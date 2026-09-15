@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: projects resolved feature bindings into inert runtime handoff plans.
 ;;; Invariant: handoff planning records requirements but performs no runtime effects.
 (import (only-in :clan/poo/object

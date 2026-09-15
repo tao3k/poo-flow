@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: native nono FFI live probes and receipts.
 ;;; Boundary: this module calls the package-managed Gambit FFI shim.
 ;;; Runtime contract: irreversible sandbox apply is not performed by default.

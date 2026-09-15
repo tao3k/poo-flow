@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: boolean fast path for normalized JSON Schema value validation.
 ;;; Invariant: this owner returns booleans only. Diagnostics and receipts stay
 ;;; in json-schema-validate.ss so the hot path avoids allocation.

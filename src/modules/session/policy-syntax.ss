@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic macros for repeated session policy object families.
 ;;; Invariant: macros expand to ordinary public constructors over POO-native
 ;;; session policy objects. They are internal generation helpers, not a user DSL.

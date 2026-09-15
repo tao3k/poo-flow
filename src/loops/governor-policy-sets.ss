@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: normalizes governor policy descriptors into membership sets.
 ;;; Invariant: set construction preserves descriptor action identities and equality semantics.
 (import :gerbil/gambit

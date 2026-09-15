@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: agent-sandbox bridge envelope projection lives in this module.
 ;;; Boundary: core runtime adapters provide the generic Rust envelope contract.
 ;;; Boundary: this module adds extension fields for Marlin-compatible runtimes.

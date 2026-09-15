@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 /* Thin ABI owner for the Lean-linked AOT Runtime Host. Rust owns the Host
  * protocol; this file owns Lean initialization and Lean object lifetimes. */
 #include <lean/lean.h>

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: emit POO Flow object contracts from normalized JSON Schema IR.
 ;;; Optimization boundary: this module builds predicate closures once while
 ;;; emitting contracts; value validation reuses those closures without walking

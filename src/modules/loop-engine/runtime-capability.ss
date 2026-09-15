@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: loop-engine capability receipt projection and registry lookup.
 ;;; Invariant: capability receipts are inert handoff facts; this owner never
 ;;; probes, opens, validates, or executes a runtime backend.

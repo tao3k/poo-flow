@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Real Module admission -> native observation -> explanation -> upstream debug.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :std/srfi/13 string-contains)

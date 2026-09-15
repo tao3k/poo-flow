@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable artifact validation and policy receipt projection.
 ;;; Invariant: validation compares already-built POO objects and emits bounded
 ;;; policy receipts; it does not create runtime manifests or perform handoff.

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime-facing projection for user-interface module fragments.
 ;;; Invariant: runtime adapters load user fragments through the same
 ;;; `use-module` surface; module-specific projection remains behind this

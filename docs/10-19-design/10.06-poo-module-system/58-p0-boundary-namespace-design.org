@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.58 P0 Boundary Namespace Design
 This document defines the P0 naming system for =poo-flow= boundaries and namespaces.
 

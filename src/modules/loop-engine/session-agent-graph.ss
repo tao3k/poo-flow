@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: lightweight loop-engine session-agent graph projection.
 ;;; Invariant: this owner builds report-only graph rows without importing the
 ;;; full runtime handoff stack or user config facades.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
 #+author: POO Flow
 #+status: Historical downstream design; current guard owned by ASP Gerbil Scheme

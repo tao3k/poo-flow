@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: config-session syntax aggregates the session module macro facade
 ;;; while keeping category/module configuration separate from runtime state.
 ;;; Invariant: this owner must preserve the compact init/config shape expected

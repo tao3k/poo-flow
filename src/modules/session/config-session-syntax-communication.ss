@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: config-session communication syntax owns channel authoring before
 ;;; session runtime receipts materialize message routing.
 ;;; Invariant: channel expansion must preserve explicit session ids so policy

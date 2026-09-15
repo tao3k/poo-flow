@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Versioned build-source identity and comparable performance receipts
 
 Performance measurement uses the native Gerbil package lifecycle.  POO Flow no

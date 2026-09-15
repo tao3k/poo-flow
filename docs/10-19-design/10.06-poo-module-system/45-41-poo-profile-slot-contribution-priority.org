@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO Profile Slot Contribution Priority
 #+subtitle: Exact precedence, inheritance boundaries, deterministic composition, and lazy shadowing
 #+startup: overview

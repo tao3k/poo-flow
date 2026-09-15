@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session communication receipts.
 ;;; Invariant: communication receipts describe routing intent only; Scheme does
 ;;; not deliver messages or mutate source/target sessions.

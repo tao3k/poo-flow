@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: JSON Schema validation keyword constraints.
 ;;; Invariant: this owner stores small constraint metadata and compiles it into
 ;;; predicates; it does not parse full schemas or emit object contracts.

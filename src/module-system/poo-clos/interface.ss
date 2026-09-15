@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Public POO-native CLOS facade.  Syntax declarations are a later factor.
 
 (import "types.ss" "objects.ss" "funcs.ss" "generic-evolution.ss" "classes.ss"

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: workflow CI/CD check maps are inert POO control-plane data.
 ;;; Invariant: tests prove receipts and runtime readiness without execution.
 

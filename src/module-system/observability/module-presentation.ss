@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: strict observability data for module-system debugging.
 ;;; Invariant: observations are strict POO values without lazy slots or runtime adapters.
 ;;; Intent: make recursive presentation paths visible without participating in them.

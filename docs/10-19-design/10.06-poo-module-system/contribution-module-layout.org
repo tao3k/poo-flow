@@ -21,11 +21,15 @@ contribution registry:
  '(adr decision-kind diataxis sdlc))
 #+end_src
 
-POO Flow's default PackageSpec contains exactly the POO Flow-maintained
-=src/modules/<module-name>/interface.ss= roots.  =build.ss= obtains them by
-invoking the same =poo-flow-load-modules= form used for contributor and user
-collections; framework and implementation files enter through native Gerbil
-imports, so the build owns no second public-root list.
+POO Flow's default PackageSpec is the clean-image bootstrap: ten stable
+framework entrypoints and zero catalog targets. =build.ss= imports only ASP's
+Build API because importing a =:poo-flow= loader before the package exists is a
+self-dependency that fails in a hermetic Bazel image. After bootstrap, module
+selection resolves through the ordered POO load path. Available
+=src/modules/<module-name>/interface.ss= roots remain catalog data, so adding
+100 or 1,000 unselected modules does not widen the package bootstrap.
+User-owned and contributor-owned selections stay in their independent loading
+and build lanes.
 The root-owned =build-contribute= adapter applies =poo-flow-load-modules= discovery
 to each direct =modules/<module-name>/= tree. The loader admits exactly the
 module's public =interface.ss=; native Gerbil imports close over its internal
@@ -237,12 +241,20 @@ catalog data rather than being turned into lifecycle instances.
 * Large source catalogs and warm-build cost
 Native =std/make= expands selected source modules while determining dependencies
 even when no output needs recompilation. Public-entry PackageSpec projection
-also imports the complete local module context before the =std/make= handoff.
+imports only the stable framework roots during clean-image bootstrap.
 A large data catalog should use one shared POO constructor over ordinary quoted
 source data, instead of emitting a full =.o= macro declaration for every row.
 Atomic test builds avoid the redundant public-entry projection because their
 one file is already explicitly selected. No new scheduler or cache is involved,
 and =std/make= remains responsible for source currentness and compilation.
+
+Scale receipts keep catalog size =N= distinct from selected module count =K=.
+The 100 and 1,000 module cases project source-ref data without forcing a loader
+and report =selected-build-target-count=0=. Timing is emitted as Observability
+evidence rather than compared with a machine-specific constant in a semantic
+unit test. Test observation cadence is selected by a native POO Observability
+Profile, so CI and user profiles can refine heartbeat timing without editing
+the observer.
 
 Atomic tests must also keep their runtime import closure proportional to the
 capability under test. A test that needs =sdlc-project= imports =objects.ss=;

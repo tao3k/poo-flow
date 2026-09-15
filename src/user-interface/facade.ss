@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: compatibility facade for the downstream POO Flow user interface.
 ;;; Invariant: Loader mechanics flow in from module-system; concrete module
 ;;; APIs are composed here and never re-exported by the mechanism facade.

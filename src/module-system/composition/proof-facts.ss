@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Composition proof fact projection for module-system contracts.
 ;;; - Keep bounded proof rows separate from module execution and runtime handoff.
 

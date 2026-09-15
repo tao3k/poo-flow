@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: lightweight composition benchmark gates.
 ;;; Invariant: composition macro scenarios should not import the whole
 ;;; performance support family just to load a few benchmark fixtures.

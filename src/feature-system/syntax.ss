@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: exposes hygienic syntax for declaring POO-native features and profiles.
 ;;; Invariant: macros expand to ordinary model constructors without owning runtime behavior.
 (import :poo-flow/src/feature-system/model)

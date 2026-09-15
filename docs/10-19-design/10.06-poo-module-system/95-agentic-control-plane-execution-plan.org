@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: 10.06.95 Agentic Control Plane Execution Plan
 #+SUBTITLE: Ordered Work Packages For RFC 90–94
 #+OPTIONS: toc:3 num:t

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow tutorial alignment spec rows and gate proof catalog.
 ;;; Invariant: this owner stores audit metadata only and never runs tests.
 

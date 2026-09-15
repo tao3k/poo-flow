@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: RFC 150 — Runtime Language ABI Lane for Protocol-Person Promotion
 #+subtitle: Canonical cross-language execution contract; Marlin and Python are implementations
 #+author: POO Flow

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable artifact profile objects and database profile objects.
 ;;; Invariant: this module returns POO-native objects and performs no runtime
 ;;; storage, database, artifact lifecycle, or Marlin handoff work.

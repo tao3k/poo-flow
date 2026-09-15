@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox cases prove declarations stay data-only before realization.
 ;;; Backend descriptors are inspected as upstream module facts, not executed here.
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.31 Profile Object User Interface
 ** 10.06.31.10 Decision
 The primary =user-interface/custom/*/profiles/*.ss= surface is Gerbil POO

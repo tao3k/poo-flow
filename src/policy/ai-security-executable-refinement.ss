@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Provider-neutral AI-security executable refinement.
 ;;;
 ;;; Boundary: provider adapters normalize logs into the POO-native envelope.

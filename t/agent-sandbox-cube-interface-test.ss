@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Cube interface tests cover Marlin-facing lifecycle manifests.
 ;;; Invariant: tests do not call Cube APIs or create remote sandboxes.
 
