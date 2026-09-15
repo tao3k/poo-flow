@@ -52,6 +52,7 @@ gerbil_project_test(
     name = "package_spec_root_mode_ab_test",
     size = "medium",
     srcs = [
+        "//:scheme_build_sources",
         "//:t/package-spec-root-mode-ab-scenario-test.ss",
         "//:t/scenarios/building/package-spec-root-mode-ab/closure-build.ss",
         "//:t/scenarios/building/package-spec-root-mode-ab/contract.ss",
