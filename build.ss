@@ -14,7 +14,9 @@
 ;;; This is the package bootstrap closure. build.ss cannot import a :poo-flow
 ;;; module before the package exists in a clean Bazel/gxpkg image. Concrete
 ;;; module discovery and selection begin after these stable interfaces exist;
-;;; catalog size therefore does not widen this bootstrap BuildSpec.
+;;; catalog size therefore does not widen this bootstrap BuildSpec. Advanced
+;;; init syntax, configuration discovery and declaration cases are registered
+;;; lazy framework sources; the ordinary init.ss path does not compile them.
 (def +framework-public-entry-modules+
   '("src/core/api.ss"
     "src/module-system/api.ss"
@@ -22,10 +24,7 @@
     "src/loops/agent.ss"
     "src/profiles/kernel/interface.ss"
     "src/module-system/observability/testing-extension.ss"
-    "src/user-interface/facade.ss"
-    "src/user-interface/init-syntax.ss"
-    "src/user-interface/config-discovery-syntax.ss"
-    "src/user-interface/declaration-case.ss"))
+    "src/user-interface/facade.ss"))
 
 (def +public-entry-modules+
   +framework-public-entry-modules+)

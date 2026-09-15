@@ -60,6 +60,16 @@ Focused receipts after the split:
 - historical compiled CLI experiments validated that bypassing package-env startup matters, but the current focused test gate is native =gxtest=.
 - =gxtest t/module-system-lazy-loader-test.ss=: validates native focused tests, =real 8.94s=.
 
+The clean Bazel bootstrap was also reduced from ten roots to seven by removing
+the three framework sources already governed as lazy registry entries:
+=init-syntax.ss=, =config-discovery-syntax.ss= and =declaration-case.ss=. In the
+same checkout, the ten-root Gerbil action used 107.456 seconds and peaked at
+5,363,187,712 bytes. The seven-root action used 23.746 seconds and peaked at
+2,872,836,096 bytes; total Bazel wall time was 44.836 seconds. Focused consumers
+then imported and exercised all three lazy owners successfully. This receipt
+measures one cold comparison and establishes the ownership correction; future
+performance claims use repeated scenario statistics.
+
 The package-env receipt is the removed cost center. Native runner startup is sub-second; focused tests remain bounded by =gxtest= and the module/test load graph, while the millisecond gate lives inside the registry scenario so the test distinguishes module catalog expansion from runner startup and Gerbil compilation work.
 
 ** 40.55 Fast Gate Entrypoint
@@ -75,6 +85,8 @@ Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-o
 Reject future changes that do any of the following:
 - import =src/modules/*= from =src/module-system/facade.ss=;
 - import =src/modules/*= from =src/user-interface/facade.ss=;
+- promote a registry-owned lazy framework source into the package bootstrap
+  without an explicit consumer and a cold-build receipt;
 - move loader backends, resolver activation, or extension graph logic into =module-registry.ss=;
 - use filesystem scans as the default registry expansion path;
 - make tests pass by relying on facade to leak concrete owner symbols.

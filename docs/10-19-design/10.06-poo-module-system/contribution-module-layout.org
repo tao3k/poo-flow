@@ -21,13 +21,18 @@ contribution registry:
  '(adr decision-kind diataxis sdlc))
 #+end_src
 
-POO Flow's default PackageSpec is the clean-image bootstrap: ten stable
+POO Flow's default PackageSpec is the clean-image bootstrap: seven stable
 framework entrypoints and zero catalog targets. =build.ss= imports only ASP's
 Build API because importing a =:poo-flow= loader before the package exists is a
 self-dependency that fails in a hermetic Bazel image. After bootstrap, module
 selection resolves through the ordered POO load path. Available
 =src/modules/<module-name>/interface.ss= roots remain catalog data, so adding
 100 or 1,000 unselected modules does not widen the package bootstrap.
+=init-syntax.ss=, =config-discovery-syntax.ss= and =declaration-case.ss= are
+registered framework source refs rather than bootstrap targets. The ordinary
+=user-interface/init.ss= path uses the smaller =init-declaration-syntax.ss=
+owner, so those advanced authoring and presentation sources compile only for a
+consumer that imports them.
 User-owned and contributor-owned selections stay in their independent loading
 and build lanes.
 The root-owned =build-contribute= adapter applies =poo-flow-load-modules= discovery
