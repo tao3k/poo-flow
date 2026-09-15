@@ -103,12 +103,19 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Verify selected Gerbil capability
+        env:
+          GERBIL_INSTALL_KIND: ${{ matrix.install }}
         shell: bash
         run: |
           set -euo pipefail
           gerbil --version
           gxi -v
-          gxi -e '(begin (import :std/make :std/text/json) (displayln "darwin-gerbil-ready"))'
+          gxi -e '(begin (import :std/make) (displayln "darwin-std-make-ready"))'
+          if [[ "$GERBIL_INSTALL_KIND" == "release" ]]; then
+            gxi -e '(begin (import :std/encoding/json) (displayln (json->string (string->json "{\"generation\":19}"))))'
+          else
+            gxi -e '(begin (import :std/text/json) (displayln "darwin-json-v18-ready"))'
+          fi
 
       - name: Restore exact Gerbil dependency cache
         id: dependency-cache
@@ -152,7 +159,7 @@ jobs:
           set -euo pipefail
           gerbil clean
           gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
-            cold "$TOOLCHAIN" "$RUNNER_TEMP/cold-build.json"
+            cold "$TOOLCHAIN" "$RUNNER_TEMP/cold-build.ss"
 
       - name: Measure warm POO Flow build
         env:
@@ -161,10 +168,15 @@ jobs:
         run: |
           set -euo pipefail
           gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
-            warm "$TOOLCHAIN" "$RUNNER_TEMP/warm-build.json"
+            warm "$TOOLCHAIN" "$RUNNER_TEMP/warm-build.ss"
 
-      - name: Validate native JSON HashTable path
+      - name: Validate v0.18 native JSON HashTable path
+        if: matrix.install == 'homebrew'
         run: gerbil env gxtest ./t/funflow-github-ci-json-schema-contract-test.ss
+
+      - name: Validate v0.19 JSON capability
+        if: matrix.install == 'release'
+        run: gerbil env gxi -e '(begin (import :std/encoding/json) (unless (hash-table? (string->json "{\"native\":true}" (JSONReadOptions object-as-hash: #t))) (error "v19 JSON object-as-hash must decode to a native HashTable")))'
 
       - name: Publish build comparison summary
         if: always()
@@ -175,11 +187,13 @@ jobs:
           {
             echo "### Darwin Gerbil build: $TOOLCHAIN"
             echo
-            if [[ -s "$RUNNER_TEMP/cold-build.json" ]]; then
-              echo "- cold: $(jq -r '.elapsedMs' "$RUNNER_TEMP/cold-build.json") ms"
+            if [[ -s "$RUNNER_TEMP/cold-build.ss" ]]; then
+              cold_ms="$(sed -nE 's/.*\(elapsed-ms \. ([0-9.]+)\).*/\1/p' "$RUNNER_TEMP/cold-build.ss")"
+              echo "- cold: ${cold_ms:-receipt-unavailable} ms"
             fi
-            if [[ -s "$RUNNER_TEMP/warm-build.json" ]]; then
-              echo "- warm: $(jq -r '.elapsedMs' "$RUNNER_TEMP/warm-build.json") ms"
+            if [[ -s "$RUNNER_TEMP/warm-build.ss" ]]; then
+              warm_ms="$(sed -nE 's/.*\(elapsed-ms \. ([0-9.]+)\).*/\1/p' "$RUNNER_TEMP/warm-build.ss")"
+              echo "- warm: ${warm_ms:-receipt-unavailable} ms"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -189,7 +203,7 @@ jobs:
         with:
           name: darwin-gerbil-build-${{ matrix.toolchain }}
           path: |
-            ${{ runner.temp }}/cold-build.json
-            ${{ runner.temp }}/warm-build.json
+            ${{ runner.temp }}/cold-build.ss
+            ${{ runner.temp }}/warm-build.ss
           if-no-files-found: warn
           retention-days: 14
