@@ -57,18 +57,11 @@ jobs:
         run: |
           set -euo pipefail
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install gcc jq openssl pkg-config sqlite zlib
-
-          gcc_prefix="$(brew --prefix gcc)"
-          gcc_bin="$({
-            find "$gcc_prefix/bin" -maxdepth 1 -type f -name 'gcc-[0-9]*'
-          } | awk -F- '{print $NF "\t" $0}' | sort -n | tail -n 1 | cut -f2-)"
-          test -x "$gcc_bin"
-          echo "GERBIL_GCC=$gcc_bin" >> "$GITHUB_ENV"
+          brew install jq openssl pkg-config sqlite zlib
 
           openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
           echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
-          "$gcc_bin" --version
+          cc --version
 
       - name: Install v0.18.2 Homebrew capability
         if: matrix.install == 'homebrew'
