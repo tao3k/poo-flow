@@ -181,8 +181,8 @@ that boundary.  A valid slot remains owned by ASP revision
 the complete production closure before handing the BuildSpec to =std/make=.
 
 The =package-spec-root-mode-ab= Scenario retains both unwrapped projection lanes
-as diagnostic evidence.  Four direct =modules= targets project faster but are
-an incomplete package; the production entry therefore uses
+as diagnostic evidence.  Direct =modules= targets project faster but are an
+incomplete package; the production entry therefore uses
 =public-entry-modules= and reports its full target count.
 
 * Development memory diagnosis

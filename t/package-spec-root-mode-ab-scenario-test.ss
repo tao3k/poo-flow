@@ -45,6 +45,11 @@
                      (contract-ref contract 'minimumClosureTargetCount))
                  => #t)
           (check (> (length closure-spec) (length modules-spec)) => #t)
+          (check
+           (andmap
+            (lambda (path) (and (member path closure-spec) #t))
+            (contract-ref contract 'requiredPublicOwners))
+           => #t)
           (check (< modules-ns
                     (contract-ref contract 'maxModulesSpecNanoseconds))
                  => #t))))))

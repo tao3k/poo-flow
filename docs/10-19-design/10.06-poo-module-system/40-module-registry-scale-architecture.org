@@ -130,9 +130,10 @@ When a new module family is needed, add manifest data to =module-registry.ss=, a
 
 =build.ss= is the unique package build entry.  It declares one POO PackageSpec
 and delegates to the same ASP Build API and =std/make= executor for development,
-CI, Bazel, and release builds.  Its =public-entry-modules= slot names four
-stable interfaces: core API, module-system API, feature-system interface, and
-User Interface facade.  ASP revision
+CI, Bazel, and release builds.  Its =public-entry-modules= slot names nine
+stable public owners: the four framework interfaces plus Bundle v1 writing,
+Runtime v0 schema, Cedar authority, proof-vector, and runtime-symbol owners
+used directly by published bindings.  ASP revision
 =3f5fb71c59d5ebb3232d9c0cca1f463ccae72062= projects the native import
 closure and =std/make= compiles that result.  The entry contains no
 =all-gerbil-modules= scan, package-local owner import, test PackageSpec, or
@@ -163,19 +164,24 @@ and =user-interface/custom/my-module/config.ss= explicitly; atomic tests still
 load the user-owned configuration by its relative source boundary.
 =build.ss= remains the sole =defbuild-script= entry.  The default native source
 catalog projected 512 targets and its isolated Bazel action exceeded the local
-180-second bound.  Passing four interfaces through PackageSpec =modules=
-produced five native targets including the nono-C prelude, but current CI then
+180-second bound.  Passing the interface roots through PackageSpec =modules=
+produced only those direct native targets plus the nono-C prelude, but CI then
 failed while importing =src/core/api.ssi=: =std/make= does not compile the
-transitive package closure from those four strings.  The smaller count was an
+transitive package closure from root strings.  The smaller count was an
 incomplete artifact, not a performance improvement.
 
-The corrected =public-entry-modules= projection produces 230 package modules
-before the explicit nono-C prelude.  The same-host A/B Scenario measured the
-invalid four-root projection at 0.960 seconds and the complete native import
-projection at 26.741 seconds.  That interval occurs before =std/make= and is
+The corrected =public-entry-modules= projection produces 236 package modules;
+the explicit nono-C prelude makes 237 BuildSpec targets.  With ASP
+=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062=, two nine-root A/B samples measured
+2.03--2.08 seconds for direct projection and 20.12--25.11 seconds for the
+complete closure.  These wall-clock values are observations, not fixed
+constants.  Closure membership is the admission condition.  That closure
+interval occurs before =std/make= and is
 owned by ASP's Gerbil Import Model projection; it must not be reported as an
 =std/make= fixed cost.  The 227-file POO test run then completed successfully in
-about 82 seconds with 12 native batches and three serialized tests.
+about 82 seconds with 12 native batches.  Four resource-sensitive suites now
+run in fresh serialized processes, including the memory-monitor containment
+suite that overflowed a reused 56-file Ubuntu heap.
 
 The Runtime-WASM workflow separately materializes
 =//gerbil:dependency_packages= before the package action.  This exposes and
