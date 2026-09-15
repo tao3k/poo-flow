@@ -11,7 +11,18 @@
 ;;; Runtime contract: scheduler and plan semantics stay out of this extension.
 ;;; Policy evidence: tests should assert registry, task shape, and interpreter result.
 
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/task
+                 make-task-family-descriptor task-family-registry-extend
+                 default-task-family-registry make-task task-kind
+                 task-request-operation task-request-payload)
+        (only-in :poo-flow/src/core/strategy
+                 make-strategy strategy-name strategy-capabilities
+                 strategy-cache-policy strategy-failure-policy strategy-planner
+                 make-local-eager-strategy)
+        (only-in :poo-flow/src/core/runtime-adapter make-request-only-adapter)
+        (only-in :poo-flow/src/core/config make-run-config)
+        (only-in :poo-flow/src/core/flow
+                 default-flow-declaration-registry task-flow)
         :poo-flow/src/core/projection-syntax)
 
 (export custom-task-family-descriptor

@@ -3,9 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: user-interface tests import only the public module-system facade.
-;;; Invariant: leaf owner names must not become part of the user contract.
-;;; Intent: this file protects the surface that module authors actually call.
+;;; Boundary: this integration test imports Module System and User Interface
+;;; from their respective public owners. Neither facade leaks the other domain.
 
 (import (only-in :std/test
                  check
@@ -19,6 +18,11 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
+        :poo-flow/src/module-system/api
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/loader/context
+        :poo-flow/src/module-system/loader/resolver
+        :poo-flow/src/module-system/descriptor/syntax
         :poo-flow/src/user-interface/facade)
 
 (export module-system-user-interface-test)
@@ -163,7 +167,7 @@
 ;;; internal loader or registry owners.
 (def module-system-user-interface-test
   (test-suite "poo-flow module system user interface"
-    (test-case "declares modules through the public facade only"
+    (test-case "declares modules through explicit public owners"
       (check-equal? (poo-flow-module-descriptor? user-root-module) #t)
       (check-equal? (poo-flow-module-name user-root-module) 'user-root)
       (check-equal? (poo-flow-module-interface-id

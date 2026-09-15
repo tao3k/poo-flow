@@ -18,6 +18,7 @@
         test-error
         test-suite)
         :poo-flow/src/user-interface/facade
+        :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/agent-sandbox/config
         (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-session-module

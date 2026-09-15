@@ -28,13 +28,20 @@ The facade re-exports stable module-system contracts only. Concrete workflow, sa
 
 4. =src/user-interface/facade.ss=
 
-The User Interface facade follows the same bounded rule. It owns stable loader,
-entrypoint, presentation, and observation mechanics. A concrete capability is
+The User Interface facade follows the same bounded rule. It owns stable
+entrypoint, presentation, and observation mechanics. Module System loading is
+imported from its own interface by the consumer that needs it. A concrete capability is
 exported by =src/modules/<module-name>/interface.ss= and is loaded only when a
 configuration selects that module. In particular, durable memory behavior is
 owned by =src/modules/memory-core/interface.ss= and session lifecycle behavior
 is owned by =src/modules/session/interface.ss=; neither is re-exported by the
 global User Interface facade.
+
+The facade is an advanced presentation owner and is not the production
+User Interface bootstrap. Top-level =user-interface/init.ss= imports the
+lightweight =src/user-interface/init-declaration-syntax.ss= owner directly.
+The PackageSpec follows that real import edge, so it does not initialize the
+presentation graph for a declaration-only user entry.
 
 ** 40.30 Growth Rule
 Adding a new concrete module should follow this shape:
@@ -70,6 +77,22 @@ then imported and exercised all three lazy owners successfully. This receipt
 measures one cold comparison and establishes the ownership correction; future
 performance claims use repeated scenario statistics.
 
+The testing Observability extension was then removed from the production
+BuildSpec, leaving six framework roots. Its focused test explicitly imports and
+compiles the owner in the independent testing lane. After the User Interface
+root was corrected to the actual init declaration owner, the exact six-root
+cold Gerbil action completed in 22.457 seconds with a 2,784,985,088-byte peak
+process-tree footprint. Runnable process count was 6 under the native core limit
+7, and total Bazel wall time was 41.443 seconds.
+
+Module admission also performs a reader-native owner-import inspection over
+every =.ss= file below each module root. An implementation role importing an
+aggregate framework surface emits
+=poo-flow.module-owner-import-observation.v1= and fails admission with
+=POO-FLOW-MODULE-E008=. The check reads datums only and never expands or
+evaluates module source. Its repository gate covers all maintained module role
+files, including nonstandard private helpers below the canonical role owners.
+
 The package-env receipt is the removed cost center. Native runner startup is sub-second; focused tests remain bounded by =gxtest= and the module/test load graph, while the millisecond gate lives inside the registry scenario so the test distinguishes module catalog expansion from runner startup and Gerbil compilation work.
 
 ** 40.55 Fast Gate Entrypoint
@@ -85,8 +108,12 @@ Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-o
 Reject future changes that do any of the following:
 - import =src/modules/*= from =src/module-system/facade.ss=;
 - import =src/modules/*= from =src/user-interface/facade.ss=;
+- import or re-export the aggregate =src/module-system/facade.ss= from
+  =src/user-interface/facade.ss=;
 - promote a registry-owned lazy framework source into the package bootstrap
   without an explicit consumer and a cold-build receipt;
+- promote a testing extension into the production bootstrap merely so focused
+  tests can import it;
 - move loader backends, resolver activation, or extension graph logic into =module-registry.ss=;
 - use filesystem scans as the default registry expansion path;
 - make tests pass by relying on facade to leak concrete owner symbols.

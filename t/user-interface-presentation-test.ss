@@ -18,6 +18,7 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
+        :poo-flow/src/module-system/interface
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/user-interface/profile-config

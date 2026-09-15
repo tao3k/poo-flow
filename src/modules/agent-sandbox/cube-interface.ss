@@ -9,7 +9,8 @@
 ;;; Policy evidence: Cube interface tests assert descriptor override and gates.
 
 (import (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/core/api
+        (only-in :poo-flow/src/core/roles execution-policy-role)
+        (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax

@@ -434,6 +434,58 @@ Performance is part of style.
 - Add focused performance scenarios for object-family, macro-expansion,
   projection, and selection hot paths when a change touches shared behavior.
 
+** 10.06.44.123 Import And Build-Root Ownership
+
+Imports express ownership and demand. Build roots express the minimum artifacts
+needed to bootstrap the production package. They are not interchangeable lists.
+
+Use these rules:
+
+1. A normal module consumer imports =modules/<name>/interface.ss=. Code inside
+   that module uses relative imports for its role owners. A cross-domain
+   implementation imports the precise public owner, using =only-in= when it
+   needs a bounded symbol set.
+2. =interface.ss= may use =export (import: ...)= to close and publish its own
+   =types=, =objects=, =funs=, =config=, and optional =syntax= roles. A global
+   facade must export a deliberate stable surface; it must not wildcard-reexport
+   another aggregate facade or concrete module, profile, scenario, or testing
+   owners.
+3. A production BuildSpec root must correspond to a separately required
+   bootstrap artifact. Registry source refs, advanced authoring forms, profiles,
+   scenarios, declaration cases, and testing extensions remain lazy unless a
+   production root has a direct consumer that needs them.
+   For User Interface startup, the root is the owner imported by top-level
+   =user-interface/init.ss=; an advanced presentation facade is not a substitute
+   for that owner.
+4. Do not list both a facade and a compatibility child, or both a module
+   =interface.ss= and its internal roles, as independent roots. Native Gerbil
+   imports already close the dependency graph. Any deliberate exception needs
+   a source-owner explanation and a cold-build receipt.
+5. Production, contribution, profile/scenario, and testing lanes select their
+   own roots. Tests explicitly import their test support. A test dependency is
+   not evidence that the production bootstrap owns that dependency.
+6. Diagnose root changes with the existing ASP Build API and upstream
+   =std/make=. Record root count, compile count, elapsed action time, peak
+   process-tree memory, and saturation. Do not add a scheduler, currentness
+   cache, source expander, or duplicate dependency graph to compensate for an
+   incorrect import boundary.
+7. =poo-flow-load-modules= applies the reader-native owner-import admission
+   policy to every Scheme file under a module root. An aggregate framework
+   import produces =poo-flow.module-owner-import-observation.v1= and
+   =POO-FLOW-MODULE-E008= with the exact source scope, imported owner, stable
+   diagnostic code, and =import-precise-owner= repair. This gate must remain
+   evaluation-free so authoring diagnostics cannot execute module code.
+
+#+begin_export mermaid
+flowchart LR
+    Build["Production BuildSpec"] -->|"stable bootstrap root"| Facade["Bounded interface or facade"]
+    Module["modules/name/interface.ss"] -->|"module-owned closure"| Roles["types, objects, funs, config, syntax"]
+    Registry["POO module registry"] -. "lazy source reference" .-> Lazy["profile, scenario, or advanced owner"]
+    Consumer["Selected consumer"] -->|"explicit import"| Lazy
+    Test["Independent testing lane"] -->|"explicit import"| TestOwner["testing extension"]
+    TestOwner -. "no production ownership" .-> Build
+#+end_export
+
 ** 10.06.44.125 Build-Stage Receipts And Warm-Cache Measurement
 
 Build and control-plane outcomes are part of the POO boundary. A caller that

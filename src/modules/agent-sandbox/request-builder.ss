@@ -12,8 +12,7 @@
 ;;; Policy evidence:
 ;;; - The named-field macro and profiled flow both call these constructors.
 
-(import :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/alist
+(import :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/request-field

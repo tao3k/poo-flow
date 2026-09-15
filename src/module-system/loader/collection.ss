@@ -11,9 +11,12 @@
         (only-in :std/srfi/13 string-suffix?)
         (only-in :std/sort sort)
         (only-in :poo-flow/src/core/funcs
+                 poo-flow-directory-files-recursive
                  poo-flow-make-value-index
                  poo-flow-value-index-put!
                  poo-flow-value-index-ref)
+        (only-in :poo-flow/src/module-system/loader/import-policy
+                 poo-flow-module-owner-import-file-observations)
         :poo-flow/src/module-system/loader/source)
 
 (export poo-flow-module-source-collection-prototype
@@ -215,12 +218,25 @@
               (cdr layer))))))
      layers)))
 
+(def (poo-flow-module-owner-imports-validate! module-name module-root)
+  (for-each
+   (lambda (path)
+     (let (observations
+           (poo-flow-module-owner-import-file-observations
+            (string->symbol path) path))
+       (when (pair? observations)
+         (error "POO-FLOW-MODULE-E008 module owner imports aggregate facade"
+                module-name path (car observations)))))
+   (filter (lambda (path) (string-suffix? ".ss" path))
+           (poo-flow-directory-files-recursive module-root))))
+
 (def (poo-flow-module-default-style-validate! _collection module-name module-root)
   (when (file-exists? (path-expand "init.ss" module-root))
     (error "POO-FLOW-MODULE-E005 init.ss belongs to the User Interface root"
            module-name))
   (poo-flow-module-interface-validate! module-name module-root)
   (poo-flow-module-dependency-direction-validate! module-name module-root)
+  (poo-flow-module-owner-imports-validate! module-name module-root)
   module-root)
 
 (def poo-flow-module-style-policy-prototype

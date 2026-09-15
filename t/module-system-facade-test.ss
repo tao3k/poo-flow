@@ -20,6 +20,9 @@
         (only-in :std/srfi/13 string-prefix?)
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/loader/context
+        :poo-flow/src/module-system/loader/resolver
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)
 
@@ -56,6 +59,15 @@
           (source-port-has-module-prefix?
            port
            ":poo-flow/src/modules/")))
+       #f))
+    (test-case "keeps the user-interface facade independent of the aggregate module facade"
+      (check-equal?
+       (call-with-input-file
+        "src/user-interface/facade.ss"
+        (lambda (port)
+          (source-port-has-module-prefix?
+           port
+           ":poo-flow/src/module-system/facade")))
        #f))
     (test-case "builds Marlin-style interface config descriptors"
       (let* ((interface

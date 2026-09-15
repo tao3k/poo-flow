@@ -16,13 +16,16 @@
                  check-false
                  check-not-equal?
                  check-output
-                 check-true
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/module-system/observability/module-presentation
         :poo-flow/src/module-system/observability/module-source-observation
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/observability/source-authoring
+        (only-in :poo-flow/src/module-system/observability/funcs
+                 poo-flow-debug-memory-policy
+                 poo-flow-debug-memory-sample
+                 poo-flow-debug-memory-receipt))
 
 (export module-system-observability-test)
 
@@ -63,6 +66,41 @@
 ;;; and lazy-load decisions.
 (def module-system-observability-test
   (test-suite "poo-flow module-system observability"
+    (test-case "reports aggregate owner imports before module admission"
+      (let* ((observations
+              (poo-flow-authoring-owner-import-port-observations
+               'modules/example/funs.ss
+               (open-input-string
+                "(import :poo-flow/src/core/api)")))
+             (observation (car observations)))
+        (check-equal? (length observations) 1)
+        (check-equal? (.ref observation 'scope) 'modules/example/funs.ss)
+        (check-equal? (.ref observation 'owner) ':poo-flow/src/core/api)
+        (check-equal? (.ref observation 'phase) 'module-admission)
+        (check-equal? (.ref observation 'status) 'aggregate-owner-import)
+        (check-equal? (.ref observation 'code)
+                      'module-owner-import-expands-aggregate-facade)
+        (check-equal? (.ref observation 'recommendation)
+                      'import-precise-owner)
+        (check-equal? (.ref observation 'accepted?) #f)
+        (check-equal? (.ref observation 'runtime-executed?) #f)
+        (check-equal?
+         (poo-flow-authoring-owner-import-port-observations
+          'modules/example/funs.ss
+         (open-input-string
+           "(import (only-in :poo-flow/src/core/task make-task))"))
+         '())))
+    (test-case "all maintained module sources import precise owners"
+      (let* ((paths (module-observability-source-files "src/modules"))
+             (observations
+              (apply append
+                     (map (lambda (path)
+                            (poo-flow-authoring-owner-import-file-observations
+                             (string->symbol path)
+                             path))
+                          paths))))
+        (check-equal? (> (length paths) 0) #t)
+        (check-equal? observations '())))
     (test-case "builds strict presentation trace rows"
       (let* ((native-observation
               (poo-flow-module-observation-stage/detail
@@ -270,7 +308,7 @@
         (check-equal? (.ref observation 'code)
                       'poo-prototype-lookup-inside-composition)
         (check-equal? (.ref observation 'runtime-executed?) #f)))
-    (test-case "default module-system facade exposes development quality and performance evidence"
+    (test-case "observability owner exposes development quality and performance evidence"
       (let* ((policy
               (poo-flow-debug-memory-policy
                'native-module-system-test

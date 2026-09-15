@@ -21,7 +21,7 @@ contribution registry:
  '(adr decision-kind diataxis sdlc))
 #+end_src
 
-POO Flow's default PackageSpec is the clean-image bootstrap: seven stable
+POO Flow's default PackageSpec is the clean-image bootstrap: six stable
 framework entrypoints and zero catalog targets. =build.ss= imports only ASP's
 Build API because importing a =:poo-flow= loader before the package exists is a
 self-dependency that fails in a hermetic Bazel image. After bootstrap, module
@@ -33,11 +33,22 @@ registered framework source refs rather than bootstrap targets. The ordinary
 =user-interface/init.ss= path uses the smaller =init-declaration-syntax.ss=
 owner, so those advanced authoring and presentation sources compile only for a
 consumer that imports them.
+=src/user-interface/facade.ss= is likewise an advanced presentation surface,
+not the owner imported by =user-interface/init.ss=, and therefore is not a
+production bootstrap root.
+=module-system/observability/testing-extension.ss= follows the same ownership
+rule from the testing side: it is imported and compiled by the focused testing
+lane, not by every production bootstrap.
 User-owned and contributor-owned selections stay in their independent loading
 and build lanes.
-The root-owned =build-contribute= adapter applies =poo-flow-load-modules= discovery
-to each direct =modules/<module-name>/= tree. The loader admits exactly the
-module's public =interface.ss=; native Gerbil imports close over its internal
+The root-owned =build-contribute= adapter applies =poo-flow-load-modules=
+discovery to each direct =modules/<module-name>/= tree and therefore applies
+the same reader-native owner-import admission to contributor roles. Aggregate
+framework imports return the structured
+=poo-flow.module-owner-import-observation.v1= diagnostic and fail with
+=POO-FLOW-MODULE-E008= before a contribution reaches native compilation.
+The loader admits exactly the module's public =interface.ss=; native Gerbil
+imports close over its internal
 roles before ASP =package-source-stage= hands the entrypoint to =std/make=.
 The contribution owns no
 package, scanner, scheduler, cache, or build script. Core and contribution

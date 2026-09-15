@@ -6,7 +6,7 @@
 ;;; Boundary: structured agent-sandbox profile validation.
 ;;; Invariant: invalid filesystem/resource markers are reported before runtime handoff.
 
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile-data)

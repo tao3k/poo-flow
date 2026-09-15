@@ -12,12 +12,19 @@
                  poo-flow-scheme-inline-prototype-datum-observations
                  poo-flow-scheme-inline-prototype-port-observations
                  poo-flow-scheme-inline-prototype-file-observations)
+        (only-in "../loader/import-policy.ss"
+                 poo-flow-module-owner-import-datum-observations
+                 poo-flow-module-owner-import-port-observations
+                 poo-flow-module-owner-import-file-observations)
         (only-in "types.ss" PooFlowAuthoringObservationContract))
 
 (export PooFlowAuthoringObservationContract
         poo-flow-authoring-inline-prototype-datum-observations
         poo-flow-authoring-inline-prototype-port-observations
         poo-flow-authoring-inline-prototype-file-observations
+        poo-flow-authoring-owner-import-datum-observations
+        poo-flow-authoring-owner-import-port-observations
+        poo-flow-authoring-owner-import-file-observations
         poo-flow-authoring-observation-sexp)
 
 ;;; Resolve the stable Contract prototype once when this owner loads.  Receipt
@@ -65,6 +72,21 @@
 (def (poo-flow-authoring-inline-prototype-file-observations scope path)
   (poo-flow-authoring-observations-from-rows
    (poo-flow-scheme-inline-prototype-file-observations scope path)))
+
+;; : (-> Symbol SchemeDatum [PooFlowAuthoringObservation])
+(def (poo-flow-authoring-owner-import-datum-observations scope datum)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-module-owner-import-datum-observations scope datum)))
+
+;; : (-> Symbol InputPort [PooFlowAuthoringObservation])
+(def (poo-flow-authoring-owner-import-port-observations scope port)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-module-owner-import-port-observations scope port)))
+
+;; : (-> Symbol PathString [PooFlowAuthoringObservation])
+(def (poo-flow-authoring-owner-import-file-observations scope path)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-module-owner-import-file-observations scope path)))
 
 ;;; The final projection is closed over symbolic fields and cannot reconstruct
 ;;; the discarded source datum or claim runtime execution.
