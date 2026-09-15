@@ -57,6 +57,10 @@
 
 (def (poo-flow-runtime-v0-abi-schema->c-header schema)
   (let (port (open-output-string))
+    (emit-line port "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors")
+    (emit-line port "//")
+    (emit-line port "// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later")
+    (newline port)
     (emit-line port "#ifndef POO_FLOW_RUNTIME_V0_CONTRACT_H")
     (emit-line port "#define POO_FLOW_RUNTIME_V0_CONTRACT_H")
     (newline port)

@@ -92,7 +92,6 @@ gerbil_project_compile(
     deps = [":asp_gerbil_scheme_package"],
     env = {
         "GERBIL_BUILD_VERBOSE": "1",
-        "POO_FLOW_BUILD_PROFILE": "release",
     },
 )
 

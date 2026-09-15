@@ -49,20 +49,7 @@ build-contribute contribution="lambda-episteme":
     echo "[poo-flow-contribute] phase=target-selected owner={{ contribution }} lane=production budget=45s"
     GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec timeout --foreground --signal=TERM --kill-after=3s 45s gxi ./build-contribute.ss </dev/null
 
-# Compile contribution-only fixtures without adding them to production closure.
-[group('test')]
-build-contribute-tests contribution="lambda-episteme" module="sdlc" test_file="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    test "{{ contribution }}" = "lambda-episteme"
-    echo "[poo-flow-contribute] phase=target-selected owner={{ contribution }} lane=test module={{ module }} test={{ test_file }}"
-    if [[ -n "{{ test_file }}" ]]; then test_image="{{ contribution_atomic_test_path }}"; test_library="{{ contribution_atomic_test_library_path }}"; else test_image="{{ contribution_test_path }}"; test_library="{{ contribution_test_library_path }}"; fi
-    mkdir -p "$test_image"
-    if [[ -n "{{ test_file }}" ]]; then phase_budget=20s; elif [[ "{{ module }}" = "all" ]]; then phase_budget=45s; else phase_budget=30s; fi
-    POO_FLOW_CONTRIBUTE_TEST_MODULE="{{ module }}" POO_FLOW_CONTRIBUTE_TEST_FILE="{{ test_file }}" GERBIL_PATH="$test_image" GERBIL_LOADPATH="$test_library:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s "$phase_budget" gxi ./build-contribute-tests.ss
-
-# Execute only one contribution-owned t/<module-name>/ tree from the shared
-# contribution test image.  Build and test remain separate native phases.
+# Execute one contribution-owned t/<module-name>/ tree directly with gxtest.
 [group('test')]
 test-contribute contribution="lambda-episteme" module="sdlc":
     test "{{ contribution }}" = "lambda-episteme"
@@ -75,12 +62,10 @@ observe-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file
     test "{{ contribution }}" = "lambda-episteme"
     test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-observability] phase=source-start owner={{ contribution }} module={{ module }} test={{ test_file }}"
-    # Source scan and dynamic import are separately reported; 15s covers the
-    # measured 5.5s SDLC import while retaining a bounded atomic preflight.
+    # Reader-native admission stays independent of test compilation and load.
     GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-test.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
 
-# Run the opt-in deep heap diagnostic when the ordinary atomic preflight ends
-# at import-start. The native POO monitor terminates runaway lazy-slot growth.
+# Replay a previously compiled exact test under the opt-in native heap monitor.
 [group('test')]
 observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
     test "{{ contribution }}" = "lambda-episteme"
@@ -98,16 +83,16 @@ test-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="u
     GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxtest -v "{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-complete owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
 
-# Compile one module test root and then execute that module.
+# Build contribution production owners once, then let gxtest own the module.
 [group('check')]
 check-contribute contribution="lambda-episteme" module="sdlc":
-    just build-contribute-tests "{{ contribution }}" "{{ module }}"
+    just build-contribute "{{ contribution }}"
     just test-contribute "{{ contribution }}" "{{ module }}"
 
-# Compile one module test root and then execute one exact test file.
+# Build contribution production owners once, then let gxtest own the file.
 [group('check')]
 check-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
-    just build-contribute-tests "{{ contribution }}" "{{ module }}" "{{ test_file }}"
+    just build-contribute "{{ contribution }}"
     just test-contribute-atomic "{{ contribution }}" "{{ module }}" "{{ test_file }}"
 
 # Install the dependency revisions declared by gerbil.pkg.

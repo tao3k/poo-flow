@@ -8,7 +8,9 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :std/sugar foldl)
         "./performance"
-        :poo-flow/src/user-interface/facade
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-settings
+                 pooFlowUserConfig)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation))
 

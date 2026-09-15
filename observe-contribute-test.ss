@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; -*- Gerbil -*-
-;;; Source and import observability preflight for one contribution-owned atomic test.
+;;; Reader-native observability preflight for one contribution-owned atomic test.
 
 (import :gerbil/gambit
         (only-in :std/sort sort)
@@ -38,16 +38,6 @@
             '("source.ss" "init.ss"))))
      ((file-exists? top-level-tree) (scheme-source-files top-level-tree))
      (else '()))))
-
-(def (test-path->module-id contribution module test-file)
-  (let* ((path (string-append contribution "/t/" module "/" test-file))
-         (length (string-length path)))
-    (string->symbol
-     (string-append ":poo-flow/" (substring path 0 (- length 3))))))
-
-(def (elapsed-milliseconds started)
-  (quotient (* (- (current-jiffy) started) 1000)
-            (jiffies-per-second)))
 
 (def (observe-contribution-test contribution module test-file)
   (let* ((test-path (path-expand (string-append "t/" module "/" test-file)
@@ -89,20 +79,7 @@
       (unless (null? failures) (exit 2))
       (displayln "[poo-flow-observability] phase=source-admitted owner=" contribution
                  " module=" module " test=" test-file)
-      (force-output)
-      ;; Dynamic import leaves an exact phase boundary before module expansion.
-      ;; The outer process budget can therefore attribute a forced termination
-      ;; to import rather than test discovery or case execution.
-      (let ((module-id (test-path->module-id contribution module test-file))
-            (started (current-jiffy)))
-        (displayln "[poo-flow-observability] phase=import-start owner=" contribution
-                   " module=" module " test=" test-file " import=" module-id)
-        (force-output)
-        (eval `(import ,module-id))
-        (displayln "[poo-flow-observability] phase=import-complete owner=" contribution
-                   " module=" module " test=" test-file " import=" module-id
-                   " elapsed-ms=" (elapsed-milliseconds started))
-        (force-output)))))
+      (force-output))))
 
 (let (arguments (cddr (command-line)))
   (unless (= (length arguments) 3)

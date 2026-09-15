@@ -188,9 +188,7 @@ jobs:
           key: native-gerbil-pkg-portable-v2-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Build native Gerbil package
-        run: |
-          gerbil clean
-          GERBIL_BUILD_VERBOSE=1 POO_FLOW_BUILD_PROFILE=test gerbil build
+        run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
       - name: Run the single native unit-test entrypoint
         run: gerbil env ./unit-tests.ss

@@ -285,8 +285,9 @@ seconds inside the ASP Build API.
 Before evaluating an atomic test, POO Flow applies its strict POO slot authoring
 observation to the selected module tree and exact test file, then dynamically
 imports that exact compiled test before =gxtest=. Events are flushed at
-=source-start=, =source-scanned=, =source-admitted=, =import-start=,
-=import-complete=, =test-start= and =test-complete=. Separate budgets bound the
+=source-start=, =source-scanned=, =source-admitted=, =test-start= and
+=test-complete=. The reader-native preflight never imports or compiles the test;
+native =gxtest= owns that boundary. Separate budgets bound the
 source/import preflight and case execution, so the last event identifies the
 stalled boundary. The normal path stays lightweight. The opt-in
 =observe-contribute-import-memory= path wraps import in the native POO Debug
