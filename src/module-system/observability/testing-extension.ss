@@ -10,6 +10,8 @@
 (import (only-in :clan/poo/object .cc .o .ref .slot? object?)
         (only-in :asp-gerbil-scheme/testing-api
                  testing-interface-call-with-operation)
+        (only-in "build-projection.ss"
+                 poo-flow-write-observation-line!)
         (only-in "debug.ss"
                  poo-flow-debug-call-policy
                  call-with-poo-flow-debug-trace))
@@ -87,12 +89,10 @@
                    (poo-flow-current-testing-observability-profile)))
                  (parameterize ((current-output-port port)
                                 (current-error-port port))
-                   (displayln
-                    "[poo-flow-testing] phase=operation-heartbeat operation="
+                   (poo-flow-write-observation-line!
+                    "[poo-flow-testing] phase=operation-heartbeat operation=~a elapsedNs=~a"
                     operation
-                    " elapsedNs="
-                    (poo-flow-testing-elapsed-nanoseconds started-jiffy))
-                   (force-output port))
+                    (poo-flow-testing-elapsed-nanoseconds started-jiffy)))
                  (loop))))))
       (thread-start! heartbeat)
       (dynamic-wind

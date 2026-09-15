@@ -10,7 +10,12 @@
         poo-flow-module-forbidden-aggregate-imports
         poo-flow-module-owner-import-datum-observations
         poo-flow-module-owner-import-port-observations
-        poo-flow-module-owner-import-file-observations)
+        poo-flow-module-owner-import-file-observations
+        poo-flow-build-bootstrap-import-datum-observations
+        poo-flow-build-bootstrap-import-port-observations
+        poo-flow-build-bootstrap-import-file-observations)
+
+(import (only-in :std/srfi/13 string-prefix?))
 
 (def poo-flow-module-owner-import-observation-kind
   "poo-flow.module-owner-import-observation.v1")
@@ -80,3 +85,58 @@
    path
    (lambda (port)
      (poo-flow-module-owner-import-port-observations scope port))))
+
+;;; A package build entry executes before its own artifacts exist. Importing a
+;;; local package owner here creates a loaded-module/currentness cycle on
+;;; macOS, where the compiler emits numbered replacement objects forever.
+(def (poo-flow-build-bootstrap-package-owner datum)
+  (cond
+   ((string? datum)
+    (and (or (string-prefix? "./src/" datum)
+             (string-prefix? "src/" datum))
+         datum))
+   ((symbol? datum)
+    (let (name (symbol->string datum))
+      (and (string-prefix? ":poo-flow/" name) datum)))
+   ((pair? datum)
+    (or (poo-flow-build-bootstrap-package-owner (car datum))
+        (poo-flow-build-bootstrap-package-owner (cdr datum))))
+   ((vector? datum)
+    (poo-flow-build-bootstrap-package-owner (vector->list datum)))
+   (else #f)))
+
+(def (poo-flow-build-bootstrap-import-observation scope owner)
+  (list
+   (cons 'kind poo-flow-module-owner-import-observation-kind)
+   (cons 'scope scope)
+   (cons 'owner (if (string? owner) (string->symbol owner) owner))
+   (cons 'form 'import)
+   (cons 'phase 'build-bootstrap-admission)
+   (cons 'status 'build-bootstrap-imports-package-owner)
+   (cons 'detail
+         (list
+          (cons 'code 'build-bootstrap-self-import)
+          (cons 'recommendation 'declare-package-spec-only)))
+   (cons 'runtime-executed #f)))
+
+(def (poo-flow-build-bootstrap-import-datum-observations scope datum)
+  (if (and (pair? datum) (eq? (car datum) 'import))
+    (alet (owner (poo-flow-build-bootstrap-package-owner (cdr datum)))
+      (list (poo-flow-build-bootstrap-import-observation scope owner)))
+    '()))
+
+(def (poo-flow-build-bootstrap-import-port-observations scope port)
+  (let loop ((observations-rev '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse observations-rev)
+        (loop
+         (foldl cons observations-rev
+                (poo-flow-build-bootstrap-import-datum-observations
+                 scope datum)))))))
+
+(def (poo-flow-build-bootstrap-import-file-observations scope path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (poo-flow-build-bootstrap-import-port-observations scope port))))

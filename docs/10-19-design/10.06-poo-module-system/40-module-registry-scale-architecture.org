@@ -130,57 +130,38 @@ When a new module family is needed, add manifest data to =module-registry.ss=, a
 
 =build.ss= is the unique package build entry.  It declares one POO PackageSpec
 and delegates to the same ASP Build API and =std/make= executor for development,
-CI, Bazel, and release builds.  The declaration intentionally omits both
-=modules= and =public-entry-modules=: ASP's PackageSpec default invokes the
-native package source catalog.  No project-owned =all-gerbil-modules= call,
-eager Import Model closure, test PackageSpec, or second build script exists.
+CI, Bazel, and release builds.  Its =modules= slot contains only the four stable
+public interface roots: core API, module-system API, feature-system interface,
+and User Interface facade.  Native Gerbil compilation owns their imports.  The
+entry contains no =all-gerbil-modules= scan, eager Import Model closure, test
+PackageSpec, or second build script.
 
 Native unit CI builds this package once and then invokes =unit-tests.ss=.  Its
 ASP Testing Interface discovers atomic files and delegates selected batches to
 native =gxtest=.  Because the unique package build publishes every production
 owner, test imports do not require a parallel package graph.
 
-With =GERBIL_BUILD_VERBOSE=1= the package emits =spec-start= before ASP import
-projection and =spec-projected= with profile, POO policy identity, target count,
-and elapsed milliseconds before handing the result to
-=std/make=.  =src/module-system/observability/config.ss= owns extensible POO
-policy slots for the package projection.  Target and projection-time budgets
-plus their =observe=/=reject= actions are inherited Scheme configuration; no
-profile or budget environment variable participates in semantic composition.
-The clean CI checkout does not run =gerbil clean=: that command itself
-evaluates =build.ss= and previously duplicated the public closure projection
-before any package artifact existed.  A budget crossing
-emits =phase=spec-budget-exceeded= with the observed value, action, policy, and
-budget, making accidental closure expansion attributable at the change that
-introduced it.
-
-The native catalog currently crosses the default 256-target observation budget.
-After projection, the adapter emits =phase=executor-handoff= and then
-=phase=executor-active= every five seconds while the process remains inside the
-native =std/make= boundary.  The heartbeat identifies that boundary as source
-import, currentness analysis, or compilation; it does not claim which of those
-native operations is active and it never schedules or imports a target.  The
-interval and target budget are slots on the inherited POO observation policy,
-so downstream policy objects can override or disable them without environment
-variables.  This closes the previous macOS failure mode where a 500-plus target
-catalog entered =std/make= and produced no evidence for tens of seconds.
+The build entry must not import a =:poo-flow= or =./src= owner.  Such an import
+loads the package module before the same =std/make= invocation checks it; macOS
+then emits numbered replacement objects and the warm build never becomes
+current.  The Observability source-admission gate reports this as
+=build-bootstrap-self-import= with =declare-package-spec-only= as the repair.
+Build-time resource observation remains outside the package action: the shared
+Bazel Gerbil resource guard records effective cores, elapsed time, process-tree
+RSS, and runnable saturation.  The runtime Observability module remains an
+ordinary POO Flow library owner and is never used to bootstrap its own build.
 
 Repository-owned command helpers and user configuration are not package
 artifacts.  The PackageSpec excludes the two contribution observation commands
 and =user-interface/custom/my-module/config.ss= explicitly; atomic tests still
 load the user-owned configuration by its relative source boundary.
-The bootstrap-safe adapter remains owned by
-=src/module-system/observability/build-projection.ss=.  =build.ss= is the sole
-=defbuild-script= entry.  The PackageSpec injects the adapter through its
-inherited =spec-projector= method, and the macro-generated native spec reaches
-the official =defbuild-script= directly.  Its PackageSpec and observation
-policy are native POO objects, so a project author derives and overrides those
-Scheme objects with =.def= instead of mutating semantic build configuration
-through process environment variables.
-
-The rejected public-entry Import Model path projected 48 targets in 20.285
-seconds on a clean macOS runner before =std/make=.  The native PackageSpec
-catalog observed during the preceding clean test-profile experiment projected
-the complete production source set in milliseconds.  The single PackageSpec
-therefore removes that eager expansion cost rather than caching it or moving it
-behind another entrypoint.
+=build.ss= remains the sole =defbuild-script= entry.  The rejected native source
+catalog projected 512 targets and its isolated Bazel action exceeded the local
+180-second bound.  The rejected =public-entry-modules= route eagerly loaded 231
+package modules before =std/make= and retained the same currentness hazard.
+Passing four interface roots through PackageSpec =modules= produced five native
+targets including the explicit nono-C prelude.  On the same macOS host, the
+isolated Bazel action completed in 129.43 seconds (92 seconds inside the Gerbil
+project receipt), used 12 effective cores, and peaked at 2,736,209,920 bytes;
+the immediately repeated Bazel build was a cache hit.  These receipts establish
+the build-root correction without claiming a replacement scheduler.

@@ -105,10 +105,13 @@ jobs:
           test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:asp_gerbil_scheme_package)')"
           test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:gerbil_poo_package)')"
 
+      - name: Build declared Gerbil dependency projects
+        timeout-minutes: 12
+        run: bazelisk build //gerbil:dependency_packages
+
       - name: Build, test, and pack the package
-        # A dependency revision invalidates the complete native package action;
-        # keep the warm gate in Bazel's cache receipts, while allowing one
-        # source-complete generation to populate that cache.
+        # Dependency actions are materialized and attributed by the preceding
+        # phase. This budget covers the POO Flow package and Runtime-WASM lane.
         timeout-minutes: 25
         shell: bash
         run: |

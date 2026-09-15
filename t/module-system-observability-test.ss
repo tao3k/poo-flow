@@ -101,6 +101,23 @@
                           paths))))
         (check-equal? (> (length paths) 0) #t)
         (check-equal? observations '())))
+    (test-case "package build bootstrap imports no package-local owner"
+      (check-equal?
+       (poo-flow-authoring-build-bootstrap-import-file-observations
+        'build.ss "build.ss")
+       '())
+      (let* ((observations
+              (poo-flow-authoring-build-bootstrap-import-port-observations
+               'build.ss
+               (open-input-string
+                "(import (only-in \"./src/module-system/observability/config.ss\" policy))")))
+             (observation (car observations)))
+        (check-equal? (.ref observation 'phase) 'build-bootstrap-admission)
+        (check-equal? (.ref observation 'status)
+                      'build-bootstrap-imports-package-owner)
+        (check-equal? (.ref observation 'code) 'build-bootstrap-self-import)
+        (check-equal? (.ref observation 'recommendation)
+                      'declare-package-spec-only)))
     (test-case "builds strict presentation trace rows"
       (let* ((native-observation
               (poo-flow-module-observation-stage/detail

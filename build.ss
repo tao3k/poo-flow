@@ -7,20 +7,22 @@
 ;;; Unique native POO Flow package build entry.
 
 (import (only-in :std/build-script defbuild-script)
-        (only-in :clan/poo/object .get)
         (only-in :asp-gerbil-scheme/src/build-api/source-bootstrap
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support
-                 default-exclude-dirs)
-        (only-in "./src/module-system/observability/build-projection.ss"
-                 poo-flow-make-observed-package-spec-projector)
-        (only-in "./src/module-system/observability/config.ss"
-                 poo-flow-default-build-observability-policy))
+                 default-exclude-dirs))
 
-;;; ASP's PackageSpec default owns the native package source catalog. Omitting
-;;; modules and public-entry-modules is intentional: this entry constructs no
-;;; second discovery function or eager Import Model closure.
+;;; These stable public interface roots are the only explicit build inputs.
+;;; std/make and Gerbil compilation own their native import dependencies; the
+;;; PackageSpec does not eagerly import the complete package into the build
+;;; process merely to reconstruct that same graph.
+(def +poo-flow-public-entry-modules+
+  '("src/core/api.ss"
+    "src/module-system/api.ss"
+    "src/feature-system/interface.ss"
+    "src/user-interface/facade.ss"))
+
 (def +poo-flow-build-exclude-dirs+
   (append '("lambda-episteme"
             "bindings"
@@ -46,10 +48,7 @@
  (poo-flow-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-native-spec)
- (spec-projector
-  (poo-flow-make-observed-package-spec-projector
-   (.get asp-gerbil-scheme-library-package-prototype spec-projector)
-   poo-flow-default-build-observability-policy))
+ (modules +poo-flow-public-entry-modules+)
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "observe-contribute-import.ss"

@@ -10,16 +10,28 @@
 ;;; execution ownership.
 
 (import (only-in :clan/poo/object .ref object?)
-        (only-in :gerbil/gambit spawn thread-sleep!))
+        (only-in :gerbil/gambit spawn thread-sleep! write-substring)
+        (only-in :std/format format))
 
-(export poo-flow-make-observed-package-spec-projector
+(export poo-flow-write-observation-line!
+        poo-flow-build-elapsed-milliseconds
+        poo-flow-make-observed-package-spec-projector
         poo-flow-observe-build-projection-start
         poo-flow-observe-build-projection
         poo-flow-observe-build-executor-handoff)
 
-;;; Compose observation into PackageSpec's native spec projection.  The
-;;; generated spec procedure and std/build-script remain the sole execution
-;;; path; this adapter only decorates the POO-owned projection method.
+;;; Materialize a complete receipt before it reaches the shared native port.
+(def (poo-flow-write-observation-line! template . values)
+  (let* ((line (apply format template values))
+         (record (string-append "\n" line "\n"))
+         (port (current-output-port)))
+    (write-substring record 0 (string-length record) port)
+    (force-output port)))
+
+(def (poo-flow-build-elapsed-milliseconds started-jiffy)
+  (quotient (* (- (current-jiffy) started-jiffy) 1000)
+            (jiffies-per-second)))
+
 (def (poo-flow-make-observed-package-spec-projector projector policy)
   (unless (procedure? projector)
     (error "POO Flow observed PackageSpec projector must be a procedure"
@@ -29,11 +41,8 @@
       (poo-flow-observe-build-projection-start policy)
       (let* ((spec (projector package-spec))
              (target-count (length spec))
-             (elapsed-ms
-              (quotient (* (- (current-jiffy) started) 1000)
-                        (jiffies-per-second))))
-        (poo-flow-observe-build-projection
-         policy target-count elapsed-ms)
+             (elapsed-ms (poo-flow-build-elapsed-milliseconds started)))
+        (poo-flow-observe-build-projection policy target-count elapsed-ms)
         (poo-flow-observe-build-executor-handoff policy target-count)
         spec))))
 
@@ -58,15 +67,10 @@
 
 (def (poo-flow-build-budget-exceeded! policy reason observed budget action)
   (let (profile-name (poo-flow-build-policy-ref policy 'profile))
-    (displayln "[poo-flow] phase=spec-budget-exceeded profile=" profile-name
-             " reason=" reason
-             " observed=" observed
-             " budget=" budget
-             " action=" action
-             " policy=" (poo-flow-build-policy-ref policy 'id)
-             " owner=module-system/observability"
-             " executor=asp-build-api/std-make")
-    (force-output)
+    (poo-flow-write-observation-line!
+     "[poo-flow] phase=spec-budget-exceeded profile=~a reason=~a observed=~a budget=~a action=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+     profile-name reason observed budget action
+     (poo-flow-build-policy-ref policy 'id))
     (when (eq? action 'reject)
       (error "POO Flow build observation exceeded its configured budget"
              profile-name reason observed budget))))
@@ -74,17 +78,13 @@
 (def (poo-flow-observe-build-projection-start policy)
   (when (poo-flow-build-policy-ref policy 'enabled?)
     (let (profile-name (poo-flow-build-policy-ref policy 'profile))
-    (displayln "[poo-flow] phase=spec-start profile=" profile-name
-               " policy=" (poo-flow-build-policy-ref policy 'id)
-               " owner=module-system/observability"
-               " executor=asp-build-api/std-make")
-      (force-output))))
+      (poo-flow-write-observation-line!
+       "[poo-flow] phase=spec-start profile=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+       profile-name (poo-flow-build-policy-ref policy 'id)))))
 
-(def (poo-flow-observe-build-projection policy target-count
-                                        elapsed-ms)
+(def (poo-flow-observe-build-projection policy target-count elapsed-ms)
   (let* ((profile-name (poo-flow-build-policy-ref policy 'profile))
-         (target-budget
-          (poo-flow-build-policy-budget policy 'target-budget))
+         (target-budget (poo-flow-build-policy-budget policy 'target-budget))
          (projection-budget-ms
           (poo-flow-build-policy-budget policy 'projection-budget-ms))
          (target-budget-action
@@ -92,13 +92,10 @@
          (projection-budget-action
           (poo-flow-build-budget-action policy 'projection-budget-action)))
     (when (poo-flow-build-policy-ref policy 'enabled?)
-      (displayln "[poo-flow] phase=spec-projected profile=" profile-name
-                 " target-count=" target-count
-                 " elapsedMs=" elapsed-ms
-                 " policy=" (poo-flow-build-policy-ref policy 'id)
-                 " owner=module-system/observability"
-                 " executor=asp-build-api/std-make")
-      (force-output))
+      (poo-flow-write-observation-line!
+       "[poo-flow] phase=spec-projected profile=~a target-count=~a elapsedMs=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+       profile-name target-count elapsed-ms
+       (poo-flow-build-policy-ref policy 'id)))
     (when (and target-budget (> target-count target-budget))
       (poo-flow-build-budget-exceeded!
        policy "target-count" target-count target-budget target-budget-action))
@@ -107,40 +104,27 @@
        policy "projection-elapsed-ms" elapsed-ms projection-budget-ms
        projection-budget-action))))
 
-;;; defbuild-script hands the projected value directly to std/make, which does
-;;; not report its source-import/currentness barrier.  This observer thread is
-;;; deliberately outside execution ownership: it neither imports, schedules,
-;;; retries, nor mutates targets.  It only keeps that native boundary visible
-;;; until the build process exits.  Derived POO policies may disable it with
-;;; executor-heartbeat-ms: #f or select another positive interval.
+;;; This observer is available to callers that wrap a projection outside the
+;;; package being built. A package build must never import its own observer.
 (def (poo-flow-observe-build-executor-handoff policy target-count)
   (let (interval-ms (poo-flow-build-policy-ref policy 'executor-heartbeat-ms))
     (when interval-ms
       (unless (and (exact-integer? interval-ms) (> interval-ms 0))
         (error "POO Flow executor heartbeat must be positive or false"
                (.ref policy 'id) interval-ms))
-      (displayln
-       "[poo-flow] phase=executor-handoff profile="
-       (poo-flow-build-policy-ref policy 'profile)
-       " boundary=std/make/source-import-currentness-or-compile"
-       " target-count=" target-count
-       " heartbeatMs=" interval-ms
-       " policy=" (poo-flow-build-policy-ref policy 'id)
-       " owner=module-system/observability"
-       " executor=asp-build-api/std-make")
-      (force-output)
-      (spawn
-       (lambda ()
-         (let loop ((elapsed-ms interval-ms))
-           (thread-sleep! (/ interval-ms 1000.0))
-           (displayln
-            "[poo-flow] phase=executor-active profile="
-            (poo-flow-build-policy-ref policy 'profile)
-            " boundary=std/make/source-import-currentness-or-compile"
-            " target-count=" target-count
-            " elapsedMs=" elapsed-ms
-            " policy=" (poo-flow-build-policy-ref policy 'id)
-            " owner=module-system/observability"
-            " executor=asp-build-api/std-make")
-           (force-output)
-           (loop (+ elapsed-ms interval-ms))))))))
+      (let (started-jiffy (current-jiffy))
+        (poo-flow-write-observation-line!
+         "[poo-flow] phase=executor-handoff profile=~a boundary=std/make/source-import-currentness-or-compile target-count=~a heartbeatMs=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+         (poo-flow-build-policy-ref policy 'profile)
+         target-count interval-ms (poo-flow-build-policy-ref policy 'id))
+        (spawn
+         (lambda ()
+           (let loop ()
+             (thread-sleep! (/ interval-ms 1000.0))
+             (poo-flow-write-observation-line!
+              "[poo-flow] phase=executor-active profile=~a boundary=std/make/source-import-currentness-or-compile target-count=~a elapsedMs=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+              (poo-flow-build-policy-ref policy 'profile)
+              target-count
+              (poo-flow-build-elapsed-milliseconds started-jiffy)
+              (poo-flow-build-policy-ref policy 'id))
+             (loop))))))))
