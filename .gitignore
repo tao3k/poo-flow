@@ -27,6 +27,8 @@ version.ss
 /target/
 
 # Local Python packaging and native-extension build outputs.
+__pycache__/
+*.py[cod]
 *.egg-info/
 *.so
 
