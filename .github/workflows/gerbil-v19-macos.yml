@@ -1,0 +1,200 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+name: Gerbil v19 macOS qualification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/gerbil-v19-macos.yml
+      - build.ss
+      - gerbil.pkg
+      - src/**
+      - t/qualification/darwin-gerbil-build-scenario.ss
+      - t/funflow-github-ci-json-schema-contract-test.ss
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gerbil-v19-macos-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-scenario:
+    name: Darwin build (${{ matrix.toolchain }})
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - toolchain: v0.18.2-homebrew
+            install: homebrew
+            release-tag: ""
+            release-archive: ""
+            release-sha256: ""
+            release-revision: ""
+          - toolchain: v0.19-3964ba4e
+            install: release
+            release-tag: gerbil-v0.19-3964ba4eafae414201e408742a847c404ba755ef-darwin-aarch64
+            release-archive: gerbil-v0.19-3964ba4eafae414201e408742a847c404ba755ef-darwin-aarch64.tar.gz
+            release-sha256: a3744bd55ce4b9b1496467ba7c7bbf849b8e181033cb6bbe8c8964efec035480
+            release-revision: 3964ba4eafae414201e408742a847c404ba755ef
+    env:
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/${{ matrix.toolchain }}
+    steps:
+      - name: Checkout POO Flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install shared Darwin dependencies
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
+          brew install gcc jq openssl pkg-config sqlite zlib
+
+          gcc_prefix="$(brew --prefix gcc)"
+          gcc_bin="$({
+            find "$gcc_prefix/bin" -maxdepth 1 -type f -name 'gcc-[0-9]*'
+          } | awk -F- '{print $NF "\t" $0}' | sort -n | tail -n 1 | cut -f2-)"
+          test -x "$gcc_bin"
+          echo "GERBIL_GCC=$gcc_bin" >> "$GITHUB_ENV"
+
+          openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
+          echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+          "$gcc_bin" --version
+
+      - name: Install v0.18.2 Homebrew capability
+        if: matrix.install == 'homebrew'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: brew install --force-bottle tao3k/gerbil/gerbil-scheme
+
+      - name: Install immutable v0.19 Darwin capability
+        if: matrix.install == 'release'
+        env:
+          RELEASE_TAG: ${{ matrix.release-tag }}
+          RELEASE_ARCHIVE: ${{ matrix.release-archive }}
+          RELEASE_SHA256: ${{ matrix.release-sha256 }}
+          RELEASE_REVISION: ${{ matrix.release-revision }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GERBIL_RELEASE_ROOT"
+          url="https://github.com/tao3k/gerbil-bazel/releases/download/$RELEASE_TAG/$RELEASE_ARCHIVE"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/$RELEASE_ARCHIVE" "$url"
+          echo "$RELEASE_SHA256  $RUNNER_TEMP/$RELEASE_ARCHIVE" | shasum -a 256 --check
+          tar -xzf "$RUNNER_TEMP/$RELEASE_ARCHIVE" \
+            -C "$GERBIL_RELEASE_ROOT" --strip-components=1
+          test -f "$GERBIL_RELEASE_ROOT/activate"
+          jq -e --arg revision "$RELEASE_REVISION" \
+            '.schema == "gerbil-bazel.toolchain-release.v1" and
+             .upstreamRevision == $revision and
+             .platform.os == "darwin" and .platform.arch == "aarch64"' \
+            "$GERBIL_RELEASE_ROOT/gerbil-toolchain-release.json" >/dev/null
+
+          source "$GERBIL_RELEASE_ROOT/activate"
+          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
+          echo "GERBIL_PREFIX=$GERBIL_PREFIX" >> "$GITHUB_ENV"
+          echo "GERBIL_HOME=$GERBIL_HOME" >> "$GITHUB_ENV"
+          echo "GAMBOPT=$GAMBOPT" >> "$GITHUB_ENV"
+
+      - name: Verify selected Gerbil capability
+        shell: bash
+        run: |
+          set -euo pipefail
+          gerbil --version
+          gxi -v
+          gxi -e '(begin (import :std/make :std/text/json) (displayln "darwin-gerbil-ready"))'
+
+      - name: Restore exact Gerbil dependency cache
+        id: dependency-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gerbil/pkg
+            .gerbil/lib
+            .gerbil/bin
+          key: darwin-gerbil-build-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('gerbil.pkg') }}
+
+      - name: Install declared Gerbil dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          if [[ "${{ steps.dependency-cache.outputs.cache-hit }}" == "true" ]]; then
+            gerbil deps --update
+          else
+            gerbil deps --install
+          fi
+          gerbil env gerbil interactive -e \
+            '(begin (import :asp-gerbil-scheme/benchmark-api) (displayln "asp-benchmark-ready"))'
+
+      - name: Save exact Gerbil dependency cache
+        if: steps.dependency-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gerbil/pkg
+            .gerbil/lib
+            .gerbil/bin
+          key: darwin-gerbil-build-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('gerbil.pkg') }}
+
+      - name: Measure cold POO Flow build
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gerbil clean
+          gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
+            cold "$TOOLCHAIN" "$RUNNER_TEMP/cold-build.json"
+
+      - name: Measure warm POO Flow build
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
+            warm "$TOOLCHAIN" "$RUNNER_TEMP/warm-build.json"
+
+      - name: Validate native JSON HashTable path
+        run: gerbil env gxtest ./t/funflow-github-ci-json-schema-contract-test.ss
+
+      - name: Publish build comparison summary
+        if: always()
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
+        shell: bash
+        run: |
+          {
+            echo "### Darwin Gerbil build: $TOOLCHAIN"
+            echo
+            if [[ -s "$RUNNER_TEMP/cold-build.json" ]]; then
+              echo "- cold: $(jq -r '.elapsedMs' "$RUNNER_TEMP/cold-build.json") ms"
+            fi
+            if [[ -s "$RUNNER_TEMP/warm-build.json" ]]; then
+              echo "- warm: $(jq -r '.elapsedMs' "$RUNNER_TEMP/warm-build.json") ms"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Darwin build receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: darwin-gerbil-build-${{ matrix.toolchain }}
+          path: |
+            ${{ runner.temp }}/cold-build.json
+            ${{ runner.temp }}/warm-build.json
+          if-no-files-found: warn
+          retention-days: 14
