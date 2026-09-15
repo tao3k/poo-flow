@@ -13,7 +13,9 @@
                  testing-interface-map-profile
                  testing-interface-run-test-files!)
         (only-in :std/srfi/1 filter foldl)
-        (only-in :std/srfi/13 string-prefix?))
+        (only-in :std/srfi/13 string-prefix?)
+        (only-in "src/module-system/observability/testing-extension.ss"
+                 poo-flow-testing-observability-extension))
 
 ;;; Scenario end-to-end benchmarks admit on wall-clock p95, so every file in
 ;;; the performance lane needs an uncontended process.  This is a test-owned
@@ -31,7 +33,7 @@
       testing
       (testing-test-selector 'contains fragment)
       +testing-serial-resource-profile+))
-   +asp-testing-interface+
+   (poo-flow-testing-observability-extension +asp-testing-interface+)
    +poo-flow-performance-serial-test-fragments+))
 
 (def +poo-flow-performance-test-files+

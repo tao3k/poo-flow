@@ -79,7 +79,14 @@
              'testing/source-root 1/100))
         (check-equal?
          (poo-flow-testing-observability-profile-source-load-paths profile)
-         '(".gerbil/lib" "."))))
+         '(".gerbil/lib" "."))
+        (let (performance-source
+              (call-with-input-file "performance-tests.ss" read-all-as-string))
+          (check-equal?
+           (contains?
+            performance-source
+            "(poo-flow-testing-observability-extension +asp-testing-interface+)")
+           #t))))
 
     (test-case "default policy exposes an oversized native catalog"
       (let (port (open-output-string))
