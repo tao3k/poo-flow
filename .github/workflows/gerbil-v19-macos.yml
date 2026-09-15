@@ -103,9 +103,11 @@ jobs:
 
           source "$GERBIL_RELEASE_ROOT/activate"
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          echo "GERBIL_PREFIX=$GERBIL_PREFIX" >> "$GITHUB_ENV"
-          echo "GERBIL_HOME=$GERBIL_HOME" >> "$GITHUB_ENV"
-          echo "GAMBOPT=$GAMBOPT" >> "$GITHUB_ENV"
+          {
+            echo "GERBIL_PREFIX=$GERBIL_PREFIX"
+            echo "GERBIL_HOME=$GERBIL_HOME"
+            echo "GAMBOPT=$GAMBOPT"
+          } >> "$GITHUB_ENV"
 
       - name: Verify selected Gerbil capability
         shell: bash
