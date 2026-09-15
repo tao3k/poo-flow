@@ -26,6 +26,16 @@ This owner consumes registry source refs and turns them into lazy-load plans, au
 
 The facade re-exports stable module-system contracts only. Concrete workflow, sandbox, profile, presentation, and object modules should be imported from their real owner by callers that need them. The facade must not be used as a convenience import for downstream implementation modules.
 
+4. =src/user-interface/facade.ss=
+
+The User Interface facade follows the same bounded rule. It owns stable loader,
+entrypoint, presentation, and observation mechanics. A concrete capability is
+exported by =src/modules/<module-name>/interface.ss= and is loaded only when a
+configuration selects that module. In particular, durable memory behavior is
+owned by =src/modules/memory-core/interface.ss= and session lifecycle behavior
+is owned by =src/modules/session/interface.ss=; neither is re-exported by the
+global User Interface facade.
+
 ** 40.30 Growth Rule
 Adding a new concrete module should follow this shape:
 #+begin_src scheme
@@ -64,6 +74,7 @@ Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-o
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
 - import =src/modules/*= from =src/module-system/facade.ss=;
+- import =src/modules/*= from =src/user-interface/facade.ss=;
 - move loader backends, resolver activation, or extension graph logic into =module-registry.ss=;
 - use filesystem scans as the default registry expansion path;
 - make tests pass by relying on facade to leak concrete owner symbols.

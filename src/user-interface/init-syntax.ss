@@ -13,19 +13,12 @@
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
         :poo-flow/src/module-system/observability/module-presentation
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/store-backend
-        :poo-flow/src/modules/memory-core/durable/store-operation
-        :poo-flow/src/modules/memory-core/durable/store-operation-bridge
-        :poo-flow/src/modules/memory-core/durable/recovery-scenario
-        :poo-flow/src/modules/memory-core/durable/artifact-policy
+        :poo-flow/src/modules/memory-core/interface
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/cubeSandbox/profile-interface
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/docker-sandbox/profile-interface
         :poo-flow/src/modules/funflow/config
-        :poo-flow/src/modules/memory-core/config
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/session/syntax
         :poo-flow/src/modules/tool-core/config
@@ -82,7 +75,7 @@
         (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
         (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/src/modules/funflow/config)
-        (import: :poo-flow/src/modules/memory-core/config)
+        (import: :poo-flow/src/modules/memory-core/interface)
         (import: :poo-flow/src/modules/session/config)
         (import: :poo-flow/src/modules/session/syntax)
         (import: :poo-flow/src/modules/tool-core/config)
@@ -111,13 +104,6 @@
         loop-engine-safety-policy-extension
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability/module-presentation)
-        (import: :poo-flow/src/modules/memory-core/durable/policy)
-        (import: :poo-flow/src/modules/memory-core/durable/store)
-        (import: :poo-flow/src/modules/memory-core/durable/store-backend)
-        (import: :poo-flow/src/modules/memory-core/durable/store-operation)
-        (import: :poo-flow/src/modules/memory-core/durable/store-operation-bridge)
-        (import: :poo-flow/src/modules/memory-core/durable/recovery-scenario)
-        (import: :poo-flow/src/modules/memory-core/durable/artifact-policy)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays

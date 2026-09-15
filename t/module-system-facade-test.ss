@@ -17,6 +17,7 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
+        (only-in :std/srfi/13 string-prefix?)
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
         :poo-flow/src/user-interface/presentation
@@ -24,11 +25,38 @@
 
 (export module-system-facade-test)
 
+(def (source-datum-has-module-prefix? value prefix)
+  (cond
+   ((symbol? value) (string-prefix? prefix (symbol->string value)))
+   ((pair? value)
+    (or (source-datum-has-module-prefix? (car value) prefix)
+        (source-datum-has-module-prefix? (cdr value) prefix)))
+   ((vector? value)
+    (source-datum-has-module-prefix? (vector->list value) prefix))
+   (else #f)))
+
+(def (source-port-has-module-prefix? port prefix)
+  (let loop ()
+    (let (value (read port))
+      (cond
+       ((eof-object? value) #f)
+       ((source-datum-has-module-prefix? value prefix) #t)
+       (else (loop))))))
+
 ;;; This suite protects the public module-system facade from leaking leaf-owner
 ;;; implementation details.
 ;; : TestSuite
 (def module-system-facade-test
   (test-suite "poo-flow module system facade"
+    (test-case "keeps the user-interface facade independent of concrete modules"
+      (check-equal?
+       (call-with-input-file
+        "src/user-interface/facade.ss"
+        (lambda (port)
+          (source-port-has-module-prefix?
+           port
+           ":poo-flow/src/modules/")))
+       #f))
     (test-case "builds Marlin-style interface config descriptors"
       (let* ((interface
               (poo-flow-module-interface
