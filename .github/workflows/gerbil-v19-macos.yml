@@ -60,7 +60,11 @@ jobs:
           brew install jq openssl pkg-config sqlite zlib
 
           openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
-          echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+          test -e "$openssl_prefix/lib/libssl.dylib"
+          {
+            echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+            echo "LIBRARY_PATH=$openssl_prefix/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+          } >> "$GITHUB_ENV"
           cc --version
 
       - name: Install v0.18.2 Homebrew capability
@@ -101,6 +105,34 @@ jobs:
             echo "GERBIL_HOME=$GERBIL_HOME"
             echo "GAMBOPT=$GAMBOPT"
           } >> "$GITHUB_ENV"
+
+      - name: Complete v0.19 tools omitted from release
+        if: matrix.install == 'release'
+        env:
+          RELEASE_REVISION: ${{ matrix.release-revision }}
+          TOOLS_BUILD_SHA256: 285168b7a3078576453269388d55e1e9eca815beb5ac7feb4f7a73382e01daea
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gxi -e '(import :gerbil/tools/gxpkg)' >/dev/null 2>&1; then
+            echo "v19 release already contains Gerbil package tools"
+            exit 0
+          fi
+
+          echo "::notice::The pinned v19 release omits the official tools build target; completing it from the same upstream revision"
+          tools_build="$RUNNER_TEMP/gerbil-v19-tools-build.ss"
+          curl --fail --location --retry 3 \
+            "https://git.cons.io/mighty-gerbils/gerbil/raw/commit/$RELEASE_REVISION/src/tools/build.ss" \
+            --output "$tools_build"
+          echo "$TOOLS_BUILD_SHA256  $tools_build" | shasum -a 256 --check
+          build_workers="$(sysctl -n hw.logicalcpu)"
+          (
+            cd "$GERBIL_PREFIX/src/tools"
+            GERBIL_BUILD_PREFIX="$GERBIL_PREFIX" \
+              GERBIL_BUILD_FLAGS="-j$build_workers" \
+              gxi "$tools_build"
+          )
+          gxi -e '(begin (import :gerbil/tools/gxpkg) (displayln "darwin-gerbil-tools-ready"))'
 
       - name: Verify selected Gerbil capability
         env:
