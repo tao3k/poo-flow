@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: backend capability policy describes sandbox provider capabilities
 ;;; before nano, docker, cube, or native runtime adapters consume them.
 ;;; Invariant: capability objects must stay parser-visible and POO-native for
@@ -267,6 +271,7 @@
 	           seen
 	           (cons entry-key ordered))))))))
 
+;; : (forall (e) (-> [e] HashTable [e] [e]))
 ;; : (-> Alist HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/kept entries
                                                                   latest
@@ -282,6 +287,7 @@
              (poo-flow-sandbox-backend-capability-registry-entry-key entry)))))
     entries)))
 
+;; : (forall (k e) (-> [k] HashTable [e] [e]))
 ;; : (-> [Symbol] HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/materialize keys
                                                                           latest

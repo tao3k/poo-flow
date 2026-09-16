@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow POO prototype families.
 ;;; Invariant: this owner declares static prototype slots and predicates only.
 
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/config-prototype-syntax)
+        :poo-flow/src/module-system/declaration/config-syntax)
 
 (export funflow-check
         funflow-pipeline

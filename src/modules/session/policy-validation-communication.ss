@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: communication receipt normalization and grant checks.
 
 (import (only-in :poo-flow/src/modules/session/communication
@@ -46,6 +50,7 @@
     (list (cons 'kind 'poo-flow.session.communication-channel-receipt.invalid)
           (cons 'value receipt)))))
 
+;; : (forall (a b) (-> [a] [b]))
 ;; : (-> [PooSessionCommunicationChannelReceiptOrRow] [Alist])
 (def (poo-flow-session-policy-communication-channel-receipt-rows receipts)
   (map poo-flow-session-policy-communication-channel-receipt-row receipts))
@@ -60,6 +65,7 @@
     (list (cons 'kind 'poo-flow.session.communication-receipt.invalid)
           (cons 'value receipt)))))
 
+;; : (forall (a b) (-> [a] [b]))
 ;; : (-> [PooSessionCommunicationReceiptOrRow] [Alist])
 (def (poo-flow-session-policy-communication-receipt-rows receipts)
   (map poo-flow-session-policy-communication-receipt-row receipts))

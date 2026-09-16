@@ -1,4 +1,10 @@
-(import :clan/poo/object
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: resolves feature-profile selections into deterministic feature sets.
+;;; Invariant: dependency closure cannot introduce an undeclared feature identity.
+(import (only-in :clan/poo/object .ref)
         :poo-flow/src/feature-system/model
         :poo-flow/src/utilities/functional)
 

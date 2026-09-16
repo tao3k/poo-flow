@@ -1,10 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :clan/poo/object :std/test
-        :gslph/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel
         :poo-flow/src/semantic/organization-bundle-shadow)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (shadow-bundle)
   (poo-flow-organization-bundle
@@ -37,7 +39,7 @@
          (identity (poo-flow-organization-bundle-identity bundle)))
     (kernel-state 'validated bundle canonical identity 0 #f 'validate #f)))
 
-(def shadow-tests
+(def organization-bundle-shadow-test
   (test-suite
    "read-only organization Bundle shadow projection"
    (test-case "equivalent facts are deterministic draft evidence"
@@ -103,5 +105,3 @@
                    'poo-flow.organization-bundle.draft.3)
      (check-equal? +poo-flow-organization-facet-schema+
                    'poo-flow.organization-facet.draft.3))))
-
-(run-tests! shadow-tests)

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: CI/CD sandbox profile inheritance and runtime-readiness facts.
 ;;; Invariant: unresolved profile refs stay visible; no fallback profile is fabricated.
 
@@ -222,7 +226,7 @@
 ;;   %
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-runtime-manifest-readiness-fields check profile-catalog)
-  (poo-flow-core-field-rows
+  (poo-flow-product-field-rows
    (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
    (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
    (check (poo-flow-cicd-check-name check))

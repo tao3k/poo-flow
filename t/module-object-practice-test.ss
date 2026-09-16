@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
 (import :gerbil/gambit
@@ -10,13 +14,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core)
+        "./support/performance"
+        (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface)
 
 (export module-object-practice-test)
 
@@ -34,7 +38,7 @@
 (def (large-object-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'Any
+   PooFlowModuleAnyType
    'override
    #f
    '((scope . large-object-performance)
@@ -44,7 +48,7 @@
 (def (large-object-list-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'List
+   PooFlowModuleListType
    'append
    '()
    '((scope . large-object-performance)
@@ -59,7 +63,7 @@
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'append
                  '(filesystem-read)
                  '((scope . best-practice)
@@ -67,7 +71,7 @@
                (note-field
                 (poo-flow-module-field-contract
                  'note
-                 'String
+                 PooFlowModuleStringType
                  'override
                  "unset"
                  '((scope . best-practice)
@@ -140,7 +144,7 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-object-contributions practice-object
@@ -198,12 +202,12 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node contributions))))
                (noop-best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node
@@ -233,7 +237,7 @@
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'override
                  '(filesystem-read process-run cache-mount)
                  '((scope . best-practice)
@@ -241,7 +245,7 @@
                (metadata-field
                 (poo-flow-module-field-contract
                  'metadata-map
-                 'Map
+                 PooFlowModuleMapType
                  'override
                  '((stage . default))
                  '((scope . best-practice)

@@ -1,10 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: lightweight composition benchmark gates.
 ;;; Invariant: composition macro scenarios should not import the whole
 ;;; performance support family just to load a few benchmark fixtures.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :gslph/src/benchmark/gate benchmark-run))
+        (only-in :asp-gerbil-scheme/benchmark-api benchmark-run))
 
 (export poo-performance-composition-profile-declaration-fixture
         poo-performance-composition-profiles-bulk-fixture

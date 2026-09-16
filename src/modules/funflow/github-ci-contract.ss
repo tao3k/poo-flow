@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Funflow profile contract: GitHub Actions workflow schema projection.
 ;;; Invariant: this module owns a Funflow profile contract surface only. GitHub
 ;;; execution, API adapters, and CI runners remain outside the Scheme core.

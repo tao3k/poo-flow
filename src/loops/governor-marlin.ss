@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Marlin-facing loop governor ABI projections live here.
 ;;; Responsibility: publish ABI manifests from validated governor contracts.
 ;;; Responsibility: publish Marlin request envelopes for =govern-loop=.
@@ -15,7 +19,7 @@
 ;;; Policy evidence: tests assert schemas, envelopes, receipts, and manifests.
 
 (import :poo-flow/src/core/failure
-        (only-in :poo-flow/src/module-system/loop-engine-core
+        (only-in :poo-flow/src/modules/loop-engine/core
                  +poo-flow-user-loop-engine-handoff-contracts+
                  +poo-flow-user-loop-engine-receipt-contracts+
                  +poo-flow-user-loop-engine-runtime-command-arguments+

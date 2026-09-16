@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: config-session core syntax owns the shared macro substrate for the
 ;;; session module category and its feature-level expansions.
 ;;; Invariant: core expansions must stay deterministic for loader and policy
@@ -59,7 +63,7 @@
     (poo-flow-session-syntax-default-placement 'profile-ref))))
 
 ;; session-graph
-;;   : (-> Syntax PooSessionGraphPresentation)
+;;   : (-> PooSessionValue ... PooSessionGraphPresentation)
 ;;   | doc m%
 ;;       `session-graph` mirrors the declaration form: users list session values
 ;;       and receive the existing report-only graph receipt.
@@ -70,10 +74,8 @@
 ;;       ;; => pooFlowSessionGraphPresentation receipt
 ;;       ```
 ;;     %
-(defrules session-graph ()
-  ((_ session-value ...)
-   (poo-flow-session-syntax-graph-presentation
-    (list session-value ...))))
+(def (session-graph . session-values)
+  (poo-flow-session-syntax-graph-presentation session-values))
 
 ;; session-registry-entry
 ;;   : (-> Syntax PooSessionRegistryEntry)

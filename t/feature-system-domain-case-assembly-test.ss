@@ -1,8 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/utilities/functional)
 
 (export feature-system-domain-case-assembly-test)

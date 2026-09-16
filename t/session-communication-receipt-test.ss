@@ -1,10 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session communication receipts.
 ;;; Invariant: receipts describe routed intent; Scheme never delivers messages.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -195,5 +198,3 @@
         (check-equal? (test-ref (car rows) 'handoff-required) #t)
         (check-equal? (test-ref (car rows) 'delivered?) #f)
         (check-equal? (test-ref (car rows) 'runtime-executed) #f)))))
-
-(run-tests! session-communication-receipt-test)

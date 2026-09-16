@@ -1,6 +1,15 @@
-(import :poo-flow/src/proof/proof-fact-wire
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-ffi-bridge
         :poo-flow/src/proof/proof-gate-receipts)
+
+(def proof-ffi-bridge-test
+  (test-suite "proof FFI bridge"
+    (test-case "projects the accepted proof payload"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -32,4 +41,4 @@
               (poo-flow-proof-fact-ref
                'schema
                (poo-flow-proof-fact-ref 'handoff-wire payload))
-              'poo-flow.proof.ffi-wire)
+              'poo-flow.proof.ffi-wire))))

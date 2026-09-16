@@ -1,4 +1,9 @@
-import { rmSync } from "node:fs";
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+import assert from "node:assert/strict";
+import { readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -12,10 +17,24 @@ import {
 
 const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const workspaceRoot = resolve(packageRoot, "../..");
-const target = "//bindings/runtime-wasm:human_capability_bundle";
+const primaryTarget = "//bindings/runtime-wasm:human_capability_bundle";
+const independentTarget =
+  "//bindings/runtime-wasm:human_capability_bundle_determinism";
 
-runBazel(["build", target], { cwd: workspaceRoot });
+runBazel(["build", primaryTarget, independentTarget], { cwd: workspaceRoot });
 const bazelBin = runBazel(["info", "bazel-bin"], { cwd: workspaceRoot });
+const outputRoot = join(bazelBin, "bindings/runtime-wasm");
+
+assert.deepEqual(
+  readFileSync(join(outputRoot, "human-capability.determinism.descriptor.bin")),
+  readFileSync(join(outputRoot, "human-capability.descriptor.bin")),
+  "independent descriptor lowering must be byte deterministic",
+);
+assert.deepEqual(
+  readFileSync(join(outputRoot, "human-capability.determinism.arena.bin")),
+  readFileSync(join(outputRoot, "human-capability.arena.bin")),
+  "independent arena lowering must be byte deterministic",
+);
 
 const outputs = [
   ["human-capability.descriptor.bin", "workflows/human-capability.descriptor.bin"],
@@ -25,7 +44,7 @@ const outputs = [
 const staged = [];
 try {
   for (const [sourceName, targetName] of outputs) {
-    const source = join(bazelBin, "bindings/runtime-wasm", sourceName);
+    const source = join(outputRoot, sourceName);
     const destination = join(packageRoot, targetName);
     const temporary = join(
       dirname(destination),

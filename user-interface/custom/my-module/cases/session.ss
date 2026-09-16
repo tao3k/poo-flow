@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream session dataflow case.
 ;;; Invariant: this standalone module declares report-only objects.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-case)
+
+(def poo-flow-custom-my-module-session-case
+  (poo-flow-session-cases
   (session-case custom-session-case
     (metadata (source . user-interface)
               (case . openrath-session-first))
@@ -29,4 +37,4 @@
       (session-graph custom-session-root custom-session-branch)))
     (rows custom-session-root
           custom-session-branch
-          custom-session-presentation)))
+          custom-session-presentation))))

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime tutorial stages prove Docker/Store handoff behavior.
 ;;; Invariant: these tests keep heavy runtime semantics behind command output.
 
@@ -10,13 +14,12 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/docker
-        :poo-flow/src/workflow/store
+        :poo-flow/src/modules/docker/interface
+        :poo-flow/src/modules/workflow/store
         :poo-flow/src/modules/workflow/flows)
 
 (export tutorial-runtime-result-test)

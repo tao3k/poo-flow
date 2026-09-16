@@ -1,8 +1,18 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
+    "gerbil-dependencies.MODULE.bazel",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
-    "tools/validate-runtime-v0-symbol-surface.ss",
+    "t/module-system-observability-test.ss",
+    "t/package-spec-root-mode-ab-scenario-test.ss",
+    "t/profile-composition-test.ss",
+    "t/scenarios/building/package-spec-root-mode-ab/closure-build.ss",
+    "t/scenarios/building/package-spec-root-mode-ab/contract.ss",
+    "t/scenarios/building/package-spec-root-mode-ab/modules-build.ss",
 ])
 
 filegroup(
@@ -15,42 +25,8 @@ filegroup(
     srcs = glob([
         "gerbil.pkg",
         "src/**/*.inc",
-        "src/**/*.scm",
         "src/**/*.ss",
-        "src/**/*.ssi",
     ]),
-)
-
-filegroup(
-    name = "runtime_wasm_generator_build_script",
-    srcs = ["runtime-wasm-generator-build.ss"],
-)
-
-filegroup(
-    name = "runtime_wasm_generator_scheme_sources",
-    srcs = [
-        "gerbil.pkg",
-        "src/core/failure.ss",
-        "src/core/flow.ss",
-        "src/core/flow-declarations.ss",
-        "src/core/flow-strand.ss",
-        "src/core/object-syntax.ss",
-        "src/core/plan.ss",
-        "src/core/projection-syntax.ss",
-        "src/core/roles.ss",
-        "src/core/task.ss",
-        "src/feature-system/bundle-v1-composition-writer.ss",
-        "src/feature-system/bundle-v1-foreign-arena.ss",
-        "src/feature-system/bundle-v1-lowering.ss",
-        "src/module-system/profile-composition.ss",
-        "src/module-system/profile-composition-accessors.ss",
-        "src/module-system/profile-composition-builders.ss",
-        "src/module-system/profile-composition-inline-runtime.ss",
-        "src/module-system/profile-composition-syntax-plan.ss",
-        "src/module-system/profile-composition-use-syntax.ss",
-        "src/projection-syntax-support.ss",
-        "src/utilities/functional.ss",
-    ],
 )
 
 filegroup(
@@ -59,10 +35,28 @@ filegroup(
 )
 
 filegroup(
+    name = "scheme_test_support_sources",
+    srcs = [
+        "t/domain-case-test-support.ss",
+        "t/fixtures/bundle-v1-domain-case-projection.ss",
+        "t/fixtures/object-load-valid/objects.ss",
+        "t/fixtures/object-load-valid/parts/object1.ss",
+        "t/module-system-poo-performance-test-support/composition-gates.ss",
+        "t/module-system-poo-performance-test-support/composition-large-library.ss",
+        "t/module-system-poo-performance-test-support/composition-scenarios.ss",
+        "t/scenarios/performance/composition-macro-expansion/benchmark.ss",
+        "t/scenarios/performance/domain-case-indexed-resolution/benchmark.ss",
+        "t/scenarios/performance/poo-clos-native-c3/benchmark.ss",
+        "t/user-interface-fixtures.ss",
+    ] + glob(["t/support/**/*.ss"]),
+)
+
+filegroup(
     name = "scheme_build_sources",
     srcs = [
         "build.ss",
         ":scheme_runtime_sources",
+        ":scheme_test_support_sources",
     ] + glob([
         "bindings/nono-c/**/*.h",
         "user-interface/**/*.ss",
@@ -71,14 +65,23 @@ filegroup(
 
 filegroup(
     name = "runtime_load_projection_source",
-    srcs = ["src/module-system/runtime-load-projection.ss"],
+    srcs = ["src/modules/funflow/runtime-load-projection.ss"],
 )
 
 filegroup(
-    name = "scheme_test_sources",
-    srcs = [":scheme_build_sources"] + glob([
-        "README.org",
-        "docs/**/*.org",
-        "t/**",
-    ]),
+    name = "json_schema_native_contract_test_support",
+    srcs = [
+        "schemas/json/github-workflow.json",
+        "t/funflow-github-ci-json-schema-contract-test.ss",
+        "t/json-schema-contract-bridge-test.ss",
+        "t/json-schema-native-contract-test.ss",
+    ],
+)
+
+filegroup(
+    name = "type_contract_performance_test_support",
+    srcs = [
+        "t/support/performance.ss",
+        "t/support/type-contract-performance.ss",
+    ],
 )

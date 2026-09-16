@@ -1,10 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
 (import (only-in :clan/poo/object .ref object<-alist)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
+        :poo-flow/src/module-system/projection/syntax
         (only-in :poo-flow/src/modules/workflow/cicd-core
                  poo-flow-cicd-alist-ref
                  poo-flow-cicd-symbol-member?)
@@ -12,6 +17,7 @@
         :poo-flow/src/modules/workflow/cicd)
 
 (export poo-flow-funflow-cicd-default-payload
+        poo-flow-funflow-configs
         +poo-flow-funflow-workflow-agreement-contract+
         funflow-check
         funflow-pipeline
@@ -52,10 +58,24 @@
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles)
 
+;;; Module-owned user syntax delegates to the one generic config lowering.
+(defsyntax (poo-flow-funflow-configs stx)
+  (syntax-case stx ()
+    ((_ config-form ...)
+     (syntax
+      (poo-flow-module-configs
+       funflow
+       poo-flow-funflow-poo-config-flags
+       (quoted :config config-form ...)
+       config-form ...)))))
+
 ;;; The CI/CD payload is a Funflow feature, not a new top-level category. It is
 ;;; inspectable module data; adapters such as GitHub, Docker, or Nix stay out.
 ;; : UserModuleFlagEntry
-(import ./config-adapter.ss)
+(import (only-in ./config-adapter.ss
+                 poo-flow-funflow-require
+                 poo-flow-funflow-poo-check->cicd-check
+                 poo-flow-funflow-poo-pipeline->check-map))
 
 (def poo-flow-funflow-cicd-default-payload
   '(+cicd
@@ -95,7 +115,7 @@
    ((and (eq? workflow-ref 'funflow-cicd)
          (null? check-maps))
     (list
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (field 'workflow-ref)
       (code 'missing-funflow-workflow-pipeline)
       (workflow-ref workflow-ref))))
@@ -103,7 +123,7 @@
 
 ;; : (-> [PooFlowCicdCheckMap] Alist)
 (def (poo-flow-funflow-workflow-agreement-summary check-maps)
-  (poo-flow-module-field-rows
+  (poo-flow-product-field-rows
    (pipeline-count (length check-maps))
    (pipeline-names (map poo-flow-cicd-check-map-name check-maps))
    (functional-dag-rows
@@ -124,7 +144,7 @@
           (poo-flow-funflow-workflow-agreement-summary check-maps))
          (functional-dag-rows
           (poo-flow-cicd-alist-ref summary 'functional-dag-rows '())))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (kind 'funflow-workflow-agreement)
      (contract +poo-flow-funflow-workflow-agreement-contract+)
      (workflow-ref workflow-ref)
@@ -281,7 +301,7 @@
   (poo-flow-funflow-dag-edge
    (poo-flow-cicd-alist-ref edge 'from #f)
    (poo-flow-cicd-alist-ref edge 'to #f)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'workflow-cicd-dependency-graph))))
 
 ;; : (-> [Alist] [PooFlowFunflowDagEdge])
@@ -301,7 +321,7 @@
    node
    #f
    #f
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'funflow-functional-kernel))))
 
 ;; : (-> PooFlowFunflowDagEdge PooFlowFunflowCompositionStep)
@@ -311,7 +331,7 @@
    #f
    (.ref edge 'from)
    (.ref edge 'to)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
     (source 'funflow-functional-kernel)
     (edge-composition-style
      (.ref edge 'composition-style)))))
@@ -429,7 +449,7 @@
    "funflow runtime projection requires a plan"
    (poo-flow-funflow-plan? plan)
    plan)
-   (poo-flow-module-field-rows
+   (poo-flow-product-field-rows
    (kind 'poo-flow.funflow.plan-projection)
    (schema 'poo-flow.funflow-plan-projection.v1)
    (origin (.ref plan 'origin))
@@ -493,7 +513,7 @@
       (cons 'valid?
             (poo-flow-cicd-alist-ref graph 'valid? #f))
       (cons 'metadata
-            (poo-flow-module-field-rows
+            (poo-flow-product-field-rows
              (source 'funflow-functional-kernel)
              (dependency-graph-kind
               (poo-flow-cicd-alist-ref graph 'kind #f))))
@@ -511,7 +531,7 @@
    ((null? stages) '())
    ((pair? stages)
     (cons
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (stage (car stages))
       (source 'use-module-funflow)
       (path (list 'use-module 'funflow flow-name (car stages))))
@@ -549,7 +569,7 @@
 (def (poo-flow-funflow-check-map->normalized-flow check-map)
   (let* ((dag (poo-flow-funflow-check-map->functional-dag check-map))
          (metadata
-          (poo-flow-module-field-rows
+          (poo-flow-product-field-rows
            (source 'use-module-funflow)
            (check-map (poo-flow-cicd-check-map-name check-map)))))
     (poo-flow-funflow-functional-dag->normalized-flow dag metadata)))
@@ -565,7 +585,7 @@
    ((null? nodes) '())
    ((pair? nodes)
     (cons
-     (poo-flow-module-field-rows
+     (poo-flow-product-field-rows
       (name (car nodes))
       (kind 'funflow-step)
       (runtime-executed #f))
@@ -606,7 +626,7 @@
             (list->vector (poo-flow-funflow-edge-table-rows edges)))
       (cons 'policy-table
             (vector
-             (poo-flow-module-field-rows
+             (poo-flow-product-field-rows
               (policy-family (.ref flow 'policy-family)))))
       (cons 'effect-table '#())
       (cons 'runtime-contract (.ref flow 'runtime-contract))

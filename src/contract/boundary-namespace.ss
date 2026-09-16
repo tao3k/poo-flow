@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: validation receipt for P0 boundary namespace descriptors.
 
 (import (only-in "../semantic/boundary-namespace.ss"
@@ -38,7 +42,7 @@
                  poo-flow-type-fact-contract->alist
                  poo-flow-lean-fact
                  poo-flow-lean-fact-contract->alist)
-        (only-in "../observability/objects.ss"
+        (only-in "../module-system/observability/objects.ss"
                  poo-flow-observability-diagnostic-record
                  poo-flow-observability-diagnostic-code
                  poo-flow-observability-diagnostic->alist
@@ -256,6 +260,7 @@
        'negative
        '((scope . boundary)))))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowBoundaryNamespaceValidation Alist)
 (def (poo-flow-boundary-namespace-validation->alist validation)
   (list

@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 100ms)
+ (target_total . 25ms)
+ (regression_budget . 75ms)
+ (expected_over_input_budget . 5ms)
+ (sampleCount . 20)
+ (targetRationale . "Pinned to graph analysis plus SCC condensation over a 1,000-node linear DAG.")
+ (maxRssMb . 256)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 3)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/graph-analysis-linear-dag/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . graph-analysis-linear-dag)
+ (optimizationFocus . "shared adjacency indexes, std queue traversal, linear Kahn ordering, Tarjan SCC and hash-deduplicated condensation")
+ (inputShape . "1,000 graph nodes and 999 directed edges in one linear DAG")
+ (expectedOutcome . "frontier, traversal, cycle, topological, SCC and condensation facts are produced without runtime execution")
+ (expectedRepair . "retain graph index ownership in graph/algorithms.ss; do not restore per-node full-edge scans or a control-layer shadow index")
+ (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (tags poo graph algorithms stdlib hash queue performance big-o))

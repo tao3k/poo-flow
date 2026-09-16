@@ -1,0 +1,47 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: native POO observation, authoring, quality, and development
+;;; performance interface. Debug effects remain opt-in function calls; loading
+;;; this interface only makes their bounded contracts available by default.
+(import (only-in "types.ss"
+                 PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
+                 PooFlowObservationContextContract PooFlowObservationContract
+                 PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
+                 PooFlowObservationSummaryContract)
+        (only-in "objects.ss"
+                 poo-flow-admission-observation-prototype
+                 poo-flow-observation-identity poo-flow-observation-provenance
+                 poo-flow-observation-context poo-flow-observe-admission-evidence
+                 poo-flow-observe-contract-admission poo-flow-observation-explain
+                 poo-flow-observation-summary)
+        (only-in "config.ss"
+                 poo-flow-build-observability-policy-prototype
+                 poo-flow-default-build-observability-policy)
+        (only-in "build-projection.ss"
+                 poo-flow-make-observed-package-spec-projector
+                 poo-flow-admit-build-package-spec!
+                 poo-flow-observe-build-projection-start
+                 poo-flow-observe-build-projection)
+        "source-authoring.ss"
+        "source-admission.ss"
+        "debug.ss")
+(export PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
+        PooFlowObservationContextContract PooFlowObservationContract
+        PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
+        PooFlowObservationSummaryContract poo-flow-admission-observation-prototype
+        poo-flow-observation-identity poo-flow-observation-provenance
+        poo-flow-observation-context poo-flow-observe-admission-evidence
+        poo-flow-observe-contract-admission poo-flow-observation-explain
+        poo-flow-observation-summary
+        poo-flow-build-observability-policy-prototype
+        poo-flow-default-build-observability-policy
+        poo-flow-make-observed-package-spec-projector
+        poo-flow-admit-build-package-spec!
+        poo-flow-observe-build-projection-start
+        poo-flow-observe-build-projection
+        (import: "source-authoring.ss")
+        (import: "source-admission.ss")
+        (import: "debug.ss"))

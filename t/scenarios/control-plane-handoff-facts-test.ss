@@ -1,4 +1,13 @@
-(import :poo-flow/src/graph/control-plane-handoff-facts)
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/graph/control-plane-handoff-facts)
+
+(def control-plane-handoff-facts-test
+  (test-suite "control-plane handoff facts"
+    (test-case "projects accepted and rejected handoff facts"
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))
@@ -67,4 +76,4 @@
 
 (assert-equal 'runtime-executed-here-rule
               (alist-ref 'rejection-rule runtime-executed-here-facts)
-              'control-plane-handoff-rejected-by-execution)
+              'control-plane-handoff-rejected-by-execution))))

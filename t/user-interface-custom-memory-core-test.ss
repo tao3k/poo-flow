@@ -1,13 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface memory-core scenario.
 ;;; Invariant: user config declares memory specs and validation receipts only.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-memory-core-case))
 
 (export user-interface-custom-memory-core-test)
@@ -38,5 +41,3 @@
         (check-equal? (test-ref validation-row 'runtime-owner)
                       "marlin-agent-core")
         (check-equal? (test-ref validation-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-memory-core-test)

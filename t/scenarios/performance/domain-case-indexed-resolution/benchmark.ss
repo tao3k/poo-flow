@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 100ms)
+ (target_total . 25ms)
+ (regression_budget . 75ms)
+ (expected_over_input_budget . 5ms)
+ (sampleCount . 20)
+ (targetRationale . "Pinned to slot and method resolution over 2,000 unique identities; repeated linear winner scans are inadmissible.")
+ (maxRssMb . 512)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 3)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/domain-case-indexed-resolution/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . domain-case-indexed-resolution)
+ (optimizationFocus . "single-pass hash winner indexes with ordered active-entry projection")
+ (inputShape . "2,000 unique slot contracts and 2,000 unique method contracts")
+ (expectedOutcome . "resolution preserves source order and diagnostics in expected linear time")
+ (expectedRepair . "retain winner indexes and active-entry projection; do not restore repeated find/remove scans")
+ (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (tags poo domain-case contracts stdlib hash performance big-o))

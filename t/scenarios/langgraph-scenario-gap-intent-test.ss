@@ -1,5 +1,15 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/graph/scenario-gap-intent)
+
+(import (only-in :std/test test-case test-suite))
+
+(def langgraph-scenario-gap-intent-test
+  (test-suite "LangGraph scenario gap intent"
+    (test-case "projects exact runtime and Lean facts"
 
 (def (check-equal label actual expected)
   (unless (equal? actual expected)
@@ -231,6 +241,4 @@
 (check-true 'lean-complete
             (contains-string? lean-source "GeneratedScenarioGapComplete_ok"))
 (check-true 'lean-p0
-            (contains-string? lean-source "GeneratedScenarioGapP0Count : Nat := 8"))
-
-(displayln "... All tests OK")
+            (contains-string? lean-source "GeneratedScenarioGapP0Count : Nat := 8")))))

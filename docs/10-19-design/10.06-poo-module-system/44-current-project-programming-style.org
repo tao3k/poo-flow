@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.44 Current Project Programming Style
 This document is the current programming contract for =poo-flow=.  It is not a
 general Gerbil style guide.  It tells agents how to write and repair code in
@@ -43,6 +47,23 @@ New code must follow these rules:
    Users should select modules and public factors.  They should not compose
    kernel hooks by hand to make a module work.
 
+6. Every maintained, contributor, and user module has one public entrypoint.
+   The stable shell is =modules/<module-name>/{types,objects,funs,config,interface}.ss=.
+   =interface.ss= imports and re-exports the four role owners; an optional
+   =syntax.ss= is also imported and re-exported when present.  Consumers and
+   build declarations load the module through =poo-flow-load-modules= and may
+   not substitute =config.ss=, =objects.ss=, or a hand-maintained source list
+   as a parallel public entrypoint.
+
+The =poo-flow-load-modules= hygienic form accepts exactly one source-collection
+expression.  It validates the required role files, rejects a module-local
+=init.ss=, checks the role dependency direction, and projects one
+=interface.ss= source reference per direct child module.  Domain authors may
+add focused files and may choose native Gerbil dispatch, MOP/CLOS composition,
+POO prototypes, pure functions, or a small hygienic rule according to the
+behavior.  The loader constrains the public shell and dependency direction; it
+does not prescribe one low-level dispatch pattern for every module.
+
 ** 10.06.44.20 Upstream Gerbil Feature Baseline
 The harness research identifies stable high-yield Gerbil owners:
 
@@ -87,6 +108,48 @@ Use this table while reviewing generated Scheme:
 Do not "simplify" these repairs back into alists.  Alists are acceptable only at
 projection boundaries, metadata payloads, or small diagnostics where the owning
 POO object is already known.
+
+** 10.06.44.35 Normative Mermaid State And Edge Semantics
+
+Architecture relationships that are materially clearer as a graph MUST be
+recorded in the owning Org RFC with a Mermaid export block.  A diagram shown
+only in discussion is not durable specification evidence.
+
+#+begin_export mermaid
+flowchart LR
+    A["State 1: declaration parsed"] -->|"lexical resolution"| B["State 2: bounded static plan"]
+    B -->|"evidence gate satisfied"| C["State 3: runtime lowering authorized"]
+    C -->|"one owner-scoped operation"| D["State 4: POO result"]
+    D -. "observation only; no precedence" .-> E["Receipt and trace projection"]
+#+end_export
+
+Mermaid nodes SHOULD name a semantic entity or an explicit state.  Edges MUST
+label nontrivial relationships, including:
+
+- state transition or lowering phase;
+- source-order or lineage precedence;
+- containment versus lazy dependency;
+- authority grant, decision, or continuation commit;
+- evidence and qualification gate;
+- owner handoff or runtime barrier;
+- an explicit absence of inheritance, override, or cross-boundary precedence.
+
+Solid edges denote an operative transition, contribution, containment, or
+dependency unless the label states otherwise.  Dotted edges SHOULD be used for
+observation, advisory relationships, or an explicitly non-precedence relation.
+Sibling boundaries MUST NOT be visually merged through an unlabeled edge.
+
+Diagrams supplement normative prose and do not replace it.  State names,
+edge labels, authority boundaries, and evidence gates in a diagram MUST agree
+with the surrounding RFC text.  Durable source uses Org syntax:
+
+#+begin_example
+#+begin_export mermaid
+...
+#+end_export
+#+end_example
+
+Markdown fences are not a project documentation format.
 
 ** 10.06.44.40 Macro And Metaprogramming Policy
 Use Gerbil macros when all of these are true:
@@ -150,7 +213,7 @@ The reference architecture is
 Stable large POO object families must not hand-write the same predicate,
 accessor, and boundary projection pattern for every object.
 
-Use =src/module-system/object-family-syntax.ss= when the family has:
+Use =src/module-system/object-family/syntax.ss= when the family has:
 
 - one stable =kind= slot;
 - fixed public slot accessors;
@@ -371,6 +434,58 @@ Performance is part of style.
 - Add focused performance scenarios for object-family, macro-expansion,
   projection, and selection hot paths when a change touches shared behavior.
 
+** 10.06.44.123 Import And Build-Root Ownership
+
+Imports express ownership and demand. Build roots express the minimum artifacts
+needed to bootstrap the production package. They are not interchangeable lists.
+
+Use these rules:
+
+1. A normal module consumer imports =modules/<name>/interface.ss=. Code inside
+   that module uses relative imports for its role owners. A cross-domain
+   implementation imports the precise public owner, using =only-in= when it
+   needs a bounded symbol set.
+2. =interface.ss= may use =export (import: ...)= to close and publish its own
+   =types=, =objects=, =funs=, =config=, and optional =syntax= roles. A global
+   facade must export a deliberate stable surface; it must not wildcard-reexport
+   another aggregate facade or concrete module, profile, scenario, or testing
+   owners.
+3. A production BuildSpec root must correspond to a separately required
+   bootstrap artifact. Registry source refs, advanced authoring forms, profiles,
+   scenarios, declaration cases, and testing extensions remain lazy unless a
+   production root has a direct consumer that needs them.
+   For User Interface startup, the root is the owner imported by top-level
+   =user-interface/init.ss=; an advanced presentation facade is not a substitute
+   for that owner.
+4. Do not list both a facade and a compatibility child, or both a module
+   =interface.ss= and its internal roles, as independent roots. Native Gerbil
+   imports already close the dependency graph. Any deliberate exception needs
+   a source-owner explanation and a cold-build receipt.
+5. Production, contribution, profile/scenario, and testing lanes select their
+   own roots. Tests explicitly import their test support. A test dependency is
+   not evidence that the production bootstrap owns that dependency.
+6. Diagnose root changes with the existing ASP Build API and upstream
+   =std/make=. Record root count, compile count, elapsed action time, peak
+   process-tree memory, and saturation. Do not add a scheduler, currentness
+   cache, source expander, or duplicate dependency graph to compensate for an
+   incorrect import boundary.
+7. =poo-flow-load-modules= applies the reader-native owner-import admission
+   policy to every Scheme file under a module root. An aggregate framework
+   import produces =poo-flow.module-owner-import-observation.v1= and
+   =POO-FLOW-MODULE-E008= with the exact source scope, imported owner, stable
+   diagnostic code, and =import-precise-owner= repair. This gate must remain
+   evaluation-free so authoring diagnostics cannot execute module code.
+
+#+begin_export mermaid
+flowchart LR
+    Build["Production BuildSpec"] -->|"stable bootstrap root"| Facade["Bounded interface or facade"]
+    Module["modules/name/interface.ss"] -->|"module-owned closure"| Roles["types, objects, funs, config, syntax"]
+    Registry["POO module registry"] -. "lazy source reference" .-> Lazy["profile, scenario, or advanced owner"]
+    Consumer["Selected consumer"] -->|"explicit import"| Lazy
+    Test["Independent testing lane"] -->|"explicit import"| TestOwner["testing extension"]
+    TestOwner -. "no production ownership" .-> Build
+#+end_export
+
 ** 10.06.44.125 Build-Stage Receipts And Warm-Cache Measurement
 
 Build and control-plane outcomes are part of the POO boundary. A caller that
@@ -447,7 +562,11 @@ object-local slot values already materialized by =.ref=.
    Do not use instance mutation as a policy-evolution mechanism.
 6. Keep slot names distinct from lexical value bindings in dynamic POO forms.
    Public macros must preserve hygiene and generate distinct value bindings so
-   a slot cannot recursively force itself through a same-name capture.
+   a slot cannot recursively force itself through a same-name capture. This
+   applies to both =slot: initializer= and =(slot initializer)= spellings.
+   =t/module-system-observability-test.ss= is the reader-native source gate:
+   it scans =src/**/*.ss= through the module-system authoring observations and
+   must report zero diagnostics without expanding or realizing any POO object.
 7. Use =std/lazy= only for a pure deferred calculation that is not naturally a
    POO slot. It is a Scheme control-plane mechanism, not a runtime concurrency
    primitive.

@@ -1,14 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused user-interface loop-engine POO slot contract failures.
 ;;; Invariant: malformed slots fail before presentation emits intent rows.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-slot-contract-test)
 

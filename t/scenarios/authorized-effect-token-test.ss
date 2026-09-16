@@ -1,13 +1,15 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/policy/authorized-effect-token
         :poo-flow/src/policy/cedar-decision
         :poo-flow/src/policy/strict-mediation
         :poo-flow/src/proof/authorized-effect-evidence
-        :poo-flow/src/module-system/tool-calling-control)
+        :poo-flow/src/modules/tool-core/calling-control)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def binding
   (poo-flow-effect-binding "bundle" 7 "policy" "entities" "allow"
@@ -149,5 +151,3 @@
         (check (poo-flow-authorized-effect-proof-claim-level unknown) => 'l1-mediated)
         (check (cdr (assq 'claim-level wire)) => 'l3-verified))))
   )
-
-(run-tests! authorized-effect-token-test)

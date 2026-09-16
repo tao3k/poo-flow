@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: dynamic agent-sandbox profile candidates live here.
 ;;; Boundary:
 ;;; - Candidates, patches, promotion requests, and receipts are inert data.
@@ -7,7 +11,8 @@
 ;;; Policy evidence: tests validate contracts without invoking nono or CubeSandbox.
 
 (import (only-in :clan/poo/object .@ object?)
-        :poo-flow/src/core/api
+        (only-in :poo-flow/src/core/roles execution-policy-role)
+        (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile)

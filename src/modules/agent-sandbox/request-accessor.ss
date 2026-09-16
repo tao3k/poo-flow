@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: agent-sandbox task request accessors live here.
 ;;; Boundary:
 ;;; - Request construction owns normalized data.
@@ -11,7 +15,7 @@
 ;;; Policy evidence:
 ;;; - Descriptor tests assert each public accessor field.
 
-(import :poo-flow/src/core/api)
+(import (only-in :poo-flow/src/core/task task-kind task-request))
 
 (export task-agent-sandbox-config
         task-agent-sandbox-config-ref

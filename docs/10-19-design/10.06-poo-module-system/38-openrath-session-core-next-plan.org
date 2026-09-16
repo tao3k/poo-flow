@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.38 OpenRath Session Core Next Plan
 ** 10.06.38.10 Purpose
 This plan uses OpenRath's session-first user ladder as design evidence for the
@@ -23,7 +27,7 @@ Local OpenRath evidence:
 
 Current POO Flow evidence:
 - =src/modules/session-core/config.ss= enables the upstream session module row.
-- =src/module-system/session-core-config.ss= projects =session-core-intents=.
+- =src/modules/session-core/presentation.ss= projects =session-core-intents=.
 - =src/modules/session/config.ss= owns POO session values, chunks, lineage,
   placement, and graph presentation.
 - =src/modules/sandbox-core/profile.ss= owns POO resource/profile projection.
@@ -177,7 +181,7 @@ POO Flow target:
 Candidate files:
 - =src/modules/session/placement.ss=
 - =src/modules/sandbox-core/profile.ss=
-- =src/module-system/session-core-config.ss=
+- =src/modules/session-core/presentation.ss=
 - =t/session-placement-handoff-test.ss=
 
 Acceptance:
@@ -213,7 +217,7 @@ Implemented checkpoint:
 - =user-interface/custom/my-module/cases/tool-core.ss= proves the public surface with =use-module tool-core :config= and POO =tool-spec= / =tool-catalog= objects.
 - =t/tool-core-test.ss= covers direct object semantics, built-in sandbox requirements, MCP row declaration, and policy diagnostics.
 - =t/user-interface-custom-tool-core-test.ss= and the =scenario-tool-core= testing-project root cover the user-facing scenario path.
-- =t/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
+- =t/performance/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
 ** 10.06.38.120 Milestone 5: Memory Core
 OpenRath rung: =09_memory.py=.
 
@@ -240,7 +244,7 @@ Implemented checkpoint:
 - =user-interface/custom/my-module/cases/memory-core.ss= proves the public surface with =use-module memory-core :config= and POO =memory-store-spec= / =memory-catalog= objects.
 - =t/memory-core-test.ss= covers direct object semantics, default stores, custom stores, handoff manifests, and catalog validation diagnostics.
 - =t/user-interface-custom-memory-core-test.ss= and the =scenario-memory-core= testing-project root cover the user-facing scenario path.
-- =t/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
+- =t/performance/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
 ** 10.06.38.130 Milestone 6: Selector Core
 OpenRath rung: =11_dynamic_selector.py=.
 
@@ -293,8 +297,8 @@ asp org lint docs/10-19-design/10.06-poo-module-system/00-index.org <changed-doc
 Milestone 1 is now delivered as a report-only control-plane slice:
 - =src/modules/session/transform.ss= defines the POO transform and receipt object family.
 - =src/modules/session/config.ss= exposes =session-transform= and =transform-session= for compact user syntax.
-- =src/modules/session-core/config.ss= and =src/module-system/session-core-config.ss= surface =+transform= as a default session-core feature.
+- =src/modules/session-core/config.ss= and =src/modules/session-core/presentation.ss= surface =+transform= as a default session-core feature.
 - =user-interface/custom/my-module/cases/session-transform.ss= loads a downstream transform/root/receipt object list through the existing =load!= expression contract.
 - =t/session-transform-test.ss= covers transform declaration, derived session lineage, placement inheritance, handoff intent, and =runtime-executed: #f=.
-- Object catalog debug is contract-owned: =src/module-system/object-validation.ss= now projects object identities, direct/resolved field identities, field origins, inheritance chains, validation phases, field counts, inheritance counts, and runtime flags through validation receipts instead of adding debug slots or per-file debug variables to =objects.ss=.
+- Object catalog debug is contract-owned: =src/module-system/object-validation/interface.ss= now projects object identities, direct/resolved field identities, field origins, inheritance chains, validation phases, field counts, inheritance counts, and runtime flags through validation receipts instead of adding debug slots or per-file debug variables to =objects.ss=.
 Follow-up: if focused =gxtest= startup continues spending most time in =session/config=, split placement catalog resolution away from the core session object loading path so transform tests can exercise =objects + transform= without pulling the full sandbox profile catalog.

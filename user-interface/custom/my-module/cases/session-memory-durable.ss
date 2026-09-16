@@ -1,11 +1,19 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream durable memory job case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream durable memory job case.
 ;;; Invariant: this is durable job handoff data only; Scheme does not recall,
 ;;; commit, consolidate, persist, or repair memory stores.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax
+        :poo-flow/src/modules/memory-core/config)
+
+(export poo-flow-custom-my-module-session-memory-durable-case)
+
+(def poo-flow-custom-my-module-session-memory-durable-case
+  (poo-flow-session-cases
   (session-case custom-session-memory-durable-case
     (metadata (source . user-interface)
               (case . session-memory-durable))
@@ -107,4 +115,4 @@
         bounded-transcript
         (cons (cons 'job-state 'repair-required) durable-options)))))
     (rows)
-    (row-groups (poo-flow-memory-durable-job-receipts->alists jobs))))
+    (row-groups (poo-flow-memory-durable-job-receipts->alists jobs)))))

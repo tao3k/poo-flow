@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.86 Doom Emacs Core Module Boundary Research
 ** 10.06.86.10 Purpose
 This note is the current Doom Emacs calibration document for =poo-flow='s module
@@ -359,6 +363,29 @@ set of hand-written hooks.  The framework-specific vocabulary becomes a profile
 or composition surface over the same kernel/factor/plugin model.
 
 ** 10.06.86.130 Open Gaps To Track
+*** Current concrete module: poo-clos
+
+=src/module-system/poo-clos/= is the =:core= category application of this
+boundary. Its descriptor depth =(-110 . -110)= orders it before ordinary
+modules such as =(:flow . funflow)=:
+
+- =config.ss= owns only module interface, descriptor, selection, depth, and the
+  canonical entrypoint, without importing runtime factors;
+- =types.ss=, =objects.ss=, =classes.ss=, and =dispatch.ss= extend the native
+  Gerbil POO MOP and C3;
+- =interface.ss= is the explicit opt-in runtime factor;
+- =t/scenarios/performance/poo-clos-native-c3/= proves native precedence and
+  exact metaobject identity.
+
+The kernel profile declares =(:core . poo-clos)= and the registry resolves its
+lightweight =config.ss=. Funflow remains =(:flow . funflow)= and publishes a
+=standard-library= source ref to this sole method-combination owner.
+
+This does not invent a second registry or tier system. It mirrors Doom's
+=(:category . module)= keys, separate core/module collections, ordered module
+load paths, and profile-owned enablement. POO Flow keeps one descriptor,
+source-ref, ordering, and diagnostic model.
+
 The current =poo-flow= design still needs implementation-level checks for:
 
 - kernel-factor visibility: normal =use-module= should inherit kernels without

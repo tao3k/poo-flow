@@ -1,6 +1,15 @@
-(import :poo-flow/src/proof/proof-fact-wire
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-receipts
         :poo-flow/src/proof/proof-gate-bundle)
+
+(def proof-gate-receipts-test
+  (test-suite "proof gate receipts"
+    (test-case "assembles accepted and rejected receipt bundles"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -97,4 +106,4 @@
               (poo-flow-proof-fact-ref
                'runtime-boundary-ok?
                runtime-owner-bundle)
-              #f)
+              #f))))

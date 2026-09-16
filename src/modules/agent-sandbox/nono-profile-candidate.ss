@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono dynamic profile candidate projection lives here.
 ;;; Boundary: this module emits candidate data only; it never promotes profiles.
 ;;; Runtime contract: JSON decoding and nono execution belong to CLI/Marlin.

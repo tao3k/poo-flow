@@ -1,15 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused tests for loop-engine to Funflow workflow agreement.
 ;;; Invariant: workflow agreement is report-only and never executes a pipeline.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        (only-in "../user-interface/custom/my-module/config"
                  poo-flow-custom-my-module-funflow-cicd-case
                  poo-flow-custom-my-module-loop-engine-case))
 

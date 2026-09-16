@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono profile alignment lives in this backend module.
 ;;; Boundary: core provides schema, task, envelope, and adapter protocols.
 ;;; Import contract: users opt in through =:poo-flow/src/modules/agent-sandbox/nono= for profile defaults.

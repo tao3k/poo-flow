@@ -12,8 +12,12 @@
   '()
   (list
    (poo-flow-module-field-contract
-    'title 'String 'override "loaded" '((scope . fixture)))
+    'title PooFlowModuleStringType 'override "loaded" '((scope . fixture)))
    (poo-flow-module-field-contract
-    'tags '(List Symbol) 'append '() '((scope . fixture))))
+    'tags
+    (poo-flow-module-list-type PooFlowModuleSymbolType)
+    'append
+    '()
+    '((scope . fixture))))
   '((namespace . objects.fixture)
     (domain . fixture))))

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: profile-set cases mirror Doom-style selection before realization.
 ;;; Doctor output is checked as POO data so user config remains declarative.
 
@@ -10,14 +14,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/profile-config)
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/profile-config)
 
 (export user-interface-profile-set-case-test)
 

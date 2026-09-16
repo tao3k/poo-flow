@@ -1,92 +1,69 @@
 #!/usr/bin/env gxi
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; -*- Gerbil -*-
-;;; Thin package entrypoints for the POO Flow Gerbil runtime.
+;;; Unique native POO Flow package build entry.
 
-(import (only-in :std/cli/getopt
-                 flag
-                 rest-arguments)
-        (only-in :std/cli/multicall
-                 define-entry-point
-                 define-multicall-main)
-        (only-in :gslph/src/build-api/source-coverage
-                 gslph-source-coverage)
-        :gslph/src/build-api/framework
-        "./src/cli-support/project-build.ss"
-        "./src/build-api/project-compile-guard.ss"
-        (only-in :gerbil/gambit
-                 exit
-                 pretty-print))
+(import (only-in :std/build-script defbuild-script)
+        (only-in :asp-gerbil-scheme/src/build-api/source-bootstrap
+                 asp-gerbil-scheme-package-spec!
+                 asp-gerbil-scheme-library-package-prototype)
+        (only-in :asp-gerbil-scheme/src/build-api/native-spec-support
+                 default-exclude-dirs))
 
-(gslph-source-coverage
- roots: '("src" "user-interface")
- runtime-roots: '("src")
- explanation: "POO Flow runtime owners live under src; user-interface modules are declarative package sources that still need policy coverage.")
+;;; These stable public interfaces are the only declared package roots.  ASP's
+;;; native Import Model projects their complete production closure before the
+;;; resulting BuildSpec is handed to std/make.
+(def +poo-flow-public-entry-modules+
+  '("src/core/api.ss"
+    "src/graph/types.ss"
+    "src/module-system/api.ss"
+    "src/feature-system/interface.ss"
+    "src/feature-system/bundle-v1-composition-writer.ss"
+    "src/modules/funflow/interface.ss"
+    "src/contract/runtime-v0-abi-schema.ss"
+    "src/policy/cedar-authority.ss"
+    "src/proof/proof-case-vector.ss"
+    "src/qualification/runtime-symbol-manifest.ss"
+    "src/user-interface/init-declaration-syntax.ss"
+    "src/user-interface/config-discovery-syntax.ss"
+    "src/user-interface/facade.ss"))
 
-(def +poo-flow-build-getopt+
-  [(flag 'release "--release"
-         help: "Build released artifacts")
-   (flag 'optimized "--optimized"
-         help: "Build optimized artifacts")
-   (flag 'debug "--debug"
-         help: "Include debug information")
-   (flag 'verbose "-V" "--verbose"
-         help: "Enable verbose build output")])
+(def +poo-flow-build-exclude-dirs+
+  (append '("lambda-episteme"
+            "bindings"
+            "packages"
+            "target"
+            "user-interface/cases"
+            "user-interface/profiles"
+            "user-interface/custom/my-module/cases"
+            "user-interface/custom/my-module/profiles")
+          default-exclude-dirs))
 
-(define-multicall-main)
+(def +nono-c-include-option+
+  (string-append
+   "-I"
+   (path-expand "bindings/nono-c" (current-directory))))
 
-(poo-flow-project-configure-build-root! ".")
+(def +nono-c-link-option+
+  (cond-expand
+   (darwin "-Wl,-undefined,dynamic_lookup")
+   (else "-ldl")))
 
-(define-build-options poo-flow-project-options
-  make: (lambda () poo-flow-project-build-options))
+(asp-gerbil-scheme-package-spec!
+ (poo-flow-package-spec
+  @ asp-gerbil-scheme-library-package-prototype)
+ (spec poo-flow-native-spec)
+ (public-entry-modules +poo-flow-public-entry-modules+)
+ (exclude-dirs +poo-flow-build-exclude-dirs+)
+ (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
+                    "observe-contribute-import.ss"
+                    "user-interface/custom/my-module/config.ss"))
+ (native-prelude-spec
+  `((gxc: "src/modules/nono-sandbox/_nono"
+          "-cc-options" ,+nono-c-include-option+
+          "-ld-options" ,+nono-c-link-option+))))
 
-(define-entry-point (meta)
-  (help: "List package build targets"
-   getopt: [])
-  (write '("spec" "compile" "clean"))
-  (newline))
-
-(define-entry-point (spec release: (release #f)
-                          optimized: (optimized #f)
-                          debug: (debug #f)
-                          verbose: (verbose #f))
-  (help: "Print the package build spec"
-   getopt: +poo-flow-build-getopt+)
-  (pretty-print
-   (poo-flow-project-build-spec
-    (poo-flow-project-options release optimized debug verbose))))
-
-(define-entry-point (compile release: (release #f)
-                             optimized: (optimized #f)
-                             debug: (debug #f)
-                             verbose: (verbose #f))
-  (help: "Compile the package"
-   getopt: +poo-flow-build-getopt+)
-   (poo-flow-project-compile-guarded!
-    (poo-flow-project-options release optimized debug verbose))
-   (exit 0))
-
-(define-entry-point (clean)
-  (help: "Clean package build artifacts"
-   getopt: [])
-  (poo-flow-project-clean!)
-  (exit 0))
-(import :gslph/src/building/observability)
-(export poo-flow-project-observe!
-        poo-flow-project-observe/guard!)
-
-(def (poo-flow-project-observe! root worker-count)
-  (poo-flow-project-configure-build-root! root)
-  ;; Keep worker-count explicit at this boundary so callers can apply the
-  ;; machine-specific policy before the canonical requests are built.
-  (package-source-stages-observe!
-   (poo-flow-project-source-stages worker-count)
-   (poo-flow-project-build-requests worker-count)))
-
-(def (poo-flow-project-observe/guard!
-      root worker-count guard on-observation)
-  (poo-flow-project-configure-build-root! root)
-  (package-source-stages-observe/guard!
-   (poo-flow-project-source-stages worker-count)
-   (poo-flow-project-build-requests worker-count)
-   guard
-   on-observation))
+(defbuild-script (poo-flow-native-spec))

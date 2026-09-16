@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: CubeSandbox kernel module selection.
 ;;; Invariant: object inheritance and row extension live in objects.ss owners.
 
 (import :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-cubeSandbox-module-bundles
         poo-flow-cubeSandbox-config-flags
@@ -27,9 +31,9 @@
 ;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-cubeSandbox-config-flags profiles . maybe-user-config)
   (if (null? maybe-user-config)
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:config profiles))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

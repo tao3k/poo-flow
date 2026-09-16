@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: nono sandbox kernel module selection.
 ;;; Invariant: object inheritance and row extension live in objects.ss owners.
 
 (import :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-nono-sandbox-module-bundles
         +poo-flow-nono-sandbox-default-binding+
@@ -40,10 +44,10 @@
 ;; : (-> Symbol [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-nono-sandbox-config-flags binding-value profiles . maybe-user-config)
   (if (null? maybe-user-config)
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
      (:config profiles))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
      (:config profiles)
      (:user-config (car maybe-user-config)))))

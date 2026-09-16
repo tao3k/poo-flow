@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; User Interface reusable profile fragment: LangChain-style linear chain.
 ;;; Invariant: included by load!; the loader owns imports and generated export.
 

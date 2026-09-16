@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream Funflow CI/CD POO authoring gate configuration.
 ;;; Invariant: formal POO-native use-module config only; no runtime work.
 
-(use-module funflow
-  :config
+(import :poo-flow/src/modules/funflow/config)
+
+(export poo-flow-custom-my-module-poo-introspection-case)
+
+(def poo-flow-custom-my-module-poo-introspection-case
+  (poo-flow-funflow-configs
   (.def (funflow/profile-authoring @ funflow-check
                                    check-name profile-ref command-vector
                                    artifact-outputs cache-intents
@@ -44,4 +52,4 @@
     pipeline-name: 'poo-authoring-gate
     checks: (list funflow/profile-authoring funflow/readiness)
     metadata: '((scenario . poo-authoring-gate)
-                (authoring-style . gerbil-poo-native))))
+                (authoring-style . gerbil-poo-native)))))

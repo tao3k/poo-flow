@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: selector syntax owns the user-facing selector authoring facade for
 ;;; session graph and child-agent addressing.
 ;;; Invariant: selector expansion must keep fallback and parent-child ancestry

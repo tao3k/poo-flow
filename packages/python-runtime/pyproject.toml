@@ -1,7 +1,13 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 [project]
 name = "poo-flow-runtime"
 version = "0.1.0"
 description = "Python runtime consumer for the POO Flow C ABI."
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+license-files = ["LICENSE"]
 readme = { file = "README.org", content-type = "text/plain" }
 requires-python = ">=3.11"
 dependencies = [

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: POO Flow Agentic Control Plane AC-00 Baseline Receipt
 #+subtitle: Isolation, owner inventory, validation baseline, and first-slice freeze
 #+author: POO Flow Contributors
@@ -53,8 +57,8 @@ current owners:
 
 | Concern | Confirmed current owner set |
 |-
-| POO-native authoring and =session-case= | =src/module-system/init-syntax.ss= |
-| Profile composition | =src/module-system/profile-composition.ss=, =profile-composition-accessors.ss=, and the =main/profile/use/clause= syntax owners |
+| POO-native authoring and =session-case= | =src/user-interface/init-syntax.ss= |
+| Profile composition | =src/module-system/profile-composition/interface.ss=, =profile-composition-accessors.ss=, and the =main/profile/use/clause= syntax owners |
 | Policy | =src/core/policy.ss=, =src/modules/session/policy.ss=, =policy-syntax.ss=, and =policy-validation*.ss= |
 | Receipts | Core/runner receipts, session receipt syntax and validation receipt, contract receipt, loop-engine extension receipt, and proof-gate receipts |
 | Semantic and contract namespaces | =src/semantic/boundary-namespace.ss= and =src/contract/boundary-namespace.ss= |

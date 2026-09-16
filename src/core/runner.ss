@@ -1,8 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runner interprets plans and emits receipts.
 ;;; Invariant: adapter calls remain behind runtime-adapter functions.
 
 (import :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/funcs
         :poo-flow/src/core/receipt
         :poo-flow/src/core/failure
         :poo-flow/src/core/task
@@ -147,10 +152,20 @@
   (let ((strategy (runner-strategy runner)))
     (let ((plan (runner-plan runner flow)))
       (runner-validate-plan runner plan)
-      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '() '() '())))
+      (let* ((frontier-state
+              (poo-flow-make-frontier-state
+               (execution-plan-nodes plan)
+               plan-node-id plan-node-ordinal plan-node-dependencies))
+             (root-frontier
+              (strategy-admit-ready-frontier-ids
+               strategy
+               (poo-flow-frontier-state-ready-ids frontier-state)))
+             (result
+              (run-plan-nodes
+               runner plan strategy (execution-plan-nodes plan) input
+               '() (poo-flow-make-value-index) frontier-state)))
         (let ((value (car result))
-              (children (reverse (cdr result)))
-              (root-frontier (strategy-ready-frontier-ids strategy plan '())))
+              (children (reverse (cdr result))))
           (make-run-result
            value
            (make-receipt (execution-plan-flow-name plan)
@@ -198,22 +213,25 @@
    make-try-left))
 
 ;;; Boundary: this recursive driver is the topology interpreter loop.
-;;; Invariant: completed ids are audit state for frontier receipts, while the
-;;; values table is the dataflow state used to feed dependency outputs into
-;;; later DAG nodes.
-;; : (-> Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt] Alist StepSequenceResult)
-(def (run-plan-nodes runner plan strategy nodes input completed-node-ids receipts values)
+;;; Invariant: frontier state owns graph progress while the value index feeds
+;;; dependency outputs into later DAG nodes.
+;; : (-> Runner ExecutionPlan Strategy [PlanNode] Input [Receipt] HashTable FrontierState StepSequenceResult)
+(def (run-plan-nodes runner plan strategy nodes input receipts value-index frontier-state)
   (if (null? nodes)
-    (cons (plan-output-value plan values input) receipts)
+    (cons (plan-output-value plan value-index input) receipts)
     (let* ((node (car nodes))
-           (frontier (strategy-ready-frontier-ids strategy plan completed-node-ids))
-           (node-input (node-input-value node values input))
+           (frontier
+            (strategy-admit-ready-frontier-ids
+             strategy
+             (poo-flow-frontier-state-ready-ids frontier-state)))
+           (node-input (node-input-value node value-index input))
            (step-result (run-plan-node runner plan strategy node node-input frontier))
            (value (car step-result))
-           (receipt (cdr step-result))
-           (completed (cons (plan-node-id node) completed-node-ids))
-           (next-values (cons (cons (plan-node-id node) value) values)))
-      (run-plan-nodes runner plan strategy (cdr nodes) input completed (cons receipt receipts) next-values))))
+           (receipt (cdr step-result)))
+      (poo-flow-value-index-put! value-index (plan-node-id node) value)
+      (poo-flow-frontier-state-complete! frontier-state (plan-node-id node))
+      (run-plan-nodes runner plan strategy (cdr nodes) input
+                      (cons receipt receipts) value-index frontier-state))))
 
 ;;; Node dispatch stays shape-based: task nodes execute work, flow nodes wrap
 ;;; nested runs, and branch nodes join dependency values.
@@ -481,7 +499,7 @@
 (def (runner-plan-node-ids nodes)
   (map plan-node-id nodes))
 
-;; : (-> ExecutionPlan Alist Value Value)
+;; : (-> ExecutionPlan HashTable Value Value)
 (def (plan-output-value plan values default-input)
   (let ((terminal-values (node-values (runner-plan-node-ids
                                        (execution-plan-terminal-nodes plan))
@@ -494,7 +512,7 @@
 ;;; Node input selection follows dependency cardinality: roots receive the
 ;;; original input, one dependency passes a scalar value, and joins receive the
 ;;; ordered dependency value list.
-;; : (-> PlanNode Alist Value Value)
+;; : (-> PlanNode HashTable Value Value)
 (def (node-input-value node values default-input)
   (let ((dependencies (plan-node-dependencies node)))
     (cond
@@ -504,7 +522,7 @@
 
 ;;; Dependency ids are already in plan order, so this projection preserves the
 ;;; branch-left and branch-right ordering expected by join receipts.
-;; : (-> [Id] Alist [Value])
+;; : (-> [Id] HashTable [Value])
 (def (node-values ids values)
   (map (lambda (id) (value-for-node-id id values))
        ids))
@@ -517,11 +535,12 @@
   (bindings ())
   (fields ((node-id id))))
 
-;; : (-> Id Alist Value)
-(def (value-for-node-id id values)
-  (let ((entry (assoc id values)))
-    (if entry
-      (cdr entry)
+;; : (-> Id HashTable Value)
+(def (value-for-node-id id value-index)
+  (let-values (((present? value)
+                (poo-flow-value-index-ref value-index id)))
+    (if present?
+      value
       (raise-control-plane-failure
        'runner
        'missing-dependency-value

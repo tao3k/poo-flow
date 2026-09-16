@@ -1,8 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: direct syntax smoke for POO-native composition macros.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/profile-composition)
+        :poo-flow/src/module-system/profile-composition/interface)
 
 (def report/base
   (.o (name 'report/base)
@@ -86,7 +90,7 @@
 
     (stage pull-request
       (step build
-        (run "gxpkg" "build" "-g"))
+        (run "gerbil" "build" "-g"))
       (step test
         (run "uv" "run" "pytest" "-q"))
       (edges

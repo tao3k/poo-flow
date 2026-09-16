@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 
 (import :std/test
         :std/srfi/13
@@ -6,8 +10,10 @@
         :gerbil/gambit
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition
-        (only-in :poo-flow/src/module-system/profile-composition-syntax-plan
+        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/profile-composition/funcs
+                 poo-flow-composition-leftmost-index-by)
+        (only-in :poo-flow/src/module-system/profile-composition/syntax-plan
                  parse-poo-flow-composition-syntax-plan))
 
 (def base-report
@@ -75,8 +81,29 @@
     (stage scenario
       (step collect))))
 
-(def (composition-syntax-error-message module-datum)
-  (let (module-form (datum->syntax #f module-datum))
+(def github-profile (.o kind: 'github-actions name: 'github-workflow))
+(def nasa-sdlc-profile (.o kind: 'sdlc-standard name: 'nasa-7150-2d))
+(def multi-module-composition
+  (use-composition github-workflow
+    (modules
+      (use-module github as github
+        (profile github-profile))
+      (use-module sdlc as sdlc
+        (profile nasa-sdlc-profile)))
+    (compose
+      (profile github github-profile)
+      (profile sdlc nasa-sdlc-profile))
+    (stage production
+      (prove nasa-release-gates)
+      (handoff github-actions))))
+
+(def (composition-syntax-error-message module-datum . maybe-form-data)
+  (let* ((module-form (datum->syntax #f module-datum))
+         (forms
+          (if (null? maybe-form-data)
+            '()
+            (map (lambda (form) (datum->syntax #f form))
+                 (car maybe-form-data)))))
     (with-exception-catcher
      (lambda (exn)
        (call-with-output-string
@@ -85,13 +112,23 @@
        (parse-poo-flow-composition-syntax-plan
         (datum->syntax #f 'invalid-composition)
         module-form
-        '()
+        forms
         module-form)
        #f))))
 
-(def profile-composition-tests
+(export profile-composition-test)
+
+(def profile-composition-test
   (test-suite
    "profile composition"
+   (test-case
+    "target indexes retain the first source declaration"
+    (let* ((first '(profile report step))
+           (second '(case report handoff))
+           (index
+            (poo-flow-composition-leftmost-index-by
+             cadr (list first second))))
+      (check (hash-get index 'report) => first)))
    (test-case
     "canonical grammar lowers to reusable POO objects"
     (let* ((profiles (.ref canonical-composition 'profiles))
@@ -123,6 +160,15 @@
       (check-equal? (length stages) 1)
       (check-equal? (.ref stage 'name) 'production)
       (check-equal? (length (.ref stage 'clauses)) 4)))
+   (test-case
+    "one composition declares and selects multiple POO modules"
+    (let ((bindings (.ref multi-module-composition 'modules))
+          (profiles (.ref multi-module-composition 'profiles)))
+      (check-equal? (map (lambda (value) (.ref value 'alias)) bindings)
+                    '(github sdlc))
+      (check-equal? (length profiles) 2)
+      (check-equal? (car profiles) github-profile)
+      (check-equal? (cadr profiles) nasa-sdlc-profile)))
    (test-case
     "composition multiplicity uses compact launch ranges"
     (let* ((alpha
@@ -242,6 +288,29 @@
            (profile report :kind report)
            (profile report :kind report)))
        "composition-duplicate-profile"))
-     #t))))
-
-(run-tests! profile-composition-tests)
+     #t))
+   (test-case
+    "empty composition bodies are rejected during parsing"
+    (check-equal?
+     (integer?
+      (string-contains
+       (composition-syntax-error-message
+        '(use-module artifact-catalog as artifact))
+       "composition-missing-profile-operand"))
+     #t))
+   (test-case
+    "stage-only composition bodies are rejected during parsing"
+    (let (message
+          (composition-syntax-error-message
+           '(use-module artifact-catalog as artifact)
+           '((stage production
+               (graph artifact-publish-graph)
+               (loop #:fuel 3 #:exit published)
+               (prove audit-before-publish)
+               (handoff marlin-runtime)))))
+      (check-equal?
+       (integer?
+        (string-contains
+         message
+         "composition-missing-profile-operand"))
+       #t)))))

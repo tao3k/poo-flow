@@ -1,21 +1,24 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-policy scenario.
 ;;; Invariant: user config projects effective policy validation only; Scheme
 ;;; never executes tools, hooks, providers, sandboxes, or communication.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/modules/session/config)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        :poo-flow/src/modules/session/config
+        (only-in "../user-interface/custom/my-module/cases/session-policy"
+                 poo-flow-custom-my-module-session-policy-case))
 
 (export user-interface-custom-session-policy-test)
-
-(load! "../user-interface/custom/my-module/cases/session-policy")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -95,9 +98,11 @@
 (def user-interface-custom-session-policy-test
   (test-suite "poo-flow custom user-interface session-policy case"
     (test-case "projects custom effective session-policy validation"
-      (let* ((selection (car poo-flow-custom-module-session-policy-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-policy-case))
              (rows
-              (module-config-rows poo-flow-custom-module-session-policy-case))
+              (module-config-rows
+               poo-flow-custom-my-module-session-policy-case))
              (durable-row (car rows))
              (isolation-row (find-policy-row rows 'session-isolation))
              (isolation-slots (test-ref isolation-row 'policy-slots))
@@ -257,5 +262,3 @@
          (has-code? 'communication-channel-receipt-not-granted codes)
          #t)
         (check-equal? (test-ref validation 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-policy-test)

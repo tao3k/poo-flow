@@ -1,10 +1,12 @@
-(import :std/test
-        :gslph/src/testing/memory-profile
-        :clan/poo/object
-        :poo-flow/src/module-system/durable-artifact-policy
-        :poo-flow/src/module-system/profile-composition)
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
+(import :std/test
+        :clan/poo/object
+        :poo-flow/src/modules/memory-core/durable/artifact-policy
+        :poo-flow/src/module-system/profile-composition/interface)
+
 
 (def (clause-payload clause)
   (.ref clause 'payload))
@@ -412,5 +414,3 @@
         (check-equal? (map (lambda (profile) (.ref profile 'name))
                            compose-payload)
                       '(research-report internal-report))))))
-
-(run-tests! durable-artifact-policy-test)

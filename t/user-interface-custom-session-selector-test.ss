@@ -1,20 +1,23 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface session-selector scenario.
 ;;; Invariant: selectors are pending routing receipts; Marlin owns scoring,
 ;;; dispatch, and selected result materialization.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-selector"
+                 poo-flow-custom-my-module-session-selector-case))
 
 (export user-interface-custom-session-selector-test)
-
-(load! "../user-interface/custom/my-module/cases/session-selector")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -32,9 +35,11 @@
 (def user-interface-custom-session-selector-test
   (test-suite "poo-flow custom user-interface session-selector case"
     (test-case "projects custom selector receipt without dispatch"
-      (let* ((selection (car poo-flow-custom-module-session-selector-case))
+      (let* ((selection
+              (car poo-flow-custom-my-module-session-selector-case))
              (rows
-              (module-config-rows poo-flow-custom-module-session-selector-case))
+              (module-config-rows
+               poo-flow-custom-my-module-session-selector-case))
              (row (car rows))
              (candidates (test-ref row 'candidates))
              (build-candidate (car candidates))
@@ -70,5 +75,3 @@
         (check-equal? (test-ref row 'diagnostic-count) 0)
         (check-equal? (test-ref row 'diagnostics) '())
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-selector-test)

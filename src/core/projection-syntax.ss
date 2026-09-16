@@ -1,65 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic macros for core receipt/projection alists.
 ;;; Invariant: generated functions are final boundary projections only; public
 ;;; object construction remains ordinary core code.
 
-(import :poo-flow/src/projection-syntax-support)
+(import :poo-flow/src/utilities/product-syntax)
 
-(export poo-flow-core-rows/tail
-        poo-flow-core-field-rows
-        poo-flow-core-field-rows/tail
+(export poo-flow-product-rows/tail
+        poo-flow-product-rows-into/rev
+        poo-flow-product-field-rows
+        poo-flow-product-field-rows/tail
         defpoo-core-receipt-projection)
-
-;;; Core projection row helpers are deliberately small: macro-generated
-;;; receipt functions use them only to assemble final alist boundaries.
-;; poo-flow-core-rows/tail
-;;   : (-> Alist Alist Alist)
-;;   | contract: ordered core projection rows followed by caller-owned tail rows
-;;   | result: a fresh ordered alist preserving the row sequence before tail
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-core-rows/tail '((kind . receipt)) '((metadata)))
-;;       ;; => ((kind . receipt) (metadata))
-;;       ```
-;;     %
-(def (poo-flow-core-rows/tail rows tail)
-  (append rows tail))
-
-;; poo-flow-core-field-rows
-;;   : (-> Syntax Alist)
-;;   | contract: lower fixed field clauses into literal alist rows
-;;   | result: ordered alist rows with symbols matching the field names
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-core-field-rows (kind 'receipt) (status 'ok))
-;;       ;; => ((kind . receipt) (status . ok))
-;;       ```
-;;     %
-(defrules poo-flow-core-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
-
-;; poo-flow-core-field-rows/tail
-;;   : (-> Syntax Alist)
-;;   | contract: lower fixed field clauses and append caller-owned tail rows
-;;   | result: ordered field rows followed by the supplied tail alist
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-core-field-rows/tail '((metadata)) (kind 'receipt))
-;;       ;; => ((kind . receipt) (metadata))
-;;       ```
-;;     %
-(defrules poo-flow-core-field-rows/tail ()
-  ((_ tail (field value) ...)
-   (poo-flow-core-rows/tail
-    (poo-flow-core-field-rows (field value) ...)
-    tail)))
 
 ;; defpoo-core-receipt-projection
 ;;   : (-> Syntax Definition)
@@ -87,8 +41,6 @@
   ((_ constructor (argument ...)
       (bindings ((binding-name binding-expr) ...))
       (fields ((field-key field-expr) ...)))
-   (defpoo-static-receipt-projection
-     constructor
-     (argument ...)
-     (bindings ((binding-name binding-expr) ...))
-     (fields (('field-key field-expr) ...)))))
+   (def (constructor argument ...)
+     (let* ((binding-name binding-expr) ...)
+       (list (cons 'field-key field-expr) ...)))))

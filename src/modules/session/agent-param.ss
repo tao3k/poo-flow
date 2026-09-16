@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: POO-native AgentParam contract objects.
 ;;; Invariant: AgentParam contracts bind agent topology to effective policy
 ;;; validation; they never run providers, tools, memory stores, or streams.
@@ -7,7 +11,8 @@
         :poo-flow/src/modules/session/agent
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-validation
-        :poo-flow/src/modules/session/receipt-syntax)
+        :poo-flow/src/modules/session/receipt-syntax
+        :poo-flow/src/modules/session/receipt-projection)
 
 (export poo-flow-session-agent-param-contract
         poo-flow-session-agent-param-contract?
@@ -271,8 +276,8 @@
     ('metadata (.ref contract 'metadata)))))
 
 ;; : (-> [PooSessionAgentParamContract] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-agent-param-contracts->alists
-  (contracts)
-  (projector poo-flow-session-agent-param-contract->alist)
-  (error-message "session AgentParam contract serialization requires a list"))
+(def (poo-flow-session-agent-param-contracts->alists contracts)
+  (poo-flow-session-receipt-projection-batch
+   contracts
+   poo-flow-session-agent-param-contract->alist
+   "session AgentParam contract serialization requires a list"))

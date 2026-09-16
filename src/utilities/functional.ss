@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: pure functional helpers for reusable Scheme control-plane code.
 ;;; Invariant: this module owns algorithms and combinators, not workflow,
 ;;; sandbox, session, proof, or runtime semantics.
@@ -9,12 +13,16 @@
                  append-map
                  every
                  find
+                 filter
                  filter-map
                  fold
                  fold-right
                  map
                  member
-        remove)
+                 remove)
+        (only-in :std/misc/list
+                 delete-duplicates/hash
+                 duplicates)
         (only-in :std/srfi/13
                  string-drop
                  string-prefix?))
@@ -29,6 +37,8 @@
         poo-flow-any?
         poo-flow-all?
         poo-flow-member?
+        poo-flow-set-subset?
+        poo-flow-stable-duplicates
         poo-flow-alist?
         poo-flow-list-of?
         poo-flow-string-prefix?
@@ -202,6 +212,39 @@
 (def (poo-flow-member? value values)
   (if (member value values) #t #f))
 
+;; poo-flow-set-subset?
+;;   : (-> [Object] [Object] Boolean)
+;;   | contract: compare list-shaped sets without rescanning the allowed set
+;;   | complexity: O(requested + allowed) expected time
+(def (poo-flow-set-subset? requested allowed)
+  (let (allowed-index (make-hash-table))
+    (for-each
+     (lambda (value)
+       (hash-put! allowed-index value #t))
+     allowed)
+    (poo-flow-all?
+     (lambda (value)
+       (hash-key? allowed-index value))
+     requested)))
+
+;; poo-flow-stable-duplicates
+;;   : (-> [Object] [Object])
+;;   | doc m%
+;;       Returns each duplicated value once, ordered by its first appearance.
+;;       The implementation composes the maintained `std/misc/list` hash
+;;       algorithms instead of repeatedly scanning an accumulated list.
+;;     %
+(def (poo-flow-stable-duplicates values)
+  (let (duplicate-table (make-hash-table))
+    (for-each
+     (lambda (entry)
+       (hash-put! duplicate-table (car entry) #t))
+     (duplicates values))
+    (filter
+     (lambda (value)
+       (hash-key? duplicate-table value))
+     (delete-duplicates/hash values from-end?: #t))))
+
 ;; poo-flow-alist?
 ;;   : (-> Object Boolean)
 ;;   | doc m%
@@ -356,6 +399,7 @@
       (cdr entry)
       default-value)))
 
+;; : (forall (k v) (-> [k] [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-select
 ;;   : (-> [Symbol] Alist Alist)
 ;;   | doc m%
@@ -377,6 +421,7 @@
             (cons key (cdr entry)))))
    keys))
 
+;; : (forall (k v) (-> k [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-delete-key
 ;;   : (-> Symbol Alist Alist)
 ;;   | doc m%
@@ -396,6 +441,7 @@
      (equal? key (car entry)))
    alist))
 
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
 ;; poo-flow-alist-merge-right
 ;;   : (-> Alist Alist Alist)
 ;;   | doc m%

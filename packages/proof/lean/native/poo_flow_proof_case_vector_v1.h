@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 /* Generated from proof-case-vector-v1.toml. Do not edit. */
 #ifndef POO_FLOW_PROOF_CASE_VECTOR_V1_H
 #define POO_FLOW_PROOF_CASE_VECTOR_V1_H

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Harness Policy Runtime Boundary
 This scenario anchors Scheme control-plane and runtime-language handoff boundaries to the testing policy suite.
 

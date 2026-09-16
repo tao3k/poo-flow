@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable artifact policy scenario.
 ;;; Invariant: user config declares POO artifact policy data and bounded
 ;;; receipts only; runtime artifact storage/indexing/publishing stays outside
@@ -6,10 +10,9 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/cases/durable-artifact"
                  poo-flow-custom-my-module-durable-artifact-case))
 
 (export user-interface-custom-durable-artifact-test)
@@ -61,5 +64,3 @@
         (check-equal? (test-ref marlin-handoff 'runtime-executed) #f)
         (check-equal? (test-ref marlin-handoff 'runtime-parses-scheme-source)
                       #f)))))
-
-(run-tests! user-interface-custom-durable-artifact-test)

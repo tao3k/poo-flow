@@ -1,12 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: scenario coverage for user-interface use-composition syntax.
 
 (import (only-in :clan/poo/object .o .ref)
-         (only-in :std/test check-equal? run-tests! test-case test-suite)
-         :gslph/src/testing/memory-profile
-         :poo-flow/src/module-system/profile-composition)
+         (only-in :std/test check-equal? test-case test-suite)
+         :poo-flow/src/module-system/profile-composition/interface)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 ;; : PooFlowComposition
 (def rag-agent
@@ -33,7 +35,7 @@
       (.ref (car clauses) 'payload))
      (else (loop (cdr clauses))))))
 
-(run-tests!
+(def user-interface-composition-test
  (test-suite "poo-flow user-interface composition macro"
   (test-case "defines a named composition from module profile slots"
     (check-equal? (poo-flow-composition? rag-agent) #t)

@@ -1,20 +1,13 @@
-((max_total . 100ms)
- (maxCollectMs . 25)
- (maxParseMs . 15)
- (maxFileMs . 5)
- (maxPhaseMs . 10)
- (observedCollectMs . 8)
- (observedParseMs . 0)
- (observedFileMs . 0)
- (observedPhaseMs . 7)
- (observed_total . 12ms)
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 100ms)
  (target_total . 25ms)
  (regression_budget . 75ms)
  (expected_over_input_budget . 8ms)
- (observedTimings . (((name . collect-before) (durationMs . 7))
-                     ((name . policy-before) (durationMs . 5))
-                     ((name . collect-after) (durationMs . 7))
-                     ((name . policy-after) (durationMs . 4))))
+ (sampleCount . 20)
  (targetRationale . "custom user-interface scenario aggregation is the public acceptance surface for downstream POO-native cases and must stay bounded.")
  (maxRssMb . 512)
  (memoryMetric . resident-set-size)
@@ -41,5 +34,5 @@
                     collect-after
                     policy-after
                     assert-time-gate
-                    assert-memory-gate)
+                    observe-runtime-memory)
  (tags poo user-interface scenarios performance))

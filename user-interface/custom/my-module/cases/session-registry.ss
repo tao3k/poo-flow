@@ -1,11 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream session registry case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream session registry case.
 ;;; Invariant: registry rows describe project/root/child address space only;
 ;;; Scheme does not retain live runtime state.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-registry-case)
+
+(def poo-flow-custom-my-module-session-registry-case
+  (poo-flow-session-cases
   (session-case custom-session-registry-case
     (metadata (source . user-interface)
               (case . session-registry))
@@ -75,4 +82,4 @@
         (entries root-entry build-entry audit-entry)
         (metadata (source . user-interface)
                   (case . session-registry)))))
-    (rows registry)))
+    (rows registry))))

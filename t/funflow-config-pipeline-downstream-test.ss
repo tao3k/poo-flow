@@ -1,10 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream-shaped Funflow POO config lowers to readiness facts.
 
 (import (only-in :std/sugar match)
         (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/workflow/cicd)
 
@@ -33,7 +38,7 @@
                                     result-protocol runtime-mode)
       check-name: 'build
       profile-ref: 'ci/build
-      command-vector: '("gxpkg" "build")
+      command-vector: '("gerbil" "build")
       artifact-outputs: '(build-log)
       cache-intents: '(gerbil-build-cache)
       result-protocol: '(read :lines)
@@ -45,7 +50,7 @@
                                    runtime-mode dependency-refs)
       check-name: 'test
       profile-ref: 'ci/check
-      command-vector: '("gxtest" "t/unit-tests.ss")
+      command-vector: '("gerbil" "env" "./unit-tests.ss")
       artifact-outputs: '(test-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -57,8 +62,7 @@
                                       runtime-mode dependency-refs)
       check-name: 'package
       profile-ref: 'ci/check
-      command-vector: '("gxtest"
-                        "t/workflow-cicd-dependency-graph-test.ss")
+      command-vector: '("gerbil" "env" "./unit-tests.ss")
       artifact-outputs: '(dependency-graph-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -86,7 +90,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 4)
@@ -104,7 +107,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-only)))
                 (access . read-only))
                (cpu . 1)

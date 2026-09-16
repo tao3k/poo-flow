@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: scenario-local policy for POO dynamic slot binding leaks.
 ;;;
 ;;; This file is static policy data. It must not import :clan/poo/object and

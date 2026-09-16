@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Presentation checks for custom loop-engine tests.
 ;;; Boundary: helpers mirror public doctor slots back to projected intent facts.
 ;;; Invariant: presentation checks assert report-only rows and never execute loops.
 
 (import (only-in :std/test check-equal?)
         (only-in :clan/poo/object .ref)
-        :poo-flow/t/support/custom-loop-engine/fixtures)
+        "./fixtures")
 
 (export check-custom-loop-presentation-boundary)
 

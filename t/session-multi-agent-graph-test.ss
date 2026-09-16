@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only multi-agent session graph topology.
 ;;; Invariant: graph construction is declarative; Scheme does not run agents or
 ;;; deliver messages.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -201,5 +204,3 @@
         (check-equal? (cdr (assoc 'durable-policy-refs registry-row))
                       '(durable/graph durable/graph))
         (check-equal? (.ref graph 'runtime-executed) #f)))))
-
-(run-tests! session-multi-agent-graph-test)

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: core cases exercise the thin declarative user-interface surface.
 ;;; These checks intentionally stop before sandbox realization or runtime work.
 
@@ -10,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -18,11 +21,12 @@
         "user-interface-fixtures.ss"
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/root-profile
-        :poo-flow/src/module-system/use-module-contract)
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/user-interface/profile-config
+        :poo-flow/src/user-interface/root-profile
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/declaration/contract)
 
 (export user-interface-config-core-case-test)
 
@@ -36,7 +40,8 @@
 
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
-  '((flow . funflow)
+  '((core . poo-clos)
+    (flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
@@ -78,12 +83,12 @@
                     'developer)
       (check-equal? (length (poo-flow-user-profile-module-bundles
                              test-poo-flow-user-profile))
-                    7)
+                    8)
       (check-equal? (poo-flow-user-config? test-poo-flow-user-config) #t)
       (check-equal? (poo-flow-user-config-module-keys test-poo-flow-user-config)
                     expected-poo-flow-core-module-keys))
     (test-case "builds profile module bundles and conditional gates"
-      (check-equal? (length test-poo-flow-user-modules) 7)
+      (check-equal? (length test-poo-flow-user-modules) 8)
       (check-equal? (poo-flow-user-module-selection-key
                      (car (use-module nono-sandbox +nono +doctor)))
                     '(sandbox . nono-sandbox))
@@ -95,19 +100,12 @@
                     '())
       (check-equal? (poo-flow-user-module-selection->alist
                      (car test-poo-flow-user-modules))
-                    '((group . flow)
-                      (module . funflow)
-                      (key flow . funflow)
+                    '((group . core)
+                      (module . poo-clos)
+                      (key core . poo-clos)
                       (source-ref . #f)
                       (entrypoint . #f)
-                      (flags +functional +dag +typed-receipts
-                             +runtime-manifest
-                             (+cicd
-                              (checks +parallel +typed-receipts)
-                              (artifacts +export)
-                             (release +manual-gate)
-                             (webhook +server)
-                             (runtime +manifest-handoff)))
+                      (flags +native)
                       (enabled? . #t))))
     (test-case "validates use-module declarations before projection"
       (let* ((valid-selections (use-module nono-sandbox +nono +doctor))
@@ -161,20 +159,20 @@
                                    '(custom . my-module)))
              (custom-source
               (poo-flow-user-module-selection-source-ref custom-module)))
-        (check-equal? (length custom-modules) 7)
+        (check-equal? (length custom-modules) 8)
         (check-equal? (poo-flow-user-module-selection-key custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-flags custom-module)
                       '(+private +doctor))
         (check-equal? (poo-flow-user-module-selection-entrypoint custom-module)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (poo-flow-module-source-ref-kind custom-source) 'local)
         (check-equal? (poo-flow-module-source-ref-value custom-source)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'entrypoint custom-fact)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'declaration-index custom-fact)
-                      6)
+                      7)
         (check-equal? (alist-value 'declaration-phase custom-fact)
                       'init-selection)
         (check-equal? (alist-value 'package-management? custom-fact)
@@ -201,9 +199,9 @@
                       #t)
         (check-equal? (length (poo-flow-user-profile-module-bundles
                                root-poo-flow-user-profile))
-                      8)
+                      9)
         (check-equal? (length poo-flow-user-module-bundles) 5)
-        (check-equal? (length root-modules) 8)
+        (check-equal? (length root-modules) 9)
         (check-equal? (poo-flow-user-config-module-keys root-poo-flow-user-config)
                       expected-poo-flow-root-module-keys)
         (check-equal? (poo-flow-user-module-selection-flags root-flow-module)
@@ -217,4 +215,4 @@
         (check-equal? (poo-flow-user-module-selection-key root-custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-entrypoint root-custom-module)
-                      "./custom/my-module/config.ss")))))
+                      "./custom/my-module/interface.ss")))))

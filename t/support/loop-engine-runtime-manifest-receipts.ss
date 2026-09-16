@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared assertions for loop-engine runtime manifest receipts.
 ;;; Invariant: helpers inspect inert request rows only; they never construct or
 ;;; execute runtime manifests.

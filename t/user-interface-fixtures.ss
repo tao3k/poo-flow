@@ -1,13 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared fixtures for root user-interface tests.
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/profile-core
-        :poo-flow/src/module-system/profiles/kernel)
+        :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/module-system/load
+                 poo-flow-modules!)
+        :poo-flow/src/modules/loop-engine/config
+        :poo-flow/src/user-interface/profile-core
+        :poo-flow/src/profiles/kernel/interface)
 
 (defrules poo-flow-profile-set (default profiles)
   ((_ name (default default-name) (profiles profile ...))
@@ -53,15 +58,6 @@
 (def (poo-flow-user-module-bundles->modules bundles)
   (apply append bundles))
 
-(defrules poo-flow-custom-module-bundles ()
-  ((_ (name path feature ...) ...)
-   (list
-    (list
-     (poo-flow-user-module-selection 'custom
-                                     'name
-                                     '(feature ...)))
-    ...)))
-
 (def poo-flow-default-user-setting-keys
   '(surface profile flow-mode loop-strategy sandbox-policy sandbox-backends mode-lock))
 
@@ -106,34 +102,33 @@
   (poo-flow-user-module-bundles-extend
    poo-flow-kernel-profile-module-bundles
    (list
-    (use-module loop-engine
-      :config
-      (.def (test-loop @ loop-engine-use-case name)
-        name: 'test-loop)
+    (poo-flow-loop-engine-configs
+     (.def (test-loop @ loop-engine-use-case name)
+       name: 'test-loop)
 
-      (.def (test-loop-governor @ loop-engine-governor capabilities)
-        capabilities: '(+strategy +policy))
+     (.def (test-loop-governor @ loop-engine-governor capabilities)
+       capabilities: '(+strategy +policy))
 
-      (.def (test-loop-judges @ loop-engine-agent-judges
-                              auditor verifier governor)
-        auditor: 'repo-audit-agent
-        verifier: 'repo-verifier-agent
-        governor: 'repo-governor)
+     (.def (test-loop-judges @ loop-engine-agent-judges
+                             auditor verifier governor)
+       auditor: 'repo-audit-agent
+       verifier: 'repo-verifier-agent
+       governor: 'repo-governor)
 
-      (.def (test-loop-human-audit @ loop-engine-human-audit actions)
-        actions: '(+approval +changes-requested))
+     (.def (test-loop-human-audit @ loop-engine-human-audit actions)
+       actions: '(+approval +changes-requested))
 
-      (.def (test-loop-runtime @ loop-engine-runtime capabilities)
-        capabilities: '(+manifest-handoff))
+     (.def (test-loop-runtime @ loop-engine-runtime capabilities)
+       capabilities: '(+manifest-handoff))
 
-      (.def (test-loop-profile @ loop-engine-profile
-                               use-case governor agent-judges
-                               human-audit runtime)
-        use-case: test-loop
-        governor: test-loop-governor
-        agent-judges: test-loop-judges
-        human-audit: test-loop-human-audit
-        runtime: test-loop-runtime)))))
+     (.def (test-loop-profile @ loop-engine-profile
+                              use-case governor agent-judges
+                              human-audit runtime)
+       use-case: test-loop
+       governor: test-loop-governor
+       agent-judges: test-loop-judges
+       human-audit: test-loop-human-audit
+       runtime: test-loop-runtime)))))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def test-poo-flow-user-modules
@@ -141,8 +136,9 @@
 
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def test-poo-flow-user-custom-module-bundles
-  (poo-flow-custom-module-bundles
-   (my-module "./custom/my-module" +private +doctor)))
+  (poo-flow-modules!
+   :custom
+   (my-module @ "./custom/my-module" +private +doctor)))
 
 ;; : (-> Unit PooUserProfile)
 (def test-poo-flow-user-custom-profile
@@ -196,11 +192,7 @@
 
 ;; : (-> Unit PooUserConfig)
 (def test-poo-flow-user-config
-  (.o kind: "poo-flow.modules.user-config.v1"
-      user-modules: (apply append
-                           (.ref test-poo-flow-user-profile
-                                 'profile-selection-bundles))
-      user-settings: (.ref test-poo-flow-user-profile 'user-settings)))
+  (pooFlowUserConfigFromProfile test-poo-flow-user-profile))
 
 ;; : (-> UserInterfaceEntry Alist MaybeValue)
 (def (alist-value key entries)

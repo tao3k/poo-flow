@@ -1,18 +1,22 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user-owned custom module facade.
 ;;; Invariant: the facade re-exports focused profile/case owners and does not
 ;;; load every declaration into one compiled aggregate module.
 
-(import :poo-flow/user-interface/custom/my-module/profiles/all
-        :poo-flow/user-interface/custom/my-module/cases/cicd-owner
-        :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
-        :poo-flow/user-interface/custom/my-module/cases/session-owner
-        :poo-flow/user-interface/custom/my-module/cases/runtime-owner
-        :poo-flow/user-interface/custom/my-module/cases/durable-owner)
+(import "profiles/all"
+        "cases/cicd-owner"
+        "cases/loop-engine-owner"
+        "cases/session-owner"
+        "cases/runtime-owner"
+        "cases/durable-owner")
 
-(export (import: :poo-flow/user-interface/custom/my-module/profiles/all)
-        (import: :poo-flow/user-interface/custom/my-module/cases/cicd-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/session-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/runtime-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/durable-owner))
+(export (import: "profiles/all")
+        (import: "cases/cicd-owner")
+        (import: "cases/loop-engine-owner")
+        (import: "cases/session-owner")
+        (import: "cases/runtime-owner")
+        (import: "cases/durable-owner"))

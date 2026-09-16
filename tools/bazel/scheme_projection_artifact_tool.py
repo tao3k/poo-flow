@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Hermetic Bazel tool for exporting a packaged Scheme projection artifact."""
 
 from __future__ import annotations
@@ -83,8 +87,7 @@ def _load_projection_rows(
     project_dependency_roots: tuple[Path, ...],
 ) -> tuple[object, ...]:
     runner_source = (
-        "(import :poo-flow/src/module-system/init-syntax\n"
-        "        :poo-flow/src/module-system/profile-composition)\n"
+        "(import :poo-flow/src/module-system/profile-composition/interface)\n"
         f"(include {_scheme_string(str(projection))})\n"
         "(poo-flow-runtime-load-write!\n"
         f" (begin (include {_scheme_string(str(source))})))\n"

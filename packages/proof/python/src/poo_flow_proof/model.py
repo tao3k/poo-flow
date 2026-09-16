@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Python-side typed model for emitting Lean constructors.
 
 The values here are not proof objects. They are a generator-friendly mirror of

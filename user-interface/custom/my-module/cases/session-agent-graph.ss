@@ -1,11 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream multi-agent session graph case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream multi-agent session graph case.
 ;;; Invariant: this is declarative graph/registry data; message delivery,
 ;;; providers, tools, and sandbox runtime stay behind Marlin handoff.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-agent-graph-case)
+
+(def poo-flow-custom-my-module-session-agent-graph-case
+  (poo-flow-session-cases
   (session-case custom-session-agent-graph-case
     (metadata (source . user-interface)
               (case . session-agent-graph))
@@ -153,4 +160,4 @@
      (session-communication-channel-rows build-audit-channel
                                          audit-root-channel)
      (session-communication-rows build-audit-message
-                                 audit-root-message))))
+                                 audit-root-message)))))

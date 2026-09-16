@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: POO-native AgentParam contracts derived from session topology.
 ;;; Invariant: AgentParam contracts are report-only policy/topology bindings;
 ;;; Scheme never opens providers, tools, memory stores, streams, or sandboxes.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -256,5 +259,3 @@
         (check-equal? (length rows) 1)
         (check-equal? (test-ref (car rows) 'contract-id)
                       'agent-param/build)))))
-
-(run-tests! session-agent-param-contract-test)

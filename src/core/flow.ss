@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: flows describe workflow composition and contract shape.
 ;;; Invariant: task execution is deferred to runner/runtime-adapter code.
 
@@ -8,7 +12,8 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow-strand
         :poo-flow/src/core/flow-declarations
-        :poo-flow/src/core/object-syntax)
+        :poo-flow/src/core/object-syntax
+        :poo-flow/src/core/funcs)
 
 (export make-flow
         flow?
@@ -248,36 +253,16 @@
 ;;; - Store and CAS extensions own persistent cache materialization.
 ;; : (-> Symbol KeyProcedure Procedure Contract Contract Flow)
 (def (cached-pure-flow name key-proc proc input-contract output-contract)
-  (let (entries '())
-    (pure-flow name
-               (lambda (input)
-                 (let* ((key (key-proc input))
-                        (entry (assoc key entries)))
-                   (if entry
-                     (cdr entry)
-                     (let (value (proc input))
-                       (set! entries (cons (cons key value) entries))
-                       value))))
-               input-contract
-               output-contract)))
+  (pure-flow name (poo-flow-memoize key-proc proc)
+             input-contract output-contract))
 
 ;;; Invariant:
 ;;; - Cache lookup must happen before executor invocation.
 ;;; - This preserves QuickReference's single visible =Increment!= observation.
 ;; : (-> Symbol KeyProcedure Procedure Contract Contract Flow)
 (def (cached-scheme-flow name key-proc proc input-contract output-contract)
-  (let (entries '())
-    (scheme-flow name
-                 (lambda (input)
-                   (let* ((key (key-proc input))
-                          (entry (assoc key entries)))
-                     (if entry
-                       (cdr entry)
-                       (let (value (proc input))
-                         (set! entries (cons (cons key value) entries))
-                         value))))
-                 input-contract
-                 output-contract)))
+  (scheme-flow name (poo-flow-memoize key-proc proc)
+               input-contract output-contract))
 
 ;;; Composition concatenates logical steps and keeps the left input/right output
 ;;; edge, matching pipeline composition without running either side.

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: dependency graph and reachability diagnostics for CI/CD checks.
 
 (import :poo-flow/src/modules/workflow/cicd-core
@@ -7,7 +11,6 @@
         :poo-flow/src/utilities/functional)
 
 (export poo-flow-cicd-checks-names
-        poo-flow-cicd-duplicate-symbols/fold
         poo-flow-cicd-duplicate-symbols
         poo-flow-cicd-check-unresolved-dependency-refs/rev
         poo-flow-cicd-unresolved-dependency-refs
@@ -27,26 +30,9 @@
 (def (poo-flow-cicd-checks-names checks)
   (map poo-flow-cicd-check-name checks))
 
-;; Duplicate names make dependency refs ambiguous, so the graph reports them
-;; before any downstream scheduler tries to interpret edges.
-;; : (-> Symbol Pair Pair)
-(def (poo-flow-cicd-duplicate-symbol-state name state)
-  (let ((seen (car state))
-        (duplicates (cdr state)))
-    (if (poo-flow-cicd-symbol-member? name seen)
-      (cons seen (poo-flow-cicd-symbol-add name duplicates))
-      (cons (poo-flow-cicd-symbol-add name seen) duplicates))))
-
-;; : (-> [Symbol] [Symbol] [Symbol] [Symbol])
-(def (poo-flow-cicd-duplicate-symbols/fold names seen duplicates)
-  (cdr (poo-flow-fold-left
-        poo-flow-cicd-duplicate-symbol-state
-        (cons seen duplicates)
-        names)))
-
 ;; : (-> [Symbol] [Symbol])
 (def (poo-flow-cicd-duplicate-symbols names)
-  (poo-flow-cicd-duplicate-symbols/fold names '() '()))
+  (poo-flow-stable-duplicates names))
 
 ;; Unresolved dependency refs are graph diagnostics, not constructor errors.
 ;; Keeping this local to one check lets the map-level report aggregate every
@@ -77,6 +63,7 @@
 
 ;; Dependency edges are emitted as inert `from` and `to` facts. The runtime
 ;; scheduler can choose its own execution plan from the graph report later.
+;; : (forall (e) (-> PooFlowCicdCheck [e] [e]))
 ;; : (-> PooFlowCicdCheck [Alist] [Alist])
 (def (poo-flow-cicd-check-dependency-edges/rev check edges-rev)
   (let ((check-name (poo-flow-cicd-check-name check)))
@@ -89,6 +76,7 @@
      edges-rev
      (poo-flow-cicd-check-dependency-refs check))))
 
+;; : (forall (a e) (-> [a] [e]))
 ;; : (-> [PooFlowCicdCheck] [Alist])
 (def (poo-flow-cicd-dependency-edges checks)
   (reverse
@@ -192,6 +180,7 @@
 
 ;; The dependency graph is a declarative DAG handoff. It reports nodes, edges,
 ;; and unresolved refs but deliberately does not sort or schedule the checks.
+;; : (forall (a) (-> a Alist))
 ;; poo-flow-cicd-check-map->dependency-graph
 ;; : (-> PooFlowCicdCheckMap Alist)
 ;; | doc m%

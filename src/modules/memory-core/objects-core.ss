@@ -1,8 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: memory store spec primitives shared by memory-core modules.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/transform)
 
@@ -28,6 +32,18 @@
         poo-flow-memory-store-spec->alist
         poo-flow-memory-reverse-onto)
 
+;; poo-flow-memory-field-rows
+;;   : (-> FieldRow... Alist)
+;;   | doc m%
+;;       `poo-flow-memory-field-rows` constructs ordered memory object fields.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-memory-field-rows (kind memory) (schema memory.v1))
+;;       ;; => ((kind . memory) (schema . memory.v1))
+;;       ```
+;;     %
 (defrules poo-flow-memory-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))

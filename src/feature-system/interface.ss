@@ -1,3 +1,9 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: re-exports the public POO-native feature-system surface.
+;;; Invariant: implementation ownership remains in the imported feature modules.
 (import :poo-flow/src/feature-system/model
         :poo-flow/src/feature-system/resolver
         :poo-flow/src/feature-system/feature-manifest
