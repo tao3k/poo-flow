@@ -26,6 +26,9 @@ structure AuthorizationSubject where
   policySetDigest : PolicySetDigest
   entityStoreDigest : EntityStoreDigest
   bundleDigest : BundleDigest
+  profileIdentities : List String
+  governanceAssessmentDigest : SubjectDigest
+  subjectSnapshotDigest : SubjectDigest
   epoch : Nat
   deriving DecidableEq, Repr
 
@@ -47,6 +50,9 @@ def subjectA : AuthorizationSubject where
   policySetDigest := "sha256:policies-a"
   entityStoreDigest := "sha256:entities-a"
   bundleDigest := "sha256:bundle"
+  profileIdentities := ["healthcare/base", "healthcare/medication-safety"]
+  governanceAssessmentDigest := "sha256:governance-a"
+  subjectSnapshotDigest := "sha256:subject-a"
   epoch := 7
 
 def subjectB : AuthorizationSubject where
@@ -54,6 +60,9 @@ def subjectB : AuthorizationSubject where
   policySetDigest := "sha256:policies-b"
   entityStoreDigest := "sha256:entities-b"
   bundleDigest := "sha256:bundle"
+  profileIdentities := ["healthcare/base", "healthcare/medication-safety"]
+  governanceAssessmentDigest := "sha256:governance-b"
+  subjectSnapshotDigest := "sha256:subject-b"
   epoch := 7
 
 def cedarReceiptA : DecisionReceipt where
@@ -168,6 +177,23 @@ theorem closedDualDecisionProvidesDistinctEngines
     (closed : dualDecisionEvidenceClosed semantics valid left right) :
     left.engineId ≠ right.engineId :=
   closed.2.1
+
+theorem closedDualDecisionProvidesGovernanceAssessmentIdentity
+    (semantics : DecisionSemantics)
+    (valid : DecisionReceiptValid)
+    (left right : DecisionReceipt)
+    (closed : dualDecisionEvidenceClosed semantics valid left right) :
+    left.subject.governanceAssessmentDigest =
+      right.subject.governanceAssessmentDigest := by
+  exact congrArg AuthorizationSubject.governanceAssessmentDigest closed.1
+
+theorem closedDualDecisionProvidesSubjectSnapshotIdentity
+    (semantics : DecisionSemantics)
+    (valid : DecisionReceiptValid)
+    (left right : DecisionReceipt)
+    (closed : dualDecisionEvidenceClosed semantics valid left right) :
+    left.subject.subjectSnapshotDigest = right.subject.subjectSnapshotDigest := by
+  exact congrArg AuthorizationSubject.subjectSnapshotDigest closed.1
 
 theorem closedDualDecisionProvidesSemanticCorrectness
     (semantics : DecisionSemantics)

@@ -12,7 +12,7 @@
   "src/module-system/profile-composition/interface.ss"
   "src/feature-system/bundle-v1-composition-writer.ss"
   "src/contract/runtime-v0-abi-schema.ss"
-  "src/policy/cedar-authority.ss"
+  "src/modules/authorization/providers/cedar/interface.ss"
   "src/proof/generated/proof-case-vector-v1.ss"
   "src/proof/proof-case-vector.ss"
   "src/qualification/runtime-symbol-manifest.ss")

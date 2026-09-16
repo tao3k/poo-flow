@@ -9,8 +9,8 @@
         (only-in :poo-flow/src/module-system/contribution/interface
                  admit-contributions)
         :poo-flow/src/modules/governance/interface
-        :poo-flow/src/policy/cedar-authority
-        :poo-flow/src/policy/cedar-governance)
+        :poo-flow/src/modules/authorization/interface
+        :poo-flow/src/modules/authorization/providers/cedar/interface)
 
 (export governance-core-test)
 
@@ -49,9 +49,12 @@
       identity: "test/governance/unsafe"
       threat-model: BlockingThreatModel))
 
-(def (test-proof composition)
+(def (test-proof composition profiles assessments)
   (poo-flow-cedar-proof-binding
-   composition test-digest test-digest test-digest test-digest
+   composition (map (lambda (profile) (.ref profile 'identity)) profiles)
+   test-digest test-digest test-digest test-digest
+   (poo-flow-governance-assessments-digest assessments)
+   test-digest
    '("test-governance-qualification")))
 
 (def test-context
@@ -71,6 +74,10 @@
 
 (def test-capability
   (poo-flow-cedar-runtime-capability "test::Action" 1))
+
+(def test-elevated-capability
+  (poo-flow-authorization-capability
+   "test/capability/release" "test::Action" 1 'elevated))
 
 (def governance-core-test
   (test-suite "POO Flow Governance core and Cedar Provider boundary"
@@ -109,34 +116,57 @@
              (receipt (admit-contributions (list contribution) '())))
         (check-equal? (.ref receipt 'accepted?) #t)
         (check-equal? (.ref receipt 'runtime-executed?) #f)))
+    (test-case "Authorization contracts keep elevated capability strict"
+      (let (receipt
+            (poo-flow-authorization-capability-contract
+             CedarDualEngineAuthorizationProvider
+             (list test-elevated-capability)))
+        (check-equal? (.ref receipt 'admitted?) #t)
+        (check-equal? (.ref receipt 'runtime-executed?) #f)
+        ;; Force the lazy slot: lexical names matching POO slot names can
+        ;; otherwise hide a recursive capture until a downstream handoff.
+        (check-equal?
+         (.ref receipt 'contract-digest)
+         (poo-flow-authorization-capabilities-digest
+          CedarDualEngineAuthorizationProvider
+          (list test-elevated-capability)))
+        (check-equal?
+         (poo-flow-authorization-provider-engines
+          CedarDualEngineAuthorizationProvider)
+         '("cedar-rust" "cedar-lean"))))
     (test-case "Cedar adapter binds the exact Governance Profile identity"
-      (let* ((assessment
-              (poo-flow-governance-evaluate TestGovernanceProfile (.o)))
+      (let* ((profiles (list TestGovernanceProfile))
+             (assessments
+              (list (poo-flow-governance-evaluate TestGovernanceProfile (.o))))
              (snapshot
             (poo-flow-cedar-governance-snapshot
-             TestGovernanceProfile assessment test-context
-             (test-proof "test/governance")
+             "test/governance" profiles assessments test-context
+             (test-proof "test/governance" profiles assessments)
              (list test-policy) test-schema test-entities
              (list test-capability))))
         (check-equal? (.ref snapshot 'runtime-executed?) #f)
         (check-equal?
-         (.ref (.ref snapshot 'governance-assessment) 'handoff-ready?) #t)
+         (.ref (car (.ref snapshot 'governance-assessments)) 'handoff-ready?) #t)
         (check-equal?
          (.ref (.ref snapshot 'proof-binding) 'composition)
          "test/governance")))
     (test-case "Cedar adapter rejects another composition"
       (check-exception
-       (poo-flow-cedar-governance-snapshot
-        TestGovernanceProfile
-        (poo-flow-governance-evaluate TestGovernanceProfile (.o))
-        test-context (test-proof "other/governance")
-        (list test-policy) test-schema test-entities (list test-capability))
+       (let* ((profiles (list TestGovernanceProfile))
+              (assessments
+               (list (poo-flow-governance-evaluate TestGovernanceProfile (.o)))))
+         (poo-flow-cedar-governance-snapshot
+          "test/governance" profiles assessments test-context
+          (test-proof "other/governance" profiles assessments)
+          (list test-policy) test-schema test-entities (list test-capability)))
        true))
     (test-case "Cedar adapter cannot bypass unresolved Governance threats"
       (check-exception
-       (poo-flow-cedar-governance-snapshot
-        UnsafeGovernanceProfile
-        (poo-flow-governance-evaluate UnsafeGovernanceProfile (.o))
-        test-context (test-proof "test/governance/unsafe")
-        (list test-policy) test-schema test-entities (list test-capability))
+       (let* ((profiles (list UnsafeGovernanceProfile))
+              (assessments
+               (list (poo-flow-governance-evaluate UnsafeGovernanceProfile (.o)))))
+         (poo-flow-cedar-governance-snapshot
+          "test/governance/unsafe" profiles assessments test-context
+          (test-proof "test/governance/unsafe" profiles assessments)
+          (list test-policy) test-schema test-entities (list test-capability)))
        true))))

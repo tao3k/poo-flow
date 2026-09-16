@@ -32,7 +32,11 @@ pub struct Capability {
 #[serde(deny_unknown_fields)]
 pub struct Provenance {
     pub composition_identity: String,
+    pub profile_identities: Vec<String>,
     pub profile_origin_digest: String,
+    pub governance_assessment_digest: String,
+    pub subject_snapshot_digest: String,
+    pub governance_admitted: bool,
     pub certification_names: Vec<String>,
 }
 
@@ -117,6 +121,8 @@ pub struct AuthorizationSubject {
     pub policy_set_digest: String,
     pub entity_store_digest: String,
     pub independent_declaration_bundle_digest: String,
+    pub governance_assessment_digest: String,
+    pub subject_snapshot_digest: String,
     pub epoch: u64,
 }
 
@@ -185,7 +191,8 @@ fn materialize_context_schema(mut schema: Value) -> Result<Value> {
             fields.insert("poo_flow".into(), json!({"type": "Record", "attributes": {
                 "intentDigest": {"type": "String"}, "handoffDigest": {"type": "String"}, "runtimeContext": {"type": "String"},
                 "runtimeGeneration": {"type": "Long"}, "bundleEpoch": {"type": "Long"}, "runtimeBundleDigest": {"type": "String"},
-                "profileBundleDigest": {"type": "String"}, "capabilityContractDigest": {"type": "String"}, "revocationEpoch": {"type": "Long"}
+                "profileBundleDigest": {"type": "String"}, "capabilityContractDigest": {"type": "String"}, "revocationEpoch": {"type": "Long"},
+                "governanceAssessmentDigest": {"type": "String"}, "subjectSnapshotDigest": {"type": "String"}, "governanceAdmitted": {"type": "Boolean"}
             }}));
         }
     }
@@ -197,7 +204,7 @@ impl Snapshot {
         if bootstrap.schema_id != "poo-flow.cedar-authority-snapshot.v1"
             || bootstrap.object_kind != "cedar-authority-snapshot"
             || bootstrap.producer != "poo-flow.scheme-control"
-            || bootstrap.source != "src/policy/cedar-authority.ss"
+            || bootstrap.source != "src/modules/authorization/providers/cedar/objects.ss"
         {
             return Err(Error::new(
                 "snapshot-owner-invalid",
@@ -228,8 +235,23 @@ impl Snapshot {
             &bootstrap.independent_bundle_digest,
             &bootstrap.capability_contract_digest,
             &bootstrap.provenance.profile_origin_digest,
+            &bootstrap.provenance.governance_assessment_digest,
+            &bootstrap.provenance.subject_snapshot_digest,
         ] {
             canonical::check_digest(digest)?;
+        }
+        if bootstrap.provenance.profile_identities.is_empty()
+            || bootstrap
+                .provenance
+                .profile_identities
+                .iter()
+                .any(String::is_empty)
+            || !bootstrap.provenance.governance_admitted
+        {
+            return Err(Error::new(
+                "governance-admission-invalid",
+                "profile identities and admitted Governance evidence are required",
+            ));
         }
         if bootstrap.provenance.certification_names.is_empty()
             || bootstrap
@@ -383,6 +405,9 @@ impl Snapshot {
             "profileBundleDigest": self.bootstrap.profile_bundle_digest,
             "capabilityContractDigest": self.bootstrap.capability_contract_digest,
             "revocationEpoch": self.bootstrap.revocation_epoch,
+            "governanceAssessmentDigest": self.bootstrap.provenance.governance_assessment_digest,
+            "subjectSnapshotDigest": self.bootstrap.provenance.subject_snapshot_digest,
+            "governanceAdmitted": self.bootstrap.provenance.governance_admitted,
         }));
         let context = Context::from_json_value(context_json, Some((&self.schema, &action)))
             .map_err(cedar_error("cedar-context-invalid"))?;
@@ -393,6 +418,12 @@ impl Snapshot {
             policy_set_digest: self.policy_digest.clone(),
             entity_store_digest: self.entity_digest.clone(),
             independent_declaration_bundle_digest: self.bootstrap.independent_bundle_digest.clone(),
+            governance_assessment_digest: self
+                .bootstrap
+                .provenance
+                .governance_assessment_digest
+                .clone(),
+            subject_snapshot_digest: self.bootstrap.provenance.subject_snapshot_digest.clone(),
             epoch: self.bootstrap.bundle_epoch,
         };
         let policy_input_digest = canonical::digest(
@@ -407,6 +438,8 @@ impl Snapshot {
                 [],
                 self.bootstrap.profile_bundle_digest,
                 self.bootstrap.capability_contract_digest,
+                self.bootstrap.provenance.governance_assessment_digest,
+                self.bootstrap.provenance.subject_snapshot_digest,
                 "strict-lockstep",
                 self.bootstrap.provenance.profile_origin_digest,
             ]),

@@ -2,7 +2,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: Cedar evaluates policy while Scheme POO owns semantic token meaning.
+;;; Boundary: Cedar Provider evaluates policy while Scheme POO owns semantic token meaning.
 ;;; Invariant: a Cedar decision cannot mint or reinterpret authorized-effect evidence.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/crypto/digest sha256)

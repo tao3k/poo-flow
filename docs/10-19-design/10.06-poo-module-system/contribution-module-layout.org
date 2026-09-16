@@ -122,6 +122,13 @@ are permitted; the public entry remains =interface.ss=.
 | config.ss | User selection to module/profile projection | Runtime execution |
 | interface.ss | Public exports | Business logic or another DSL |
 
+Security-sensitive modules may additionally provide =contracts.ss=.  This
+optional role owns relational invariants spanning two or more already typed
+objects, such as Provider/capability compatibility, identity joins, digest
+bindings or handoff eligibility.  It must not duplicate the element predicates
+owned by =types.ss=, construct defaults owned by =objects.ss=, or perform the
+runtime effect.  The public =interface.ss= imports it explicitly when present.
+
 An extension-bearing module uses one closed expression chain:
 
 #+begin_example
@@ -132,6 +139,8 @@ generic protocol -> checked method bundle -> native POO/type composition
 =types.ss= owns the native classes or =define-type= carriers needed by the
 domain. =objects.ss= owns protocol objects, generics and inheritable prototypes.
 =funs.ss= owns pure implementation functions and the default method bundles.
+=contracts.ss=, when present, owns cross-object admission and is called by the
+pure projection before any runtime handoff.
 An optional =syntax.ss= may expose a small =defrule= that lowers directly to one
 of those ordinary bundles; it may not own dispatch, policy evaluation or a
 second registry. =interface.ss= closes the chain for consumers.

@@ -5,7 +5,7 @@
 #+title: Governance Core, Vertical Domain, and Cedar Provider Boundary
 #+date: [2026-09-16]
 #+property: SDD_KIND architecture-decision
-#+property: STATUS implemented-governance-model
+#+property: STATUS implemented-healthcare-dual-engine-slice
 
 * Decision
 
@@ -14,7 +14,9 @@ by Lambda Episteme and it is not synonymous with the Cedar evaluator.
 
 POO Flow owns the engine-neutral Governance Profile, Source, pre-threat,
 Threat Model, Assessment and Contribution contracts under
-=src/modules/governance/=.  Lambda Episteme consumes those
+=src/modules/governance/=.  POO Flow's engine-neutral authorization protocol
+lives under =src/modules/authorization/=, while Cedar is its explicitly selected
+Provider under =src/modules/authorization/providers/cedar/=.  Lambda Episteme consumes those
 contracts to publish vertical-industry Profiles, Scenarios, Cases, policies and
 Sources.  Cedar is one explicitly selected authorization Provider.  The final
 application binds an admitted domain composition to that Provider.
@@ -27,7 +29,8 @@ No reverse dependency from POO Flow to Lambda Episteme is permitted.
 |-------+----------------+--------------|
 | POO Flow Governance core | Profile, Source, pre-threat, Threat Model and Assessment contracts; semantic admission | Industry vocabulary; implicit authorization |
 | Lambda Episteme | Industry/standard Profiles, Scenarios, Cases, policies, Sources and evidence | Core Governance prototype; Cedar execution |
-| Cedar bridge | Exact Profile identity to proof-binding and authority-snapshot projection | Industry-policy interpretation; authorization result |
+| POO Flow Authorization core | Provider and Capability types plus cross-object contracts | Selecting an ambient Provider; industry vocabulary |
+| Cedar Provider | Exact Case/Profile/assessment/proof identity projection | Industry-policy interpretation; effect execution |
 | Cedar Runtime Host | One bounded Rust+Lean dual-engine evaluation and signed runtime evidence | Domain composition or Profile mutation |
 | Application | Profile/Case selection, Provider selection and effect authorization | Reinterpreting failed admission as success |
 
@@ -70,7 +73,12 @@ The implemented core provides:
 - =.assess-threats= and =.assess-governance= as open =.defgeneric= slots;
 - =poo-flow-governance-evaluate= for single-dispatch Profile assessment;
 - =poo-flow-governance-contribution= for inert semantic contributions;
-- =poo-flow-cedar-governance-snapshot= as the narrow Cedar Provider bridge.
+- =PooFlowAuthorizationProvider= and =PooFlowAuthorizationCapability= as the
+  engine-neutral authorization contract;
+- optional =contracts.ss= roles for Provider/Capability and
+  Governance/Cedar relational admission;
+- =poo-flow-cedar-governance-snapshot= as the aggregate Case-level Cedar
+  Provider projection.
 
 The abstract Profile has no default contributor identity, revision or owner.
 Every concrete contributor must state those values.  This prevents a core
@@ -82,10 +90,20 @@ Threat must name at least one mitigation, and an accepted residual Threat must
 name its acceptance authority.  Exposed or realized high/critical Threats make
 the typed Assessment ineligible for Provider handoff.
 
-The Cedar bridge rejects both unresolved Threats and a proof binding whose
-=composition= identity differs from the selected Governance Profile.  It
+The Cedar Provider rejects unresolved Threats, incomplete Profile/Assessment
+joins, assessment-digest drift, and proof bindings whose composition or Profile
+identities differ from the selected Case.  The exact Case graph and vertical
+authorization declaration are bound through =subject-snapshot-digest=.  It
 performs no policy evaluation and does not provide an alternate in-process
 engine.
+
+The first vertical slice is Healthcare medication administration.  Lambda owns
+the =administerMedication= elevated Capability, standard Cedar policy Sources,
+Healthcare schema, Case graph and declarative Provider/Patient/Encounter/Order
+subject.  The core adapter projects them without interpreting clinical meaning.
+The independent Runtime Host evaluates the exact same protobuf through
+=cedar-rust= and the AOT =Cedar.Spec= Lean engine.  Allow, default deny and
+revoked-order forbid are qualified with per-request strict-lockstep witnesses.
 
 * Enterprise security assurance
 
@@ -171,11 +189,11 @@ is smaller, testable and does not manufacture a second provider framework.
 - [X] Semantic contribution admission leaves =runtime-executed?= false.
 - [X] Observed pre-threat conditions require evidence identity.
 - [X] Active high/critical Threats block Provider handoff.
-- [X] Cedar projection binds the exact Profile/composition identity.
+- [X] Cedar projection binds the complete Case/Profile/assessment composition.
 - [X] A mismatched proof binding fails before runtime handoff.
 - [X] Lean proves core admission and Enterprise security-assurance closure.
 - [X] Native gerbil-parser accepts and losslessly roundtrips the TLA+ model.
 - [X] Official TLC exhausts the Governance state space with all invariants intact.
 - [X] Lambda production closure imports Governance only from POO Flow.
-- [ ] Qualify a concrete vertical Cedar policy Case through the real dual-engine Host.
+- [X] Qualify Healthcare medication allow/default-deny/revocation through the real dual-engine Host.
 - [ ] Introduce Provider/Profile CLOS dispatch only after a second real axis exists.

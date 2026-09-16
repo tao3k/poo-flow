@@ -2,7 +2,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: POO-native Cedar policy, authority, and handoff values.
+;;; Boundary: POO-native Cedar Provider policy, authority, and handoff values.
 ;;; Invariant: construction and projection perform no authorization or runtime IO.
 (import (only-in :clan/poo/object .o .ref .alist object?)
         (only-in :std/text/hex hex-encode)
@@ -102,16 +102,30 @@
   (.o (:: @ Entities.) document: document-value))
 
 ;; : (-> String Digest Digest Digest Digest (List String) CedarProofBinding)
-(def (poo-flow-cedar-proof-binding composition-value origin-value profile-value
-                                    independent-value capability-value names-value)
+(def (poo-flow-cedar-proof-binding composition-value profile-identities-value
+                                    origin-value profile-value independent-value
+                                    capability-value governance-value
+                                    subject-value names-value)
   (require-value "composition identity must be text" (text? composition-value) composition-value)
+  (require-value "proof binding requires concrete Profile identities"
+                 (and (pair? profile-identities-value)
+                      (every? text? profile-identities-value))
+                 profile-identities-value)
   (require-value "proof binding requires canonical content identities"
-                 (every? digest? (list origin-value profile-value independent-value capability-value)) composition-value)
+                 (every? digest?
+                         (list origin-value profile-value independent-value
+                               capability-value governance-value subject-value))
+                 composition-value)
   (require-value "proof binding requires named certifications"
                  (and (pair? names-value) (every? text? names-value)) names-value)
-  (.o (:: @ ProofBinding.) composition: composition-value profile-origin: origin-value
+  (.o (:: @ ProofBinding.) composition: composition-value
+      profile-identities: profile-identities-value
+      profile-origin: origin-value
       profile-bundle: profile-value independent-bundle: independent-value
-      capability-contract: capability-value certification-names: names-value))
+      capability-contract: capability-value
+      governance-assessment: governance-value
+      subject-snapshot: subject-value
+      certification-names: names-value))
 
 ;; : (-> String String Natural Digest Natural Natural Natural CedarAuthorityContext)
 (def (poo-flow-cedar-authority-context authority-value context-value generation-value
@@ -214,11 +228,19 @@
   (let ((context (.ref value 'context)) (proof (.ref value 'proof-binding)))
     (runtime-record
      (cons "schema_id" "poo-flow.cedar-authority-snapshot.v1")
-     (cons "producer" "poo-flow.scheme-control") (cons "source" "src/policy/cedar-authority.ss")
+     (cons "producer" "poo-flow.scheme-control")
+     (cons "source" "src/modules/authorization/providers/cedar/objects.ss")
      (cons "object_kind" "cedar-authority-snapshot")
      (cons "provenance" (runtime-record
                           (cons "composition_identity" (.ref proof 'composition))
+                          (cons "profile_identities"
+                                (list->vector (.ref proof 'profile-identities)))
                           (cons "profile_origin_digest" (.ref proof 'profile-origin))
+                          (cons "governance_assessment_digest"
+                                (.ref proof 'governance-assessment))
+                          (cons "subject_snapshot_digest"
+                                (.ref proof 'subject-snapshot))
+                          (cons "governance_admitted" #t)
                           (cons "certification_names" (list->vector (.ref proof 'certification-names)))))
      (cons "authority_id" (.ref context 'authority)) (cons "runtime_context_id" (.ref context 'runtime-context))
      (cons "runtime_generation" (.ref context 'generation)) (cons "bundle_epoch" (.ref context 'bundle-epoch))

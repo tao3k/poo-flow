@@ -46,7 +46,7 @@ silently claim another tool's guarantee:
 
 | Layer | Owner | What it establishes | What it cannot establish |
 | POO Governance | =src/modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
-| Cedar boundary | =src/policy/cedar-governance.ss= and the independent Runtime Host | Exact Profile/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
+| Cedar Provider | =src/modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
 | TLA+ / TLC | =packages/proof/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
 | Lean | =packages/proof/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
 

@@ -6,7 +6,7 @@
 (import (only-in :std/foreign begin-ffi c-define)
         (only-in :std/text/json json-object->string)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/policy/cedar-authority
+        :poo-flow/src/modules/authorization/providers/cedar/objects
         (only-in :gerbil-scheme-rust/scheme/native gerbil-rs-root-string))
 (export main snapshot-root allow-root deny-root forbid-root)
 
@@ -22,8 +22,9 @@
 (def (snapshot)
   (poo-flow-cedar-authority-snapshot
    (poo-flow-cedar-authority-context "native.authority" "native.context" 1 (digest #\2) 7 1 0)
-   (poo-flow-cedar-proof-binding "native.composition" (digest #\1) (digest #\3)
-     (digest #\4) (digest #\5)
+   (poo-flow-cedar-proof-binding "native.composition" '("native.profile")
+     (digest #\1) (digest #\3) (digest #\4) (digest #\5)
+     (digest #\a) (digest #\b)
      ["PooFlowProof.Runtime.CedarNative" "PooFlowProof.Runtime.CedarRuntimeHost"])
    [(poo-flow-cedar-policy "permit-run"
       "permit(principal == User::\"alice\", action == Action::\"run\", resource == Job::\"demo\") when { context.approved };")

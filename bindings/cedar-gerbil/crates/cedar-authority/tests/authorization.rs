@@ -26,8 +26,11 @@ fn bootstrap() -> Bootstrap {
     }}}}});
     serde_json::from_value(json!({
         "schema_id": "poo-flow.cedar-authority-snapshot.v1", "producer": "poo-flow.scheme-control",
-        "source": "src/policy/cedar-authority.ss", "object_kind": "cedar-authority-snapshot",
-        "provenance": {"composition_identity": "example.composition", "profile_origin_digest": digest(1),
+        "source": "src/modules/authorization/providers/cedar/objects.ss", "object_kind": "cedar-authority-snapshot",
+        "provenance": {"composition_identity": "example.composition",
+            "profile_identities": ["example.profile"], "profile_origin_digest": digest(1),
+            "governance_assessment_digest": digest(10), "subject_snapshot_digest": digest(11),
+            "governance_admitted": true,
             "certification_names": ["PooFlowProof.Runtime.CedarNative", "PooFlowProof.Runtime.CedarRuntimeHost"]},
         "authority_id": "example.authority", "runtime_context_id": "context-1", "runtime_generation": 1, "bundle_epoch": 7,
         "runtime_bundle_digest": digest(2), "profile_bundle_digest": digest(3), "independent_bundle_digest": digest(4),
@@ -52,6 +55,90 @@ fn proposal() -> Proposal {
         handoff: HandoffInput {
             sequence: 1,
             payload_hex: hex::encode(b"owned runtime payload"),
+            semantic_root: digest(7),
+            before_execution_root: digest(0),
+            after_execution_root: digest(8),
+            observation_digest: digest(9),
+        },
+    }
+}
+
+fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstrap {
+    let entities = json!([
+        {"uid": {"type": "Healthcare::Provider", "id": "provider-1"}, "attrs": {}, "parents": []},
+        {"uid": {"type": "Healthcare::Provider", "id": "provider-2"}, "attrs": {}, "parents": []},
+        {"uid": {"type": "Healthcare::Patient", "id": "patient-1"}, "attrs": {}, "parents": []},
+        {"uid": {"type": "Healthcare::Encounter", "id": "encounter-1"}, "attrs": {}, "parents": []},
+        {"uid": {"type": "Healthcare::MedicationOrder", "id": "medication-order-1"},
+         "attrs": {
+             "assignedProvider": {"__entity": {"type": "Healthcare::Provider", "id": "provider-1"}},
+             "patient": {"__entity": {"type": "Healthcare::Patient", "id": "patient-1"}},
+             "encounter": {"__entity": {"type": "Healthcare::Encounter", "id": "encounter-1"}},
+             "reconciliationObserved": reconciliation_observed,
+             "revoked": revoked
+         }, "parents": []}
+    ]);
+    serde_json::from_value(json!({
+        "schema_id": "poo-flow.cedar-authority-snapshot.v1",
+        "producer": "poo-flow.scheme-control",
+        "source": "src/modules/authorization/providers/cedar/objects.ss",
+        "object_kind": "cedar-authority-snapshot",
+        "provenance": {
+            "composition_identity": "post-operative-healing",
+            "profile_identities": [
+                "lambda-episteme/ontology/evidence",
+                "lambda-episteme/ontology/privacy",
+                "lambda-episteme/ontology/healthcare/base",
+                "lambda-episteme/ontology/healthcare/healing",
+                "lambda-episteme/ontology/healthcare/medication-safety"
+            ],
+            "profile_origin_digest": digest(1),
+            "governance_assessment_digest": digest(10),
+            "subject_snapshot_digest": digest(11),
+            "governance_admitted": true,
+            "certification_names": [
+                "PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure",
+                "PooFlowProof.PooC3.CedarDualEngineArbitration"
+            ]
+        },
+        "authority_id": "healthcare.authority",
+        "runtime_context_id": "post-operative-runtime",
+        "runtime_generation": 1,
+        "bundle_epoch": 1,
+        "runtime_bundle_digest": digest(2),
+        "profile_bundle_digest": digest(3),
+        "independent_bundle_digest": digest(4),
+        "capability_contract_digest": digest(5),
+        "policy_revision": 1,
+        "revocation_epoch": 0,
+        "schema_json": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/schema.json"),
+        "policies": [{
+            "identity": "healthcare-medication-permit",
+            "source": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-safety.cedar")
+        }, {
+            "identity": "healthcare-medication-revocation",
+            "source": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-revocation.cedar")
+        }],
+        "entities_json": entities.to_string(),
+        "capabilities": [{
+            "action": "Healthcare::Action::\"administerMedication\"",
+            "event_kind": 4101
+        }]
+    }))
+    .unwrap()
+}
+
+fn healthcare_proposal(provider: &str) -> Proposal {
+    Proposal {
+        schema_id: "poo-flow.cedar-authorization-request.v1".into(),
+        principal: format!("Healthcare::Provider::\"{provider}\""),
+        action: "Healthcare::Action::\"administerMedication\"".into(),
+        resource: "Healthcare::MedicationOrder::\"medication-order-1\"".into(),
+        context: json!({}),
+        intent_digest: digest(6),
+        handoff: HandoffInput {
+            sequence: 1,
+            payload_hex: hex::encode(b"medication administration intent"),
             semantic_root: digest(7),
             before_execution_root: digest(0),
             after_execution_root: digest(8),
@@ -222,6 +309,77 @@ fn real_dual_engines_allow_default_deny_and_forbid_override() {
         ["forbid-blocked"]
     );
     assert_eq!(authority.info().state, "ready");
+}
+
+#[test]
+fn healthcare_medication_authorization_is_governance_bound_and_dual_witnessed() {
+    let runtime = spawn_runtime(10000);
+    let admitted_deployment = deployment(&runtime);
+
+    let mut admitted = Authority::new(
+        healthcare_bootstrap(true, false),
+        admitted_deployment,
+        [43; 32],
+    )
+    .unwrap();
+    let allowed = admitted.issue(healthcare_proposal("provider-1")).unwrap();
+    assert_eq!(allowed.status, "authorized");
+    assert_eq!(allowed.receipt.payload.arbitration, "strict-lockstep");
+    assert!(allowed.receipt.payload.per_request_dual_witness);
+    assert!(
+        allowed
+            .receipt
+            .payload
+            .rust
+            .payload
+            .outcome
+            .agrees_with(&allowed.receipt.payload.lean.payload.outcome)
+    );
+    assert_eq!(
+        allowed
+            .receipt
+            .payload
+            .rust
+            .payload
+            .authorization_subject
+            .governance_assessment_digest,
+        digest(10)
+    );
+    assert_eq!(
+        allowed
+            .receipt
+            .payload
+            .rust
+            .payload
+            .authorization_subject
+            .subject_snapshot_digest,
+        digest(11)
+    );
+
+    let denied = admitted.issue(healthcare_proposal("provider-2")).unwrap();
+    assert_eq!(denied.status, "denied");
+    assert!(denied.grant.is_none());
+
+    let revoked_runtime = spawn_runtime(10000);
+    let mut revoked = Authority::new(
+        healthcare_bootstrap(true, true),
+        deployment(&revoked_runtime),
+        [44; 32],
+    )
+    .unwrap();
+    let forbidden = revoked.issue(healthcare_proposal("provider-1")).unwrap();
+    assert_eq!(forbidden.status, "denied");
+    assert!(forbidden.grant.is_none());
+    assert_eq!(
+        forbidden
+            .receipt
+            .payload
+            .rust
+            .payload
+            .outcome
+            .determining_policies,
+        ["healthcare-medication-revocation"]
+    );
 }
 
 #[test]
