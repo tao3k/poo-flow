@@ -10,9 +10,18 @@
         (only-in :poo-flow/src/module-system/contribution/interface
                  make-contribution)
         (only-in :poo-flow/src/modules/governance/types
-                 poo-flow-governance-profile?))
+                 poo-flow-governance-profile?
+                 poo-flow-governance-assess))
 
-(export poo-flow-governance-contribution)
+(export poo-flow-governance-contribution
+        poo-flow-governance-evaluate)
+
+;;; Derived Profiles replace their native method slot while callers retain one
+;;; open protocol.  The result remains a semantic assessment, not authority.
+(def (poo-flow-governance-evaluate profile-value context-value)
+  (unless (poo-flow-governance-profile? profile-value)
+    (error "invalid governance profile" profile-value))
+  (poo-flow-governance-assess profile-value context-value))
 
 (def (poo-flow-governance-contribution profile-value facets requirements)
   (unless (poo-flow-governance-profile? profile-value)

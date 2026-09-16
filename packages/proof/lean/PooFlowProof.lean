@@ -36,6 +36,7 @@ import PooFlowProof.PooC3.ExplicitEntropyDerivation
 import PooFlowProof.PooC3.EventIngressCausalCut
 import PooFlowProof.PooC3.IncrementalTruthMaintenance
 import PooFlowProof.PooC3.GovernanceDecisionAuthority
+import PooFlowProof.PooC3.GovernanceCore
 import PooFlowProof.PooC3.EvidenceRetentionErasure
 import PooFlowProof.PooC3.PrincipalKeyLifecycle
 import PooFlowProof.PooC3.CrossDomainFederation

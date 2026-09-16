@@ -5,15 +5,16 @@
 #+title: Governance Core, Vertical Domain, and Cedar Provider Boundary
 #+date: [2026-09-16]
 #+property: SDD_KIND architecture-decision
-#+property: STATUS implemented-first-slice
+#+property: STATUS implemented-governance-model
 
 * Decision
 
 Governance is a POO Flow core module.  It is not infrastructure privately owned
 by Lambda Episteme and it is not synonymous with the Cedar evaluator.
 
-POO Flow owns the engine-neutral Governance Profile, Source and Contribution
-contracts under =src/modules/governance/=.  Lambda Episteme consumes those
+POO Flow owns the engine-neutral Governance Profile, Source, pre-threat,
+Threat Model, Assessment and Contribution contracts under
+=src/modules/governance/=.  Lambda Episteme consumes those
 contracts to publish vertical-industry Profiles, Scenarios, Cases, policies and
 Sources.  Cedar is one explicitly selected authorization Provider.  The final
 application binds an admitted domain composition to that Provider.
@@ -24,7 +25,7 @@ No reverse dependency from POO Flow to Lambda Episteme is permitted.
 
 | Owner | Responsibility | Must not own |
 |-------+----------------+--------------|
-| POO Flow Governance core | Profile and Source contracts; semantic contribution admission | Industry vocabulary; implicit authorization |
+| POO Flow Governance core | Profile, Source, pre-threat, Threat Model and Assessment contracts; semantic admission | Industry vocabulary; implicit authorization |
 | Lambda Episteme | Industry/standard Profiles, Scenarios, Cases, policies, Sources and evidence | Core Governance prototype; Cedar execution |
 | Cedar bridge | Exact Profile identity to proof-binding and authority-snapshot projection | Industry-policy interpretation; authorization result |
 | Cedar Runtime Host | One bounded Rust+Lean dual-engine evaluation and signed runtime evidence | Domain composition or Profile mutation |
@@ -34,7 +35,7 @@ No reverse dependency from POO Flow to Lambda Episteme is permitted.
 
 #+begin_src mermaid
 flowchart LR
-    G["POO Flow Governance core<br/>Profile / Source / Contribution"]
+    G["POO Flow Governance core<br/>Profile / Source / Threat Model / Assessment"]
     L["Lambda Episteme<br/>vertical Profiles / Scenarios / Cases"]
     A["Application composition<br/>explicit selection"]
     B["Cedar Governance bridge<br/>identity-bound snapshot"]
@@ -55,14 +56,19 @@ with =runtime-executed? #f= is not a permit.  Only the independently qualified
 Runtime Host can produce the dual-engine execution evidence consumed by the
 authority boundary.
 
-* Core API
+* Core API and MOP model
 
-The first implemented slice provides:
+The implemented core provides:
 
 - =PooFlowGovernanceProfile.= as an abstract POO prototype;
-- =poo-flow-governance-profile?= and
-  =poo-flow-governance-source?= as engine-neutral admission predicates;
-- =poo-flow-governance-source= for explicit Source ownership;
+- six =define-type= descriptors for Profile, Source, pre-threat condition,
+  Threat, Threat Model and Assessment values;
+- =poo-flow-governance-source= for explicit Source ownership and
+  =poo-flow-governance-precondition= for evidence-bound observations;
+- =poo-flow-governance-threat= and =poo-flow-governance-threat-model= for
+  typed threat lifecycle and severity declarations;
+- =.assess-threats= and =.assess-governance= as open =.defgeneric= slots;
+- =poo-flow-governance-evaluate= for single-dispatch Profile assessment;
 - =poo-flow-governance-contribution= for inert semantic contributions;
 - =poo-flow-cedar-governance-snapshot= as the narrow Cedar Provider bridge.
 
@@ -71,9 +77,56 @@ Every concrete contributor must state those values.  This prevents a core
 prototype from silently assigning Lambda Episteme ownership to unrelated
 downstream Profiles.
 
-The Cedar bridge rejects a proof binding whose =composition= identity differs
-from the selected Governance Profile.  It performs no policy evaluation and
-does not provide an alternate in-process engine.
+An observed pre-threat condition must carry an evidence identity.  A mitigated
+Threat must name at least one mitigation, and an accepted residual Threat must
+name its acceptance authority.  Exposed or realized high/critical Threats make
+the typed Assessment ineligible for Provider handoff.
+
+The Cedar bridge rejects both unresolved Threats and a proof binding whose
+=composition= identity differs from the selected Governance Profile.  It
+performs no policy evaluation and does not provide an alternate in-process
+engine.
+
+* Enterprise security assurance
+
+The core model is necessary but not by itself sufficient for the intended
+enterprise user.  The Lean module
+=PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure= composes the core
+Governance admission and Provider-handoff proof with:
+
+- a closed typed security-relation graph;
+- explicit threat-intelligence and evidence-snapshot identities;
+- proposer/approver/executor separation of duties;
+- the invariant that Governance evidence never carries action authority.
+
+An active critical Threat is a constructive counterexample to enterprise
+assurance: it makes =ProviderHandoffEligible= impossible.  This connects the
+existing Enterprise security proof family to Governance without re-proving the
+Cedar evaluator.  Cedar request, policy, evaluation and response semantics
+remain owned by the upstream Cedar specification and its Lean proof.
+
+* TLA+ transition model and parser authority
+
+=packages/proof/tla/GovernanceCore.tla= models the temporal boundary from
+pre-threat observation through assessment, Governance admission, enterprise
+evidence closure and Provider handoff.  Its invariants require evidence for an
+observed precondition, closed enterprise assurance before handoff, explicit
+authority evidence for accepted residual risk, and absence of Governance
+action authority.
+
+Syntax qualification uses =gerbil-parser='s native
+=tla-plus.native-core.v1= parser.  POO Flow does not contain a second TLA+
+parser and does not add =gerbil-parser= as a production dependency.  The
+=just check-governance-tla= lane first establishes a local =gxpkg link= from
+the parser's isolated package environment to this POO Flow checkout, builds
+the parser through its own PackageSpec, then requires a valid, successful,
+byte-exact ParseArtifact.  This direction is required because =gerbil-parser=
+itself consumes POO Flow; reversing the package edge would create a cycle.
+
+The native v1 parser deliberately excludes multiline layout, PlusCal and full
+proof syntax.  Therefore this receipt proves admitted TLA+ syntax and
+losslessness, not temporal semantics.  TLC remains the owner of state-space
+model checking.
 
 * Lambda Episteme migration
 
@@ -103,8 +156,12 @@ is smaller, testable and does not manufacture a second provider framework.
 - [X] Governance core builds as a root of the official POO Flow PackageSpec.
 - [X] The abstract Profile rejects missing identity, revision and owner.
 - [X] Semantic contribution admission leaves =runtime-executed?= false.
+- [X] Observed pre-threat conditions require evidence identity.
+- [X] Active high/critical Threats block Provider handoff.
 - [X] Cedar projection binds the exact Profile/composition identity.
 - [X] A mismatched proof binding fails before runtime handoff.
+- [X] Lean proves core admission and Enterprise security-assurance closure.
+- [X] Native gerbil-parser accepts and losslessly roundtrips the TLA+ model.
 - [X] Lambda production closure imports Governance only from POO Flow.
 - [ ] Qualify a concrete vertical Cedar policy Case through the real dual-engine Host.
 - [ ] Introduce Provider/Profile CLOS dispatch only after a second real axis exists.

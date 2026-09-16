@@ -28,6 +28,7 @@ contribution_test_library_path := contribution_test_path + "/lib"
 contribution_atomic_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/atomic-test"
 contribution_atomic_test_library_path := contribution_atomic_test_path + "/lib"
 poo_flow_library_path := justfile_directory() + "/.gerbil/lib"
+gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -203,6 +204,17 @@ test-runtime-c-leaks:
 # Run the native Scheme build and ordinary-test convergence gate.
 [group('check')]
 check: build test
+
+# Qualify Governance TLA+ syntax through gerbil-parser's own isolated package
+# environment. Its POO Flow dependency is a local development link so this
+# repository never acquires a reverse production dependency on the parser.
+[group('check')]
+check-governance-tla:
+    test -f "{{ gerbil_parser_dir }}/gerbil.pkg"
+    if test ! -e "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow"; then cd "{{ gerbil_parser_dir }}" && gerbil pkg link github.com/tao3k/poo-flow "{{ justfile_directory() }}"; fi
+    test "$(cd "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow" && pwd -P)" = "$(cd "{{ justfile_directory() }}" && pwd -P)"
+    cd "{{ gerbil_parser_dir }}" && gerbil build
+    cd "{{ gerbil_parser_dir }}" && POO_FLOW_GOVERNANCE_TLA="{{ justfile_directory() }}/packages/proof/tla/GovernanceCore.tla" gerbil env gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
 
 # Validate the repository and published-package license contract.
 [group('check')]
