@@ -90,10 +90,11 @@ Admission rejects invalid shapes, incompatible contracts, missing requirements
 and duplicate export identities. Successful source admission records
 =runtime-executed? #f=; it cannot be used as execution evidence.
 
-The child =governance/= owner constructs domain profiles containing native
-ontology and policy objects plus optional source-asset references. Asset
-references do not read files at import time. Their language is open; GQL is
-one possible source language rather than an engine dependency.
+POO Flow's =src/modules/governance/= core owns the engine-neutral Profile and
+Source contracts.  Lambda Episteme child modules construct vertical domain
+Profiles containing native ontology and policy objects plus optional Source
+references.  Sources do not read files at import time. Their language is open;
+GQL is one possible source language rather than an engine dependency.
 
 * Source modules implemented
 

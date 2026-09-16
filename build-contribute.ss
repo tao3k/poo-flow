@@ -147,7 +147,7 @@
 ;;; dependency order before one std/make invocation schedules the build.
 (def +contribution-public-entry-modules+
   (append
-   '("interface.ss" "governance/interface.ss")
+   '("interface.ss")
    (map module-source-ref->entry
         (poo-flow-load-modules +contribution-module-source+))
    (load-user-interface-specs)))
