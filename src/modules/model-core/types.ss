@@ -3,7 +3,121 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: model-core currently publishes no standalone types bindings.
-;;; Invariant: the explicit role keeps module composition and discovery uniform.
+;;; Boundary: model-core value kinds and closed shape contracts.
+;;; Invariant: this owner defines admission only; construction and selection
+;;; behavior belong to objects.ss and funs.ss respectively.
 
-(export)
+(import (only-in :clan/poo/object .ref .slot? object?)
+        (only-in :clan/poo/mop define-type Type. element?)
+        (only-in :std/srfi/1 every))
+
+(export +poo-flow-model-core-spec-kind+
+        +poo-flow-model-core-catalog-kind+
+        +poo-flow-model-core-selection-policy-kind+
+        +poo-flow-model-core-selection-receipt-kind+
+        PooFlowModelSpec PooFlowModelCatalog
+        PooFlowModelSelectionPolicy PooFlowModelSelectionReceipt
+        poo-flow-model-spec-value? poo-flow-model-catalog-value?
+        poo-flow-model-selection-policy-value?
+        poo-flow-model-selection-receipt-value?)
+
+(def +poo-flow-model-core-spec-kind+ 'poo-flow-model-core-spec)
+(def +poo-flow-model-core-catalog-kind+ 'poo-flow-model-core-catalog)
+(def +poo-flow-model-core-selection-policy-kind+
+  'poo-flow-model-core-selection-policy)
+(def +poo-flow-model-core-selection-receipt-kind+
+  'poo-flow-model-core-selection-receipt)
+
+(def (model-value-has-slots? value slots)
+  (and (object? value)
+       (every (lambda (slot) (.slot? value slot)) slots)))
+
+(def (model-value-kind? value kind slots)
+  (and (model-value-has-slots? value (cons 'kind slots))
+       (eq? (.ref value 'kind) kind)))
+
+(def (model-symbol-list? value)
+  (and (list? value) (every symbol? value)))
+
+(def (poo-flow-model-spec-shape? value)
+  (and (model-value-kind?
+        value +poo-flow-model-core-spec-kind+
+        '(schema model-ref provider model-id capabilities modalities
+          context-window max-output-tokens runtime-owner handoff-operation
+          runtime-backend runtime-executed metadata))
+       (symbol? (.ref value 'model-ref))
+       (symbol? (.ref value 'provider))
+       (string? (.ref value 'model-id))
+       (model-symbol-list? (.ref value 'capabilities))
+       (model-symbol-list? (.ref value 'modalities))
+       (exact-integer? (.ref value 'context-window))
+       (> (.ref value 'context-window) 0)
+       (exact-integer? (.ref value 'max-output-tokens))
+       (> (.ref value 'max-output-tokens) 0)
+       (string? (.ref value 'runtime-owner))
+       (symbol? (.ref value 'handoff-operation))
+       (symbol? (.ref value 'runtime-backend))
+       (eq? (.ref value 'runtime-executed) #f)))
+
+(define-type (PooFlowModelSpec @ Type.)
+  .element?: poo-flow-model-spec-shape?)
+
+(def (poo-flow-model-catalog-shape? value)
+  (and (model-value-kind?
+        value +poo-flow-model-core-catalog-kind+
+        '(schema catalog-ref models model-refs model-count runtime-owner
+          runtime-executed metadata))
+       (symbol? (.ref value 'catalog-ref))
+       (list? (.ref value 'models))
+       (every (lambda (model) (element? PooFlowModelSpec model))
+              (.ref value 'models))
+       (equal? (.ref value 'model-refs)
+               (map (lambda (model) (.ref model 'model-ref))
+                    (.ref value 'models)))
+       (= (.ref value 'model-count) (length (.ref value 'models)))
+       (eq? (.ref value 'runtime-executed) #f)))
+
+(define-type (PooFlowModelCatalog @ Type.)
+  .element?: poo-flow-model-catalog-shape?)
+
+(def (poo-flow-model-selection-policy-shape? value)
+  (and (model-value-kind?
+        value +poo-flow-model-core-selection-policy-kind+
+        '(schema policy-ref candidate-model-refs fallback-model-ref
+          required-capabilities routing-strategy budget-policy runtime-owner
+          runtime-executed metadata))
+       (symbol? (.ref value 'policy-ref))
+       (model-symbol-list? (.ref value 'candidate-model-refs))
+       (or (not (.ref value 'fallback-model-ref))
+           (symbol? (.ref value 'fallback-model-ref)))
+       (model-symbol-list? (.ref value 'required-capabilities))
+       (symbol? (.ref value 'routing-strategy))
+       (list? (.ref value 'budget-policy))
+       (every pair? (.ref value 'budget-policy))
+       (eq? (.ref value 'runtime-executed) #f)))
+
+(define-type (PooFlowModelSelectionPolicy @ Type.)
+  .element?: poo-flow-model-selection-policy-shape?)
+
+(def (poo-flow-model-selection-receipt-shape? value)
+  (and (model-value-kind?
+        value +poo-flow-model-core-selection-receipt-kind+
+        '(schema policy-ref catalog-ref valid? selected-model-ref
+          selected-model diagnostics runtime-executed))
+       (boolean? (.ref value 'valid?))
+       (or (not (.ref value 'selected-model-ref))
+           (symbol? (.ref value 'selected-model-ref)))
+       (list? (.ref value 'diagnostics))
+       (eq? (.ref value 'runtime-executed) #f)))
+
+(define-type (PooFlowModelSelectionReceipt @ Type.)
+  .element?: poo-flow-model-selection-receipt-shape?)
+
+(def (poo-flow-model-spec-value? value)
+  (element? PooFlowModelSpec value))
+(def (poo-flow-model-catalog-value? value)
+  (element? PooFlowModelCatalog value))
+(def (poo-flow-model-selection-policy-value? value)
+  (element? PooFlowModelSelectionPolicy value))
+(def (poo-flow-model-selection-receipt-value? value)
+  (element? PooFlowModelSelectionReceipt value))

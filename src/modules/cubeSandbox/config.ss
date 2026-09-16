@@ -23,8 +23,12 @@
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-cubeSandbox-module-bundles
   (list
-   (poo-flow-user-module-bundle
-    (sandbox cubeSandbox +cube +doctor))))
+   (list
+    (poo-flow-user-module-selection
+     'sandbox 'cubeSandbox
+     (list '+cube '+doctor
+           (cons ':backend-capability-registry
+                 poo-flow-cubeSandbox-backend-capability-registry))))))
 
 ;;; Module config flags carry both the validated internal profile list and the
 ;;; raw user-authored config body used by user-interface presentation.
@@ -32,8 +36,12 @@
 (def (poo-flow-cubeSandbox-config-flags profiles . maybe-user-config)
   (if (null? maybe-user-config)
     (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-cubeSandbox-backend-capability-registry)
      (:config profiles))
     (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-cubeSandbox-backend-capability-registry)
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

@@ -94,6 +94,29 @@ feature is a public boundary, use contracts and receipts.
 Dispatch follows the number of independently extensible axes; it does not
 follow how sophisticated a feature sounds.
 
+Every public module first closes four responsibilities.  File names are not
+evidence by themselves: an empty =types.ss= beside a 400-line =objects.ss=
+does not satisfy this contract.
+
+| Layer | Sole responsibility | Normal Gerbil/POO mechanism |
+|-------+---------------------+-----------------------------|
+| =types= | value boundary, shape and invariant admission | =define-type=, predicates, closed vocabulary |
+| =objects= | inert POO values, prototypes and one-receiver behavior | =.o=, =.def=, slot =.defgeneric= |
+| =funs/contracts= | pure algorithms, relations, validation and receipts | functions, indexes, contract objects |
+| =config/provider= | concrete Profile/Provider composition and open crossings | POO composition; CLOS method bundles only for independent axes |
+
+Imports MUST flow from boundary to composition: =types -> objects ->
+funs/contracts -> config/provider=.  A lower layer MUST NOT import a higher
+layer merely to recover a convenient concrete value.  =interface.ss= may
+re-export the closed surface but owns no behavior.
+
+An empty layer is admissible only when the module has no responsibility of
+that kind.  Its boundary comment MUST say why.  It is not admissible to leave a
+role empty while placing its behavior in =objects.ss= or =config.ss=.  Before
+adding CLOS, reviewers MUST name both independently growing axes and the owner
+of each method bundle.  If that sentence cannot be written, use a slot generic
+or a function instead.
+
 | Shape | Required owner |
 |-------+----------------|
 | User declaration or configuration | POO object slots such as =.add-trajectory= |

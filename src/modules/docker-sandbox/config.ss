@@ -24,8 +24,12 @@
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-docker-sandbox-module-bundles
   (list
-   (poo-flow-user-module-bundle
-    (sandbox docker-sandbox +docker +doctor))))
+   (list
+    (poo-flow-user-module-selection
+     'sandbox 'docker-sandbox
+     (list '+docker '+doctor
+           (cons ':backend-capability-registry
+                 poo-flow-docker-sandbox-backend-capability-registry))))))
 
 ;;; Module config flags keep the internal POO profile payload separate from the
 ;;; user-authored config body shown by the user-interface presentation.
@@ -33,8 +37,12 @@
 (def (poo-flow-docker-sandbox-config-flags profiles . maybe-user-config)
   (if (null? maybe-user-config)
     (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-docker-sandbox-backend-capability-registry)
      (:config profiles))
     (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-docker-sandbox-backend-capability-registry)
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

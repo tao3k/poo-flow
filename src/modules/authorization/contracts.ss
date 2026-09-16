@@ -8,11 +8,18 @@
         (only-in :std/crypto/digest sha256)
         (only-in :std/srfi/1 delete-duplicates every find)
         (only-in :std/text/hex hex-encode)
+        :poo-flow/src/module-system/poo-clos/interface
+        (only-in :poo-flow/src/modules/authorization/objects
+                 AuthorizationCapabilityContractExecutor)
         (only-in :poo-flow/src/modules/authorization/types
                  poo-flow-authorization-provider?
                  poo-flow-authorization-capability?))
 
 (export poo-flow-authorization-capabilities-digest
+        AuthorizationCapabilityContractProtocol
+        AuthorizationCapabilityContractGeneric
+        AuthorizationCapabilityContractCoreMethods
+        poo-flow-authorization-capability-contract/default
         poo-flow-authorization-capability-contract)
 
 (def (require-authorization-values provider capabilities)
@@ -47,7 +54,7 @@
   (require-authorization-values provider capabilities)
   (authorization-capabilities-digest provider capabilities))
 
-(def (poo-flow-authorization-capability-contract
+(def (poo-flow-authorization-capability-contract/default
       provider-value capability-values)
   (require-authorization-values provider-value capability-values)
   (unless (= (length (.ref provider-value 'engines))
@@ -67,3 +74,40 @@
       (authorization-capabilities-digest provider-value capability-values)
       admitted?: #t
       runtime-executed?: #f))
+
+;;; Executor strategy and Provider identity are independently extensible axes.
+;;; The base method fails closed; Provider packages own concrete method bundles.
+(def AuthorizationCapabilityContractProtocol
+  (poo-clos-generic-protocol 'authorization/capability-contract))
+
+(def AuthorizationCapabilityContractGeneric
+  (poo-clos-generic-function
+   'authorization-capability-contract 3
+   protocol: AuthorizationCapabilityContractProtocol))
+
+(def AuthorizationUnsupportedCapabilityContractMethod
+  (poo-clos-method
+   'authorization/unsupported-capability-contract
+   (list
+    (poo-clos-class-specializer AuthorizationCapabilityContractExecutor)
+    (poo-clos-any-specializer)
+    (poo-clos-any-specializer))
+   (lambda (_frame _executor provider _capabilities)
+     (error "authorization Provider lacks a capability contract method"
+            (.ref provider 'identity)))))
+
+(.defmethod-bundle AuthorizationCapabilityContractCoreMethods
+  AuthorizationCapabilityContractProtocol
+  AuthorizationUnsupportedCapabilityContractMethod)
+
+(poo-clos-compose-method-bundle
+ AuthorizationCapabilityContractGeneric
+ AuthorizationCapabilityContractCoreMethods)
+
+(def (poo-flow-authorization-capability-contract provider capabilities)
+  (require-authorization-values provider capabilities)
+  (poo-clos-call
+   AuthorizationCapabilityContractGeneric
+   (.ref provider 'contract-executor)
+   provider
+   capabilities))

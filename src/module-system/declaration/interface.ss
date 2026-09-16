@@ -338,6 +338,7 @@
 (def (poo-flow-user-module-selection-presentation-config-flag? flag-key)
   (or (equal? flag-key ':binding)
       (equal? flag-key ':config)
+      (equal? flag-key ':backend-capability-registry)
       (equal? flag-key ':user-config)))
 
 ;;; Boundary: user module selection presentation flags is the policy-visible

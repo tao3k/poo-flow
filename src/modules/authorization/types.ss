@@ -23,7 +23,7 @@
 (def (authorization-provider-shape? value)
   (and (object? value)
        (every (lambda (slot) (.slot? value slot))
-              '(kind identity engines arbitration runtime-owner
+              '(kind identity engines arbitration contract-executor runtime-owner
                 runtime-executed?))
        (eq? (.ref value 'kind) poo-flow-authorization-provider-kind)
        (string? (.ref value 'identity))

@@ -8,6 +8,9 @@
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/module-system/contribution/interface
                  admit-contributions)
+        (only-in :poo-flow/src/module-system/poo-clos/interface
+                 poo-clos-generic-methods
+                 poo-clos-make-instance)
         :poo-flow/src/modules/governance/interface
         :poo-flow/src/modules/authorization/interface
         :poo-flow/src/modules/authorization/providers/cedar/interface)
@@ -117,9 +120,12 @@
         (check-equal? (.ref receipt 'accepted?) #t)
         (check-equal? (.ref receipt 'runtime-executed?) #f)))
     (test-case "Authorization contracts keep elevated capability strict"
+      (check-equal?
+       (.ref CedarAuthorizationProvider 'identity)
+       "poo-flow/authorization/cedar")
       (let (receipt
             (poo-flow-authorization-capability-contract
-             CedarDualEngineAuthorizationProvider
+             CedarAuthorizationProvider
              (list test-elevated-capability)))
         (check-equal? (.ref receipt 'admitted?) #t)
         (check-equal? (.ref receipt 'runtime-executed?) #f)
@@ -128,12 +134,30 @@
         (check-equal?
          (.ref receipt 'contract-digest)
          (poo-flow-authorization-capabilities-digest
-          CedarDualEngineAuthorizationProvider
+          CedarAuthorizationProvider
           (list test-elevated-capability)))
         (check-equal?
          (poo-flow-authorization-provider-engines
-          CedarDualEngineAuthorizationProvider)
+          CedarAuthorizationProvider)
          '("cedar-rust" "cedar-lean"))))
+    (test-case "Authorization Provider publishes its CLOS method bundle"
+      (check-equal?
+       (length
+        (poo-clos-generic-methods AuthorizationCapabilityContractGeneric))
+       2)
+      (let (unsupported-provider
+            (poo-flow-authorization-provider
+             "test/authorization/unsupported"
+             '("unsupported")
+             'strict-lockstep
+             (poo-clos-make-instance
+              AuthorizationCapabilityContractExecutor)
+             'test.runtime))
+        (check-exception
+         (poo-flow-authorization-capability-contract
+          unsupported-provider
+          (list test-elevated-capability))
+         true)))
     (test-case "Cedar adapter binds the exact Governance Profile identity"
       (let* ((profiles (list TestGovernanceProfile))
              (assessments

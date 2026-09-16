@@ -25,8 +25,12 @@
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-nono-sandbox-module-bundles
   (list
-   (poo-flow-user-module-bundle
-    (sandbox nono-sandbox +nono +native-ffi +doctor))))
+   (list
+    (poo-flow-user-module-selection
+     'sandbox 'nono-sandbox
+     (list '+nono '+native-ffi '+doctor
+           (cons ':backend-capability-registry
+                 poo-flow-nono-sandbox-backend-capability-registry))))))
 
 ;; : Symbol
 (def +poo-flow-nono-sandbox-default-binding+ 'native-ffi)
@@ -46,9 +50,13 @@
   (if (null? maybe-user-config)
     (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
+     (:backend-capability-registry
+      poo-flow-nono-sandbox-backend-capability-registry)
      (:config profiles))
     (poo-flow-product-field-rows
      (:binding (poo-flow-nono-sandbox-binding-config binding-value))
+     (:backend-capability-registry
+      poo-flow-nono-sandbox-backend-capability-registry)
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

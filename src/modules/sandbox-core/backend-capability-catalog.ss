@@ -11,13 +11,8 @@
                  poo-flow-sandbox-backend-capability-registry/sandbox-core
                  poo-flow-sandbox-backend-capability-registry-merge
                  poo-flow-sandbox-backend-capability-registry-ref
-                 poo-flow-sandbox-backend-capability-registries-validation)
-        (only-in :poo-flow/src/modules/nono-sandbox/objects
-                 poo-flow-nono-sandbox-backend-capability-registry)
-        (only-in :poo-flow/src/modules/docker-sandbox/objects
-                 poo-flow-docker-sandbox-backend-capability-registry)
-        (only-in :poo-flow/src/modules/cubeSandbox/objects
-                 poo-flow-cubeSandbox-backend-capability-registry))
+                 poo-flow-sandbox-backend-capability-registry?
+                 poo-flow-sandbox-backend-capability-registries-validation))
 
 (export poo-flow-user-module-selection-sandbox-backend-capability-registry
         poo-flow-user-config-sandbox-backend-capability-registries/add
@@ -27,20 +22,19 @@
         poo-flow-user-config-sandbox-backend-capability-registry-validation
         poo-flow-user-config-sandbox-backend-capability)
 
-;;; User selections are the module-system input. They select backend capability
-;;; contribution objects, not runtime adapters or package descriptors.
+;;; Backend modules own their capability contribution and attach it as an
+;;; internal selection slot.  sandbox-core consumes the slot generically, so a
+;;; new backend never requires a symbolic branch or import in this owner.
 ;; : (-> PooUserModuleSelection MaybePooSandboxBackendCapabilityRegistry)
 (def (poo-flow-user-module-selection-sandbox-backend-capability-registry
       selection)
-  (let (key (poo-flow-user-module-selection-key selection))
-    (cond
-     ((equal? key (cons 'sandbox 'nono-sandbox))
-      poo-flow-nono-sandbox-backend-capability-registry)
-     ((equal? key (cons 'sandbox 'docker-sandbox))
-      poo-flow-docker-sandbox-backend-capability-registry)
-     ((equal? key (cons 'sandbox 'cubeSandbox))
-      poo-flow-cubeSandbox-backend-capability-registry)
-     (else #f))))
+  (let (entry
+        (poo-flow-user-module-selection-flag-entry
+         selection
+         ':backend-capability-registry))
+    (and (pair? entry)
+         (poo-flow-sandbox-backend-capability-registry? (cdr entry))
+         (cdr entry))))
 
 ;;; Keep the contribution list as a first-class evidence surface so validation
 ;;; can report duplicate ids before registry merge overwrites later entries.

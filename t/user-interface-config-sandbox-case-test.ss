@@ -18,7 +18,10 @@
         "user-interface-fixtures.ss"
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/profile-config
-        :poo-flow/src/modules/agent-sandbox/config)
+        :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
+        (only-in :poo-flow/src/modules/sandbox-core/profile-support/policy
+                 poo-flow-sandbox-backend-capability/backend-kind))
 
 (def (check-error thunk)
   (check-equal?
@@ -257,6 +260,27 @@
                        docker-module
                        '+docker)
                       #t)))
+    (test-case "backend modules contribute capabilities without core branches"
+      (let* ((modules
+              (poo-flow-user-config-modules test-poo-flow-user-config))
+             (nono
+              (poo-flow-user-config-sandbox-backend-capability modules 'nono))
+             (cube
+              (poo-flow-user-config-sandbox-backend-capability modules 'cube))
+             (docker
+              (poo-flow-user-config-sandbox-backend-capability modules 'docker)))
+        (check-eq? (poo-flow-sandbox-backend-capability/backend-kind nono)
+                   'nono)
+        (check-eq? (poo-flow-sandbox-backend-capability/backend-kind cube)
+                   'cube)
+        (check-eq? (poo-flow-sandbox-backend-capability/backend-kind docker)
+                   'docker)
+        (check-equal?
+         (let ((selection
+                (module-selection-by-key modules '(sandbox . nono-sandbox))))
+           (poo-flow-user-module-selection-has-flag?
+            selection ':backend-capability-registry))
+         #t)))
     (test-case "queries selected module features without package management"
       (let* ((custom-config
               (pooFlowUserConfigFromProfile test-poo-flow-user-custom-profile)))

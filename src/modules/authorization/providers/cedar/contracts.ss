@@ -11,10 +11,38 @@
         (only-in :poo-flow/src/modules/governance/types
                  poo-flow-governance-profile?
                  poo-flow-governance-assessment?)
+        :poo-flow/src/module-system/poo-clos/interface
+        (only-in :poo-flow/src/modules/authorization/contracts
+                 AuthorizationCapabilityContractProtocol
+                 AuthorizationCapabilityContractGeneric
+                 poo-flow-authorization-capability-contract/default)
+        (only-in "config.ss"
+                 CedarCapabilityContractExecutor
+                 CedarAuthorizationProvider)
         (only-in "objects.ss" poo-flow-cedar-proof-binding?))
 
 (export poo-flow-governance-assessments-digest
-        poo-flow-cedar-governance-contract)
+        poo-flow-cedar-governance-contract
+        CedarCapabilityContractMethods)
+
+(def CedarCapabilityContractMethod
+  (poo-clos-method
+   'authorization/cedar-capability-contract
+   (list
+    (poo-clos-class-specializer CedarCapabilityContractExecutor)
+    (poo-clos-eql-specializer CedarAuthorizationProvider)
+    (poo-clos-any-specializer))
+   (lambda (_frame _executor provider capabilities)
+     (poo-flow-authorization-capability-contract/default
+      provider capabilities))))
+
+(.defmethod-bundle CedarCapabilityContractMethods
+  AuthorizationCapabilityContractProtocol
+  CedarCapabilityContractMethod)
+
+(poo-clos-compose-method-bundle
+ AuthorizationCapabilityContractGeneric
+ CedarCapabilityContractMethods)
 
 (def (assessment->canonical value)
   (list (.ref value 'profile-identity)

@@ -6,23 +6,32 @@
 ;;; Boundary: inert authorization Provider objects; execution is external.
 (import (only-in :clan/poo/object .o)
         (only-in :clan/poo/mop validate)
+        :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/modules/authorization/types
                  poo-flow-authorization-provider-kind
                  poo-flow-authorization-capability-kind
                  PooFlowAuthorizationProvider
                  PooFlowAuthorizationCapability))
 
-(export poo-flow-authorization-provider
+(export AuthorizationCapabilityContractExecutor
+        poo-flow-authorization-provider
         poo-flow-authorization-capability)
 
+;;; Provider packages specialize this executor class and publish their methods
+;;; through a bundle.  The core owns no Provider-name branch.
+(def AuthorizationCapabilityContractExecutor
+  (poo-clos-class 'authorization/capability-contract-executor))
+
 (def (poo-flow-authorization-provider identity-value engines-value
-                                      arbitration-value runtime-owner-value)
+                                      arbitration-value executor-value
+                                      runtime-owner-value)
   (validate
    PooFlowAuthorizationProvider
    (.o kind: poo-flow-authorization-provider-kind
        identity: identity-value
        engines: engines-value
        arbitration: arbitration-value
+       contract-executor: executor-value
        runtime-owner: runtime-owner-value
        runtime-executed?: #f)))
 

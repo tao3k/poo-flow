@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Public Cedar Provider surface under the core Authorization module.
-(import "objects.ss" "contracts.ss" "funs.ss" "decision.ss" "config.ss")
+(import "objects.ss" "config.ss" "contracts.ss" "funs.ss" "decision.ss")
 (export (import: "objects.ss")
         (import: "funs.ss")
         (import: "contracts.ss")
