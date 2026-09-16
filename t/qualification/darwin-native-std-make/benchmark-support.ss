@@ -9,7 +9,7 @@
         (only-in :std/misc/process run-process))
 
 (export benchmark-temporary-root
-        benchmark-gxi
+        benchmark-gerbil
         benchmark-command
         benchmark-measure
         benchmark-sample-ref
@@ -26,8 +26,8 @@
     (create-directory* root)
     root))
 
-(def (benchmark-gxi)
-  (path-expand "bin/gxi" (getenv "GERBIL_PREFIX" "/opt/homebrew")))
+(def (benchmark-gerbil)
+  (path-expand "bin/gerbil" (getenv "GERBIL_PREFIX" "/opt/homebrew")))
 
 (def (benchmark-command image timeout arguments)
   (append
