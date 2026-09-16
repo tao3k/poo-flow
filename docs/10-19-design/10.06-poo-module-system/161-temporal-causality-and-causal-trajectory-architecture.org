@@ -78,6 +78,69 @@ An Impact receipt contains witness paths and separates =past-effects=,
 identified cut, selected relations and horizon is not global clinical
 completeness.
 
+* Standard trajectory and Impact contract
+
+=PooFlowCausalTrajectoryContract= is the domain-neutral admission standard for
+every vertical Case that presents a correct path beside an error path.  It has
+two explicit layers:
+
+| Layer | Slots | Admitted modality |
+|-------+-------+-------------------|
+| operational | =trigger-event-id=, =intended-event-ids= | trigger is committed =observed=; intended members are =observed=, =declared= or =derived= |
+| operational | =error-event-paths= | uncommitted =counterfactual= only |
+| Impact | =intended-impact-event-ids= | uncommitted =hypothesized= only |
+| Impact | =error-impact-event-ids= | uncommitted =hypothesized= only |
+
+Identity sets are disjoint.  The intended path is ordered from the trigger;
+each error path branches from the trigger or intended path; and Impact members
+must be causally reachable from their corresponding path.  Missing identities,
+incomplete event graphs, broken paths and modality violations produce typed
+=PooFlowCausalTrajectoryAssessment= diagnostics.  Assessment uses one adjacency
+index and two multi-root traversals, so its bound is O(V + E + declared
+trajectory members), not one graph traversal per member.
+
+=OntologyCase= exposes only the declarative =.add-trajectory= slot.  Its
+composition receipt owns =trajectory-assessments= and
+=trajectory-handoff-ready?=.  A rejected trajectory also blocks the overall
+Governance handoff.  In particular, changing an error-path event from
+=counterfactual= to =observed= cannot promote it into fact; admission returns
+=trajectory-contract-rejected= before any effect handoff.
+
+** POO contract and formal Provider projection law
+
+The trajectory contract is declared exactly once as the POO value stored in a
+Case's =.add-trajectory= slot.  Its =PooFlowCausalTrajectoryAssessment= and
+=trajectory-assessment-digest= are the common identity consumed by every
+formal boundary.  TLA+, Lean and Cedar do not own parallel Case configuration
+languages.
+
+Single-contract admission is a functional operation over POO slots.  The open
+crossing between a formal Provider and a vertical Profile is different: both
+axes can gain implementations independently, so it uses the POO CLOS generic
+=HealthcareFormalAssuranceProjectionGeneric=.  The TLA+ Provider and Lean
+Provider specialize on =AIClinicalDecisionSupportProfile= through separate
+methods published by =HealthcareFormalAssuranceProjectionMethods=.  The base
+Provider method fails closed when no vertical method exists.  Cedar already
+uses the equivalent Provider/Profile multi-dispatch in
+=HealthcareAuthorizationProjectionGeneric=.
+
+#+begin_export mermaid
+flowchart LR
+    C["Case .add-trajectory POO slots"] -->|"functional admission"| S["POO trajectory assessment"]
+    S -->|"stable assessment digest"| G["CLOS formal-assurance generic"]
+    TP["TLA+ Provider"] -->|"class specializer"| G
+    LP["Lean Provider"] -->|"class specializer"| G
+    HP["Healthcare Profile"] -->|"eql specializer"| G
+    G -->|"TLA and Lean method bindings"| A["Assurance digest"]
+    A -->|"trajectoryHandoffReady plus digest"| CP["Cedar Provider/Profile generic"]
+    CP -->|"current action only"| H["Dual-engine authority host"]
+#+end_export
+
+The assurance digest includes the canonical CLOS method outputs, so changing
+the Provider evidence, Profile crossing, contract identity or assessment
+digest changes the authority input.  A method result is still inert evidence;
+only the final Cedar dual-engine boundary may authorize an effect.
+
 * Four-language responsibility
 
 ** Scheme and POO — semantic and receipt owner
@@ -194,7 +257,7 @@ into a build of every enterprise proof family.
 
 * End-to-end protocol
 
-#+begin_src mermaid
+#+begin_export mermaid
 flowchart LR
     E[POO clinical events] --> EG[Identity-bound causal event graph]
     EG --> C[Committed causal cut at as-of]
@@ -209,7 +272,7 @@ flowchart LR
     L --> I
     I --> A[Cedar current-action request]
     A --> H[Dual-engine Runtime Host]
-#+end_src
+#+end_export
 
 1. Scheme admits facts and candidates into =G_t=, then derives committed cut
    =C_t= at an explicit logical position.
@@ -265,6 +328,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - [X] Establish =src/modules/temporal-causality/= as the POO Flow core owner of
    causal event graphs, causal trajectories and deterministic witness-path
    analysis.  SDLC adaptation remains a separate compatibility-preserving task.
+- [X] Standardize intended paths, error paths, intended Impact and error Impact
+   as typed POO contracts; integrate their assessments into Ontology Case
+   admission and migrate the AI-prescription and personal-care Cases.
 - [X] Extend Healthcare with immutable Prescription, Administration Event,
    Observation and Care Obligation POO declarations.
 - [X] Add parser-qualified GQL queries for retrospective, current and prospective
@@ -285,6 +351,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - [X] Bind the exact assurance digest and closed-state blocker into the existing
    Cedar Healthcare snapshot without placing clinical semantics inside the
    Cedar Provider.  Release remains false until the current Cedar boundary.
+- [X] Bind TLA+ and Lean formal Providers to the Healthcare Profile and the
+   shared POO trajectory assessment through CLOS multi-dispatch; bind the same
+   assessment digest into Cedar request admission.
 
 * Rejected designs
 
@@ -295,4 +364,7 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - accepting an empty GQL result as no Impact on an incomplete inventory;
 - treating TLC model checking as a Lean theorem;
 - treating a Lean theorem or Impact receipt as a current Cedar permit;
+- copying the POO trajectory slots into a second TLA, Lean or Cedar-facing Case
+  contract DSL;
+- replacing Provider/Profile multi-dispatch with a central symbolic =case=;
 - implementing a second Healthcare graph runtime or query language.

@@ -27,4 +27,13 @@ WrongAIPathNeverCommits == ~wrongAutoApprovalCommitted /\ ~wrongAdministrationCo
 HypothesizedRiskNeverBecomesFact == ~hypothesizedRiskPromoted
 TemporalAssuranceNeverGrantsActionAuthority == ~actionAuthority
 
+(* The same two-layer trajectory declared by the Scheme Case: the intended
+   path may become ready, while the wrong path and its Impact stay non-facts. *)
+IntendedTrajectoryReady == interactionEvidenceBound /\ governanceHoldActive /\ independentReviewRecorded /\ alternativePrescriptionSelected /\ pharmacyVerified
+ErrorTrajectoryRemainsCounterfactual == ~wrongAutoApprovalCommitted /\ ~wrongAdministrationCommitted
+ErrorImpactRemainsHypothesized == ~hypothesizedRiskPromoted
+TrajectoryHandoffReady == IntendedTrajectoryReady /\ ErrorTrajectoryRemainsCounterfactual /\ ErrorImpactRemainsHypothesized
+TrajectoryHandoffRequiresIndependentReview == TrajectoryHandoffReady => independentReviewRecorded
+TrajectoryLayersNeverCollapse == ErrorTrajectoryRemainsCounterfactual /\ ErrorImpactRemainsHypothesized
+
 ====

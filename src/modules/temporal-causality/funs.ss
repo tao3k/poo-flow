@@ -21,14 +21,19 @@
                  poo-flow-relation-trajectory-witness
                  poo-flow-structural-impact-receipt
                  poo-flow-causal-event-graph-value
+                 poo-flow-causal-trajectory-assessment
                  poo-flow-causal-cut-value
                  poo-flow-temporal-classification-receipt)
         (only-in :poo-flow/src/modules/temporal-causality/types
                  poo-flow-causal-event? poo-flow-causal-event-graph?
+                 poo-flow-causal-trajectory-contract?
+                 poo-flow-causal-trajectory-assessment?
                  poo-flow-causal-cut?))
 
 (export poo-flow-structural-impact-analyze
         poo-flow-causal-event-graph
+        poo-flow-causal-trajectory-assess
+        poo-flow-causal-trajectory-assessment-digest
         poo-flow-causal-cut
         poo-flow-temporal-causal-classify)
 
@@ -223,6 +228,186 @@
                  (map causal-event-canonical ordered))))
       (poo-flow-causal-event-graph-value
        identity subject ordered event-index missing violations))))
+
+(def (causal-trajectory-diagnostic code identity detail)
+  (list code identity detail))
+
+(def (causal-event-parent? event parent-identity)
+  (if (member parent-identity (.ref event 'causal-parent-identities)) #t #f))
+
+(def (causal-event-parent-in? event candidate-identities)
+  (if (find (lambda (identity)
+              (causal-event-parent? event identity))
+            candidate-identities)
+    #t #f))
+
+;;; Build adjacency once, then use a two-list queue for each multi-root walk.
+;;; Assessment remains O(V + E + declared trajectory members).
+(def (causal-event-adjacency event-graph)
+  (let (adjacency (make-hash-table))
+    (for-each
+     (lambda (event)
+       (for-each
+        (lambda (parent)
+          (hash-put! adjacency parent
+                     (cons (.ref event 'identity)
+                           (or (hash-get adjacency parent) '()))))
+        (.ref event 'causal-parent-identities)))
+     (.ref event-graph 'events))
+    adjacency))
+
+(def (causal-descendant-index adjacency roots)
+  (let (visited (make-hash-table))
+    (for-each (lambda (root) (hash-put! visited root #t)) roots)
+    (let loop ((front roots) (back '()))
+      (cond
+       ((pair? front)
+        (let (next-back back)
+          (for-each
+           (lambda (child)
+             (unless (hash-get visited child)
+               (hash-put! visited child #t)
+               (set! next-back (cons child next-back))))
+           (or (hash-get adjacency (car front)) '()))
+          (loop (cdr front) next-back)))
+       ((pair? back) (loop (reverse back) '()))
+       (else visited)))))
+
+(def (poo-flow-causal-trajectory-assess contract event-graph)
+  (unless (poo-flow-causal-trajectory-contract? contract)
+    (error "invalid causal trajectory contract" contract))
+  (unless (poo-flow-causal-event-graph? event-graph)
+    (error "causal trajectory requires a causal event graph" event-graph))
+  (let* ((event-index (.ref event-graph 'event-index))
+         (trigger-id (.ref contract 'trigger-event-id))
+         (intended-ids (.ref contract 'intended-event-ids))
+         (error-paths (.ref contract 'error-event-paths))
+         (error-ids (apply append error-paths))
+         (intended-impact-ids
+          (.ref contract 'intended-impact-event-ids))
+         (error-impact-ids (.ref contract 'error-impact-event-ids))
+         (all-ids
+          (cons trigger-id
+                (append intended-ids error-ids
+                        intended-impact-ids error-impact-ids)))
+         (diagnostics-reverse '()))
+    (def (reject! code identity detail)
+      (set! diagnostics-reverse
+            (cons (causal-trajectory-diagnostic code identity detail)
+                  diagnostics-reverse)))
+    (unless (.ref event-graph 'complete?)
+      (reject! 'incomplete-event-graph
+               (.ref event-graph 'identity)
+               (append (.ref event-graph 'missing-parent-identities)
+                       (.ref event-graph 'temporal-order-violations))))
+    (for-each
+     (lambda (identity)
+       (unless (hash-get event-index identity)
+         (reject! 'missing-trajectory-event identity 'event-graph)))
+     all-ids)
+    (let (trigger (hash-get event-index trigger-id))
+      (when (and trigger
+                 (not (and (eq? (.ref trigger 'modality) 'observed)
+                           (.ref trigger 'committed?))))
+        (reject! 'invalid-trigger-modality trigger-id
+                 (list (.ref trigger 'modality)
+                       (.ref trigger 'committed?)))))
+    (for-each
+     (lambda (identity)
+       (let (event (hash-get event-index identity))
+         (when (and event
+                    (not (memq (.ref event 'modality)
+                               '(observed declared derived))))
+           (reject! 'invalid-intended-modality identity
+                    (.ref event 'modality)))))
+     intended-ids)
+    (for-each
+     (lambda (identity)
+       (let (event (hash-get event-index identity))
+         (when (and event
+                    (not (and (eq? (.ref event 'modality) 'counterfactual)
+                              (not (.ref event 'committed?)))))
+           (reject! 'invalid-error-modality identity
+                    (and event
+                         (list (.ref event 'modality)
+                               (.ref event 'committed?)))))))
+     error-ids)
+    (for-each
+     (lambda (identity)
+       (let (event (hash-get event-index identity))
+         (when (and event
+                    (not (and (eq? (.ref event 'modality) 'hypothesized)
+                              (not (.ref event 'committed?)))))
+           (reject! 'invalid-impact-modality identity
+                    (and event
+                         (list (.ref event 'modality)
+                               (.ref event 'committed?)))))))
+     (append intended-impact-ids error-impact-ids))
+    ;; Topology checks run only when every declared member resolves.
+    (when (every (lambda (identity) (hash-get event-index identity)) all-ids)
+      (let ((previous trigger-id))
+        (for-each
+         (lambda (identity)
+           (let (event (hash-get event-index identity))
+             (unless (causal-event-parent? event previous)
+               (reject! 'broken-intended-trajectory identity previous))
+             (set! previous identity)))
+         intended-ids))
+      (let (branch-points (cons trigger-id intended-ids))
+        (for-each
+         (lambda (path)
+           (let ((first (car path)) (previous #f))
+             (unless (causal-event-parent-in?
+                      (hash-get event-index first) branch-points)
+               (reject! 'detached-error-trajectory first branch-points))
+             (for-each
+              (lambda (identity)
+                (when previous
+                  (unless (causal-event-parent?
+                           (hash-get event-index identity) previous)
+                    (reject! 'broken-error-trajectory identity previous)))
+                (set! previous identity))
+              path)))
+         error-paths))
+      (let* ((adjacency (causal-event-adjacency event-graph))
+             (intended-descendants
+              (causal-descendant-index adjacency intended-ids))
+             (error-descendants
+              (causal-descendant-index adjacency error-ids)))
+        (for-each
+         (lambda (identity)
+           (unless (hash-get intended-descendants identity)
+             (reject! 'detached-intended-impact identity intended-ids)))
+         intended-impact-ids)
+        (for-each
+         (lambda (identity)
+           (unless (hash-get error-descendants identity)
+             (reject! 'detached-error-impact identity error-ids)))
+         error-impact-ids)))
+    (let ((diagnostics (reverse diagnostics-reverse)))
+      (poo-flow-causal-trajectory-assessment
+       (if (null? diagnostics)
+         'causal-trajectory-admitted
+         'causal-trajectory-rejected)
+       contract event-graph diagnostics))))
+
+;;; Stable cross-engine identity for the exact declarative trajectory and its
+;;; Scheme assessment. TLA+, Lean and Cedar bind this digest; none of them
+;;; reconstructs a second trajectory DSL.
+(def (poo-flow-causal-trajectory-assessment-digest assessment)
+  (unless (poo-flow-causal-trajectory-assessment? assessment)
+    (error "invalid causal trajectory assessment" assessment))
+  (temporal-causality-digest
+   (list 'poo-flow.temporal-causality.causal-trajectory-assessment.v1
+         (.ref assessment 'status)
+         (.ref assessment 'accepted?)
+         (.ref assessment 'contract-identity)
+         (.ref assessment 'event-graph-identity)
+         (.ref assessment 'diagnostics)
+         (.ref assessment 'intended-event-ids)
+         (.ref assessment 'error-event-paths)
+         (.ref assessment 'intended-impact-event-ids)
+         (.ref assessment 'error-impact-event-ids))))
 
 (def (poo-flow-causal-cut event-graph as-of-position)
   (unless (poo-flow-causal-event-graph? event-graph)

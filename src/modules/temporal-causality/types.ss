@@ -15,6 +15,8 @@
         poo-flow-temporal-observation-kind
         poo-flow-causal-event-kind
         poo-flow-causal-event-graph-kind
+        poo-flow-causal-trajectory-contract-kind
+        poo-flow-causal-trajectory-assessment-kind
         poo-flow-causal-cut-kind
         poo-flow-temporal-classification-receipt-kind
         PooFlowRelationTrajectoryWitness
@@ -22,6 +24,8 @@
         PooFlowTemporalObservation
         PooFlowCausalEvent
         PooFlowCausalEventGraph
+        PooFlowCausalTrajectoryContract
+        PooFlowCausalTrajectoryAssessment
         PooFlowCausalCut
         PooFlowTemporalClassificationReceipt
         poo-flow-relation-trajectory-witness?
@@ -29,6 +33,8 @@
         poo-flow-temporal-observation?
         poo-flow-causal-event?
         poo-flow-causal-event-graph?
+        poo-flow-causal-trajectory-contract?
+        poo-flow-causal-trajectory-assessment?
         poo-flow-causal-cut?
         poo-flow-temporal-classification-receipt?)
 
@@ -46,6 +52,12 @@
 
 (def poo-flow-causal-event-graph-kind
   'poo-flow.temporal-causality.causal-event-graph)
+
+(def poo-flow-causal-trajectory-contract-kind
+  'poo-flow.temporal-causality.causal-trajectory-contract)
+
+(def poo-flow-causal-trajectory-assessment-kind
+  'poo-flow.temporal-causality.causal-trajectory-assessment)
 
 (def poo-flow-causal-cut-kind
   'poo-flow.temporal-causality.causal-cut)
@@ -233,6 +245,76 @@
 
 (def (poo-flow-causal-event-graph? value)
   (element? PooFlowCausalEventGraph value))
+
+(def (causal-trajectory-contract-shape? value)
+  (and (temporal-causality-has-slots?
+        value
+        '(kind identity trigger-event-id intended-event-ids error-event-paths
+               intended-impact-event-ids error-impact-event-ids))
+       (eq? (.ref value 'kind) poo-flow-causal-trajectory-contract-kind)
+       (temporal-causality-text? (.ref value 'identity))
+       (temporal-causality-text? (.ref value 'trigger-event-id))
+       (let ((intended (.ref value 'intended-event-ids))
+             (error-paths (.ref value 'error-event-paths))
+             (intended-impacts (.ref value 'intended-impact-event-ids))
+             (error-impacts (.ref value 'error-impact-event-ids)))
+         (and (list? intended) (pair? intended)
+              (every temporal-causality-text? intended)
+              (list? error-paths) (pair? error-paths)
+              (every (lambda (path)
+                       (and (list? path) (pair? path)
+                            (every temporal-causality-text? path)))
+                     error-paths)
+              (list? intended-impacts)
+              (every temporal-causality-text? intended-impacts)
+              (list? error-impacts) (pair? error-impacts)
+              (every temporal-causality-text? error-impacts)
+              (let (all-identities
+                    (cons (.ref value 'trigger-event-id)
+                          (append intended
+                                  (apply append error-paths)
+                                  intended-impacts error-impacts)))
+                (temporal-causality-unique? all-identities))))))
+
+(define-type (PooFlowCausalTrajectoryContract @ Type.)
+  .element?: causal-trajectory-contract-shape?)
+
+(def (poo-flow-causal-trajectory-contract? value)
+  (element? PooFlowCausalTrajectoryContract value))
+
+(def (causal-trajectory-assessment-shape? value)
+  (and (temporal-causality-has-slots?
+        value
+        '(kind status accepted? contract-identity event-graph-identity
+               diagnostics intended-event-ids error-event-paths
+               intended-impact-event-ids error-impact-event-ids
+               assurance-closed? release-authorized? runtime-executed?))
+       (eq? (.ref value 'kind) poo-flow-causal-trajectory-assessment-kind)
+       (memq (.ref value 'status)
+             '(causal-trajectory-admitted causal-trajectory-rejected))
+       (boolean? (.ref value 'accepted?))
+       (eq? (.ref value 'accepted?)
+            (eq? (.ref value 'status) 'causal-trajectory-admitted))
+       (temporal-causality-text? (.ref value 'contract-identity))
+       (temporal-causality-text? (.ref value 'event-graph-identity))
+       (list? (.ref value 'diagnostics))
+       (every (lambda (diagnostic)
+                (and (list? diagnostic) (pair? diagnostic)
+                     (symbol? (car diagnostic))))
+              (.ref value 'diagnostics))
+       (list? (.ref value 'intended-event-ids))
+       (list? (.ref value 'error-event-paths))
+       (list? (.ref value 'intended-impact-event-ids))
+       (list? (.ref value 'error-impact-event-ids))
+       (eq? (.ref value 'assurance-closed?) #f)
+       (eq? (.ref value 'release-authorized?) #f)
+       (eq? (.ref value 'runtime-executed?) #f)))
+
+(define-type (PooFlowCausalTrajectoryAssessment @ Type.)
+  .element?: causal-trajectory-assessment-shape?)
+
+(def (poo-flow-causal-trajectory-assessment? value)
+  (element? PooFlowCausalTrajectoryAssessment value))
 
 (def (causal-cut-shape? value)
   (and (causal-event-inventory-shape?

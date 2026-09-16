@@ -134,7 +134,12 @@ fn healthcare_proposal(provider: &str) -> Proposal {
         principal: format!("Healthcare::Provider::\"{provider}\""),
         action: "Healthcare::Action::\"administerMedication\"".into(),
         resource: "Healthcare::MedicationOrder::\"medication-order-1\"".into(),
-        context: json!({}),
+        context: json!({
+            "assuranceDigest": digest(12),
+            "assuranceClosed": true,
+            "trajectoryAssessmentDigest": digest(13),
+            "trajectoryHandoffReady": true
+        }),
         intent_digest: digest(6),
         handoff: HandoffInput {
             sequence: 1,
@@ -145,6 +150,26 @@ fn healthcare_proposal(provider: &str) -> Proposal {
             observation_digest: digest(9),
         },
     }
+}
+
+#[test]
+fn healthcare_trajectory_context_is_admitted_by_the_strict_cedar_schema() {
+    let snapshot = Snapshot::new(healthcare_bootstrap(true, false)).unwrap();
+    snapshot
+        .prepare(&healthcare_proposal("provider-1"))
+        .expect("closed assurance and trajectory context must project to Cedar");
+
+    let mut missing_trajectory = healthcare_proposal("provider-1");
+    missing_trajectory
+        .context
+        .as_object_mut()
+        .unwrap()
+        .remove("trajectoryAssessmentDigest");
+    let error = match snapshot.prepare(&missing_trajectory) {
+        Ok(_) => panic!("missing trajectory digest must fail closed"),
+        Err(error) => error,
+    };
+    assert_eq!(error.code, "cedar-context-invalid");
 }
 
 fn artifact(path: &std::path::Path) -> String {
@@ -355,6 +380,18 @@ fn healthcare_medication_authorization_is_governance_bound_and_dual_witnessed() 
             .subject_snapshot_digest,
         digest(11)
     );
+
+    let mut trajectory_unready = healthcare_proposal("provider-1");
+    trajectory_unready.context["trajectoryHandoffReady"] = json!(false);
+    let trajectory_denied = admitted.issue(trajectory_unready).unwrap();
+    assert_eq!(trajectory_denied.status, "denied");
+    assert!(trajectory_denied.grant.is_none());
+
+    let mut assurance_open = healthcare_proposal("provider-1");
+    assurance_open.context["assuranceClosed"] = json!(false);
+    let assurance_denied = admitted.issue(assurance_open).unwrap();
+    assert_eq!(assurance_denied.status, "denied");
+    assert!(assurance_denied.grant.is_none());
 
     let denied = admitted.issue(healthcare_proposal("provider-2")).unwrap();
     assert_eq!(denied.status, "denied");

@@ -38,6 +38,43 @@ def AdmittedAt
     (event : CausalEvent EventIdentity SubjectIdentity PayloadIdentity) : Prop :=
   event.committed = true ∧ event.logicalPosition ≤ asOf
 
+/- A declarative trajectory keeps the actual path, counterfactual error paths,
+and hypothesized impacts separate.  Vertical domains refine this contract;
+they do not invent their own modality semantics. -/
+def ErrorTrajectoryValid
+    {EventIdentity SubjectIdentity PayloadIdentity : Type}
+    (events : List (CausalEvent EventIdentity SubjectIdentity PayloadIdentity)) : Prop :=
+  ∀ event ∈ events,
+    event.modality = .counterfactual ∧ event.committed = false
+
+def ImpactTrajectoryValid
+    {EventIdentity SubjectIdentity PayloadIdentity : Type}
+    (events : List (CausalEvent EventIdentity SubjectIdentity PayloadIdentity)) : Prop :=
+  ∀ event ∈ events,
+    event.modality = .hypothesized ∧ event.committed = false
+
+theorem validErrorTrajectoryMemberCannotBeAdmitted
+    {EventIdentity SubjectIdentity PayloadIdentity : Type}
+    (events : List (CausalEvent EventIdentity SubjectIdentity PayloadIdentity))
+    (valid : ErrorTrajectoryValid events)
+    (event : CausalEvent EventIdentity SubjectIdentity PayloadIdentity)
+    (member : event ∈ events) (asOf : Nat) :
+    ¬ AdmittedAt asOf event := by
+  intro admitted
+  have notCommitted := (valid event member).2
+  simp [AdmittedAt, notCommitted] at admitted
+
+theorem validImpactTrajectoryMemberCannotBeAdmitted
+    {EventIdentity SubjectIdentity PayloadIdentity : Type}
+    (events : List (CausalEvent EventIdentity SubjectIdentity PayloadIdentity))
+    (valid : ImpactTrajectoryValid events)
+    (event : CausalEvent EventIdentity SubjectIdentity PayloadIdentity)
+    (member : event ∈ events) (asOf : Nat) :
+    ¬ AdmittedAt asOf event := by
+  intro admitted
+  have notCommitted := (valid event member).2
+  simp [AdmittedAt, notCommitted] at admitted
+
 structure CausalEventGraph
     (EventIdentity SubjectIdentity PayloadIdentity GraphIdentity : Type) where
   graphIdentity : GraphIdentity

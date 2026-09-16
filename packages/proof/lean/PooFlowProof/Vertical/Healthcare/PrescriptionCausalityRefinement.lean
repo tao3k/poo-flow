@@ -75,6 +75,34 @@ def independentReviewCut : List String :=
   [aiRecommendation.identity, interactionEvidence.identity,
    governanceHold.identity, clinicianReview.identity]
 
+def declaredErrorPath : List ClinicalEvent :=
+  [wrongAutoApproval, wrongAdministration]
+
+def declaredErrorImpacts : List ClinicalEvent :=
+  [anticoagulationRisk]
+
+theorem wrongPathSatisfiesTrajectoryContract :
+    ErrorTrajectoryValid declaredErrorPath := by
+  simp [ErrorTrajectoryValid, declaredErrorPath, wrongAutoApproval,
+    wrongAdministration, nonFactEvent]
+
+theorem errorImpactSatisfiesTrajectoryContract :
+    ImpactTrajectoryValid declaredErrorImpacts := by
+  simp [ImpactTrajectoryValid, declaredErrorImpacts, anticoagulationRisk,
+    nonFactEvent]
+
+theorem declaredErrorPathCannotBeAdmitted (asOf : Nat)
+    (event : ClinicalEvent) (member : event ∈ declaredErrorPath) :
+    ¬ AdmittedAt asOf event :=
+  validErrorTrajectoryMemberCannotBeAdmitted declaredErrorPath
+    wrongPathSatisfiesTrajectoryContract event member asOf
+
+theorem declaredErrorImpactCannotBeAdmitted (asOf : Nat)
+    (event : ClinicalEvent) (member : event ∈ declaredErrorImpacts) :
+    ¬ AdmittedAt asOf event :=
+  validImpactTrajectoryMemberCannotBeAdmitted declaredErrorImpacts
+    errorImpactSatisfiesTrajectoryContract event member asOf
+
 theorem declaredCaseBindsRecommendationToInteractionEvidence :
     interactionEvidence.causalParents = [aiRecommendation.identity] := by
   rfl

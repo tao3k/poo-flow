@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: POO-native causal-trajectory and structural-analysis values.
-(import (only-in :clan/poo/object .o)
+(import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in :poo-flow/src/modules/temporal-causality/types
                  poo-flow-relation-trajectory-witness-kind
@@ -12,6 +12,8 @@
                  poo-flow-temporal-observation-kind
                  poo-flow-causal-event-kind
                  poo-flow-causal-event-graph-kind
+                 poo-flow-causal-trajectory-contract-kind
+                 poo-flow-causal-trajectory-assessment-kind
                  poo-flow-causal-cut-kind
                  poo-flow-temporal-classification-receipt-kind
                  PooFlowRelationTrajectoryWitness
@@ -19,6 +21,8 @@
                  PooFlowTemporalObservation
                  PooFlowCausalEvent
                  PooFlowCausalEventGraph
+                 PooFlowCausalTrajectoryContract
+                 PooFlowCausalTrajectoryAssessment
                  PooFlowCausalCut
                  PooFlowTemporalClassificationReceipt))
 
@@ -27,6 +31,8 @@
         poo-flow-temporal-observation
         poo-flow-causal-event
         poo-flow-causal-event-graph-value
+        poo-flow-causal-trajectory-contract
+        poo-flow-causal-trajectory-assessment
         poo-flow-causal-cut-value
         poo-flow-temporal-classification-receipt)
 
@@ -103,6 +109,39 @@
        temporal-order-violations: temporal-order-violations-value
        complete?: (and (null? missing-parent-identities-value)
                        (null? temporal-order-violations-value))
+       runtime-executed?: #f)))
+
+(def (poo-flow-causal-trajectory-contract
+      identity-value trigger-event-id-value intended-event-ids-value
+      error-event-paths-value intended-impact-event-ids-value
+      error-impact-event-ids-value)
+  (validate
+   PooFlowCausalTrajectoryContract
+   (.o kind: poo-flow-causal-trajectory-contract-kind
+       identity: identity-value
+       trigger-event-id: trigger-event-id-value
+       intended-event-ids: intended-event-ids-value
+       error-event-paths: error-event-paths-value
+       intended-impact-event-ids: intended-impact-event-ids-value
+       error-impact-event-ids: error-impact-event-ids-value)))
+
+(def (poo-flow-causal-trajectory-assessment
+      status-value contract-value event-graph-value diagnostics-value)
+  (validate
+   PooFlowCausalTrajectoryAssessment
+   (.o kind: poo-flow-causal-trajectory-assessment-kind
+       status: status-value
+       accepted?: (eq? status-value 'causal-trajectory-admitted)
+       contract-identity: (.ref contract-value 'identity)
+       event-graph-identity: (.ref event-graph-value 'identity)
+       diagnostics: diagnostics-value
+       intended-event-ids: (.ref contract-value 'intended-event-ids)
+       error-event-paths: (.ref contract-value 'error-event-paths)
+       intended-impact-event-ids:
+       (.ref contract-value 'intended-impact-event-ids)
+       error-impact-event-ids: (.ref contract-value 'error-impact-event-ids)
+       assurance-closed?: #f
+       release-authorized?: #f
        runtime-executed?: #f)))
 
 (def (poo-flow-causal-cut-value

@@ -89,6 +89,57 @@ feature is a repeated declaration frame, use a macro.  If the feature is object
 behavior, use POO objects, classes, interfaces, or generic dispatch.  If the
 feature is a public boundary, use contracts and receipts.
 
+** 10.06.44.25 POO Slot And CLOS Dispatch Ownership
+
+Dispatch follows the number of independently extensible axes; it does not
+follow how sophisticated a feature sounds.
+
+| Shape | Required owner |
+|-------+----------------|
+| User declaration or configuration | POO object slots such as =.add-trajectory= |
+| One receiver family whose descendants replace one behavior | =.defgeneric= slot dispatch |
+| Pure validation, indexing or graph traversal | named functional helper |
+| Provider/executor crossed with Profile, Scenario, Case or contract kind | POO CLOS generic, specializers and method bundle |
+| Runtime ABI or proof-engine payload | projection of an already admitted POO value |
+
+A public contract MUST remain one POO object.  Formal languages, providers and
+runtimes consume a named projection or digest of that object; they MUST NOT
+publish a second user-facing record DSL for the same contract.  In particular,
+a temporal trajectory is declared once through slots such as
+=trigger-event-id=, =intended-event-ids=, =error-event-paths= and Impact slots.
+TLA+, Lean and Cedar may keep their native internal models, but their receipts
+must bind the same POO contract and assessment identity.
+
+CLOS is mandatory when both sides may grow independently.  The canonical
+shape is:
+
+#+begin_src scheme
+(def FormalAssuranceGeneric
+  (poo-clos-generic-function 'formal-assurance-project 4))
+
+(def TLAHealthcareMethod
+  (poo-clos-method
+   'tla-healthcare-trajectory
+   (list (poo-clos-class-specializer TLAProvider)
+         (poo-clos-eql-specializer HealthcareProfile)
+         (poo-clos-any-specializer)
+         (poo-clos-any-specializer))
+   (lambda (frame provider profile trajectory receipt)
+     (project-tla-healthcare-trajectory
+      provider profile trajectory receipt))))
+#+end_src
+
+Methods are published through =.defmethod-bundle= and composed into the
+generic.  A base Provider method SHOULD fail closed for an unsupported
+Provider/Profile crossing.  Do not replace this dispatch with a symbolic
+=case=, a provider-name table, or Profile-specific conditionals in the generic
+caller.
+
+Conversely, do not manufacture a CLOS generic for a single object axis.  A
+Profile's own =.assess-governance= behavior remains slot dispatch; a graph BFS
+remains a function.  The purpose of CLOS is open multi-dispatch and method
+combination, not decorative abstraction.
+
 ** 10.06.44.30 Repair Bad Agent Code
 Use this table while reviewing generated Scheme:
 

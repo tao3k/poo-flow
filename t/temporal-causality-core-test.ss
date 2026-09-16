@@ -126,6 +126,80 @@
        (check (.ref receipt 'assurance-closed?) => #f)
        (check (.ref receipt 'release-authorized?) => #f)))
 
+   (test-case "trajectory contract separates intended error and Impact layers"
+     (let* ((subject "patient-1")
+            (event
+             (lambda (identity position parents modality committed?)
+               (poo-flow-causal-event
+                identity subject 'clinical-event
+                (poo-flow-temporal-observation
+                 (string-append identity "/time")
+                 'logical-version position "clinical-ledger")
+                (string-append identity "/payload")
+                parents modality committed?)))
+            (events
+             (list
+              (event "request" 1 '() 'observed #t)
+              (event "evidence" 2 '("request") 'observed #t)
+              (event "hold" 3 '("evidence") 'observed #t)
+              (event "review" 4 '("hold") 'observed #t)
+              (event "ready" 5 '("review") 'declared #f)
+              (event "auto-approval" 3 '("evidence") 'counterfactual #f)
+              (event "wrong-effect" 4 '("auto-approval")
+                     'counterfactual #f)
+              (event "benefit" 6 '("ready") 'hypothesized #f)
+              (event "harm" 5 '("wrong-effect") 'hypothesized #f)))
+            (event-graph (poo-flow-causal-event-graph subject events))
+            (contract
+             (poo-flow-causal-trajectory-contract
+              "clinical-safety" "request"
+              '("evidence" "hold" "review" "ready")
+              '(("auto-approval" "wrong-effect"))
+              '("benefit") '("harm")))
+            (assessment
+             (poo-flow-causal-trajectory-assess contract event-graph)))
+       (check (poo-flow-causal-trajectory-contract? contract) => #t)
+       (check (poo-flow-causal-trajectory-assessment? assessment) => #t)
+       (check (.ref assessment 'status) => 'causal-trajectory-admitted)
+       (check (.ref assessment 'accepted?) => #t)
+       (check (.ref assessment 'error-event-paths)
+              => '(("auto-approval" "wrong-effect")))
+       (check (.ref assessment 'intended-impact-event-ids)
+              => '("benefit"))
+       (check (.ref assessment 'error-impact-event-ids) => '("harm"))
+       (check (.ref assessment 'release-authorized?) => #f)))
+
+   (test-case "observed error branch is rejected instead of becoming fact"
+     (let* ((subject "patient-1")
+            (event
+             (lambda (identity position parents modality committed?)
+               (poo-flow-causal-event
+                identity subject 'clinical-event
+                (poo-flow-temporal-observation
+                 (string-append identity "/time")
+                 'logical-version position "clinical-ledger")
+                (string-append identity "/payload")
+                parents modality committed?)))
+            (event-graph
+             (poo-flow-causal-event-graph
+              subject
+              (list (event "request" 1 '() 'observed #t)
+                    (event "review" 2 '("request") 'observed #t)
+                    (event "unsafe-auto-approval" 2 '("request")
+                           'observed #t)
+                    (event "harm" 3 '("unsafe-auto-approval")
+                           'hypothesized #f))))
+            (contract
+             (poo-flow-causal-trajectory-contract
+              "reject-observed-error" "request" '("review")
+              '(("unsafe-auto-approval")) '() '("harm")))
+            (assessment
+             (poo-flow-causal-trajectory-assess contract event-graph)))
+       (check (.ref assessment 'accepted?) => #f)
+       (check (map car (.ref assessment 'diagnostics))
+              => '(invalid-error-modality))
+       (check (.ref assessment 'release-authorized?) => #f)))
+
    (test-case "missing parents keep temporal classification partial"
      (let* ((event
              (poo-flow-causal-event
