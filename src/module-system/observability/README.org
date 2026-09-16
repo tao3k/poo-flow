@@ -221,6 +221,15 @@ observe POO phase identity, native contracts, or the lazy slot read that
 triggers a cycle.  Memory diagnosis remains native Scheme in this framework;
 the runtime test profile and existing external observer are independent layers.
 
+Contribution atomic tests and module tests enter through the compiled
+=lambda-episteme/testing-observer.ss= module.  It does not discover or execute
+tests itself: ASP projects the selected POO Testing Profiles and invokes the
+native =gerbil test= command.  The observer emits =native-test-process-start=,
+five-second =operation-heartbeat= receipts, a traced return or raise outcome,
+and =native-test-process-complete=.  This makes a pre-output import stall
+distinguishable from a running gxtest suite while retaining the same upstream
+test semantics and per-file memory Profile.
+
 The motivating failure was a native POO authoring cycle.  In an =.o= body,
 =policy: policy=, =before: before=, or =after: after= resolves the bare right
 hand identifier as a self slot.  It does not capture a same-named constructor

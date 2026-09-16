@@ -69,7 +69,7 @@ clean-contribute contribution="lambda-episteme":
 test-contribute contribution="lambda-episteme" module="sdlc":
     test "{{ contribution }}" = "lambda-episteme"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=module"
-    GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxtest -v "{{ contribution }}/t/{{ module }}/..."
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxi ./run-contribute-test.ss "{{ contribution }}/t/{{ module }}/..."
 
 # Replay a previously compiled exact test under the opt-in native heap monitor.
 [group('test')]
@@ -86,7 +86,7 @@ test-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="u
     test "{{ contribution }}" = "lambda-episteme"
     test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
-    GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxtest -v "{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-complete owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
 
 # Build contribution production owners once, then let gxtest own the module.
@@ -295,7 +295,7 @@ check-healthcare-ai-temporal-model: _prepare-gerbil-parser
 # downstream Rust library consumer of the parser FFI, never a Scheme subprocess.
 [group('check')]
 check-healthcare-case-assurance: build-contribute check-healthcare-gql check-healthcare-lean check-healthcare-ai-temporal-model
-    GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxtest -v "lambda-episteme/t/ontology/qualification/healthcare-case-assurance.ss"
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "lambda-episteme/t/ontology/qualification/healthcare-case-assurance.ss"
 
 # Validate the repository and published-package license contract.
 [group('check')]
