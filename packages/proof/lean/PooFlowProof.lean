@@ -34,6 +34,7 @@ import PooFlowProof.PooC3.AdmissionFairnessIsolation
 import PooFlowProof.PooC3.ExplicitTemporalObservations
 import PooFlowProof.PooC3.ExplicitEntropyDerivation
 import PooFlowProof.PooC3.EventIngressCausalCut
+import PooFlowProof.PooC3.TemporalCausality
 import PooFlowProof.PooC3.IncrementalTruthMaintenance
 import PooFlowProof.PooC3.GovernanceDecisionAuthority
 import PooFlowProof.PooC3.GovernanceCore

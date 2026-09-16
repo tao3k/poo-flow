@@ -199,9 +199,43 @@ jobs:
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
-    name: POO Flow Lean proof bridge
+    name: Lean module / ${{ matrix.owner }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - owner: module-system
+            target: PooFlowModuleSystemProof
+            ffi: true
+          - owner: governance
+            target: PooFlowModuleGovernanceProof
+            ffi: false
+          - owner: temporal-causality
+            target: PooFlowModuleTemporalCausalityProof
+            ffi: false
+          - owner: authorization
+            target: PooFlowModuleAuthorizationProof
+            ffi: false
+          - owner: loop-engine
+            target: PooFlowModuleLoopEngineProof
+            ffi: false
+          - owner: session
+            target: PooFlowModuleSessionProof
+            ffi: false
+          - owner: sandbox-core
+            target: PooFlowModuleSandboxCoreProof
+            ffi: false
+          - owner: funflow
+            target: PooFlowModuleFunflowProof
+            ffi: false
+          - owner: workflow
+            target: PooFlowModuleWorkflowProof
+            ffi: false
+          - owner: memory-core
+            target: PooFlowModuleMemoryCoreProof
+            ffi: false
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -213,9 +247,9 @@ jobs:
           path: |
             ~/.elan
             packages/proof/lean/.lake
-          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
           restore-keys: |
-            lean-proof-${{ runner.os }}-${{ runner.arch }}-
+            lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install elan
         shell: bash
@@ -229,12 +263,19 @@ jobs:
           cd packages/proof/lean
           "$HOME/.elan/bin/lake" --version
 
-      - name: Build Lean proof bridge
+      - name: Build native Lean module library
         working-directory: packages/proof/lean
         shell: bash
         run: |
           set -euo pipefail
-          lake build
+          lake build "${{ matrix.target }}"
+
+      - name: Build and run the independent Lean FFI smoke
+        if: matrix.ffi
+        working-directory: packages/proof/lean
+        shell: bash
+        run: |
+          set -euo pipefail
           lake build ffiSmoke
           .lake/build/bin/ffiSmoke
 
@@ -245,7 +286,7 @@ jobs:
           path: |
             ~/.elan
             packages/proof/lean/.lake
-          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
   cedar-rust-runtime-host:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

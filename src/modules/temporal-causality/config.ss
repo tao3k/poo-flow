@@ -1,8 +1,7 @@
+;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(package:
- poo-flow
-depend:
- ("github.com/tao3k/asp-gerbil-scheme@95b78c8280788f79091653f12530f5aa2c42e489"))
+;;; Temporal Causality has no ambient graph, clock, horizon, or authority.
+(export)

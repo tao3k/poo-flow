@@ -13,9 +13,71 @@ require Cedar from git
   @ "e9fa9c1e6b636f29b0897d8706bd7aa5eaf06f9a"
   / "cedar-lean"
 
-@[default_target]
 lean_lib PooFlowProof where
   roots := #[`PooFlowProof]
+
+/-!
+Native module libraries mirror proof-bearing owners under `src/modules`.
+Lake derives each complete import closure from these roots; no external scanner
+or changed-file projection owns the proof graph. `PooFlowProof` above remains
+the explicit repository-wide integration aggregate.
+-/
+@[default_target]
+lean_lib PooFlowModuleSystemProof where
+  roots := #[
+    `PooFlowProof.PooC3.ModuleProfileBundleImports,
+    `PooFlowProof.PooC3.GerbilPooPhysicalRefinement,
+    `PooFlowProof.PooC3.NativeProjectionPipeline
+  ]
+
+lean_lib PooFlowModuleGovernanceProof where
+  roots := #[
+    `PooFlowProof.PooC3.GovernanceCore,
+    `PooFlowProof.PooC3.GovernanceDecisionAuthority,
+    `PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure
+  ]
+
+lean_lib PooFlowModuleTemporalCausalityProof where
+  roots := #[`PooFlowProof.PooC3.TemporalCausality]
+
+lean_lib PooFlowModuleAuthorizationProof where
+  roots := #[
+    `PooFlowProof.PooC3.CedarPooAdapterRefinement,
+    `PooFlowProof.Enterprise.CedarDualEngineAuthorization
+  ]
+
+lean_lib PooFlowModuleLoopEngineProof where
+  roots := #[
+    `PooFlowProof.PooC3.LoopEngineGraph,
+    `PooFlowProof.PooC3.IncrementalTruthMaintenance
+  ]
+
+lean_lib PooFlowModuleSessionProof where
+  roots := #[
+    `PooFlowProof.PooC3.SessionControlLink,
+    `PooFlowProof.PooC3.AgentLifecycleTopology
+  ]
+
+lean_lib PooFlowModuleSandboxCoreProof where
+  roots := #[
+    `PooFlowProof.PooC3.Sandbox,
+    `PooFlowProof.PooC3.CapabilityRoleIsolation
+  ]
+
+lean_lib PooFlowModuleFunflowProof where
+  roots := #[`PooFlowProof.PooC3.FunctionalFlow]
+
+lean_lib PooFlowModuleWorkflowProof where
+  roots := #[
+    `PooFlowProof.PooC3.PolicyTrace,
+    `PooFlowProof.PooC3.EffectDagAtomicity
+  ]
+
+lean_lib PooFlowModuleMemoryCoreProof where
+  roots := #[
+    `PooFlowProof.PooC3.PersistentStateMigrationContract,
+    `PooFlowProof.PooC3.RecoveryPolicyAuthorization
+  ]
 
 target proof_native.o (pkg : NPackage __name__) : FilePath := do
   let src := pkg.dir / "native" / "poo_flow_proof_ffi.c"

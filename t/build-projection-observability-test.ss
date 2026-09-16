@@ -6,7 +6,7 @@
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/srfi/13 string-contains string-prefix?)
-        (only-in :clan/poo/object .o)
+        (only-in :clan/poo/object .o .ref)
         (only-in :gerbil/gambit spawn thread-join! thread-sleep!)
         (only-in "../src/module-system/observability/config.ss"
                  poo-flow-default-build-observability-policy)
@@ -19,7 +19,10 @@
                  poo-flow-build-elapsed-milliseconds)
         (only-in "../src/module-system/observability/testing-extension.ss"
                  make-poo-flow-testing-observability-profile
-                 poo-flow-testing-observability-profile-source-load-paths))
+                 poo-flow-testing-observability-profile-source-load-paths)
+        (only-in "../src/module-system/observability/source-admission.ss"
+                 poo-flow-source-admission-observability-profile-prototype
+                 poo-flow-source-admission-observability-profile?))
 
 (export build-projection-observability-test)
 
@@ -73,6 +76,21 @@
         (check-equal? (contains? source
                                  "(modules +poo-flow-public-entry-modules+)")
                       #f)))
+
+    (test-case "contribution build is a native ASP PackageSpec"
+      (let (source
+            (call-with-input-file "lambda-episteme/build.ss"
+                                  read-all-as-string))
+        (check-equal?
+         (contains? source
+                    "(public-entry-modules +lambda-episteme-public-entry-modules+)")
+         #t)
+        (check-equal?
+         (contains? source "make-package-source-stage")
+         #f)
+        (check-equal?
+         (contains? source "poo-flow-directory-files-recursive")
+         #f)))
     (test-case "testing source roots are owned by the POO profile"
       (let (profile
             (make-poo-flow-testing-observability-profile
@@ -87,6 +105,20 @@
             performance-source
             "(poo-flow-testing-observability-extension +asp-testing-interface+)")
            #t))))
+
+    (test-case "module-specific source observation is a declarative POO profile"
+      (let (profile
+            (.o (:: @ poo-flow-source-admission-observability-profile-prototype)
+                (identity 'lambda-episteme/sdlc-source-admission)
+                (owner 'lambda-episteme)
+                (module 'sdlc)
+                (emit-summary? #t)
+                (emit-diagnostics? #f)))
+        (check-equal?
+         (poo-flow-source-admission-observability-profile? profile) #t)
+        (check-equal? (.ref profile 'owner) 'lambda-episteme)
+        (check-equal? (.ref profile 'module) 'sdlc)
+        (check-equal? (.ref profile 'emit-diagnostics?) #f)))
 
     (test-case "default policy exposes an oversized native catalog"
       (let (port (open-output-string))

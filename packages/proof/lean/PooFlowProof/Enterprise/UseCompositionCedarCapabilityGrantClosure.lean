@@ -159,6 +159,9 @@ def sampleSubject : AuthorizationSubject where
   policySetDigest := "policy:v7"
   entityStoreDigest := "entities:v3"
   bundleDigest := "bundle:wendao"
+  profileIdentities := ["profile:alpha", "profile:beta"]
+  governanceAssessmentDigest := "governance:accepted"
+  subjectSnapshotDigest := "subject:compose"
   epoch := 11
 
 def sampleContext : ReceiptValidationContext where

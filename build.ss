@@ -24,6 +24,7 @@
     "src/feature-system/bundle-v1-composition-writer.ss"
     "src/modules/funflow/interface.ss"
     "src/modules/governance/interface.ss"
+    "src/modules/temporal-causality/interface.ss"
     "src/modules/authorization/interface.ss"
     "src/modules/authorization/providers/cedar/interface.ss"
     "src/contract/runtime-v0-abi-schema.ss"

@@ -243,9 +243,34 @@ The important source areas are:
 Common focused checks:
 
 #+begin_src shell
-cd packages/proof/lean
-lake build
+just check-lean-module PooFlowProof.PooC3.TemporalCausality
+just check-healthcare-lean
 #+end_src
+
+Lean validation is module-atomic by default: each command builds only the named
+module or Lake-declared module bundle and its native import closure.  The full
+=PooFlowProof.lean= aggregate is an explicit integration qualification,
+available as =just check-lean-all=; ordinary pull requests do not compile all
+proof families merely because one Case-owned theorem changed.
+
+Proof-bearing POO owners map directly to native Lake libraries:
+
+| POO owner | Lake library target |
+|-----------+---------------------|
+| =module-system= | =PooFlowModuleSystemProof= |
+| =governance= | =PooFlowModuleGovernanceProof= |
+| =temporal-causality= | =PooFlowModuleTemporalCausalityProof= |
+| =authorization= | =PooFlowModuleAuthorizationProof= |
+| =loop-engine= | =PooFlowModuleLoopEngineProof= |
+| =session= | =PooFlowModuleSessionProof= |
+| =sandbox-core= | =PooFlowModuleSandboxCoreProof= |
+| =funflow= | =PooFlowModuleFunflowProof= |
+| =workflow= | =PooFlowModuleWorkflowProof= |
+| =memory-core= | =PooFlowModuleMemoryCoreProof= |
+
+Modules without a Lean-owned contract do not receive placeholder proof
+libraries.  A Scenario composes module libraries; it does not become the owner
+of their proof graph.
 
 #+begin_src shell
 asp org lint docs/10-19-design/10.06-poo-module-system/55-pooc3-proof-architecture.org

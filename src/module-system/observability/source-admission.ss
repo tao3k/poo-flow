@@ -8,17 +8,78 @@
 ;;; this extension only observes the resulting source set.
 
 (import :gerbil/gambit
-        (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-native-import-closure)
+        (only-in :asp-gerbil-scheme/testing-api
+                 asp-gerbil-scheme-prepared-native-import-closure)
         (only-in :asp-gerbil-scheme/src/support/time
                  duration-micros monotonic-micros)
-        (only-in :clan/poo/object make-object $constant-slot-spec)
+        (only-in :clan/poo/object
+                 .o .ref .slot? object? make-object $constant-slot-spec)
         (only-in :std/sort sort)
+        (only-in "build-projection.ss"
+                 poo-flow-write-observation-line!)
         (only-in "module-presentation.ss"
                  poo-flow-poo-slot-authoring-file-observations
                  poo-flow-poo-slot-authoring-observation-ok?))
 
-(export poo-flow-source-admission)
+(export poo-flow-source-admission-observability-profile-prototype
+        poo-flow-source-admission-observability-profile?
+        poo-flow-default-source-admission-observability-profile
+        poo-flow-observe-source-admission!
+        poo-flow-source-admission)
+
+;;; A test declares observation policy as a POO value.  Presentation stays in
+;;; the Observability owner instead of being repeated as ad hoc `displayln`
+;;; calls in every module-specific suite.
+(def poo-flow-source-admission-observability-profile-prototype
+  (.o (source-admission-observability-profile? #t)
+      (identity 'source-admission/default)
+      (owner 'poo-flow)
+      (module 'all)
+      (emit-summary? #t)
+      (emit-diagnostics? #t)))
+
+(def (poo-flow-source-admission-observability-profile? value)
+  (and (object? value)
+       (.slot? value 'source-admission-observability-profile?)
+       (.ref value 'source-admission-observability-profile?)
+       (.slot? value 'identity)
+       (symbol? (.ref value 'identity))
+       (.slot? value 'owner)
+       (symbol? (.ref value 'owner))
+       (.slot? value 'module)
+       (symbol? (.ref value 'module))
+       (.slot? value 'emit-summary?)
+       (boolean? (.ref value 'emit-summary?))
+       (.slot? value 'emit-diagnostics?)
+       (boolean? (.ref value 'emit-diagnostics?))))
+
+(def poo-flow-default-source-admission-observability-profile
+  (.o (:: @ poo-flow-source-admission-observability-profile-prototype)))
+
+(def (poo-flow-observe-source-admission! profile receipt)
+  (unless (poo-flow-source-admission-observability-profile? profile)
+    (error "invalid source-admission observability profile" profile))
+  (when (.ref profile 'emit-summary?)
+    (poo-flow-write-observation-line!
+     "[poo-flow-observability] phase=source-scanned profile=~a owner=~a module=~a files=~a observations=~a diagnostics=~a preparedGraphElapsedUs=~a policyElapsedUs=~a elapsedUs=~a"
+     (.ref profile 'identity)
+     (.ref profile 'owner)
+     (.ref profile 'module)
+     (.ref receipt 'file-count)
+     (.ref receipt 'observation-count)
+     (.ref receipt 'diagnostic-count)
+     (.ref receipt 'prepared-graph-elapsed-us)
+     (.ref receipt 'authoring-policy-elapsed-us)
+     (.ref receipt 'elapsed-us)))
+  (when (and (.ref profile 'emit-diagnostics?)
+             (> (.ref receipt 'diagnostic-count) 0))
+    (poo-flow-write-observation-line!
+     "[poo-flow-observability] phase=source-diagnostics profile=~a owner=~a module=~a diagnostics=~a"
+     (.ref profile 'identity)
+     (.ref profile 'owner)
+     (.ref profile 'module)
+     (.ref receipt 'diagnostics)))
+  receipt)
 
 (def (poo-flow-source-admission-slot name value)
   (cons name ($constant-slot-spec value)))
@@ -34,7 +95,7 @@
     (dynamic-wind
       (lambda () (current-directory root))
       (lambda ()
-        (asp-gerbil-scheme-native-import-closure root entries))
+        (asp-gerbil-scheme-prepared-native-import-closure root entries))
       (lambda () (current-directory previous-directory)))))
 
 ;;; Fold observations as each file is read.  The admission receipt needs only

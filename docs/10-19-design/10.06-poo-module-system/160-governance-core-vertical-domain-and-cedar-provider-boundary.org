@@ -105,6 +105,26 @@ The independent Runtime Host evaluates the exact same protobuf through
 =cedar-rust= and the AOT =Cedar.Spec= Lean engine.  Allow, default deny and
 revoked-order forbid are qualified with per-request strict-lockstep witnesses.
 
+* Scenario relations and Temporal Causality boundary
+
+Lambda's accepted POO composition is also the authority for enterprise
+relation reasoning.  It is projected into the existing POO Flow Graph with
+typed Scenario-to-Case, Case-to-composition, composition-to-Profile,
+Profile-import, Source, Threat and Capability edges.  The projection does not
+introduce a second ontology store or require Cases to maintain reverse indexes.
+
+Structural Impact Analysis is computed from the reverse dependency cone of
+that graph.  It is one operation of the POO Flow =Temporal Causality= core,
+not the core module's name.  Therefore
+a changed Profile, Source, Threat or Capability identifies every affected Case
+from current accepted declarations rather than a handwritten =IMPACTS= list.
+GQL Sources may express the corresponding relation and Impact questions, but
+GQL parser admission proves syntax and lossless source only.  Until an admitted
+GQL executor is integrated, native Scheme graph construction and Impact
+receipts remain the executable boundary.  Neither path grants Cedar authority.
+Past, present, future and counterfactual causal trajectories are specified
+separately in RFC 161; a structural receipt explicitly makes no temporal claim.
+
 * Enterprise security assurance
 
 The core model is necessary but not by itself sufficient for the intended

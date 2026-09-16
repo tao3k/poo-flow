@@ -1,0 +1,369 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: finite structural analysis over one explicit POO Flow Graph.
+;;; Invariant: the result is output-sensitive O(V + E + witness bytes), inert,
+;;; and never promoted to temporal causality or action authority.
+(import (only-in :clan/poo/object .ref)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/sort sort)
+        (only-in :std/srfi/1 every filter find)
+        (only-in :std/text/hex hex-encode)
+        (only-in :poo-flow/src/graph/types
+                 poo-flow-graph poo-flow-graph-edge poo-flow-graph-node
+                 poo-flow-graph? poo-flow-graph-id poo-flow-graph-nodes
+                 poo-flow-graph-edges poo-flow-graph-node-id
+                 poo-flow-graph-edge-from poo-flow-graph-edge-to
+                 poo-flow-graph-edge-kind)
+        (only-in :poo-flow/src/modules/temporal-causality/objects
+                 poo-flow-relation-trajectory-witness
+                 poo-flow-structural-impact-receipt
+                 poo-flow-causal-event-graph-value
+                 poo-flow-causal-cut-value
+                 poo-flow-temporal-classification-receipt)
+        (only-in :poo-flow/src/modules/temporal-causality/types
+                 poo-flow-causal-event? poo-flow-causal-event-graph?
+                 poo-flow-causal-cut?))
+
+(export poo-flow-structural-impact-analyze
+        poo-flow-causal-event-graph
+        poo-flow-causal-cut
+        poo-flow-temporal-causal-classify)
+
+(def (temporal-causality-unique? values)
+  (let (seen (make-hash-table))
+    (every
+     (lambda (value)
+       (if (hash-get seen value)
+         #f
+         (begin (hash-put! seen value #t) #t)))
+     values)))
+
+(def (poo-flow-structural-impact-analyze
+      graph changed-node-ids selected-relations direction inventory-complete?)
+  (unless (poo-flow-graph? graph)
+    (error "structural Impact requires a POO Flow Graph" graph))
+  (unless (and (list? changed-node-ids) (pair? changed-node-ids)
+               (temporal-causality-unique? changed-node-ids)
+               (list? selected-relations) (pair? selected-relations)
+               (every symbol? selected-relations)
+               (memq direction '(dependents dependencies))
+               (boolean? inventory-complete?))
+    (error "invalid structural Impact selection"))
+  (let ((node-index (make-hash-table))
+        (adjacency (make-hash-table))
+        (unresolved '()))
+    (for-each
+     (lambda (node)
+       (let (id (poo-flow-graph-node-id node))
+         (when (hash-get node-index id)
+           (error "duplicate graph node identity" id))
+         (hash-put! node-index id node)))
+     (poo-flow-graph-nodes graph))
+    (for-each
+     (lambda (changed)
+       (unless (hash-get node-index changed)
+         (error "changed node is absent from graph" changed)))
+     changed-node-ids)
+    (for-each
+     (lambda (edge)
+       (let ((relation (poo-flow-graph-edge-kind edge))
+             (from (poo-flow-graph-edge-from edge))
+             (to (poo-flow-graph-edge-to edge)))
+         (when (memq relation selected-relations)
+           (if (and (hash-get node-index from) (hash-get node-index to))
+             (let* ((origin (if (eq? direction 'dependents) to from))
+                    (destination (if (eq? direction 'dependents) from to))
+                    (neighbors (or (hash-get adjacency origin) '())))
+               (hash-put! adjacency origin
+                          (cons (cons destination relation) neighbors)))
+             (set! unresolved
+                   (cons (list from relation to) unresolved))))))
+     (poo-flow-graph-edges graph))
+    (let ((witness-index (make-hash-table))
+          (affected-reverse '()))
+      (for-each
+       (lambda (changed)
+         (let (witness
+               (poo-flow-relation-trajectory-witness
+                changed (list changed) '()))
+           (hash-put! witness-index changed witness)
+           (set! affected-reverse (cons changed affected-reverse))))
+       changed-node-ids)
+      ;; A two-list queue avoids append-based quadratic traversal.  Witness
+      ;; construction cost is proportional to the paths returned to callers.
+      (let loop ((front changed-node-ids) (back '()))
+        (cond
+         ((pair? front)
+          (let* ((current (car front))
+                 (parent (hash-get witness-index current))
+                 (next-back back))
+            (for-each
+             (lambda (neighbor+relation)
+               (let ((neighbor (car neighbor+relation))
+                     (relation (cdr neighbor+relation)))
+                 (unless (hash-get witness-index neighbor)
+                   (let (witness
+                         (poo-flow-relation-trajectory-witness
+                          neighbor
+                          (append (.ref parent 'node-path) (list neighbor))
+                          (append (.ref parent 'relation-path)
+                                  (list relation))))
+                     (hash-put! witness-index neighbor witness)
+                     (set! affected-reverse
+                           (cons neighbor affected-reverse))
+                     (set! next-back (cons neighbor next-back))))))
+             (reverse (or (hash-get adjacency current) '())))
+            (loop (cdr front) next-back)))
+         ((pair? back) (loop (reverse back) '()))
+         (else
+          (let* ((affected (reverse affected-reverse))
+                 (trajectories
+                  (map (lambda (id) (hash-get witness-index id)) affected))
+                 (unresolved-edges (reverse unresolved))
+                 (status
+                  (cond
+                   ((pair? unresolved-edges) 'invalid-inventory)
+                   ((not inventory-complete?) 'partial-impact)
+                   (else 'snapshot-scoped-impact))))
+            (poo-flow-structural-impact-receipt
+             status
+             (poo-flow-graph-id graph)
+             changed-node-ids
+             direction
+             selected-relations
+             affected
+             trajectories
+             unresolved-edges))))))))
+
+(def (temporal-causality-digest value)
+  (string-append
+   "sha256:"
+   (hex-encode
+    (sha256
+     (call-with-output-string (lambda (port) (write value port)))))))
+
+(def (causal-event-position event)
+  (.ref (.ref event 'observation) 'logical-position))
+
+(def (causal-event<? left right)
+  (let ((left-position (causal-event-position left))
+        (right-position (causal-event-position right)))
+    (or (< left-position right-position)
+        (and (= left-position right-position)
+             (string<? (.ref left 'identity) (.ref right 'identity))))))
+
+(def (causal-event-canonical event)
+  (list (.ref event 'identity)
+        (.ref event 'subject)
+        (.ref event 'event-kind)
+        (let (observation (.ref event 'observation))
+          (list (.ref observation 'identity)
+                (.ref observation 'clock-role)
+                (.ref observation 'logical-position)
+                (.ref observation 'provenance-identity)))
+        (.ref event 'payload-identity)
+        (sort (.ref event 'causal-parent-identities) string<?)
+        (.ref event 'modality)
+        (.ref event 'committed?)))
+
+(def (causal-events-analyze subject events)
+  (unless (and (string? subject) (> (string-length subject) 0)
+               (list? events) (pair? events)
+               (every poo-flow-causal-event? events))
+    (error "invalid causal event subject or inventory" subject))
+  (let ((event-index (make-hash-table))
+        (missing-index (make-hash-table))
+        (missing-reverse '())
+        (violations-reverse '()))
+    (for-each
+     (lambda (event)
+       (let (identity (.ref event 'identity))
+         (unless (equal? (.ref event 'subject) subject)
+           (error "causal event belongs to another subject" identity))
+         (unless (temporal-causality-unique?
+                  (.ref event 'causal-parent-identities))
+           (error "duplicate causal parent identity" identity))
+         (when (hash-get event-index identity)
+           (error "duplicate causal event identity" identity))
+         (hash-put! event-index identity event)))
+     events)
+    (for-each
+     (lambda (event)
+       (let ((event-identity (.ref event 'identity))
+             (event-position (causal-event-position event)))
+         (for-each
+          (lambda (parent-identity)
+            (let (parent (hash-get event-index parent-identity))
+              (if parent
+                (when (> (causal-event-position parent) event-position)
+                  (set! violations-reverse
+                        (cons (list parent-identity event-identity)
+                              violations-reverse)))
+                (unless (hash-get missing-index parent-identity)
+                  (hash-put! missing-index parent-identity #t)
+                  (set! missing-reverse
+                        (cons parent-identity missing-reverse))))))
+          (.ref event 'causal-parent-identities))))
+     events)
+    (values (sort events causal-event<?)
+            event-index
+            (reverse missing-reverse)
+            (reverse violations-reverse))))
+
+(def (poo-flow-causal-event-graph subject events)
+  (let-values (((ordered event-index missing violations)
+                (causal-events-analyze subject events)))
+    (let (identity
+          (temporal-causality-digest
+           (list 'poo-flow.temporal-causality.causal-event-graph.v1
+                 subject
+                 (map causal-event-canonical ordered))))
+      (poo-flow-causal-event-graph-value
+       identity subject ordered event-index missing violations))))
+
+(def (poo-flow-causal-cut event-graph as-of-position)
+  (unless (poo-flow-causal-event-graph? event-graph)
+    (error "causal cut requires a causal event graph" event-graph))
+  (unless (and (exact-integer? as-of-position) (>= as-of-position 0))
+    (error "invalid causal cut position" as-of-position))
+  (let (committed-events
+        (filter
+         (lambda (event)
+           (and (.ref event 'committed?)
+                (<= (causal-event-position event) as-of-position)))
+         (.ref event-graph 'events)))
+    (unless (pair? committed-events)
+      (error "causal cut has no committed event" as-of-position))
+    (let-values (((ordered event-index missing violations)
+                  (causal-events-analyze
+                   (.ref event-graph 'subject) committed-events)))
+      (let (identity
+            (temporal-causality-digest
+             (list 'poo-flow.temporal-causality.causal-cut.v1
+                   (.ref event-graph 'identity)
+                   as-of-position
+                   (map (lambda (event) (.ref event 'identity)) ordered))))
+        (poo-flow-causal-cut-value
+         identity
+         (.ref event-graph 'identity)
+         (.ref event-graph 'subject)
+         ordered event-index missing violations as-of-position)))))
+
+(def (causal-event-graph->graph event-graph)
+  (let ((events (.ref event-graph 'events)))
+    (poo-flow-graph
+     (list 'causal-event-graph (.ref event-graph 'identity))
+     (map (lambda (event)
+            (poo-flow-graph-node
+             (.ref event 'identity)
+             event
+             (list (cons 'entity-kind 'causal-event)
+                   (cons 'modality (.ref event 'modality)))))
+          events)
+     (apply append
+            (map
+             (lambda (event)
+               (map (lambda (parent)
+                      (poo-flow-graph-edge
+                       parent (.ref event 'identity) 'CAUSAL_PARENT
+                       (list (cons 'modality (.ref event 'modality)))))
+                    (.ref event 'causal-parent-identities)))
+             events))
+     (list (cons 'causal-event-graph (.ref event-graph 'identity))
+           (cons 'complete? (.ref event-graph 'complete?))))))
+
+(def (temporal-causality-ordered-union left right)
+  (let ((seen (make-hash-table))
+        (result-reverse '()))
+    (for-each
+     (lambda (value)
+       (unless (hash-get seen value)
+         (hash-put! seen value #t)
+         (set! result-reverse (cons value result-reverse))))
+     (append left right))
+    (reverse result-reverse)))
+
+(def (poo-flow-temporal-causal-classify
+      event-graph cut trigger-event-id horizon)
+  (unless (poo-flow-causal-event-graph? event-graph)
+    (error "temporal classification requires a causal event graph"
+           event-graph))
+  (unless (poo-flow-causal-cut? cut)
+    (error "temporal classification requires a causal cut" cut))
+  (unless (equal? (.ref cut 'event-graph-identity)
+                  (.ref event-graph 'identity))
+    (error "causal cut belongs to another event graph" cut))
+  (let (as-of-position (.ref cut 'as-of-position))
+    (unless (and (exact-integer? horizon) (>= horizon as-of-position))
+      (error "invalid temporal classification horizon"
+             as-of-position horizon)))
+  (unless (hash-get (.ref cut 'event-index) trigger-event-id)
+    (error "trigger event is absent from causal cut" trigger-event-id))
+  (let* ((as-of-position (.ref cut 'as-of-position))
+         (graph (causal-event-graph->graph event-graph))
+         (structural
+          (poo-flow-structural-impact-analyze
+           graph (list trigger-event-id) '(CAUSAL_PARENT) 'dependencies
+           (.ref event-graph 'complete?)))
+         (affected-index (make-hash-table))
+         (past-reverse '())
+         (current-reverse '())
+         (future-reverse '())
+         (hypothesized-reverse '())
+         (counterfactual-reverse '())
+         (outside-reverse '()))
+    (for-each
+     (lambda (id) (hash-put! affected-index id #t))
+     (.ref structural 'affected-node-ids))
+    (for-each
+     (lambda (event)
+       (let ((identity (.ref event 'identity))
+             (position (causal-event-position event))
+             (modality (.ref event 'modality)))
+         (when (hash-get affected-index identity)
+           (cond
+           ((eq? modality 'counterfactual)
+             (set! counterfactual-reverse
+                   (cons identity counterfactual-reverse)))
+            ((eq? modality 'hypothesized)
+             (set! hypothesized-reverse
+                   (cons identity hypothesized-reverse)))
+            ((< position as-of-position)
+             (set! past-reverse (cons identity past-reverse)))
+            ((= position as-of-position)
+             (set! current-reverse (cons identity current-reverse)))
+            ((<= position horizon)
+             (set! future-reverse (cons identity future-reverse)))
+            (else
+             (set! outside-reverse (cons identity outside-reverse)))))))
+     (.ref event-graph 'events))
+    (let ((status
+           (cond
+            ((or (pair? (.ref event-graph 'temporal-order-violations))
+                 (pair? (.ref cut 'temporal-order-violations)))
+             'invalid-causal-cut)
+            ((or (pair? (.ref event-graph 'missing-parent-identities))
+                 (pair? (.ref cut 'missing-parent-identities)))
+             'partial-temporal-classification)
+            (else 'bounded-temporal-classification))))
+      (poo-flow-temporal-classification-receipt
+       status
+       (.ref event-graph 'identity)
+       (.ref cut 'identity)
+       trigger-event-id
+       as-of-position
+       horizon
+       (reverse past-reverse)
+       (reverse current-reverse)
+       (reverse future-reverse)
+       (reverse hypothesized-reverse)
+       (reverse counterfactual-reverse)
+       (reverse outside-reverse)
+       (temporal-causality-ordered-union
+        (.ref cut 'missing-parent-identities)
+        (.ref event-graph 'missing-parent-identities))
+       (.ref structural 'relation-trajectories)
+       structural))))

@@ -29,7 +29,21 @@
         poo-flow-governance-threat
         poo-flow-governance-threat-model
         poo-flow-governance-threat-blocking?
+        poo-flow-governance-assessment-value
         poo-flow-governance-assessment)
+
+(def (poo-flow-governance-assessment-value
+      profile model unresolved-threat-values context-value)
+  (validate
+   PooFlowGovernanceAssessment
+   (.o kind: poo-flow-governance-assessment-kind
+       profile-identity: (.ref profile 'identity)
+       model-identity: (.ref model 'identity)
+       assessed-threats: (.ref model 'threats)
+       unresolved-threats: unresolved-threat-values
+       handoff-ready?: (null? unresolved-threat-values)
+       runtime-executed?: #f
+       context: context-value)))
 
 (def (poo-flow-governance-threat-blocking? threat)
   (and (memq (.ref threat 'severity) '(high critical))
@@ -41,16 +55,8 @@
          (unresolved
           (map (lambda (threat) (.ref threat 'identity))
                (filter poo-flow-governance-threat-blocking? threats))))
-    (validate
-     PooFlowGovernanceAssessment
-     (.o kind: poo-flow-governance-assessment-kind
-         profile-identity: (.ref profile 'identity)
-         model-identity: (.ref model 'identity)
-         assessed-threats: threats
-         unresolved-threats: unresolved
-         handoff-ready?: (null? unresolved)
-         runtime-executed?: #f
-         context: context-value))))
+    (poo-flow-governance-assessment-value
+     profile model unresolved context-value)))
 
 (def PooFlowGovernanceThreatModel.
   (.o (:: self)
