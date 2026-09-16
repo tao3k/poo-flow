@@ -18,6 +18,7 @@
 ;;; resulting BuildSpec is handed to std/make.
 (def +poo-flow-public-entry-modules+
   '("src/core/api.ss"
+    "src/graph/types.ss"
     "src/module-system/api.ss"
     "src/feature-system/interface.ss"
     "src/feature-system/bundle-v1-composition-writer.ss"
@@ -26,6 +27,8 @@
     "src/policy/cedar-authority.ss"
     "src/proof/proof-case-vector.ss"
     "src/qualification/runtime-symbol-manifest.ss"
+    "src/user-interface/init-declaration-syntax.ss"
+    "src/user-interface/config-discovery-syntax.ss"
     "src/user-interface/facade.ss"))
 
 (def +poo-flow-build-exclude-dirs+
@@ -57,7 +60,6 @@
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "observe-contribute-import.ss"
-                    "observe-contribute-test.ss"
                     "user-interface/custom/my-module/config.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"

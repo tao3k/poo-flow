@@ -10,7 +10,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .def .o .ref)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms)
 
@@ -63,9 +63,29 @@
          (poo-flow-graph-edge 'a 'c)
          (poo-flow-graph-edge 'b 'd))))
 
+;; : PooFlowGraph
+(.def (graph-declarative-slot-sample @ graph)
+  (graph-id 'declarative-slot-graph)
+  (.add-node
+   (.o source: (poo-flow-graph-node 'source 'Source)
+       target: (poo-flow-graph-node 'target 'Target)))
+  (.add-edge
+   (.o source-declares-target:
+       (poo-flow-graph-edge 'source 'target 'declares))))
+
 ;; : TestSuite
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
+    (test-case "Graph derives algorithm values from declarative POO slots"
+      (check-equal? (poo-flow-graph-node-ids graph-declarative-slot-sample)
+                    '(source target))
+      (check-equal? (poo-flow-graph-edge-pairs graph-declarative-slot-sample)
+                    '((source target)))
+      (check-equal?
+       (poo-flow-graph-nodes
+        (poo-flow-graph 'declarative-slot-graph '() '()))
+       '()))
+
     (test-case "projects adjacency, frontiers, reachability, and topology"
       (let ((analysis (poo-flow-graph-analysis-receipt
                        graph-algorithm-sample)))

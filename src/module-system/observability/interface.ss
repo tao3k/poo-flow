@@ -26,6 +26,7 @@
                  poo-flow-observe-build-projection-start
                  poo-flow-observe-build-projection)
         "source-authoring.ss"
+        "source-admission.ss"
         "debug.ss")
 (export PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
         PooFlowObservationContextContract PooFlowObservationContract
@@ -42,4 +43,5 @@
         poo-flow-observe-build-projection-start
         poo-flow-observe-build-projection
         (import: "source-authoring.ss")
+        (import: "source-admission.ss")
         (import: "debug.ss"))

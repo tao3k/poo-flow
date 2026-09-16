@@ -4,6 +4,8 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
+export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", `getconf _NPROCESSORS_ONLN`)
+
 devenv_exec := ".devenv/devenv-profile-exec"
 bazel := devenv_exec + " bazelisk"
 gerbil_compile := "//gerbil:compile"
@@ -56,15 +58,6 @@ test-contribute contribution="lambda-episteme" module="sdlc":
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=module"
     GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxtest -v "{{ contribution }}/t/{{ module }}/..."
 
-# Execute one exact test file within one contribution module.
-[group('test')]
-observe-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
-    test "{{ contribution }}" = "lambda-episteme"
-    test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
-    echo "[poo-flow-observability] phase=source-start owner={{ contribution }} module={{ module }} test={{ test_file }}"
-    # Reader-native admission stays independent of test compilation and load.
-    GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-test.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
-
 # Replay a previously compiled exact test under the opt-in native heap monitor.
 [group('test')]
 observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
@@ -73,12 +66,12 @@ observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" te
     echo "[poo-flow-observability] phase=import-observer-start owner={{ contribution }} module={{ module }} test={{ test_file }} budget=15s"
     GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-import.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
 
-# Execute one exact test file after its reader-only POO authoring preflight.
+# Execute one exact test file. Source admission belongs to the native gxtest
+# lifecycle and is enabled declaratively by its POO Testing Profile.
 [group('test')]
 test-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
     test "{{ contribution }}" = "lambda-episteme"
     test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
-    just observe-contribute-atomic "{{ contribution }}" "{{ module }}" "{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
     GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxtest -v "{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-complete owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"

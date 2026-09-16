@@ -45,6 +45,22 @@
     (let (context-id (expander-context-id (current-expander-context)))
       (and (symbol? context-id) (symbol->string context-id))))
 
+  (def (poo-flow-ui-package-name)
+    (let* ((package-path (path-expand "gerbil.pkg" (current-directory)))
+           (package-data
+            (and (file-exists? package-path)
+                 (call-with-input-file package-path read))))
+      (let loop ((rest package-data))
+        (if (and (pair? rest) (pair? (cdr rest)))
+          (if (eq? (car rest) 'package:)
+            (let (name (cadr rest))
+              (cond
+               ((symbol? name) (symbol->string name))
+               ((string? name) name)
+               (else #f)))
+            (loop (cdr rest)))
+          #f))))
+
   (def (poo-flow-ui-context-base)
     (let* ((context-name (poo-flow-ui-context-name))
            (config-suffix "/config"))
@@ -55,21 +71,32 @@
 
   (def (poo-flow-ui-context-source-path)
     (let* ((context-name (poo-flow-ui-context-name))
+           (package-name (poo-flow-ui-package-name))
+           (package-prefix
+            (and package-name (string-append package-name "/")))
            (relative
-            (if (and context-name
-                     (poo-flow-ui-string-prefix? "poo-flow/" context-name))
-              (substring context-name 9 (string-length context-name))
+            (if (and context-name package-prefix
+                     (poo-flow-ui-string-prefix? package-prefix context-name))
+              (substring context-name
+                         (string-length package-prefix)
+                         (string-length context-name))
               context-name)))
       (and relative
            (path-expand (string-append relative ".ss")
                         (current-directory)))))
 
   (def (poo-flow-ui-discovery-root source)
-    (let (cwd (current-directory))
-      (if (and (file-exists? (path-expand "profiles" cwd))
-               (file-exists? (path-expand "scenarios" cwd)))
-        cwd
-        (path-directory source))))
+    (let* ((cwd (current-directory))
+           (user-interface-root (path-expand "user-interface" cwd)))
+      (cond
+       ((and (file-exists? (path-expand "profiles" cwd))
+             (file-exists? (path-expand "scenarios" cwd)))
+        cwd)
+       ((and (file-exists? (path-expand "profiles" user-interface-root))
+             (file-exists? (path-expand "scenarios" user-interface-root)))
+        user-interface-root)
+       (else
+        (path-directory source)))))
 
   (def (poo-flow-ui-discovery-files root role)
     (let (directory (path-expand role root))

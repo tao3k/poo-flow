@@ -6,7 +6,8 @@
 ;;; Boundary: graph facts are POO-native control-plane values.
 ;;; Invariant: graph objects describe topology; they never schedule or run it.
 
-(import (only-in :clan/poo/object .ref .slot? object? object<-alist)
+(import (only-in :clan/poo/object
+                 .all-slots .cc .o .ref .slot? object? object<-alist)
         :poo-flow/src/module-system/projection/syntax)
 
 (export #t)
@@ -63,16 +64,28 @@
     (cons 'runtime-executed #f))))
 
 ;; : PooFlowGraphPrototype
+(def (poo-flow-graph-declaration-values declarations)
+  (poo-flow-graph-require
+   "graph declarations must be a POO object"
+   (object? declarations)
+   declarations)
+  (map (lambda (slot) (.ref declarations slot))
+       (.all-slots declarations)))
+
+;; `.add-node` and `.add-edge` are declarative object slots.  Their child
+;; slots carry named Graph values; `nodes` and `edges` are lazy projections for
+;; the existing algorithm boundary.
 (def graph
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-graph-prototype-kind+)
-    (cons 'schema 'poo-flow.graph.v1)
-    (cons 'graph-id #f)
-    (cons 'nodes '())
-    (cons 'edges '())
-    (cons 'metadata '())
-    (cons 'runtime-executed #f))))
+  (.o
+      kind: +poo-flow-graph-prototype-kind+
+      schema: 'poo-flow.graph.v1
+      graph-id: #f
+      .add-node: (.o)
+      .add-edge: (.o)
+      nodes: (poo-flow-graph-declaration-values .add-node)
+      edges: (poo-flow-graph-declaration-values .add-edge)
+      metadata: '()
+      runtime-executed: #f))
 
 ;; : PooFlowGraphAnalysisPrototype
 (def graph-analysis
@@ -290,17 +303,13 @@
                           (poo-flow-graph-every? poo-flow-graph-edge?
                                                  edges)
                           edges)
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-graph-prototype-kind+)
-    (cons 'schema 'poo-flow.graph.v1)
-    (cons 'graph-id graph-id)
-    (cons 'nodes nodes)
-    (cons 'edges edges)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata)))
-    (cons 'runtime-executed #f))))
+  (.cc graph
+       graph-id: graph-id
+       nodes: nodes
+       edges: edges
+       metadata: (if (null? maybe-metadata)
+                   '()
+                   (car maybe-metadata))))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-graph? value)

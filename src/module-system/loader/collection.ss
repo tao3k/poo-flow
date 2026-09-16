@@ -155,9 +155,13 @@
 
 (def (poo-flow-module-role-reference? datum module-name role)
   (let ((leaf (string-append role ".ss"))
+        (relative (string-append "./" role))
         (suffix (string-append "/" module-name "/" role)))
     (cond
-     ((symbol? datum) (string-suffix? suffix (symbol->string datum)))
+     ((symbol? datum)
+      (let (reference (symbol->string datum))
+        (or (string=? reference relative)
+            (string-suffix? suffix reference))))
      ((string? datum)
       (or (string=? datum leaf) (string-suffix? suffix datum)))
      ((pair? datum)
