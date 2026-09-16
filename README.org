@@ -32,6 +32,53 @@ The current design is centered on three ideas.
 
 Public extension APIs should stay POO-native. Raw alist DSLs, ad hoc patch languages, and untyped mutation hooks are not the normal user interface. They can exist only as internal or advanced escape hatches behind named POO-native or functional helpers.
 
+* Enterprise Security Governance
+
+Governance is a first-class POO Flow module, not a Cedar wrapper and not a
+documentation label.  A =PooFlowGovernanceProfile.= carries typed Sources,
+preconditions, threats and a ThreatModel.  Its assessment is an inert value:
+an active =high= or =critical= threat in the =exposed= or =realized= phase
+blocks Provider handoff, while the assessment itself never executes an action
+or grants authority.
+
+The security argument is split across four owners so that one tool cannot
+silently claim another tool's guarantee:
+
+| Layer | Owner | What it establishes | What it cannot establish |
+| POO Governance | =src/modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
+| Cedar boundary | =src/policy/cedar-governance.ss= and the independent Runtime Host | Exact Profile/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
+| TLA+ / TLC | =packages/proof/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
+| Lean | =packages/proof/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
+
+The intended evidence chain is:
+
+#+begin_src text
+Lambda Scenario / Profile / Case declarations
+  -> POO Flow typed Governance assessment
+  -> TLA+ transition-model qualification
+  -> Lean enterprise assurance obligations
+  -> identity-bound Cedar Provider handoff
+  -> independent runtime authorization or rejection
+#+end_src
+
+These arrows are admission boundaries, not authority inheritance.  TLA+ does
+not authorize a Cedar request; Lean does not manufacture observations; Cedar
+does not reinterpret the Profile or threat graph; and a Scheme assessment
+always reports =runtime-executed?: #f=.  The enterprise Lean closure makes
+this explicit in
+[[file:packages/proof/lean/PooFlowProof/Enterprise/GovernanceThreatAssuranceClosure.lean][GovernanceThreatAssuranceClosure]]:
+typed security-graph closure, threat-intelligence provenance, snapshot
+identity and separation of duties are required, and an active critical threat
+contradicts Provider-handoff eligibility.
+
+The executable model gate is =just check-governance-model=.  Gerbil Parser
+owns TLA+ syntax and byte-exact round-trip qualification; official TLC owns
+state exploration.  The checked receipt is written to
+=.ci/governance/tlc-receipt.ss= with source, configuration, tool and output
+digests plus state counts, graph depth and the final admission bit.  A parser
+success, a TLC banner, or a zero exit status alone is not accepted as model
+closure.
+
 * AI Strategy/Policy Boundary
 The problem this project targets is AI strategy/policy rigor. This should not be described as a worker-execution problem. A worker can execute a unit of work, but the hard part is deciding whether an AI-generated strategy is allowed to start, which policy it refines, which sandbox it may use, which session facts it depends on, and which loop state it may advance.
 
