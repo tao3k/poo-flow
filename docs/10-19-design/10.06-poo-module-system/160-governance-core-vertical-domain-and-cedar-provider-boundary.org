@@ -126,7 +126,17 @@ itself consumes POO Flow; reversing the package edge would create a cycle.
 The native v1 parser deliberately excludes multiline layout, PlusCal and full
 proof syntax.  Therefore this receipt proves admitted TLA+ syntax and
 losslessness, not temporal semantics.  TLC remains the owner of state-space
-model checking.
+model checking.  =just check-governance-model= composes, without conflating,
+both owners: it first obtains the native parser acceptance and then runs the
+official Nixpkgs =tlaplus= distribution over the same source.  The versioned
+TLC receipt binds the specification and configuration SHA-256 identities,
+resolved tool identity and SHA-256, worker policy, exit status,
+generated/distinct/remaining state
+counts and complete graph depth.  A zero process status alone is insufficient:
+admission also requires TLC's explicit completion result and an empty queue.
+The bounded Governance model intentionally uses one worker: its 42-state graph
+does not benefit from distributed search, while deterministic small-model
+receipts do benefit from avoiding parallel exploration variance.
 
 * Lambda Episteme migration
 
@@ -162,6 +172,7 @@ is smaller, testable and does not manufacture a second provider framework.
 - [X] A mismatched proof binding fails before runtime handoff.
 - [X] Lean proves core admission and Enterprise security-assurance closure.
 - [X] Native gerbil-parser accepts and losslessly roundtrips the TLA+ model.
+- [X] Official TLC exhausts the Governance state space with all invariants intact.
 - [X] Lambda production closure imports Governance only from POO Flow.
 - [ ] Qualify a concrete vertical Cedar policy Case through the real dual-engine Host.
 - [ ] Introduce Provider/Profile CLOS dispatch only after a second real axis exists.

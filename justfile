@@ -29,6 +29,9 @@ contribution_atomic_test_path := justfile_directory() + "/.gerbil/contributions/
 contribution_atomic_test_library_path := contribution_atomic_test_path + "/lib"
 poo_flow_library_path := justfile_directory() + "/.gerbil/lib"
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
+governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
+governance_tlc_config := justfile_directory() + "/packages/proof/tla/GovernanceCore.cfg"
+governance_tlc_receipt := justfile_directory() + "/.ci/governance/tlc-receipt.json"
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -214,7 +217,19 @@ check-governance-tla:
     if test ! -e "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow"; then cd "{{ gerbil_parser_dir }}" && gerbil pkg link github.com/tao3k/poo-flow "{{ justfile_directory() }}"; fi
     test "$(cd "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow" && pwd -P)" = "$(cd "{{ justfile_directory() }}" && pwd -P)"
     cd "{{ gerbil_parser_dir }}" && gerbil build
-    cd "{{ gerbil_parser_dir }}" && POO_FLOW_GOVERNANCE_TLA="{{ justfile_directory() }}/packages/proof/tla/GovernanceCore.tla" gerbil env gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+    cd "{{ gerbil_parser_dir }}" && POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" gerbil env gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+
+# Model-check the exact parser-qualified Governance source with the official
+# TLC implementation and publish an identity-bound semantic receipt.
+[group('check')]
+check-governance-tlc: check-governance-tla
+    mkdir -p "$(dirname "{{ governance_tlc_receipt }}")"
+    python3 scripts/check_governance_tlc.py --tlc tlc --spec "{{ governance_tla }}" --config "{{ governance_tlc_config }}" --receipt "{{ governance_tlc_receipt }}"
+
+# One public lane closes both independent owners: native syntax and TLC
+# state-space semantics.  It is an alias rather than a third implementation.
+[group('check')]
+check-governance-model: check-governance-tlc
 
 # Validate the repository and published-package license contract.
 [group('check')]

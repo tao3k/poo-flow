@@ -19,6 +19,9 @@
     pkgs.binaryen
     pkgs.bazel-buildtools
     pkgs.nodejs_24
+    # Official TLA+ Tools distribution.  gerbil-parser remains the syntax
+    # authority; TLC independently owns state-space model checking.
+    pkgs.tlaplus
     # The lockfile and lean-toolchain remain the source pins. These tools make
     # `just build-cedar-runtime-host OUT` available through the generated
     # devenv profile entrypoint.
