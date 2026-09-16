@@ -11,7 +11,8 @@
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-add-profile
-                 testing-interface-map-profile
+                 testing-interface-map-profile)
+        (only-in :asp-gerbil-scheme/testing-runner-api
                  init-profiled-test-environment!)
         (only-in "src/module-system/observability/testing-extension.ss"
                  poo-flow-testing-observability-extension))

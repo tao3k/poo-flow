@@ -5,4 +5,4 @@
 (package:
  poo-flow
 depend:
- ("github.com/tao3k/asp-gerbil-scheme@95b78c8280788f79091653f12530f5aa2c42e489"))
+ ("github.com/tao3k/asp-gerbil-scheme@c60f45158b562a0642242b8427d937ae461fc48a"))

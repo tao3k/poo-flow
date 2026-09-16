@@ -13,8 +13,6 @@
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
-                 )
-        (only-in :asp-gerbil-scheme/testing-api
                  testing-benchmark-run/result)
         (only-in :clan/poo/object .ref object<-alist)
         (only-in "../support/poo-performance-object-scenarios"

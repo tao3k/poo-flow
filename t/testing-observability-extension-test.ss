@@ -10,7 +10,7 @@
                  +asp-testing-interface+
                  testing-interface-call-with-operation
                  testing-interface-run-test-batch!)
-        (only-in "../src/module-system/observability/testing-extension.ss"
+        (only-in :poo-flow/src/module-system/observability/testing-extension
                  poo-flow-native-observability-enabled?
                  make-poo-flow-testing-observability-profile
                  poo-flow-testing-observability-extension))

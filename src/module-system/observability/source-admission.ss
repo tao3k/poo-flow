@@ -8,7 +8,7 @@
 ;;; this extension only observes the resulting source set.
 
 (import :gerbil/gambit
-        (only-in :asp-gerbil-scheme/testing-api
+        (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure)
         (only-in :asp-gerbil-scheme/src/support/time
                  duration-micros monotonic-micros)
