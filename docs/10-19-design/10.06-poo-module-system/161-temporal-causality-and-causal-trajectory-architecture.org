@@ -86,8 +86,11 @@ Gerbil POO owns declarative Event, Decision, Effect, Observation, Profile,
 Scenario and Case objects.  It validates identities, seals the event graph,
 derives the committed causal cut, projects the finite graph and produces
 deterministic witness paths.  It also
-combines independently admitted GQL, TLC and Lean evidence into one inert
-Impact receipt.
+combines its native temporal classification with independently admitted TLC
+and Lean evidence into one inert assurance receipt.  Content-bound GQL Sources
+remain non-authoritative analysis contracts until the downstream MRR Rust
+library executes them through gerbil-parser's native FFI and returns a separate
+execution receipt.
 
 Scheme must not infer a clinical causal fact merely because two nodes are
 reachable.  Relations carry modality, for example =declared=, =observed=,
@@ -196,8 +199,8 @@ flowchart LR
     E[POO clinical events] --> EG[Identity-bound causal event graph]
     EG --> C[Committed causal cut at as-of]
     EG --> G[POO relation graph]
-    G --> Q[GQL candidate paths]
-    Q --> S[Scheme structural witnesses]
+    G --> S[Scheme structural witnesses]
+    G -. declared GQL Sources .-> Q[MRR Rust analysis boundary]
     EG --> M[TLA+ finite transition model]
     M --> T[TLC traces / counterexamples]
     C --> L[Lean invariant and refinement obligations]
@@ -212,12 +215,14 @@ flowchart LR
    =C_t= at an explicit logical position.
 2. The POO Graph projection binds =G_t=, =C_t=, Profile/policy revisions and relation
    modalities.
-3. GQL selects candidate witness paths from the changed prescription.
-4. Scheme materializes deterministic structural witnesses and the unknown
+3. Scheme materializes deterministic structural witnesses and the unknown
    frontier.
+4. Gerbil-parser separately qualifies the declared GQL source bytes; a later
+   MRR Rust execution receipt may add non-authoritative analysis witnesses.
 5. TLC explores bounded present/future/counterfactual transitions.
-6. Lean proves generic invariants and the refinement boundary.
-7. Scheme combines the receipts without treating one as proof of another.
+6. Lean proves generic invariants and the Healthcare refinement boundary.
+7. Scheme combines the native, TLC and Lean receipts without treating one as
+   proof of another.
 8. Cedar separately decides whether the exact next action may execute; the
    dual-engine Host remains the authority boundary.
 
@@ -264,19 +269,22 @@ requires a fresh, exact Cedar decision at the effect boundary.
    Observation and Care Obligation POO declarations.
 - [X] Add parser-qualified GQL queries for retrospective, current and prospective
    candidate paths plus explicit unknown-frontier queries.
-- [ ] Bind those GQL queries to an execution receipt; parser qualification alone
-   is not query execution.
+- [ ] Bind those GQL queries to an MRR Rust execution receipt through the
+   gerbil-parser native FFI; parser qualification alone is not query execution
+   and Lambda must not add a subprocess or a second graph runtime.
 - [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
    native parser qualification and byte-exact roundtrip are closed.
 - [X] Run official TLC model exhaustion through the explicit devenv-backed
-   assurance gate and retain its typed receipt.  The first model closes 22
-   distinct states at graph depth 6 with an empty queue and no counterexample.
+   assurance gate and retain its typed receipt.  The exact AI-assisted
+   prescription model generates 16 states, closes 11 distinct states at graph
+   depth 7, leaves an empty queue and finds no counterexample.
 - [X] Add generic Lean Temporal Causality theorems refining the existing
    =EventIngressCausalCut= contract.
-- [ ] Add the Healthcare-specific Lean refinement from the declared Case events
-   into those generic contracts.
-- [ ] Bind assurance-closed Impact blockers into the existing Cedar Healthcare
-   snapshot without placing clinical semantics inside the Cedar Provider.
+- [X] Add the Healthcare-specific Lean refinement from the declared Case events
+   into those generic contracts as =PooFlowScenarioHealthcareProof=.
+- [X] Bind the exact assurance digest and closed-state blocker into the existing
+   Cedar Healthcare snapshot without placing clinical semantics inside the
+   Cedar Provider.  Release remains false until the current Cedar boundary.
 
 * Rejected designs
 

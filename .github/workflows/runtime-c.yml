@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+name: Runtime C ABI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - bindings/runtime-c/**
+      - src/contract/runtime-v0-abi-schema.ss
+      - MODULE.bazel
+      - MODULE.bazel.lock
+      - .github/workflows/runtime-c.yml
+  pull_request:
+    paths:
+      - bindings/runtime-c/**
+      - src/contract/runtime-v0-abi-schema.ss
+      - MODULE.bazel
+      - MODULE.bazel.lock
+      - .github/workflows/runtime-c.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-c-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  abi:
+    name: ABI / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-26]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+      - name: Test portable C ABI
+        run: |
+          bazelisk test --test_output=errors \
+            //bindings/runtime-c:runtime_c_tests \
+            //bindings/runtime-c/bundle-v1:bundle_v1_tests
+      - name: Test Linux sanitizer boundary
+        if: runner.os == 'Linux'
+        run: |
+          bazelisk test --test_output=errors \
+            //bindings/runtime-c:runtime_c_sanitizer_tests \
+            //bindings/runtime-c:runtime_v0_batch_benchmark_smoke

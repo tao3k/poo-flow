@@ -11,7 +11,17 @@ load(":runtime_contract.bzl", "runtime_contract")
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["t/validate-runtime-v0-symbol-surface.ss"])
+exports_files([
+    "pkgconfig/poo-flow-runtime-v0.pc",
+    "include/poo_flow/scheme_native_v1.h",
+    "t/validate-runtime-v0-symbol-surface.ss",
+])
+
+cc_library(
+    name = "scheme_native_v1_headers",
+    hdrs = ["include/poo_flow/scheme_native_v1.h"],
+    strip_include_prefix = "include",
+)
 
 runtime_contract(
     name = "runtime_v0_contract",
@@ -110,6 +120,13 @@ cc_test(
     size = "small",
     srcs = ["tests/runtime_v0_harness.c"],
     deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "scheme_native_v1_header_harness",
+    size = "small",
+    srcs = ["tests/scheme_native_v1_header_harness.c"],
+    deps = [":scheme_native_v1_headers"],
 )
 
 runtime_gerbil_benchmark_test(
@@ -331,5 +348,6 @@ test_suite(
         ":runtime_v0_installed_consumer",
         ":runtime_v0_symbol_surface_test",
         ":runtime_v0_vector_harness",
+        ":scheme_native_v1_header_harness",
     ],
 )

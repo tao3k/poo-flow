@@ -55,6 +55,16 @@
    (darwin "-Wl,-undefined,dynamic_lookup")
    (else "-ldl")))
 
+;;; Gambit emits a loadable bundle for begin-ffi modules on Darwin.  The
+;;; process/AOT consumer supplies libc and runtime symbols at final link time.
+(def +runtime-v0-native-ffi-spec+
+  (cond-expand
+   (darwin
+    '(gxc: "src/ffi/runtime-v0-native"
+           "-ld-options" "-Wl,-undefined,dynamic_lookup"))
+   (else
+    '(gxc: "src/ffi/runtime-v0-native"))))
+
 (asp-gerbil-scheme-package-spec!
  (poo-flow-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
@@ -62,11 +72,13 @@
  (public-entry-modules +poo-flow-public-entry-modules+)
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
+                    "src/ffi/runtime-v0-native.ss"
                     "observe-contribute-import.ss"
                     "user-interface/custom/my-module/config.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
-          "-ld-options" ,+nono-c-link-option+))))
+          "-ld-options" ,+nono-c-link-option+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))

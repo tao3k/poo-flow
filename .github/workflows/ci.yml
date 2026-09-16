@@ -215,6 +215,9 @@ jobs:
           - owner: temporal-causality
             target: PooFlowModuleTemporalCausalityProof
             ffi: false
+          - owner: healthcare-scenario
+            target: PooFlowScenarioHealthcareProof
+            ffi: false
           - owner: authorization
             target: PooFlowModuleAuthorizationProof
             ffi: false
