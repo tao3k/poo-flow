@@ -15,6 +15,7 @@
         :poo-flow/src/feature-system/runtime-handoff-plan
         :poo-flow/src/feature-system/bundle-v1-domain-case-projection
         :poo-flow/src/feature-system/bundle-v1-foreign-arena
+        :poo-flow/src/feature-system/bundle-v1-composition-writer
         :poo-flow/src/feature-system/syntax)
 
 (export (import: :poo-flow/src/feature-system/model)
@@ -28,4 +29,5 @@
         (import: :poo-flow/src/feature-system/runtime-handoff-plan)
         (import: :poo-flow/src/feature-system/bundle-v1-domain-case-projection)
         (import: :poo-flow/src/feature-system/bundle-v1-foreign-arena)
+        (import: :poo-flow/src/feature-system/bundle-v1-composition-writer)
         (import: :poo-flow/src/feature-system/syntax))
