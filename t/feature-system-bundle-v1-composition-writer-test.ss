@@ -35,7 +35,7 @@
    (test-case
     "arbitrary POO composition lowers with symbols and dependency edges"
     (let-values (((plan image)
-                  (poo-flow-composition->bundle-v1-image
+                  (poo-flow-scenario-case->bundle-v1-image
                    writer-test-composition 'writer-test-bundle 3)))
       (let* ((descriptor (.ref image 'descriptor))
              (no-adapter (feature-bundle-v1-lower-compact-id

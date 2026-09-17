@@ -8,6 +8,8 @@
 
 (import :poo-flow/src/module-system/profile-composition/builders
         :poo-flow/src/module-system/profile-composition/inline-runtime
+        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+                 poo-flow-scenario-case)
         (for-syntax
          :poo-flow/src/module-system/profile-composition/syntax-plan))
 
@@ -39,7 +41,7 @@
         ((imported)
          (with-syntax ((name name)
                        (module-name module-name))
-           #'(poo-flow-composition-inline-imported-profile
+           #'(poo-flow-scenario-inline-imported-profile
               'module-name
               'name)))
         ((existing)
@@ -51,7 +53,7 @@
            (if (null? rest)
              (with-syntax ((name name)
                            ((section ...) (reverse out)))
-               #'(poo-flow-composition-inline-profile
+               #'(poo-flow-scenario-inline-profile
                   'name
                   (list section ...)))
              (section-loop
@@ -101,7 +103,7 @@
     (with-syntax ((kind (composition-clause-syntax-kind clause))
                   ((payload ...)
                    (composition-clause-syntax-payload clause)))
-      #'(poo-flow-composition-clause 'kind '(payload ...))))
+      #'(poo-flow-scenario-clause 'kind '(payload ...))))
 
   ;; : (-> CompositionStageSyntax Syntax)
   (def (poo-flow-composition-lower-stage stage)
@@ -112,7 +114,7 @@
         (with-syntax
             ((stage-name (composition-stage-syntax-name stage))
              ((clause ...) (reverse out)))
-          #'(poo-flow-composition-stage
+          #'(poo-flow-scenario-stage
              'stage-name
              (list clause ...)))
         (clause-loop
@@ -165,7 +167,7 @@
                       (composition-profile-ref-syntax-module profile-ref))
                      (slot
                       (composition-profile-ref-syntax-slot profile-ref)))
-                  #'(poo-flow-composition-profile-binding 'module 'slot)))
+                  #'(poo-flow-scenario-profile-binding 'module 'slot)))
               profile-refs))
             (stage-expressions
              (poo-flow-composition-lower-stages
@@ -181,7 +183,7 @@
                        ((profile-name ...) profile-names)
                        ((profile-expression ...) profile-expressions))
                     #'(alias
-                       (poo-flow-composition-inline-module
+                       (poo-flow-scenario-inline-module
                         '(profile-name ...)
                         (list profile-expression ...))))))
               modules))
@@ -190,7 +192,7 @@
               (lambda (module)
                 (with-syntax
                     ((alias (composition-module-syntax-alias module)))
-                  #'(poo-flow-composition-module-binding 'alias alias)))
+                  #'(poo-flow-scenario-module-binding 'alias alias)))
               modules)))
          (with-syntax
              ((composition-name (composition-syntax-plan-name plan))
@@ -202,7 +204,7 @@
               ((stage-expression ...) stage-expressions))
            (syntax/loc stx
              (let ((alias module-expression) ...)
-               (poo-flow-composition-object/profile-bindings
+               (poo-flow-scenario-case
                 'composition-name
                 (list module-binding-expression ...)
                 (list compose-expression ...)

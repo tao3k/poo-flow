@@ -54,15 +54,15 @@
              native-poo-object-reused))))
 
 (let* ((artifact
-        (.ref (car (poo-flow-composition-modules
+        (.ref (car (poo-flow-scenario-case-modules
                     native-poo-extension-composition))
               'module))
        (research-report (.ref artifact 'research-report))
        (audited-report (.ref artifact 'audited-report))
        (enterprise-report* (.ref artifact 'enterprise-report))
-       (stage (car (poo-flow-composition-stages
+       (stage (car (poo-flow-scenario-case-stages
                     native-poo-extension-composition)))
-       (profiles (poo-flow-composition-profiles
+       (profiles (poo-flow-scenario-case-profiles
                   native-poo-extension-composition)))
   (unless (and (equal? (.ref research-report 'scope)
                        '(session human-handoff publish-channel))
@@ -99,16 +99,16 @@
         (src -> build)))))
 
 (let* ((module-binding
-        (car (poo-flow-composition-modules
+        (car (poo-flow-scenario-case-modules
               local-funflow-module-composition)))
        (ff (.ref module-binding 'module))
        (composition-profiles
-        (poo-flow-composition-profiles local-funflow-module-composition))
-       (stage (car (poo-flow-composition-stages
+        (poo-flow-scenario-case-profiles local-funflow-module-composition))
+       (stage (car (poo-flow-scenario-case-stages
                     local-funflow-module-composition)))
        (clause-kinds
         (map (lambda (clause) (.ref clause 'clause-kind))
-             (poo-flow-composition-stage-clauses stage))))
+             (poo-flow-scenario-stage-clauses stage))))
   (unless (eq? (.ref module-binding 'alias) 'ff)
     (error "local use-module did not preserve the composition alias"))
   (unless (equal? (map (lambda (profile) (.ref profile 'name))
@@ -130,7 +130,7 @@
 
 (let (profile-names
       (map (lambda (profile) (.ref profile 'name))
-           (poo-flow-composition-profiles
+           (poo-flow-scenario-case-profiles
             local-funflow-batch-composition)))
   (unless (equal? profile-names '(github-ci python-anyio))
     (error "top-level compose did not preserve batch local profile refs")))

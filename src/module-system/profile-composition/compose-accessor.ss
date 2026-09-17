@@ -10,25 +10,25 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/profile-composition/accessors)
 
-(export poo-flow-composition-stage-compose-profiles)
+(export poo-flow-scenario-stage-compose-profiles)
 
 ;;; Returns profile objects selected by a stage compose clause.
 ;;; Scan boundary: this is a metadata lookup, not graph or loop evaluation.
-;; poo-flow-composition-stage-compose-profiles
-;; : (-> PooFlowCompositionStage PooProfileList)
+;; poo-flow-scenario-stage-compose-profiles
+;; : (-> PooFlowScenarioStage PooProfileList)
 ;; | doc m%
 ;;   Extracts ordered profile objects selected by a stage compose clause.
 ;;   # Examples
 ;;   ```scheme
-;;   (poo-flow-composition-stage-compose-profiles production-stage)
+;;   (poo-flow-scenario-stage-compose-profiles production-stage)
 ;;   ;; => []
 ;;   ```
-(def (poo-flow-composition-stage-compose-profiles composition-stage)
+(def (poo-flow-scenario-stage-compose-profiles composition-stage)
   (let (compose-clause
         (find
          (lambda (clause)
            (eq? (.ref clause 'clause-kind) 'compose))
-         (poo-flow-composition-stage-clauses composition-stage)))
+         (poo-flow-scenario-stage-clauses composition-stage)))
     (if compose-clause
       (.ref compose-clause 'payload)
       [])))

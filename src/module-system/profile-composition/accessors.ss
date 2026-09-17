@@ -8,69 +8,59 @@
 
 (import (only-in :clan/poo/object .ref))
 
-(export poo-flow-composition?
-        poo-flow-composition-name
-        poo-flow-composition-modules
-        poo-flow-composition-profiles
-        poo-flow-composition-stages
-        poo-flow-composition-stage-name
-        poo-flow-composition-stage-clauses)
-
-;;; Recognizes the top-level profile composition object.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-composition? composition)
-;;   | result: #t only for objects tagged as poo-flow.composition
-;; : (-> PooFlowCompositionCandidate Bool)
-(def (poo-flow-composition? value)
-  (eq? (.ref value 'kind) 'poo-flow.composition))
+(export poo-flow-scenario-case-name
+        poo-flow-scenario-case-modules
+        poo-flow-scenario-case-profiles
+        poo-flow-scenario-case-stages
+        poo-flow-scenario-stage-name
+        poo-flow-scenario-stage-clauses)
 
 ;;; Returns the symbolic composition name.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-name composition)
+;;       (poo-flow-scenario-case-name composition)
 ;;   | result: composition name symbol
-;; : (-> PooFlowComposition Symbol)
-(def (poo-flow-composition-name composition)
+;; : (-> PooFlowScenarioCase Symbol)
+(def (poo-flow-scenario-case-name composition)
   (.ref composition 'name))
 
 ;;; Returns module alias binding objects captured by the composer.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-modules composition)
+;;       (poo-flow-scenario-case-modules composition)
 ;;   | result: ordered module binding objects
-;; : (-> PooFlowComposition List)
-(def (poo-flow-composition-modules composition)
+;; : (-> PooFlowScenarioCase List)
+(def (poo-flow-scenario-case-modules composition)
   (.ref composition 'modules))
 
 ;;; Returns top-level profiles selected by the composition.
-;; : (-> PooFlowComposition List)
-(def (poo-flow-composition-profiles composition)
+;; : (-> PooFlowScenarioCase List)
+(def (poo-flow-scenario-case-profiles composition)
   (.ref composition 'profiles))
 
 ;;; Returns all stages in declaration order.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-stages composition)
+;;       (poo-flow-scenario-case-stages composition)
 ;;   | result: ordered composition stages
-;; : (-> PooFlowComposition List)
-(def (poo-flow-composition-stages composition)
+;; : (-> PooFlowScenarioCase List)
+(def (poo-flow-scenario-case-stages composition)
   (.ref composition 'stages))
 
 ;;; Returns the name of a composition stage.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-stage-name production-stage)
+;;       (poo-flow-scenario-stage-name production-stage)
 ;;   | result: stage name symbol
-;; : (-> PooFlowCompositionStage Symbol)
-(def (poo-flow-composition-stage-name composition-stage)
+;; : (-> PooFlowScenarioStage Symbol)
+(def (poo-flow-scenario-stage-name composition-stage)
   (.ref composition-stage 'name))
 
 ;;; Returns raw clause objects stored on a stage.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-stage-clauses production-stage)
+;;       (poo-flow-scenario-stage-clauses production-stage)
 ;;   | result: ordered stage clause objects
-;; : (-> PooFlowCompositionStage List)
-(def (poo-flow-composition-stage-clauses composition-stage)
+;; : (-> PooFlowScenarioStage List)
+(def (poo-flow-scenario-stage-clauses composition-stage)
   (.ref composition-stage 'clauses))

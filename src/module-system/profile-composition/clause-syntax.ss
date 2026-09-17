@@ -93,7 +93,7 @@
      (let (profile-exprs
            (poo-flow-compose-profile-exprs (syntax->list #'(item ...))))
        (with-syntax (((profile-ref ...) profile-exprs))
-         #'(poo-flow-composition-clause 'compose
+         #'(poo-flow-scenario-clause 'compose
                                         (list profile-ref ...)))))))
 
 ;; graph
@@ -108,7 +108,7 @@
 (defsyntax (graph stx)
   (syntax-case stx ()
     ((_ item ...)
-     #'(poo-flow-composition-clause 'graph '(item ...)))))
+     #'(poo-flow-scenario-clause 'graph '(item ...)))))
 
 ;; loop
 ;; : (-> Syntax Syntax)
@@ -122,7 +122,7 @@
 (defsyntax (loop stx)
   (syntax-case stx ()
     ((_ item ...)
-     #'(poo-flow-composition-clause 'loop '(item ...)))))
+     #'(poo-flow-scenario-clause 'loop '(item ...)))))
 
 ;; prove
 ;; : (-> Syntax Syntax)
@@ -136,7 +136,7 @@
 (defsyntax (prove stx)
   (syntax-case stx ()
     ((_ item ...)
-     #'(poo-flow-composition-clause 'prove '(item ...)))))
+     #'(poo-flow-scenario-clause 'prove '(item ...)))))
 
 ;; handoff
 ;; : (-> Syntax Syntax)
@@ -150,4 +150,4 @@
 (defsyntax (handoff stx)
   (syntax-case stx ()
     ((_ item ...)
-     #'(poo-flow-composition-clause 'handoff '(item ...)))))
+     #'(poo-flow-scenario-clause 'handoff '(item ...)))))

@@ -13,19 +13,19 @@
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/funcs)
 
-(export poo-flow-composition-inline-section-slot
-        poo-flow-composition-inline-alist-ref
-        poo-flow-composition-inline-profile-field
-        poo-flow-composition-inline-profile-ref/default
-        poo-flow-composition-inline-profile-normalize
-        poo-flow-composition-inline-apply-hooks
-        poo-flow-composition-inline-imported-profile
-        poo-flow-composition-inline-module
-        poo-flow-composition-inline-profile
-        poo-flow-composition->execution-plan)
+(export poo-flow-scenario-inline-section-slot
+        poo-flow-scenario-inline-alist-ref
+        poo-flow-scenario-inline-profile-field
+        poo-flow-scenario-inline-profile-ref/default
+        poo-flow-scenario-inline-profile-normalize
+        poo-flow-scenario-inline-apply-hooks
+        poo-flow-scenario-inline-imported-profile
+        poo-flow-scenario-inline-module
+        poo-flow-scenario-inline-profile
+        poo-flow-scenario-case->execution-plan)
 
 ;; : (-> Symbol Symbol)
-(def (poo-flow-composition-inline-section-slot key)
+(def (poo-flow-scenario-inline-section-slot key)
   (case key
     ((:extends extends) 'extends)
     ((:kind kind) 'kind)
@@ -40,20 +40,20 @@
     (else key)))
 
 ;; : (-> Alist Symbol Datum Datum)
-(def (poo-flow-composition-inline-alist-ref alist key default)
+(def (poo-flow-scenario-inline-alist-ref alist key default)
   (let (entry (assoc key alist))
     (if entry (cdr entry) default)))
 
 ;; : (-> PooProfile Symbol Datum Datum)
-(def (poo-flow-composition-inline-profile-ref/default profile key default)
-  (poo-flow-composition-inline-profile-ref/default*
+(def (poo-flow-scenario-inline-profile-ref/default profile key default)
+  (poo-flow-scenario-inline-profile-ref/default*
    profile
    (.all-slots profile)
    key
    default))
 
 ;; : (-> PooProfile [Symbol] Symbol Datum Datum)
-(def (poo-flow-composition-inline-profile-ref/default*
+(def (poo-flow-scenario-inline-profile-ref/default*
       profile
       slots
       key
@@ -63,31 +63,31 @@
     default))
 
 ;; : (-> Alist Datum Symbol Datum Datum)
-(def (poo-flow-composition-inline-profile-field sections base key default)
-  (poo-flow-composition-inline-alist-ref
+(def (poo-flow-scenario-inline-profile-field sections base key default)
+  (poo-flow-scenario-inline-alist-ref
    sections
    key
    (if base
-     (poo-flow-composition-inline-profile-ref/default base key default)
+     (poo-flow-scenario-inline-profile-ref/default base key default)
      default)))
 
 ;;; Boundary: inline profile normalization keeps authoring-time profile values
 ;;; deterministic before composition stages inherit or extend them.
 ;; : (-> PooProfile PooProfile PooProfile)
-(def (poo-flow-composition-inline-profile-normalize base profile)
+(def (poo-flow-scenario-inline-profile-normalize base profile)
   (.mix profile base))
 
 ;; : (-> PooProfile [(-> PooProfile PooProfile)] PooProfile)
-(def (poo-flow-composition-inline-apply-hooks profile hooks)
+(def (poo-flow-scenario-inline-apply-hooks profile hooks)
   (foldl
    (lambda (hook out)
-     (poo-flow-composition-inline-profile-normalize out (hook out)))
+     (poo-flow-scenario-inline-profile-normalize out (hook out)))
    profile
    hooks))
 
 ;; : (-> Symbol Symbol PooProfile)
-(def (poo-flow-composition-inline-imported-profile module-name profile-name)
-  (.o (kind 'poo-flow.composition.imported-profile)
+(def (poo-flow-scenario-inline-imported-profile module-name profile-name)
+  (.o (kind 'poo-flow.scenario.imported-profile.v1)
       (name profile-name)
       (module module-name)
       (profile profile-name)
@@ -103,9 +103,9 @@
 ;; objects remain reusable by `.ref` lookup after construction.
 ;;
 ;; # Examples
-;;   (poo-flow-composition-inline-module '(default) (list profile))
+;;   (poo-flow-scenario-inline-module '(default) (list profile))
 ;;   ;; result: (.ref module 'default) returns `profile`.
-(def (poo-flow-composition-inline-module profile-names profile-values)
+(def (poo-flow-scenario-inline-module profile-names profile-values)
   (unless (= (length profile-names) (length profile-values))
     (error "inline composition module name/value arity mismatch"
            profile-names
@@ -115,10 +115,10 @@
 ;;; Boundary: inline profile construction is the runtime value edge for
 ;;; use-composition macro output and must preserve POO-native profile objects.
 ;; : (-> Symbol Alist PooProfile)
-(def (poo-flow-composition-inline-profile profile-name sections)
-  (let* ((base (poo-flow-composition-inline-alist-ref sections 'extends #f))
+(def (poo-flow-scenario-inline-profile profile-name sections)
+  (let* ((base (poo-flow-scenario-inline-alist-ref sections 'extends #f))
          (hook-values
-          (poo-flow-composition-inline-alist-ref sections 'hooks '()))
+          (poo-flow-scenario-inline-alist-ref sections 'hooks '()))
          (profile
           (if base
             (.o (:: @ base)
@@ -126,62 +126,62 @@
                 name: profile-name
                 extends: base
                 kind:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'kind profile-name)
                 scope:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'scope '())
                 storage:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'storage '())
                 analysis:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'analysis '())
                 publish:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'publish '())
                 retention:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'retention '())
                 capabilities:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'capabilities '())
                 guard:
-                (poo-flow-composition-inline-profile-field
+                (poo-flow-scenario-inline-profile-field
                  sections base 'guard #f)
                 hooks: hook-values
                 runtime-executed: #f
-                source: 'poo-flow.composition.inline-profile)
+                source: 'poo-flow.scenario.inline-profile.v1)
             (.o name: profile-name
                 extends: #f
                 kind:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'kind profile-name)
                 scope:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'scope '())
                 storage:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'storage '())
                 analysis:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'analysis '())
                 publish:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'publish '())
                 retention:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'retention '())
                 capabilities:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'capabilities '())
                 guard:
-                (poo-flow-composition-inline-alist-ref
+                (poo-flow-scenario-inline-alist-ref
                  sections 'guard #f)
                 hooks: hook-values
                 runtime-executed: #f
-                source: 'poo-flow.composition.inline-profile))))
-    (poo-flow-composition-inline-apply-hooks profile hook-values)))
+                source: 'poo-flow.scenario.inline-profile.v1))))
+    (poo-flow-scenario-inline-apply-hooks profile hook-values)))
 
 ;;; Boundary: a composition lowers into the canonical execution-plan before
 ;;; any consumer observes it. Bundle/WASM and future projections consume the
@@ -428,10 +428,10 @@
        (cons 1 '())
        descriptors)))))
 
-;; : (-> PooFlowComposition ExecutionPlan)
-(def (poo-flow-composition->execution-plan composition)
-  (unless (eq? (.ref composition 'kind) 'poo-flow.composition)
-    (error "POO-FLOW-PLAN-E100 expected poo-flow.composition" composition))
+;; : (-> PooFlowScenarioCase ExecutionPlan)
+(def (poo-flow-scenario-case->execution-plan composition)
+  (unless (eq? (.ref composition 'kind) 'poo-flow.scenario-case.v1)
+    (error "POO-FLOW-PLAN-E100 expected poo-flow.scenario-case.v1" composition))
   (let* ((name (.ref composition 'name))
          (stages (.ref composition 'stages))
          (bindings (.ref composition 'profile-bindings))

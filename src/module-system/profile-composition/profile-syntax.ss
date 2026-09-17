@@ -77,7 +77,7 @@
         "module")))
 
   ;; : (-> Any Any)
-  (def (poo-flow-composition-profile-binding-syntax ctx profile-name)
+  (def (poo-flow-scenario-profile-binding-syntax ctx profile-name)
     (let (profile-key (syntax->datum profile-name))
       (unless (symbol? profile-key)
         (error "use-profile expects a symbolic profile fragment name"
@@ -104,6 +104,6 @@
 (defsyntax (poo-flow-composition-profile-module stx)
   (syntax-case stx ()
     ((ctx profile-name)
-     (poo-flow-composition-profile-binding-syntax
+     (poo-flow-scenario-profile-binding-syntax
       (syntax ctx)
       (syntax profile-name)))))

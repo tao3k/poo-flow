@@ -6,7 +6,7 @@
 
 (import :std/test
         :std/srfi/13
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .call .o .ref .ref/cached)
         :gerbil/gambit
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/core/plan
@@ -138,7 +138,7 @@
            (stage (car stages))
            (audited (list-ref profiles 2)))
       (check-equal? (.ref canonical-composition 'kind)
-                    'poo-flow.composition)
+                    +poo-flow-scenario-case-kind+)
       (check-equal? (.ref canonical-composition 'name)
                     'canonical-composition)
       (check-equal? (length (.ref canonical-composition 'modules)) 1)
@@ -148,7 +148,7 @@
       (check-equal? (.ref (car profile-bindings) 'slot)
                     'imported-report)
       (check-equal? (.ref (car profiles) 'kind)
-                    'poo-flow.composition.imported-profile)
+                    'poo-flow.scenario.imported-profile.v1)
       (check-equal? (.ref (car profiles) 'module) 'artifact-catalog)
       (check-equal? (.ref (list-ref profiles 1) 'kind) 'native-profile)
       (check-equal? (.ref audited 'kind) 'report)
@@ -172,41 +172,44 @@
    (test-case
     "composition multiplicity uses compact launch ranges"
     (let* ((alpha
-            (poo-flow-composition-object/profiles
+            (poo-flow-scenario-case
              'alpha
+             '()
              '()
              '()
              '()))
            (beta
-            (poo-flow-composition-object/profiles
+            (poo-flow-scenario-case
              'beta
+             '()
              '()
              '()
              '()))
            (gamma
-            (poo-flow-composition-object/profiles
+            (poo-flow-scenario-case
              'gamma
+             '()
              '()
              '()
              '()))
            (workload
-            (poo-flow-composition-workload
-             (list (poo-flow-composition-multiplicity alpha 5000)
-                   (poo-flow-composition-multiplicity beta 10000)
-                   (poo-flow-composition-multiplicity gamma 25000))))
+            (poo-flow-scenario-case-workload
+             (list (poo-flow-scenario-case-multiplicity alpha 5000)
+                   (poo-flow-scenario-case-multiplicity beta 10000)
+                   (poo-flow-scenario-case-multiplicity gamma 25000))))
            (launch-ranges (.ref workload 'launch-ranges))
            (alpha-tail
-            (poo-flow-composition-workload/ref workload 4999))
+            (poo-flow-scenario-case-workload/ref workload 4999))
            (beta-head
-            (poo-flow-composition-workload/ref workload 5000))
+            (poo-flow-scenario-case-workload/ref workload 5000))
            (beta-tail
-            (poo-flow-composition-workload/ref workload 14999))
+            (poo-flow-scenario-case-workload/ref workload 14999))
            (gamma-head
-            (poo-flow-composition-workload/ref workload 15000))
+            (poo-flow-scenario-case-workload/ref workload 15000))
            (gamma-tail
-            (poo-flow-composition-workload/ref workload 39999)))
+            (poo-flow-scenario-case-workload/ref workload 39999)))
       (check-equal? (.ref workload 'kind)
-                    'poo-flow.composition.workload)
+                    'poo-flow.scenario.workload.v1)
       (check-equal? (.ref workload 'total-count) 40000)
       (check-equal? (vector-length launch-ranges) 3)
       (check-equal? (.ref (vector-ref launch-ranges 0) 'start) 0)
@@ -226,28 +229,29 @@
    (test-case
     "composition multiplicity rejects invalid counts ranges and ordinals"
     (let ((composition
-           (poo-flow-composition-object/profiles
+           (poo-flow-scenario-case
             'bounded
+            '()
             '()
             '()
             '())))
       (check-exception
-       (poo-flow-composition-multiplicity composition 0)
+       (poo-flow-scenario-case-multiplicity composition 0)
        true)
       (check-exception
-       (poo-flow-composition-launch-range composition -1 1)
+       (poo-flow-scenario-case-launch-range composition -1 1)
        true)
       (check-exception
-       (poo-flow-composition-workload '())
+       (poo-flow-scenario-case-workload '())
        true)
       (let ((workload
-             (poo-flow-composition-workload
-              (list (poo-flow-composition-multiplicity composition 1)))))
+             (poo-flow-scenario-case-workload
+              (list (poo-flow-scenario-case-multiplicity composition 1)))))
         (check-exception
-         (poo-flow-composition-workload/ref workload -1)
+         (poo-flow-scenario-case-workload/ref workload -1)
          true)
         (check-exception
-         (poo-flow-composition-workload/ref workload 1)
+         (poo-flow-scenario-case-workload/ref workload 1)
          true))))
    (test-case
     "generated alias binding does not capture the surrounding binding"
@@ -256,7 +260,7 @@
       (check-equal? (.ref profile 'scope) '(session))))
    (test-case
     "composition lowers to the canonical execution plan and dependency DAG"
-    (let* ((plan (poo-flow-composition->execution-plan plan-composition))
+    (let* ((plan (poo-flow-scenario-case->execution-plan plan-composition))
            (nodes (execution-plan-nodes plan))
            (dependency-edges (execution-plan-dependency-edges plan))
            (researcher (list-ref nodes 3))
@@ -270,6 +274,79 @@
            #t
            #f)
        #t)))
+   (test-case
+    "closed composition is a Scenario Case"
+    (check-equal? (poo-flow-scenario-case? plan-composition) #t)
+    (check-equal? (.ref plan-composition 'kind)
+                  +poo-flow-scenario-case-kind+)
+    (check-equal? (.ref/cached plan-composition 'execution-plan
+                                (lambda () 'not-forced))
+                  'not-forced)
+    (check-equal? (.ref/cached plan-composition 'admission
+                                (lambda () 'not-forced))
+                  'not-forced)
+    (check-equal? (.ref/cached plan-composition 'presentation
+                                (lambda () 'not-forced))
+                  'not-forced))
+   (test-case
+    "Scenario Case memoizes its lazy execution plan"
+    (let (prepared (.ref plan-composition 'execution-plan))
+      (check-equal? (execution-plan? prepared) #t)
+      (check-equal? (eq? prepared (.ref plan-composition 'execution-plan)) #t)))
+   (test-case
+    "Scenario Case exposes preparation behavior"
+    (let (prepared (.call plan-composition prepare))
+      (check-equal? (eq? prepared (.ref plan-composition 'execution-plan)) #t)
+      (check-equal? (execution-plan? prepared) #t)))
+   (test-case
+    "Scenario Case exposes admission behavior"
+    (let (admission (.call plan-composition admit))
+      (check-equal? (.ref admission 'accepted?) #t)
+      (check-equal? (execution-plan? (.ref admission 'plan)) #t)
+      (check-equal? (eq? (.ref admission 'plan)
+                         (.ref plan-composition 'execution-plan))
+                    #t)))
+   (test-case
+    "case projection preserves lazy derived slots"
+    (let (composition
+          (poo-flow-scenario-case 'lazy-projection '() '() '() '()))
+      (check-equal? (eq? (.call composition project 'case) composition) #t)
+      (check-equal? (.ref/cached composition 'execution-plan
+                                  (lambda () 'not-forced))
+                    'not-forced)
+      (check-equal? (.ref/cached composition 'admission
+                                  (lambda () 'not-forced))
+                    'not-forced)
+      (check-equal? (.ref/cached composition 'presentation
+                                  (lambda () 'not-forced))
+                    'not-forced)))
+   (test-case
+    "Scenario Case exposes presentation and projection behavior"
+    (let ((prepared (.ref plan-composition 'execution-plan))
+          (presentation (.call plan-composition present)))
+      (check-equal? (.ref presentation 'kind)
+                    +poo-flow-scenario-presentation-kind+)
+      (check-equal? (.ref presentation 'case-name) 'plan-composition)
+      (check-equal? (.ref presentation 'plan-node-count) 5)
+      (check-equal? (.call plan-composition project 'execution-plan)
+                    prepared)))
+   (test-case
+    "fresh Scenario Sessions own ordered run-local transitions"
+    (let ((session (.call plan-composition new-session))
+          (sibling (.call plan-composition new-session)))
+      (check-equal? (poo-flow-scenario-session? session) #t)
+      (check-equal? (poo-flow-scenario-session-state session) 'created)
+      (check-equal? (execution-plan? (.call session prepare!)) #t)
+      (check-equal? (poo-flow-scenario-session-state session) 'prepared)
+      (check-equal? (.ref (.call session admit!) 'accepted?) #t)
+      (check-equal? (poo-flow-scenario-session-state session) 'admitted)
+      (check-equal? (.ref (.call session project! 'summary) 'case-name)
+                    'plan-composition)
+      (check-equal? (poo-flow-scenario-session-state session) 'projected)
+      (check-equal? (length (poo-flow-scenario-session-events session)) 3)
+      (check-equal? (poo-flow-scenario-session-state sibling) 'created)
+      (check-equal? (poo-flow-scenario-session-events sibling) '())
+      (check-exception (.call session admit!) true)))
    (test-case
     "non-canonical module grammar reports the single canonical diagnostic"
     (check-equal?

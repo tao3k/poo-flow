@@ -8,6 +8,6 @@
         :poo-flow/src/utilities/functional
         "objects.ss")
 (export .o .ref .mix .extend .slot? object?
-        use-composition poo-flow-composition-profiles
+        use-composition poo-flow-scenario-case-profiles
         poo-flow-map poo-flow-append-map poo-flow-all? poo-flow-any?
         (import: "objects.ss"))

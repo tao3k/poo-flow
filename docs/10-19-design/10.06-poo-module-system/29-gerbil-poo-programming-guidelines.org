@@ -225,6 +225,24 @@ For example, =Scenario.prepare= is normally a method slot; projecting
 =Provider x Profile x ContractKind= is a legitimate CLOS generic.  There is no
 universal requirement that every Module contain both mechanisms.
 
+The first production closure of this model is owned by
+=src/module-system/profile-composition/scenario-case.ss=.  =use-composition=
+now returns =poo-flow.scenario-case.v1= directly; the former inert
+=poo-flow.composition= identity and public compatibility accessors are removed.
+The Case owns lazy =execution-plan=, =admission=, and =presentation= slots plus
+=prepare=, =admit=, =project=, =present=, and =new-session= methods.
+
+This closure has three performance invariants:
+
+1. Constructing or inspecting a Case must leave plan, admission, and
+   presentation slots unforced.  The executable guard checks them with
+   =.ref/cached= before first demand.
+2. First demand computes each derived slot once per Case; later method calls
+   reuse the object-instance cache.
+3. Session transition recording is O(1): events are consed to =events-rev=.
+   Ordered presentation performs one =reverse= at its explicit read boundary,
+   avoiding repeated =append= and O(n^2) histories.
+
 ** 10.06.29.70 User Interface Policy
 
 Users should author small declarations that extend upstream prototypes. They should not maintain implementation facades, duplicate contracts, or write custom merge algorithms.

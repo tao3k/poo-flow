@@ -4,7 +4,7 @@
 
 ;;; Boundary: serializes validated feature compositions as Bundle v1 images.
 ;;; Invariant: writing preserves the lowering result and canonical content identity.
-(export poo-flow-composition->bundle-v1-image
+(export poo-flow-scenario-case->bundle-v1-image
         poo-flow-write-composition-bundle-v1!
         poo-flow-write-composition-bundle-v1/from-environment!)
 
@@ -138,8 +138,8 @@
     (reverse (cdr order+edges-reversed))))
 
 ;; : (-> PooComposition Symbol Integer (Values PooExecutionPlan PooFeatureBundleV1ForeignArenaImage))
-(def (poo-flow-composition->bundle-v1-image composition bundle-id bundle-epoch)
-  (let* ((plan (poo-flow-composition->execution-plan composition))
+(def (poo-flow-scenario-case->bundle-v1-image composition bundle-id bundle-epoch)
+  (let* ((plan (poo-flow-scenario-case->execution-plan composition))
          (lowering
           (require-feature-bundle-v1-lowering-plan
            (feature-bundle-v1-lowering/with-symbols
@@ -169,7 +169,7 @@
 (def (poo-flow-write-composition-bundle-v1!
       composition bundle-id bundle-epoch descriptor-path arena-path)
   (let-values (((plan image)
-                (poo-flow-composition->bundle-v1-image
+                (poo-flow-scenario-case->bundle-v1-image
                  composition bundle-id bundle-epoch)))
     (write-u8vector-file! descriptor-path (.ref image 'descriptor-image))
     (write-u8vector-file! arena-path (.ref image 'arena-image))

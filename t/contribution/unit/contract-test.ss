@@ -29,4 +29,4 @@
              (use-composition selection
                (use-module test as contribution (profile sample))
                (compose (profile contribution sample)))))
-        (check-equal? (eq? (car (poo-flow-composition-profiles selection)) sample) #t)))))
+        (check-equal? (eq? (car (poo-flow-scenario-case-profiles selection)) sample) #t)))))

@@ -9,13 +9,10 @@
 (import (only-in :clan/poo/object .o .ref))
 
 (export poo-flow-profile-ref
-        poo-flow-composition-module-binding
-        poo-flow-composition-clause
-        poo-flow-composition-stage
-        poo-flow-composition-object
-        poo-flow-composition-profile-binding
-        poo-flow-composition-object/profile-bindings
-        poo-flow-composition-object/profiles)
+        poo-flow-scenario-module-binding
+        poo-flow-scenario-clause
+        poo-flow-scenario-stage
+        poo-flow-scenario-profile-binding)
 
 ;;; Selects a profile slot from a POO module object.
 ;;   | doc m%
@@ -25,11 +22,11 @@
 ;; : (-> PooModule Symbol PooProfile)
 (import :poo-flow/src/utilities/functional)
 
-(export poo-flow-composition-multiplicity
-        poo-flow-composition-launch-range
-        poo-flow-composition-multiplicities->launch-ranges
-        poo-flow-composition-workload
-        poo-flow-composition-workload/ref)
+(export poo-flow-scenario-case-multiplicity
+        poo-flow-scenario-case-launch-range
+        poo-flow-scenario-case-multiplicities->launch-ranges
+        poo-flow-scenario-case-workload
+        poo-flow-scenario-case-workload/ref)
 
 (def (poo-flow-profile-ref module slot)
   (.ref module slot))
@@ -37,85 +34,63 @@
 ;;; Captures the lexical alias and module object used by a composition.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-module-binding 'session session-module)
+;;       (poo-flow-scenario-module-binding 'session session-module)
 ;;   | result: module binding metadata object
-;; : (-> Symbol PooModule PooFlowCompositionModuleBinding)
-(def (poo-flow-composition-module-binding alias module)
+;; : (-> Symbol PooModule PooFlowScenarioModuleBinding)
+(def (poo-flow-scenario-module-binding alias module)
   (let ((alias-value alias)
         (module-value module))
-    (.o (kind 'poo-flow.composition.module)
+    (.o (kind 'poo-flow.scenario.module-binding.v1)
         (alias alias-value)
         (module module-value))))
 
 ;;; Stores one stage clause payload without interpreting engine semantics.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-clause 'graph '(guarded-flow))
+;;       (poo-flow-scenario-clause 'graph '(guarded-flow))
 ;;   | result: clause object tagged by clause kind
-;; : (-> Symbol PooFlowCompositionPayload PooFlowCompositionClause)
-(def (poo-flow-composition-clause kind payload)
+;; : (-> Symbol PooFlowScenarioPayload PooFlowScenarioClause)
+(def (poo-flow-scenario-clause kind payload)
   (let ((kind-value kind)
         (payload-value payload))
-    (.o (kind 'poo-flow.composition.clause)
+    (.o (kind 'poo-flow.scenario.clause.v1)
         (clause-kind kind-value)
         (payload payload-value))))
 
 ;;; Builds a named composition stage from clause objects.
 ;;   | doc m%
 ;;       # Examples
-;;       (poo-flow-composition-stage 'production clauses)
+;;       (poo-flow-scenario-stage 'production clauses)
 ;;   | result: stage object with name and ordered clauses
-;; : (-> Symbol List PooFlowCompositionStage)
-(def (poo-flow-composition-stage name clauses)
+;; : (-> Symbol List PooFlowScenarioStage)
+(def (poo-flow-scenario-stage name clauses)
   (let ((name-value name)
         (clauses-value clauses))
-    (.o (kind 'poo-flow.composition.stage)
+    (.o (kind 'poo-flow.scenario.stage.v1)
         (name name-value)
         (clauses clauses-value))))
 
-;;; Builds the top-level composition object.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-composition-object 'rag module-bindings stages)
-;;   | result: composition object containing module bindings and stages
-;; : (-> Symbol List List PooFlowComposition)
-(def (poo-flow-composition-object name module-bindings stages)
-  (poo-flow-composition-object/profiles name module-bindings '() stages))
-
 ;;; Builds the top-level composition object with composition-level profiles.
-;; : (-> Symbol List List List PooFlowComposition)
-(def (poo-flow-composition-profile-binding alias slot)
+;; : (-> Symbol List List List PooFlowScenarioCase)
+(def (poo-flow-scenario-profile-binding alias slot)
   (let ((alias-value alias)
         (slot-value slot))
-    (.o (kind 'poo-flow.composition.profile-binding)
+    (.o (kind 'poo-flow.scenario.profile-binding.v1)
         (alias alias-value)
         (slot slot-value))))
 
-(def (poo-flow-composition-object/profile-bindings
-      name module-bindings profiles stages profile-bindings)
-  (let ((name-value name)
-        (module-bindings-value module-bindings)
-        (profiles-value profiles)
-        (stages-value stages)
-        (profile-bindings-value profile-bindings))
-    (.o (kind 'poo-flow.composition)
-        (name name-value)
-        (modules module-bindings-value)
-        (profiles profiles-value)
-        (stages stages-value)
-        (profile-bindings profile-bindings-value))))
 
-(def (poo-flow-composition-multiplicity composition count)
+(def (poo-flow-scenario-case-multiplicity composition count)
   (unless (and (integer? count) (> count 0))
     (error "POO Flow composition multiplicity must be a positive integer"
            count))
   (let ((composition-value composition)
         (count-value count))
-    (.o (kind 'poo-flow.composition.multiplicity)
+    (.o (kind 'poo-flow.scenario.multiplicity.v1)
         (composition composition-value)
         (count count-value))))
 
-(def (poo-flow-composition-launch-range composition start count)
+(def (poo-flow-scenario-case-launch-range composition start count)
   (unless (and (integer? start) (>= start 0))
     (error "POO Flow composition launch range start must be a non-negative integer"
            start))
@@ -125,27 +100,27 @@
   (let ((composition-value composition)
         (start-value start)
         (count-value count))
-    (.o (kind 'poo-flow.composition.launch-range)
+    (.o (kind 'poo-flow.scenario.launch-range.v1)
         (composition composition-value)
         (start start-value)
         (count count-value)
         (end (+ start-value count-value)))))
 
-(def (poo-flow-composition-multiplicities->launch-ranges multiplicities)
+(def (poo-flow-scenario-case-multiplicities->launch-ranges multiplicities)
   (unless (and (list? multiplicities) (pair? multiplicities))
     (error "POO Flow composition workload requires at least one multiplicity"))
   (let* ((state
           (poo-flow-fold-left
            (lambda (multiplicity state)
              (unless (eq? (.ref multiplicity 'kind)
-                          'poo-flow.composition.multiplicity)
+                          'poo-flow.scenario.multiplicity.v1)
                (error "POO Flow composition workload requires multiplicity objects"
                       multiplicity))
              (let* ((start (car state))
                     (ranges (cdr state))
                     (count (.ref multiplicity 'count))
                     (launch-range
-                     (poo-flow-composition-launch-range
+                     (poo-flow-scenario-case-launch-range
                       (.ref multiplicity 'composition)
                       start
                       count)))
@@ -156,25 +131,25 @@
          (ranges (cdr state)))
     (list->vector (reverse ranges))))
 
-(def (poo-flow-composition-workload multiplicities)
+(def (poo-flow-scenario-case-workload multiplicities)
   (let* ((launch-ranges-value
-          (poo-flow-composition-multiplicities->launch-ranges multiplicities))
+          (poo-flow-scenario-case-multiplicities->launch-ranges multiplicities))
          (last-range
           (vector-ref launch-ranges-value
                       (- (vector-length launch-ranges-value) 1)))
          (total-count-value (.ref last-range 'end)))
-    (.o (kind 'poo-flow.composition.workload)
+    (.o (kind 'poo-flow.scenario.workload.v1)
         (launch-ranges launch-ranges-value)
         (total-count total-count-value))))
 
-;; : (-> PooFlowCompositionLaunchRange Integer Integer
-;;       PooFlowCompositionInstanceRef)
-(def (poo-flow-composition-instance-ref launch-range ordinal start)
+;; : (-> PooFlowScenarioLaunchRange Integer Integer
+;;       PooFlowScenarioInstanceRef)
+(def (poo-flow-scenario-case-instance-ref launch-range ordinal start)
   (let ((composition-value (.ref launch-range 'composition))
         (launch-range-value launch-range)
         (ordinal-value ordinal)
         (local-ordinal-value (- ordinal start)))
-    (.o (kind 'poo-flow.composition.instance-ref)
+    (.o (kind 'poo-flow.scenario.instance-ref.v1)
         (composition composition-value)
         (launch-range launch-range-value)
         (ordinal ordinal-value)
@@ -183,23 +158,23 @@
 ;; Binary search remains a bounded lookup over the immutable range vector; the
 ;; recursive helper makes its search boundary explicit instead of accumulating
 ;; a list transform in the public workload accessor.
-;; : (-> Vector Integer Integer Integer PooFlowCompositionInstanceRef)
-(def (poo-flow-composition-launch-range-ref launch-ranges ordinal low high)
+;; : (-> Vector Integer Integer Integer PooFlowScenarioInstanceRef)
+(def (poo-flow-scenario-case-launch-range-ref launch-ranges ordinal low high)
   (let* ((middle (quotient (+ low high) 2))
          (launch-range (vector-ref launch-ranges middle))
          (start (.ref launch-range 'start))
          (end (.ref launch-range 'end)))
     (cond
      ((< ordinal start)
-      (poo-flow-composition-launch-range-ref
+      (poo-flow-scenario-case-launch-range-ref
        launch-ranges ordinal low (- middle 1)))
      ((>= ordinal end)
-      (poo-flow-composition-launch-range-ref
+      (poo-flow-scenario-case-launch-range-ref
        launch-ranges ordinal (+ middle 1) high))
      (else
-      (poo-flow-composition-instance-ref launch-range ordinal start)))))
+      (poo-flow-scenario-case-instance-ref launch-range ordinal start)))))
 
-(def (poo-flow-composition-workload/ref workload ordinal)
+(def (poo-flow-scenario-case-workload/ref workload ordinal)
   (let ((total-count (.ref workload 'total-count))
         (launch-ranges (.ref workload 'launch-ranges)))
     (unless (and (integer? ordinal)
@@ -208,9 +183,5 @@
       (error "POO Flow composition workload ordinal is out of range"
              ordinal
              total-count))
-    (poo-flow-composition-launch-range-ref
+    (poo-flow-scenario-case-launch-range-ref
      launch-ranges ordinal 0 (- (vector-length launch-ranges) 1))))
-
-(def (poo-flow-composition-object/profiles name module-bindings profiles stages)
-  (poo-flow-composition-object/profile-bindings
-   name module-bindings profiles stages '()))

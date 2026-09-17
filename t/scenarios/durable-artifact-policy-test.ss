@@ -12,7 +12,7 @@
   (.ref clause 'payload))
 
 (def (stage-clause-payload composition-stage clause-kind)
-  (let loop ((clauses (poo-flow-composition-stage-clauses composition-stage)))
+  (let loop ((clauses (poo-flow-scenario-stage-clauses composition-stage)))
     (cond
      ((null? clauses) #f)
      ((eq? (.ref (car clauses) 'clause-kind) clause-kind)
@@ -369,20 +369,20 @@
                       #f)))
 
     (test-case "artifact and database profiles feed inline composition syntax"
-      (let* ((stages (poo-flow-composition-stages artifact-composition))
+      (let* ((stages (poo-flow-scenario-case-stages artifact-composition))
              (stage (car stages))
-             (compose-payload (poo-flow-composition-profiles
+             (compose-payload (poo-flow-scenario-case-profiles
                                artifact-composition))
              (graph-payload (stage-clause-payload stage 'graph))
              (loop-payload (stage-clause-payload stage 'loop))
              (prove-payload (stage-clause-payload stage 'prove)))
-        (check-equal? (poo-flow-composition? artifact-composition) #t)
-        (check-equal? (poo-flow-composition-name artifact-composition)
+        (check-equal? (poo-flow-scenario-case? artifact-composition) #t)
+        (check-equal? (poo-flow-scenario-case-name artifact-composition)
                       'agent-artifacts)
-        (check-equal? (length (poo-flow-composition-modules
+        (check-equal? (length (poo-flow-scenario-case-modules
                                artifact-composition))
                       1)
-        (check-equal? (poo-flow-composition-stage-name stage)
+        (check-equal? (poo-flow-scenario-stage-name stage)
                       'production)
         (check-equal? (map (lambda (profile) (.ref profile 'name))
                            compose-payload)
@@ -396,17 +396,17 @@
                         database-capability-satisfied))))
 
     (test-case "inline use-module profiles expand to POO module objects"
-      (let* ((modules (poo-flow-composition-modules inline-artifact-composition))
+      (let* ((modules (poo-flow-scenario-case-modules inline-artifact-composition))
              (module-binding (car modules))
              (module-object (.ref module-binding 'module))
              (research-profile (.ref module-object 'research-report))
              (internal-profile (.ref module-object 'internal-report))
-             (compose-payload (poo-flow-composition-profiles
+             (compose-payload (poo-flow-scenario-case-profiles
                                inline-artifact-composition)))
-        (check-equal? (poo-flow-composition? inline-artifact-composition) #t)
+        (check-equal? (poo-flow-scenario-case? inline-artifact-composition) #t)
         (check-equal? (.ref research-profile 'name) 'research-report)
         (check-equal? (.ref research-profile 'source)
-                      'poo-flow.composition.inline-profile)
+                      'poo-flow.scenario.inline-profile.v1)
         (check-equal? (.ref (.ref internal-profile 'extends) 'name)
                       'research-report)
         (check-equal? (.ref internal-profile 'retention)

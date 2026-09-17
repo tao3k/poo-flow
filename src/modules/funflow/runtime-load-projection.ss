@@ -13,12 +13,13 @@
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-key)
         (only-in :poo-flow/src/module-system/profile-composition/accessors
-                 poo-flow-composition?
-                 poo-flow-composition-name
-                 poo-flow-composition-profiles
-                 poo-flow-composition-stage-clauses
-                 poo-flow-composition-stage-name
-                 poo-flow-composition-stages)
+                 poo-flow-scenario-case-name
+                 poo-flow-scenario-case-profiles
+                 poo-flow-scenario-stage-clauses
+                 poo-flow-scenario-stage-name
+                 poo-flow-scenario-case-stages)
+        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+                 poo-flow-scenario-case?)
         (only-in :poo-flow/src/modules/funflow/config
                  funflow-plan
                  poo-flow-funflow-plan->runtime-projection))
@@ -46,7 +47,7 @@
 (def (poo-flow-runtime-load-composition? value)
   (and (object? value)
        (.slot? value 'kind)
-       (poo-flow-composition? value)))
+       (poo-flow-scenario-case? value)))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-runtime-load-funflow-profile? profile)
@@ -87,7 +88,7 @@
 ;; : (-> PooObject [Symbol])
 (def (poo-flow-runtime-load-stage-step-names stage)
   (poo-flow-runtime-load-clause-list-step-names
-   (poo-flow-composition-stage-clauses stage)))
+   (poo-flow-scenario-stage-clauses stage)))
 
 ;; : (-> [PooObject] [Symbol])
 (def (poo-flow-runtime-load-composition-step-names stages)
@@ -151,7 +152,7 @@
 ;; : (-> PooObject [Alist])
 (def (poo-flow-runtime-load-stage-edge-rows stage)
   (poo-flow-runtime-load-clause-list-edge-rows
-   (poo-flow-composition-stage-clauses stage)))
+   (poo-flow-scenario-stage-clauses stage)))
 
 ;; : (-> [PooObject] [Alist])
 (def (poo-flow-runtime-load-composition-edge-rows stages)
@@ -185,8 +186,8 @@
 ;; : (-> PooObject PooObject [Alist])
 (def (poo-flow-runtime-load-stage-source-map-rows composition stage)
   (poo-flow-runtime-load-source-map-stage-rows
-   (poo-flow-composition-name composition)
-   (poo-flow-composition-stage-name stage)
+   (poo-flow-scenario-case-name composition)
+   (poo-flow-scenario-stage-name stage)
    (poo-flow-runtime-load-stage-step-names stage)))
 
 ;; : (-> PooObject [PooObject] [Alist])
@@ -201,13 +202,13 @@
 
 ;; : (-> PooObject PooObject)
 (def (poo-flow-runtime-load-composition->funflow-plan composition)
-  (let* ((profiles (poo-flow-composition-profiles composition))
+  (let* ((profiles (poo-flow-scenario-case-profiles composition))
          (_funflow-profile
           (if (poo-flow-runtime-load-has-funflow-profile? profiles)
             #t
             (error "runtime load expected a composed funflow profile"
                    profiles)))
-         (stages (poo-flow-composition-stages composition))
+         (stages (poo-flow-scenario-case-stages composition))
          (nodes (poo-flow-runtime-load-composition-step-names stages))
          (edge-rows (poo-flow-runtime-load-composition-edge-rows stages))
          (source-map
@@ -217,10 +218,10 @@
      (list
       (cons 'kind (.ref funflow-plan 'kind))
       (cons 'schema 'poo-flow.modules.funflow.plan.v1)
-      (cons 'name (poo-flow-composition-name composition))
+      (cons 'name (poo-flow-scenario-case-name composition))
       (cons 'version 1)
       (cons 'origin 'use-composition-funflow)
-      (cons 'normalized-flow (poo-flow-composition-name composition))
+      (cons 'normalized-flow (poo-flow-scenario-case-name composition))
       (cons 'node-table
             (list->vector (poo-flow-runtime-load-node-rows nodes)))
       (cons 'edge-table (list->vector edge-rows))
