@@ -31,32 +31,12 @@ filegroup(
 )
 
 filegroup(
-    name = "scheme_test_support_sources",
-    srcs = [
-        "t/domain-case-test-support.ss",
-        "t/fixtures/bundle-v1-domain-case-projection.ss",
-        "t/fixtures/object-load-valid/objects.ss",
-        "t/fixtures/object-load-valid/parts/object1.ss",
-        "t/module-system-poo-performance-test-support/composition-gates.ss",
-        "t/module-system-poo-performance-test-support/composition-large-library.ss",
-        "t/module-system-poo-performance-test-support/composition-scenarios.ss",
-        "t/scenarios/performance/composition-macro-expansion/benchmark.ss",
-        "t/scenarios/performance/domain-case-indexed-resolution/benchmark.ss",
-        "t/scenarios/performance/poo-clos-native-c3/benchmark.ss",
-        "t/user-interface-fixtures.ss",
-    ] + glob(["t/support/**/*.ss"]),
-)
-
-filegroup(
     name = "scheme_build_sources",
     srcs = [
         "build.ss",
+        "user-interface/init.ss",
         ":scheme_runtime_sources",
-        ":scheme_test_support_sources",
-    ] + glob([
-        "bindings/nono-c/**/*.h",
-        "user-interface/**/*.ss",
-    ]),
+    ] + glob(["bindings/nono-c/**/*.h"]),
 )
 
 filegroup(

@@ -7,13 +7,16 @@
 ;;; Unique native POO Flow package build entry.
 
 (import (only-in :std/build-script defbuild-script)
+        ;; Native package declaration only needs the latency-bounded PackageSpec
+        ;; facade. Optional profiles compose through PackageSpec POO slots and
+        ;; must not add another framework to the `gerbil build` startup closure.
         (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
                  default-exclude-dirs))
 
 (def +poo-flow-build-exclude-dirs+
-  (append '("lambda-episteme"
+  (append '("packages/lambda-episteme"
             "bindings"
             "packages"
             "target"
@@ -45,8 +48,12 @@
 
 (asp-gerbil-scheme-package-spec!
  (poo-flow-package-spec
-  @ asp-gerbil-scheme-library-package-prototype)
+ @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-native-spec)
+ (public-entry-modules
+  '("src/core/api.ss"
+    "src/module-system/interface.ss"
+    "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"

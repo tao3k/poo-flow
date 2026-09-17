@@ -6,8 +6,7 @@
 ;;; Canonical compiler owner for the downstream native conformance program.
 (import (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype
-                 call-with-framework-native-build-memory-anomaly-guard)
+                 asp-gerbil-scheme-library-package-prototype)
         (only-in "./scheme/conformance-build-runtime"
                  cedar-conformance-build!))
 
@@ -23,7 +22,4 @@
 
 ;; : (-> Path Void)
 (def (main output-dir)
-  (call-with-framework-native-build-memory-anomaly-guard
-   "poo-flow cedar conformance build"
-   (lambda ()
-     (cedar-conformance-build! (cedar-conformance-spec) output-dir))))
+  (cedar-conformance-build! (cedar-conformance-spec) output-dir))

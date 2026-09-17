@@ -49,9 +49,9 @@
         spec))))
 
 ;;; Validate only the declared PackageSpec boundary.  The ordinary POO Flow
-;;; package leaves both `modules` and `public-entry-modules` unset so ASP's
-;;; native source catalog feeds std/make directly.  Other callers may still
-;;; choose explicit public roots; observation must never replace their graph.
+;;; package declares its stable public roots so ASP can project their native
+;;; registry closure before handing the resulting targets to std/make.
+;;; Observation reports that declaration and never replaces its graph.
 (def (poo-flow-admit-build-package-spec! package-spec policy)
   (unless (object? package-spec)
     (error "POO Flow build projection requires a POO PackageSpec"

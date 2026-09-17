@@ -42,18 +42,28 @@
           (check-equal? (contains? output "phase=executor-handoff") #t)
           (check-equal? (contains? output "phase=executor-active") #f))))
 
-    (test-case "package build delegates the complete source catalog to ASP"
+    (test-case "package build delegates the native public closure to ASP"
       (let (source (call-with-input-file "build.ss" read-all-as-string))
         (check-equal? (contains? source
                                  ":asp-gerbil-scheme/building-api")
                       #t)
+        (check-equal? (contains? source
+                                 ":asp-gerbil-scheme/build-api")
+                      #f)
         (check-equal? (contains? source
                                  ":asp-gerbil-scheme/src/build-api/")
                       #f)
         (check-equal? (contains? source ":clan/building") #f)
         (check-equal? (contains? source
                                  "(public-entry-modules")
-                      #f)
+                      #t)
+        (check-equal? (contains? source "\"src/core/api.ss\"") #t)
+        (check-equal? (contains? source
+                                 "\"src/module-system/interface.ss\"")
+                      #t)
+        (check-equal? (contains? source
+                                 "\"src/feature-system/interface.ss\"")
+                      #t)
         (check-equal? (contains? source
                                  "(modules ")
                       #f)

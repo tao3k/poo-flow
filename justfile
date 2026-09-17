@@ -27,6 +27,7 @@ contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-
 contribution_test_library_path := contribution_test_path + "/lib"
 contribution_atomic_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/atomic-test"
 contribution_atomic_test_library_path := contribution_atomic_test_path + "/lib"
+contribution_source_root := justfile_directory() + "/packages"
 poo_flow_library_path := justfile_directory() + "/.gerbil/lib"
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
 governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
@@ -50,32 +51,32 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
-    gerbil build
+    GERBIL_BUILD_VERBOSE=1 gerbil build
 
-# Build one top-level contribution inside POO Flow's package environment.
+# Build one packaged contribution inside POO Flow's package environment.
 [group('build')]
 build-contribute contribution="lambda-episteme":
     test "{{ contribution }}" = "lambda-episteme"
-    cd "{{ contribution }}" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec timeout --foreground --signal=TERM --kill-after=3s 45s gerbil build </dev/null
+    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec gerbil build </dev/null
 
 # Clean one contribution through its native gxpkg package entry.
 [group('build')]
 clean-contribute contribution="lambda-episteme":
     test "{{ contribution }}" = "lambda-episteme"
-    cd "{{ contribution }}" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" gerbil clean
+    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" gerbil clean
 
 # Execute one contribution-owned t/<module-name>/ tree directly with gxtest.
 [group('test')]
 test-contribute contribution="lambda-episteme" module="sdlc":
     test "{{ contribution }}" = "lambda-episteme"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=module"
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxi ./run-contribute-test.ss "{{ contribution }}/t/{{ module }}/..."
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxi ./run-contribute-test.ss "packages/{{ contribution }}/t/{{ module }}/..."
 
 # Replay a previously compiled exact test under the opt-in native heap monitor.
 [group('test')]
 observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
     test "{{ contribution }}" = "lambda-episteme"
-    test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    test -f "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-observability] phase=import-observer-start owner={{ contribution }} module={{ module }} test={{ test_file }} budget=15s"
     GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-import.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
 
@@ -84,9 +85,9 @@ observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" te
 [group('test')]
 test-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
     test "{{ contribution }}" = "lambda-episteme"
-    test -f "{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    test -f "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-complete owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
 
 # Build contribution production owners once, then let gxtest own the module.
@@ -295,7 +296,7 @@ check-healthcare-ai-temporal-model: _prepare-gerbil-parser
 # downstream Rust library consumer of the parser FFI, never a Scheme subprocess.
 [group('check')]
 check-healthcare-case-assurance: build-contribute check-healthcare-gql check-healthcare-lean check-healthcare-ai-temporal-model
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "lambda-episteme/t/ontology/qualification/healthcare-case-assurance.ss"
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "packages/lambda-episteme/t/ontology/qualification/healthcare-case-assurance.ss"
 
 # Validate the repository and published-package license contract.
 [group('check')]
