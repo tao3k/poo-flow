@@ -15,7 +15,15 @@
         "runtime-base.ss"
         "runtime-capability.ss"
         "runtime-agent.ss"
-        "runtime-intent.ss"
+        (only-in "runtime-intent-request.ss"
+                 poo-flow-user-loop-engine-intent-runtime-request
+                 poo-flow-user-loop-engine-runtime-envelope/from-request)
+        (only-in "runtime-intent-manifest.ss"
+                 poo-flow-user-loop-engine-runtime-command-manifest/from-envelope
+                 poo-flow-user-loop-engine-runtime-command-manifest-summary/from-manifest
+                 poo-flow-user-loop-engine-proof-manifest/from-manifest)
+        (only-in "runtime-intent-handoff.ss"
+                 poo-flow-user-loop-engine-runtime-handoff-facts/from-request)
         "result-contract.ss"
         :poo-flow/src/utilities/functional)
 
