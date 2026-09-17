@@ -53,6 +53,8 @@
  (public-entry-modules
   '("src/core/api.ss"
     "src/module-system/interface.ss"
+    "src/module-system/profile-composition/interface.ss"
+    "src/modules/funflow/runtime-load-projection.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"

@@ -29,8 +29,11 @@ class LicenseContractTest(unittest.TestCase):
     def test_gitlink_contributor_repository_is_excluded(self) -> None:
         contract = license_contract_module()
 
-        self.assertIn("lambda-episteme", contract.submodule_paths())
-        self.assertNotIn(ROOT / "lambda-episteme/pyproject.toml", contract.project_files())
+        self.assertIn("packages/lambda-episteme", contract.submodule_paths())
+        self.assertNotIn(
+            ROOT / "packages/lambda-episteme/pyproject.toml",
+            contract.project_files(),
+        )
 
     def test_repository_license_contract_is_closed(self) -> None:
         completed = subprocess.run(

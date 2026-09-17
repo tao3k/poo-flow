@@ -4,8 +4,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +18,41 @@ from tools.bazel import scheme_projection_artifact_tool as projection_tool
 
 
 class SchemeProjectionArtifactToolTest(unittest.TestCase):
+    def test_native_failure_preserves_the_gerbil_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "flow.ss"
+            projection = root / "runtime-load-projection.ss"
+            compiled_root = root / "compiled"
+            dependency_root = root / "dependencies"
+            fake_gxi = root / "gxi"
+
+            source.write_text("(use-composition smoke)\n", encoding="utf-8")
+            projection.write_text(";; projection\n", encoding="utf-8")
+            (compiled_root / "lib").mkdir(parents=True)
+            dependency_root.mkdir()
+            fake_gxi.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' 'native projection diagnostic'\n"
+                "exit 70\n",
+                encoding="utf-8",
+            )
+            fake_gxi.chmod(0o755)
+            diagnostic = io.StringIO()
+
+            with contextlib.redirect_stderr(diagnostic):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    projection_tool._load_projection_rows(
+                        gxi=fake_gxi,
+                        source=source,
+                        projection=projection,
+                        compiled_root=compiled_root,
+                        dependency_root=dependency_root,
+                        project_dependency_roots=(),
+                    )
+
+            self.assertIn("native projection diagnostic", diagnostic.getvalue())
+
     def test_main_writes_packaged_digest_envelope(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import subprocess
+import sys
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
@@ -109,11 +110,17 @@ def _load_projection_rows(
             (str(gxi), str(runner_path)),
             cwd=Path.cwd(),
             env=env,
-            check=True,
+            check=False,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+        if result.returncode:
+            # Preserve the native Gerbil diagnostic at the Bazel action
+            # boundary; a bare CalledProcessError hides the typed root cause.
+            sys.stderr.write(result.stdout)
+            sys.stderr.write(result.stderr)
+            result.check_returncode()
     finally:
         runner_path.unlink(missing_ok=True)
     return tuple(parse_scheme_datum(result.stdout))
