@@ -71,6 +71,13 @@
     (test-case "package build source declares complete public closure roots"
       (let (source (call-with-input-file "build.ss" read-all-as-string))
         (check-equal? (contains? source
+                                 ":asp-gerbil-scheme/building-api")
+                      #t)
+        (check-equal? (contains? source
+                                 ":asp-gerbil-scheme/src/build-api/")
+                      #f)
+        (check-equal? (contains? source ":clan/building") #f)
+        (check-equal? (contains? source
                                  "(public-entry-modules +poo-flow-public-entry-modules+)")
                       #t)
         (check-equal? (contains? source

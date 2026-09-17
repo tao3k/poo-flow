@@ -7,10 +7,9 @@
 ;;; Unique native POO Flow package build entry.
 
 (import (only-in :std/build-script defbuild-script)
-        (only-in :asp-gerbil-scheme/src/build-api/source-bootstrap
+        (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
-                 asp-gerbil-scheme-library-package-prototype)
-        (only-in :asp-gerbil-scheme/src/build-api/native-spec-support
+                 asp-gerbil-scheme-library-package-prototype
                  default-exclude-dirs))
 
 ;;; These stable public interfaces are the only declared package roots.  ASP's
