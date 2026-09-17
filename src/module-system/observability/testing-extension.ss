@@ -4,8 +4,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: POO Flow owns test-operation observation while ASP retains the
-;;; native Gerbil test runner.  The upstream build verbosity environment is
-;;; reused as the sole opt-in; no parallel observability setting is invented.
+;;; native Gerbil test runner.  Enablement and cadence are POO profile slots;
+;;; process environment is transport, not policy.
 
 (import (only-in :clan/poo/object .cc .o .ref .slot? object?)
         (only-in :asp-gerbil-scheme/testing-api
@@ -40,18 +40,18 @@
 ;;; Flow declares only the policy slots: what counts as a large closure, how
 ;;; much non-platform overlap is acceptable, and whether a violation rejects.
 (def +poo-flow-testing-import-footprint-profile+
-  (testing-import-footprint-profile
-   [] 0 'reject
-   large-closure-module-count: 32
-   max-shared-closure-modules: 16
-   ignored-module-prefixes: '("std/" "gerbil/" "gambit/")))
+  ;; Reuse ASP's registry policy defaults instead of copying numeric limits
+  ;; into the downstream package.  POO Flow contributes only its admission
+  ;; action; ASP owns the resident-module algorithm and calibrated defaults.
+  (testing-import-footprint-profile [] 0 'reject))
 
 ;;; Heartbeat timing is a POO profile so CI, a user profile, or an atomic test
 ;;; can refine observation cadence without patching the observer.
 (def poo-flow-testing-observability-profile-prototype
   (.o (testing-observability-profile? #t)
       (identity 'testing/default)
-      (heartbeat-interval-seconds 15)
+      (enabled? #t)
+      (heartbeat-interval-seconds 5)
       ;; Prefer package artifacts, then resolve test-only precise owners from
       ;; source. FFI modules must never be interpreted from their .ss form.
       (source-load-paths '(".gerbil/lib" "."))))
@@ -62,6 +62,8 @@
        (.ref value 'testing-observability-profile?)
        (.slot? value 'identity)
        (symbol? (.ref value 'identity))
+       (.slot? value 'enabled?)
+       (boolean? (.ref value 'enabled?))
        (.slot? value 'heartbeat-interval-seconds)
        (real? (.ref value 'heartbeat-interval-seconds))
        (> (.ref value 'heartbeat-interval-seconds) 0)
@@ -147,12 +149,7 @@
 
 ;; : (-> Boolean)
 (def (poo-flow-native-observability-enabled?)
-  (cond
-   ((getenv "GERBIL_BUILD_VERBOSE" #f)
-    => (lambda (value)
-         (let (level (string->number value))
-           (and (real? level) (> level 0)))))
-   (else #f)))
+  (.ref (poo-flow-current-testing-observability-profile) 'enabled?))
 
 ;; : (forall (a) (-> Symbol (-> a) a))
 (def (poo-flow-observe-testing-operation operation thunk)
