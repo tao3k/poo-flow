@@ -16,9 +16,15 @@ contribution registry:
 (make-poo-flow-contribution-registry-entry
  'lambda-episteme
  "https://github.com/tao3k/lambda-episteme.git"
- "937836f0fa75db30a1033987faff8c04c8e5e638"
- "lambda-episteme" "modules"
- '(adr decision-kind diataxis sdlc))
+ "ab31bde9cbd09465798991bd91e3a8400f651d6e"
+ "packages/lambda-episteme" "modules"
+ '(decision-kind diataxis healthcare ontology))
+(make-poo-flow-contribution-registry-entry
+ 'lambda-aitia
+ "https://github.com/tao3k/lambda-aitia.git"
+ "9363bed3a50729cdfe08ceb5144c350eea6003b3"
+ "packages/lambda-aitia" "modules"
+ '(ADR assurance gitops sdlc))
 #+end_src
 
 POO Flow's default PackageSpec is the clean-image bootstrap: six stable
@@ -36,6 +42,12 @@ consumer that imports them.
 =src/user-interface/facade.ss= is likewise an advanced presentation surface,
 not the owner imported by =user-interface/init.ss=, and therefore is not a
 production bootstrap root.
+
+The final =user-interface/config.ss= imports public Profiles, each
+=scenarios/<name>/scenario.ss= declaration, and Profiles below each Scenario.
+Case declarations and auxiliary assurance or Provider projections remain
+demand-loaded.  Directory discovery therefore scales with reusable composition
+inputs instead of importing every implementation file in every vertical Case.
 =module-system/observability/testing-extension.ss= follows the same ownership
 rule from the testing side: it is imported and compiled by the focused testing
 lane, not by every production bootstrap.
@@ -51,7 +63,8 @@ The loader admits exactly the module's public =interface.ss=; native Gerbil
 imports close over its internal
 roles before ASP =package-source-stage= hands the entrypoint to =std/make=.
 The contribution owns no
-package, scanner, scheduler, cache, or build script. Core and contribution
+package manager, scanner, scheduler, cache, or build framework. Its sole
+=build.ss= is the native Gerbil entry and inherits ASP's PackageSpec. Core and contribution
 artifacts share the package namespace while their build and test lanes remain
 independent.
 

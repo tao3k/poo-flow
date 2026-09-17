@@ -9,7 +9,7 @@
 * Controlling decisions, 2026-09-12
 
 POO Flow is the core. Do not create another =poo-flow-core= package.
-=lambda-episteme/= is the top-level, independently maintained contributor
+=packages/lambda-episteme/= is the independently maintained contributor
 repository. Its modules contribute POO-native domain declarations, profiles,
 source assets and scenarios. They do not own a graph execution engine.
 
@@ -31,7 +31,8 @@ older child RFCs and the SQL-centered migration in the earlier proposal.
 
 The remote lambda-episteme main tree inspected in this session and the original
 parent gitlink identify =5a7ec98b7fb93ce92be2addde64d1123008c118b=.
-The submodule name, URL and top-level path now use =lambda-episteme=.
+The submodule name and URL use =lambda-episteme=; its parent checkout path is
+=packages/lambda-episteme=.
 The gitlink is unchanged; new child implementation is an uncommitted working
 change and is not part of that pinned revision or a published release.
 

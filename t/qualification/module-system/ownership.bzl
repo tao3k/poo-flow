@@ -7,7 +7,8 @@
 OWNER_MAP_SCHEMA = "poo-flow.module-system-qualification-ownership.v1"
 
 DESCENDANT_BOUNDARIES = [
-    "lambda-episteme",
+    "packages/lambda-aitia",
+    "packages/lambda-episteme",
 ]
 
 OWNER_MAP_ROWS = [

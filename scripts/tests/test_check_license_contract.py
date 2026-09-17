@@ -30,6 +30,7 @@ class LicenseContractTest(unittest.TestCase):
         contract = license_contract_module()
 
         self.assertIn("packages/lambda-episteme", contract.submodule_paths())
+        self.assertIn("packages/lambda-aitia", contract.submodule_paths())
         self.assertNotIn(
             ROOT / "packages/lambda-episteme/pyproject.toml",
             contract.project_files(),

@@ -206,10 +206,17 @@
     (make-poo-flow-contribution-registry-entry
      'lambda-episteme
      "https://github.com/tao3k/lambda-episteme.git"
-     "937836f0fa75db30a1033987faff8c04c8e5e638"
-     "lambda-episteme"
+     "ab31bde9cbd09465798991bd91e3a8400f651d6e"
+     "packages/lambda-episteme"
      "modules"
-     '(adr decision-kind diataxis gitops sdlc)))))
+     '(decision-kind diataxis healthcare ontology))
+    (make-poo-flow-contribution-registry-entry
+     'lambda-aitia
+     "https://github.com/tao3k/lambda-aitia.git"
+     "9363bed3a50729cdfe08ceb5144c350eea6003b3"
+     "packages/lambda-aitia"
+     "modules"
+     '(ADR assurance gitops sdlc)))))
 
 (def poo-flow-official-contribution-load-path
   (poo-flow-contribution-registry-load-path

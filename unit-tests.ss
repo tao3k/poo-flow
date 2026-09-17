@@ -43,8 +43,10 @@
      (testing-interface-add-profile
       (poo-flow-testing-observability-extension +asp-testing-interface+)
       (.cc +testing-discovery-profile+
-           ignoreDirectories: '("lambda-episteme"
+           ignoreDirectories: '("packages/lambda-episteme"
+                                "packages/lambda-aitia"
                                 "t/performance"
+                                "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
      +poo-flow-atomic-test-selector+
      +testing-process-isolation-profile+)

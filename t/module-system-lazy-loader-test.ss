@@ -19,6 +19,7 @@
                  test-suite)
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
+        (only-in :poo-flow/src/module-system/load poo-flow-modules!)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/extension/interface
@@ -236,6 +237,11 @@
                           #t
                           #f)
                         #t)
+          (check-equal? (if (member "src/modules/standards/interface.ss"
+                                    source-values)
+                          #t
+                          #f)
+                        #t)
           (check-equal? (if (member "src/user-interface/profile-config.ss"
                                     source-values)
                           #t
@@ -352,6 +358,20 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
+(def module-system-lazy-loader-aitia-registry-case
+  (test-case "official Aitia registry resolves only Aitia-owned module roots"
+    (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
+           (source-refs
+            (poo-flow-module-selection-source-refs
+             poo-flow-official-contribution-load-path selection)))
+      (check-equal?
+       (map poo-flow-module-source-ref-value source-refs)
+       '("packages/lambda-aitia/modules/ADR/interface.ss"
+         "packages/lambda-aitia/modules/assurance/interface.ss"
+         "packages/lambda-aitia/modules/gitops/interface.ss"
+         "packages/lambda-aitia/modules/sdlc/interface.ss")))))
+
+;; : TestCase
 (def module-system-lazy-loader-auto-import-removal-case
   (test-case "removes auto-imported entrypoints through POO extension"
         (set! lazy-loader-call-count 0)
@@ -389,4 +409,5 @@
     module-system-lazy-loader-module-tree-case
     module-system-lazy-loader-src-modules-case
     module-system-lazy-loader-user-root-case
+    module-system-lazy-loader-aitia-registry-case
     module-system-lazy-loader-auto-import-removal-case))

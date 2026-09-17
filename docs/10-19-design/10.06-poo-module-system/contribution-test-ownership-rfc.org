@@ -10,7 +10,7 @@ A contribution repository owns its test cases. =:std/test= owns suite and
 assertion primitives, while =:clan/testing= owns discovery and execution.
 POO Flow does not add a test declaration macro or another testing framework.
 Its package entry derives the ASP POO discovery Profile only to exclude the
-independent top-level =lambda-episteme= package from clan's recursive result.
+independent =packages/lambda-episteme= package from clan's recursive result.
 No POO Flow scanner or explicit test-file list is introduced.
 Each test retains ASP's default 1024 MiB process budget unless its own scenario
 derives a larger memory Profile. Legacy aggregate suites are split into their

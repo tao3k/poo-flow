@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", `getconf _NPROCESSORS_ONLN`)
+export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", "12")
 
 devenv_exec := ".devenv/devenv-profile-exec"
 bazel := devenv_exec + " bazelisk"
@@ -20,14 +20,15 @@ bundle_v1_library := "//bindings/runtime-c/bundle-v1:bundle_v1"
 bundle_v1_tests := "//bindings/runtime-c/bundle-v1:bundle_v1_tests"
 gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
+aitia_native_library := justfile_directory() + "/.gerbil/native/libpoo_flow_aitia.dylib"
+aitia_python_dir := contribution_source_root + "/lambda-aitia/bindings/python"
 python_runtime_test_environment := "//gerbil:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
 cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/module-test"
 contribution_test_library_path := contribution_test_path + "/lib"
-contribution_atomic_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/atomic-test"
-contribution_atomic_test_library_path := contribution_atomic_test_path + "/lib"
 contribution_source_root := justfile_directory() + "/packages"
+gerbil_darwin_env := "env -u SDKROOT"
 poo_flow_library_path := justfile_directory() + "/.gerbil/lib"
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
 governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
@@ -56,51 +57,76 @@ build:
 # Build one packaged contribution inside POO Flow's package environment.
 [group('build')]
 build-contribute contribution="lambda-episteme":
-    test "{{ contribution }}" = "lambda-episteme"
-    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec gerbil build </dev/null
+    case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
+    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec {{ gerbil_darwin_env }} gerbil build </dev/null
 
 # Clean one contribution through its native gxpkg package entry.
 [group('build')]
 clean-contribute contribution="lambda-episteme":
-    test "{{ contribution }}" = "lambda-episteme"
-    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" gerbil clean
+    case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
+    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} gerbil clean
 
 # Execute one contribution-owned t/<module-name>/ tree directly with gxtest.
 [group('test')]
-test-contribute contribution="lambda-episteme" module="sdlc":
-    test "{{ contribution }}" = "lambda-episteme"
+test-contribute contribution="lambda-aitia" module="sdlc":
+    case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=module"
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=5s 60s gxi ./run-contribute-test.ss "packages/{{ contribution }}/t/{{ module }}/..."
+    runner="./run-contribute-test.ss"; if test "{{ contribution }}" = "lambda-aitia"; then runner="./packages/lambda-aitia/run-test.ss"; fi; GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/module-test" GERBIL_LOADPATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/module-test/lib:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gxi "$runner" "packages/{{ contribution }}/t/{{ module }}/..."
 
 # Replay a previously compiled exact test under the opt-in native heap monitor.
 [group('test')]
-observe-contribute-import-memory contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
-    test "{{ contribution }}" = "lambda-episteme"
+observe-contribute-import-memory contribution="lambda-aitia" module="sdlc" test_file="unit/nasa-certification-test.ss":
+    case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test -f "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-observability] phase=import-observer-start owner={{ contribution }} module={{ module }} test={{ test_file }} budget=15s"
-    GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-import.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
+    GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/atomic-test" GERBIL_LOADPATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/atomic-test/lib:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=2s 15s gxi ./observe-contribute-import.ss "{{ contribution }}" "{{ module }}" "{{ test_file }}"
 
 # Execute one exact test file. Source admission belongs to the native gxtest
 # lifecycle and is enabled declaratively by its POO Testing Profile.
 [group('test')]
-test-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
-    test "{{ contribution }}" = "lambda-episteme"
+test-contribute-atomic contribution="lambda-aitia" module="sdlc" test_file="unit/nasa-certification-test.ss":
+    case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test -f "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-start owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_atomic_test_path }}" GERBIL_LOADPATH="{{ contribution_atomic_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi ./run-contribute-test.ss "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    runner="./run-contribute-test.ss"; if test "{{ contribution }}" = "lambda-aitia"; then runner="./packages/lambda-aitia/run-test.ss"; fi; GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/atomic-test" GERBIL_LOADPATH="{{ justfile_directory() }}/.gerbil/contributions/{{ contribution }}/atomic-test/lib:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi "$runner" "packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
     echo "[poo-flow-contribute] phase=test-complete owner={{ contribution }} module={{ module }} scope=file test={{ test_file }}"
 
 # Build contribution production owners once, then let gxtest own the module.
 [group('check')]
-check-contribute contribution="lambda-episteme" module="sdlc":
+check-contribute contribution="lambda-aitia" module="sdlc":
     just build-contribute "{{ contribution }}"
     just test-contribute "{{ contribution }}" "{{ module }}"
 
 # Build contribution production owners once, then let gxtest own the file.
 [group('check')]
-check-contribute-atomic contribution="lambda-episteme" module="sdlc" test_file="unit/nasa-certification-test.ss":
+check-contribute-atomic contribution="lambda-aitia" module="sdlc" test_file="unit/nasa-certification-test.ss":
     just build-contribute "{{ contribution }}"
     just test-contribute-atomic "{{ contribution }}" "{{ module }}" "{{ test_file }}"
+
+# Aitia owns the SDLC and GitOps composition and its integration closure.
+[group('check')]
+check-aitia-integration:
+    just build-contribute lambda-aitia
+    cd "{{ contribution_source_root }}/lambda-aitia" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} ./integration-build.ss compile
+    just test-contribute lambda-aitia bindings
+    just test-contribute lambda-aitia integration
+
+# Build the self-contained Aitia Scheme-native library and its Aitia-owned consumers.
+[group('check')]
+check-aitia-native:
+    just build-contribute lambda-aitia
+    cd "{{ contribution_source_root }}/lambda-aitia" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} ./integration-build.ss compile
+    mkdir -p "{{ justfile_directory() }}/.gerbil/native"
+    cd "{{ contribution_source_root }}/lambda-aitia" && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} python3 tools/build-native-library.py --output "{{ aitia_native_library }}"
+    cc -std=c11 -Wall -Wextra -Werror -pedantic -I"{{ contribution_source_root }}/lambda-aitia/bindings/c/include" "{{ contribution_source_root }}/lambda-aitia/bindings/c/tests/aitia-header-harness.c" -o "{{ justfile_directory() }}/.gerbil/native/aitia_header_harness"
+    "{{ justfile_directory() }}/.gerbil/native/aitia_header_harness"
+    cc -std=c11 -Wall -Wextra -Werror -pedantic -I"{{ contribution_source_root }}/lambda-aitia/bindings/c/include" "{{ contribution_source_root }}/lambda-aitia/bindings/c/tests/aitia-dynamic-harness.c" -o "{{ justfile_directory() }}/.gerbil/native/aitia_dynamic_harness"
+    "{{ justfile_directory() }}/.gerbil/native/aitia_dynamic_harness" "{{ aitia_native_library }}"
+    just test-contribute lambda-aitia bindings
+    cd "{{ aitia_python_dir }}" && {{ gerbil_darwin_env }} uv lock --check
+    cd "{{ aitia_python_dir }}" && {{ gerbil_darwin_env }} uv run --locked --extra test python src/lambda_aitia/_native/_build.py
+    cd "{{ aitia_python_dir }}" && LAMBDA_AITIA_NATIVE_LIBRARY="{{ aitia_native_library }}" {{ gerbil_darwin_env }} uv run --locked --extra test pytest
+    cd "{{ aitia_python_dir }}" && LAMBDA_AITIA_NATIVE_LIBRARY="{{ aitia_native_library }}" {{ gerbil_darwin_env }} uv build --wheel
 
 # Install the dependency revisions declared by gerbil.pkg.
 [group('dependency')]
