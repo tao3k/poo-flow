@@ -51,6 +51,8 @@
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"
                     "observe-contribute-import.ss"
+                    "performance-tests.ss"
+                    "run-contribute-test.ss"
                     "user-interface/custom/my-module/config.ss"))
  (native-prelude-spec
   `((gxc: "src/modules/nono-sandbox/_nono"

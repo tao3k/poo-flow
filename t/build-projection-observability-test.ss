@@ -59,7 +59,9 @@
                       #f)
         (check-equal? (contains? source
                                  "(exclude-dirs +poo-flow-build-exclude-dirs+)")
-                      #t)))
+                      #t)
+        (check-equal? (contains? source "\"performance-tests.ss\"") #t)
+        (check-equal? (contains? source "\"run-contribute-test.ss\"") #t)))
 
     (test-case "performance suite declares the POO testing extension"
       (let (performance-source
@@ -70,7 +72,7 @@
           "(poo-flow-testing-observability-extension +asp-testing-interface+)")
          #t)))
 
-    (test-case "default policy reports a catalog above its declared budget"
+    (test-case "default policy measures catalog size without an invented limit"
       (let (port (open-output-string))
         (parameterize ((current-output-port port))
           (poo-flow-observe-build-projection
@@ -79,8 +81,7 @@
           (check-equal? (string-prefix? "\n[poo-flow]" output) #t)
           (check-equal? (contains? output "phase=spec-projected") #t)
           (check-equal? (contains? output "target-count=601") #t)
-          (check-equal? (contains? output "reason=target-count") #t)
-          (check-equal? (contains? output "action=observe") #t))))
+          (check-equal? (contains? output "reason=target-count") #f))))
 
     (test-case "derived POO policy overrides the budget without environment state"
       (let ((port (open-output-string))
@@ -93,6 +94,20 @@
         (let (output (get-output-string port))
           (check-equal? (contains? output "phase=spec-projected") #t)
           (check-equal? (contains? output "phase=spec-budget-exceeded") #f))))
+
+    (test-case "derived POO policy can admit against measured package evidence"
+      (let ((port (open-output-string))
+            (policy
+             (.o (:: @ poo-flow-default-build-observability-policy)
+                 (id 'build-projection/qualification)
+                 (target-budget 256)
+                 (target-budget-action 'observe))))
+        (parameterize ((current-output-port port))
+          (poo-flow-observe-build-projection policy 257 3))
+        (let (output (get-output-string port))
+          (check-equal? (contains? output "phase=spec-budget-exceeded") #t)
+          (check-equal? (contains? output "reason=target-count") #t)
+          (check-equal? (contains? output "budget=256") #t))))
 
     (test-case "concurrent Owner receipts remain complete line records"
       (let* ((worker-count 12)

@@ -16,7 +16,11 @@
   id: 'build-projection/package
   profile: 'package
   enabled?: #t
-  target-budget: 600
+  ;; The default policy reports measured cardinality without inventing a
+  ;; machine-independent package-size limit.  A project or CI profile that has
+  ;; a measured baseline derives this object with `.def` and supplies its own
+  ;; positive budget and admission action.
+  target-budget: #f
   target-budget-action: 'observe
   projection-budget-ms: #f
   projection-budget-action: 'observe
