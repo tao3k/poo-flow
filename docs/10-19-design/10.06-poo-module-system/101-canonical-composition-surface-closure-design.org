@@ -134,7 +134,7 @@ Dispatch Semantic Plane and Observability Contract]].
 
 ** Canonical parser
 
-=profile-composition-syntax-plan.ss= remains the sole parser owner.  It
+=profile-composition-declaration-syntax.ss= remains the sole parser owner.  It
 deconstructs the module form into exactly four required elements followed by
 zero or more profile clauses:
 
@@ -168,7 +168,7 @@ diagnostic and must not teach the removed syntax.
 flowchart LR
   Source["use-composition"] -->|"opens the named composition boundary"| Category["compose profiles"]
   Category -->|"recognizes the contextual clause during expansion"| Clause["use-module module-name as alias"]
-  Clause -->|"records syntax without loading a module"| Plan["Composition syntax plan"]
+  Clause -->|"records syntax without loading a module"| Plan["Composition declaration model"]
   Clause -->|"binds without rewriting module identity"| Alias["Composition-local alias"]
   Plan -->|"lowers module-name to a pure lookup expression"| Demand["POO identity demand"]
   Plan -->|"retains profile refinements as pure values"| Refinements["Profile prototype refinements"]

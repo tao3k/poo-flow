@@ -322,7 +322,7 @@ remain private.  =profile-priority/normalize=,
 
 ** Macro dependency
 
-=profile-composition-clause-syntax.ss= may depend on the small
+=profile-composition-use-syntax.ss= may depend on the small
 =profile-priority/interface.ss= projection at the appropriate expansion phase.
 It may only lower contextual syntax to ordinary imports, native POO values, and
 direct references to named functions.  The macro must not generate hidden
@@ -342,7 +342,7 @@ flowchart LR
   Objects -->|"projects the two endpoints and Numeric prototype"| Interface["profile-priority/interface.ss"]
   Types -->|"projects ProfilePriority and its Contract"| Interface
   Func -->|"remains private behind the sole admit boundary"| Interface
-  Interface -->|"supplies a phase-bounded semantic target"| Macro["profile-composition-clause-syntax.ss"]
+  Interface -->|"supplies a phase-bounded semantic target"| Macro["profile-composition-use-syntax.ss"]
   Macro -->|"generates a direct call to profile-priority/admit"| Consumer["Profile composition"]
   Objects -.->|"must not import syntax or interface"| Macro
   Func -.->|"must not own macros, objects, caches, or runtime effects"| Consumer
@@ -594,7 +594,7 @@ flowchart LR
 
 ** Slice 5 - Hygienic syntax
 
-- [ ] Extend =profile-composition-clause-syntax.ss= only after the interface is
+- [ ] Extend =profile-composition-use-syntax.ss= only after the interface is
       admitted.
 - [ ] Lower contextual =(priority ...)= through =profile-priority/admit=.
 - [ ] Prove phase isolation, contextual binding, and absence of runtime syntax

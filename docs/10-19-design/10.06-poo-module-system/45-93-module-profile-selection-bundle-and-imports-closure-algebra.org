@@ -597,7 +597,7 @@ remains inspectable native POO and functional code.
 
 * Current implementation gap
 
-The current syntax-plan parser treats ~use-module~ as a private form in the
+The current declaration parser treats ~use-module~ as a private form in the
 second operand position of ~use-composition~.
 
 The current path:
@@ -762,7 +762,7 @@ Implementation may begin only when:
 - [[file:45-91-control-policy-profile-projection-and-user-composition-interface.org][45-91: user-composition interface]]
 - [[file:45-92-user-composition-current-gap-and-thin-macro-contract.org][45-92: user-composition thin macro contract]]
 - [[file:../../../src/module-system/profile-composition/use-syntax.ss][current use-composition owner]]
-- [[file:../../../src/module-system/profile-composition/syntax-plan.ss][current syntax-plan parser]]
+- [[file:../../../src/module-system/profile-composition/declaration-syntax.ss][current declaration parser]]
 - [[file:../../../src/module-system/profile-composition/inline-runtime.ss][current inline alist lowering]]
 - [[file:../../../t/profile-composition-test.ss][current Profile composition test]]
 - [[file:45-94-user-interface-case-projection-and-reachable-imports-validation.org][45-94: User Interface case projection and reachable imports validation]]

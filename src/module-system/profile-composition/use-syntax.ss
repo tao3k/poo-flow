@@ -11,11 +11,20 @@
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
                  poo-flow-scenario-case)
         (for-syntax
-         :poo-flow/src/module-system/profile-composition/syntax-plan))
+         :poo-flow/src/module-system/profile-composition/declaration-syntax))
 
 (export use-composition)
 
 (begin-syntax
+  ;; One lowering result owns the parallel syntax products required by the
+  ;; final template.  Callers no longer coordinate several independent walks.
+  (defclass poo-flow-composition-lowering
+    (module-bindings
+     module-binding-expressions
+     compose-expressions
+     profile-binding-expressions
+     stage-expressions))
+
   ;; : (-> CompositionProfileSectionSyntax Syntax)
   (def (poo-flow-composition-lower-profile-section section)
     (let ((slot (composition-profile-section-syntax-slot section))
@@ -62,7 +71,7 @@
                (poo-flow-composition-lower-profile-section (car rest))
                out)))))
         (else
-         (error "unknown composition profile plan mode"
+         (error "unknown composition profile declaration mode"
                 (composition-profile-syntax-mode profile))))))
 
   ;; : (-> [CompositionProfileSyntax] (values [Syntax] [Syntax]))
@@ -87,16 +96,21 @@
           (composition-profile-ref-syntax-slot profile-ref)))
       #'(poo-flow-profile-ref module-name 'profile-name)))
 
-  ;; : (-> [CompositionProfileRefSyntax] [Syntax])
+  ;; : (-> [CompositionProfileRefSyntax] (values [Syntax] [Syntax]))
   (def (poo-flow-composition-lower-profile-refs profile-refs)
-    (let loop ((rest profile-refs) (out '()))
+    (let loop ((rest profile-refs) (expressions '()) (bindings '()))
       (if (null? rest)
-        (reverse out)
-        (loop
-         (cdr rest)
-         (cons
-          (poo-flow-composition-lower-profile-ref (car rest))
-          out)))))
+        (values (reverse expressions) (reverse bindings))
+        (let (profile-ref (car rest))
+          (with-syntax
+              ((module (composition-profile-ref-syntax-module profile-ref))
+               (slot (composition-profile-ref-syntax-slot profile-ref)))
+            (loop
+             (cdr rest)
+             (cons (poo-flow-composition-lower-profile-ref profile-ref)
+                   expressions)
+             (cons #'(poo-flow-scenario-profile-binding 'module 'slot)
+                   bindings)))))))
 
   ;; : (-> CompositionClauseSyntax Syntax)
   (def (poo-flow-composition-lower-stage-clause clause)
@@ -130,14 +144,58 @@
         (reverse out)
         (loop
          (cdr rest)
-         (cons (poo-flow-composition-lower-stage (car rest)) out))))))
+         (cons (poo-flow-composition-lower-stage (car rest)) out)))))
+
+  ;; : (-> [CompositionModuleSyntax] (values [Syntax] [Syntax]))
+  (def (poo-flow-composition-lower-modules modules)
+    (let loop ((rest modules) (module-bindings '()) (binding-expressions '()))
+      (if (null? rest)
+        (values (reverse module-bindings) (reverse binding-expressions))
+        (let* ((module (car rest))
+               (alias (composition-module-syntax-alias module)))
+          (let-values (((profile-names profile-expressions)
+                        (poo-flow-composition-lower-profiles
+                         (composition-module-syntax-profiles module))))
+            (with-syntax
+                ((alias alias)
+                 ((profile-name ...) profile-names)
+                 ((profile-expression ...) profile-expressions))
+              (loop
+               (cdr rest)
+               (cons
+                #'(alias
+                   (poo-flow-scenario-inline-module
+                    '(profile-name ...)
+                    (list profile-expression ...)))
+                module-bindings)
+               (cons #'(poo-flow-scenario-module-binding 'alias alias)
+                     binding-expressions))))))))
+
+  ;; : (-> CompositionDeclaration PooFlowCompositionLowering)
+  (def (poo-flow-composition-lower-declaration declaration)
+    (let-values
+        (((module-bindings module-binding-expressions)
+          (poo-flow-composition-lower-modules
+           (composition-declaration-modules declaration)))
+         ((compose-expressions profile-binding-expressions)
+          (poo-flow-composition-lower-profile-refs
+           (composition-declaration-compose declaration))))
+      (poo-flow-composition-lowering
+       module-bindings: module-bindings
+       module-binding-expressions: module-binding-expressions
+       compose-expressions: compose-expressions
+       profile-binding-expressions: profile-binding-expressions
+       stage-expressions:
+       (poo-flow-composition-lower-stages
+        (composition-declaration-stages declaration)))))
+  )
 
 ;;; Expand the canonical declarative composition grammar into POO-native
 ;;; module, profile, clause, stage, and composition builders.
 ;; use-composition
 ;;   : (-> Syntax Syntax)
 ;;   | doc m%
-;;       Expand a validated composition plan into ordinary POO-native builders.
+;;       Expand a validated composition declaration into ordinary POO-native builders.
 ;;
 ;;       # Examples
 ;;
@@ -149,59 +207,25 @@
 (defsyntax (use-composition stx)
   (syntax-case stx ()
     ((_ composition-name module-form form ...)
-     (let* ((plan
-             (parse-poo-flow-composition-syntax-plan
+     (let* ((declaration
+             (parse-poo-flow-composition-declaration
               #'composition-name
               #'module-form
               (syntax->list #'(form ...))
               stx))
-            (modules (composition-syntax-plan-modules plan))
-            (profile-refs (composition-syntax-plan-compose plan))
-            (compose-expressions
-             (poo-flow-composition-lower-profile-refs profile-refs))
-            (profile-binding-expressions
-             (map
-              (lambda (profile-ref)
-                (with-syntax
-                    ((module
-                      (composition-profile-ref-syntax-module profile-ref))
-                     (slot
-                      (composition-profile-ref-syntax-slot profile-ref)))
-                  #'(poo-flow-scenario-profile-binding 'module 'slot)))
-              profile-refs))
-            (stage-expressions
-             (poo-flow-composition-lower-stages
-              (composition-syntax-plan-stages plan)))
-            (module-bindings
-             (map
-              (lambda (module)
-                (let-values (((profile-names profile-expressions)
-                              (poo-flow-composition-lower-profiles
-                               (composition-module-syntax-profiles module))))
-                  (with-syntax
-                      ((alias (composition-module-syntax-alias module))
-                       ((profile-name ...) profile-names)
-                       ((profile-expression ...) profile-expressions))
-                    #'(alias
-                       (poo-flow-scenario-inline-module
-                        '(profile-name ...)
-                        (list profile-expression ...))))))
-              modules))
-            (module-binding-expressions
-             (map
-              (lambda (module)
-                (with-syntax
-                    ((alias (composition-module-syntax-alias module)))
-                  #'(poo-flow-scenario-module-binding 'alias alias)))
-              modules)))
+            (lowering (poo-flow-composition-lower-declaration declaration)))
          (with-syntax
-             ((composition-name (composition-syntax-plan-name plan))
-              (((alias module-expression) ...) module-bindings)
-              ((module-binding-expression ...) module-binding-expressions)
-              ((compose-expression ...) compose-expressions)
+             ((composition-name (composition-declaration-name declaration))
+              (((alias module-expression) ...)
+               (poo-flow-composition-lowering-module-bindings lowering))
+              ((module-binding-expression ...)
+               (poo-flow-composition-lowering-module-binding-expressions lowering))
+              ((compose-expression ...)
+               (poo-flow-composition-lowering-compose-expressions lowering))
               ((profile-binding-expression ...)
-               profile-binding-expressions)
-              ((stage-expression ...) stage-expressions))
+               (poo-flow-composition-lowering-profile-binding-expressions lowering))
+              ((stage-expression ...)
+               (poo-flow-composition-lowering-stage-expressions lowering)))
            (syntax/loc stx
              (let ((alias module-expression) ...)
                (poo-flow-scenario-case

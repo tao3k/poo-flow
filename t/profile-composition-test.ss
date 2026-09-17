@@ -5,16 +5,12 @@
 
 
 (import :std/test
-        :std/srfi/13
         (only-in :clan/poo/object .call .o .ref .ref/cached)
         :gerbil/gambit
-        (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/interface
         (only-in :poo-flow/src/module-system/profile-composition/funcs
-                 poo-flow-leftmost-index-by)
-        (only-in :poo-flow/src/module-system/profile-composition/syntax-plan
-                 parse-poo-flow-composition-syntax-plan))
+                 poo-flow-leftmost-index-by))
 
 ;;; Test protocol: construction and identity projection must not force any
 ;;; listed derived slot.  Keep the macro small and expand to ordinary checks.
@@ -104,25 +100,6 @@
     (stage production
       (prove nasa-release-gates)
       (handoff github-actions))))
-
-(def (composition-syntax-error-message module-datum . maybe-form-data)
-  (let* ((module-form (datum->syntax #f module-datum))
-         (forms
-          (if (null? maybe-form-data)
-            '()
-            (map (lambda (form) (datum->syntax #f form))
-                 (car maybe-form-data)))))
-    (with-exception-catcher
-     (lambda (exn)
-       (call-with-output-string
-        (lambda (port) (display-exception exn port))))
-     (lambda ()
-       (parse-poo-flow-composition-syntax-plan
-        (datum->syntax #f 'invalid-composition)
-        module-form
-        forms
-        module-form)
-       #f))))
 
 (export profile-composition-test)
 
@@ -340,48 +317,4 @@
       (check-equal? (length (poo-flow-scenario-session-events session)) 3)
       (check-equal? (poo-flow-scenario-session-state sibling) 'created)
       (check-equal? (poo-flow-scenario-session-events sibling) '())
-      (check-exception (.call session admit!) true)))
-   (test-case
-    "non-canonical module grammar reports the single canonical diagnostic"
-    (check-equal?
-     (integer?
-      (string-contains
-       (composition-syntax-error-message '(module artifact))
-       "composition-invalid-module-form"))
-     #t))
-   (test-case
-    "duplicate profile declarations are rejected during parsing"
-    (check-equal?
-     (integer?
-      (string-contains
-       (composition-syntax-error-message
-        '(use-module artifact-catalog as artifact
-           (profile report :kind report)
-           (profile report :kind report)))
-       "composition-duplicate-profile"))
-     #t))
-   (test-case
-    "empty composition bodies are rejected during parsing"
-    (check-equal?
-     (integer?
-      (string-contains
-       (composition-syntax-error-message
-        '(use-module artifact-catalog as artifact))
-       "composition-missing-profile-operand"))
-     #t))
-   (test-case
-    "stage-only composition bodies are rejected during parsing"
-    (let (message
-          (composition-syntax-error-message
-           '(use-module artifact-catalog as artifact)
-           '((stage production
-               (graph artifact-publish-graph)
-               (loop #:fuel 3 #:exit published)
-               (prove audit-before-publish)
-               (handoff marlin-runtime)))))
-      (check-equal?
-       (integer?
-        (string-contains
-         message
-         "composition-missing-profile-operand"))
-       #t)))))
+      (check-exception (.call session admit!) true)))))

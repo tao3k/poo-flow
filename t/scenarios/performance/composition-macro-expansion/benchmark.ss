@@ -19,6 +19,9 @@
 (def +composition-expansion-5000-source+
   "t/scenarios/performance/composition-macro-expansion/case-5000.ss")
 
+(def +composition-module-index-1000-source+
+  "t/scenarios/performance/composition-macro-expansion/case-modules-1000.ss")
+
 (def +composition-expansion-1000-output-directory+
   ".cache/composition-macro-expansion-1000")
 
@@ -28,11 +31,15 @@
 (def +composition-expansion-5000-second-output-directory+
   ".cache/composition-macro-expansion-5000-second")
 
+(def +composition-module-index-1000-output-directory+
+  ".cache/composition-module-index-1000")
+
 (def +composition-expansion-max-elapsed-ms+ 20000.0)
 
-;; : (-> Fixnum String String Flonum PooBenchmarkReceipt)
+;; : (-> Fixnum Fixnum String String Flonum PooBenchmarkReceipt)
 (def (run-composition-macro-expansion-case
       profile-count
+      module-count
       source
       output-directory
       max-elapsed-ms)
@@ -51,12 +58,14 @@
     (let (elapsed-ms (/ elapsed-nanos 1000000.0))
     (let ((source-value source)
           (profile-count-value profile-count)
+          (module-count-value module-count)
           (elapsed-ms-value elapsed-ms)
           (max-elapsed-ms-value max-elapsed-ms)
           (pass-value (<= elapsed-ms max-elapsed-ms)))
       (.o (kind 'poo-flow.scenario.macro-expansion.benchmark)
           (source source-value)
           (profile-count profile-count-value)
+          (module-count module-count-value)
           (generated-profile-expression-count profile-count-value)
           (generated-compose-reference-count profile-count-value)
           (compiler-mode 'gerbil-expansion-and-scheme-generation)
@@ -71,38 +80,52 @@
   (let* ((case-1000
           (run-composition-macro-expansion-case
            1000
+           1
            +composition-expansion-1000-source+
            +composition-expansion-1000-output-directory+
            +composition-expansion-max-elapsed-ms+))
          (case-5000-first
           (run-composition-macro-expansion-case
            5000
+           1
            +composition-expansion-5000-source+
            +composition-expansion-5000-first-output-directory+
            +composition-expansion-max-elapsed-ms+))
          (case-5000-second
           (run-composition-macro-expansion-case
            5000
+           1
            +composition-expansion-5000-source+
            +composition-expansion-5000-second-output-directory+
+           +composition-expansion-max-elapsed-ms+))
+         (module-index-1000
+          (run-composition-macro-expansion-case
+           1000
+           1000
+           +composition-module-index-1000-source+
+           +composition-module-index-1000-output-directory+
            +composition-expansion-max-elapsed-ms+)))
     (let ((case-1000-value case-1000)
           (case-5000-first-value case-5000-first)
           (case-5000-second-value case-5000-second)
+          (module-index-1000-value module-index-1000)
           (pass-value
            (and (.ref case-1000 'pass)
                 (.ref case-5000-first 'pass)
-                (.ref case-5000-second 'pass))))
+                (.ref case-5000-second 'pass)
+                (.ref module-index-1000 'pass))))
       (.o (kind 'poo-flow.scenario.macro-expansion.benchmark-suite)
           (case-1000 case-1000-value)
           (case-5000-first case-5000-first-value)
           (case-5000-second case-5000-second-value)
+          (module-index-1000 module-index-1000-value)
           (pass pass-value)))))
 
 ;; : (-> PooBenchmarkReceipt Alist)
 (def (composition-macro-expansion-case->alist receipt)
   (list
    (cons 'profile-count (.ref receipt 'profile-count))
+   (cons 'module-count (.ref receipt 'module-count))
    (cons 'generated-profile-expression-count
          (.ref receipt 'generated-profile-expression-count))
    (cons 'generated-compose-reference-count
@@ -125,4 +148,7 @@
    (cons 'case-5000-second
          (composition-macro-expansion-case->alist
           (.ref receipt 'case-5000-second)))
+   (cons 'module-index-1000
+         (composition-macro-expansion-case->alist
+          (.ref receipt 'module-index-1000)))
    (cons 'pass (.ref receipt 'pass))))

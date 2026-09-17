@@ -22,7 +22,7 @@ _SCHEME_LOAD_DEPENDENCIES = (
     Path("src/module-system/profile-composition/interface.ss"),
     Path("src/module-system/profile-composition/accessors.ss"),
     Path("src/module-system/profile-composition/builders.ss"),
-    Path("src/module-system/profile-composition/clause-syntax.ss"),
+    Path("src/module-system/profile-composition/declaration-syntax.ss"),
     Path("src/module-system/profile-composition/core.ss"),
     Path("src/module-system/profile-composition/inline-runtime.ss"),
     Path("src/module-system/profile-composition/profile-syntax.ss"),

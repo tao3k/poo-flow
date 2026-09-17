@@ -61,7 +61,7 @@ single-instantiation behavior, and compile-time allocation.
 |-------+----------------+----------------|
 | =profile-composition.ss= | Stable composition facade | =use-composition= plus explicitly selected native POO extension helpers |
 | =profile-composition-use-syntax.ss= | Thin public macro and final lowering | =use-composition= only |
-| =profile-composition-syntax-plan.ss= | Phase-owned grammar parser, validation, and immutable syntax plan | Compile-time import only |
+| =profile-composition-declaration-syntax.ss= | Phase-owned grammar parser, validation, and immutable declaration model | Compile-time import only |
 | =profile-composition-builders.ss= | Ordinary POO composition, module-binding, stage, and clause builders | Selected through the facade |
 | =profile-composition-inline-runtime.ss= | Runtime construction of inline/imported POO profiles | Selected through the facade; no wildcard re-export from syntax owner |
 
@@ -70,7 +70,7 @@ the complete runtime module.  Generated identifiers carry their original
 module bindings, so lowering does not require exposing private runtime helpers
 as user configuration.
 
-The syntax-plan owner is compiled macro support.  It is imported through the
+The declaration syntax owner is compiled macro support.  It is imported through the
 canonical phase-adjusted Gerbil module path for the active compiler.  It must
 not be loaded with =load=, evaluated from source, or stored in a mutable module
 global.
@@ -80,14 +80,14 @@ global.
 #+begin_src mermaid
 flowchart LR
   A["use-composition syntax object"] --> B["shape and literal validation"]
-  B --> C["immutable composition syntax plan"]
+  B --> C["immutable composition declaration model"]
   C --> D["single lowering traversal"]
   D --> E["ordinary POO-native builder forms"]
   E --> F["composition POO object"]
   F --> G["receipt or runtime projection"]
 #+end_src
 
-The syntax plan retains syntax objects for the composition name, module name,
+The declaration model retains syntax objects for the composition name, module name,
 alias, profile expressions, extension expressions, clauses, and stages.  It is
 a private phase-owned class with named fields, constructors, and accessors.  It
 exists only to model expander state and syntax objects; runtime semantic owners
@@ -214,7 +214,7 @@ forms.
 - Do not use nested =apply append= over mapped profile groups.
 - Do not rescan all forms independently for compose and stage output.
 - Do not construct temporary POO runtime objects during expansion.
-- Reuse the compiled syntax-plan module through the Gerbil module registry.
+- Reuse the compiled declaration syntax module through the Gerbil module registry.
 
 For =n= profile references and =m= stage clauses, the target work is
 =O(n + m)= and generated form count is also =O(n + m)=.
@@ -307,8 +307,8 @@ The phase-aware refactor landed on 2026-07-09 with these owners:
 - =profile-composition.ss= is the stable facade;
 - =profile-composition-use-syntax.ss= exports only =use-composition= and owns
   final lowering;
-- =profile-composition-syntax-plan.ss= is imported with =for-syntax= and owns
-  binding-aware validation plus immutable syntax-plan classes;
+- =profile-composition-declaration-syntax.ss= is imported with =for-syntax= and owns
+  binding-aware validation plus immutable declaration syntax classes;
 - =profile-composition-builders.ss= and
   =profile-composition-inline-runtime.ss= remain ordinary POO runtime owners;
 - the legacy =profile-composition-main-syntax.ss= owner was removed without a

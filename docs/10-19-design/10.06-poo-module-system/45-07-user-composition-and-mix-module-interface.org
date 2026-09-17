@@ -749,7 +749,7 @@ The Profile names are illustrative.  The public grammar is not extended with
 =identity=, =imports=, =capabilities=, =initial=, or =resolve= clauses.
 
 The existing parser owner remains
-=profile-composition-syntax-plan.ss=.  This RFC owns the semantic expansion
+=profile-composition-declaration-syntax.ss=.  This RFC owns the semantic expansion
 contract, not another parser.
 
 * Mix identity scope and Profile projection
@@ -1134,7 +1134,7 @@ creates no DecisionReceipt.  45-04 owns its detached diagnostic presentation.
 
 #+begin_src text
 PUBLIC_NEW_CONFIGURATION_FORMS=0
-CANONICAL_PARSER_OWNER=profile-composition-syntax-plan.ss
+CANONICAL_PARSER_OWNER=profile-composition-declaration-syntax.ss
 MIX_MODULE_REQUIRED_SLOTS=identity+imports+capabilities
 PROFILE_MAY_OVERRIDE_IDENTITY=false
 IMPORT_CONTAINER_FORCE_POLICY=declaration-only
@@ -1481,7 +1481,7 @@ flowchart LR
 - [X] Concrete Gerbil owner:
   =src/module-system/profile-composition/use-syntax.ss=.
 - [X] Parser owner:
-  =src/module-system/profile-composition/syntax-plan.ss=.
+  =src/module-system/profile-composition/declaration-syntax.ss=.
 - [X] Focused Scheme owner: =t/profile-composition-test.ss= and the
   composition syntax smoke scenario.
 - [X] Lean counterexample: generic composition equality does not imply parser
@@ -1500,7 +1500,7 @@ The proof audit found that the original parser returned a plan when its body
 was empty and when its body contained stages but no =compose profiles=
 operand.  This contradicted the already normative non-empty profile
 requirement.  The parser owner now checks its accumulated composed profile
-references before constructing =composition-syntax-plan= and raises
+references before constructing =composition-declaration= and raises
 =composition-missing-profile-operand= when that set is empty.  Focused Scheme
 tests contain separate empty-body and stage-only counterexamples so the two
 invalid forms cannot regress independently.

@@ -123,7 +123,7 @@ They may help bridge current code, but they do not define a second object model.
 
 ** Legacy composition helpers
 
-Current profile-composition accessors, syntax planners, alist projections,
+Current profile-composition accessors, declaration parsers, alist projections,
 stage clauses, and binding builders are legacy implementation surfaces.
 
 They do not constrain the new public algebra and are not automatically admitted
@@ -467,7 +467,7 @@ selected its value. Unresolved conflicts fail closed.
 
 ** Representation uniqueness law
 
-No alist, record, syntax plan, runtime registry, or generated manifest becomes
+No alist, record, compile-time declaration model, runtime registry, or generated manifest becomes
 co-authoritative with the Module object.
 
 * Evidence projection

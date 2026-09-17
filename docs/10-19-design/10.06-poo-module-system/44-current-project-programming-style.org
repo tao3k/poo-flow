@@ -264,7 +264,7 @@ Use these ownership rules:
 - rely on Gerbil module registration for one compiled module context instead of
   mutable global macro registries or bespoke source collectors;
 - keep runtime and macro artifacts in their native phases and never project a
-  syntax plan into JSON, an alist DSL, or a runtime row.
+  declaration model into JSON, an alist DSL, or a runtime row.
 
 Grammar identifiers must be compared with binding-aware syntax operations.
 Do not identify fixed grammar with =symbol->string=, printed text, or unscoped

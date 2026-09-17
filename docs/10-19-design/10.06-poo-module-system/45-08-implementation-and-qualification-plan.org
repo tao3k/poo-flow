@@ -102,7 +102,7 @@ create files.
 
 | Tranche | Candidate source anchors | Candidate test anchors | Verified current owner |
 |-
-| Mix-module expansion and predicates | 45-07 self-reference: =profile-composition-syntax-plan.ss=; inherited 88/101 candidates: =profile-composition-use-syntax.ss=, =profile-composition-accessors.ss=, =profile-composition.ss= | inherited 88/101 candidates: composition syntax smoke; profile composition tests | no |
+| Mix-module expansion and predicates | 45-07 self-reference: =profile-composition-declaration-syntax.ss=; inherited 88/101 candidates: =profile-composition-use-syntax.ss=, =profile-composition-accessors.ss=, =profile-composition.ss= | inherited 88/101 candidates: composition syntax smoke; profile composition tests | no |
 | G0 semantic values | =Requirement=, =Observation=, =Policy=, =DecisionReceipt=, =:clan/poo/proto= | canonicalization, decision-reason, and qualification cases | no |
 | runtime context and recovery | =PooFlowRuntimeContext=, =QualificationKey=, =DependencyQualificationCell=, =RecoverySet= | lifecycle, stale-continuation, replacement, and recovery cases | no |
 | observability | =QualificationDiagnosticSnapshot=, =inspect-qualification-failure=, =decisionReceiptDigest= | event ordering, correlation, buffer overflow, and detached snapshot cases | no |

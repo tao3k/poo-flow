@@ -8,42 +8,12 @@
 
 (import (only-in :gerbil/expander/core
                  current-expander-context
-                 expander-context-id))
+                 expander-context-id)
+        (only-in :std/srfi/13 string-prefix?))
 
 (export poo-flow-composition-profile-module)
 
 (begin-syntax
-  ;; Engineering note: policy-sensitive helpers in this owner keep explicit
-  ;; contracts adjacent to definitions so downstream reports stay actionable.
-  ;; : (-> Any Any)
-  (def (poo-flow-composition-string-prefix? prefix value)
-    (let ((prefix-length (string-length prefix))
-          (value-length (string-length value)))
-      (and (>= value-length prefix-length)
-           (string=? (substring value 0 prefix-length) prefix))))
-
-  ;; : (-> Any Any)
-  (def (poo-flow-composition-path-segments value)
-    (let ((length (string-length value)))
-      (let loop ((index 0) (start 0) (segments '()))
-        (cond
-         ((= index length)
-          (reverse (cons (substring value start index) segments)))
-         ((char=? (string-ref value index) #\/)
-          (loop (+ index 1)
-                (+ index 1)
-                (cons (substring value start index) segments)))
-         (else
-          (loop (+ index 1) start segments))))))
-
-  ;; : (-> Any Any)
-  (def (poo-flow-composition-member-tail needle values)
-    (let loop ((rest values))
-      (cond
-       ((null? rest) #f)
-       ((equal? (car rest) needle) rest)
-       (else (loop (cdr rest))))))
-
   ;; : (-> Any Any)
   (def (poo-flow-composition-module-context-source-path)
     (let* ((context-id
@@ -54,8 +24,7 @@
            (package-prefix "poo-flow/"))
       (and context-name
            (let (relative-context-name
-                 (if (poo-flow-composition-string-prefix? package-prefix
-                                                          context-name)
+                 (if (string-prefix? package-prefix context-name)
                    (substring context-name
                               (string-length package-prefix)
                               (string-length context-name))
@@ -68,10 +37,10 @@
             (poo-flow-composition-module-context-source-path))
            (source-segments
             (if context-source-path
-              (poo-flow-composition-path-segments context-source-path)
+              (string-split context-source-path #\/)
               []))
            (custom-tail
-            (poo-flow-composition-member-tail "custom" source-segments)))
+            (member "custom" source-segments)))
       (if (and custom-tail (pair? (cdr custom-tail)))
         (cadr custom-tail)
         "module")))
