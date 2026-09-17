@@ -54,6 +54,7 @@
   '("src/core/api.ss"
     "src/module-system/interface.ss"
     "src/module-system/profile-composition/interface.ss"
+    "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
