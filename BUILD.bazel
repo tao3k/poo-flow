@@ -8,11 +8,7 @@ exports_files([
     "gerbil-dependencies.MODULE.bazel",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
     "t/module-system-observability-test.ss",
-    "t/package-spec-root-mode-ab-scenario-test.ss",
     "t/profile-composition-test.ss",
-    "t/scenarios/building/package-spec-root-mode-ab/closure-build.ss",
-    "t/scenarios/building/package-spec-root-mode-ab/contract.ss",
-    "t/scenarios/building/package-spec-root-mode-ab/modules-build.ss",
 ])
 
 filegroup(

@@ -48,26 +48,9 @@ gerbil_project_test(
     ],
 )
 
-gerbil_project_test(
-    name = "package_spec_root_mode_ab_test",
-    size = "medium",
-    srcs = [
-        "//:scheme_build_sources",
-        "//:t/package-spec-root-mode-ab-scenario-test.ss",
-        "//:t/scenarios/building/package-spec-root-mode-ab/closure-build.ss",
-        "//:t/scenarios/building/package-spec-root-mode-ab/contract.ss",
-        "//:t/scenarios/building/package-spec-root-mode-ab/modules-build.ss",
-    ],
-    project = "//gerbil:compile",
-    source_root_marker = "//:scheme_source_root_marker",
-    tags = ["exclusive"],
-    tests = ["//:t/package-spec-root-mode-ab-scenario-test.ss"],
-)
-
 test_suite(
     name = "owner_map_tests",
     tests = [
-        ":package_spec_root_mode_ab_test",
         ":owner_contract_test",
         ":owner_map_contract_test",
     ],

@@ -13,6 +13,14 @@ bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 
+# protobuf 33.4 pulls unused Apple and Swift rule sets into every C build;
+# protobuf 34 removes that dependency edge.  Keep the graph on the first
+# release without the irrelevant macOS Swift repository probe.
+single_version_override(
+    module_name = "protobuf",
+    version = "34.0.bcr.1",
+)
+
 include("//:gerbil-bazel.MODULE.bazel")
 
 GERBIL_LINUX_INSTALL_DIGEST = "ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208"
