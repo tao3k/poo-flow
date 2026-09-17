@@ -85,8 +85,8 @@ until the runtime handoff layer consumes them.
 
 ** 10.06.25.50 Owner Boundary
 Recommended ownership:
-- =src/modules/workflow/cicd.ss= or =src/modules/funflow/cicd.ss= should own the
-  check-map object and receipt projection.
+- =src/modules/workflow/objects.ss= should own the check-map object and
+  =src/modules/workflow/funs.ss= its receipt projection.
 - =src/modules/funflow/config.ss= should continue to own only default feature
   payload rows.
 - =src/modules/sandbox-core/profile.ss= and backend sandbox modules should keep
@@ -96,10 +96,9 @@ Recommended ownership:
   this milestone.
 - =marlin-agent-core= remains the heavy runtime owner.
 
-The better first owner is =src/modules/workflow/cicd.ss= if the object is meant
-to be engine-independent workflow data. Use =src/modules/funflow/cicd.ss= only
-if the first implementation intentionally depends on Funflow-specific graph
-projection.
+The workflow module is the engine-independent owner.  Consumers enter through
+=src/modules/workflow/interface.ss=; Funflow only supplies its configuration
+adapter.
 
 ** 10.06.25.60 Acceptance Criteria
 The next code slice is complete when:
@@ -115,7 +114,8 @@ The next code slice is complete when:
   flow.
 
 ** 10.06.25.65 Implementation Update
-The check-map slice now exists in =src/modules/workflow/cicd.ss=:
+The check-map slice now exists under the Workflow role owners and is exported
+through =src/modules/workflow/interface.ss=:
 - checks and check maps remain inert POO control-plane objects;
 - receipts and runtime-manifest readiness carry =profile-refs=, =sandbox-runtime-summaries=, =sandbox-handoff-summaries=, and =sandbox-unresolved-profile-refs=;
 - sandbox summaries are projected by =src/modules/agent-sandbox/config.ss= from a provided profile catalog, so CI/CD code does not parse filesystem/resource policy rows;

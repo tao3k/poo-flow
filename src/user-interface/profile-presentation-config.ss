@@ -7,7 +7,7 @@
 ;;; Invariant: presentation is shallow inspection data and does not activate modules.
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :poo-flow/src/modules/workflow/cicd
+        (only-in :poo-flow/src/modules/workflow/interface
                  poo-flow-cicd-check-map-name)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface

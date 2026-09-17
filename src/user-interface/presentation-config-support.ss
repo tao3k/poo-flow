@@ -32,7 +32,7 @@
                  poo-flow-sandbox-profile-backend-kind
                  poo-flow-sandbox-profile-backend-ref
                  poo-flow-sandbox-profile-metadata)
-        :poo-flow/src/modules/workflow/cicd
+        :poo-flow/src/modules/workflow/interface
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
         (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config

@@ -15,9 +15,10 @@
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-check-map->functional-dag
                  poo-flow-funflow-functional-dag->alist)
-        (only-in :poo-flow/src/modules/workflow/cicd
+        (only-in :poo-flow/src/modules/workflow/objects
                  poo-flow-cicd-check-map?
-                 poo-flow-cicd-check-map-name
+                 poo-flow-cicd-check-map-name)
+        (only-in :poo-flow/src/modules/workflow/funs
                  poo-flow-cicd-check-map->receipts
                  poo-flow-cicd-check-map->runtime-manifest-readiness
                  poo-flow-cicd-check-map->runtime-command-manifests

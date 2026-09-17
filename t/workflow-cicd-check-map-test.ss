@@ -13,7 +13,7 @@
                  )
         (only-in :clan/poo/object .ref object?)
         :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/interface)
 
 (export workflow-cicd-check-map-test)
 

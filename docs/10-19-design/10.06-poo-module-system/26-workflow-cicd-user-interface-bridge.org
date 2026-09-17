@@ -27,7 +27,7 @@ The current CI/CD implementation is split into intent and concrete control-plane
 objects:
 
 - =src/modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
-- =src/modules/workflow/cicd.ss= owns inert POO check and check-map objects.
+- =src/modules/workflow/objects.ss= owns inert POO check and check-map objects.
 - =t/workflow-cicd-check-map-test.ss= proves receipt and runtime-manifest
   readiness projection without execution.
 - =t/user-interface-cicd-test.ss= still proves the older user intent payload and
@@ -120,8 +120,8 @@ Funflow config helper. The helper should live beside the module owner, not in
 
 - =src/modules/funflow/config.ss= owns the public POO prototypes:
   =funflow-check= and =funflow-pipeline=.
-- =src/modules/workflow/cicd.ss= keeps the shared workflow-domain POO check-map
-  object and projections until or unless it becomes Funflow-specific.
+- =src/modules/workflow/{objects,funs}.ss= keep the shared workflow-domain POO
+  check-map object and projections until or unless it becomes Funflow-specific.
 - =src/user-interface/init-syntax.ss= only recognizes the syntax and calls the
   Funflow config helper.
 - =src/modules/funflow/config.ss= keeps the default =+cicd= feature payload.
@@ -216,7 +216,7 @@ Legacy =:config= pipeline rows are no longer accepted.
   check-map object data;
 - =:inherits= preserves single or multiple supers as profile refs or objects;
 - receipts and runtime-manifest readiness remain available through
-  =src/modules/workflow/cicd.ss= projections;
+  =src/modules/workflow/interface.ss= projections;
 - Scheme does not execute commands, activate sandboxes, or resolve runtime
   adapters;
 - focused tests pass through native =gxtest= and the package build remains

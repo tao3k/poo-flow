@@ -7,9 +7,10 @@
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/projection/syntax
-        :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
         :poo-flow/src/modules/funflow/config-prototypes
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/funs)
 
 (export poo-flow-funflow-require
         poo-flow-funflow-symbol-list?

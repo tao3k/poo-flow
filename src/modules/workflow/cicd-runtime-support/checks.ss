@@ -11,7 +11,9 @@
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
                  runtime-command-fields->manifest)
-        :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
+        :poo-flow/src/modules/workflow/cicd-funs
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
         :poo-flow/src/modules/workflow/cicd-runtime-support/graph)

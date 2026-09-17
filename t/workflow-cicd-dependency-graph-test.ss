@@ -11,7 +11,7 @@
                  test-case
                  check-equal?
                  )
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/interface)
 
 (export workflow-cicd-dependency-graph-test)
 

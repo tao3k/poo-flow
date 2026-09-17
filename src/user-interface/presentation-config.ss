@@ -10,7 +10,7 @@
 (import (only-in :clan/poo/object object<-alist)
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/modules/workflow/cicd
+        :poo-flow/src/modules/workflow/interface
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/entrypoints

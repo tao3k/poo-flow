@@ -7,7 +7,9 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :std/misc/list delete-duplicates/hash)
-        :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
+        :poo-flow/src/modules/workflow/cicd-funs
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
         :poo-flow/src/modules/workflow/cicd-runtime-support/checks

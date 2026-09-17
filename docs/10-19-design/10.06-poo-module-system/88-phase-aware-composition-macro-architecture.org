@@ -149,7 +149,7 @@ are matched as syntax literals, not through =symbol->string=.
 
 The following rules are mandatory:
 
-- preserve source and lexical context while parsing and planning;
+- preserve source and lexical context while parsing declarations;
 - use binding-aware literal comparison for grammar identifiers;
 - keep profile expressions, =:extends= expressions, and hook expressions as
   syntax objects;
@@ -160,9 +160,9 @@ The following rules are mandatory:
 - do not place hidden activation, I/O, connector calls, or runtime execution in
   the expansion.
 
-* Syntax Plan Contract
+* Declaration Model Contract
 
-One parse produces one immutable plan containing:
+One parse produces one immutable declaration model containing:
 
 - composition name syntax;
 - imported module and alias syntax;
@@ -182,7 +182,10 @@ The parser validates before lowering:
 - known top-level and stage clause kinds;
 - valid =profile= and =profiles= shapes.
 
-The lowering pass consumes the plan without reparsing source forms.
+The lowering pass consumes the declaration model without reparsing source
+forms.  This compile-time value is deliberately not called a Plan: it contains
+no execution nodes, dependency schedule, runtime authority, or handoff state.
+Only the lazy Scenario Case projection may publish an execution plan.
 
 * Error Contract
 

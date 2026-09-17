@@ -9,7 +9,7 @@
 (import :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/sandbox-core/profile-catalog
         :poo-flow/src/modules/workflow/cicd-config
-        (only-in :poo-flow/src/modules/workflow/cicd
+        (only-in :poo-flow/src/modules/workflow/funs
                  poo-flow-cicd-check-map->pipeline-run
                  poo-flow-cicd-check-map->pipeline-result))
 

@@ -14,7 +14,7 @@
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-pipeline-runtime-command-manifests)
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/interface)
 
 (export funflow-config-pipeline-direct-test)
 

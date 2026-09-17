@@ -191,7 +191,7 @@ only in discussion is not durable specification evidence.
 
 #+begin_export mermaid
 flowchart LR
-    A["State 1: declaration parsed"] -->|"lexical resolution"| B["State 2: bounded static plan"]
+    A["State 1: declaration parsed"] -->|"lexical resolution"| B["State 2: immutable declaration model"]
     B -->|"evidence gate satisfied"| C["State 3: runtime lowering authorized"]
     C -->|"one owner-scoped operation"| D["State 4: POO result"]
     D -. "observation only; no precedence" .-> E["Receipt and trace projection"]
@@ -250,11 +250,13 @@ Use the smallest macro tier:
 ** 10.06.44.42 Phase, Hygiene, And Module Context
 Macros that parse a project language must preserve Gerbil syntax context.  The
 parser owns syntax objects, source locations, grammar validation, and a bounded
-compile-time plan.  Runtime modules own POO construction and policy behavior.
+compile-time declaration model.  Runtime modules own POO construction and
+policy behavior.  The term Plan is reserved for a Scenario Case execution
+projection with nodes and dependency semantics.
 
 Use these ownership rules:
 
-- put reusable grammar parsing and immutable expansion plans in a dedicated
+- put reusable grammar parsing and immutable declaration models in a dedicated
   syntax-support module;
 - import syntax support through =for-syntax= rather than loading or evaluating
   its source;
@@ -698,7 +700,7 @@ The static declaration path is:
 #+begin_src text
 AI-authored declaration
   -> syntax parser and binding-aware grammar validation
-  -> bounded immutable compile-time plan
+  -> bounded immutable compile-time declaration model
   -> ordinary POO-native or functional expansion
   -> constructor/contract/receipt validation
   -> proof-fact or runtime-handoff projection
