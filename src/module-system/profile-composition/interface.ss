@@ -22,7 +22,8 @@
                  poo-flow-scenario-inline-profile-normalize
                  poo-flow-scenario-inline-apply-hooks
                  poo-flow-scenario-inline-module
-                 poo-flow-scenario-inline-profile
+                 poo-flow-scenario-inline-profile)
+        (only-in :poo-flow/src/module-system/profile-composition/plan-projection
                  poo-flow-scenario-case->execution-plan)
         (only-in :poo-flow/src/module-system/profile-composition/accessors
                  poo-flow-scenario-case-name

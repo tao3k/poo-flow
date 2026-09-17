@@ -12,7 +12,7 @@
                             execution-plan?
                             plan-node-count)
                    (plan-node-count core-plan-node-count))
-        (only-in :poo-flow/src/module-system/profile-composition/inline-runtime
+        (only-in :poo-flow/src/module-system/profile-composition/plan-projection
                  poo-flow-scenario-case->execution-plan))
 
 (export +poo-flow-scenario-case-kind+

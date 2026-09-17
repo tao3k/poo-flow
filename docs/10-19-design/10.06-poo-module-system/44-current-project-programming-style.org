@@ -434,6 +434,29 @@ contract syntax, profile declaration syntax, policy selector syntax,
 =use-module= branches, and static runtime handoff schemas.  Do not repeatedly
 parse fixed declaration syntax at runtime.
 
+** 10.06.44.85 Reference-Grade Scheme Expression And Test Protocol
+The local =.data/gerbil-poo= and =.data/gerbil-persist= checkouts are reference
+corpora for expression quality.  They are not dependencies and their source is
+not copied wholesale.  New POO Flow code should preserve the following
+division of responsibility demonstrated by those repositories:
+
+- public extensible behavior uses POO prototypes, =define-type=, slot
+  generics, or CLOS according to the number of open dispatch axes;
+- private traversal records use a small =defstruct= when positional lists would
+  otherwise create an implicit =car=/=cadr= protocol;
+- graph and collection algorithms use named functions plus Gerbil iteration,
+  SRFI folds, and standard hash/set operations with visible complexity;
+- a =defrule= in a test may bind a repeated protocol vocabulary and expand to
+  ordinary assertions, but it must not contain the behavior being tested;
+- semantic lists remain lists: ordered Profiles, clauses, node identifiers,
+  user syntax payloads, and public projection rows must not be wrapped merely
+  to eliminate the word =list=.
+
+A source file must own one of object construction, syntax lowering, graph
+planning, runtime handoff, or test protocol.  Combining several owners in one
+large helper file is a refactoring signal even when every individual function
+is pure.
+
 ** 10.06.44.90 Module, Factor, Plugin, And Fixture Boundary
 Each module is made from:
 

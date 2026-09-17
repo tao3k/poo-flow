@@ -5,10 +5,10 @@
 
 ;;; Reusable indexing functions for profile-composition lowering.
 
-(export poo-flow-composition-leftmost-index-by)
+(export poo-flow-leftmost-index-by)
 
 ;; The first source declaration wins, matching the prior linear `find` path.
-(def (poo-flow-composition-leftmost-index-by key-of values)
+(def (poo-flow-leftmost-index-by key-of values)
   (let (index (make-hash-table-eq))
     (for-each
      (lambda (value)

@@ -12,9 +12,17 @@
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/interface
         (only-in :poo-flow/src/module-system/profile-composition/funcs
-                 poo-flow-composition-leftmost-index-by)
+                 poo-flow-leftmost-index-by)
         (only-in :poo-flow/src/module-system/profile-composition/syntax-plan
                  parse-poo-flow-composition-syntax-plan))
+
+;;; Test protocol: construction and identity projection must not force any
+;;; listed derived slot.  Keep the macro small and expand to ordinary checks.
+(defrule (check-unforced-slots object slot ...)
+  (begin
+    (check-equal? (.ref/cached object 'slot (lambda () 'not-forced))
+                  'not-forced)
+    ...))
 
 (def base-report
   (.o (kind 'report)
@@ -126,7 +134,7 @@
     (let* ((first '(profile report step))
            (second '(case report handoff))
            (index
-            (poo-flow-composition-leftmost-index-by
+            (poo-flow-leftmost-index-by
              cadr (list first second))))
       (check (hash-get index 'report) => first)))
    (test-case
@@ -279,15 +287,8 @@
     (check-equal? (poo-flow-scenario-case? plan-composition) #t)
     (check-equal? (.ref plan-composition 'kind)
                   +poo-flow-scenario-case-kind+)
-    (check-equal? (.ref/cached plan-composition 'execution-plan
-                                (lambda () 'not-forced))
-                  'not-forced)
-    (check-equal? (.ref/cached plan-composition 'admission
-                                (lambda () 'not-forced))
-                  'not-forced)
-    (check-equal? (.ref/cached plan-composition 'presentation
-                                (lambda () 'not-forced))
-                  'not-forced))
+    (check-unforced-slots
+     plan-composition execution-plan admission presentation))
    (test-case
     "Scenario Case memoizes its lazy execution plan"
     (let (prepared (.ref plan-composition 'execution-plan))
@@ -311,15 +312,8 @@
     (let (composition
           (poo-flow-scenario-case 'lazy-projection '() '() '() '()))
       (check-equal? (eq? (.call composition project 'case) composition) #t)
-      (check-equal? (.ref/cached composition 'execution-plan
-                                  (lambda () 'not-forced))
-                    'not-forced)
-      (check-equal? (.ref/cached composition 'admission
-                                  (lambda () 'not-forced))
-                    'not-forced)
-      (check-equal? (.ref/cached composition 'presentation
-                                  (lambda () 'not-forced))
-                    'not-forced)))
+      (check-unforced-slots
+       composition execution-plan admission presentation)))
    (test-case
     "Scenario Case exposes presentation and projection behavior"
     (let ((prepared (.ref plan-composition 'execution-plan))
