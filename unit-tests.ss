@@ -20,10 +20,6 @@
 (def +poo-flow-serial-test-selectors+
   (map (lambda (fragment) (testing-test-selector 'contains fragment))
        '("module-object-practice-test.ss"
-         ;; This suite expands the complete PackageSpec closure and samples
-         ;; its observability contract.  Keep its declared 1024 MiB heap
-         ;; independent of the other isolated test processes.
-         "build-projection-observability-test.ss"
          "module-system-lazy-loader-test.ss"
          "module-system-observability-test.ss"
          ;; This suite deliberately drives a non-returning lazy POO slot until

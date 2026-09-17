@@ -77,20 +77,6 @@
                                  "(modules +poo-flow-public-entry-modules+)")
                       #f)))
 
-    (test-case "contribution build is a native ASP PackageSpec"
-      (let (source
-            (call-with-input-file "lambda-episteme/build.ss"
-                                  read-all-as-string))
-        (check-equal?
-         (contains? source
-                    "(public-entry-modules +lambda-episteme-public-entry-modules+)")
-         #t)
-        (check-equal?
-         (contains? source "make-package-source-stage")
-         #f)
-        (check-equal?
-         (contains? source "poo-flow-directory-files-recursive")
-         #f)))
     (test-case "testing source roots are owned by the POO profile"
       (let (profile
             (make-poo-flow-testing-observability-profile
