@@ -111,13 +111,13 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
         "capability_contract_digest": digest(5),
         "policy_revision": 1,
         "revocation_epoch": 0,
-        "schema_json": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/schema.json"),
+        "schema_json": include_str!("../../../../../packages/lambda-episteme/user-interface/scenarios/healthcare/authorization/schema.json"),
         "policies": [{
             "identity": "healthcare-medication-permit",
-            "source": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-safety.cedar")
+            "source": include_str!("../../../../../packages/lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-safety.cedar")
         }, {
             "identity": "healthcare-medication-revocation",
-            "source": include_str!("../../../../../lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-revocation.cedar")
+            "source": include_str!("../../../../../packages/lambda-episteme/user-interface/scenarios/healthcare/authorization/medication-revocation.cedar")
         }],
         "entities_json": entities.to_string(),
         "capabilities": [{
