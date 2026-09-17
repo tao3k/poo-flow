@@ -83,6 +83,51 @@ Use the highest-level POO operator that expresses the intent:
 
 The public user interface should prefer ==>=, ==>.+=, =?=, =.mix=, and named constructors. Raw =$computed-slot-spec= and direct =(lambda (self superfun) ...)= code should stay inside implementation helpers with tests.
 
+** 10.06.29.45 Complete Gerbil POO Capability Map
+
+POO Flow must not reduce =gerbil-poo= to =.o= plus =.ref=, nor should it try
+to demonstrate completeness by calling every operator in ordinary user config.
+The operators form different semantic layers.  The owner of a value determines
+which layer is admissible.
+
+| Capability | Native surface | Meaning | Normal POO Flow owner |
+|------------+----------------+---------+-----------------------|
+| Prototype declaration | =.o=, =.def=, =object<-alist=, =object<-fun= | Define an open recursive specification | Module and Profile objects; named boundary adapters only for =object<-= forms |
+| C3 composition | =.mix=, supers in =.o=, =.extend=, =.+= | Compose traits and precedence at runtime | Module composition, Profile refinement, Scenario assembly |
+| Slot algebra | direct slot, =?=, ==>=, ==>.+=, conditional inherited computation | Override, default, refine, or recursively refine one slot | Profile and Case declarations |
+| Lazy instance demand | =.ref=, =.get=, =.@=, =.ref/cached= | Instantiate on demand and memoize a reached slot | Any composed semantic object; reads must occur after composition |
+| Behavior slot | function-valued slot plus =.call= | One receiver supplies replaceable behavior | Scenario planning, admission, projection, receipt presentation |
+| Persistent variation | =.cc= | Copy the current instance values with bounded overrides | Request-local option or receipt variation after the source object is already admitted |
+| Reflection | =.slot?=, =.key?=, =.has?=, =.all-slots=, =.alist= | Discover capabilities or deliberately materialize a view | Doctor, admission, observability, explicit projection boundary |
+| Fresh stateful instance | =(.mix prototype)= followed by =.put!= or =.set!= | Create an instance cache independent of the exported prototype and update run-local state | Scheme-owned Session, interactive coordinator, bounded CLOS/MOP state |
+| Prototype surgery | =.putslot!=, =.setslot!=, =.def!=, =.putdefault!=, =uninstantiate-object!= | Change the computation graph after declaration | Observability instrumentation, REPL development, controlled hot evolution; never normal Profile customization |
+| Type objects and slot protocol | =define-type=, =Type.=, =validate=, =element?=, =.defgeneric= | Describe values and dispatch a protocol through type-object slots | Module =types.ss= and one-receiver protocol families |
+| Multi-axis open dispatch | POO Flow CLOS generics, specializers, method bundles | Select behavior where two or more independently extensible axes cross | Provider/Profile, Runtime/Contract, or similar open crossings |
+| Fixed projection | =with-slots=, =def-slots=, prefixed variants, =slot-lens= | Bind a known shape once rather than rediscovering it in a loop | Internal hot paths and generated projection helpers |
+| Low-level prototype functions | =instantiate-proto=, =compose-proto=, =compose-proto*= | Build arbitrary fixed-point prototypes whose instances need not be POO records | Internal algebra research only, with a concrete need that =object.ss= cannot express |
+
+This map is normative.  A code review must ask which semantic layer owns the
+operation.  Counting operator names is not evidence of POO quality.  A Module
+that uses only =.def=, ==>=, and =.mix= may be complete; a Scenario whose
+behavior is a long external symbolic =case= while all its objects are inert
+records is not complete.
+
+Two details are easy to miss:
+
+1. =.cc= copies materialized instance values.  It is appropriate for a bounded
+   value variation, but it is not prototype inheritance and must not replace a
+   reusable Profile.
+2. =.extend= and =.mix= create a new prototype/instance lifetime.  Values
+   written with =.put!= to the source object's instance are deliberately not
+   inherited.  Stateful work must therefore start from a fresh
+   =(.mix session-prototype)= and must never mutate the exported prototype.
+3. In the currently pinned provider, =.has? object a b c= checks that =a=,
+   =b=, and =c= are slots of the same receiver.  Although the upstream prose
+   presents this as a nested path form, the implementation does not descend
+   through =a= and =b=.  POO Flow must select the child explicitly, for example
+   =(.has? (.get scenario metadata) owner provider)=, until the provider
+   contract changes and the admission test is updated.
+
 ** 10.06.29.50 Super And Override Discipline
 
 In Gerbil POO, earlier and leftmost child prototypes override later/rightmost super prototypes. The =super= concept is not a reified super-instance. The normal way to use it is to invoke the inherited computation for the same slot.
@@ -118,6 +163,67 @@ This keeps the domain slot stable and delegates nested object merging to POO.
 5. Hygienic Gerbil macros may improve authoring, but they must expand to POO objects and functional combinators.
 
 This is why =src/core/flow.ss= owns the functional kernel and why workflow module macros must produce ordinary =flow= values. The Scheme layer is a control plane, not a scheduler.
+
+** 10.06.29.65 Scenario Case Expression Model
+
+A POO Flow Scenario is not merely a record containing a graph name, and it is
+not the heavy runtime execution itself.  It is a composed control-plane object
+with five kinds of slots:
+
+| Slot family | Example | Evaluation rule |
+|-------------+---------+-----------------|
+| Identity | =scenario-id=, =schema-version= | constant, inherited, inspectable |
+| Composition inputs | =modules=, =profiles=, =stages=, =policies= | accumulated with C3 and named functional combinators |
+| Derived facts | =effective-profiles=, =stage-graph=, =admission-plan= | lazy slots, forced only by the requested operation |
+| Behavior | =prepare=, =admit=, =project=, =present= | methods called with =.call=; refinable by Scenario prototypes |
+| Boundary facts | =runtime-owner=, =handoff-schema= | immutable description of the explicit runtime handoff |
+
+The corresponding Session is a different object.  A Session is created for
+one Scheme-side evaluation with =(.mix scenario-session-prototype)=.  It may
+hold =state=, =current-stage=, =observations=, and =last-receipt= in its
+instance cache.  Only named Session methods may update those slots.  The
+Session does not execute Docker, GitHub Actions, a model runtime, or Marlin;
+it records and validates the control-plane transition and projects the next
+handoff request.
+
+The complete expression path is:
+
+#+begin_export mermaid
+flowchart LR
+    M["Module prototypes"] -->|"C3 composition"| P["Profile composition"]
+    P -->|"selected by declaration"| C["Scenario Case prototype"]
+    C -->|"lazy .ref and behavioral .call"| A["Admitted control-plane plan"]
+    A -->|"fresh .mix"| S["Run-local Session instance"]
+    S -->|"named method; bounded .put!"| R["Receipt and next handoff"]
+    R -. "observed through reflection or projection" .-> O["Doctor and observability"]
+#+end_export
+
+The distinction closes a recurring design gap in the current User Interface:
+=use-composition= is the declarative composition root, while the object it
+produces must expose behavior through slots.  Syntax parses and lowers the
+declaration; it must not become a second interpreter for Scenario behavior.
+
+The ordinary authoring shape should therefore remain small:
+
+#+begin_src scheme
+(.def (github-release-case @ [gitops-case nasa-sdlc-case])
+  profiles: => append '(developer staging production)
+  prepare: prepare-github-release
+  admit: admit-github-release
+  project: project-github-workflow)
+
+(.call github-release-case prepare repository-facts)
+#+end_src
+
+The named functions remain pure.  Inheritance selects or refines them, =.call=
+expresses that they are object behavior, and a projection produces the GitHub
+Workflow or Marlin handoff only after admission.
+
+Use native type objects or a slot generic when one receiver family owns the
+behavior.  Use POO Flow CLOS only when independently extensible axes cross.
+For example, =Scenario.prepare= is normally a method slot; projecting
+=Provider x Profile x ContractKind= is a legitimate CLOS generic.  There is no
+universal requirement that every Module contain both mechanisms.
 
 ** 10.06.29.70 User Interface Policy
 
@@ -251,11 +357,26 @@ Project rules:
 
 1. Treat upstream profile, sandbox, workflow, and strategy prototypes as immutable after export.
 2. Prefer constructing a new prototype with =.mix=, =.extend=, =.+=, ==>=, or ==>.+= over mutating an existing prototype.
-3. Reserve =.put!= and =.putslot!= for tests, REPL exploration, or tightly-scoped internal builders that do not leak partially-instantiated objects.
-4. Do not use mutation to implement downstream customization.
-5. If mutation is unavoidable, add a validation receipt that proves no exported object was already instantiated.
+3. Reserve =.put!= and =.set!= for a fresh, run-local object instance, bounded
+   CLOS/MOP state, tests, or REPL exploration.  Exported Module, Profile,
+   Scenario, policy, and strategy prototypes remain immutable.
+4. A stateful Session constructor must create a new instance with
+   =(.mix session-prototype)= before any write.  Mutation must be reachable
+   through named behavior, and its receipt must expose the resulting
+   transition without exporting the mutable cell as public configuration.
+5. Reserve =.putslot!=, =.setslot!=, =.def!=, and =.putdefault!= for
+   controlled prototype evolution.  The owner must account for already
+   instantiated descendants and the need for =uninstantiate-object!=.
+6. Prototype surgery must not implement downstream customization.  Prefer a
+   new prototype with =.mix=, =.extend=, =.+=, ==>=, or ==>.+=.
+7. If prototype mutation is unavoidable, add a validation receipt that proves
+   the affected object graph is private or that cache invalidation was applied
+   deliberately.
 
-For normal code review, a new =.putslot!= call should be treated as a design smell until proven otherwise.
+For normal code review, a new =.putslot!= call is a design smell until proven
+otherwise.  A new =.put!= call is judged by ownership: it is wrong on a shared
+semantic prototype and may be correct on an explicitly fresh Session or CLOS
+state object.
 
 ** 10.06.29.140 Diagnostics And Presentation Policy
 

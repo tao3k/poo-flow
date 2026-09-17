@@ -216,6 +216,12 @@ package.  Its test cases cover:
 - native =.o= and =.def= construction, =.ref=, =.get=, =.@=, =.slot?=, and
   =.call=;
 - immutable =.cc= descriptor/object specialization;
+- a Scenario-shaped native object with defaults, ==>= inherited accumulation,
+  ==>.+= nested composition, same-receiver reflection, and =.call= behavior;
+- fresh Session instances whose =.put!= and =.set!= state is isolated from the
+  exported prototype and from sibling instances;
+- controlled =.putslot!=, =.putdefault!=, and =.def!= evolution, including the
+  explicit =uninstantiate-object!= boundary for an already cached value;
 - a diamond built with =.extend= and =.mix= whose computed responsibility follows
   upstream C3 and calls each inherited contribution once;
 - a second projection of that responsibility observes the upstream lazy cache;
@@ -228,7 +234,7 @@ admits the exact upstream substrate on which that value may be implemented.
 
 The current development receipt uses
 =./.devenv/devenv-profile-exec gxtest
-t/gerbil-poo-operation-admission-test.ss= and passes all 15 checks.  A
+t/gerbil-poo-operation-admission-test.ss= and passes all 32 checks.  A
 =bazelisk query= through the same launcher resolves the focused target.  The
 corresponding cold Bazel test build was interrupted before test execution when
 validation moved to the cached native path, so this RFC does not claim a Bazel

@@ -26,8 +26,11 @@
   "@gerbil_poo_sources//:source_resolution_receipt")
 
 (def +poo-flow-gerbil-poo-required-api+
-  '(.o .def .@ .get .ref .slot? .all-slots .call
-    .cc .extend .mix compute-precedence-list! $computed-slot-spec NoApplicableMethod?
+  '(.o .def .@ .get .ref .slot? .has? .all-slots .call
+    .cc .extend .mix .+
+    .put! .set! .putslot! .putdefault! .def! uninstantiate-object!
+    compute-precedence-list! $constant-slot-spec $computed-slot-spec
+    NoApplicableMethod?
     .defgeneric define-type
     Type Type. TypeError? element? validate raise-type-error
     object? object<-alist))

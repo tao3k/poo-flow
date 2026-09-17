@@ -4,8 +4,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Contract: executable admission evidence for the pinned gerbil-poo surface.
-;;; This test exercises upstream mechanics directly; it does not introduce a
-;;; POO Flow object, dispatch, precedence, or inherited-computation adapter.
+;;; This test exercises upstream mechanics directly; its Scenario and Session
+;;; examples remain native objects and introduce no alternate POO Flow object,
+;;; dispatch, precedence, or inherited-computation adapter.
 
 (import (only-in :std/test
                  check-equal?
@@ -14,17 +15,25 @@
                  test-suite)
         (only-in :clan/poo/object
                  $computed-slot-spec
+                 $constant-slot-spec
                  .@
                  .all-slots
                  .call
                  .cc
                  .def
+                 .def!
                  .extend
                  .get
+                 .has?
                  .mix
                  .o
+                 .put!
+                 .putdefault!
+                 .putslot!
                  .ref
+                 .set!
                  .slot?
+                 uninstantiate-object!
                  NoApplicableMethod?)
         (only-in :clan/poo/mop
                  .defgeneric
@@ -61,6 +70,69 @@
        (check-equal? (.call clone render '(tail)) '(clone tail))
        (check-equal? (.slot? clone 'render) #t)
        (check-equal? (length (.all-slots clone)) 2)))
+
+   (test-case "expresses a Scenario as defaults, inherited refinement, nested composition, and behavior"
+     (.def scenario-base
+       (profiles ? '())
+       (metadata (.o (owner 'poo-flow)
+                     (runtime-owner 'marlin)))
+       (prepare (lambda (facts)
+                  (list 'prepared facts profiles))))
+     (.def (github-release @ scenario-base)
+       (profiles => append '(developer staging production))
+       (metadata =>.+ (.o (provider 'github-actions)))
+       (prepare (lambda (facts)
+                  (list 'github-release facts profiles))))
+     (check-equal? (.get github-release profiles)
+                   '(developer staging production))
+     (check-equal? (.get github-release metadata owner) 'poo-flow)
+     (check-equal? (.get github-release metadata provider) 'github-actions)
+     ;; In the pinned provider `.has?` checks several slots on one receiver;
+     ;; explicitly select a child object before reflecting over its slots.
+     (check-equal? (.has? (.get github-release metadata)
+                          owner provider runtime-owner)
+                   #t)
+     (check-equal? (.call github-release prepare 'repository-ready)
+                   '(github-release repository-ready
+                     (developer staging production))))
+
+   (test-case "keeps run-local Session mutation outside the shared prototype"
+     (.def (session-prototype @)
+       (state 'created)
+       (history '())
+       (transition!
+        (lambda (next-state)
+          (.set! @ state next-state)
+          (.put! @ 'history (append history (list next-state)))
+          @)))
+     (let ((first-session (.mix session-prototype))
+           (second-session (.mix session-prototype)))
+       (.call first-session transition! 'admitted)
+       (.call first-session transition! 'projected)
+       (check-equal? (.get first-session state) 'projected)
+       (check-equal? (.get first-session history) '(admitted projected))
+       (check-equal? (.get second-session state) 'created)
+       (check-equal? (.get second-session history) '())
+       (check-equal? (.get session-prototype state) 'created)
+       ;; A further mix uses the prototype, never the mutated instance cache.
+       (check-equal? (.get (.mix first-session) state) 'created)))
+
+   (test-case "makes prototype surgery and instance invalidation explicit"
+     (.def evolving-scenario
+       (status ? 'draft)
+       (version 1))
+     (check-equal? (.get evolving-scenario version) 1)
+     (.putslot! evolving-scenario 'version ($constant-slot-spec 2))
+     ;; The already-instantiated value stays cached until deliberately reset.
+     (check-equal? (.get evolving-scenario version) 1)
+     (uninstantiate-object! evolving-scenario)
+     (check-equal? (.get evolving-scenario version) 2)
+     (uninstantiate-object! evolving-scenario)
+     (.putdefault! evolving-scenario 'status 'ready)
+     (.def! evolving-scenario projection-kind () 'github-workflow)
+     (check-equal? (.get evolving-scenario status) 'ready)
+     (check-equal? (.get evolving-scenario projection-kind)
+                   'github-workflow))
 
    (test-case "preserves C3 super order and lazy slot caching"
      (let ((b-evaluations 0)
