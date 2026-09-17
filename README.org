@@ -283,7 +283,7 @@ just build
 #+end_src
 
 The package =build.ss= declares native targets through the =exclude-modules=
-and =extra-spec= POO slots of =:asp-gerbil-scheme/build-api=. The upstream
+and =extra-spec= POO slots of =:asp-gerbil-scheme/building-api=. The upstream
 catalog owns discovery; there is no downstream =native-spec-projector= or
 second source scan. ASP Scheme owns shared build and testing
 machinery; POO Flow retains its domain modules, test cases, and performance

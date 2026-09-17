@@ -61,20 +61,30 @@ Gerbil =std/make= computes =settings-parallelize= through =gerbil-build-cores=. 
 The worker model still has an important limit: =make-build= first normalizes the build spec, creates completion/timestamp tables, imports spec modules under a mutex, checks dependency timestamps, then pushes buildable specs to a work channel. The worker count only helps after that import/dependency phase.
 
 For =poo-flow=, the expensive section is not only =gsc= compilation. The heavy module-system and POO macro modules make the pre-worker expander/import phase large enough to look like a single-threaded stall.
-** 10.06.39.20 Finding: Thin Package Builds Depend On Clean Package Roots
+** 10.06.39.20 Finding: Thin Package Builds Depend On Public Native Ownership
 :PROPERTIES:
-=.data/gerbil-poo/build.ss= is the right package-level reference for a normal Gerbil library. It imports =:clan/building=, defines a small =spec= around =all-gerbil-modules=, applies one special build option to =io=, conses one test helper, and delegates the rest to =init-build-environment!=.
+=poo-flow/build.ss= consumes only the public
+=:asp-gerbil-scheme/building-api=.  Its PackageSpec declares stable public
+entry modules and exceptional native options; ASP projects the native import
+closure, while =std/build-script= and =std/make= retain command, dependency,
+currentness, and execution ownership.
 
-=.data/gerbil-utils/build.ss= is slightly larger only because it bootstraps =:clan/building= itself and defines extra multicall commands for Nix/Docker publishing. Its package surface is still discovered through =clan/building#all-gerbil-modules= with a small conventional boundary.
-
-The lesson for =poo-flow= is not that every project needs a giant explicit stage list. The lesson is that a Gerbil package can keep =build.ss= simple when the package root contains package modules, tests that are meant to compile, and a small number of explicit special entries. If the repository root also contains research checkouts, generated state, user examples, docs, and fixtures, then =build.ss= becomes a boundary-repair layer. That is a project structure smell.
+Neither POO Flow nor ASP imports =clan/building=, initializes a parallel build
+environment, or maintains a second source graph.  The package root may contain
+research checkouts, generated state, user examples, docs, and fixtures, but
+those are excluded from the declared production closure rather than recovered
+through a downstream recursive build scan.
 ** 10.06.39.25 Measurement: Reference Simplicity Is Not The Same As Always-Fast Builds
 :PROPERTIES:
 With =GERBIL_BUILD_CORES=8=, the local reference checkouts behaved as follows on 2026-06-22:
 - =.data/gerbil-poo=: first measured =gxpkg build= finished in 324s; a second run was stopped after 247s with no useful additional evidence.
 - =.data/gerbil-utils=: first measured =gxpkg build= finished in 377s; a second run finished in 58s.
 
-This means build-file simplicity and build speed must be analyzed separately. =clan/building= gives a small, conventional package entry point and lets =std/make= use =GERBIL_BUILD_CORES=. It does not make a cold or timestamp-invalid Gerbil compilation free. The durable engineering improvement for =poo-flow= is therefore:
+This means build-file simplicity and build speed must be analyzed separately.
+The public ASP PackageSpec keeps the declaration small while =std/make= reads
+=GERBIL_BUILD_CORES= and owns execution. It does not make a cold or
+timestamp-invalid Gerbil compilation free. The durable engineering improvement
+for =poo-flow= is therefore:
 1. keep =build.ss= thin and package-manager-owned;
 2. keep package discovery positive by scanning the intended include dirs;
 3. reduce expensive POO/macro expansion in hot modules;
@@ -86,9 +96,10 @@ Gerbil bootstrap is a different path. =src/build/build1.ss= imports =:gerbil/com
 That strategy avoids =std/make='s package dependency tables, but it recompiles the selected modules. It is suitable for bootstrap or a deliberate full rebuild mode, not as the default =gxpkg build= path for normal package iteration.
 ** 10.06.39.40 POO Flow Build Direction
 :PROPERTIES:
-The correct next implementation is:
+The current implementation contract is:
 1. Keep default =gxpkg build= on =std/make= so package clean/build semantics and incremental checks stay intact.
-2. Use =:clan/building= as the normal package build facade, matching =gerbil-poo= and =gerbil-utils=.
+2. Use =:asp-gerbil-scheme/building-api= as the sole downstream package build
+   facade; never import ASP's =src/build-api= implementation modules.
 3. Keep =build.ss= responsible only for true special target options: the nono
    =begin-ffi= module's host flags and the small user-interface entry surface
    that must be package-managed. Gerbil owns the FFI module outputs.
@@ -109,11 +120,11 @@ installation uses provider locators in =gerbil.pkg=; Gerbil 0.18.2 =pkg-fetch=
 accepts =github.com/=, =gitlab.com/=, and =bitbucket.org/= providers and rejects
 an unfetched logical name with =Unknown package provider=.
 
-POO Flow therefore imports =:clan/poo/...= and declares
-=deps: '("clan" "clan/poo")= when lowering through =:clan/building=.  GitHub
-commit identities remain confined to =gerbil.pkg= and the Gerbil-Bazel source
-lock, where they provide immutable acquisition and integrity.  They must not
-appear in the user-facing Build API macro.
+POO Flow may import =:clan/poo/...= as its object system, but build ownership
+comes only through =:asp-gerbil-scheme/building-api=. GitHub commit identities
+remain confined to =gerbil.pkg= and the Gerbil-Bazel source lock, where they
+provide immutable acquisition and integrity. They must not appear in the
+user-facing Build API macro.
 
 POO Flow's direct =gerbil.pkg= dependency is ASP only.  ASP owns the pinned
 =gerbil-poo= dependency, and =gerbil-poo= owns =gerbil-utils=; repeating those
