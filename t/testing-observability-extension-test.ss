@@ -5,20 +5,45 @@
 
 
 (import :std/test
+        (only-in :clan/poo/object .ref)
         (only-in :std/srfi/13 string-contains)
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  testing-interface-call-with-operation
                  testing-interface-run-test-batch!)
         (only-in :poo-flow/src/module-system/observability/testing-extension
+                 +poo-flow-testing-import-footprint-profile+
                  poo-flow-native-observability-enabled?
                  make-poo-flow-testing-observability-profile
+                 poo-flow-testing-observability-profile-source-load-paths
                  poo-flow-testing-observability-extension))
 
 (export testing-observability-extension-test)
 
 (def testing-observability-extension-test
   (test-suite "POO Flow native testing observability extension"
+    (test-case "source roots are owned by the POO testing profile"
+      (let (profile
+            (make-poo-flow-testing-observability-profile
+             'testing/source-root 1/100))
+        (check-equal?
+         (poo-flow-testing-observability-profile-source-load-paths profile)
+         '(".gerbil/lib" "."))))
+
+    (test-case "registry footprint policy is declared only through POO slots"
+      (check (.ref +poo-flow-testing-import-footprint-profile+
+                   'heavyOwners)
+             => '())
+      (check (.ref +poo-flow-testing-import-footprint-profile+
+                   'largeClosureModuleCount)
+             => 32)
+      (check (.ref +poo-flow-testing-import-footprint-profile+
+                   'maxSharedClosureModules)
+             => 16)
+      (check (.ref +poo-flow-testing-import-footprint-profile+
+                   'action)
+             => 'reject))
+
     (test-case "GERBIL_BUILD_VERBOSE emits admission before the operation"
       (let ((previous (getenv "GERBIL_BUILD_VERBOSE" #f))
             (port (open-output-string))

@@ -10,7 +10,7 @@
 ;;; and std/make retain projection and execution ownership.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :gerbil/gambit spawn thread-sleep! write-substring)
+        (only-in :gerbil/gambit write-substring)
         (only-in :std/format format))
 
 (export poo-flow-write-observation-line!
@@ -48,9 +48,10 @@
         (poo-flow-observe-build-executor-handoff policy target-count)
         spec))))
 
-;;; Validate only the declared PackageSpec boundary.  ASP owns expansion of
-;;; `public-entry-modules` into the complete native import closure; the observer
-;;; must not replace that closure with a smaller, incomplete target list.
+;;; Validate only the declared PackageSpec boundary.  The ordinary POO Flow
+;;; package leaves both `modules` and `public-entry-modules` unset so ASP's
+;;; native source catalog feeds std/make directly.  Other callers may still
+;;; choose explicit public roots; observation must never replace their graph.
 (def (poo-flow-admit-build-package-spec! package-spec policy)
   (unless (object? package-spec)
     (error "POO Flow build projection requires a POO PackageSpec"
@@ -129,24 +130,16 @@
 ;;; This observer is available to callers that wrap a projection outside the
 ;;; package being built. A package build must never import its own observer.
 (def (poo-flow-observe-build-executor-handoff policy target-count)
-  (let (interval-ms (poo-flow-build-policy-ref policy 'executor-heartbeat-ms))
-    (when interval-ms
-      (unless (and (exact-integer? interval-ms) (> interval-ms 0))
-        (error "POO Flow executor heartbeat must be positive or false"
-               (.ref policy 'id) interval-ms))
-      (let (started-jiffy (current-jiffy))
-        (poo-flow-write-observation-line!
-         "[poo-flow] phase=executor-handoff profile=~a boundary=std/make/source-import-currentness-or-compile target-count=~a heartbeatMs=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
-         (poo-flow-build-policy-ref policy 'profile)
-         target-count interval-ms (poo-flow-build-policy-ref policy 'id))
-        (spawn
-         (lambda ()
-           (let loop ()
-             (thread-sleep! (/ interval-ms 1000.0))
-             (poo-flow-write-observation-line!
-              "[poo-flow] phase=executor-active profile=~a boundary=std/make/source-import-currentness-or-compile target-count=~a elapsedMs=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
-              (poo-flow-build-policy-ref policy 'profile)
-              target-count
-              (poo-flow-build-elapsed-milliseconds started-jiffy)
-              (poo-flow-build-policy-ref policy 'id))
-             (loop))))))))
+  (let (emit? (poo-flow-build-policy-ref policy 'emit-executor-handoff?))
+    (unless (boolean? emit?)
+      (error "POO Flow executor handoff emission must be boolean"
+             (.ref policy 'id) emit?))
+    (when emit?
+      ;; This observer does not own std/make's lifetime, so it must not spawn
+      ;; an unbounded heartbeat thread.  ASP's scoped projection observer owns
+      ;; and terminates its heartbeat with dynamic-wind; this edge records the
+      ;; handoff exactly once and then returns control to the native executor.
+      (poo-flow-write-observation-line!
+       "[poo-flow] phase=executor-handoff profile=~a boundary=std/make/source-import-currentness-or-compile target-count=~a policy=~a owner=module-system/observability executor=asp-build-api/std-make"
+       (poo-flow-build-policy-ref policy 'profile)
+       target-count (poo-flow-build-policy-ref policy 'id)))))

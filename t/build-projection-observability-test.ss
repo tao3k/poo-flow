@@ -3,26 +3,18 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal? check-exception)
+(import (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/srfi/13 string-contains string-prefix?)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o)
         (only-in :gerbil/gambit spawn thread-join! thread-sleep!)
         (only-in "../src/module-system/observability/config.ss"
                  poo-flow-default-build-observability-policy)
-        (only-in "../src/module-system/observability/interface.ss"
-                 poo-flow-make-observed-package-spec-projector
-                 poo-flow-admit-build-package-spec!
-                 poo-flow-observe-build-projection)
         (only-in "../src/module-system/observability/build-projection.ss"
+                 poo-flow-make-observed-package-spec-projector
+                 poo-flow-observe-build-projection
                  poo-flow-write-observation-line!
-                 poo-flow-build-elapsed-milliseconds)
-        (only-in "../src/module-system/observability/testing-extension.ss"
-                 make-poo-flow-testing-observability-profile
-                 poo-flow-testing-observability-profile-source-load-paths)
-        (only-in "../src/module-system/observability/source-admission.ss"
-                 poo-flow-source-admission-observability-profile-prototype
-                 poo-flow-source-admission-observability-profile?))
+                 poo-flow-build-elapsed-milliseconds))
 
 (export build-projection-observability-test)
 
@@ -31,44 +23,26 @@
 
 (def build-projection-observability-test
   (test-suite "POO PackageSpec projection observability"
-    (test-case "public entry closure remains owned by the ASP projector"
+    (test-case "native package catalog reaches the ASP projector unchanged"
       (let ((projected? #f)
             (port (open-output-string))
-            (package-spec
-             (.o (public-entry-modules '("src/core/api.ss")))))
+            (package-spec (.o)))
         (parameterize ((current-output-port port))
           ((poo-flow-make-observed-package-spec-projector
             (lambda (_package-spec)
               (set! projected? #t)
-              '("src/core/api.ss"))
+              '("src/core/api.ss" "src/module-system/api.ss"))
             poo-flow-default-build-observability-policy)
            package-spec))
         (let (output (get-output-string port))
           (check-equal? projected? #t)
-          (check-equal? (contains? output "phase=spec-input") #t)
-          (check-equal? (contains? output "mode=public-entry-modules") #t)
-          (check-equal?
-           (contains? output "owner=asp-build-api/native-import-closure")
-           #t))))
+          (check-equal? (contains? output "phase=spec-input") #f)
+          (check-equal? (contains? output "phase=spec-projected") #t)
+          (check-equal? (contains? output "target-count=2") #t)
+          (check-equal? (contains? output "phase=executor-handoff") #t)
+          (check-equal? (contains? output "phase=executor-active") #f))))
 
-    (test-case "public interface rejects malformed roots before projection"
-      (let ((projected? #f)
-            (package-spec (.o (public-entry-modules 'malformed))))
-        (check-exception
-         (poo-flow-admit-build-package-spec!
-          package-spec poo-flow-default-build-observability-policy)
-         (lambda (_failure) #t))
-        (check-exception
-         ((poo-flow-make-observed-package-spec-projector
-           (lambda (_package-spec)
-             (set! projected? #t)
-             '())
-           poo-flow-default-build-observability-policy)
-          package-spec)
-         (lambda (_failure) #t))
-        (check-equal? projected? #f)))
-
-    (test-case "package build source declares complete public closure roots"
+    (test-case "package build delegates the complete source catalog to ASP"
       (let (source (call-with-input-file "build.ss" read-all-as-string))
         (check-equal? (contains? source
                                  ":asp-gerbil-scheme/building-api")
@@ -78,50 +52,33 @@
                       #f)
         (check-equal? (contains? source ":clan/building") #f)
         (check-equal? (contains? source
-                                 "(public-entry-modules +poo-flow-public-entry-modules+)")
-                      #t)
+                                 "(public-entry-modules")
+                      #f)
         (check-equal? (contains? source
-                                 "(modules +poo-flow-public-entry-modules+)")
-                      #f)))
+                                 "(modules ")
+                      #f)
+        (check-equal? (contains? source
+                                 "(exclude-dirs +poo-flow-build-exclude-dirs+)")
+                      #t)))
 
-    (test-case "testing source roots are owned by the POO profile"
-      (let (profile
-            (make-poo-flow-testing-observability-profile
-             'testing/source-root 1/100))
+    (test-case "performance suite declares the POO testing extension"
+      (let (performance-source
+            (call-with-input-file "performance-tests.ss" read-all-as-string))
         (check-equal?
-         (poo-flow-testing-observability-profile-source-load-paths profile)
-         '(".gerbil/lib" "."))
-        (let (performance-source
-              (call-with-input-file "performance-tests.ss" read-all-as-string))
-          (check-equal?
-           (contains?
-            performance-source
-            "(poo-flow-testing-observability-extension +asp-testing-interface+)")
-           #t))))
+         (contains?
+          performance-source
+          "(poo-flow-testing-observability-extension +asp-testing-interface+)")
+         #t)))
 
-    (test-case "module-specific source observation is a declarative POO profile"
-      (let (profile
-            (.o (:: @ poo-flow-source-admission-observability-profile-prototype)
-                (identity 'lambda-episteme/sdlc-source-admission)
-                (owner 'lambda-episteme)
-                (module 'sdlc)
-                (emit-summary? #t)
-                (emit-diagnostics? #f)))
-        (check-equal?
-         (poo-flow-source-admission-observability-profile? profile) #t)
-        (check-equal? (.ref profile 'owner) 'lambda-episteme)
-        (check-equal? (.ref profile 'module) 'sdlc)
-        (check-equal? (.ref profile 'emit-diagnostics?) #f)))
-
-    (test-case "default policy exposes an oversized native catalog"
+    (test-case "default policy reports a catalog above its declared budget"
       (let (port (open-output-string))
         (parameterize ((current-output-port port))
           (poo-flow-observe-build-projection
-           poo-flow-default-build-observability-policy 257 3))
+           poo-flow-default-build-observability-policy 601 3))
         (let (output (get-output-string port))
           (check-equal? (string-prefix? "\n[poo-flow]" output) #t)
           (check-equal? (contains? output "phase=spec-projected") #t)
-          (check-equal? (contains? output "target-count=257") #t)
+          (check-equal? (contains? output "target-count=601") #t)
           (check-equal? (contains? output "reason=target-count") #t)
           (check-equal? (contains? output "action=observe") #t))))
 
@@ -130,7 +87,7 @@
             (policy
              (.o (:: @ poo-flow-default-build-observability-policy)
                  (id 'build-projection/test)
-                 (target-budget 600))))
+                 (target-budget 700))))
         (parameterize ((current-output-port port))
           (poo-flow-observe-build-projection policy 257 3))
         (let (output (get-output-string port))

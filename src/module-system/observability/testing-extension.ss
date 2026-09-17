@@ -9,6 +9,8 @@
 
 (import (only-in :clan/poo/object .cc .o .ref .slot? object?)
         (only-in :asp-gerbil-scheme/testing-api
+                 testing-import-footprint-profile
+                 testing-interface-add-profile
                  testing-interface-call-with-operation)
         (only-in :std/misc/path path-expand)
         (only-in :std/srfi/13 string-join)
@@ -25,6 +27,7 @@
         poo-flow-testing-observability-profile-identity
         poo-flow-testing-observability-profile-heartbeat-interval-seconds
         poo-flow-testing-observability-profile-source-load-paths
+        +poo-flow-testing-import-footprint-profile+
         poo-flow-default-testing-observability-profile
         poo-flow-current-testing-observability-profile
         poo-flow-observe-testing-operation
@@ -32,6 +35,16 @@
 
 (def +poo-flow-testing-observation-policy+
   (poo-flow-debug-call-policy 'native-gerbil-testing 8))
+
+;;; ASP derives closure ownership from Gerbil's resident module registry.  POO
+;;; Flow declares only the policy slots: what counts as a large closure, how
+;;; much non-platform overlap is acceptable, and whether a violation rejects.
+(def +poo-flow-testing-import-footprint-profile+
+  (testing-import-footprint-profile
+   [] 0 'reject
+   large-closure-module-count: 32
+   max-shared-closure-modules: 16
+   ignored-module-prefixes: '("std/" "gerbil/" "gambit/")))
 
 ;;; Heartbeat timing is a POO profile so CI, a user profile, or an atomic test
 ;;; can refine observation cadence without patching the observer.
@@ -162,7 +175,8 @@
     (unless (poo-flow-testing-observability-profile? profile)
       (error "invalid POO Flow testing observability extension profile" profile))
     (poo-flow-testing-prepare-source-load-path! profile)
-    (.cc testing
+    (.cc (testing-interface-add-profile
+          testing +poo-flow-testing-import-footprint-profile+)
          around-operation:
          (lambda (operation thunk)
            (parameterize

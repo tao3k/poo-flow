@@ -16,11 +16,11 @@
   id: 'build-projection/package
   profile: 'package
   enabled?: #t
-  target-budget: 256
+  target-budget: 600
   target-budget-action: 'observe
   projection-budget-ms: #f
   projection-budget-action: 'observe
-  executor-heartbeat-ms: 5000)
+  emit-executor-handoff?: #t)
 
 (.def (poo-flow-default-build-observability-policy
        @ poo-flow-build-observability-policy-prototype)

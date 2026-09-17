@@ -12,27 +12,6 @@
                  asp-gerbil-scheme-library-package-prototype
                  default-exclude-dirs))
 
-;;; These stable public interfaces are the only declared package roots.  ASP's
-;;; native Import Model projects their complete production closure before the
-;;; resulting BuildSpec is handed to std/make.
-(def +poo-flow-public-entry-modules+
-  '("src/core/api.ss"
-    "src/graph/types.ss"
-    "src/module-system/api.ss"
-    "src/feature-system/interface.ss"
-    "src/feature-system/bundle-v1-composition-writer.ss"
-    "src/modules/funflow/interface.ss"
-    "src/modules/governance/interface.ss"
-    "src/modules/temporal-causality/interface.ss"
-    "src/modules/authorization/interface.ss"
-    "src/modules/authorization/providers/cedar/interface.ss"
-    "src/contract/runtime-v0-abi-schema.ss"
-    "src/proof/proof-case-vector.ss"
-    "src/qualification/runtime-symbol-manifest.ss"
-    "src/user-interface/init-declaration-syntax.ss"
-    "src/user-interface/config-discovery-syntax.ss"
-    "src/user-interface/facade.ss"))
-
 (def +poo-flow-build-exclude-dirs+
   (append '("lambda-episteme"
             "bindings"
@@ -68,7 +47,6 @@
  (poo-flow-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (spec poo-flow-native-spec)
- (public-entry-modules +poo-flow-public-entry-modules+)
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"
