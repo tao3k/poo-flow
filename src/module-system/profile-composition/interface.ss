@@ -35,6 +35,7 @@
                  poo-flow-scenario-module-binding
                  poo-flow-scenario-clause
                  poo-flow-scenario-stage
+                 poo-flow-scenario-profile-binding
                  poo-flow-scenario-case-multiplicity
                  poo-flow-scenario-case-launch-range
                  poo-flow-scenario-case-multiplicities->launch-ranges
@@ -92,6 +93,7 @@
         poo-flow-scenario-module-binding
         poo-flow-scenario-clause
         poo-flow-scenario-stage
+        poo-flow-scenario-profile-binding
         poo-flow-scenario-case
         poo-flow-scenario-case-multiplicity
         poo-flow-scenario-case-launch-range
