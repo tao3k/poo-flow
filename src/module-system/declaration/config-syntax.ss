@@ -117,7 +117,7 @@
 ;; | type ConfigBindingSyntax = Syntax
 ;; | type ConfigSlotRowsSyntax = Syntax
 ;; | type ConfigPrototypeSyntax = Syntax
-;; | contract: expands a binding plus literal slots into a native `.o` definition
+;; | contract: expands bounded literal slots through clan/poo's native object constructor
 ;; | warning: keep object inheritance and merge policy outside this syntax helper
 ;; | doc m%
 ;;   Defines a module config prototype object.
@@ -131,7 +131,8 @@
   ((_ binding
       (slots ((slot-key slot-value) ...)))
    (def binding
-     (.o (slot-key slot-value) ...))))
+     (object<-alist
+      (list (cons 'slot-key slot-value) ...)))))
 
 ;;; Predicate macros generate kind guards over POO config prototypes.
 ;; defpoo-module-config-kind-predicate
