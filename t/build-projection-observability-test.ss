@@ -59,7 +59,7 @@
                       #t)
         (check-equal? (contains? source "\"src/core/api.ss\"") #t)
         (check-equal? (contains? source
-                                 "\"src/module-system/interface.ss\"")
+                                 "\"src/module-system/api.ss\"")
                       #t)
         (check-equal? (contains? source
                                  "\"src/feature-system/interface.ss\"")
