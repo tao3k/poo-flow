@@ -5,10 +5,13 @@
 
 ;;; Scenario: user-interface CrewAI-style composition instance.
 
-(import (only-in :clan/poo/object .ref)
+(import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/loader/fragment-syntax load!)
+        (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+                 poo-flow-scenario-case?)
         :poo-flow/src/module-system/profile-composition/accessors)
 
 
