@@ -54,6 +54,13 @@
                                 ;; explicitly pinned FHIR Validator JAR and is
                                 ;; owned by `just check-healthcare-fhir-reference-validator`.
                                 "t/qualification/healthcare-fhir-reference-validator"
+                                ;; Healthcare parser and migration assurance
+                                ;; qualifications inject their pinned
+                                ;; gerbil-parser and Lambda Episteme loadpaths
+                                ;; through dedicated Just gates.
+                                "t/qualification/healthcare-fhirpath-syntax"
+                                "t/qualification/healthcare-hl7v2-migration"
+                                "t/qualification/healthcare-standard-migration-assurance"
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
      +poo-flow-atomic-test-selector+
