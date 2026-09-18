@@ -17,7 +17,9 @@
                    (use-composition poo-flow-use-composition/expression))
         (for-syntax
          (only-in :poo-flow/src/core/funcs
-                  poo-flow-directory-files-recursive)))
+                  poo-flow-directory-files-recursive)
+         (only-in :poo-flow/src/user-interface/config-discovery-funs
+                  poo-flow-ui-scenario-declaration?)))
 
 (export use-composition)
 
@@ -87,11 +89,38 @@
 
   (def (poo-flow-ui-discovery-root source)
     (let* ((cwd (current-directory))
-           (user-interface-root (path-expand "user-interface" cwd)))
+           (user-interface-root (path-expand "user-interface" cwd))
+           (source-path (and source (path-expand source cwd)))
+           (source-root (and source-path (path-directory source-path)))
+           (cwd-prefix
+            (if (and (> (string-length cwd) 0)
+                     (char=? (string-ref cwd (- (string-length cwd) 1)) #\/))
+              cwd
+              (string-append cwd "/")))
+           (packaged-source
+            (and source
+                 (poo-flow-ui-string-prefix? cwd-prefix source)
+                 (path-expand
+                  (string-append
+                   "packages/"
+                   (substring source
+                              (string-length cwd-prefix)
+                              (string-length source)))
+                  cwd)))
+           (packaged-root (and packaged-source
+                               (path-directory packaged-source))))
       (cond
+       ((and source-root
+             (file-exists? (path-expand "profiles" source-root))
+             (file-exists? (path-expand "scenarios" source-root)))
+        source-root)
        ((and (file-exists? (path-expand "profiles" cwd))
              (file-exists? (path-expand "scenarios" cwd)))
         cwd)
+       ((and packaged-root
+             (file-exists? (path-expand "profiles" packaged-root))
+             (file-exists? (path-expand "scenarios" packaged-root)))
+        packaged-root)
        ((and (file-exists? (path-expand "profiles" user-interface-root))
              (file-exists? (path-expand "scenarios" user-interface-root)))
         user-interface-root)
@@ -104,6 +133,10 @@
         (error "missing User Interface discovery directory" directory))
       (filter (lambda (path) (string-suffix? ".ss" path))
               (poo-flow-directory-files-recursive directory))))
+
+  (def (poo-flow-ui-scenario-discovery-files root)
+    (filter poo-flow-ui-scenario-declaration?
+            (poo-flow-ui-discovery-files root "scenarios")))
 
   (def (poo-flow-ui-discovery-module root base path)
     (let* ((root-length (string-length root))
@@ -118,8 +151,8 @@
       (string->symbol (string-append ":" base "/" module-tail))))
 
   (def (poo-flow-ui-discovery-modules stx)
-    (let* ((source (or (poo-flow-ui-source-path (stx-source stx))
-                       (poo-flow-ui-context-source-path)))
+    (let* ((source (or (poo-flow-ui-context-source-path)
+                       (poo-flow-ui-source-path (stx-source stx))))
            (root (and source (poo-flow-ui-discovery-root source))))
       (unless root
         (error "use-composition could not resolve its config.ss source" stx))
@@ -127,7 +160,7 @@
         (map (lambda (path)
                (poo-flow-ui-discovery-module root base path))
              (append (poo-flow-ui-discovery-files root "profiles")
-                     (poo-flow-ui-discovery-files root "scenarios")))))))
+                     (poo-flow-ui-scenario-discovery-files root)))))))
 
 (begin-syntax
   (def (poo-flow-ui-claim-discovery! stx)

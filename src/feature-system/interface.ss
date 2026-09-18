@@ -16,6 +16,7 @@
         :poo-flow/src/feature-system/bundle-v1-domain-case-projection
         :poo-flow/src/feature-system/bundle-v1-foreign-arena
         :poo-flow/src/feature-system/bundle-v1-composition-writer
+        "source-lock-feature.ss"
         :poo-flow/src/feature-system/syntax)
 
 (export (import: :poo-flow/src/feature-system/model)
@@ -30,4 +31,5 @@
         (import: :poo-flow/src/feature-system/bundle-v1-domain-case-projection)
         (import: :poo-flow/src/feature-system/bundle-v1-foreign-arena)
         (import: :poo-flow/src/feature-system/bundle-v1-composition-writer)
+        (import: "source-lock-feature.ss")
         (import: :poo-flow/src/feature-system/syntax))
