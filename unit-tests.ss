@@ -50,6 +50,10 @@
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "t/performance"
+                                ;; This external qualification requires the
+                                ;; explicitly pinned FHIR Validator JAR and is
+                                ;; owned by `just check-healthcare-fhir-reference-validator`.
+                                "t/qualification/healthcare-fhir-reference-validator"
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
      +poo-flow-atomic-test-selector+
