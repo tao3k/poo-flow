@@ -10,9 +10,10 @@
         (only-in "../src/testing/module-system-live-case"
                  poo-flow-module-system-live-case-test-suite
                  pooFlowModuleSystemLiveCaseFromModuleSelection)
-        (only-in "../user-interface/custom/my-module/config"
-                 poo-flow-custom-my-module-cicd-case
-                 poo-flow-custom-my-module-cicd-module))
+        (only-in "../user-interface/custom/my-module/profiles/cicd"
+                 poo-flow-custom-my-module-cicd-module)
+        (only-in "../user-interface/custom/my-module/cases/cicd"
+                 poo-flow-custom-my-module-cicd-case))
 
 (export user-interface-live-cicd-case-test)
 

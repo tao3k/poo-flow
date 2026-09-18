@@ -7,21 +7,31 @@
 ;;; Invariant: presentations stay report-only and never realize descriptors.
 
 (import (only-in :std/test
-                 check
-                 check-eq?
                  check-equal?
-                 check-false
-                 check-not-equal?
-                 check-output
-                 check-true
                  test-case
-                 test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/interface
-        :poo-flow/src/user-interface/facade
+        (only-in :poo-flow/src/module-system/interface
+                 poo-flow-brand-group
+                 poo-flow-brand-name)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-config-presentation-kind)
+        (only-in :poo-flow/src/user-interface/presentation-config
+                 pooFlowUserConfigPresentation)
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/user-interface/profile-config
+        (only-in :poo-flow/src/user-interface/profile-core
+                 poo-flow-default-user-setting-keys
+                 poo-flow-user-profile-doctor-presentation-kind
+                 poo-flow-user-profile-doctor-report-kind
+                 poo-flow-user-profile-presentation-kind
+                 pooFlowDefaultUserSettings
+                 pooFlowUserProfile)
+        (only-in :poo-flow/src/user-interface/profile-doctor
+                 poo-flow-user-profile-doctor-ok?
+                 pooFlowUserProfileDoctor)
+        (only-in :poo-flow/src/user-interface/profile-presentation-config
+                 pooFlowUserProfileDoctorPresentation
+                 pooFlowUserProfilePresentation)
         "user-interface-fixtures.ss")
 
 (export user-interface-presentation-test)
