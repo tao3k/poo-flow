@@ -11,17 +11,25 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/user-interface/presentation-config
-        :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/workflow/cicd-config
-        (only-in "../user-interface/custom/my-module/cases/cicd-owner"
-                 poo-flow-custom-my-module-cicd-case
-                 poo-flow-custom-my-module-cicd-module
-                 poo-flow-custom-my-module-funflow-cicd-case)
-        "./user-interface-fixtures")
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in :poo-flow/src/user-interface/presentation-config
+                 pooFlowUserConfigPresentation)
+        (only-in :poo-flow/src/modules/workflow/cicd-config
+                 poo-flow-user-config-cicd-intents
+                 poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle)
+        (only-in "../user-interface/custom/my-module/cases/cicd"
+                 poo-flow-custom-my-module-cicd-case)
+        (only-in "./support/user-interface-cicd-runtime-fixture"
+                 user-interface-cicd-runtime-fixture-config))
 
 (export user-interface-cicd-test)
+
+;; : (-> Symbol Alist Value)
+(def (alist-value key entries)
+  (let (entry (assoc key entries))
+    (if entry (cdr entry) #f)))
 
 ;; : (-> [Alist] Symbol MaybeAlist)
 (def (user-interface-cicd-trace-stage trace stage)
@@ -31,13 +39,6 @@
    (else
     (user-interface-cicd-trace-stage (cdr trace) stage))))
 
-;; : (-> Unit PooUserConfig)
-(def (user-interface-cicd-funflow-config)
-  (pooFlowUserConfig
-   (append poo-flow-custom-my-module-cicd-module
-           poo-flow-custom-my-module-funflow-cicd-case)
-   (poo-flow-settings)))
-
 ;; : (-> Unit TestSuite)
 ;;; This suite keeps CI/CD user-interface assembly separate from runtime
 ;;; execution.
@@ -46,7 +47,7 @@
     (test-case "presents Funflow CI/CD payload as user intent data"
       (let* ((intents
               (poo-flow-user-config-cicd-intents
-               (user-interface-cicd-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (intent (car intents)))
         (check-equal? (length intents) 1)
         (check-equal? (alist-value 'key intent) '(flow . funflow))
@@ -84,7 +85,7 @@
     (test-case "traces CI/CD presentation projection without runtime work"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (trace (.ref presentation 'presentation-trace))
              (cicd-step
               (user-interface-cicd-trace-stage trace 'cicd-intents))
@@ -103,7 +104,7 @@
     (test-case "presents Funflow pipeline and functional DAG"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (dags (.ref presentation 'workflow-cicd-functional-dags))
              (dag (car dags))
              (composition-steps (alist-value 'composition-steps dag))
@@ -142,7 +143,7 @@
     (test-case "projects user config into Marlin runtime handoff ABI"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (abis (.ref presentation
                          'workflow-cicd-marlin-runtime-handoff-abis))
              (summaries
