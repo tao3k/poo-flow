@@ -10,6 +10,8 @@
         (only-in :clan/poo/mop validate)
         (only-in :clan/debug traced-function)
         (only-in :clan/poo/debug DDT trace-poo)
+        (only-in :asp-gerbil-scheme/src/benchmark/memory
+                 benchmark-memory-usage)
         (only-in :std/error deferror-class)
         (only-in :std/sugar cut)
         (only-in "types.ss"
@@ -237,10 +239,11 @@
       (DDT 'observation poo-flow-observation-summary-sexp summary))
     summary))
 
-;;; This is the only runtime-heap read in the framework. The returned value is
-;;; a native POO sample, so callers never depend on Gambit's vector layout.
-;;; Indices 15..19 are the counters projected by std/debug/heap: heap size,
-;;; allocation, live, movable, and still bytes.
+;;; This is the only runtime-heap read in the framework. ASP Gerbil Scheme's
+;;; narrow memory library owns the Gambit statistics layout without importing
+;;; the unrelated `std/debug/heap` heap walker. This module consumes only its
+;;; named projection and returns a native POO sample, so callers depend on
+;;; neither private runtime indices nor the library's alist representation.
 ;; : (-> Symbol collect?: Boolean PooFlowDebugMemorySample)
 ;; poo-flow-debug-memory-snapshot
 ;;   : (-> Symbol collect?: Boolean PooFlowDebugMemorySample)
@@ -259,10 +262,14 @@
 ;;     %
 (def (poo-flow-debug-memory-counters collect?)
   (when collect? (##gc))
-  (let (usage (##process-statistics))
-    (map (lambda (index)
-           (inexact->exact (f64vector-ref usage index)))
-         '(15 16 17 18 19))))
+  (let (usage (benchmark-memory-usage))
+    (map (lambda (name)
+           (let (entry (assq name usage))
+             (unless (and entry (exact-integer? (cdr entry)))
+               (error "ASP memory usage omitted a required counter"
+                      name usage))
+             (cdr entry)))
+         '(gc-heap-size gc-alloc gc-live gc-movable gc-still))))
 
 (def (poo-flow-debug-memory-sample-from-counters phase counters)
     (apply (lambda (heap-size allocation live movable still)

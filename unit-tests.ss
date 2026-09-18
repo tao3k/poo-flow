@@ -7,6 +7,7 @@
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  +testing-discovery-profile+
+                 +testing-memory-profile+
                  +testing-process-isolation-profile+
                  +testing-serial-resource-profile+
                  testing-test-selector
@@ -41,7 +42,10 @@
        testing selector +testing-serial-resource-profile+))
     (testing-interface-map-profile
      (testing-interface-add-profile
-      (poo-flow-testing-observability-extension +asp-testing-interface+)
+      (poo-flow-testing-observability-extension
+       (testing-interface-add-profile
+        +asp-testing-interface+
+        (.cc +testing-memory-profile+ maxHeapMiB: 512)))
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"

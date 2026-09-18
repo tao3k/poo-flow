@@ -192,8 +192,10 @@ the catalog handoff and projected target count.
 =debug.ss= also owns an explicit in-band memory observation slice:
 
 - =poo-flow-debug-memory-policy= constructs a validated native POO policy;
-- =poo-flow-debug-memory-snapshot= projects Gambit's heap-size, allocation,
-  live, movable, and still counters into a native POO sample;
+- =poo-flow-debug-memory-snapshot= reuses ASP Gerbil Scheme's narrow
+  =benchmark-memory-usage= library projection and converts its heap-size,
+  allocation, live, movable, and still counters into a native POO sample,
+  without loading =:std/debug/heap='s unrelated heap-walker machinery;
 - =poo-flow-debug-memory-receipt= is a pure comparison of policy and samples;
 - =poo-flow-debug-memory-checkpoint= and
   =call-with-poo-flow-debug-memory-span= perform the effectful sampling and may
@@ -210,13 +212,14 @@ walk the live heap or retain observed subjects.  Optional collection is an
 explicit policy field and is disabled by default because collection changes
 the measured operation.
 
-The in-band framework cannot run before its own module has loaded.  Native test
+The in-band framework cannot run before its own module has loaded. Native test
 programs therefore apply the selected ASP POO Testing profile to their current
-Gambit runtime before loading the suites.  No caller-owned heap command-line
-option or shell wrapper is part of the test interface.  Builds remain
-unbounded.  The ASP Scheme process-tree observer remains an outer diagnostic
-for test children and pre-import failure; it is not the semantic diagnosis
-owner and does not replace phase receipts.
+Gambit runtime before loading the suites. The root Justfile also gives its
+outer test launcher a 512 MiB Gambit startup ceiling, before the profile module
+can load; this is a containment boundary, not a second policy or receipt owner.
+Builds remain unbounded. The ASP Scheme process-tree observer remains an outer
+diagnostic for test children and pre-import failure; it is not the semantic
+diagnosis owner and does not replace phase receipts.
 
 Do not add a shell poller or shell test wrapper as the detector.  Shell cannot
 observe POO phase identity, native contracts, or the lazy slot read that
