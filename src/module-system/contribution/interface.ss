@@ -6,8 +6,12 @@
 (import :clan/poo/object
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/utilities/functional
-        "objects.ss")
+        "model.ss"
+        "objects.ss"
+        "verification.ss")
 (export .o .ref .mix .extend .slot? object?
         use-composition poo-flow-scenario-case-profiles
         poo-flow-map poo-flow-append-map poo-flow-all? poo-flow-any?
-        (import: "objects.ss"))
+        (import: "model.ss")
+        (import: "objects.ss")
+        (import: "verification.ss"))

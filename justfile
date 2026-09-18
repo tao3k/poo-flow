@@ -28,7 +28,11 @@ cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/module-test"
 contribution_test_library_path := contribution_test_path + "/lib"
 contribution_source_root := justfile_directory() + "/packages"
-gerbil_darwin_env := "env -u SDKROOT"
+gerbil_homebrew_runtime := `if gsc -v 2>&1 | grep -F '/opt/homebrew/Cellar/' >/dev/null; then printf true; else printf false; fi`
+# Keep the Homebrew/Gambit workaround scoped to each child command. A Nix
+# Gerbil runtime retains its own compiler, SDK and linker environment.
+gerbil_darwin_cc := "/usr/bin/clang -Wno-ignored-optimization-argument -Wno-unused-command-line-argument"
+gerbil_darwin_env := if os() == "macos" { if gerbil_homebrew_runtime == "true" { "env -u SDKROOT BUILD_OBJ_CC_PARAM='" + gerbil_darwin_cc + "' BUILD_DYN_CC_PARAM='" + gerbil_darwin_cc + "' BUILD_DYN_LD_OPTIONS_PARAM='-bundle -undefined dynamic_lookup' BUILD_EXE_CC_PARAM='" + gerbil_darwin_cc + "'" } else { "env" } } else { "env" }
 poo_flow_gerbil_path := env_var_or_default("GERBIL_PATH", justfile_directory() + "/.gerbil")
 poo_flow_library_path := env_var_or_default("GERBIL_LOADPATH", poo_flow_gerbil_path + "/lib")
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
