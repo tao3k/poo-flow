@@ -49,13 +49,18 @@
  (spec poo-flow-native-spec)
  (public-entry-modules
   '("src/core/api.ss"
+    "src/graph/interface.ss"
     "src/module-system/api.ss"
+    "src/module-system/load.ss"
+    "src/module-system/loader/module-source-interface.ss"
     "src/module-system/observability/interface.ss"
     "src/module-system/profile-composition/interface.ss"
     "src/user-interface/config-discovery-syntax.ss"
     "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
+    "src/modules/governance/interface.ss"
     "src/modules/standards/interface.ss"
+    "src/modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("src/modules/nono-sandbox/_nono.ss"

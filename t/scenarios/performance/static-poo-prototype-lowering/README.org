@@ -1,0 +1,29 @@
+#+title: Static POO Prototype Lowering A/B
+
+* Contract
+
+This scenario expands two equivalent families of 2 POO object expressions with
+24 constant slots each.  The reference form sends every row through the full
+=.o= syntax normalizer.  The production form is the expression emitted by
+=defpoo-module-config-prototype= after its grammar has bounded those rows, using
+upstream =object<-alist=.
+
+The optimization is deliberately narrow.  It applies only when a declaration
+macro has already proved that every row is a constant slot assignment.  It does
+not apply to =.o= forms with inheritance, defaults, computed slots, =self=,
+=next-method=, match syntax, or runtime object composition.
+
+Both source fixtures use the same object count, slot names, and values.  The
+isolated performance test sets =current-expander-compiling?= to false and calls
+=import-module= with =reload?= true, so each window includes real source-module
+expansion, bypasses an existing =.ssi=, and neither queues compilation nor
+writes artifacts.  The focused gate requires the bounded lowering to be faster
+and at most 75 percent of the native-reference expansion time.
+
+* Verification
+
+#+begin_src sh
+gerbil build
+gerbil test -v t/module-config-prototype-syntax-test.ss
+gerbil test -v t/performance/static-poo-prototype-lowering-performance-test.ss
+#+end_src

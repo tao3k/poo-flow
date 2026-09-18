@@ -247,6 +247,29 @@ Use the smallest macro tier:
 4. Macro objects only when the macro itself has classed behavior and the owner
    module benefits from explicit expander state.
 
+*** Static POO Declaration Lowering
+
+A public Profile or config declaration remains POO-native even when its macro
+uses a cheaper upstream constructor internally.  For a bounded declaration
+whose grammar accepts only =(slot value)= rows, the macro SHOULD lower directly
+to =object<-alist= (or an equally direct =make-object= wrapper owned by
+=gerbil-poo=) instead of regenerating one =.o= form and asking the =.o= expander
+to rediscover that every row is constant.  The public form, result, and
+extension boundary remain a named POO declaration and a native POO object; an
+alist is not exposed as the user model.
+
+This exception is compile-time-specific and requires same-source A/B evidence.
+It MUST NOT be generalized to an arbitrary =.o= expression.  Keep =.o= when a
+form needs prototype inheritance, defaults, computed or inherited slot
+methods, lexical =self=, =next-method=, match syntax, or dynamic composition.
+Runtime and hot-loop construction require their own runtime benchmark and must
+not be rewritten merely because the static declaration benchmark is faster.
+
+The executable evidence is
+=t/scenarios/performance/static-poo-prototype-lowering/=.  Its two compiler
+fixtures differ only in lowering strategy and protect both the semantic object
+contract and the expansion-time improvement.
+
 ** 10.06.44.42 Phase, Hygiene, And Module Context
 Macros that parse a project language must preserve Gerbil syntax context.  The
 parser owns syntax objects, source locations, grammar validation, and a bounded
