@@ -16,6 +16,11 @@
                  poo-flow-composition-identity-local-name
                  poo-flow-composition-identity-qualified-name
                  poo-flow-composition-identity-official?)
+        (only-in :poo-flow/src/module-system/profile-composition/value
+                 +poo-flow-composition-kind+
+                 poo-flow-composition
+                 poo-flow-composition?
+                 poo-flow-composition-select)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
@@ -63,6 +68,10 @@
         poo-flow-composition-identity-local-name
         poo-flow-composition-identity-qualified-name
         poo-flow-composition-identity-official?
+        +poo-flow-composition-kind+
+        poo-flow-composition
+        poo-flow-composition?
+        poo-flow-composition-select
         poo-flow-profile-ref
         poo-flow-scenario-module-binding
         poo-flow-scenario-clause
