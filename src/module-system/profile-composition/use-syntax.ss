@@ -8,6 +8,8 @@
 
 (import :poo-flow/src/module-system/profile-composition/builders
         :poo-flow/src/module-system/profile-composition/inline-runtime
+        (only-in :poo-flow/src/module-system/profile-composition/catalog
+                 poo-flow-current-composition-ref)
         (only-in :poo-flow/src/module-system/profile-composition/value
                  poo-flow-composition-select)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
@@ -210,7 +212,8 @@
   (syntax-case stx ()
     ((_ composition)
      (syntax/loc stx
-       (poo-flow-composition-select composition)))
+       (poo-flow-composition-select
+        (poo-flow-current-composition-ref 'composition))))
     ((_ composition-name module-form form ...)
      (let* ((declaration
              (parse-poo-flow-composition-declaration

@@ -21,6 +21,15 @@
                  poo-flow-composition
                  poo-flow-composition?
                  poo-flow-composition-select)
+        (only-in :poo-flow/src/module-system/profile-composition/catalog
+                 +poo-flow-composition-catalog-kind+
+                 poo-flow-composition-catalog
+                 poo-flow-composition-catalog?
+                 poo-flow-composition-catalog-ref
+                 current-poo-flow-composition-catalog
+                 poo-flow-current-composition-ref)
+        (only-in :poo-flow/src/module-system/profile-composition/value-loader
+                 poo-flow-load-composition-value)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
@@ -72,6 +81,13 @@
         poo-flow-composition
         poo-flow-composition?
         poo-flow-composition-select
+        +poo-flow-composition-catalog-kind+
+        poo-flow-composition-catalog
+        poo-flow-composition-catalog?
+        poo-flow-composition-catalog-ref
+        current-poo-flow-composition-catalog
+        poo-flow-current-composition-ref
+        poo-flow-load-composition-value
         poo-flow-profile-ref
         poo-flow-scenario-module-binding
         poo-flow-scenario-clause
