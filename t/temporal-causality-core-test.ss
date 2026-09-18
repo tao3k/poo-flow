@@ -62,6 +62,25 @@
               graph '(changed) '(dependency) 'dependents #f)))
        (check (.ref receipt 'status) => 'partial-impact)))
 
+   (test-case "structural Impact terminates on relation cycles"
+     (let* ((graph
+             (poo-flow-graph
+              'cyclic-software-structure
+              (list (poo-flow-graph-node 'requirement)
+                    (poo-flow-graph-node 'verification))
+              (list (poo-flow-graph-edge
+                     'requirement 'verification 'VERIFIES)
+                    (poo-flow-graph-edge
+                     'verification 'requirement 'TRACES_BACK))))
+            (receipt
+             (poo-flow-structural-impact-analyze
+              graph '(requirement) '(VERIFIES TRACES_BACK)
+              'dependencies #t)))
+       (check (.ref receipt 'status) => 'snapshot-scoped-impact)
+       (check (.ref receipt 'affected-node-ids)
+              => '(requirement verification))
+       (check (length (.ref receipt 'relation-trajectories)) => 2)))
+
    (test-case "causal cut classifies bounded past present and future"
      (let* ((subject "patient-1")
             (event
