@@ -67,6 +67,7 @@
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `(,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `("src/module-system/observability/testing-extension"
+               ,+runtime-v0-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))

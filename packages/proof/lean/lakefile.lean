@@ -43,7 +43,10 @@ lean_lib PooFlowModuleTemporalCausalityProof where
 /-! Scenario refinements compose module libraries without becoming a second
 module graph.  This target owns the exact Healthcare Case declarations. -/
 lean_lib PooFlowScenarioHealthcareProof where
-  roots := #[`PooFlowProof.Vertical.Healthcare.PrescriptionCausalityRefinement]
+  roots := #[
+    `PooFlowProof.Vertical.Healthcare.PrescriptionCausalityRefinement,
+    `PooFlowProof.Vertical.Healthcare.StandardMigrationRefinement
+  ]
 
 lean_lib PooFlowModuleAuthorizationProof where
   roots := #[
