@@ -565,20 +565,19 @@
           (check-equal? (.ref declaration 'valid?) #t)
           (check-equal? (.ref before 'valid?) #f)
           (check-equal? (.ref before 'missing-slots)
-                        '(authority-provider human-authorization formal-model
-                          refinement-proof impact-contract conformance
-                          audit-receipt)))
-        (let* ((formal-binding
+                        '(authority-provider human-authorization
+                          proof-assurance conformance audit-receipt)))
+        (let* ((proof-binding
                 (poo-flow-standard-governance-binding
-                 'formal-model "test/formal-owner" 'tla-plus-model
-                 (poo-flow-standard-digest 'test-formal-model)
+                 'proof-assurance "test/proof-owner" 'proof-assurance
+                 (poo-flow-standard-digest 'test-proof-assurance)
                  'qualified #f (.o evidence: 'test)))
                (written
-                (poo-flow-standard-governance-write interface formal-binding))
+                (poo-flow-standard-governance-write interface proof-binding))
                (after
                 (poo-flow-standard-governance-validate written 'admit)))
           (check-equal? (.ref after 'valid?) #f)
-          (check-equal? (memq 'formal-model (.ref after 'missing-slots)) #f)
+          (check-equal? (memq 'proof-assurance (.ref after 'missing-slots)) #f)
           (check-exception
            ((.ref interface '.write-governance)
             (poo-flow-standard-governance-binding
