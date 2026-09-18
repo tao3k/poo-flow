@@ -45,30 +45,24 @@
 (def PooFlowStandardMigrationGovernanceInterface.
   (poo-flow-standard-governance-interface
    "poo-flow/modules/standards/features/migration/governance"
-   '(authority-provider human-authorization formal-model refinement-proof
-     impact-contract conformance audit-receipt)
+   '(authority-provider human-authorization proof-assurance conformance
+     audit-receipt)
    '(documentation presentation-metadata reference-implementation
      non-authoritative-analysis)
    (.o declaration: (.o)
        review:
-       (.o formal-model: '(qualified admitted)
-           refinement-proof: '(qualified admitted)
-           impact-contract: '(qualified admitted)
+       (.o proof-assurance: '(qualified admitted)
            conformance: '(qualified admitted))
        admit:
        (.o authority-provider: '(qualified admitted)
            human-authorization: '(qualified admitted)
-           formal-model: '(qualified admitted)
-           refinement-proof: '(qualified admitted)
-           impact-contract: '(qualified admitted)
+           proof-assurance: '(qualified admitted)
            conformance: '(qualified admitted)
            audit-receipt: '(qualified admitted))
        cutover:
        (.o authority-provider: '(admitted)
            human-authorization: '(admitted)
-           formal-model: '(admitted)
-           refinement-proof: '(admitted)
-           impact-contract: '(admitted)
+           proof-assurance: '(admitted)
            conformance: '(admitted)
            audit-receipt: '(admitted)))
    (.o)

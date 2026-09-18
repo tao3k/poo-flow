@@ -59,6 +59,7 @@
     "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
     "src/modules/governance/interface.ss"
+    "src/modules/proof/interface.ss"
     "src/modules/standards/interface.ss"
     "src/modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))
