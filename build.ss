@@ -55,6 +55,7 @@
     "src/module-system/loader/module-source-interface.ss"
     "src/module-system/observability/interface.ss"
     "src/module-system/profile-composition/interface.ss"
+    "src/user-interface/profile-core.ss"
     "src/user-interface/config-discovery-syntax.ss"
     "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
