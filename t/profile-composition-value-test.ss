@@ -61,6 +61,32 @@
              official-catalog))
         (check (poo-flow-scenario-case? loaded) => #t)
         (check (.ref loaded 'name) => 'official)))
+    (test-case "ordinary clauses lower to a POO-native Profile overlay"
+      (let* ((selected-case
+              (parameterize
+                  ((current-poo-flow-composition-catalog official-catalog))
+                (use-composition official
+                  (project
+                   repository: "tao3k/example"
+                   languages: '(rust python))
+                  (delivery provider: 'github))))
+             (profile (car (.ref selected-case 'profiles)))
+             (project (.ref profile 'project))
+             (delivery (.ref profile 'delivery)))
+        (check (.ref project 'repository) => "tao3k/example")
+        (check (.ref project 'languages) => '(rust python))
+        (check (.ref delivery 'provider) => 'github)
+        (check (.ref profile 'name)
+               => 'default-software-engineering-project)))
+    (test-case "file-value loading uses the same ordinary clause macro"
+      (let* ((loaded
+              (poo-flow-load-composition-value
+               "t/fixtures/composition-value/ordinary.ss"
+               official-catalog))
+             (profile (car (.ref loaded 'profiles))))
+        (check (.ref (.ref profile 'project) 'repository)
+               => "tao3k/file-value")
+        (check (.ref (.ref profile 'delivery) 'provider) => 'github)))
     (test-case "catalog and file boundaries fail closed"
       (check-exception
        (poo-flow-composition-catalog

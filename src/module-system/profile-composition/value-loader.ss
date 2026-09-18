@@ -7,11 +7,10 @@
 ;;; Invariant: loading reads one root selector and performs no imports, exports,
 ;;; directory discovery, Runtime construction or Session execution.
 
-(import (only-in :gerbil/expander/stx syntax->datum)
+(import (only-in :gerbil/expander/core eval-syntax)
+        (only-in :gerbil/expander/stx datum->syntax stx-source syntax->datum)
         (only-in :poo-flow/src/module-system/profile-composition/catalog
-                 poo-flow-composition-catalog-ref)
-        (only-in :poo-flow/src/module-system/profile-composition/value
-                 poo-flow-composition-select))
+                 current-poo-flow-composition-catalog))
 
 (export poo-flow-load-composition-value)
 
@@ -29,23 +28,32 @@
                 path tail))
        root))))
 
-(def (poo-flow-root-composition-selector root path)
+(def (poo-flow-validate-composition-root root path)
   (let (datum (syntax->datum root))
     (unless (and (pair? datum)
                  (eq? (car datum) 'use-composition)
                  (pair? (cdr datum))
-                 (null? (cddr datum))
                  (symbol? (cadr datum)))
-      (error "Composition value root must be (use-composition selector)"
+      (error "Composition value root must be (use-composition selector ...)"
              path root))
-    (cadr datum)))
+    root))
 
-;;; The initial value-loader contract admits the zero-override selector path.
-;;; Clause expansion remains owned by the hygienic use-composition macro and is
-;;; widened only together with its slot protocol and source-location tests.
+;;; The bounded prelude is implementation-owned. Downstream value files contain
+;;; no import/export forms; the exact public macro used by ordinary modules also
+;;; expands the loaded root, so there is no second clause interpreter.
 (def (poo-flow-load-composition-value path catalog)
-  (let* ((root (poo-flow-read-single-expression path))
-         (selector (poo-flow-root-composition-selector root path))
-         (composition
-          (poo-flow-composition-catalog-ref catalog selector)))
-    (poo-flow-composition-select composition)))
+  (let* ((root
+          (poo-flow-validate-composition-root
+           (poo-flow-read-single-expression path)
+           path))
+         (bounded-form
+          (datum->syntax
+           #f
+           (list
+            'begin
+            '(import :poo-flow/src/module-system/profile-composition/interface)
+            (syntax->datum root))
+           (stx-source root))))
+    (parameterize
+        ((current-poo-flow-composition-catalog catalog))
+      (eval-syntax bounded-form))))

@@ -20,7 +20,8 @@
                  +poo-flow-composition-kind+
                  poo-flow-composition
                  poo-flow-composition?
-                 poo-flow-composition-select)
+                 poo-flow-composition-select
+                 poo-flow-composition-select/overrides)
         (only-in :poo-flow/src/module-system/profile-composition/catalog
                  +poo-flow-composition-catalog-kind+
                  poo-flow-composition-catalog
@@ -82,6 +83,7 @@
         poo-flow-composition
         poo-flow-composition?
         poo-flow-composition-select
+        poo-flow-composition-select/overrides
         +poo-flow-composition-catalog-kind+
         poo-flow-composition-catalog
         poo-flow-composition-catalog?

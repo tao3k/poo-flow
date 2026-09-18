@@ -6,12 +6,14 @@
 ;;; Boundary: thin public syntax and final lowering for profile composition.
 ;;; Invariant: parsing is phase-owned; expansion emits ordinary POO builders.
 
-(import :poo-flow/src/module-system/profile-composition/builders
+(import (only-in :clan/poo/object .o)
+        :poo-flow/src/module-system/profile-composition/builders
         :poo-flow/src/module-system/profile-composition/inline-runtime
         (only-in :poo-flow/src/module-system/profile-composition/catalog
                  poo-flow-current-composition-ref)
         (only-in :poo-flow/src/module-system/profile-composition/value
-                 poo-flow-composition-select)
+                 poo-flow-composition-select
+                 poo-flow-composition-select/overrides)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
                  poo-flow-scenario-case)
         (for-syntax
@@ -20,6 +22,28 @@
 (export use-composition)
 
 (begin-syntax
+  (def poo-flow-composition-value-reserved-heads
+    '(module modules use-module compose stage import export def begin .def))
+
+  (def (poo-flow-composition-value-clause? clause)
+    (syntax-case clause ()
+      ((slot payload ...)
+       (and (identifier? #'slot)
+            (not (memq (syntax->datum #'slot)
+                       poo-flow-composition-value-reserved-heads))))
+      (_ #f)))
+
+  (def (poo-flow-composition-value-clauses? clauses)
+    (let loop ((rest clauses))
+      (or (null? rest)
+          (and (poo-flow-composition-value-clause? (car rest))
+               (loop (cdr rest))))))
+
+  (def (poo-flow-composition-lower-value-clause clause)
+    (syntax-case clause ()
+      ((slot payload ...)
+       #'(slot (.o payload ...)))))
+
   ;; One lowering result owns the parallel syntax products required by the
   ;; final template.  Callers no longer coordinate several independent walks.
   (defclass poo-flow-composition-lowering
@@ -214,31 +238,41 @@
      (syntax/loc stx
        (poo-flow-composition-select
         (poo-flow-current-composition-ref 'composition))))
-    ((_ composition-name module-form form ...)
-     (let* ((declaration
-             (parse-poo-flow-composition-declaration
-              #'composition-name
-              #'module-form
-              (syntax->list #'(form ...))
-              stx))
-            (lowering (poo-flow-composition-lower-declaration declaration)))
+    ((_ composition-name first-form form ...)
+     (let (forms (syntax->list #'(first-form form ...)))
+       (if (poo-flow-composition-value-clauses? forms)
          (with-syntax
-             ((composition-name (composition-declaration-name declaration))
-              (((alias module-expression) ...)
-               (poo-flow-composition-lowering-module-bindings lowering))
-              ((module-binding-expression ...)
-               (poo-flow-composition-lowering-module-binding-expressions lowering))
-              ((compose-expression ...)
-               (poo-flow-composition-lowering-compose-expressions lowering))
-              ((profile-binding-expression ...)
-               (poo-flow-composition-lowering-profile-binding-expressions lowering))
-              ((stage-expression ...)
-               (poo-flow-composition-lowering-stage-expressions lowering)))
+             (((override-slot ...)
+               (map poo-flow-composition-lower-value-clause forms)))
            (syntax/loc stx
-             (let ((alias module-expression) ...)
-               (poo-flow-scenario-case
-                'composition-name
-                (list module-binding-expression ...)
-                (list compose-expression ...)
-                (list stage-expression ...)
-                (list profile-binding-expression ...)))))))))
+             (poo-flow-composition-select/overrides
+              (poo-flow-current-composition-ref 'composition-name)
+              (.o override-slot ...))))
+         (let* ((declaration
+                 (parse-poo-flow-composition-declaration
+                  #'composition-name
+                  #'first-form
+                  (syntax->list #'(form ...))
+                  stx))
+                (lowering
+                 (poo-flow-composition-lower-declaration declaration)))
+           (with-syntax
+               ((composition-name (composition-declaration-name declaration))
+                (((alias module-expression) ...)
+                 (poo-flow-composition-lowering-module-bindings lowering))
+                ((module-binding-expression ...)
+                 (poo-flow-composition-lowering-module-binding-expressions lowering))
+                ((compose-expression ...)
+                 (poo-flow-composition-lowering-compose-expressions lowering))
+                ((profile-binding-expression ...)
+                 (poo-flow-composition-lowering-profile-binding-expressions lowering))
+                ((stage-expression ...)
+                 (poo-flow-composition-lowering-stage-expressions lowering)))
+             (syntax/loc stx
+               (let ((alias module-expression) ...)
+                 (poo-flow-scenario-case
+                  'composition-name
+                  (list module-binding-expression ...)
+                  (list compose-expression ...)
+                  (list stage-expression ...)
+                  (list profile-binding-expression ...)))))))))))

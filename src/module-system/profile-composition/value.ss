@@ -7,7 +7,7 @@
 ;;; Invariant: selecting a Composition constructs one closed Case and never
 ;;; starts a Runtime Session.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .mix .o .ref object?)
         (only-in :poo-flow/src/module-system/profile-composition/identity
                  poo-flow-composition-identity?)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
@@ -16,7 +16,8 @@
 (export +poo-flow-composition-kind+
         poo-flow-composition
         poo-flow-composition?
-        poo-flow-composition-select)
+        poo-flow-composition-select
+        poo-flow-composition-select/overrides)
 
 (def +poo-flow-composition-kind+
   'poo-flow.composition)
@@ -52,14 +53,26 @@
 ;;; This is the generic value operation behind the short public form
 ;;;   (use-composition official-composition)
 ;;; It evaluates the selected Composition once and returns exactly one Case.
-(def (poo-flow-composition-select composition)
+(def (poo-flow-composition-instantiate composition profile)
   (unless (poo-flow-composition? composition)
     (error "use-composition requires a POO Flow Composition value"
            composition))
   (let (case-value
         ((.ref composition 'instantiate)
-         (.ref composition 'default-profile)))
+         profile))
     (unless (poo-flow-scenario-case? case-value)
       (error "Composition constructor did not return a Scenario Case"
              case-value))
     case-value))
+
+(def (poo-flow-composition-select/overrides composition overrides)
+  (unless (object? overrides)
+    (error "Composition overrides must be a POO-native object" overrides))
+  (poo-flow-composition-instantiate
+   composition
+   (.mix overrides (.ref composition 'default-profile))))
+
+(def (poo-flow-composition-select composition)
+  (poo-flow-composition-instantiate
+   composition
+   (.ref composition 'default-profile)))
