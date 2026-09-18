@@ -1,0 +1,129 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+name: Set up project-local native Gerbil
+description: Build and cache the POO Flow native Gerbil capability without changing the runner user environment.
+
+inputs:
+  project-root:
+    description: POO Flow checkout root relative to github.workspace.
+    required: false
+    default: .
+  gerbil-ref:
+    description: Exact Gerbil source revision.
+    required: false
+    default: add922481cec81d05431db014bcb91b30485cf21
+  gerbil-label:
+    description: Stable cache label for the selected Gerbil revision.
+    required: false
+    default: source-v0.18.2-4-gadd92248
+
+runs:
+  using: composite
+  steps:
+    - name: Install native build dependencies
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          ca-certificates \
+          git \
+          libsqlite3-dev \
+          libssl-dev \
+          openssl \
+          pkg-config \
+          sqlite3 \
+          zlib1g-dev
+
+    - name: Declare project-local Gerbil environment
+      shell: bash
+      env:
+        PROJECT_ROOT_INPUT: ${{ inputs.project-root }}
+        GERBIL_LABEL_INPUT: ${{ inputs.gerbil-label }}
+      run: |
+        set -euo pipefail
+        project_root="$GITHUB_WORKSPACE/$PROJECT_ROOT_INPUT"
+        local_home="$project_root/.ci/home"
+        gerbil_prefix="$project_root/.ci/gerbil/$GERBIL_LABEL_INPUT"
+        gerbil_src="$project_root/.ci/gerbil-src/$GERBIL_LABEL_INPUT"
+        mkdir -p "$local_home" "$(dirname "$gerbil_prefix")" "$(dirname "$gerbil_src")"
+        echo "$gerbil_prefix/bin" >> "$GITHUB_PATH"
+        {
+          echo "HOME=$local_home"
+          echo "GERBIL_PREFIX=$gerbil_prefix"
+          echo "GERBIL_SRC=$gerbil_src"
+        } >> "$GITHUB_ENV"
+
+    - name: Restore native Gerbil install
+      id: gerbil-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.project-root }}/.ci/gerbil/${{ inputs.gerbil-label }}
+        key: downstream-native-gerbil-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.gerbil-label }}-${{ inputs.gerbil-ref }}
+
+    - name: Build native Gerbil
+      if: steps.gerbil-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        GERBIL_REF_INPUT: ${{ inputs.gerbil-ref }}
+      run: |
+        set -euo pipefail
+        git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
+        cd "$GERBIL_SRC"
+        git checkout "$GERBIL_REF_INPUT"
+        ./configure --prefix="$GERBIL_PREFIX" --enable-march=
+        echo '(def (gerbil-version-string) "poo-flow-downstream-ci")' > src/gerbil/runtime/version.ss
+        . ./build-env.sh
+        build_cores="${GERBIL_BUILD_CORES:-12}"
+        for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
+          GERBIL_BUILD_CORES="$build_cores" ./src/build.sh "$target"
+        done
+        ./install.sh
+
+    - name: Save native Gerbil install
+      if: steps.gerbil-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.project-root }}/.ci/gerbil/${{ inputs.gerbil-label }}
+        key: downstream-native-gerbil-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.gerbil-label }}-${{ inputs.gerbil-ref }}
+
+    - name: Restore declared Gerbil packages
+      id: package-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ inputs.project-root }}/.gerbil/pkg
+          ${{ inputs.project-root }}/.gerbil/lib
+          ${{ inputs.project-root }}/.gerbil/bin
+        key: downstream-gerbil-packages-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.gerbil-label }}-${{ hashFiles(format('{0}/gerbil.pkg', inputs.project-root)) }}
+
+    - name: Resolve declared Gerbil packages
+      shell: bash
+      env:
+        PROJECT_ROOT_INPUT: ${{ inputs.project-root }}
+      run: |
+        set -euo pipefail
+        cd "$GITHUB_WORKSPACE/$PROJECT_ROOT_INPUT"
+        mkdir -p "$HOME/.gerbil/pkg"
+        gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+        if [ "${{ steps.package-cache.outputs.cache-hit }}" = "true" ]; then
+          if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/testing-api) (displayln "dependency-cache-ready"))'; then
+            gerbil deps --update
+          fi
+        else
+          gerbil deps --install
+        fi
+        gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/testing-api) (displayln "native-capability-ready"))'
+
+    - name: Save declared Gerbil packages
+      if: steps.package-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ inputs.project-root }}/.gerbil/pkg
+          ${{ inputs.project-root }}/.gerbil/lib
+          ${{ inputs.project-root }}/.gerbil/bin
+        key: downstream-gerbil-packages-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.gerbil-label }}-${{ hashFiles(format('{0}/gerbil.pkg', inputs.project-root)) }}
