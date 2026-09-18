@@ -11,10 +11,16 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/user-interface/facade
-        :poo-flow/src/user-interface/init-syntax
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 pooFlowUserConfig
+                 poo-flow-settings
+                 poo-flow-user-module-bundles->modules
+                 poo-flow-user-module-selection)
+        (only-in :poo-flow/src/modules/agent-sandbox/config
+                 poo-flow-sandbox-profile-config)
+        (only-in :poo-flow/src/user-interface/presentation-config
+                 pooFlowUserConfigPresentation)
+        (only-in "../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-sandbox-agreement-test)
@@ -41,24 +47,42 @@
     (poo-flow-user-module-bundles->modules module-bundles)
     (poo-flow-settings))))
 
-;;; The concrete loop case references `ci/build`. This local sandbox module
-;;; lets one test resolve that profile into sandbox-owned runtime summaries.
+;;; The concrete loop case references `ci/build`. These focused fixtures use
+;;; the public POO profile constructor directly, so agreement qualification
+;;; does not expand the aggregate downstream profile syntax owner.
 ;; : Metadata
 (def custom-loop-sandbox-profile-metadata
   '((intent . loop-engine-ci-build)
     (scope . test)))
 
+;; : ResourcePolicy
+(def custom-loop-sandbox-resource-policy
+  '((filesystem
+     (scope . project-workspace)
+     (paths
+      ((role . project-workspace)
+       (source . ".")
+       (project-marker . "gerbil.pkg")
+       (mode . read-write)))
+     (access . read-write))))
+
+;; : (-> PooSandboxProfile)
+(def (custom-loop-sandbox-profile)
+  (poo-flow-sandbox-profile-config
+   'ci/build
+   (list '(backend nono)
+         '(network deny-network)
+         '(capabilities process-run filesystem-read filesystem-write tmpdir)
+         (cons 'resources custom-loop-sandbox-resource-policy)
+         (cons 'metadata custom-loop-sandbox-profile-metadata))))
+
 ;; : [PooUserModuleSelection]
 (def custom-loop-sandbox-profile-module
-  (use-module nono-sandbox
-    (.def (ci/build @ nono-sandbox-profile
-                    network capabilities resources metadata)
-      network: (deny-network)
-      capabilities: '(process-run filesystem-read filesystem-write tmpdir)
-      resources: =>.+ readwrite-project-workspace-resources
-      metadata: => (lambda (super-metadata)
-                     (append super-metadata
-                             custom-loop-sandbox-profile-metadata)))))
+  (list
+   (poo-flow-user-module-selection
+    'sandbox
+    'nono-sandbox
+    (list (cons ':config (list (custom-loop-sandbox-profile)))))))
 
 ;;; Invalid sandbox profile keeps the reference resolvable while making the
 ;;; filesystem capability/resource agreement fail as report-only data.
@@ -73,17 +97,24 @@
   '((intent . loop-engine-invalid-ci-build)
     (scope . test)))
 
+;; : (-> PooSandboxProfile)
+(def (custom-loop-invalid-sandbox-profile)
+  (poo-flow-sandbox-profile-config
+   'ci/build
+   (list '(backend nono)
+         '(network deny-network)
+         '(capabilities filesystem-read process-run)
+         (cons 'resources custom-loop-invalid-sandbox-resource-policy)
+         (cons 'metadata custom-loop-invalid-sandbox-profile-metadata))))
+
 ;; : [PooUserModuleSelection]
 (def custom-loop-invalid-sandbox-profile-module
-  (use-module nono-sandbox
-    (.def (ci/build @ nono-sandbox-profile
-                    network capabilities resources metadata)
-      network: (deny-network)
-      capabilities: '(filesystem-read process-run)
-      resources: custom-loop-invalid-sandbox-resource-policy
-      metadata: => (lambda (super-metadata)
-                     (append super-metadata
-                             custom-loop-invalid-sandbox-profile-metadata)))))
+  (list
+   (poo-flow-user-module-selection
+    'sandbox
+    'nono-sandbox
+    (list
+     (cons ':config (list (custom-loop-invalid-sandbox-profile)))))))
 
 ;;; Valid sandbox resolution proves the agreement receipt travels through the
 ;;; intent, runtime manifest, and public presentation slots unchanged.

@@ -3,30 +3,21 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: keep the public user-interface config test as a small aggregator.
-;;; Scenario owners live in separate files so warning policy can isolate failures.
+;;; Boundary: optional umbrella suite for explicitly requested config checks.
+;;; Atomic CI discovery runs each imported owner directly; this file therefore
+;;; deliberately does not use the `-test.ss` suffix.
 
-(import (only-in :std/test
-                 check
-                 check-eq?
-                 check-equal?
-                 check-false
-                 check-not-equal?
-                 check-output
-                 check-true
-                 test-case
-                 test-error
-                 test-suite)
+(import (only-in :std/test test-suite)
         "user-interface-config-modules-test.ss"
         "user-interface-cicd-profile-case-test.ss"
         "user-interface-config-core-case-test.ss"
         "user-interface-config-sandbox-case-test.ss"
         "user-interface-profile-set-case-test.ss")
 
-(export user-interface-config-test)
+(export user-interface-config-suite)
 
 ;; : (-> Unit TestSuite)
-(def user-interface-config-test
+(def user-interface-config-suite
   (test-suite "poo-flow user interface config"
     user-interface-config-modules-test
     user-interface-cicd-profile-case-test
