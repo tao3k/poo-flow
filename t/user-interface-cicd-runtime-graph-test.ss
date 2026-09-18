@@ -10,12 +10,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/declaration/interface
-                 pooFlowUserConfig
-                 poo-flow-settings
-                 poo-flow-user-module-selection)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
-                 poo-flow-sandbox-profile-config)
         (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-config-workflow-cicd-runtime-readiness
                  poo-flow-user-config-workflow-cicd-runtime-command-manifests
@@ -23,8 +17,8 @@
                  poo-flow-user-workflow-cicd-runtime-command-manifest-agreement)
         (only-in :poo-flow/src/modules/workflow/funs
                  poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi)
-        (only-in "../user-interface/custom/my-module/cases/funflow-cicd"
-                 poo-flow-custom-my-module-funflow-cicd-case))
+        (only-in "./support/user-interface-cicd-runtime-fixture"
+                 user-interface-cicd-runtime-fixture-config))
 
 (export user-interface-cicd-runtime-graph-test)
 
@@ -33,69 +27,13 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) #f)))
 
-;; : [PooSandboxResource]
-(def user-interface-cicd-runtime-graph-readonly-resources
-  '((filesystem
-     (scope . project-workspace)
-     (paths
-      ((role . project-workspace)
-       (source . ".")
-       (project-marker . "gerbil.pkg")
-       (mode . read-only)))
-     (access . read-only))))
-
-(def user-interface-cicd-runtime-graph-readwrite-resources
-  '((filesystem
-     (scope . project-workspace)
-     (paths
-      ((role . project-workspace)
-       (source . ".")
-       (project-marker . "gerbil.pkg")
-       (mode . read-write)))
-     (access . read-write))))
-
-;; : (-> [PooUserModuleSelection])
-(def (user-interface-cicd-runtime-graph-profile-module)
-  (list
-   (poo-flow-user-module-selection
-    'sandbox
-    'nono-sandbox
-    (list
-     (cons
-      ':config
-      (list
-       (poo-flow-sandbox-profile-config
-        'ci/check
-        (list
-         '(backend nono)
-         '(network deny-by-default)
-         '(capabilities process-run filesystem-read tmpdir)
-         (cons 'resources
-               user-interface-cicd-runtime-graph-readonly-resources)))
-       (poo-flow-sandbox-profile-config
-        'ci/build
-        (list
-         '(backend nono)
-         '(network allowlisted "github.com" "crates.io")
-         '(capabilities process-run filesystem-read filesystem-write tmpdir
-                        cache-mount)
-         (cons 'resources
-               user-interface-cicd-runtime-graph-readwrite-resources)))))))))
-
-;; : (-> PooUserConfig)
-(def (user-interface-cicd-runtime-graph-funflow-config)
-  (pooFlowUserConfig
-   (append (user-interface-cicd-runtime-graph-profile-module)
-           poo-flow-custom-my-module-funflow-cicd-case)
-   (poo-flow-settings)))
-
 ;; : (-> CicdRuntimeGraphContext Symbol Value)
 (def (user-interface-cicd-runtime-graph-context-ref context key)
   (user-interface-cicd-runtime-graph-alist-ref context key))
 
 ;; : (-> CicdRuntimeGraphContext)
 (def (user-interface-cicd-runtime-graph-context)
-  (let* ((config (user-interface-cicd-runtime-graph-funflow-config))
+  (let* ((config (user-interface-cicd-runtime-fixture-config))
          (readiness-rows
           (poo-flow-user-config-workflow-cicd-runtime-readiness config))
          (readiness
