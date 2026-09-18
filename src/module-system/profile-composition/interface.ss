@@ -7,6 +7,15 @@
 
 (import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
                  use-composition)
+        (only-in :poo-flow/src/module-system/profile-composition/identity
+                 +poo-flow-composition-identity-kind+
+                 poo-flow-official-composition-identity
+                 poo-flow-user-composition-identity
+                 poo-flow-composition-identity?
+                 poo-flow-composition-identity-namespace
+                 poo-flow-composition-identity-local-name
+                 poo-flow-composition-identity-qualified-name
+                 poo-flow-composition-identity-official?)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
@@ -46,6 +55,14 @@
                  poo-flow-scenario-session-last-result))
 
 (export use-composition
+        +poo-flow-composition-identity-kind+
+        poo-flow-official-composition-identity
+        poo-flow-user-composition-identity
+        poo-flow-composition-identity?
+        poo-flow-composition-identity-namespace
+        poo-flow-composition-identity-local-name
+        poo-flow-composition-identity-qualified-name
+        poo-flow-composition-identity-official?
         poo-flow-profile-ref
         poo-flow-scenario-module-binding
         poo-flow-scenario-clause
