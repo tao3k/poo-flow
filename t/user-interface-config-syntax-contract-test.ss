@@ -1,0 +1,89 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: module-selection syntax and declaration-contract admission.
+;;; Invariant: contract qualification does not load profiles or root config.
+
+(import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection
+                 poo-flow-user-module-selection-flags
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection->alist
+                 poo-flow-user-module-when
+                 poo-flow-modules-system-use-module)
+        (only-in :poo-flow/src/module-system/declaration/contract
+                 poo-flow-require-use-module-contract!
+                 poo-flow-use-module-contract-validation
+                 poo-flow-use-module-contract-validation-valid?))
+
+(export user-interface-config-syntax-contract-test)
+
+(def (syntax-contract-alist-ref entries key)
+  (let (entry (assoc key entries))
+    (if entry (cdr entry) #f)))
+
+(def user-interface-config-syntax-contract-test
+  (test-suite "poo-flow user interface config syntax contract"
+    (test-case "builds module selections and conditional gates"
+      (let ((nono-selections
+             (poo-flow-modules-system-use-module
+              'nono-sandbox
+              '(+nono +doctor)))
+            (core-selection
+             (poo-flow-user-module-selection 'core 'poo-clos '(+native))))
+        (check-equal? (poo-flow-user-module-selection-key
+                       (car nono-selections))
+                      '(sandbox . nono-sandbox))
+        (check-equal? (poo-flow-user-module-selection-flags
+                       (car nono-selections))
+                      '(+nono +doctor))
+        (check-equal? (poo-flow-user-module-when #f
+                       (sandbox cubeSandbox +doctor))
+                      '())
+        (check-equal? (poo-flow-user-module-selection->alist core-selection)
+                      '((group . core)
+                        (module . poo-clos)
+                        (key core . poo-clos)
+                        (source-ref . #f)
+                        (entrypoint . #f)
+                        (flags +native)
+                        (enabled? . #t)))))
+    (test-case "validates use-module declarations before projection"
+      (let* ((valid-selections
+              (poo-flow-modules-system-use-module
+               'nono-sandbox
+               '(+nono +doctor)))
+             (valid-validation
+              (poo-flow-use-module-contract-validation
+               'nono-sandbox
+               valid-selections))
+             (invalid-selection
+              (poo-flow-user-module-selection 'custom 'workflow '())))
+        (check-equal? (syntax-contract-alist-ref valid-validation 'valid) #t)
+        (check-equal? (syntax-contract-alist-ref valid-validation 'module)
+                      'nono-sandbox)
+        (check-equal?
+         (syntax-contract-alist-ref valid-validation 'selection-count)
+         1)
+        (check-equal? (poo-flow-require-use-module-contract!
+                       'nono-sandbox
+                       valid-selections)
+                      valid-selections)
+        (check-equal?
+         (poo-flow-use-module-contract-validation-valid?
+          (poo-flow-use-module-contract-validation
+           'workflow
+           (list invalid-selection)))
+         #f)
+        (check-equal?
+         (with-catch
+          (lambda (_) #t)
+          (lambda ()
+            (poo-flow-require-use-module-contract!
+             'nono-sandbox
+             '(not-a-selection))
+            #f))
+         #t)))))
