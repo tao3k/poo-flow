@@ -5,6 +5,7 @@
 
 (import :std/test
         (only-in :std/misc/ports read-all-as-string)
+        (only-in :std/misc/path path-expand)
         (only-in :std/srfi/1 filter-map)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/lambda-episteme/modules/healthcare/standards/fhir/config
@@ -25,7 +26,9 @@
                  parse-artifact-success? parse-artifact-valid?))
 
 (def fixture-root
-  "../gerbil-parser/languages/fhirpath/v2.0.0/corpus/au-core-patient")
+  (path-expand
+   "languages/fhirpath/v2.0.0/corpus/au-core-patient"
+   (getenv "GERBIL_PARSER_DIR" "../gerbil-parser")))
 
 (def fixture-paths
   (map (lambda (name) (string-append fixture-root "/" name))

@@ -300,13 +300,13 @@ check-healthcare-gql: _prepare-gerbil-parser
 # Parse the domain-owned legacy message in gerbil-parser's isolated package
 # environment, then require exact equality with Lambda's retained projection.
 [group('check')]
-check-healthcare-hl7v2-migration:
+check-healthcare-hl7v2-migration: _prepare-gerbil-parser
     GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil test -v t/qualification/healthcare-hl7v2-migration/parser-receipt-test.ss
 
 # Qualify parser-owned FHIRPath syntax without claiming evaluator semantics.
 [group('check')]
-check-healthcare-fhirpath-syntax:
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil test -v t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
+check-healthcare-fhirpath-syntax: _prepare-gerbil-parser
+    GERBIL_PARSER_DIR="{{ gerbil_parser_dir }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil test -v t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
 
 # Replay the pinned external Validator from its local JAR/package cache. The
 # test verifies the binary digest and compares decoded OperationOutcome JSON.
