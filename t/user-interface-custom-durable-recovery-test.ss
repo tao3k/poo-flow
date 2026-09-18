@@ -1,18 +1,20 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable recovery scenario.
 ;;; Invariant: recovery rows describe crash/replay/repair handoff data only;
 ;;; Scheme never replays logs, claims leases, repairs state, or runs workflow.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/init-syntax)
+        (only-in "../user-interface/custom/my-module/cases/durable-recovery"
+                 poo-flow-custom-my-module-durable-recovery-case))
 
 (export user-interface-custom-durable-recovery-test)
-
-(load! "../user-interface/custom/my-module/cases/durable-recovery")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -23,7 +25,7 @@
 (def user-interface-custom-durable-recovery-test
   (test-suite "poo-flow custom user-interface durable-recovery case"
     (test-case "projects custom durable recovery handoff row"
-      (let* ((row poo-flow-custom-module-durable-recovery-case)
+      (let* ((row poo-flow-custom-my-module-durable-recovery-case)
              (observability-rows (test-ref row 'observability-rows)))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.durable.recovery-scenario)
@@ -39,5 +41,3 @@
                       '(#f #f #f #f #f #f))
         (check-equal? (test-ref row 'handoff-required) #t)
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-recovery-test)

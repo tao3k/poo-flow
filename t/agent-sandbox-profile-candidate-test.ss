@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: profile candidate tests cover Scheme-side dynamic profile data.
 ;;; Invariant: tests do not execute nono promote/apply or native sandbox code.
 
@@ -10,14 +14,15 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/profile-candidate)
 
-(run-tests!
+(export agent-sandbox-profile-candidate-test)
+
+(def agent-sandbox-profile-candidate-test
  (test-suite "agent sandbox profile candidates"
    (test-case "builds nono candidates through POO descriptors and macros"
      (let* ((choice

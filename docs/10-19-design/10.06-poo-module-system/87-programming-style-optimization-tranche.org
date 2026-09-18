@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Programming Style Optimization Tranche
 #+subtitle: Object Families, Projection Boundaries, and Measurable Performance Gates
 #+date: 2026-07-09
@@ -125,7 +129,7 @@ The acceptance evidence is intentionally narrow and reproducible:
 
 #+begin_src sh
 gxpkg env gxtest -q t/tool-core-test.ss
-gxpkg env gxtest -q t/tool-core-performance-test.ss
+gxpkg env gxtest -q t/performance/tool-core-performance-test.ss
 #+end_src
 
 Both gates passed after the split.  Bare =gxc= under the inherited Nix

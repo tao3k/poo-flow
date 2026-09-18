@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: shared agent-sandbox alist combinators live in this utility module.
 ;;; Boundary: profile, request, and bridge modules reuse these helpers only.
 ;;; Runtime contract: this module performs no backend selection or execution.

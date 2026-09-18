@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: Agent sandbox facade and task/flow opt-in live here.
 ;;; Boundary: profile, request, and bridge contracts live in leaf modules.
 ;;; Import contract: users opt in through =:poo-flow/src/modules/agent-sandbox= exports.
@@ -6,7 +10,21 @@
 ;;; Runtime contract: LLM calls, API/R surfaces, and C bindings stay out of Scheme.
 ;;; Policy evidence: tests should validate this facade plus leaf contracts.
 
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/task
+                 make-task-family-descriptor task-family-registry-extend
+                 default-task-family-registry make-task)
+        (only-in :poo-flow/src/core/strategy
+                 make-strategy strategy-name strategy-capabilities
+                 strategy-cache-policy strategy-failure-policy strategy-planner
+                 make-local-eager-strategy)
+        (only-in :poo-flow/src/core/runtime-adapter
+                 make-runtime-adapter runtime-adapter-name
+                 runtime-adapter-capabilities runtime-adapter-submitter
+                 runtime-adapter-fetcher runtime-adapter-store-putter
+                 runtime-adapter-store-getter make-rust-adapter adapter-submit)
+        (only-in :poo-flow/src/core/config make-run-config)
+        (only-in :poo-flow/src/core/flow
+                 default-flow-declaration-registry task-flow)
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/profile-candidate

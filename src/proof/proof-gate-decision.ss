@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Proof gate decision projection.
 ;;; - Keep rejection reasons derived from validated proof wires before runtime handoff.
 (import :poo-flow/src/proof/proof-fact-wire

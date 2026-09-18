@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user-interface profile library gate tests.
 ;;; Invariant: public reusable profiles must carry test and Lean proof status.
 
@@ -6,12 +10,10 @@
                  check-equal?
                  test-case
                  test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/profile-core
-        :poo-flow/src/module-system/profile-gate)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/profile-core
+        :poo-flow/src/user-interface/profile-gate)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export user-interface-profile-library-gate-test)
 

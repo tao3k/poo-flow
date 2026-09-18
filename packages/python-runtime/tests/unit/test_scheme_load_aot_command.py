@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,7 +12,7 @@ from poo_flow_runtime import _scheme_load_cache as scheme_cache
 
 
 def _runtime_projection_fixture(root: Path) -> None:
-    projection = root / "src" / "module-system" / "runtime-load-projection.ss"
+    projection = root / "src" / "modules" / "funflow" / "runtime-load-projection.ss"
     projection.parent.mkdir(parents=True)
     projection.write_text(";; projection fixture\n", encoding="utf-8")
 
@@ -20,7 +24,7 @@ def _source_fixture(root: Path) -> Path:
 
 
 def _aot_artifact_binary(root: Path, source: Path) -> Path:
-    projection = root / "src" / "module-system" / "runtime-load-projection.ss"
+    projection = root / "src" / "modules" / "funflow" / "runtime-load-projection.ss"
     cache_key = scheme_cache.scheme_load_cache_key(
         source.resolve(),
         root.resolve(),

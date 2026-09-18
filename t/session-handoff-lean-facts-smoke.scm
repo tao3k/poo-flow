@@ -1,8 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: smoke validates Lean fact projection tables, not runtime behavior.
 ;;; Invariant: Scheme manufactures proof facts only; runtime execution stays
 ;;; behind the Marlin handoff boundary.
 (import (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/loop-engine-session-agent-graph
+        :poo-flow/src/modules/loop-engine/session-agent-graph
         :poo-flow/src/modules/session/objects-handoff)
 
 ;; : (-> Alist Symbol Object)

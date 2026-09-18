@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_static_library.bzl", "cc_static_library")
@@ -6,6 +10,18 @@ load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benc
 load(":runtime_contract.bzl", "runtime_contract")
 
 package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "pkgconfig/poo-flow-runtime-v0.pc",
+    "include/poo_flow/scheme_native_v1.h",
+    "t/validate-runtime-v0-symbol-surface.ss",
+])
+
+cc_library(
+    name = "scheme_native_v1_headers",
+    hdrs = ["include/poo_flow/scheme_native_v1.h"],
+    strip_include_prefix = "include",
+)
 
 runtime_contract(
     name = "runtime_v0_contract",
@@ -106,6 +122,13 @@ cc_test(
     deps = [":runtime_c_library"],
 )
 
+cc_test(
+    name = "scheme_native_v1_header_harness",
+    size = "small",
+    srcs = ["tests/scheme_native_v1_header_harness.c"],
+    deps = [":scheme_native_v1_headers"],
+)
+
 runtime_gerbil_benchmark_test(
     name = "runtime_v0_gerbil_ffi_benchmark",
     contract_header = ":runtime_v0_contract_header",
@@ -143,7 +166,7 @@ runtime_gerbil_script_test(
     name = "runtime_v0_symbol_surface_test",
     size = "small",
     arguments = [
-        "//:tools/validate-runtime-v0-symbol-surface.ss",
+        ":t/validate-runtime-v0-symbol-surface.ss",
         ":runtime_c_shared",
         ":runtime_v0_exported_symbols",
         "@gerbil_poo_sources//:gerbil.pkg",
@@ -325,5 +348,6 @@ test_suite(
         ":runtime_v0_installed_consumer",
         ":runtime_v0_symbol_surface_test",
         ":runtime_v0_vector_harness",
+        ":scheme_native_v1_header_harness",
     ],
 )

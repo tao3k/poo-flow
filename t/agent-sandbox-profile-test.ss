@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: agent-sandbox profile tests cover profile descriptors and defaults.
 ;;; Invariant: backend execution stays outside Scheme tests.
 
@@ -10,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -54,7 +57,9 @@
   (let (entry (and (list? entries) (assoc key entries)))
     (if entry (cdr entry) #f)))
 
-(run-tests!
+(export agent-sandbox-profile-test)
+
+(def agent-sandbox-profile-test
  (test-suite "agent sandbox profile descriptors"
    (test-case "builds backend profiles for nono and CubeSandbox"
      (let ((nono (make-nono-agent-sandbox-profile 'always-further/opencode))

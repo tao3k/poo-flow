@@ -1,12 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Concrete custom loop-engine user-interface case.
 
 (import (only-in :std/test test-case)
-        :poo-flow/t/support/custom-loop-engine/fixtures
-        :poo-flow/t/support/custom-loop-engine/declaration
-        :poo-flow/t/support/custom-loop-engine/agent
-        :poo-flow/t/support/custom-loop-engine/operation
-        :poo-flow/t/support/custom-loop-engine/presentation)
+        "./fixtures"
+        "./declaration"
+        "./agent"
+        "./operation"
+        "./presentation")
 
 (export user-interface-custom-loop-engine-concrete-case)
 

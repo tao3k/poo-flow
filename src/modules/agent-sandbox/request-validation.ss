@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: agent-sandbox normalized request validation lives here.
 ;;; Boundary:
 ;;; - Request builders assemble data before calling this module.
@@ -11,7 +15,7 @@
 ;;; Policy evidence:
 ;;; - Profile and bridge tests assert both valid requests and failure codes.
 
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile

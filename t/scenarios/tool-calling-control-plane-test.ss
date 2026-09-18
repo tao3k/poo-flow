@@ -1,6 +1,15 @@
-(import (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/tool-calling-control)
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        (only-in :clan/poo/object .o)
+        :poo-flow/src/module-system/profile-composition/interface
+        :poo-flow/src/modules/tool-core/calling-control)
+
+(def tool-calling-control-plane-test
+  (test-suite "tool calling control plane"
+    (test-case "validates tool call plan and receipt facts"
 
 (def tool-calling
   (eval (call-with-input-file "user-interface/profiles/tool-calling.ss" read)))
@@ -75,4 +84,4 @@
                                      'tool-output-cannot-authorize-policy)
   (error "Tool output must not authorize policy"))
 
-(void)
+(void))))

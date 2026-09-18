@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: adapter-routed task dispatch and receipt classification helpers.
 ;;; Invariant: runner orchestration imports these helpers but owns DAG control.
 

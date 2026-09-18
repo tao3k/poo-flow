@@ -1,9 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hook-scoped tool permission policy.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -49,5 +52,3 @@
                       #f)
         (check-equal? (poo-flow-session-policy-default-action hook-policy)
                       'deny)))))
-
-(run-tests! session-hook-tool-policy-test)

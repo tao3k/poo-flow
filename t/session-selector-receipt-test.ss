@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only selector receipts over workflow/transform candidates.
 ;;; Invariant: Scheme never scores candidates, calls a model, dispatches a
 ;;; workflow, or returns an EmptyWorkflow; it emits pending routing receipts.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
@@ -115,5 +118,3 @@
         (check-equal? (test-ref row 'candidate-ids) '())
         (check-equal? (test-ref row 'fallback-ref) 'empty-workflow)
         (check-equal? (test-ref row 'selected-candidate-ref) #f)))))
-
-(run-tests! session-selector-receipt-test)

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: strategies choose planning policy, not runtime execution.
 ;;; Invariant: heavy execution remains in runner/runtime-adapter code.
 
@@ -23,6 +27,7 @@
         strategy-can-select-frontier?
         strategy-ready-frontier
         strategy-ready-frontier-ids
+        strategy-admit-ready-frontier-ids
         strategy-can-run-locally-in
         strategy-can-run-locally?
         strategy-cache-decision)
@@ -122,6 +127,18 @@
 (def (strategy-ready-frontier-ids strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
     (execution-plan-ready-node-ids plan completed-node-ids)
+    (raise-control-plane-failure
+     'strategy
+     'unsupported-frontier
+     "strategy cannot select graph frontier"
+     (strategy-unsupported-frontier-detail strategy))))
+
+;;; Incremental runners may already own the pure frontier calculation.  The
+;;; strategy still admits the capability and preserves the same typed failure.
+;; : (-> Strategy [Id] [Id])
+(def (strategy-admit-ready-frontier-ids strategy frontier-ids)
+  (if (strategy-can-select-frontier? strategy)
+    frontier-ids
     (raise-control-plane-failure
      'strategy
      'unsupported-frontier

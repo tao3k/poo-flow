@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Runtime v0.1 C Bindings
 
 This directory owns the installed pre-v1 C control-lane ABI.  It contains no
@@ -13,6 +17,9 @@ heap type.
 | Pure C harness | =tests/runtime_v0_harness.c= |
 | Hot/bulk harness | =tests/runtime_v0_batch_harness.c= |
 | Installed consumer | =tests/runtime_v0_installed_consumer.c= |
+| Relocatable SDK metadata | =pkgconfig/poo-flow-runtime-v0.pc= |
+| Scheme-native C header | =include/poo_flow/scheme_native_v1.h= |
+| Scheme semantic owner | =src/ffi/runtime-v0-native.ss= |
 
 The Bundle remains the semantic owner.  The C engine owns negotiation, opaque
 handles, lifecycle state, checkpoint envelopes, owned bytes, and typed boundary
@@ -43,6 +50,39 @@ generation and all downstream C consumers.
 
 Bazel is the external runtime-C action graph.  =build.ss= remains the native
 Scheme build authority and is not called or replaced by these C targets.
+
+The =Runtime C SDK= workflow owns this ABI independently of the Scheme package
+CI.  On Linux and macOS it validates the generated Scheme contract/header
+parity, the exported symbol allow-list, pure installed consumers, handle and
+arena lifecycle, batch behavior, and platform builds.  Linux additionally runs
+UBSan, ASan, Valgrind and the bounded performance smoke.  Its relocatable SDK
+contains both static and shared libraries, the public and generated contract
+headers, the symbol manifest and =pkg-config= metadata.
+
+Rust, MRR, Python and other runtimes bind this C11 surface directly.  They do
+not import Gerbil heap objects, discover Scheme source paths, or launch a
+Scheme subprocess.  A Rust =build.rs= may use =PKG_CONFIG_PATH= pointing at
+=lib/pkgconfig= or link =libpoo_flow_runtime_v0.a= explicitly; generated Rust
+types must remain projections of =runtime_v0.h=, never an independently owned
+protocol.
+
+The optional Scheme-native ABI is a separate, AOT-linked C surface for POO
+Flow-owned contract semantics.  It follows Gerbil's =begin-ffi= contract:
+=c-define= exports versioned symbols, =define-c-struct= types the borrowed
+result pointer, and =poo_flow_scheme_result_v1_release= is the sole owner-side
+release operation for copied payload bytes.  It currently exposes a descriptor
+and bounded validation for source-query, language-admission, and artifact-
+projection receipts.  Unsupported contract names and malformed payloads fail
+closed with =poo-flow.scheme-native-error.v1= bytes.
+
+The ordinary Runtime C SDK does not contain a hidden Scheme VM and therefore
+does not ship =scheme_native_v1.h= by itself.  Downstream AOT packages include
+that header together with the compiler-produced Gerbil program archive and
+runtime initialization stub.  The ordinary native Scheme build and gxtest lane
+compile this module and execute a real C caller inside the Gerbil host,
+covering symbol resolution, ABI version, byte ownership, validation and
+idempotent result release.  The independent Runtime C workflow remains a small
+pure-C/header/sanitizer boundary and does not rebuild the Gerbil package graph.
 
 The installed contract is ABI v0.1 and Bundle schema
 =poo-flow.organization-bundle.draft.3=.  Neither is an ABI v1 freeze claim.

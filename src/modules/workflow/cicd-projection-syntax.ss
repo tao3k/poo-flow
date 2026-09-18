@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic helpers for workflow CI/CD final row projections.
 ;;; Invariant: generated rows are plain alists at POO object, runtime manifest,
 ;;; receipt, pipeline, and Marlin handoff boundaries.

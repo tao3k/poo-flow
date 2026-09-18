@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: read pinned JSON Schema source files into JSON-like Scheme data.
 ;;; Invariant: this owner performs file decoding only. Normalization,
 ;;; reference resolution, contract emission, and validation live elsewhere.

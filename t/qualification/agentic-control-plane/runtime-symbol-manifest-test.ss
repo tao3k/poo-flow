@@ -1,9 +1,11 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/qualification/runtime-symbol-manifest)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (read-manifest json)
   (poo-flow-runtime-symbol-manifest-read (open-input-string json)))
@@ -52,5 +54,3 @@
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'diagnostics)
                => '(invalid-or-unknown-manifest))))))
-
-(run-tests! runtime-symbol-manifest-test)

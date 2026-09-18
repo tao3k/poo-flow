@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.24 Agent Harness, Session, Run, And Dispatch Design
 ** 10.06.24.10 Status
 This document turns the Flue audit and current =poo-flow= design into an implementation-oriented design for agent harnesses, sessions, workflow runs, operations, dispatch receipts, and UI snapshots.

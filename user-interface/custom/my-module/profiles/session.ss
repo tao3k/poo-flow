@@ -1,8 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream session sandbox profile declarations.
-;;; Invariant: included by ../config.ss; it declares data only.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(let ((session-capabilities
+;;; Boundary: downstream session sandbox profile declarations.
+;;; Invariant: standalone module; it declares data only.
+
+(import :poo-flow/src/user-interface/init-syntax)
+
+(export poo-flow-custom-my-module-session-module)
+
+(def poo-flow-custom-my-module-session-module
+  (let ((session-capabilities
        '(process-run filesystem-read tmpdir cache-mount))
       (session-metadata
        '((intent . coding-agent)
@@ -14,4 +23,4 @@
       capabilities: session-capabilities
       resources: =>.+ runtime-volume-resources
       metadata: => (lambda (super-metadata)
-                     (append super-metadata session-metadata)))))
+                     (append super-metadata session-metadata))))))

@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream loop-engine profile declarations.
-;;; Invariant: included by ../config.ss; it declares workflow loop intent only.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(use-module loop-engine
-  :config
+;;; Boundary: downstream loop-engine profile declarations.
+;;; Invariant: standalone module; it declares workflow loop intent only.
+
+(import :poo-flow/src/modules/loop-engine/config)
+
+(export poo-flow-custom-my-module-loops-module)
+
+(def poo-flow-custom-my-module-loops-module
+  (poo-flow-loop-engine-configs
   (.def (daily-triage-loop @ loop-engine-use-case
                            name level mode goal)
     name: 'daily-triage
@@ -310,4 +318,4 @@
     compression-policy: repo-loop-compression-policy
     policy-extensions: (list repo-loop-coordination
                              repo-loop-observability-policy
-                             repo-loop-safety-policy)))
+                             repo-loop-safety-policy))))

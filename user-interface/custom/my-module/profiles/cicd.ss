@@ -1,8 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: CI/CD downstream sandbox profile declarations.
-;;; Invariant: included by ../config.ss; it does not execute workflows.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(let ((check-capabilities
+;;; Boundary: CI/CD downstream sandbox profile declarations.
+;;; Invariant: standalone module; it does not execute workflows.
+
+(import :poo-flow/src/user-interface/init-syntax)
+
+(export poo-flow-custom-my-module-cicd-module)
+
+(def poo-flow-custom-my-module-cicd-module
+  (let ((check-capabilities
        '(process-run filesystem-read tmpdir))
       (build-capabilities
        '(process-run filesystem-read filesystem-write tmpdir cache-mount))
@@ -52,4 +61,4 @@
       network: (allowlisted-network "artifact-store.internal" "github.com")
       resources: =>.+ readwrite-project-workspace-resources
       metadata: => (lambda (super-metadata)
-                     (append super-metadata promote-metadata)))))
+                     (append super-metadata promote-metadata))))))

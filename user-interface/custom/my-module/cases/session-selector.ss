@@ -1,10 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream selector receipt case loaded by custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream selector receipt case.
 ;;; Invariant: selector declarations stay pending receipts; Marlin owns model
 ;;; scoring, workflow dispatch, and selected-result materialization.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-selector-case)
+
+(def poo-flow-custom-my-module-session-selector-case
+  (poo-flow-session-cases
   (session-case custom-session-selector-case
     (metadata (source . user-interface)
               (case . session-selector))
@@ -51,4 +59,4 @@
         (fallback empty-workflow)
         (metadata (source . user-interface)
                   (case . session-selector)))))
-    (rows (session-selector-row selector-receipt))))
+    (rows (session-selector-row selector-receipt)))))

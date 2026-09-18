@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: report-only session registry receipts.
 ;;; Invariant: registry receipts index declared sessions; they are not runtime
 ;;; stores and never retain live execution state.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -118,5 +121,3 @@
                       'poo-flow.session.registry-receipt)
         (check-equal? (test-ref receipt-row 'entry-count) 2)
         (check-equal? (test-ref receipt-row 'runtime-executed) #f)))))
-
-(run-tests! session-registry-receipt-test)

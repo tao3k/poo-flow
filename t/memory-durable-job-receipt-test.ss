@@ -1,15 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable memory job receipts for Rust/Marlin handoff.
 ;;; Invariant: Scheme validates and projects memory jobs only; it never recalls,
 ;;; commits, consolidates, persists, or repairs memory stores.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/memory-core/config)
 
@@ -180,5 +183,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'memory-intent-commit-denied)
          #t)))))
-
-(run-tests! memory-durable-job-receipt-test)

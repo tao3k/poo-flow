@@ -1,11 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow user-interface pipeline benchmark helpers.
 
 (import (only-in :clan/poo/object .ref)
         (only-in :std/sugar foldl)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/presentation-config
+        "./performance"
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-settings
+                 pooFlowUserConfig)
+        (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation))
 
 (export funflow-config-pipeline-scenario-count

@@ -1,8 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream sandbox durable placement case.
 ;;; Invariant: pure profile declaration; sandbox execution stays in runtime.
 
-(let ((durable-build-metadata
+(import :poo-flow/src/user-interface/init-syntax
+        "../profiles/all")
+
+(export poo-flow-custom-my-module-sandbox-durable-case)
+
+(def poo-flow-custom-my-module-sandbox-durable-case
+  (let ((durable-build-metadata
        '((intent . durable-sandbox-build)
          (scope . custom-module)
          (durable-policy . durable/default)
@@ -16,4 +26,4 @@
       capabilities: '(process-run filesystem-read filesystem-write tmpdir)
       resources: =>.+ readwrite-project-workspace-resources
       metadata: => (lambda (super-metadata)
-                     (append super-metadata durable-build-metadata)))))
+                     (append super-metadata durable-build-metadata))))))

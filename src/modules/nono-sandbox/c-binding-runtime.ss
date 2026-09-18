@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono-sandbox C binding runtime manifest projection lives here.
 ;;; Boundary: this module emits capability plans and backend handoff manifests.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.
@@ -7,7 +11,7 @@
 
 ;;; Native nono C binding runtime manifest projection.
 ;;; - Keep sandbox manifests validated before runtime dry-run, smoke, or live receipts are emitted.
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/bridge
@@ -405,6 +409,7 @@
 ;;; library after dry-run validation. The default probe is the direct C compile
 ;;; argv; callers may pass a safer or platform-specific command.
 ;; nono-c-binding-smoke-test
+;;   : (forall (c) (-> RuntimeManifest [c] Alist))
 ;;   : (-> RuntimeManifest [Command] Alist)
 ;;   | contract: runs a host probe command only; native sandbox apply is never called
 ;;   | doc m%
@@ -440,6 +445,7 @@
 ;;; its exit status determines success; if it cannot be spawned, the receipt is
 ;;; an explicit skip. The default command is `nono --version`, not sandbox apply.
 ;; nono-c-binding-live-test
+;;   : (forall (c) (-> RuntimeManifest [c] Alist))
 ;;   : (-> RuntimeManifest [Command] Alist)
 ;;   | contract: runs only an installed nono CLI probe; native sandbox apply is never called
 ;;   | doc m%

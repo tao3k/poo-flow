@@ -1,10 +1,13 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
+(export release-assurance-claim-verifier-test)
 
 (def (evidence id owner)
   (poo-flow-assurance-evidence-reference id owner "artifact" "digest"))
@@ -95,5 +98,3 @@
               (poo-flow-release-assurance-manifest-verify-claims invalid)))
         (check (.ref unknown 'accepted?) => #f)
         (check (.ref manifest-receipt 'code) => 'invalid-manifest)))))
-
-(run-tests! release-assurance-claim-verifier-test)

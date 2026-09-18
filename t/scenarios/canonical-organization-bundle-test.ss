@@ -1,10 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :clan/poo/object
         :std/test
-        :gslph/src/testing/memory-profile
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/semantic/organization-bundle)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (canonical-bundle . reverse-order?)
   (let* ((parent-principal (poo-flow-organization-principal 'principal-parent))
@@ -218,5 +220,3 @@
             (receipt (poo-flow-organization-bundle-validate invalid)))
        (check-equal? (poo-flow-organization-validation-accepted? receipt) #f)
        (check-equal? (diagnostic-codes receipt) '(unstable-semantic-value))))))
-
-(run-tests! canonical-organization-bundle-test)

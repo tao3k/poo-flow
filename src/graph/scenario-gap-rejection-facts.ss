@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Scenario-gap runtime rejection proof facts.
 ;;; - Keep runtime-row proof receipts stable while scenario planning remains object/native upstream.
 (export poo-flow-scenario-gap-runtime-contract->proof-facts)

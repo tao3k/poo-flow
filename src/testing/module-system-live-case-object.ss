@@ -1,8 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: inert test fixtures for downstream module-system live cases.
 ;;; Invariant: no sandbox execution or process work here.
 ;;; Note: this is not the module-system POO object model. That model is owned by
-;;; src/module-system/object-core.ss, src/modules/*/objects.ss, and object-validation.ss.
+;;; src/module-system/object-core/interface.ss, src/modules/*/objects.ss, and object-validation.ss.
 
 (import (only-in :clan/poo/object
                  .ref
@@ -11,7 +15,7 @@
                  $constant-slot-spec)
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-by-name)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry))
 
 (export pooFlowModuleSystemLiveCase

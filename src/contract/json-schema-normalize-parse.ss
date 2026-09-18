@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: owns object/property/pattern-property parsing for normalized JSON
 ;;; Schema IR and delegates shared registry behavior to normalize-core.
 ;;; Invariant: parser-owned facts from this owner describe schema shape and

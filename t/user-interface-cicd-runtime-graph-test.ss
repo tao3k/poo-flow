@@ -1,18 +1,24 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests inspect the user-facing Funflow CI/CD dependency graph.
 ;;; Invariant: graph projection stays declarative and runtime-free.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-cicd-module
-                 poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/user-interface-fixtures)
+        (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
+                 poo-flow-user-config-workflow-cicd-runtime-readiness
+                 poo-flow-user-config-workflow-cicd-runtime-command-manifests
+                 poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
+                 poo-flow-user-workflow-cicd-runtime-command-manifest-agreement)
+        (only-in :poo-flow/src/modules/workflow/funs
+                 poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi)
+        (only-in "./support/user-interface-cicd-runtime-fixture"
+                 user-interface-cicd-runtime-fixture-config))
 
 (export user-interface-cicd-runtime-graph-test)
 
@@ -21,29 +27,24 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) #f)))
 
-;; : (-> PooUserConfig)
-(def (user-interface-cicd-runtime-graph-funflow-config)
-  (pooFlowUserConfig
-   (append poo-flow-custom-my-module-cicd-module
-           poo-flow-custom-my-module-funflow-cicd-case)
-   (poo-flow-settings)))
-
 ;; : (-> CicdRuntimeGraphContext Symbol Value)
 (def (user-interface-cicd-runtime-graph-context-ref context key)
   (user-interface-cicd-runtime-graph-alist-ref context key))
 
 ;; : (-> CicdRuntimeGraphContext)
 (def (user-interface-cicd-runtime-graph-context)
-  (let* ((presentation
-          (pooFlowUserConfigPresentation
-           (user-interface-cicd-runtime-graph-funflow-config)))
+  (let* ((config (user-interface-cicd-runtime-fixture-config))
+         (readiness-rows
+          (poo-flow-user-config-workflow-cicd-runtime-readiness config))
          (readiness
-          (car (.ref presentation 'workflow-cicd-runtime-readiness)))
+          (car readiness-rows))
          (checks
           (user-interface-cicd-runtime-graph-alist-ref readiness 'checks))
+         (manifest-maps
+          (poo-flow-user-config-workflow-cicd-runtime-command-manifests
+           config))
          (manifest-map
-          (car (.ref presentation
-                     'workflow-cicd-runtime-command-manifests)))
+          (car manifest-maps))
          (dependency-graph
           (user-interface-cicd-runtime-graph-alist-ref
            manifest-map
@@ -58,22 +59,24 @@
            'manifests))
          (build-manifest (car manifests))
          (manifest-summaries
-          (.ref presentation
-                'workflow-cicd-runtime-command-manifest-summaries))
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
+           manifest-maps))
          (agreement
-          (.ref presentation
-                'workflow-cicd-runtime-command-manifest-agreement))
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+           manifest-maps
+           manifest-summaries))
          (agreement-rows
           (user-interface-cicd-runtime-graph-alist-ref agreement 'rows))
-         (handoff-abis
-          (.ref presentation
-                'workflow-cicd-marlin-runtime-handoff-abis))
+         (handoff-abi
+          (poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi
+           manifest-map))
          (handoff-entries
           (user-interface-cicd-runtime-graph-alist-ref
-           (car handoff-abis)
+           handoff-abi
            'entries)))
     (list
-     (cons 'presentation presentation)
+     (cons 'manifest-maps manifest-maps)
+     (cons 'manifest-summaries manifest-summaries)
      (cons 'readiness readiness)
      (cons 'checks checks)
      (cons 'manifest-map manifest-map)
@@ -99,13 +102,13 @@
      (cons 'package-agreement-row (caddr agreement-rows))
      (cons 'build-handoff-entry (car handoff-entries))
      (cons 'runtime-summaries
-           (.ref presentation 'workflow-cicd-sandbox-runtime-summaries)))))
+           (user-interface-cicd-runtime-graph-alist-ref
+            (car checks)
+            'sandbox-runtime-summaries)))))
 
 ;; : (-> CicdRuntimeGraphContext Void)
 (def (check-cicd-runtime-readiness! context)
-  (let* ((presentation
-          (user-interface-cicd-runtime-graph-context-ref context 'presentation))
-         (readiness
+  (let* ((readiness
           (user-interface-cicd-runtime-graph-context-ref context 'readiness))
          (checks
           (user-interface-cicd-runtime-graph-context-ref context 'checks))
@@ -120,7 +123,13 @@
            'package-agreement-row))
          (runtime-summaries
           (user-interface-cicd-runtime-graph-context-ref context
-                                                         'runtime-summaries)))
+                                                         'runtime-summaries))
+         (manifest-maps
+          (user-interface-cicd-runtime-graph-context-ref context
+                                                         'manifest-maps))
+         (manifest-summaries
+          (user-interface-cicd-runtime-graph-context-ref context
+                                                         'manifest-summaries)))
     (check-equal? (length checks) 3)
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref (car checks) 'check)
@@ -137,18 +146,16 @@
       'profile-name)
      'ci/build)
     (check-equal?
-     (.ref presentation 'workflow-cicd-runtime-command-manifest-map-count)
+     (length manifest-maps)
      1)
     (check-equal?
-     (.ref presentation 'workflow-cicd-runtime-command-manifest-summary-count)
+     (length manifest-summaries)
      3)
     (check-equal?
-     (.ref presentation
-           'workflow-cicd-runtime-command-manifest-agreement-valid?)
+     (user-interface-cicd-runtime-graph-alist-ref agreement 'valid?)
      #t)
     (check-equal?
-     (.ref presentation
-           'workflow-cicd-runtime-command-manifest-agreement-diagnostics)
+     (user-interface-cicd-runtime-graph-alist-ref agreement 'diagnostics)
      '())
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref agreement 'manifest-count)
@@ -275,7 +282,7 @@
     (check-equal? (length manifests) 3)
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-manifest 'argv)
-     '("gxpkg" "build"))
+     '("gerbil" "build"))
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-request 'check)
      'build)
@@ -337,7 +344,7 @@
      'build)
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-summary 'argv)
-     '("gxpkg" "build"))
+     '("gerbil" "build"))
     (check-equal?
      (user-interface-cicd-runtime-graph-alist-ref build-summary
                                                   'durable-task-id)
@@ -408,9 +415,9 @@
                                                   'artifact-refs)
      '(build-log))))
 
-;;; The custom module is the downstream user contract: the presentation must
-;;; expose the three-node graph and the same ordered rows used for runtime
-;;; manifest handoff, without executing the handoff adapter.
+;;; The custom Funflow case is the downstream user contract: the focused
+;;; production projection must expose the three-node graph and the same ordered
+;;; rows used for runtime manifest handoff, without executing the adapter.
 ;; : TestSuite
 (def user-interface-cicd-runtime-graph-test
   (test-suite "poo-flow user interface cicd runtime graph"

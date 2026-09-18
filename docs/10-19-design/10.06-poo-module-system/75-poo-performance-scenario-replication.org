@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: 10.06.75 POO Performance Scenario Replication
 
 * Purpose
@@ -41,7 +45,9 @@ The unified fixture gate currently covers 15 POO performance scenarios:
 Each benchmark fixture must satisfy three contracts at the same time:
 
 - benchmark contract: includes =sourcePath=, timing budgets, observed timings, input/expected comparison, and standard measurement phases.
-- memory contract: declares =maxRssMb=, =memoryMetric=, and =memoryUnit=, and includes =assert-memory-gate= in =measurementPhases=.
+- memory execution policy is selected through the ASP POO Testing Profile;
+  benchmark fixtures retain observed memory receipts but do not redeclare a
+  static heap or RSS limit.
 - POO evidence contract: declares =pooFormEvidence= and =pooUsageCallEvidence= to prove that the scenario remains centered on the POO API.
 
 These three contracts serve different purposes:
@@ -92,7 +98,7 @@ The internal receipt is a generated struct/accessor surface. The exported test h
 Key verification after this implementation:
 
 #+begin_src shell
-env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/module-system-poo-performance-test.ss
+env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/performance/module-system-poo-performance-test.ss
 #+end_src
 
 Result:

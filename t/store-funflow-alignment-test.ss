@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Store tests align Scheme declarations with Funflow CAS concepts.
 
 (import (only-in :std/test
@@ -9,12 +13,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/workflow/store)
 
 (export store-funflow-alignment-test)
 

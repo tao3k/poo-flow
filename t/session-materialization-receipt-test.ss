@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime materialization receipt projection.
 ;;; Invariant: Scheme records pending/materialized/failed state only; it never
 ;;; synchronizes runtime futures, opens sandbox handles, or replays IO.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -106,5 +109,3 @@
                                 'error-kind)
                       'RuntimeError)
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! session-materialization-receipt-test)

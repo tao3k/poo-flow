@@ -1,11 +1,29 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
         :clan/poo/object
-        :poo-flow/src/modules/model-core/objects
-        :poo-flow/src/modules/model-core/config)
+        (only-in :clan/poo/mop element?)
+        :poo-flow/src/modules/model-core/interface)
 
-(def model-core-tests
+(def (model-core-test-row-ref row key)
+  (let (entry (assq key row))
+    (and entry (cdr entry))))
+
+(export model-core-test)
+
+(def model-core-test
   (test-suite "model core"
     (test-case "model specs expose POO-native accessors and projections"
+      (check-equal? (element? PooFlowModelSpec
+                              poo-flow-model-core-tool-json-model)
+                    #t)
+      (check-equal?
+       (element? PooFlowModelSpec
+                 (.o kind: +poo-flow-model-core-spec-kind+
+                     model-ref: 'missing-contract-fields))
+       #f)
       (check-equal? (poo-flow-model-spec-ref poo-flow-model-core-tool-json-model)
                     'tool-json)
       (check-equal? (poo-flow-model-spec-provider poo-flow-model-core-tool-json-model)
@@ -14,11 +32,15 @@
                     "local-tool-json")
       (check-equal? (poo-flow-model-spec-capabilities poo-flow-model-core-tool-json-model)
                     '(chat text json tool-calling))
-      (check-equal? (cdr (assq 'runtime-executed
-                               (poo-flow-model-spec->alist
-                                poo-flow-model-core-tool-json-model)))
+      (check-equal? (model-core-test-row-ref
+                     (poo-flow-model-spec->alist
+                      poo-flow-model-core-tool-json-model)
+                     'runtime-executed)
                     #f))
     (test-case "model catalog summarizes refs without runtime execution"
+      (check-equal? (element? PooFlowModelCatalog
+                              poo-flow-model-core-default-catalog)
+                    #t)
       (check-equal? (poo-flow-model-catalog-ref poo-flow-model-core-default-catalog)
                     'model-core-default)
       (check-equal? (poo-flow-model-catalog-model-refs
@@ -33,18 +55,23 @@
                       'fast-text))
                     'fast-text))
     (test-case "selection policy chooses the first compatible model"
+      (check-equal? (element? PooFlowModelSelectionPolicy
+                              poo-flow-model-core-default-selection-policy)
+                    #t)
       (def receipt
         (poo-flow-model-select
          poo-flow-model-core-default-selection-policy
          poo-flow-model-core-default-catalog))
       (check-equal? (poo-flow-model-selection-receipt-valid? receipt)
                     #t)
+      (check-equal? (element? PooFlowModelSelectionReceipt receipt) #t)
       (check-equal? (poo-flow-model-selection-receipt-selected-model-ref receipt)
                     'tool-json)
       (check-equal? (poo-flow-model-selection-receipt-diagnostics receipt)
                     '())
-      (check-equal? (cdr (assq 'runtime-executed
-                               (poo-flow-model-selection-receipt->alist receipt)))
+      (check-equal? (model-core-test-row-ref
+                     (poo-flow-model-selection-receipt->alist receipt)
+                     'runtime-executed)
                     #f))
     (test-case "selection policy records diagnostics before fallback"
       (def small-catalog
@@ -64,8 +91,7 @@
                     #t)
       (check-equal? (poo-flow-model-selection-receipt-selected-model-ref receipt)
                     'fast-text)
-      (check-equal? (cdr (assq 'reason
-                               (car (poo-flow-model-selection-receipt-diagnostics receipt))))
+      (check-equal? (model-core-test-row-ref
+                     (car (poo-flow-model-selection-receipt-diagnostics receipt))
+                     'reason)
                     'missing-model))))
-
-(run-tests! model-core-tests)

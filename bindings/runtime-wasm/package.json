@@ -2,7 +2,7 @@
   "name": "@poo-flow/runtime-wasm",
   "version": "0.1.0",
   "description": "Browser WebAssembly runtime for canonical POO Flow Bundle v1 topologies",
-  "license": "Apache-2.0",
+  "license": "Apache-2.0 AND LGPL-2.1-or-later",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tao3k/poo-flow.git",

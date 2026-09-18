@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: user-facing session policy and transform facade forms.
 ;;; Invariant: forms create POO policy, validation, memory, and transform
 ;;; values only; runtime execution remains outside Scheme.
 
-(import :poo-flow/src/module-system/durable-policy
+(import :poo-flow/src/modules/memory-core/durable/policy
         (only-in :poo-flow/src/modules/session/config-session-syntax
                  poo-flow-session-syntax-chunk)
         :poo-flow/src/modules/session/policy

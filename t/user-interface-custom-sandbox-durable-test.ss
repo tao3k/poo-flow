@@ -1,13 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: test verifies durable sandbox config projection without runtime work.
 ;;; Invariant: assertions inspect user-interface metadata only.
 
 (import :std/test
         (only-in :clan/poo/object .ref .slot?)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
-        :poo-flow/user-interface/custom/my-module/config)
+        "../user-interface/custom/my-module/config")
 
 (export user-interface-custom-sandbox-durable-test)
 

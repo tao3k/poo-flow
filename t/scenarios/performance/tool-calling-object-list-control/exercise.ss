@@ -1,7 +1,11 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: executable exercise for tool-calling object-list performance.
 
-(import :poo-flow/src/module-system/tool-calling-control)
+(import :poo-flow/src/modules/tool-core/calling-control)
 
 (def (tool-calling-performance-symbol prefix index)
   (string->symbol (string-append prefix "-" (number->string index))))

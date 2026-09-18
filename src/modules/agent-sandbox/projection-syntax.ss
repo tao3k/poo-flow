@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: hygienic helpers for agent-sandbox final row projections.
 ;;; Invariant: generated rows remain plain alists at request, validation,
 ;;; profile, and Marlin handoff boundaries.

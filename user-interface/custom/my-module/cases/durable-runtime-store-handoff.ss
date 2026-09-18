@@ -1,10 +1,20 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream durable runtime store backend handoff case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream durable runtime store backend handoff case.
 ;;; Invariant: this declares backend negotiation data only; Marlin owns the
 ;;; store implementation and all durable side effects.
 
-(let* ((durable-policy
+(import :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend)
+
+(export poo-flow-custom-my-module-durable-runtime-store-handoff-case)
+
+(def poo-flow-custom-my-module-durable-runtime-store-handoff-case
+  (let* ((durable-policy
         (poo-flow-durable-policy
          'durable/custom-runtime-store
          'objects.shared.durable
@@ -37,4 +47,4 @@
                         (case . durable-runtime-store-handoff)))))))
   (list
    (poo-flow-durable-runtime-store-negotiation-receipt->alist negotiation)
-   (poo-flow-durable-runtime-store-negotiation->marlin-handoff negotiation)))
+    (poo-flow-durable-runtime-store-negotiation->marlin-handoff negotiation))))

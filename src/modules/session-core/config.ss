@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: session-core module selection.
 ;;; Invariant: session-core enables report-only session declarations; it never
 ;;; realizes sandbox runtimes or Marlin handlers.
 
-(import :poo-flow/src/module-system/base
+(import :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/session/config)
 
 (export (import: :poo-flow/src/modules/session/config)

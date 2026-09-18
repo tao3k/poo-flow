@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public POO-native sandbox profile authoring interface.
 ;;; Invariant: users write Gerbil POO objects; projection stays report-only.
 
@@ -38,7 +42,6 @@
   paths: '(((role . project-workspace)
             (source . ".")
             (project-marker . "gerbil.pkg")
-            (target . "/workspace/project")
             (mode . read-only)))
   access: 'read-only))
 
@@ -57,7 +60,6 @@
   paths: '(((role . project-workspace)
             (source . ".")
             (project-marker . "gerbil.pkg")
-            (target . "/workspace/project")
             (mode . read-write)))
   access: 'read-write))
 

@@ -1,11 +1,16 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: AC-11 preflight verifies evidence; it cannot authorize cutover.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: AC-11 preflight verifies supplied cutover evidence.
+;;; Invariant: readiness checks cannot authorize or execute cutover.
 
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-cutover-readiness-input-kind+

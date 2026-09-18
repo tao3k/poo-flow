@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.07 Loop Engineering, C3 Now, C4 Later
 ** 10.06.07.10 Purpose
 This note records the local research pass over =cobusgreyling/loop-engineering= and maps it onto =poo-flow='s Gerbil POO design.

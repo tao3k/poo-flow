@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: workflow CI/CD dependency graphs report topology only.
 ;;; Invariant: tests inspect graph diagnostics without scheduling work.
 
@@ -6,8 +10,8 @@
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
-        :poo-flow/src/modules/workflow/cicd)
+                 )
+        :poo-flow/src/modules/workflow/interface)
 
 (export workflow-cicd-dependency-graph-test)
 

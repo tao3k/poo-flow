@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * Scope
 This document defines the POO Flow artifact control-plane direction.
 
@@ -404,7 +408,7 @@ edges. Runtime languages execute storage, indexing, and publishing after the
 control plane has produced a valid receipt.
 
 * Scheme Implementation Surface
-This document is implemented by =src/module-system/durable-artifact-policy.ss=.
+This document is implemented by =src/modules/memory-core/durable/artifact-policy.ss=.
 
 - =artifact-profile= defines reusable artifact policy profiles.
 - =database-profile= defines backend capability profiles. Turso belongs here,

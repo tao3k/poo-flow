@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for tool-core specs and catalog receipts.
 ;;; Invariant: users author POO tool specs; runtime execution remains external.
 
 (import (only-in :std/sugar filter)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/config-prototype-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
         :poo-flow/src/modules/tool-core/objects)
 
 (export (import: :poo-flow/src/modules/tool-core/objects)
@@ -18,7 +22,18 @@
         poo-flow-tool-core-poo-spec->tool-spec
         poo-flow-tool-core-poo-catalog->catalog
         poo-flow-tool-core-poo-config-flags
+        poo-flow-tool-configs
         poo-flow-tool-core-module-bundles)
+
+(defsyntax (poo-flow-tool-configs stx)
+  (syntax-case stx ()
+    ((_ config-form ...)
+     (syntax
+      (poo-flow-module-configs
+       tool-core
+       poo-flow-tool-core-poo-config-flags
+       (quoted :config config-form ...)
+       config-form ...)))))
 
 ;; : PooToolSpecPrototype
 (defpoo-module-config-prototype
@@ -48,7 +63,8 @@
           (runtime-executed #f))))
 
 ;; tool-catalog-validation
-;;   : (-> Syntax PooToolPolicyCatalogValidationReceipt)
+;;   : (-> Symbol PooToolCatalog PooSessionPolicy PooSessionPolicy [Alist]
+;;          PooToolPolicyCatalogValidationReceipt)
 ;;   | doc m%
 ;;       Validation belongs to tool-core's user facade: users pass a concrete
 ;;       catalog plus effective session tool policies and receive a report-only
@@ -56,25 +72,21 @@
 ;;
 ;;       # Examples
 ;;       ```scheme
-;;       (tool-catalog-validation tool-check catalog agent-policy hook-policy)
+;;       (tool-catalog-validation 'tool-check catalog agent-policy hook-policy)
 ;;       ;; => validation receipt
 ;;       ```
 ;;     %
-(defrules tool-catalog-validation (metadata)
-  ((_ validation-id catalog agent-tool-policy hook-tool-policy
-      (metadata metadata-entry ...))
-   (poo-flow-tool-policy-catalog-validation-receipt
-    'validation-id
-    catalog
-    agent-tool-policy
-    hook-tool-policy
-    '(metadata-entry ...)))
-  ((_ validation-id catalog agent-tool-policy hook-tool-policy)
-   (poo-flow-tool-policy-catalog-validation-receipt
-    'validation-id
-    catalog
-    agent-tool-policy
-    hook-tool-policy)))
+(def (tool-catalog-validation validation-id
+                              catalog
+                              agent-tool-policy
+                              hook-tool-policy
+                              . maybe-metadata)
+  (apply poo-flow-tool-policy-catalog-validation-receipt
+         validation-id
+         catalog
+         agent-tool-policy
+         hook-tool-policy
+         maybe-metadata))
 
 ;; : (-> PooToolPolicyCatalogValidationReceipt Alist)
 (def (tool-catalog-validation-row receipt)

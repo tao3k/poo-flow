@@ -1,10 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile object row authoring diagnostics.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation
@@ -217,7 +221,7 @@
 (def (poo-flow-sandbox-profile-object-field-with-merge field merge)
   (poo-flow-module-field-contract
    (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-field-contract-value-kind field)
+   (poo-flow-module-field-contract-value-type field)
    merge
     (poo-flow-module-field-contract-default field)
    (poo-flow-module-field-contract-metadata field)))

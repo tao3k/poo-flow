@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: poo-flow
 #+OPTIONS: toc:2
 
@@ -27,6 +31,53 @@ The current design is centered on three ideas.
 3. Lean proofs should make policy, strategy, session, sandbox, and runtime-handoff claims explicit instead of relying on informal configuration shape.
 
 Public extension APIs should stay POO-native. Raw alist DSLs, ad hoc patch languages, and untyped mutation hooks are not the normal user interface. They can exist only as internal or advanced escape hatches behind named POO-native or functional helpers.
+
+* Enterprise Security Governance
+
+Governance is a first-class POO Flow module, not a Cedar wrapper and not a
+documentation label.  A =PooFlowGovernanceProfile.= carries typed Sources,
+preconditions, threats and a ThreatModel.  Its assessment is an inert value:
+an active =high= or =critical= threat in the =exposed= or =realized= phase
+blocks Provider handoff, while the assessment itself never executes an action
+or grants authority.
+
+The security argument is split across four owners so that one tool cannot
+silently claim another tool's guarantee:
+
+| Layer | Owner | What it establishes | What it cannot establish |
+| POO Governance | =src/modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
+| Cedar Provider | =src/modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
+| TLA+ / TLC | =packages/proof/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
+| Lean | =packages/proof/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
+
+The intended evidence chain is:
+
+#+begin_src text
+Lambda Scenario / Profile / Case declarations
+  -> POO Flow typed Governance assessment
+  -> TLA+ transition-model qualification
+  -> Lean enterprise assurance obligations
+  -> identity-bound Cedar Provider handoff
+  -> independent runtime authorization or rejection
+#+end_src
+
+These arrows are admission boundaries, not authority inheritance.  TLA+ does
+not authorize a Cedar request; Lean does not manufacture observations; Cedar
+does not reinterpret the Profile or threat graph; and a Scheme assessment
+always reports =runtime-executed?: #f=.  The enterprise Lean closure makes
+this explicit in
+[[file:packages/proof/lean/PooFlowProof/Enterprise/GovernanceThreatAssuranceClosure.lean][GovernanceThreatAssuranceClosure]]:
+typed security-graph closure, threat-intelligence provenance, snapshot
+identity and separation of duties are required, and an active critical threat
+contradicts Provider-handoff eligibility.
+
+The executable model gate is =just check-governance-model=.  Gerbil Parser
+owns TLA+ syntax and byte-exact round-trip qualification; official TLC owns
+state exploration.  The checked receipt is written to
+=.ci/governance/tlc-receipt.ss= with source, configuration, tool and output
+digests plus state counts, graph depth and the final admission bit.  A parser
+success, a TLC banner, or a zero exit status alone is not accepted as model
+closure.
 
 * AI Strategy/Policy Boundary
 The problem this project targets is AI strategy/policy rigor. This should not be described as a worker-execution problem. A worker can execute a unit of work, but the hard part is deciding whether an AI-generated strategy is allowed to start, which policy it refines, which sandbox it may use, which session facts it depends on, and which loop state it may advance.
@@ -192,9 +243,34 @@ The important source areas are:
 Common focused checks:
 
 #+begin_src shell
-cd packages/proof/lean
-lake build
+just check-lean-module PooFlowProof.PooC3.TemporalCausality
+just check-healthcare-lean
 #+end_src
+
+Lean validation is module-atomic by default: each command builds only the named
+module or Lake-declared module bundle and its native import closure.  The full
+=PooFlowProof.lean= aggregate is an explicit integration qualification,
+available as =just check-lean-all=; ordinary pull requests do not compile all
+proof families merely because one Case-owned theorem changed.
+
+Proof-bearing POO owners map directly to native Lake libraries:
+
+| POO owner | Lake library target |
+|-----------+---------------------|
+| =module-system= | =PooFlowModuleSystemProof= |
+| =governance= | =PooFlowModuleGovernanceProof= |
+| =temporal-causality= | =PooFlowModuleTemporalCausalityProof= |
+| =authorization= | =PooFlowModuleAuthorizationProof= |
+| =loop-engine= | =PooFlowModuleLoopEngineProof= |
+| =session= | =PooFlowModuleSessionProof= |
+| =sandbox-core= | =PooFlowModuleSandboxCoreProof= |
+| =funflow= | =PooFlowModuleFunflowProof= |
+| =workflow= | =PooFlowModuleWorkflowProof= |
+| =memory-core= | =PooFlowModuleMemoryCoreProof= |
+
+Modules without a Lean-owned contract do not receive placeholder proof
+libraries.  A Scenario composes module libraries; it does not become the owner
+of their proof graph.
 
 #+begin_src shell
 asp org lint docs/10-19-design/10.06-poo-module-system/55-pooc3-proof-architecture.org
@@ -202,10 +278,49 @@ asp org lint docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-compositi
 #+end_src
 
 #+begin_src shell
-gxpkg build -g
+just deps
+just build
 #+end_src
 
-Do not run =gxpkg uninstall= inside this workspace. If package identity or tag state drifts, use =gxpkg clean=, =gxpkg update <package>=, or =gxpkg deps --install= and report any remaining tag conflict.
+The package =build.ss= declares native targets through the =exclude-modules=
+and =extra-spec= POO slots of =:asp-gerbil-scheme/building-api=. The upstream
+catalog owns discovery; there is no downstream =native-spec-projector= or
+second source scan. ASP Scheme owns shared build and testing
+machinery; POO Flow retains its domain modules, test cases, and performance
+contracts. There is no package-local CLI support or testing framework wrapper.
+
+The default =just clean/deps/build/test= recipes call Gerbil's native package
+commands. =just rebuild= runs clean, dependency installation, build, and the
+unit suite sequentially, stopping at the first failure. =just check= runs the
+native build and unit suite; neither command invokes Bazel.
+
+Run the single native test entrypoint and Scheme scripts through the package
+environment:
+
+#+begin_src shell
+just test
+gerbil env ./unit-tests.ss
+gerbil env gerbil interactive t/fixtures/cli-run-smoke.ss 3
+#+end_src
+
+=unit-tests.ss= is the only package test interface. It applies ASP Scheme's
+default POO Testing profile to the current Gambit runtime, initializes
+=clan/testing=, and leaves recursive =*-test.ss= discovery to that upstream
+framework. Users do not pass heap options on the command line; a larger test derives the memory
+profile with =.cc= and maps it with =.map=. Every package test uses clan's
+single convention: a =*-test.ss= file defines the same-named =test-suite=.
+There is no downstream aggregate export list, compatibility runner, or
+duplicate source collector.
+Performance measurements use ASP Scheme's nanosecond timer and p95 helpers;
+local fixtures retain their own budgets and report =admissionStatistic=p95=.
+Compare performance only after the package and its dependencies have been
+compiled together; mixing source-loaded modules with compiled dependencies is
+not a comparable performance baseline.
+
+Do not run =gerbil pkg uninstall= (or =gxpkg uninstall=) inside this workspace.
+If package identity or tag state drifts, use =gerbil clean=,
+=gerbil pkg update <package>=, or =gerbil deps --install= and report any
+remaining tag conflict.
 
 * Docs
 The design record lives under =docs/10-19-design=. Use these as entry points:

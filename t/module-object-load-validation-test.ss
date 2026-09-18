@@ -1,20 +1,25 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: load! fixture module objects are integration validation cases.
 ;;; Invariant: unit receipt-shape tests do not import fixture packages.
 
-(import (only-in :std/test
+(import (only-in :clan/poo/object .ref object?)
+        (only-in :std/test
                  test-suite
                  test-case
                  check-equal?)
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/object-validation
-        :poo-flow/t/fixtures/object-load-valid/objects)
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/object-validation/interface
+        "./fixtures/object-load-valid/objects")
 
 (export module-object-load-validation-test)
 
-;; : (-> HashTable Symbol Value)
+;; : (-> POOObject Symbol Value)
 (def (receipt-ref receipt key)
-  (hash-get receipt key))
+  (.ref receipt key))
 
 ;; : TestSuite
 (def module-object-load-validation-test
@@ -34,6 +39,10 @@
                       'objects.fixture.loaded)
         (check-equal? (poo-flow-module-object-validation-valid? validation)
                       #t)
+        (check-equal? (and (object? validation)
+                           (andmap object? field-validations)
+                           (object? type-validation))
+                      #t)
         (check-equal? (receipt-ref type-validation 'valid) #t)
         (check-equal? (receipt-ref type-validation 'typeDisplay)
-                      "(list Symbol)")))))
+                      "List")))))

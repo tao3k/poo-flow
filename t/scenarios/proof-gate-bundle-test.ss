@@ -1,5 +1,14 @@
-(import :poo-flow/src/proof/proof-fact-wire
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-bundle)
+
+(def proof-gate-bundle-test
+  (test-suite "proof gate bundle"
+    (test-case "validates accepted and rejected bundles"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -73,4 +82,4 @@
                'rejection-rule
                (poo-flow-proof-fact-ref 'scenario
                                         missing-capability-rejected-bundle))
-              'runtime-row-rejected-by-accepted)
+              'runtime-row-rejected-by-accepted))))

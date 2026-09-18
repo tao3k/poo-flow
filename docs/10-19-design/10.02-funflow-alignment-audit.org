@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.02 Funflow Alignment Audit
 ** 10.02.00 Document Status
 This audit turns the first control-plane design into a milestone map for

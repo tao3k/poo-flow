@@ -1,11 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: CubeSandbox interface projection lives in this backend leaf.
 ;;; Boundary: this module emits API lifecycle manifests only.
 ;;; Runtime contract: Marlin owns Cube API calls, remote sessions, and snapshots.
 ;;; Policy evidence: Cube interface tests assert descriptor override and gates.
 
 (import (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/core/api
+        (only-in :poo-flow/src/core/roles execution-policy-role)
+        (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax

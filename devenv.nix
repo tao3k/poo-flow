@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 { pkgs, lib, config, inputs, ... }:
 
 {
@@ -6,17 +10,36 @@
 
   # https://devenv.sh/packages/
   packages = [
+    pkgs.typst
     pkgs.git
+    pkgs.actionlint
     pkgs.bazelisk
     pkgs.emscripten
     pkgs.lld
     pkgs.binaryen
     pkgs.bazel-buildtools
     pkgs.nodejs_24
+    # Official TLA+ Tools distribution.  gerbil-parser remains the syntax
+    # authority; TLC independently owns state-space model checking.
+    pkgs.tlaplus
+    # The lockfile and lean-toolchain remain the source pins. These tools make
+    # `just build-cedar-runtime-host OUT` available through the generated
+    # devenv profile entrypoint.
+    pkgs.elan
+    pkgs.just
   ];
 
-  # https://devenv.sh/languages/
-  # languages.rust.enable = true;
+  languages.rust = {
+    enable = true;
+    channel = "stable";
+    # Ensure rust can link python library
+    components = [
+      "rustc"
+      "cargo"
+      "clippy"
+      "rustfmt"
+    ];
+  };
 
   # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
@@ -33,6 +56,12 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+  '' + lib.optionalString pkgs.stdenv.isDarwin ''
+    # Homebrew Gerbil/Gambit selects the host C toolchain itself.  Nix's SDK
+    # and compiler selectors form a mixed Darwin toolchain when inherited by
+    # gxpkg, so keep them outside the native Gerbil build boundary.  Bazel and
+    # Emscripten retain their own declared toolchains.
+    unset SDKROOT DEVELOPER_DIR CC CXX
   '';
 
   # https://devenv.sh/tasks/

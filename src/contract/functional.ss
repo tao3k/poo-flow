@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: pure helpers for contract-boundary normalization.
 ;;; Invariant: this module owns contract data plumbing, not JSON Schema
 ;;; semantics, object contracts, or runtime execution.
@@ -123,6 +127,7 @@
   (if (every predicate values) #t #f))
 
 ;; poo-flow-contract-object-ref
+;;   : (forall (k v) (-> [(Pair k v)] k v v))
 ;;   : (-> Alist ContractKey Object Object)
 ;;   | result: matched row value or DEFAULT-VALUE
 ;;   | doc m%

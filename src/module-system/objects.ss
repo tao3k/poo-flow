@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared module objects available to every module namespace.
 
-(import :poo-flow/src/module-system/object-core)
+(import :poo-flow/src/module-system/object-core/interface)
 
-(export (import: :poo-flow/src/module-system/object-core)
+(export (import: :poo-flow/src/module-system/object-core/interface)
         poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
 
@@ -13,11 +17,11 @@
    '()
    (list
     (poo-flow-module-field-contract
-     'backend 'Symbol 'override 'sandbox '((scope . shared)))
+     'backend PooFlowModuleSymbolType 'override 'sandbox '((scope . shared)))
     (poo-flow-module-field-contract
-     'flags 'List 'append '() '((scope . shared)))
+     'flags PooFlowModuleListType 'append '() '((scope . shared)))
     (poo-flow-module-field-contract
-     'runtime-args 'List 'append '() '((scope . shared))))
+     'runtime-args PooFlowModuleListType 'append '() '((scope . shared))))
    '((namespace . objects.shared)
      (domain . sandbox))))
 

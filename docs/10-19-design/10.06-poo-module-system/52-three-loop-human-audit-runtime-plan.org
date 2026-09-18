@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: 10.06.52 Three Loop Human Audit Runtime Plan
 #+date: 2026-07-01
 #+startup: showall

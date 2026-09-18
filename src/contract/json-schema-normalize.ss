@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: facade for JSON Schema normalization across parse, definition
 ;;; collection, and reference resolution.
 ;;; Invariant: this owner wires the normalization pipeline only; new parser

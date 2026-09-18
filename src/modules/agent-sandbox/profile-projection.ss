@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: runtime and handoff summaries for validated sandbox profiles.
 ;;; Invariant: summaries are inert Scheme receipts for Marlin-owned execution.
 

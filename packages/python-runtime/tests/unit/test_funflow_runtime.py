@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 from __future__ import annotations
 
 import time
@@ -23,7 +27,7 @@ SCHEME_FIXTURE = (
     REPO_ROOT
     / "packages"
     / "python-runtime"
-    / "tests"
+    / "t"
     / "fixtures"
     / "funflow_user_module.ss"
 )

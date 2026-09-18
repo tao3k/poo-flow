@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;; Private source fragment included by governor-core.ss.
 (def (loop-governor-slot-rows name strategy overrides)
   (loop-governor-slot-rows/tail
@@ -112,10 +116,10 @@
    (else default)))
 
 (def (loop-governor-alist? value)
-  (poo-flow-contract-alist? value))
+  (and (list? value) (andmap pair? value)))
 
 (def (loop-governor-list-of? predicate values)
-  (poo-flow-contract-list-of? predicate values))
+  (and (list? values) (andmap predicate values)))
 
 (def (loop-governor-action-key? value)
   (or (symbol? value)
@@ -131,10 +135,10 @@
   (loop-strategy-plan? value))
 
 (def (loop-governor-node-type-contract->alist)
-  (poo-flow-object-type-contract->alist +loop-governor-node-type-contract+))
+  (poo-flow-native-contract->alist +loop-governor-node-type-contract+))
 
 (def (loop-governor-type-contract->alist)
-  (poo-flow-object-type-contract->alist +loop-governor-type-contract+))
+  (poo-flow-native-contract->alist +loop-governor-type-contract+))
 
 (def (loop-governor-check-slot! contract value)
   (poo-flow-contract-check-slot! contract value))

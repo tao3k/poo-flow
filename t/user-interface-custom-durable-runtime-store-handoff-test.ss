@@ -1,14 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable runtime store handoff scenario.
 ;;; Invariant: user config projects negotiation and handoff data only; Marlin
 ;;; owns the runtime store implementation.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/cases/durable-runtime-store-handoff"
                  poo-flow-custom-my-module-durable-runtime-store-handoff-case))
 
 (export user-interface-custom-durable-runtime-store-handoff-test)
@@ -48,5 +51,3 @@
                         "durable-runtime-store"
                         "negotiate"))
         (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-runtime-store-handoff-test)

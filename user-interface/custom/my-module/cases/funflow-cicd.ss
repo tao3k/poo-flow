@@ -1,9 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: downstream Funflow CI/CD pipeline declaration.
 ;;; Invariant: this file declares POO workflow objects only; no runtime work.
 
-(use-module funflow
-  :config
+(import :poo-flow/src/modules/funflow/config)
+
+(export poo-flow-custom-my-module-funflow-cicd-case)
+
+(def poo-flow-custom-my-module-funflow-cicd-case
+  (poo-flow-funflow-configs
   (.def (funflow/build @ funflow-check
                        check-name profile-ref command-vector
                        artifact-outputs cache-intents result-protocol
@@ -11,7 +19,7 @@
                        artifact-retention)
     check-name: 'build
     profile-ref: 'ci/build
-    command-vector: '("gxpkg" "build")
+    command-vector: '("gerbil" "build")
     artifact-outputs: '(build-log)
     cache-intents: '(gerbil-build-cache)
     result-protocol: '(read :lines)
@@ -26,7 +34,7 @@
                       dependency-refs durable-task-id action-class)
     check-name: 'test
     profile-ref: 'ci/check
-    command-vector: '("gxtest" "t/unit-tests.ss")
+    command-vector: '("gerbil" "env" "./unit-tests.ss")
     artifact-outputs: '(test-receipt)
     result-protocol: '(read :lines)
     runtime-mode: 'manifest-handoff
@@ -41,8 +49,7 @@
                          compensation-refs artifact-retention)
     check-name: 'package
     profile-ref: 'ci/check
-    command-vector: '("gxtest"
-                      "t/workflow-cicd-dependency-graph-test.ss")
+    command-vector: '("gerbil" "env" "./unit-tests.ss")
     artifact-outputs: '(dependency-graph-receipt)
     result-protocol: '(read :lines)
     runtime-mode: 'manifest-handoff
@@ -57,4 +64,4 @@
     pipeline-name: 'default
     checks: (list funflow/build funflow/test funflow/package)
     metadata: '((scenario . funflow-cicd)
-                (authoring-style . gerbil-poo-native))))
+                (authoring-style . gerbil-poo-native)))))

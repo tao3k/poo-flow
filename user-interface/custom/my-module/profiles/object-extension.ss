@@ -1,8 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream POO object slot-operator example.
-;;; Invariant: included by ../config.ss; it declares extension data only.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(let ((object-extension-capabilities
+;;; Boundary: downstream POO object slot-operator example.
+;;; Invariant: standalone module; it declares extension data only.
+
+(import :poo-flow/src/user-interface/init-syntax)
+
+(export poo-flow-custom-my-module-object-extension-module)
+
+(def poo-flow-custom-my-module-object-extension-module
+  (let ((object-extension-capabilities
        '(process-run filesystem-read tmpdir cache-mount artifact-cache))
       (object-extension-mounts
        '(((path . "/workspace/project")
@@ -52,4 +61,4 @@
         capabilities: object-extension-capabilities
         resources: =>.+ object-extension-resources
         metadata: => (lambda (super-metadata)
-                       (append super-metadata object-extension-metadata))))))
+                       (append super-metadata object-extension-metadata)))))))

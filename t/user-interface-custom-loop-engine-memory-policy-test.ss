@@ -1,14 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify loop-engine memory-policy declaration contracts.
 ;;; Invariant: malformed memory policy rows fail before runtime projection.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-memory-policy-test)
 

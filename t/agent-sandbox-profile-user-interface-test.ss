@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile user interface stays on the module-system facade.
 
 (import (only-in :std/test
@@ -9,13 +13,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
         test-suite)
         (only-in :clan/poo/object .o .ref .slot? object?)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
 
 (export agent-sandbox-profile-user-interface-test)
@@ -35,7 +39,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 2)
@@ -249,7 +252,6 @@
                           ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-write)))
                          (access . read-write))
                         (cpu . 2)
@@ -347,7 +349,6 @@
                           ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-write)))
                          (access . read-write))
                         (cpu . 2)

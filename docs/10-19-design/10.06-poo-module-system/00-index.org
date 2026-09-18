@@ -1,8 +1,12 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06 poo-flow Module System
 ** 10.06.10 Purpose
 This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
 
-The public facade lives in =src/module-system/facade.ss=. The implementation owners live under =src/module-system/*=; =src/modules/*= is reserved for concrete workflow and sandbox modules. The module system depends on core registries and config APIs, but core does not import or re-export it.
+The public facade lives in =src/module-system/api.ss=. The implementation owners live under =src/module-system/*=; =src/modules/*= is reserved for concrete workflow and sandbox modules. The module system depends on core registries and config APIs, but core does not import or re-export it.
 ** 10.06.15 Agentic Control Plane RFC Suite
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][90 POO Flow Agentic Control Plane Architecture RFC]]
 - [[file:91-canonical-organization-bundle-rfc.org][91 Canonical Organization Bundle RFC]]
@@ -61,7 +65,7 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:83-funflow-use-module-macro-ir.org][83 FunFlow use-module Macro IR]]
 - [[file:84-funflow-local-module-composition-ui.org][84 FunFlow Local Module Composition UI]]
 - [[file:85-json-schema-contract-bridge.org][85 JSON Schema Contract Bridge]]
-- [[file:81-utilities-contract-macro-design.org][81 Utilities Contract Macro Design]]
+- [[file:157-native-poo-type-contract-convergence.org][157 Native POO Type and Contract Convergence]]
 - [[file:82-type-contract-performance-benchmarks.org][82 Type Contract Performance Benchmarks]]
 - [[file:58-p0-boundary-namespace-design.org][58 P0 Boundary Namespace Design]]
 - [[file:72-agent-framework-capability-convergence.org][72 Agent Framework Capability Convergence]]
@@ -84,13 +88,15 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:55-baml-agent-language-audit.org][55 BAML Agent Language Audit]]
 - [[file:56-type-facts-validation-lean-plan.org][56 Type Facts Validation And Lean Plan]]
 - [[file:57-user-graph-p0-thesis.org][57 User Graph P0 Thesis]]
+- [[file:148-algorithmic-hot-path-audit.org][148 Algorithmic Hot-Path Audit And Shared Funcs Ownership]]
+- [[file:149-persistent-native-public-closure-projection.org][149 Rejected Persistent Native Public-Closure Projection]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.
 - =src/core/task.ss= owns task-family descriptors and immutable task-family registries.
 - =src/core/flow.ss= owns flow-declaration descriptors and immutable flow-declaration registries.
 - =src/core/config.ss= accepts task and flow registries at the =run-config= boundary.
-- =src/module-system/facade.ss= and =src/module-system/*= own source refs, catalog resolution, module activation, and import validation.
+- =src/module-system/api.ss= and =src/module-system/*= own source refs, catalog resolution, module activation, and import validation.
 - =src/extensions/*= demonstrates descriptor bundles as extension modules.
 ** 10.06.40 Delivered Surface
 The implemented module-system surface includes:

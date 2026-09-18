@@ -1,8 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: CI/CD sandbox profile inheritance and runtime-readiness facts.
 ;;; Invariant: unresolved profile refs stay visible; no fallback profile is fabricated.
 
 (import (only-in :clan/poo/object .ref)
+        (only-in :std/misc/list delete-duplicates/hash)
         :poo-flow/src/core/projection-syntax
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile?
@@ -10,7 +15,8 @@
                  poo-flow-sandbox-profile-handoff-summary
                  poo-flow-sandbox-profile-name
                  poo-flow-sandbox-profile-runtime-summary)
-        :poo-flow/src/modules/workflow/cicd-core)
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects)
 
 (export poo-flow-cicd-check-profile-refs
         poo-flow-cicd-check-sandbox-runtime-summaries
@@ -21,32 +27,24 @@
 ;;; Profile refs are an inheritance surface, not graph edges. This collector
 ;;; flattens symbol refs and inline profile objects into runtime catalog names.
 ;; : (-> PooFlowCicdProfileRef [Symbol] [Symbol])
-(def (poo-flow-cicd-profile-refs/add profile refs)
+(def (poo-flow-cicd-profile-refs/rev profile refs-rev)
   (cond
    ((symbol? profile)
-    (poo-flow-cicd-symbol-add profile refs))
+    (cons profile refs-rev))
    ((poo-flow-sandbox-profile? profile)
-    (poo-flow-cicd-symbol-add
-     (poo-flow-sandbox-profile-name profile)
-     refs))
+    (cons (poo-flow-sandbox-profile-name profile) refs-rev))
    ((and (pair? profile) (list? profile))
-    (poo-flow-cicd-profile-refs/list-add profile refs))
-   (else refs)))
+    (foldl poo-flow-cicd-profile-refs/rev refs-rev profile))
+   (else refs-rev)))
 
 ;;; Nested profile-ref lists preserve left-to-right inheritance order while
 ;;; flattening the runtime-facing catalog refs.
 ;; : (-> [PooFlowCicdProfileRef] [Symbol] [Symbol])
-(def (poo-flow-cicd-profile-refs/list-add profiles refs)
-  (cond
-   ((null? profiles) refs)
-   (else
-    (poo-flow-cicd-profile-refs/list-add
-     (cdr profiles)
-     (poo-flow-cicd-profile-refs/add (car profiles) refs)))))
-
-;; : (-> PooFlowCicdCheck [Symbol])
 (def (poo-flow-cicd-check-profile-refs check)
-  (poo-flow-cicd-profile-refs/add (poo-flow-cicd-check-profile check) '()))
+  (delete-duplicates/hash
+   (reverse
+    (poo-flow-cicd-profile-refs/rev
+     (poo-flow-cicd-check-profile check) '()))))
 
 ;;; Sandbox profile lookup accepts inline POO profiles and catalog symbols. It
 ;;; never constructs fallback profiles, so unresolved refs remain visible.
@@ -222,7 +220,7 @@
 ;;   %
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-runtime-manifest-readiness-fields check profile-catalog)
-  (poo-flow-core-field-rows
+  (poo-flow-product-field-rows
    (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
    (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
    (check (poo-flow-cicd-check-name check))

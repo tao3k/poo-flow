@@ -1,20 +1,23 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable session-memory scenario.
 ;;; Invariant: durable memory rows are handoff receipts only; Scheme never
 ;;; recalls, commits, consolidates, persists, or repairs memory stores.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
-                 poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-key
+                 poo-flow-user-module-selection-flag-entry)
+        (only-in "../user-interface/custom/my-module/cases/session-memory-durable"
+                 poo-flow-custom-my-module-session-memory-durable-case))
 
 (export user-interface-custom-session-memory-durable-test)
-
-(load! "../user-interface/custom/my-module/cases/session-memory-durable")
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (test-ref row key)
@@ -40,10 +43,10 @@
   (test-suite "poo-flow custom user-interface session-memory-durable case"
     (test-case "projects durable memory job receipts without runtime work"
       (let* ((selection
-              (car poo-flow-custom-module-session-memory-durable-case))
+              (car poo-flow-custom-my-module-session-memory-durable-case))
              (rows
               (module-config-rows
-               poo-flow-custom-module-session-memory-durable-case))
+               poo-flow-custom-my-module-session-memory-durable-case))
              (parent-summary (car rows))
              (stale-source (list-ref rows 4))
              (repair (list-ref rows 5)))
@@ -89,5 +92,3 @@
                         "marlin-agent-core"))
         (check-equal? (rows-field rows 'runtime-executed)
                       '(#f #f #f #f #f #f))))))
-
-(run-tests! user-interface-custom-session-memory-durable-test)

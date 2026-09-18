@@ -1,19 +1,22 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests inspect Funflow CI/CD runtime projection from user config.
 ;;; Invariant: projection remains declarative; no runtime adapter is executed.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/workflow-cicd-config
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-cicd-module
-                 poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/user-interface-fixtures)
+        (only-in :poo-flow/src/user-interface/presentation-config
+                 pooFlowUserConfigPresentation)
+        (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
+                 poo-flow-user-workflow-cicd-runtime-command-manifest-agreement)
+        (only-in "./support/user-interface-cicd-runtime-fixture"
+                 user-interface-cicd-runtime-fixture-config))
 
 (export user-interface-cicd-runtime-projection-test)
 
@@ -31,13 +34,6 @@
    (else
     (user-interface-cicd-runtime-trace-stage (cdr trace) stage))))
 
-;; : (-> Unit PooUserConfig)
-(def (user-interface-cicd-runtime-funflow-config)
-  (pooFlowUserConfig
-   (append poo-flow-custom-my-module-cicd-module
-           poo-flow-custom-my-module-funflow-cicd-case)
-   (poo-flow-settings)))
-
 ;;; This suite owns presentation-stage accounting and agreement failure shape;
 ;;; dependency graph row fidelity lives in the separate runtime graph owner.
 ;; : TestSuite
@@ -46,7 +42,7 @@
     (test-case "traces workflow CI/CD projection stages"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-runtime-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (trace (.ref presentation 'presentation-trace))
              (pipeline-step
               (user-interface-cicd-runtime-trace-stage
@@ -96,7 +92,7 @@
     (test-case "flags manifest summary mismatch before handoff"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-runtime-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (manifest-maps
               (.ref presentation 'workflow-cicd-runtime-command-manifests))
              (manifest-summaries
@@ -128,7 +124,7 @@
     (test-case "flags durable manifest summary mismatch before handoff"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               (user-interface-cicd-runtime-funflow-config)))
+               (user-interface-cicd-runtime-fixture-config)))
              (manifest-maps
               (.ref presentation 'workflow-cicd-runtime-command-manifests))
              (manifest-summaries

@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Docker sandbox kernel module selection.
-;;; Invariant: Docker task-flow extension remains in :poo-flow/src/modules/docker.
+;;; Invariant: Docker task-flow extension remains in the Docker module config.
 
 (import :poo-flow/src/modules/docker-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-config-flags
@@ -20,17 +24,25 @@
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-docker-sandbox-module-bundles
   (list
-   (poo-flow-user-module-bundle
-    (sandbox docker-sandbox +docker +doctor))))
+   (list
+    (poo-flow-user-module-selection
+     'sandbox 'docker-sandbox
+     (list '+docker '+doctor
+           (cons ':backend-capability-registry
+                 poo-flow-docker-sandbox-backend-capability-registry))))))
 
 ;;; Module config flags keep the internal POO profile payload separate from the
 ;;; user-authored config body shown by the user-interface presentation.
 ;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-docker-sandbox-config-flags profiles . maybe-user-config)
   (if (null? maybe-user-config)
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-docker-sandbox-backend-capability-registry)
      (:config profiles))
-    (poo-flow-module-field-rows
+    (poo-flow-product-field-rows
+     (:backend-capability-registry
+      poo-flow-docker-sandbox-backend-capability-registry)
      (:config profiles)
      (:user-config (car maybe-user-config)))))
 

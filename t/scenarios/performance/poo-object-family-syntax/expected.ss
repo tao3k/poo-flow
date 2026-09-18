@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (export +poo-object-family-syntax-expected-kind+
         poo-object-family-syntax-expected-sample
         poo-object-family-syntax-expected?
@@ -7,7 +11,7 @@
         poo-object-family-syntax-expected->alist)
 
 (import (only-in :clan/poo/object object<-alist)
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/module-system/object-family/syntax)
 
 (def +poo-object-family-syntax-expected-kind+
   'poo-object-family-syntax-scenario)
