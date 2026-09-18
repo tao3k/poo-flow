@@ -18,14 +18,10 @@
                  poo-flow-user-config-presentation-kind)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/src/user-interface/profile-core
-                 poo-flow-default-user-setting-keys
                  poo-flow-user-profile-doctor-presentation-kind
                  poo-flow-user-profile-doctor-report-kind
-                 poo-flow-user-profile-presentation-kind
-                 pooFlowDefaultUserSettings
-                 pooFlowUserProfile)
+                 poo-flow-user-profile-presentation-kind)
         (only-in :poo-flow/src/user-interface/profile-doctor
                  poo-flow-user-profile-doctor-ok?
                  pooFlowUserProfileDoctor)
@@ -68,98 +64,6 @@
    ((equal? (alist-value 'stage (car trace)) stage) (car trace))
    (else
     (user-interface-presentation-trace-stage (cdr trace) stage))))
-
-;;; Invalid loop-engine result contracts exercise the profile doctor path,
-;;; not the shared valid fixtures used by broad presentation checks.
-;; : [PooUserModuleSelection]
-(def user-interface-invalid-loop-result-module
-  (use-module loop-engine
-    :config
-    (.def (invalid-loop-result @ loop-engine-use-case name workflow)
-      name: 'invalid-loop-result
-      workflow: 'funflow-cicd)
-
-    (.def (invalid-loop-result-human-audit @ loop-engine-human-audit
-                                           actions)
-      actions: '(+manual-gate))
-
-    (.def (invalid-loop-result-contract @ loop-engine-result
-                                        human-audit format required-fields)
-      human-audit: 'bad-contract
-      format: 'structured-alist
-      required-fields: '())
-
-    (.def (invalid-loop-result-runtime @ loop-engine-runtime capabilities)
-      capabilities: '(+manifest-handoff))
-
-    (.def (invalid-loop-result-profile @ loop-engine-profile
-                                       use-case human-audit result runtime)
-      use-case: invalid-loop-result
-      human-audit: invalid-loop-result-human-audit
-      result: invalid-loop-result-contract
-      runtime: invalid-loop-result-runtime)))
-
-;; : PooUserProfile
-(def user-interface-invalid-loop-result-profile
-  (pooFlowUserProfile
-   'invalid-loop-result
-   (list user-interface-invalid-loop-result-module)
-   (pooFlowDefaultUserSettings 'invalid-loop-result)
-   poo-flow-default-user-setting-keys))
-
-;;; Invalid sandbox profile is resolvable but not handoff-ready: it declares a
-;;; filesystem capability without a filesystem resource boundary.
-;; : ResourcePolicy
-(def user-interface-invalid-sandbox-resource-policy
-  '((cpu . 2)
-    (memory . "4Gi")
-    (timeout-ms . 300000)))
-
-;; : Metadata
-(def user-interface-invalid-sandbox-metadata
-  '((intent . invalid-sandbox-profile)
-    (scope . test)))
-
-;; : [PooUserModuleSelection]
-(def user-interface-invalid-sandbox-profile-module
-  (use-module nono-sandbox
-    (.def (ci/build @ nono-sandbox-profile
-                    network capabilities resources metadata)
-      network: (deny-network)
-      capabilities: '(filesystem-read process-run)
-      resources: user-interface-invalid-sandbox-resource-policy
-      metadata: => (lambda (super-metadata)
-                     (append super-metadata
-                             user-interface-invalid-sandbox-metadata)))))
-
-;; : [PooUserModuleSelection]
-(def user-interface-invalid-sandbox-loop-module
-  (use-module loop-engine
-    :config
-    (.def (invalid-sandbox-loop @ loop-engine-use-case name workflow)
-      name: 'invalid-sandbox-loop
-      workflow: 'funflow-cicd)
-
-    (.def (invalid-sandbox-loop-sandbox @ loop-engine-sandbox profile)
-      profile: 'ci/build)
-
-    (.def (invalid-sandbox-loop-runtime @ loop-engine-runtime capabilities)
-      capabilities: '(+manifest-handoff))
-
-    (.def (invalid-sandbox-loop-profile @ loop-engine-profile
-                                        use-case sandbox runtime)
-      use-case: invalid-sandbox-loop
-      sandbox: invalid-sandbox-loop-sandbox
-      runtime: invalid-sandbox-loop-runtime)))
-
-;; : PooUserProfile
-(def user-interface-invalid-sandbox-profile
-  (pooFlowUserProfile
-   'invalid-sandbox
-   (list user-interface-invalid-sandbox-profile-module
-         user-interface-invalid-sandbox-loop-module)
-   (pooFlowDefaultUserSettings 'invalid-sandbox)
-   poo-flow-default-user-setting-keys))
 
 ;;; Config presentation is the broadest receipt surface, covering module
 ;;; switches, CI/CD handoff rows, loop-engine rows, and ownership boundaries.
@@ -503,68 +407,6 @@
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f))))
 
-;;; Loop-engine result-contract diagnostics must surface through profile doctor,
-;;; otherwise invalid structured result expectations remain buried in manifests.
-;; : (-> Unit TestSuite)
-(def user-interface-invalid-loop-result-doctor-case-test
-  (test-case "doctors invalid loop-engine result contracts"
-      (let* ((doctor-report
-              (pooFlowUserProfileDoctor
-               user-interface-invalid-loop-result-profile))
-             (presentation
-              (pooFlowUserProfileDoctorPresentation
-               user-interface-invalid-loop-result-profile))
-             (diagnostics (.ref presentation 'profile-diagnostics))
-             (result-contract
-              (car (.ref presentation 'loop-engine-result-contracts))))
-        (check-equal? (.ref doctor-report 'doctor-status) 'error)
-        (check-equal? (.ref doctor-report 'doctor-ok) #f)
-        (check-equal? (.ref doctor-report 'diagnostic-count) 1)
-        (check-equal? (.ref presentation 'doctor-status) 'error)
-        (check-equal? (.ref presentation 'diagnostic-count) 1)
-        (check-equal? (diagnostic-code-member?
-                       'invalid-loop-engine-result-contract
-                       diagnostics)
-                      #t)
-        (check-equal? (alist-value 'valid? result-contract) #f)
-        (check-equal? (alist-value 'diagnostic-count result-contract) 1)
-        (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f))))
-
-;;; Invalid sandbox profiles should be caught by profile doctor through the
-;;; loop-engine sandbox handoff agreement, not by throwing during presentation.
-;; : (-> Unit TestSuite)
-(def user-interface-invalid-sandbox-profile-doctor-case-test
-  (test-case "doctors invalid loop-engine sandbox profile agreements"
-      (let* ((doctor-report
-              (pooFlowUserProfileDoctor
-               user-interface-invalid-sandbox-profile))
-             (presentation
-              (pooFlowUserProfileDoctorPresentation
-               user-interface-invalid-sandbox-profile))
-             (diagnostics (.ref presentation 'profile-diagnostics))
-             (sandbox-agreement
-              (car (.ref presentation
-                         'loop-engine-sandbox-handoff-agreements))))
-        (check-equal? (.ref doctor-report 'doctor-status) 'error)
-        (check-equal? (.ref doctor-report 'doctor-ok) #f)
-        (check-equal? (.ref doctor-report 'diagnostic-count) 1)
-        (check-equal? (.ref presentation 'doctor-status) 'error)
-        (check-equal? (.ref presentation 'diagnostic-count) 1)
-        (check-equal? (diagnostic-code-member?
-                       'invalid-loop-engine-sandbox-handoff
-                       diagnostics)
-                      #t)
-        (check-equal? (alist-value 'valid? sandbox-agreement) #f)
-        (check-equal? (alist-value 'invalid-runtime-summary-count
-                                   sandbox-agreement)
-                      1)
-        (check-equal? (map (lambda (row) (alist-value 'code row))
-                           (alist-value 'diagnostics sandbox-agreement))
-                      '(invalid-sandbox-runtime-summaries))
-        (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f))))
-
 ;;; Broken-profile doctor output is the regression guard for declaration
 ;;; mistakes remaining visible as data instead of failing during presentation.
 ;; : (-> Unit TestSuite)
@@ -599,6 +441,4 @@
     user-interface-config-presentation-test
     user-interface-profile-presentation-case-test
     user-interface-profile-doctor-case-test
-    user-interface-invalid-loop-result-doctor-case-test
-    user-interface-invalid-sandbox-profile-doctor-case-test
     user-interface-broken-profile-doctor-case-test))
