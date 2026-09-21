@@ -11,7 +11,8 @@
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
-        "../user-interface/custom/my-module/config")
+        (only-in "../user-interface/custom/my-module/cases/sandbox-durable"
+                 poo-flow-custom-my-module-sandbox-durable-case))
 
 (export user-interface-custom-sandbox-durable-test)
 

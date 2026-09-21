@@ -150,7 +150,7 @@ suite passes, the Python runtime reports 225 passed, both C ABI probes report
 ** Tool-Calling Control Plane Import
 
 =t/scenarios/tool-calling-control-plane-test.ss= fails while importing
-=user-interface/cases/tool-calling-agent-loop.ss=.  The importer reports the
+=user-interface/scenarios/tool-calling-agent-loop/scenario.ss=.  The importer reports the
 top-level profile-composition import as an illegal expression.
 
 Owner boundary: the scenario/user-interface case and the current profile

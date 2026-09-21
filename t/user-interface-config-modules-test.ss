@@ -20,10 +20,13 @@
         :poo-flow/src/user-interface/facade
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/agent-sandbox/config
-        (only-in "../user-interface/custom/my-module/config"
-                 poo-flow-custom-my-module-session-module
-                 poo-flow-custom-my-module-task-module
-                 poo-flow-custom-my-module-cicd-module
+        (only-in "../user-interface/custom/my-module/profiles/session"
+                 poo-flow-custom-my-module-session-module)
+        (only-in "../user-interface/custom/my-module/profiles/task"
+                 poo-flow-custom-my-module-task-module)
+        (only-in "../user-interface/custom/my-module/profiles/cicd"
+                 poo-flow-custom-my-module-cicd-module)
+        (only-in "../user-interface/custom/my-module/profiles/object-extension"
                  poo-flow-custom-my-module-object-extension-module))
 
 (export user-interface-config-modules-test)

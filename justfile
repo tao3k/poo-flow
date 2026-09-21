@@ -34,11 +34,16 @@ cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/module-test"
 contribution_test_library_path := contribution_test_path + "/lib"
 contribution_source_root := justfile_directory() + "/packages"
-gerbil_homebrew_runtime := `if gsc -v 2>&1 | grep -F '/opt/homebrew/Cellar/' >/dev/null; then printf true; else printf false; fi`
-# Keep the Homebrew/Gambit workaround scoped to each child command. A Nix
-# Gerbil runtime retains its own compiler, SDK and linker environment.
-gerbil_darwin_cc := "/usr/bin/clang -Wno-ignored-optimization-argument -Wno-unused-command-line-argument"
-gerbil_darwin_env := if os() == "macos" { if gerbil_homebrew_runtime == "true" { "env -u SDKROOT BUILD_OBJ_CC_PARAM='" + gerbil_darwin_cc + "' BUILD_DYN_CC_PARAM='" + gerbil_darwin_cc + "' BUILD_DYN_LD_OPTIONS_PARAM='-bundle -undefined dynamic_lookup' BUILD_EXE_CC_PARAM='" + gerbil_darwin_cc + "'" } else { "env" } } else { "env" }
+gerbil_homebrew_runtime := `gerbil_executable="$(command -v gerbil 2>/dev/null || true)"; if [ -n "$gerbil_executable" ] && realpath "$gerbil_executable" | grep -F '/opt/homebrew/Cellar/' >/dev/null; then printf true; else printf false; fi`
+homebrew_openssl_prefix := `if command -v brew >/dev/null 2>&1; then brew --prefix openssl@3 2>/dev/null || true; fi`
+darwin_openssl_prefix := env_var_or_default("OPENSSL_PREFIX", homebrew_openssl_prefix)
+# Preserve the configured/user-selected compiler. For Homebrew Gerbil on
+# Darwin, keep Nix SDK/header/library variables out of child builds and make
+# GCC's collect2 resolve the Apple system linker instead of a Nix-provided ld.
+# Restore only the explicit Homebrew OpenSSL include/library roots required by
+# Gerbil's crypto modules; never inherit ambient CPATH or LIBRARY_PATH values.
+# A Nix Gerbil runtime retains its own compiler and linker environment.
+gerbil_darwin_env := if os() == "macos" { if gerbil_homebrew_runtime == "true" { "env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='" + darwin_openssl_prefix + "/include' LIBRARY_PATH='" + darwin_openssl_prefix + "/lib'" } else { "env" } } else { "env" }
 poo_flow_gerbil_path := env_var_or_default("GERBIL_PATH", justfile_directory() + "/.gerbil")
 poo_flow_library_path := env_var_or_default("GERBIL_LOADPATH", poo_flow_gerbil_path + "/lib")
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
@@ -385,7 +390,7 @@ check-healthcare-ai-temporal-model: _prepare-gerbil-parser
 [group('check')]
 check-healthcare-standard-migration-model: _prepare-gerbil-parser
     mkdir -p "$(dirname "{{ healthcare_migration_tlc_receipt }}")"
-    cd "{{ gerbil_parser_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_MIGRATION_TLA="{{ healthcare_migration_tla }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG="{{ healthcare_migration_tlc_config }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT="{{ healthcare_migration_tlc_receipt }}" gerbil env gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLA") (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+    cd "{{ gerbil_parser_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" POO_FLOW_HEALTHCARE_MIGRATION_TLA="{{ healthcare_migration_tla }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG="{{ healthcare_migration_tlc_config }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT="{{ healthcare_migration_tlc_receipt }}" gerbil env gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLA") (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
 
 # Lean refines the exact TLA+ digest and publishes named migration theorems.
 [group('check')]

@@ -3,10 +3,15 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; User Interface reusable case fragment: LangChain-style linear chain.
-;;; Invariant: included by load!; the loader owns binding and export.
+;;; Reusable Scenario object; root config decides whether to compose it.
 
-(use-composition langchain
+(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        :poo-flow/user-interface/profiles/langchain)
+(export langchain-scenario)
+
+(def langchain-scenario
+  (use-composition langchain
   (use-module langchain as chain
     (profiles memory prompt model parser no-tool))
   (compose
@@ -17,4 +22,4 @@
     (prove chain-order
            prompt-before-model
            parser-after-model
-           no-implicit-tool-branch)))
+           no-implicit-tool-branch))))

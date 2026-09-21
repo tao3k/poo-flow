@@ -3,10 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; User Interface reusable profile fragment: LangChain-style linear chain.
-;;; Invariant: included by load!; the loader owns imports and generated export.
+;;; User Interface reusable Profile library: LangChain-style linear chain.
 
-(.o (memory (.o (name 'langchain-stateless-memory)
+(import (only-in :clan/poo/object .def .o))
+(export langchain)
+
+(.def langchain
+    (memory (.o (name 'langchain-stateless-memory)
                 (contract 'no-cross-turn-state)
                 (policy 'memory-is-optional)))
     (prompt (.o (name 'langchain-prompt-template)

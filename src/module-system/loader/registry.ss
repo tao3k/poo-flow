@@ -25,9 +25,7 @@
         poo-flow-user-tree-source-policy-violations
         poo-flow-user-tree-source-valid?
         poo-flow-user-tree-init-source
-        poo-flow-user-tree-objects-source
         poo-flow-user-tree-config-source
-        poo-flow-user-tree-modules-config-source
         poo-flow-user-tree-source-refs)
 
 ;;; Boundary: tree entrypoints are source metadata, not filesystem reads.
@@ -130,40 +128,26 @@
    ((eq? entrypoint-role 'init)
     '((policy . init-switches-only)
       (allowed-responsibilities
-       . (profile-selection module-switch feature-switch
-          module-category-switch custom-module-switch))
+       . (module-switch feature-switch module-category-switch
+          custom-module-switch))
       (denied-responsibilities
-       . (object-contract field-contract sandbox-profile-recipe settings
-          package-sync descriptor-realization runtime-execution facade-export))))
-   ((eq? entrypoint-role 'objects)
-    '((policy . objects-and-contracts-only)
-      (allowed-responsibilities
-       . (poo-object object-contract field-contract object-inheritance
-          object-extension))
-      (denied-responsibilities
-       . (sandbox-profile-recipe profile-selection module-switch feature-switch
-          settings package-sync descriptor-realization runtime-execution
-          facade-export))))
+       . (profile-selection object-contract field-contract
+          sandbox-profile-recipe settings package-sync descriptor-realization
+          runtime-execution facade-export))))
    ((eq? entrypoint-role 'config)
-    '((policy . tool-facing-facade-only)
+    '((policy . composition-declarations-only)
       (allowed-responsibilities
-       . (facade-export inspection-helper presentation-helper))
+       . (composition-declaration profile-use scenario-use facade-export))
       (denied-responsibilities
        . (module-switch feature-switch object-contract field-contract
-          package-sync descriptor-realization runtime-execution))))
-   ((eq? entrypoint-role 'modules-config)
-    '((policy . user-module-helper-only)
-      (allowed-responsibilities
-       . (configuration-helper syntax-helper module-helper))
-      (denied-responsibilities
-       . (module-switch feature-switch object-contract package-sync
-          descriptor-realization runtime-execution))))
+          package-sync descriptor-realization runtime-execution
+          module-implementation))))
    (else
     '((policy . unknown-entrypoint)
       (allowed-responsibilities . ())
       (denied-responsibilities . (runtime-execution package-sync))))))
 
-;;; Boundary: user-root source refs cover init/config/objects and modules helpers.
+;;; Boundary: user-root source refs cover the two Doom-style entrypoints.
 ;; : (-> Path Symbol Path PooModuleSourceRef)
 (def (poo-flow-user-tree-source user-root-path entrypoint-role entrypoint-path)
   (let* ((entrypoint
@@ -229,22 +213,10 @@
   (poo-flow-user-tree-source user-root-path 'init "init.ss"))
 
 ;; : (-> Path PooModuleSourceRef)
-(def (poo-flow-user-tree-objects-source user-root-path)
-  (poo-flow-user-tree-source user-root-path 'objects "objects.ss"))
-
-;; : (-> Path PooModuleSourceRef)
 (def (poo-flow-user-tree-config-source user-root-path)
   (poo-flow-user-tree-source user-root-path 'config "config.ss"))
-
-;; : (-> Path PooModuleSourceRef)
-(def (poo-flow-user-tree-modules-config-source user-root-path)
-  (poo-flow-user-tree-source user-root-path
-                             'modules-config
-                             "modules/config.ss"))
 
 ;; : (-> Path [PooModuleSourceRef])
 (def (poo-flow-user-tree-source-refs user-root-path)
   (list (poo-flow-user-tree-init-source user-root-path)
-        (poo-flow-user-tree-objects-source user-root-path)
-        (poo-flow-user-tree-config-source user-root-path)
-        (poo-flow-user-tree-modules-config-source user-root-path)))
+        (poo-flow-user-tree-config-source user-root-path)))

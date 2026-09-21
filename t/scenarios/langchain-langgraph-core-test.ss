@@ -13,29 +13,21 @@
         :poo-flow/src/graph/runtime-executor
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/module-system/profile-composition/interface
-        :poo-flow/src/module-system/profile-composition/accessors)
+        :poo-flow/src/module-system/profile-composition/accessors
+        :poo-flow/user-interface/profiles/langchain
+        :poo-flow/user-interface/profiles/langgraph
+        :poo-flow/user-interface/scenarios/langchain/scenario
+        :poo-flow/user-interface/scenarios/langgraph/scenario)
 
-
-(def langchain
-  (eval (call-with-input-file "user-interface/profiles/langchain.ss" read)))
-
-(def langgraph
-  (eval (call-with-input-file "user-interface/profiles/langgraph.ss" read)))
-
-(def poo-flow-custom-module-langchain-module langchain)
-(def poo-flow-custom-module-langgraph-module langgraph)
-
-(load! "../user-interface/cases/langchain")
-(load! "../user-interface/cases/langgraph")
 
 (def langchain-composition
-  poo-flow-custom-module-langchain-case)
+  langchain-scenario)
 
 (def langgraph-composition
-  poo-flow-custom-module-langgraph-case)
+  langgraph-scenario)
 
 (def audited-langchain-module
-  (.o (:: self poo-flow-custom-module-langchain-module)
+  (.o (:: self langchain)
       (model (.o (name 'langchain-audited-chat-model)
                  (contract 'single-turn-input-output)
                  (policy 'audit-model-call-before-terminal)))))

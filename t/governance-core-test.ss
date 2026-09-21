@@ -8,6 +8,8 @@
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/module-system/contribution/interface
                  admit-contributions)
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection)
         (only-in :poo-flow/src/module-system/poo-clos/interface
                  poo-clos-generic-methods
                  poo-clos-make-instance)
@@ -51,6 +53,16 @@
   (.o (:: @ TestGovernanceProfile)
       identity: "test/governance/unsafe"
       threat-model: BlockingThreatModel))
+
+(def TestGovernanceModuleProfile
+  (.o (:: @ TestGovernanceProfile)
+      identity: "test/governance/module"
+      module-family: 'test-governance))
+
+(def TestGovernanceModule
+  (poo-flow-governance-module-contribution
+   TestGovernanceModuleProfile 'test-governance
+   '(knowledge-governance) '()))
 
 (def (test-proof composition profiles assessments)
   (poo-flow-cedar-proof-binding
@@ -119,6 +131,23 @@
              (receipt (admit-contributions (list contribution) '())))
         (check-equal? (.ref receipt 'accepted?) #t)
         (check-equal? (.ref receipt 'runtime-executed?) #f)))
+    (test-case "shared module projection admits only its declared family"
+      (let (selection
+            (poo-flow-user-module-selection 'custom 'test-governance '()))
+        (check-equal?
+         (eq? (poo-flow-governance-module-config
+               selection 'test-governance TestGovernanceModule)
+              TestGovernanceModule)
+         #t)
+        (check-exception
+         (poo-flow-governance-module-config
+          selection 'other-family TestGovernanceModule)
+         true)
+        (check-exception
+         (poo-flow-governance-module-contribution
+          TestGovernanceModuleProfile 'other-family
+          '(knowledge-governance) '())
+         true)))
     (test-case "Authorization contracts keep elevated capability strict"
       (check-equal?
        (.ref CedarAuthorizationProvider 'identity)

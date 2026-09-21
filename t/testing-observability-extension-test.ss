@@ -28,7 +28,7 @@
              'testing/source-root 1/100))
         (check-equal?
          (poo-flow-testing-observability-profile-source-load-paths profile)
-         '(".gerbil/lib" "."))))
+         '("."))))
 
     (test-case "registry footprint policy is declared only through POO slots"
       (check (.ref +poo-flow-testing-import-footprint-profile+

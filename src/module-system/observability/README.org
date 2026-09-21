@@ -245,9 +245,11 @@ Constructors must first bind differently named lexical values, for example
 =slot: initializer= and =(slot initializer)= spellings without expansion or
 evaluation. They reject the same slot identifier anywhere in its unquoted
 initializer, including nested forms such as =(reverse diagnostics)=. The
-module-system test recursively reads every =src/**/*.ss= file and rejects
-authoring diagnostics before object realization; the memory receipt separately
-proves the runtime boundary.
+module-system test recursively reads every =src/**/*.ss= and
+=t/performance/**/*.ss= file and rejects authoring diagnostics before object
+realization; the memory receipt separately proves the runtime boundary.  The
+performance root is included because a cyclic fixture can otherwise turn a
+bounded scale gate into unbounded heap growth before its first receipt.
 
 Ordinary lexical bindings have a separate reader-native gate.  The
 =poo-flow-scheme-lexical-call-shadow-{datum,port,file}-observations= APIs find

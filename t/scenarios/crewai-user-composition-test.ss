@@ -12,18 +12,12 @@
                  use-composition)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
                  poo-flow-scenario-case?)
-        :poo-flow/src/module-system/profile-composition/accessors)
+        :poo-flow/src/module-system/profile-composition/accessors
+        :poo-flow/user-interface/scenarios/crewai/scenario)
 
-
-(def crewai
-  (eval (call-with-input-file "user-interface/profiles/crewai.ss" read)))
-
-(def poo-flow-custom-module-crewai-module crewai)
-
-(load! "../user-interface/cases/crewai")
 
 (def crewai-composition
-  poo-flow-custom-module-crewai-case)
+  crewai-scenario)
 
 (def (stage-clause-payload stage kind)
   (let loop ((clauses (poo-flow-scenario-stage-clauses stage)))

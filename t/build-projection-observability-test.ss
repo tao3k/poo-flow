@@ -62,11 +62,16 @@
                                  "\"src/module-system/api.ss\"")
                       #t)
         (check-equal? (contains? source
+                                 "\"src/module-system/interface.ss\"")
+                      #f)
+        (check-equal? (contains? source
                                  "\"src/feature-system/interface.ss\"")
                       #t)
         (check-equal? (contains? source
                                  "(modules ")
                       #f)
+        (check-equal? (contains? source "poo-flow-load-modules") #f)
+        (check-equal? (contains? source "all-gerbil-modules") #f)
         (check-equal? (contains? source
                                  "(exclude-dirs +poo-flow-build-exclude-dirs+)")
                       #t)

@@ -18,7 +18,10 @@
                  poo-flow-module-owner-import-file-observations
                  poo-flow-build-bootstrap-import-datum-observations
                  poo-flow-build-bootstrap-import-port-observations
-                 poo-flow-build-bootstrap-import-file-observations)
+                 poo-flow-build-bootstrap-import-file-observations
+                 poo-flow-build-bootstrap-datum-observations
+                 poo-flow-build-bootstrap-port-observations
+                 poo-flow-build-bootstrap-file-observations)
         (only-in "types.ss" PooFlowAuthoringObservationContract))
 
 (export PooFlowAuthoringObservationContract
@@ -31,6 +34,9 @@
         poo-flow-authoring-build-bootstrap-import-datum-observations
         poo-flow-authoring-build-bootstrap-import-port-observations
         poo-flow-authoring-build-bootstrap-import-file-observations
+        poo-flow-authoring-build-bootstrap-datum-observations
+        poo-flow-authoring-build-bootstrap-port-observations
+        poo-flow-authoring-build-bootstrap-file-observations
         poo-flow-authoring-observation-sexp)
 
 ;;; Resolve the stable Contract prototype once when this owner loads.  Receipt
@@ -105,6 +111,18 @@
 (def (poo-flow-authoring-build-bootstrap-import-file-observations scope path)
   (poo-flow-authoring-observations-from-rows
    (poo-flow-build-bootstrap-import-file-observations scope path)))
+
+(def (poo-flow-authoring-build-bootstrap-datum-observations scope datum)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-build-bootstrap-datum-observations scope datum)))
+
+(def (poo-flow-authoring-build-bootstrap-port-observations scope port)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-build-bootstrap-port-observations scope port)))
+
+(def (poo-flow-authoring-build-bootstrap-file-observations scope path)
+  (poo-flow-authoring-observations-from-rows
+   (poo-flow-build-bootstrap-file-observations scope path)))
 
 ;;; The final projection is closed over symbolic fields and cannot reconstruct
 ;;; the discarded source datum or claim runtime execution.

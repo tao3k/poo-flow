@@ -13,7 +13,7 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in "../user-interface/custom/my-module/profiles/loops"
                  poo-flow-custom-my-module-loops-module))
 
 (export user-interface-custom-loop-engine-profile-test)

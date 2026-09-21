@@ -2,7 +2,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(.o (agent
+;;; -*- Gerbil -*-
+
+(import (only-in :clan/poo/object .def .o))
+(export crewai)
+
+(.def crewai
+    (agent
      (.o (name 'crewai-agent)
          (contract 'role-goal-tool-memory-agent)
          (policy 'agent-tool-scope-contained)))

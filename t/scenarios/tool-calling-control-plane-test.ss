@@ -5,24 +5,18 @@
 (import (only-in :std/test test-case test-suite)
         (only-in :clan/poo/object .o)
         :poo-flow/src/module-system/profile-composition/interface
-        :poo-flow/src/modules/tool-core/calling-control)
+        :poo-flow/src/modules/tool-core/calling-control
+        :poo-flow/user-interface/profiles/tool-calling
+        :poo-flow/user-interface/scenarios/tool-calling-agent-loop/scenario)
 
 (def tool-calling-control-plane-test
   (test-suite "tool calling control plane"
     (test-case "validates tool call plan and receipt facts"
 
-(def tool-calling
-  (eval (call-with-input-file "user-interface/profiles/tool-calling.ss" read)))
-
-(def poo-flow-custom-module-tool-calling-module tool-calling)
-
-(def tool-calling-composition-fragment
-  (load "user-interface/cases/tool-calling-agent-loop.ss"))
-
-(unless poo-flow-custom-module-tool-calling-module
+(unless tool-calling
   (error "Tool calling profile module did not load"))
 
-(unless tool-calling-composition-fragment
+(unless tool-calling-agent-loop-scenario
   (error "Tool calling composition fragment did not load"))
 
 (def tool-call-plan

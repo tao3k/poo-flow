@@ -50,10 +50,12 @@ New code must follow these rules:
 6. Every maintained, contributor, and user module has one public entrypoint.
    The stable shell is =modules/<module-name>/{types,objects,funs,config,interface}.ss=.
    =interface.ss= imports and re-exports the four role owners; an optional
-   =syntax.ss= is also imported and re-exported when present.  Consumers and
-   build declarations load the module through =poo-flow-load-modules= and may
+   =syntax.ss= is also imported and re-exported when present.  Runtime
+   consumers load module collections through =poo-flow-load-modules= and may
    not substitute =config.ss=, =objects.ss=, or a hand-maintained source list
-   as a parallel public entrypoint.
+   as a parallel public entrypoint.  The package =build.ss= instead declares
+   stable public closure roots through ASP PackageSpec; importing the package
+   loader there would expand the package while its artifacts are being built.
 
 The =poo-flow-load-modules= hygienic form accepts exactly one source-collection
 expression.  It validates the required role files, rejects a module-local
@@ -597,6 +599,10 @@ Use these rules:
    =POO-FLOW-MODULE-E008= with the exact source scope, imported owner, stable
    diagnostic code, and =import-precise-owner= repair. This gate must remain
    evaluation-free so authoring diagnostics cannot execute module code.
+   In particular, =module-system/contribution/interface.ss= is the public
+   contribution composition surface, not an implementation owner. Module roles
+   import the precise contribution owner, such as =contribution/objects.ss=,
+   and use =only-in= when they need a bounded constructor set.
 
 #+begin_export mermaid
 flowchart LR

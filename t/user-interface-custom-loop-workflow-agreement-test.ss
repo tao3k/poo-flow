@@ -13,8 +13,9 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
-        (only-in "../user-interface/custom/my-module/config"
-                 poo-flow-custom-my-module-funflow-cicd-case
+        (only-in "../user-interface/custom/my-module/cases/funflow-cicd"
+                 poo-flow-custom-my-module-funflow-cicd-case)
+        (only-in "../user-interface/custom/my-module/cases/loop-engine"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-workflow-agreement-test)

@@ -45,7 +45,7 @@ Scheme tool-calling composition
 
 * User Interface Shape
 
-The reusable profile lives at =user-interface/profiles/tool-calling.ss=. The reusable case lives at =user-interface/cases/tool-calling-agent-loop.ss=.
+The reusable Profile lives at =user-interface/profiles/tool-calling.ss=. The reusable Scenario lives at =user-interface/scenarios/tool-calling-agent-loop/scenario.ss=.
 
 #+begin_src scheme
 (use-composition tool-calling-agent-loop-composition
@@ -130,7 +130,7 @@ This keeps POO Flow strong at composition and proof, while Python remains respon
 
 - core control-plane module: =src/modules/tool-core/calling-control.ss=
 - reusable profile: =user-interface/profiles/tool-calling.ss=
-- reusable case: =user-interface/cases/tool-calling-agent-loop.ss=
+- reusable Scenario: =user-interface/scenarios/tool-calling-agent-loop/scenario.ss=
 - scenario smoke test: =t/scenarios/tool-calling-control-plane-test.ss=
 
 The next implementation step is to connect the case to generated runtime tool receipts and Lean facts. The first target should be receipt shape and proof alignment, not tool IO execution inside Scheme.

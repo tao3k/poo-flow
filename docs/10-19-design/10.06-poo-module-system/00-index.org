@@ -90,6 +90,7 @@ The public facade lives in =src/module-system/api.ss=. The implementation owners
 - [[file:57-user-graph-p0-thesis.org][57 User Graph P0 Thesis]]
 - [[file:148-algorithmic-hot-path-audit.org][148 Algorithmic Hot-Path Audit And Shared Funcs Ownership]]
 - [[file:149-persistent-native-public-closure-projection.org][149 Rejected Persistent Native Public-Closure Projection]]
+- [[file:163-standard-module-lazy-industry-conformance-rfc.org][163 Standard Module, Lazy Industry Packs, and Conformance Receipts RFC]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.

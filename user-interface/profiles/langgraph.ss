@@ -3,10 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; User Interface reusable profile fragment: LangGraph-style state graph.
-;;; Invariant: included by load!; the loader owns imports and generated export.
+;;; User Interface reusable Profile library: LangGraph-style state graph.
 
-(.o (session (.o (name 'langgraph-multi-agent-session)
+(import (only-in :clan/poo/object .def .o))
+(export langgraph)
+
+(.def langgraph
+    (session (.o (name 'langgraph-multi-agent-session)
                  (contract 'session-spawns-subagents)
                  (policy 'subagent-handoff-is-explicit)))
     (state (.o (name 'langgraph-typed-checkpointed-state)

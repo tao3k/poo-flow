@@ -18,7 +18,7 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in "../user-interface/custom/my-module/profiles/cicd"
                  poo-flow-custom-my-module-cicd-module)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax

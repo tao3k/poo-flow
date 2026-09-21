@@ -13,7 +13,10 @@
         poo-flow-module-owner-import-file-observations
         poo-flow-build-bootstrap-import-datum-observations
         poo-flow-build-bootstrap-import-port-observations
-        poo-flow-build-bootstrap-import-file-observations)
+        poo-flow-build-bootstrap-import-file-observations
+        poo-flow-build-bootstrap-datum-observations
+        poo-flow-build-bootstrap-port-observations
+        poo-flow-build-bootstrap-file-observations)
 
 (import (only-in :std/srfi/13 string-prefix?))
 
@@ -26,6 +29,7 @@
   '(:poo-flow/src/core/api
     :poo-flow/src/module-system/api
     :poo-flow/src/module-system/facade
+    :poo-flow/src/module-system/contribution/interface
     :poo-flow/src/user-interface/facade
     :poo-flow/src/feature-system/interface))
 
@@ -119,6 +123,44 @@
           (cons 'recommendation 'declare-package-spec-only)))
    (cons 'runtime-executed #f)))
 
+;;; PackageSpec already owns native import-closure projection.  Re-entering the
+;;; package loader, scanning every Gerbil source, or supplying a parallel
+;;; `modules` catalog from build.ss duplicates that owner and can expand the
+;;; package before std/make performs its currentness pass.
+(def poo-flow-build-bootstrap-forbidden-projection-forms
+  '(poo-flow-load-modules all-gerbil-modules modules))
+
+(def (poo-flow-build-bootstrap-projection-form datum)
+  (cond
+   ((pair? datum)
+    (cond
+     ;; Quoted package data is inert and must not be interpreted as a build
+     ;; projection call.
+     ((eq? (car datum) 'quote) #f)
+     ((memq (car datum)
+            poo-flow-build-bootstrap-forbidden-projection-forms)
+      (car datum))
+     (else
+      (or (poo-flow-build-bootstrap-projection-form (car datum))
+          (poo-flow-build-bootstrap-projection-form (cdr datum))))))
+   ((vector? datum)
+    (poo-flow-build-bootstrap-projection-form (vector->list datum)))
+   (else #f)))
+
+(def (poo-flow-build-bootstrap-projection-observation scope form)
+  (list
+   (cons 'kind poo-flow-module-owner-import-observation-kind)
+   (cons 'scope scope)
+   (cons 'owner form)
+   (cons 'form form)
+   (cons 'phase 'build-bootstrap-admission)
+   (cons 'status 'build-bootstrap-reimplements-package-projection)
+   (cons 'detail
+         (list
+          (cons 'code 'build-bootstrap-parallel-projection)
+          (cons 'recommendation 'declare-public-entry-modules)))
+   (cons 'runtime-executed #f)))
+
 (def (poo-flow-build-bootstrap-import-datum-observations scope datum)
   (if (and (pair? datum) (eq? (car datum) 'import))
     (alet (owner (poo-flow-build-bootstrap-package-owner (cdr datum)))
@@ -140,3 +182,29 @@
    path
    (lambda (port)
      (poo-flow-build-bootstrap-import-port-observations scope port))))
+
+;; : (-> Symbol SchemeDatum [Alist])
+(def (poo-flow-build-bootstrap-datum-observations scope datum)
+  (append
+   (or (poo-flow-build-bootstrap-import-datum-observations scope datum) '())
+   (let (form (poo-flow-build-bootstrap-projection-form datum))
+     (if form
+       (list (poo-flow-build-bootstrap-projection-observation scope form))
+       '()))))
+
+;; : (-> Symbol InputPort [Alist])
+(def (poo-flow-build-bootstrap-port-observations scope port)
+  (let loop ((observations-rev '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse observations-rev)
+        (loop
+         (foldl cons observations-rev
+                (poo-flow-build-bootstrap-datum-observations scope datum)))))))
+
+;; : (-> Symbol PathString [Alist])
+(def (poo-flow-build-bootstrap-file-observations scope path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (poo-flow-build-bootstrap-port-observations scope port))))

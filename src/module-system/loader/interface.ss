@@ -100,9 +100,7 @@
         poo-flow-user-tree-source-policy-violations
         poo-flow-user-tree-source-valid?
         poo-flow-user-tree-init-source
-        poo-flow-user-tree-objects-source
         poo-flow-user-tree-config-source
-        poo-flow-user-tree-modules-config-source
         poo-flow-user-tree-source-refs
         poo-flow-user-tree-lazy-load-plans
         poo-flow-module-selection-source-refs

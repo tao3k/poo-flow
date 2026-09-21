@@ -3,8 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: downstream durable artifact policy case loaded by
-;;; custom/my-module/config.ss.
+;;; Boundary: downstream durable artifact policy Case imported through its
+;;; precise owner when selected.
 ;;; Invariant: this declares artifact policy validation data only; Scheme does
 ;;; not store, publish, index, or retain artifacts at runtime.
 

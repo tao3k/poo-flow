@@ -10,7 +10,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in "../user-interface/custom/my-module/cases/tool-core"
                  poo-flow-custom-my-module-tool-core-case))
 
 (export user-interface-custom-tool-core-test)

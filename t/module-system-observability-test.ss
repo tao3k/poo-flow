@@ -33,8 +33,8 @@
 (def (module-observability-test-alist-value key rows)
   (cdr (assoc key rows)))
 
-;; Native Scheme owns the source gate as well as the observations.  The walk is
-;; deliberately rooted at `src/` and reads `.ss` files without expanding them.
+;; Native Scheme owns the source gate as well as the observations.  Callers
+;; choose bounded roots and read `.ss` files without expanding them.
 (def (module-observability-source-files directory)
   (apply append
          (map (lambda (name)
@@ -89,7 +89,19 @@
           'modules/example/funs.ss
          (open-input-string
            "(import (only-in :poo-flow/src/core/task make-task))"))
-         '())))
+         '())
+        (let* ((contribution-observations
+                (poo-flow-authoring-owner-import-port-observations
+                 'modules/example/objects.ss
+                 (open-input-string
+                  "(import (only-in :poo-flow/src/module-system/contribution/interface make-contribution))")))
+               (contribution-observation
+                (car contribution-observations)))
+          (check-equal? (length contribution-observations) 1)
+          (check-equal?
+           (.ref contribution-observation 'owner)
+           ':poo-flow/src/module-system/contribution/interface)
+          (check-equal? (.ref contribution-observation 'accepted?) #f))))
     (test-case "all maintained module sources import precise owners"
       (let* ((paths (module-observability-source-files "src/modules"))
              (observations
@@ -103,7 +115,7 @@
         (check-equal? observations '())))
     (test-case "package build bootstrap imports no package-local owner"
       (check-equal?
-       (poo-flow-authoring-build-bootstrap-import-file-observations
+       (poo-flow-authoring-build-bootstrap-file-observations
         'build.ss "build.ss")
        '())
       (let* ((observations
@@ -118,6 +130,33 @@
         (check-equal? (.ref observation 'code) 'build-bootstrap-self-import)
         (check-equal? (.ref observation 'recommendation)
                       'declare-package-spec-only)))
+    (test-case "package build bootstrap rejects parallel source projection"
+      (for-each
+       (lambda (form)
+         (let* ((observations
+                 (poo-flow-authoring-build-bootstrap-datum-observations
+                  'build.ss form))
+                (observation (car observations)))
+           (check-equal? (length observations) 1)
+           (check-equal? (.ref observation 'phase)
+                         'build-bootstrap-admission)
+           (check-equal? (.ref observation 'status)
+                         'build-bootstrap-reimplements-package-projection)
+           (check-equal? (.ref observation 'code)
+                         'build-bootstrap-parallel-projection)
+           (check-equal? (.ref observation 'recommendation)
+                         'declare-public-entry-modules)))
+       '((def roots (poo-flow-load-modules maintained-source))
+         (def roots (all-gerbil-modules))
+         (asp-gerbil-scheme-package-spec!
+          (package @ prototype)
+          (spec native-spec)
+          (modules roots))))
+      ;; A quoted documentation example does not execute a projection.
+      (check-equal?
+       (poo-flow-authoring-build-bootstrap-datum-observations
+        'build.ss '(quote (poo-flow-load-modules maintained-source)))
+       '()))
     (test-case "builds strict presentation trace rows"
       (let* ((native-observation
               (poo-flow-module-observation-stage/detail
@@ -350,8 +389,11 @@
         (check-equal? (length observations) 1)
         (check-equal? (.ref (car observations) 'code)
                       'poo-prototype-lookup-inside-composition)))
-    (test-case "all repository POO source slots pass the native authoring gate"
-      (let* ((paths (module-observability-source-files "src"))
+    (test-case "production and performance POO slots pass the authoring gate"
+      (let* ((paths
+              (append
+               (module-observability-source-files "src")
+               (module-observability-source-files "t/performance")))
              (observations
               (apply append
                      (map module-observability-source-observations paths))))

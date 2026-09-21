@@ -52,9 +52,9 @@
       (identity 'testing/default)
       (enabled? #t)
       (heartbeat-interval-seconds 5)
-      ;; Prefer package artifacts, then resolve test-only precise owners from
-      ;; source. FFI modules must never be interpreted from their .ss form.
-      (source-load-paths '(".gerbil/lib" "."))))
+      ;; The profile contributes only its source owner.  Gerbil's active
+      ;; library path remains runtime-owned and is projected separately.
+      (source-load-paths '("."))))
 
 (def (poo-flow-testing-observability-profile? value)
   (and (object? value)
@@ -109,11 +109,13 @@
         (map path-expand
              (poo-flow-testing-observability-profile-source-load-paths profile)))
     (when (pair? paths)
-      (let ((current (getenv "GERBIL_LOADPATH" #f))
+      (let ((current
+             (or (getenv "GERBIL_LOADPATH" #f)
+                 (string-join (load-path) ":")))
             (projected (string-join paths ":")))
         (setenv "GERBIL_LOADPATH"
                 (if (and current (> (string-length current) 0))
-                  (string-append projected ":" current)
+                  (string-append current ":" projected)
                   projected))))))
 
 ;; : (-> Integer Natural)

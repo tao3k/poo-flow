@@ -10,7 +10,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in "../user-interface/custom/my-module/cases/memory-core"
                  poo-flow-custom-my-module-memory-core-case))
 
 (export user-interface-custom-memory-core-test)

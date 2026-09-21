@@ -281,35 +281,28 @@
 
 ;; : TestCase
 (def module-system-lazy-loader-user-root-case
-  (test-case "projects user-root init objects config and module helpers"
+  (test-case "projects only the Doom-style init and config roots"
         (set! lazy-loader-call-count 0)
         (let* ((user-root "user-interface")
                (source-refs
                 (poo-flow-user-tree-source-refs user-root))
                (init-source (car source-refs))
-               (objects-source (cadr source-refs))
-               (config-source (caddr source-refs))
-               (modules-config-source (cadddr source-refs))
+               (config-source (cadr source-refs))
                (init-metadata
                 (poo-flow-module-source-ref-metadata init-source))
-               (objects-metadata
-                (poo-flow-module-source-ref-metadata objects-source))
+               (config-metadata
+                (poo-flow-module-source-ref-metadata config-source))
                (plans
                 (poo-flow-user-tree-lazy-load-plans
                  (list user-standard-library-loader)
                  user-root
                  '((owner . user-root-tree)))))
-          (check-equal? (length source-refs) 4)
+          (check-equal? (length source-refs) 2)
           (check-equal? (poo-flow-module-source-ref-value init-source)
                         "user-interface/init.ss")
-          (check-equal? (poo-flow-module-source-ref-value objects-source)
-                        "user-interface/objects.ss")
           (check-equal? (poo-flow-module-source-ref-value config-source)
                         "user-interface/config.ss")
-          (check-equal? (poo-flow-module-source-ref-value modules-config-source)
-                        "user-interface/modules/config.ss")
-          (check-equal? (cdr (assoc 'kind objects-metadata))
-                        'user-tree)
+          (check-equal? (cdr (assoc 'kind config-metadata)) 'user-tree)
           (check-equal? (cdr (assoc 'policy init-metadata))
                         'init-switches-only)
           (check-equal? (poo-flow-user-tree-source-allows?
@@ -326,32 +319,35 @@
                         #f)
           (check-equal? (poo-flow-user-tree-source-valid?
                          init-source
-                         '(profile-selection module-switch feature-switch))
+                         '(module-switch feature-switch custom-module-switch))
                         #t)
+          (check-equal? (poo-flow-user-tree-source-allows?
+                         init-source
+                         'profile-selection)
+                        #f)
           (check-equal? (poo-flow-user-tree-source-policy-violations
                          init-source
                          '(module-switch object-contract runtime-execution))
                         '(object-contract runtime-execution))
-          (check-equal? (cdr (assoc 'entrypoint-role objects-metadata))
-                        'objects)
+          (check-equal? (cdr (assoc 'policy config-metadata))
+                        'composition-declarations-only)
           (check-equal? (poo-flow-user-tree-source-allows?
-                         objects-source
-                         'poo-object)
+                         config-source
+                         'composition-declaration)
                         #t)
           (check-equal? (poo-flow-user-tree-source-valid?
-                         objects-source
-                         '(poo-object object-contract field-contract
-                           object-inheritance))
+                         config-source
+                         '(composition-declaration profile-use scenario-use))
                         #t)
           (check-equal? (poo-flow-user-tree-source-allows?
-                         objects-source
-                         'sandbox-profile-recipe)
+                         config-source
+                         'runtime-execution)
                         #f)
           (check-equal? (poo-flow-user-tree-source-allows?
-                         objects-source
+                         config-source
                          'module-switch)
                         #f)
-          (check-equal? (length plans) 4)
+          (check-equal? (length plans) 2)
           (check-equal? (poo-flow-module-load-receipt-code
                          (poo-flow-lazy-load-plan-receipt (car plans)))
                         'deferred)
@@ -391,14 +387,12 @@
                 (map poo-flow-module-source-ref-value
                      (poo-flow-module-auto-imports-result-source-refs result))))
           (check-equal? (poo-flow-module-extension-result-stable? result) #t)
-          (check-equal? (length resolved-source-values) 3)
+          (check-equal? (length resolved-source-values) 1)
           (check-equal? (member "user-interface/config.ss"
                                 resolved-source-values)
                         #f)
-          (check-equal? (member "user-interface/objects.ss"
-                                resolved-source-values)
-                        '("user-interface/objects.ss"
-                          "user-interface/modules/config.ss"))
+          (check-equal? resolved-source-values
+                        '("user-interface/init.ss"))
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestSuite

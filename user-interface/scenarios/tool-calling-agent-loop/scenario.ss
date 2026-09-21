@@ -2,7 +2,16 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(use-composition tool-calling-agent-loop-composition
+;;; -*- Gerbil -*-
+;;; Reusable Scenario object; root config decides whether to compose it.
+
+(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        :poo-flow/user-interface/profiles/tool-calling)
+(export tool-calling-agent-loop-scenario)
+
+(def tool-calling-agent-loop-scenario
+  (use-composition tool-calling-agent-loop
   (use-module tool-calling as tool
     (profiles
       tool-request
@@ -43,4 +52,4 @@
            runtime-binding-matches-tool-contract
            runtime-receipt-matches-tool-plan
            trace-covers-tool-request-call-result)
-    (handoff python-runtime-tool-plane)))
+    (handoff python-runtime-tool-plane))))

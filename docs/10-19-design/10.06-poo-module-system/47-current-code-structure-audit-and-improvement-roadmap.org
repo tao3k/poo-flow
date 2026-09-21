@@ -2,391 +2,382 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-* 10.06.47 Current Code Structure Audit And Complete Improvement Plan
-This document is the complete project advancement plan for the current =poo-flow= codebase. It is broader than a next-step list: it defines the target structure, workstreams, dependency order, application scenarios, deliverables, validation gates, and risk controls.
+#+title: Current Code Structure Audit and Complete Improvement Roadmap
+#+date: 2026-09-18
 
-The plan assumes the project invariants already established in =10.06.44= and =10.06.46=:
-- public extension APIs stay 100% POO-native;
-- flow composition prefers functional programming;
-- macros are internal generators for mechanical POO/functional/projection structure, not a new user DSL;
-- Scheme owns strategy, composition, validation, presentation, and report-only handoff data;
-- Rust and =marlin-agent-core= own heavy execution and scheduling.
-** 10.06.47.10 Current Structure Baseline
-The current codebase already has a useful layered shape:
+* 10.06.47 Current decision
 
-1. Build and testing boundary.
-   =build.ss= owns package build options. =src/testing/project.ss= binds the harness project root, roots =src=, =user-interface=, and =t=, and keeps policy checks enabled.
-   Single-file test selection belongs to the new testing framework and =gxtest='s native single-file selection support.
+This is the executable advancement plan for the current POO Flow, Lambda Aitia
+and Lambda Episteme checkouts.  It replaces the former phase sequence that
+treated Session policy syntax, runtime projection syntax and SDLC ownership as
+future work.
 
-2. Core functional and POO foundations.
-   =src/core/flow-declarations.ss= defines flow declaration descriptors and registries as POO-native values. =src/core/flow.ss= contains flow category access. =src/module-system/object-core/support/object.ss= owns module object construction, field resolution, inheritance, contribution indexing, and merge behavior.
+The plan is evidence ordered:
 
-3. Module system facade and syntax.
-   =src/user-interface/init-syntax.ss= owns public =use-module= syntax, profile construction helpers, and module bundle collection. It is the current public syntax choke point.
+1. establish reviewable repository baselines;
+2. close domain-neutral public capabilities;
+3. finish the User Interface expression layer;
+4. reduce large Runtime and Session owners;
+5. close contribution-owned verticals;
+6. measure remaining algorithmic candidates;
+7. qualify build currentness and release closure.
 
-4. Sandbox backend modules.
-   =src/modules/sandbox-core/backend-object-syntax.ss= owns the internal =defpoo-sandbox-backend-object-family= macro. Concrete backends such as =src/modules/docker-sandbox/objects.ss= already call that macro instead of hand-writing every object/profile/capability family.
+Completion in an uncommitted working tree is implementation evidence, not a
+landed or released baseline.
 
-5. Session policy module.
-   =src/modules/session/policy.ss= owns policy predicates, constructors, accessors, durable policy attachment, tool grants, policy checks, and final alist projections.
+* 10.06.47.10 Invariants
 
-6. Loop engine runtime module.
-   =src/modules/loop-engine/runtime.ss= owns runtime envelopes, manifests, receipts, capability lookup, memory/compression policy projection, context enrichment, and loop-engine intent collection.
+1. Public extension surfaces are POO-native. Objects, prototypes, slots,
+   native CLOS dispatch and named functional composition are the ordinary API.
+2. Pure algorithms live in the nearest reusable =funcs.ss= owner and use
+   Gerbil std or SRFI implementations before project-local substitutes.
+3. A generic function is introduced only for an open dispatch axis. Direct
+   slot behavior, pure functions and small hygienic rules remain valid when
+   they express the domain more directly.
+4. Public macros only project syntax or phase semantics onto ordinary POO and
+   functional code. They do not create a parallel runtime or object model.
+5. =build.ss= is the unique package build entry. ASP PackageSpec owns native
+   import closure projection and =std/make= owns compilation.
+6. =poo-flow-load-modules= owns runtime module-source discovery. It does not
+   execute inside =build.ss=.
+7. POO Flow owns domain-neutral infrastructure. Lambda Aitia owns
+   Software/SDLC, NASA, GitOps, ADR and causal assurance. Lambda Episteme owns
+   non-SDLC vertical knowledge such as Healthcare and ontology modules.
+8. Generated =source.lock.ss= files are products. The reusable implementation
+   is the Sources Lock Feature.
+9. Performance claims require an exact Scenario, input scale, measurement
+   boundary and retained receipt.
+10. Tests move from direct source compilation to atomic owner tests, real
+    Scenarios and public consumers. A stale installed artifact cannot make a
+    slice green.
 
-7. User-interface scenarios and tests.
-   =user-interface/custom/my-module/cases/loop-engine.ss= shows a real POO-native loop-engine profile with sandbox, runtime, memory, compression, lineage, selector, resource, and capability policies. =user-interface/custom/my-module/cases/session-policy.ss= shows real session policy use across tool grants, model, prompt, resource, and agent execution. Tests such as =t/user-interface-custom-loop-engine-runtime-manifest-test.ss=, =t/user-interface-custom-loop-engine-memory-policy-test.ss=, and =t/session-policy-contract-test.ss= are the scenario-level acceptance surfaces.
-** 10.06.47.20 Structural Diagnosis
-The project direction is coherent, but the structure has predictable pressure points:
+* 10.06.47.20 Audited baseline
 
-1. Large owners mix several change axes.
-   =loop-engine-runtime.ss= currently mixes runtime ABI projection, receipt construction, policy enrichment, capability diagnostics, sandbox agreement, and config collection.
+| Area | Current state | Remaining closure |
+|------+---------------+-------------------|
+| Profile and Scenario expression | Direct =poo-flow.scenario-case.v1= values, cached ExecutionPlan and 1,000/5,000 Profile receipts exist | finish directory discovery and user-facing config roles |
+| Session policy generation | =src/modules/session/policy-syntax.ss= exists | verify family coverage and reduce remaining large owners |
+| Runtime projection generation | =src/module-system/projection/runtime-syntax.ss= exists | separate receipt/request/envelope/manifest/snapshot owners |
+| Loop intent | =runtime-intent.ss= exists but remains a large mixed owner | make =runtime.ss= a small orchestrator |
+| Standards | RFC 163 M0--M4 are implemented in the working tree | land the core and preserve contribution ownership |
+| Sources Lock | POO Feature, generated module writer and indexed verification exist | canonical generation, scale and Provider gates |
+| CLOS and algorithms | major O(n²) paths have indexed or std-backed implementations | measure the bounded candidates in RFC 148 before changing them |
+| Build | ASP dependency-first native closure and build observability exist | qualify clean cold/warm currentness without a shadow builder |
+| Lambda Aitia | SDLC/NASA/GitOps and causal assurance are Aitia-owned | close child tests and child commit before parent gitlink |
+| Lambda Episteme | Healthcare/FHIR and ontology are contributor-owned | close child tests and child commit independently from Aitia |
 
-2. Session policy code repeats a policy family pattern.
-   =session/policy.ss= repeats validation, object construction, accessor reads, policy checks, durable attachment, and projection fields.
+* 10.06.47.30 Ownership map
 
-3. Runtime receipts repeat projection family structure.
-   Receipt and manifest alists are valid final ABI/report payloads, but the field lists should not be maintained by hand across source and tests.
+| Owner | Responsibility |
+|-------+----------------|
+| =src/core/*= | functional flow and execution-independent control values |
+| =src/module-system/*= | module contracts, loading, CLOS/MOP, composition and observability |
+| =src/feature-system/*= | reusable cross-module Features, including Sources Lock |
+| =src/modules/standards/*= | domain-neutral Standard catalog, resolution and lazy materialization |
+| =src/modules/*= | maintained concrete modules |
+| =src/user-interface/*= | internal UI loading, Profile/Scenario composition and diagnostics |
+| =user-interface/*= | root user configuration and realistic examples |
+| =packages/lambda-aitia= | Software/SDLC causal assurance and its standards |
+| =packages/lambda-episteme= | non-SDLC vertical knowledge and Provider implementations |
 
-4. =use-module= repeats branch mechanics.
-   Public syntax belongs in =init-syntax.ss=, but repeated branches should be generated from private procedural helpers once the lower-level macro pattern is proven.
+The parent repository may own generic integration gates. Core tests must not
+depend on one concrete contribution.
 
-5. Scenarios exist but are not yet an acceptance matrix.
-   We have real loop, sandbox, memory, runtime, and session policy cases. They need to be treated as product-facing acceptance gates, not incidental tests.
-** 10.06.47.30 Target Architecture
-The target architecture is a small set of stable owners with clear responsibility:
+* 10.06.47.40 P0 -- reviewable baselines
 
-| Owner | Responsibility | Public surface |
-|-------+----------------+----------------|
-| =src/core/*= | Functional flow descriptors, flow registry, DAG/arrow-style composition kernel | Functional constructors and POO values |
-| =src/module-system/object-core/support/*= | Module object contract, inheritance, field merge, contribution indexing | Internal object engine |
-| =src/modules/sandbox-core/backend-object-syntax.ss= | Declarative backend object/profile/capability generation | Internal macro only |
-| =src/modules/session/policy-syntax.ss= | Session policy family generation | Internal macro only |
-| =src/modules/session/policy.ss= | Public policy constructors/checks/projections | Stable POO-native policy functions |
-| =src/module-system/projection/runtime-syntax.ss= | Runtime receipt/manifest projection generation | Internal macro only |
-| =src/modules/loop-engine/runtime-receipts.ss= | Generated and hand-owned receipt functions | Internal ABI/report helpers |
-| =src/modules/loop-engine/runtime-intent.ss= | Functional loop intent enrichment pipeline | Internal pure pipeline helpers |
-| =src/modules/loop-engine/runtime.ss= | Orchestrates runtime intent, receipts, and projections | Existing compatibility owner during migration |
-| =src/user-interface/init-syntax.ss= | Public =use-module= syntax | User-facing module entry |
-| =user-interface/*= | Real scenario examples for users and agents | Public examples |
-| =t/*= | Owner and scenario gates | Verification contract |
-
-The migration should keep compatibility at public names while shrinking mixed owners behind generated and functional sub-owners.
-** 10.06.47.40 Planning Options
-Recommended: program-level staged architecture plan.
-
-This plan coordinates macro adoption, runtime owner splitting, user scenarios, Marlin handoff, and harness verification. It is slower than a single refactor, but it keeps the system coherent and prevents each slice from inventing its own local pattern.
-
-Option A: local cleanup only.
-
-This would refactor whichever file looks worst first. It is fast initially, but it does not create a reusable policy/projection pattern and would likely leave =use-module= and runtime receipts drifting.
-
-Option B: macro-first rewrite.
-
-This would aggressively replace repetition with macros before the acceptance matrix is complete. It uses Gerbil power, but it risks hiding behavior changes and creating compile-time complexity before the user scenarios are pinned.
-
-The recommended path is staged architecture: scenario matrix first, generated families second, owner splits third, broad =use-module= cleanup last.
-** 10.06.47.50 Workstreams
-*** 10.06.47.50.10 Workstream A: Scenario And Acceptance Matrix
-Purpose: make user-facing behavior the validation spine for every refactor.
+Goal: stop unrelated owners from accumulating in one unverifiable change.
 
 Deliverables:
-- A scenario matrix under =docs/10-19-design/10.06-poo-module-system/= mapping user examples to source owners and tests.
-- Expanded =user-interface/custom/my-module/cases/*= examples for funflow DAG, loop profile, sandbox resources, session policy, memory/compression, and Marlin runtime discovery.
-- Test mapping for each scenario.
 
-Acceptance:
-- Every major refactor points to at least one user-interface scenario and one focused test file.
-- No user-facing scenario is an introspection toy; each demonstrates real configuration.
-*** 10.06.47.50.20 Workstream B: Sandbox Backend Macro Hardening
-Purpose: turn the existing sandbox macro into the reference pattern for generated POO object families.
-
-Deliverables:
-- Focused tests for generated backend object metadata, field contracts, profile inheritance, and capability registry contents.
-- Coverage for =nono-sandbox=, =cubeSandbox=, and =docker-sandbox= using the same object family shape.
-- Common POO-native resource fragments for filesystem, ports, CPU, memory, volume, and runtime materialization.
-
-Acceptance gates:
-#+begin_src sh
-testing framework / gxtest native single-file selection:
-  t/agent-sandbox-profile-test.ss
-  t/agent-sandbox-cube-interface-test.ss
-  t/docker-descriptor-test.ss
-  t/nono-sandbox-c-binding-test.ss
-#+end_src
-*** 10.06.47.50.30 Workstream C: Session Policy Family Generation
-Purpose: reduce repeated constructor/accessor/projection structure while preserving public policy functions.
-
-Deliverables:
-- New =src/modules/session/policy-syntax.ss=.
-- One internal macro family that can generate constructor validation, default slots, optional slots, projection fragments, and accessor helpers.
-- Incremental migration from small policies to larger agent execution policy.
-- Compatibility tests for =poo-flow-session-policy->alist= and durable policy attachment.
-
-Acceptance gates:
-#+begin_src sh
-testing framework / gxtest native single-file selection:
-  t/session-policy-contract-test.ss
-#+end_src
-
-Completion condition:
-- Public session policy functions still exist.
-- User-facing =session-policy.ss= scenario is unchanged or improved.
-- Projection payloads remain compatible with existing tests.
-*** 10.06.47.50.40 Workstream D: Runtime Receipt And Manifest Projection
-Purpose: make receipt/manifest payloads generated from named contract declarations while keeping alists only at final ABI/report boundaries.
-
-Deliverables:
-- New =src/module-system/projection/runtime-syntax.ss=.
-- Generated lineage, selector, resource-dispatch, capability, memory, and compression receipt projections.
-- A future =src/modules/loop-engine/runtime-receipts.ss= owner once projection generation is stable.
-- Runtime command manifest and discovery consistency checks.
-
-Acceptance gates:
-#+begin_src sh
-testing framework / gxtest native single-file selection:
-  t/user-interface-custom-loop-engine-runtime-manifest-test.ss
-#+end_src
-
-Completion condition:
-- Receipt contract names are generated or declared once.
-- Runtime envelope remains explicit until receipt generation is stable.
-- Marlin handoff shape stays discoverable and report-only.
-*** 10.06.47.50.50 Workstream E: Loop Intent Functional Pipeline
-Purpose: split loop enrichment into pure functional steps while keeping heavy execution outside Scheme.
-
-Deliverables:
-- Future =src/modules/loop-engine/runtime-intent.ss=.
-- Named pipeline steps:
-  - base intent creation;
-  - sandbox profile resolution;
-  - sandbox runtime summary;
-  - sandbox handoff agreement;
-  - workflow agreement;
-  - capability receipt;
-  - runtime projection attachment.
-- Memory/compression selection behavior tied to loop use cases.
-
-Acceptance gates:
-#+begin_src sh
-testing framework / gxtest native single-file selection:
-  t/user-interface-custom-loop-engine-memory-policy-test.ss
-  t/user-interface-custom-loop-engine-runtime-manifest-test.ss
-#+end_src
-
-Completion condition:
-- Each enrichment step is value-in/value-out.
-- No scheduling or execution state is introduced in Scheme.
-*** 10.06.47.50.60 Workstream F: Funflow Functional Kernel
-Purpose: make the funflow route a first-class functional programming surface, not just a compatibility reference.
-
-Deliverables:
-- Clear functional constructors for task, sequential, branch, and empty flow descriptors.
-- DAG/arrow-style composition examples in user-interface.
-- Report-only run receipt for L1 local validation.
-- =poo-flow run <file.ss>= examples for practical execution tests where the Scheme side validates composition and emits receipts.
-
-Acceptance:
-- Users can define a small functional DAG flow without raw alist authoring.
-- Tests prove the resulting flow registry/descriptors can be consumed by loop-engine profile and runtime manifest generation.
-*** 10.06.47.50.70 Workstream G: =use-module= Procedural Branch Generation
-Purpose: reduce public syntax branch repetition only after lower-level generated families are stable.
-
-Deliverables:
-- Private helper macro for repeated =.def= parse/build/config/contract branch shape.
-- Stable public forms:
-  #+begin_src scheme
-  (use-module loop-engine
-    :config
-    (.def (profile @ loop-engine-profile)
-      sandbox: sandbox-profile))
-  #+end_src
-- Removal of stale compatibility clauses that reintroduce old DSL paths.
-
-Acceptance:
-- Existing user-interface scenarios keep working.
-- Error messages still direct users to POO-native =.def= forms.
-- No public raw alist/record DSL is introduced.
-*** 10.06.47.50.80 Workstream H: Marlin ABI And Downstream Boundary
-Purpose: make Scheme-side discovery predictable for =marlin-agent-core= while keeping execution in Rust.
-
-Deliverables:
-- Runtime manifest/bridge discovery surface that exposes loop governor request, runtime command contract, receipt contracts, and report-only handoff facts.
-- Documentation for downstream Gerbil package consumer shape.
-- ABI consumer audit in =marlin-agent-core= before any breaking contract changes.
-
-Acceptance:
-- Marlin does not guess entrypoints.
-- Scheme exports stable contract-bearing requests and receipts.
-- No scheduler, durable state writer, or heavy runtime is added to this repository.
-*** 10.06.47.50.90 Workstream I: Build, Harness, And Performance
-Purpose: keep iteration fast and verification canonical.
-
-Deliverables:
-- Focused single-file gates for each owner through the new testing framework and =gxtest= native selection support.
-- Documented understanding that native =gxtest= single-file selection is the canonical single-file testing model for this plan.
-- Full =gxpkg build -R -O= gate after owner-level tests.
-- Build-performance watch for macro expansion cost.
-- Harness policy warnings fixed through the package CLI path, not separate shadow checks.
-
-Acceptance:
-- Refactors never require direct generated artifact cleanup.
-- Tests run through the native CLI/harness path.
-- Compile-time metaprogramming does not make normal agent iteration materially slower.
-** 10.06.47.60 Phase Plan
-*** 10.06.47.60.10 Phase 0: Baseline And Matrix
-Goal: make the plan actionable and measurable.
-
-Inputs:
-- Existing docs =10.06.44=, =10.06.46=, and this plan.
-- Existing user-interface cases and tests.
-
-Deliverables:
-- Scenario acceptance matrix.
-- Owner-to-test matrix.
-- Explicit non-goals for DSL compatibility and Scheme-side execution.
+- classify every dirty path by POO Flow, Aitia or Episteme ownership;
+- keep Standards, Sources Lock, User Interface, Observability and Governance as
+  bounded parent slices;
+- validate and commit each child repository before changing its parent gitlink;
+- record source compile, atomic tests, Scenarios and scale receipts per slice.
 
 Exit criteria:
-- Every later phase has named owners, tests, and scenarios.
-*** 10.06.47.60.20 Phase 1: Sandbox Reference Pattern
-Goal: prove the existing declarative macro pattern is stable enough to copy.
 
-Deliverables:
-- Tests around generated object metadata, fields, inheritance, capability registry.
-- Resource-fragment model for docker/nono/cube reuse.
+- no parent commit absorbs child source changes;
+- no child commit mixes the other contribution's domain;
+- =git diff --check= passes in every affected repository;
+- each slice has a named verification receipt.
 
-Exit criteria:
-- Sandbox tests pass.
-- The macro shape is documented as internal infrastructure, not user API.
-*** 10.06.47.60.30 Phase 2: Session Policy Generated Families
-Goal: move repeated session policy structure into a bounded macro owner.
+* 10.06.47.50 P1 -- core public capability closure
 
-Deliverables:
-- =policy-syntax.ss=.
-- Generated constructor/projection for one small policy.
-- Migration of larger policy families after compatibility test passes.
+** 10.06.47.51 Standards
 
-Exit criteria:
-- =t/session-policy-contract-test.ss= passes.
-- User-interface session policy scenario still demonstrates real multi-agent policy composition.
-*** 10.06.47.60.40 Phase 3: Runtime Receipt Projection Families
-Goal: remove hand-maintained receipt projection drift.
+- retain exact indexed resolution and internal catalog-identity admission;
+- retain explicit materialization, single-flight, byte/depth/count budgets and
+  lazy re-entry diagnostics;
+- keep Provider execution and industry content outside the core;
+- preserve the 10,000-root resolution Scenario and zero artifact realization.
 
-Deliverables:
-- =runtime-projection-syntax.ss=.
-- Generated receipt family for lineage first, then selector/resource/capability/memory/compression.
-- Receipt contract table.
+** 10.06.47.52 Sources Lock
 
-Exit criteria:
-- Runtime manifest tests pass.
-- Marlin handoff payload remains report-only and stable.
-*** 10.06.47.60.50 Phase 4: Loop Intent Pipeline Split
-Goal: turn loop enrichment into a functional pipeline.
+- canonicalize entries independently from filesystem discovery order;
+- produce byte-identical generated modules for equivalent declarations;
+- verify digest and byte count for text and bytevector sources;
+- reject duplicate identities and missing sources;
+- qualify 10,000 declarations through freeze, SHA-256, one index construction
+  and complete lookup;
+- let contributions own the generated lock and source inventory.
 
-Deliverables:
-- =loop-engine-runtime-intent.ss= owner.
-- Pure pipeline steps for sandbox, workflow, capability, memory, compression, and runtime projection.
+Current mechanism receipt (2026-09-18):
 
-Exit criteria:
-- Memory policy and runtime manifest scenario tests pass.
-- =loop-engine-runtime.ss= becomes an orchestrator instead of the owner of all details.
-*** 10.06.47.60.60 Phase 5: Funflow Functional Kernel Completion
-Goal: make funflow the functional route for DAG and flow composition.
+- the Feature canonicalizes discovery order, materializes one constructor-owned
+  native hash index and emits byte-identical generated source for equivalent
+  declarations;
+- the atomic Feature suite passes 15 checks covering text, bytevector,
+  duplicate identity, digest, byte count and generated source identity;
+- =just test-sources-lock-performance= constructs 10,000 reversed admitted
+  entries in 187 ms and completes 20 full 10,000-lookup samples with a 5.000114
+  ms p95 under the 50 ms hard gate;
+- the reader-native POO authoring gate now covers =t/performance/**/*.ss=, so a
+  self-referential fixture slot is rejected before benchmark realization.
 
-Deliverables:
-- Functional flow constructors and combinators.
-- User-interface funflow DAG scenario.
-- L1 report-only run receipt.
+Contribution-owned generated locks and Provider-specific source inventories
+remain P4 deliverables; they do not belong in the core Feature.
 
-Exit criteria:
-- A user or agent can define and validate a functional DAG flow without raw alists.
-- The flow can be consumed by loop-engine profile/runtime surfaces.
-*** 10.06.47.60.70 Phase 6: =use-module= Branch Generation
-Goal: reduce syntax branch repetition without changing the public syntax.
+** 10.06.47.53 Module admission
 
-Deliverables:
-- Private procedural helper for repeated branch generation.
-- Public syntax compatibility tests.
-- Removal of stale non-POO DSL clauses.
+- require =types.ss=, =objects.ss=, =funs.ss=, =config.ss= and =interface.ss=;
+- reject module-local =init.ss= and invalid dependency direction;
+- require =interface.ss= as the public module entry;
+- diagnose aggregate owner imports and package bootstrap self-imports;
+- reject a parallel build projection in =build.ss=.
 
-Exit criteria:
-- User-interface scenarios pass.
-- Bad syntax errors still guide users to =use-module ... :config (.def ...)=.
-*** 10.06.47.60.80 Phase 7: Marlin Downstream Integration
-Goal: align Scheme strategy output with Rust execution consumer expectations.
+* 10.06.47.60 P2 -- Doom/Nix-like User Interface
 
-Deliverables:
-- ABI consumer audit in =marlin-agent-core=.
-- Downstream documentation for =gerbil.pkg= dependency, load path, =gxtest=, harness policy, and root =user-interface/*= usage.
-- Contract compatibility checks for loop governor request shape.
-
-Exit criteria:
-- Downstream Gerbil package can consume =poo-flow= through package dependency.
-- Marlin discovers request/manifest/receipt contracts without guessing.
-*** 10.06.47.60.90 Phase 8: Closure, Performance, And Release Readiness
-Goal: make the improved structure durable.
-
-Deliverables:
-- Full package build gate.
-- Build-performance comparison before/after macro migration.
-- Documentation index and AGENTS rules updated.
-- Changelog/release notes for public behavior.
-
-Exit criteria:
-- =gxpkg build -R -O= passes.
-- Focused scenario tests pass.
-- No known stale DSL compatibility path remains documented.
-** 10.06.47.70 Dependency Order
-The key dependency rule is:
+The stable user tree is:
 
 #+begin_src text
-scenario matrix
-  -> sandbox macro reference
-  -> session policy generated families
-  -> runtime receipt generated families
-  -> loop intent functional pipeline
-  -> funflow DAG completion
-  -> use-module branch generation
-  -> Marlin downstream integration
-  -> release readiness
+user-interface/
+  init.ss
+  config.ss
+  profiles/
+  scenarios/
+  custom/<module-name>/{types,objects,funs,config,interface}.ss
 #+end_src
 
-=use-module= should not be the first major refactor. It is public syntax and therefore should wait until the lower-level generated family patterns are proven.
-** 10.06.47.80 Scenario Acceptance Matrix
-| Scenario | User-facing surface | Internal owners | Primary tests |
-|----------+---------------------+-----------------+---------------|
-| Sandbox backend reuse | =use-module docker-sandbox/nono-sandbox/cubeSandbox= | =sandbox-backend-object-syntax.ss=, concrete backend =objects.ss= | =t/agent-sandbox-profile-test.ss=, =t/docker-descriptor-test.ss=, =t/nono-sandbox-c-binding-test.ss= |
-| Loop strategy profile | =user-interface/custom/my-module/cases/loop-engine.ss= | =init-syntax.ss=, =loop-engine-runtime.ss= | =t/user-interface-custom-loop-engine-profile-test.ss= |
-| Runtime manifest and receipts | loop runtime discovery/manifest | =runtime-projection-syntax.ss=, =loop-engine-runtime-receipts.ss= | =t/user-interface-custom-loop-engine-runtime-manifest-test.ss= |
-| Memory policy variants | loop profile memory policies | =loop-engine-runtime-intent.ss= | =t/user-interface-custom-loop-engine-memory-policy-test.ss= |
-| Session policy governance | =user-interface/custom/my-module/cases/session-policy.ss= | =policy-syntax.ss=, =policy.ss= | =t/session-policy-contract-test.ss= |
-| Funflow functional DAG | future funflow user-interface case | =src/core/flow-declarations.ss=, =src/core/flow.ss= | new focused funflow DAG test |
-| Marlin ABI handoff | runtime manifest/bridge discovery | =loop-engine-runtime.ss=, Marlin consumer | runtime manifest test plus downstream ABI smoke |
-** 10.06.47.90 Definition Of Done
-A phase is done only when all of these are true:
+=init.ss= enables module sources and switches. =config.ss= directly declares
+=use-composition=. Profiles are reusable POO values. Scenarios combine modules
+and Profiles without redefining them. Directory discovery belongs to the
+internal loader.
 
-- The public surface is still POO-native or functional.
-- Generated code expands to ordinary POO-native/functional/projection code.
-- Final alists exist only at ABI/report/test boundaries.
-- The relevant user-interface scenario exists and is realistic.
-- Focused native =gxtest <file>= gates pass.
-- Full package build is run when a phase changes shared owners.
-- Documentation and =AGENTS.md= remain aligned with the new owner boundary.
-** 10.06.47.100 Risk Register
-| Risk | Impact | Mitigation |
-|------+--------+------------|
-| Macro overreach becomes a hidden DSL | Users and agents lose the POO model | Keep macros internal unless explicitly public and POO-lowering |
-| Projection generation changes ABI shape | Marlin and tests break | Add compatibility tests before migration |
-| =use-module= refactor changes public syntax | User examples break | Delay until lower-level patterns are stable |
-| Large owner split creates circular imports | Build complexity increases | Split by dependency direction: syntax -> generated helpers -> runtime orchestrator |
-| Macro expansion slows builds | Agent iteration suffers | Track build performance after each macro phase |
-| Scenario docs drift from tests | Documentation becomes ornamental | Bind each scenario to a named test file |
-** 10.06.47.110 Operating Model For Each Slice
-Every implementation slice should follow this sequence:
+Deliverables:
 
-1. Use ASP owner/selector evidence to identify the real source owner.
-2. Update or confirm the relevant scenario and acceptance test.
-3. Make the smallest owner-boundary code change.
-4. Run the focused single-file gate through the project testing framework and native =gxtest= selection support.
-5. Run broader =gxpkg build -R -O= only after focused gates pass or when shared build/package owners changed.
-6. Update docs and user-interface examples in the same slice when public behavior changes.
-7. Commit only the bounded slice.
+- finish Profile and Scenario discovery with stable deterministic ordering;
+- make multiple Profiles reusable across multiple Scenarios;
+- keep custom user modules separate from maintained and contributor modules;
+- remove stale wrapper forms and redundant public =def= bindings;
+- retain source locations and actionable syntax failures;
+- extend Observability to report discovery, admission and plan construction.
+
+Scale gates:
+
+- 1,000 and 5,000 Profile expansion;
+- one cached ExecutionPlan per Case;
+- fresh Session state per Case instance;
+- no repeated append or repeated full-index construction;
+- realistic GitHub Workflow-style composition owned by Aitia.
+
+Current root-interface receipt (2026-09-18):
+
+- Loader projection now exposes only =init.ss= and =config.ss=; obsolete root
+  =objects.ss= and =modules/config.ss= APIs were removed;
+- =config.ss= directly declares =default-agent-control-plane= with reusable
+  Profile selections and Development, Staging and Production stages;
+- deterministic discovery imports ordinary Profile modules and only
+  =scenarios/<name>/scenario.ss= plus nested Scenario Profile modules;
+- the four former =cases/*.ss= examples are ordinary reusable Scenario modules,
+  with no =load!= or =eval= bridge;
+- =custom/my-module= passes the five-role admission contract and exposes one
+  =interface.ss=;
+- removing its aggregate config facade reduced a source-first public-interface
+  import from approximately 11.2 seconds to 0.48 seconds on the same checkout;
+- the focused Doom-style config suite passes 9 checks, and the migrated
+  LangChain/LangGraph and CrewAI Scenario suites pass 63 and 12 checks.
+- the existing Profile composition scale gate passes all 9 checks for 1,000
+  and 5,000 Profiles and for a 1,000-module index without executing GSC.
+
+* 10.06.47.70 P3 -- Runtime and Session owner reduction
+
+Split behavior by dependency direction rather than file size alone.
+
+The Loop Runtime target owners are:
+
+- runtime receipt projections;
+- runtime request construction;
+- runtime envelope projection;
+- command manifest;
+- proof manifest;
+- runtime snapshot;
+- a small orchestration facade.
+
+Session follows the same rule for validation receipts, handoff objects,
+selection, materialization and communication.
+
+Acceptance:
+
+- value-in/value-out helpers remain pure;
+- final alists exist only at ABI, report or test boundaries;
+- heavy scheduling and execution stay outside Scheme;
+- no compatibility forwarding layer is added;
+- runtime manifest, memory/compression and Session policy Scenarios pass;
+- before/after owner import closure and runtime receipts are retained.
+
+Current closure:
+
+- Loop Runtime is a directed owner graph: receipt projection feeds snapshot,
+  request, manifest and handoff owners; =runtime-intent.ss= is the public
+  aggregation owner and contains no forwarding implementation;
+- =runtime.ss= is a 74-line public orchestration owner.  The former duplicate
+  packet and receipt constructors were removed, so direct public calls and
+  runtime-request materialization now resolve to the same implementation;
+- internal runtime projection imports the exact request, manifest and handoff
+  owners instead of reopening the aggregate Runtime Intent owner;
+- Session policy validation separates the record/admission constructor from
+  the final ABI projection while retaining the existing public receipt owner;
+- source-first runtime manifest, capability, Profile, memory/compression,
+  workflow, sandbox and human-audit suites pass.  The runtime manifest/Profile
+  gate covers 202 checks and the capability negative Scenario reports a
+  1.644 ms P95 over 20 samples;
+- source-first Session policy tests cover 110 checks.  Its 240-agent-attempt +
+  240-hook-attempt Scenario reports a 3.536 ms P95 over 20 samples;
+- existing Session scale gates pass for 300 selector candidates (3.098 ms
+  P95), 300 materialization receipts (2.632 ms), 320 communication receipts
+  (1.722 ms), 240 registry entries (7.126 ms), and a 1,200-session graph;
+- the repository-wide module Observability scan accepts all maintained Scheme
+  sources after the owner split.
+
+* 10.06.47.80 P4 -- contribution closure
+
+** 10.06.47.81 Lambda Aitia
+
+Aitia owns:
+
+- Software/SDLC lifecycle;
+- NASA NPR 7150.2D source and rule coverage;
+- GitOps Dev, Staging and Production Profiles;
+- GitHub Workflow Scenarios;
+- ADR and causal assurance;
+- canonical snapshots, invalidation, reverification and bounded decisions.
+
+NASA rule implementation and source coverage do not certify a project or
+authorize a release.
+
+** 10.06.47.82 Lambda Episteme
+
+Episteme owns non-SDLC knowledge verticals, including Healthcare/FHIR and
+ontology Providers. Its generated =source.lock.ss= values consume the POO Flow
+Feature and remain contributor-owned products.
+
+** 10.06.47.83 Integration
+
+- child module tests remain atomic;
+- contribution integration tests do not enter the core unit suite;
+- the parent verifies only generic contribution contracts and selected
+  cross-contribution composition;
+- child commit and qualification precede parent gitlink updates.
+
+* 10.06.47.90 P5 -- measured algorithm work
+
+Candidates are admitted only after a scale fixture shows material cost:
+
+1. long-form CLOS effective-method membership;
+2. high-arity lexical method binding;
+3. repeated external plan frontier queries;
+4. repeated Session selector/registry lookup;
+5. repeated Loop intent and UI metadata lookup;
+6. Sources Lock discovery and generated-module emission.
+
+For every candidate:
+
+1. state the expected complexity;
+2. retain the original implementation for same-source A/B when practical;
+3. measure setup separately from the hot operation;
+4. prefer Gerbil std/SRFI;
+5. place the algorithm in the nearest =funcs.ss=;
+6. retain public POO values and canonical ordering;
+7. remove the experiment if it does not improve the real Scenario.
+
+* 10.06.47.100 P6 -- build currentness
+
+The qualification matrix uses a clean isolated =GERBIL_PATH=:
+
+| Run | Required evidence |
+|-----+-------------------|
+| cold | target count, compile count, projection time, executor time, peak memory |
+| warm 1 | changed/current target count and numbered bundle count |
+| warm 2 | zero compile jobs and unchanged artifacts |
+| source-first atomic | current source behavior independent of installed bundles |
+| installed public consumer | package artifact behavior after the canonical build |
+
+The repair surface excludes:
+
+- a second scheduler;
+- downstream topology sorting;
+- retry-until-current loops;
+- timestamp touching;
+- persistent path-only projection receipts;
+- environment-variable product configuration;
+- upstream source modification.
+
+Observability must identify the first phase that exceeds its declared budget.
+
+* 10.06.47.110 P7 -- release closure
+
+Release readiness requires:
+
+- bounded commits and clean child gitlinks;
+- direct compilation for every changed Scheme owner;
+- atomic owner tests;
+- real Profile/Scenario tests;
+- dedicated performance Scenarios;
+- clean cold/warm build receipts;
+- public consumer tests;
+- documentation and repository index alignment;
+- CI completion without relaxed correctness or time budgets.
+
+* 10.06.47.120 Scenario matrix
+
+| Capability | Scale or behavior | Primary gate |
+|------------+-------------------+--------------|
+| Profile composition | 1,000 and 5,000 Profiles | profile-composition performance |
+| Standards resolution | 10,000 exact roots | Standards resolution performance |
+| Sources Lock | 10,000 declarations and lookups | Sources Lock performance |
+| Module discovery | 100 and 1,000 module interfaces | module registry/discovery performance |
+| Loop Runtime | request through snapshot | runtime manifest and memory/compression Scenarios |
+| Session | policy, selector, registry, graph and materialization | focused Session performance suites |
+| Aitia SDLC | Dev to Staging to Production with exact evidence | Aitia GitHub Workflow integration |
+| Episteme Healthcare | locked source to Provider comparison receipt | Healthcare qualification |
+
+* 10.06.47.130 Slice protocol
+
+Every implementation slice follows this order:
+
+1. identify the source owner and public consumer;
+2. define or update the real Scenario;
+3. add the smallest meaningful negative contract;
+4. implement the owner-bound change;
+5. compile changed Scheme modules directly;
+6. run the atomic owner test;
+7. run the affected Scenario or public consumer;
+8. run a scale gate when complexity is part of the claim;
+9. inspect old names, wrong owners, positional records, repeated indexes and
+   O(n²) accumulation;
+10. commit only that slice.
+
+* 10.06.47.140 Definition of done
+
+A slice is complete only when:
+
+- ownership is correct;
+- public values are POO-native or functional;
+- generated syntax lowers to ordinary code;
+- negative behavior is executable;
+- source and installed-artifact behavior are distinguished;
+- performance evidence names its scale and boundary;
+- no second build, test, runtime or registry system was introduced;
+- documentation describes the final implementation rather than migration
+  history.

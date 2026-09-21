@@ -15,7 +15,7 @@
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/workflow/interface
-        (only-in "../user-interface/custom/my-module/config"
+        (only-in "../user-interface/custom/my-module/cases/poo-introspection"
                  poo-flow-custom-my-module-poo-introspection-case))
 
 (export user-interface-poo-introspection-case-test)

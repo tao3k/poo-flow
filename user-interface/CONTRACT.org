@@ -14,11 +14,9 @@ The maintained kernel module implementations are upstream-owned under
 - =src/modules/nono-sandbox/config.ss= owns =(sandbox nono-sandbox +nono +doctor)=.
 - =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 
-=user-interface/init.ss= exports category/module/feature bundle rows, and
-upstream =src/user-interface/root-profile.ss= extends
-=poo-flow-kernel-profile= with those rows. Downstream users extend through
-=init.ss= and =custom/*/config.ss= instead of editing or repeating upstream
-kernel files.
+=user-interface/init.ss= exports enabled category/module/feature rows.
+=user-interface/config.ss= directly declares final compositions and receives
+Profiles and Scenarios through deterministic sibling-directory discovery.
 
 This directory models the downstream repository surface that a POO Flow user
 would maintain. It is intentionally root-level and separate from =src=. POO Flow
@@ -31,9 +29,12 @@ The downstream surface follows the project invariant: POO Flow is 100% POO-nativ
 The files here stay declarative:
 
 - =init.ss= lists optional feature patches/custom modules through =poo-flow!= category rows.
-- =custom/*/config.ss= declares user-maintained custom module bodies.
+- =config.ss= directly declares =use-composition= values.
+- =custom/<module-name>/{types,objects,funs,config,interface}.ss= is the stable
+  user-maintained module shell; concrete subowners remain precise imports.
 - =profiles/*.ss= contributes stable reusable profile objects.
-- =cases/*.ss= contributes reusable strategy compositions over those profiles.
+- =scenarios/<name>/scenario.ss= contributes reusable Scenario objects over
+  those Profiles.
 
 The implementation stays upstream:
 
@@ -44,27 +45,20 @@ The implementation stays upstream:
 
 * Public Entry Points
 
-Downstream users should rely on root declarations plus upstream helpers:
+The downstream repository has two root entrypoints:
 
-- =poo-flow-init-module-bundles=
-- =poo-flow-module-bundles=
-- =poo-flow-custom-module-bundles=
-- =pooFlowRootProfile=
-- =pooFlowRootProfileSet=
-- =pooFlowRootProfileSetPresentation=
-- =pooFlowRootProfileSetDoctorPresentation=
-- =pooFlowRootSelectedProfile=
-- =pooFlowRootConfig=
-- =poo-flow-user-module-selection=
-- =poo-flow-settings=
-- =pooFlowUserConfigPresentation=
-- =pooFlowRootDeveloperDeclarationCase=
-- =poo-flow-declaration-case-presentation-matches?=
+- =init.ss= enables maintained, contributor and private custom module sources;
+- =config.ss= declares the final Scenario composition.
+
+Every custom module exposes =interface.ss=.  Its =config.ss= stays lightweight;
+it must not aggregate every Profile and Scenario implementation into the public
+module entry.
 Reusable scenario fragments are also part of the teaching surface:
-- =profiles/langchain.ss= and =cases/langchain.ss=
-- =profiles/langgraph.ss= and =cases/langgraph.ss=
-- =profiles/crewai.ss= and =cases/crewai.ss=
-- =profiles/tool-calling.ss= and =cases/tool-calling-agent-loop.ss=
+- =profiles/langchain.ss= and =scenarios/langchain/scenario.ss=
+- =profiles/langgraph.ss= and =scenarios/langgraph/scenario.ss=
+- =profiles/crewai.ss= and =scenarios/crewai/scenario.ss=
+- =profiles/tool-calling.ss= and
+  =scenarios/tool-calling-agent-loop/scenario.ss=
 
 The presentation surface exposes ownership metadata so agents can inspect the
 config without realizing descriptors or executing runtime hooks. Presentations
@@ -74,7 +68,8 @@ observability data for catching lazy POO projection recursion; they must keep
 
 * Boundaries
 
-- User-owned: root module selection and custom module declarations.
+- User-owned: root module selection, final compositions, reusable Profiles,
+  reusable Scenarios and custom module declarations.
 - Module-system-owned: settings, profile projection, profile-set validation, descriptor realization, validation, merge, doctor output.
 - Runtime-owned: backend execution and handler lifecycle in =marlin-agent-core=.
 
@@ -87,10 +82,10 @@ identity.
 =init.ss= is intentionally closer to Doom's =init.el= than to an implementation
 module:
 
-- inherit required workflow, loop, and sandbox rows through =poo-flow-kernel-profile=;
+- enable required workflow, loop, and sandbox modules through =poo-flow!=;
 - group optional feature patches by category, such as =:workflow= and =:custom=;
 - attach user-toggleable module features with =+feature= flags;
 - keep object contracts, sandbox recipes, settings, and facade exports out of =init.ss=;
 - keep sandbox recipes and non-object configuration out of root =user-interface=;
-- keep =objects.ss=, =config.ss=, and =modules/config.ss= out of root =user-interface=;
+- keep object implementations out of root =init.ss= and =config.ss=;
 - keep custom module bodies under =custom= so users have room to write their own modules.

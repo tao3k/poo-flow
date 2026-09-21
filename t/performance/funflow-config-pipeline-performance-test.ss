@@ -13,8 +13,9 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in "../../user-interface/custom/my-module/config"
-                 poo-flow-custom-my-module-cicd-module
+        (only-in "../../user-interface/custom/my-module/profiles/cicd"
+                 poo-flow-custom-my-module-cicd-module)
+        (only-in "../../user-interface/custom/my-module/cases/funflow-cicd"
                  poo-flow-custom-my-module-funflow-cicd-case)
         "../support/funflow-config-pipeline-performance")
 

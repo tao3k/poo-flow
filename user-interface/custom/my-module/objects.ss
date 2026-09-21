@@ -3,15 +3,12 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: lightweight configuration owned by this user module. Concrete
-;;; Profiles and Scenario fixtures remain precise submodule imports.
-
 (import (only-in :clan/poo/object .o)
         "types.ss")
-(export poo-flow-custom-my-module-config)
+(export poo-flow-custom-my-module-metadata)
 
-(def poo-flow-custom-my-module-config
+(def poo-flow-custom-my-module-metadata
   (.o identity: +poo-flow-custom-my-module-identity+
-      profile-source: 'profiles
-      scenario-source: 'cases
+      owner: 'user
+      public-entry: 'interface
       runtime-executed?: #f))

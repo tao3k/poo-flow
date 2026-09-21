@@ -2,7 +2,16 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(use-composition crewai
+;;; -*- Gerbil -*-
+;;; Reusable Scenario object; root config decides whether to compose it.
+
+(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        :poo-flow/user-interface/profiles/crewai)
+(export crewai-scenario)
+
+(def crewai-scenario
+  (use-composition crewai
   (use-module crewai as crew
     (profiles
       agent
@@ -51,4 +60,4 @@
            human-review-before-final-output
            trace-covers-agent-task-flow
            handoff-after-proof-gate)
-    (handoff marlin-control-plane)))
+    (handoff marlin-control-plane))))
