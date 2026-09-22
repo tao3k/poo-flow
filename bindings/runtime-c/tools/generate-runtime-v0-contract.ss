@@ -34,7 +34,7 @@
 
 ;; : (-> Path String Void)
 (def (write-text path content)
-  (write-file-string path content newline-ending: #f))
+  (write-file-string path content))
 
 ;; : RuntimeV0Header
 (def header

@@ -83,12 +83,10 @@ runtime_gerbil_script_test(
         "//:t/feature-system-bundle-v1-foreign-arena-fixture.ss",
         ":bundle_v1_scheme_image_harness_bin",
         "@gerbil_poo_sources//:gerbil.pkg",
-        "@gerbil_utils_sources//:gerbil.pkg",
     ],
     data = [
         "//:scheme_runtime_sources",
         "@gerbil_poo_sources//:sources",
-        "@gerbil_utils_sources//:sources",
     ],
     script = "tests/bundle_v1_scheme_image_test.sh",
 )

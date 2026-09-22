@@ -6,10 +6,10 @@
 ;;; Runtime-C test owner: compare one observed symbol list with the canonical
 ;;; runtime-v0 manifest and emit a machine-readable admission receipt.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :std/misc/walist walist)
-        (only-in :std/text/json json-object->string)
+        (only-in :std/list/walist walist)
+        (only-in :std/encoding/json json->string)
         :poo-flow/src/qualification/runtime-symbol-manifest)
 
 (export main)
@@ -39,7 +39,7 @@
            manifest
            (read-lines (cadr args)))))
     (display
-     (json-object->string
+     (json->string
       (walist
        (list
         (cons "schema" (.ref receipt 'schema))

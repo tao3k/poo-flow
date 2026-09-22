@@ -10,14 +10,10 @@ validator=$2
 library=$3
 manifest=$4
 clan_package=${5:-}
-utils_package=${6:-}
 if [ -z "${GERBIL_LOADPATH:-}" ] && [ -d "${PWD}/src" ]; then
   GERBIL_LOADPATH=$PWD
   if [ -n "$clan_package" ]; then
     GERBIL_LOADPATH=$GERBIL_LOADPATH:$(dirname "$clan_package")
-  fi
-  if [ -n "$utils_package" ]; then
-    GERBIL_LOADPATH=$GERBIL_LOADPATH:$(dirname "$utils_package")
   fi
   export GERBIL_LOADPATH
 fi

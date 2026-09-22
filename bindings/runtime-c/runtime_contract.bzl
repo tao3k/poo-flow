@@ -35,13 +35,11 @@ def _runtime_contract_impl(ctx):
         inputs = depset(
             direct = [
                 ctx.file.clan_poo_root,
-                ctx.file.clan_utils_root,
                 ctx.file.generator,
                 ctx.file.schema,
             ],
             transitive = [
                 ctx.attr.clan_poo_sources[DefaultInfo].files,
-                ctx.attr.clan_utils_sources[DefaultInfo].files,
                 ctx.attr.scheme_sources[DefaultInfo].files,
             ],
         ),
@@ -53,7 +51,6 @@ def _runtime_contract_impl(ctx):
             header.path,
             vector.path,
             event_vector.path,
-            ctx.file.clan_utils_root.path,
             ctx.file.clan_poo_root.path,
         ],
         command = """
@@ -63,18 +60,11 @@ generator="$2"
 header="$3"
 vector="$4"
 event_vector="$5"
-clan_root="$(dirname "$6")"
-poo_root="$(dirname "$7")"
+poo_root="$(dirname "$6")"
 loadpath="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-gerbil-loadpath.XXXXXX")"
 trap 'rm -rf "$loadpath"' EXIT
 ln -s "$PWD" "$loadpath/poo-flow"
 mkdir -p "$loadpath/clan"
-for entry in "$clan_root"/*; do
-  name="$(basename "$entry")"
-  if [ "$name" != "BUILD.bazel" ]; then
-    cp -R "$entry" "$loadpath/clan/$name"
-  fi
-done
 mkdir -p "$loadpath/clan/poo"
 for entry in "$poo_root"/*; do
   name="$(basename "$entry")"
@@ -123,11 +113,6 @@ runtime_contract = rule(
             mandatory = True,
         ),
         "clan_poo_sources": attr.label(mandatory = True),
-        "clan_utils_root": attr.label(
-            allow_single_file = True,
-            mandatory = True,
-        ),
-        "clan_utils_sources": attr.label(mandatory = True),
         "scheme_sources": attr.label(mandatory = True),
         "schema": attr.label(
             allow_single_file = [".ss"],

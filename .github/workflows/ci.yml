@@ -357,9 +357,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: prebuilt-v0.18.2-07c84815
-            gerbil-install: prebuilt
-            gerbil-formula: ""
+            gerbil-label: release-v0.19-d801e7a
+            gerbil-install: release
             dependency-timeout-minutes: 12
             compile-timeout-minutes: 12
             compile-runaway-timeout-seconds: 660
@@ -383,7 +382,7 @@ jobs:
             libsqlite3-dev \
             libssl-dev \
             openssl \
-          pkg-config \
+            pkg-config \
           sqlite3 \
           valgrind \
           zlib1g-dev
@@ -405,83 +404,11 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install jq openssl pkg-config sqlite zlib
+          brew install gcc jq openssl pkg-config sqlite zlib
 
-      - name: Install macOS Gerbil bottle
-        if: runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
-        id: homebrew-gerbil-install
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
-          INSTALL_BUDGET_SECONDS: 120
-        shell: bash
-        run: |
-          set -euo pipefail
-          formula="${{ matrix.gerbil-formula }}"
-          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          start_seconds=$SECONDS
-
-          set +e
-          brew install --force-bottle "$formula"
-          install_status=$?
-          set -e
-
-          install_seconds=$((SECONDS - start_seconds))
-          info_status=1
-          poured_from_bottle=false
-          if (( install_status == 0 )); then
-            set +e
-            formula_info="$(brew info --json=v2 "$formula" 2>/dev/null)"
-            info_status=$?
-            set -e
-            if (( info_status == 0 )); then
-              poured_from_bottle="$(jq -r '.formulae[0].installed[-1].poured_from_bottle // false' <<< "$formula_info")"
-            fi
-          fi
-
-          completed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          receipt="$RUNNER_TEMP/poo-flow-homebrew-gerbil-receipt.json"
-          jq -n \
-            --arg schema "poo-flow.ci.homebrew-gerbil-receipt.v1" \
-            --arg formula "$formula" \
-            --arg currentHeadSha "$GITHUB_SHA" \
-            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
-            --arg startedAt "$started_at" \
-            --arg completedAt "$completed_at" \
-            --argjson pouredFromBottle "$poured_from_bottle" \
-            --argjson installSeconds "$install_seconds" \
-            --argjson installBudgetSeconds "$INSTALL_BUDGET_SECONDS" \
-            --argjson installStatus "$install_status" \
-            --argjson infoStatus "$info_status" \
-            '{schema: $schema, formula: $formula, currentHeadSha: $currentHeadSha,
-              runner: $runner, pouredFromBottle: $pouredFromBottle,
-              startedAt: $startedAt, completedAt: $completedAt,
-              installSeconds: $installSeconds,
-              installBudgetSeconds: $installBudgetSeconds,
-              installStatus: $installStatus, infoStatus: $infoStatus}' > "$receipt"
-          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
-
-          if (( install_status != 0 )); then
-            exit "$install_status"
-          fi
-          if (( install_seconds > INSTALL_BUDGET_SECONDS )); then
-            echo "Gerbil bottle install exceeded ${INSTALL_BUDGET_SECONDS}s budget" >&2
-            exit 1
-          fi
-          if (( info_status != 0 )) || [[ "$poured_from_bottle" != "true" ]]; then
-            echo "Gerbil formula did not consume a published bottle" >&2
-            exit 1
-          fi
-
-      - name: Upload macOS Gerbil install receipt
-        if: always() && runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: homebrew-gerbil-install-receipt-${{ runner.os }}-${{ runner.arch }}
-          path: ${{ steps.homebrew-gerbil-install.outputs.receipt }}
-          if-no-files-found: warn
-          retention-days: 7
+      - name: Install immutable Gerbil v0.19 release
+        if: matrix.gerbil-install == 'release'
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/${{ matrix.gerbil-label }}"
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
@@ -874,9 +801,8 @@ jobs:
       matrix:
         include:
           - os: macos-26
-            gerbil-label: homebrew-tao3k-v0.18.2-07c84815
-            gerbil-install: homebrew
-            gerbil-formula: tao3k/gerbil/gerbil-scheme
+            gerbil-label: release-v0.19-d801e7a
+            gerbil-install: release
             dependency-timeout-minutes: 12
             external-module-mode: analysis
             compile-timeout-minutes: 25

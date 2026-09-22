@@ -4,6 +4,6 @@
 
 git_override(
     module_name = "gerbil_bazel",
-    commit = "6a82d91d3c224fbb3e1044c454650d7e0b28986e",
+    commit = "85603a4598c40a0a954f16dcf9e49436399a42f1",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
