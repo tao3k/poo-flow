@@ -11,7 +11,6 @@
                  +asp-testing-interface+
                  +testing-discovery-profile+
                  +testing-memory-profile+
-                 +testing-process-isolation-profile+
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-add-profile
@@ -31,20 +30,12 @@
          ;; its heap budget is independent of earlier batch allocations.
          "observability-framework-test.ss")))
 
-;; Each discovered unit is atomic: Gerbil expands and runs it in a fresh
-;; process.  This prevents unrelated module families from accumulating syntax
-;; and MOP state in one managed heap while ASP still derives concurrency from
-;; GERBIL_BUILD_CORES.
-(def +poo-flow-atomic-test-selector+
-  (testing-test-selector 'contains "-test.ss"))
-
 (def +poo-flow-testing-interface+
   (foldl
     (lambda (selector testing)
       (testing-interface-map-profile
        testing selector +testing-serial-resource-profile+))
-    (testing-interface-map-profile
-     (testing-interface-add-profile
+    (testing-interface-add-profile
       (poo-flow-testing-observability-extension
        (testing-interface-add-profile
         +asp-testing-interface+
@@ -66,8 +57,6 @@
                                 "t/qualification/healthcare-standard-migration-assurance"
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
-     +poo-flow-atomic-test-selector+
-     +testing-process-isolation-profile+)
     +poo-flow-serial-test-selectors+))
 
 (init-profiled-test-environment! +poo-flow-testing-interface+)
