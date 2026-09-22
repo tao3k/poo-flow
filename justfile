@@ -9,7 +9,7 @@ export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", "12")
 # Test processes are bounded before any Scheme profile module can load. The
 # ASP POO Testing profile remains the policy and receipt owner inside the
 # process; this launch option is the fail-closed pre-import boundary.
-gerbil_test_max_heap := env_var_or_default("GERBIL_TEST_MAX_HEAP", "512M")
+gerbil_test_max_heap := env_var_or_default("GERBIL_TEST_MAX_HEAP", "1G")
 gambit_test_runtime_options := "-:max-heap=" + gerbil_test_max_heap + ",debug=q"
 
 devenv_exec := ".devenv/devenv-profile-exec"
