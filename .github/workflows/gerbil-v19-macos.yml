@@ -48,7 +48,8 @@ jobs:
         run: |
           set -euo pipefail
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install coreutils jq openssl pkg-config sqlite zlib
+          brew install coreutils gcc jq openssl pkg-config sqlite zlib
+          test -x /opt/homebrew/bin/gcc-16
 
           openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
           test -e "$openssl_prefix/lib/libssl.dylib"

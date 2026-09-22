@@ -60,7 +60,8 @@ jobs:
         run: |
           set -euo pipefail
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install jq openssl pkg-config sqlite zlib emscripten binaryen bazelisk
+          brew install gcc jq openssl pkg-config sqlite zlib emscripten binaryen bazelisk
+          test -x /opt/homebrew/bin/gcc-16
           bash tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/v0.19-d801e7a"
 
       - name: Declare Bazel disk-cache generation
