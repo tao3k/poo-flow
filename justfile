@@ -79,7 +79,7 @@ build:
 [group('build')]
 build-contribute contribution="lambda-episteme":
     case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
-    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" exec {{ gerbil_darwin_env }} gerbil build </dev/null
+    cd "{{ contribution_source_root }}/{{ contribution }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ justfile_directory() }}:{{ poo_flow_library_path }}" exec {{ gerbil_darwin_env }} gerbil build </dev/null
 
 # Clean one contribution through its native gxpkg package entry.
 [group('build')]
