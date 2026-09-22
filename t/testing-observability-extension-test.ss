@@ -6,7 +6,6 @@
 
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/13 string-contains)
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  testing-interface-call-with-operation

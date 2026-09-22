@@ -6,7 +6,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .call .o .ref .ref/cached)
-        :gerbil/gambit
+        :gerbil/runtime/gambit
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/interface
         (only-in :poo-flow/src/module-system/profile-composition/funcs

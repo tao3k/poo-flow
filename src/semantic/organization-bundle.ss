@@ -8,9 +8,8 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/sort sort)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/encoding/hex hex-encode)
         "funcs.ss")
 
 (def +poo-flow-organization-bundle-schema+
@@ -160,12 +159,12 @@
             (semantic-id-string (poo-flow-organization-object-id right))))
 
 (def (semantic-sort objects)
-  (sort (append objects '()) semantic-object<?))
+  (list-sort semantic-object<? (append objects '())))
 
 (def (semantic-symbol-sort values)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (semantic-id-string left) (semantic-id-string right)))))
+  (list-sort (lambda (left right)
+               (string<? (semantic-id-string left) (semantic-id-string right)))
+             (append values '())))
 
 (def (principal->canonical value)
   (list 'principal (poo-flow-organization-object-id value)))
@@ -282,7 +281,9 @@
     (case algorithm
       ((sha256)
        (hex-encode
-        (sha256 (poo-flow-organization-canonical->string canonical))))
+        (sha256
+         (string->utf8
+          (poo-flow-organization-canonical->string canonical)))))
       (else (error "unsupported Bundle digest algorithm" algorithm)))))
 
 (def (poo-flow-organization-bundle-identity bundle)

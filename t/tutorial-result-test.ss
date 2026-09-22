@@ -17,8 +17,6 @@
                  test-case
                  test-error
                  test-suite)
-        (only-in :std/sugar
-                 filter)
         :poo-flow/src/core/api)
 
 (export tutorial-result-test)

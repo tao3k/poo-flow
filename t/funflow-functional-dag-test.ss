@@ -6,8 +6,7 @@
 ;;; Boundary: Funflow functional DAG objects are POO-native reports.
 ;;; Invariant: DAG construction is pure and never schedules or runs checks.
 
-(import (only-in :std/sugar match)
-        (only-in :std/test
+(import (only-in :std/test
                  check-equal?
                  test-case
                  test-suite)

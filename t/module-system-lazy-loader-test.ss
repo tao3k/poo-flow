@@ -98,7 +98,7 @@
 ;;; load eagerly during configuration parsing.
 ;; : TestSuite
 ;; : TestCase
-(def module-system-lazy-loader-large-registry-case
+(def (module-system-lazy-loader-large-registry-case)
   (test-case "expands large module registry manifests without loading modules"
         (for-each
          (lambda (module-count)
@@ -128,7 +128,7 @@
          '(100 1000))))
 
 ;; : TestCase
-(def module-system-lazy-loader-deferred-standard-library-case
+(def (module-system-lazy-loader-deferred-standard-library-case)
   (test-case "defers standard-library module loading until forced"
         (set! lazy-loader-call-count 0)
         (let* ((backends (list user-standard-library-loader))
@@ -170,7 +170,7 @@
                           'standard-kernel)))))
 
 ;; : TestCase
-(def module-system-lazy-loader-module-tree-case
+(def (module-system-lazy-loader-module-tree-case)
   (test-case "projects the public interface entrypoint from a module tree"
         (set! lazy-loader-call-count 0)
         (let* ((module-root "src/modules/nono-sandbox")
@@ -198,7 +198,7 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
-(def module-system-lazy-loader-src-modules-case
+(def (module-system-lazy-loader-src-modules-case)
   (test-case "projects canonical src/modules interfaces as lazy load plans"
         (set! lazy-loader-call-count 0)
         (let* ((plans
@@ -280,7 +280,7 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
-(def module-system-lazy-loader-user-root-case
+(def (module-system-lazy-loader-user-root-case)
   (test-case "projects only the Doom-style init and config roots"
         (set! lazy-loader-call-count 0)
         (let* ((user-root "user-interface")
@@ -354,7 +354,7 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
-(def module-system-lazy-loader-aitia-registry-case
+(def (module-system-lazy-loader-aitia-registry-case)
   (test-case "official Aitia registry resolves only Aitia-owned module roots"
     (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
            (source-refs
@@ -368,7 +368,7 @@
          "packages/lambda-aitia/modules/sdlc/interface.ss")))))
 
 ;; : TestCase
-(def module-system-lazy-loader-auto-import-removal-case
+(def (module-system-lazy-loader-auto-import-removal-case)
   (test-case "removes auto-imported entrypoints through POO extension"
         (set! lazy-loader-call-count 0)
         (let* ((source-refs
@@ -398,10 +398,10 @@
 ;; : TestSuite
 (def module-system-lazy-loader-test
   (test-suite "poo-flow module system lazy loader"
-    module-system-lazy-loader-large-registry-case
-    module-system-lazy-loader-deferred-standard-library-case
-    module-system-lazy-loader-module-tree-case
-    module-system-lazy-loader-src-modules-case
-    module-system-lazy-loader-user-root-case
-    module-system-lazy-loader-aitia-registry-case
-    module-system-lazy-loader-auto-import-removal-case))
+    (module-system-lazy-loader-large-registry-case)
+    (module-system-lazy-loader-deferred-standard-library-case)
+    (module-system-lazy-loader-module-tree-case)
+    (module-system-lazy-loader-src-modules-case)
+    (module-system-lazy-loader-user-root-case)
+    (module-system-lazy-loader-aitia-registry-case)
+    (module-system-lazy-loader-auto-import-removal-case)))

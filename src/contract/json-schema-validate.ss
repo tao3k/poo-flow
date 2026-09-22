@@ -58,10 +58,7 @@
                  poo-flow-json-schema-matching-pattern-properties)
         (only-in "./json-schema-valid.ss"
                  poo-flow-json-schema-node-valid?
-                 poo-flow-json-schema-contract-artifact-value-valid?)
-        (only-in :std/srfi/1
-                 iota
-                 map))
+                 poo-flow-json-schema-contract-artifact-value-valid?))
 
 (export make-poo-flow-json-schema-validation-diagnostic
         poo-flow-json-schema-validation-diagnostic?

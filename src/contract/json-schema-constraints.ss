@@ -20,11 +20,9 @@
                  poo-flow-json-schema-node-metadata
                  poo-flow-json-schema-node-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/pregexp
+        (only-in :std/text/pregexp
                  pregexp
-                 pregexp-match)
-        (only-in :std/srfi/1
-                 filter-map))
+                 pregexp-match))
 
 (export +poo-flow-json-schema-constraint-keywords+
         poo-flow-json-schema-parse-result-with-constraints

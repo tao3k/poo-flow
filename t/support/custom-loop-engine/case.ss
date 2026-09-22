@@ -17,7 +17,7 @@
 ;;; The concrete case is the Flue-alignment proof: one compact loop-engine row
 ;;; projects the full report-only object graph without runtime execution.
 ;; : TestCase
-(def user-interface-custom-loop-engine-concrete-case
+(def (user-interface-custom-loop-engine-concrete-case)
   (test-case "projects custom concrete loop-engine case"
     (let* ((context (custom-loop-concrete-context))
            (presentation (test-ref context 'presentation))

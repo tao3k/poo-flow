@@ -5,8 +5,6 @@
 
 ;;; Boundary: small pure helpers shared by workflow graph and ABI projections.
 
-(import (only-in :std/srfi/1 assoc member))
-
 (export poo-flow-cicd-alist-ref
         poo-flow-cicd-symbol-member?)
 

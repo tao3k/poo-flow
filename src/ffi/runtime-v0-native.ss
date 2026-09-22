@@ -6,10 +6,14 @@
 ;;; Versioned C projection of POO Flow-owned Runtime v0 contract semantics.
 ;;; The ABI never exposes a Gerbil object: every returned payload is a copied,
 ;;; caller-released byte buffer owned by poo_flow_scheme_result_v1.
-(import (only-in :std/foreign begin-ffi c-define)
-        (only-in :std/text/json json-object->string string->json-object)
+(import (only-in :std/ffi C-declare C-ffi-macrology def-C-type def-C-lambda)
+        (only-in :std/encoding/json
+                 JSONReadOptions
+                 current-json-read-options
+                 json->string
+                 string->json)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil/gambit call-with-output-string display-exception)
+        (only-in :gerbil/core call-with-output-string display-exception)
         (only-in ../contract/runtime-v0-abi-schema
                  +poo-flow-runtime-v0-abi-schema+)
         (only-in ../contract/protocol-person-runtime-abi
@@ -40,7 +44,7 @@
 
 (def (native-descriptor-payload)
   (let (schema +poo-flow-runtime-v0-abi-schema+)
-    (json-object->string
+    (json->string
      (hash (schema +native-descriptor-schema+)
            (nativeAbiVersion +native-abi-version+)
            (runtimeAbiMajor (.ref schema 'abi-major))
@@ -56,7 +60,7 @@
              (map capability->json (.ref schema 'capabilities))))))))
 
 (def (native-error-payload exception)
-  (json-object->string
+  (json->string
    (hash (schema +native-error-schema+)
          (message
           (call-with-output-string
@@ -119,7 +123,7 @@
    (json-required object "output-digest")))
 
 (def (validation-result contract failures)
-  (json-object->string
+  (json->string
    (hash (schema +native-validation-schema+)
          (contract contract)
          (valid (null? failures))
@@ -129,7 +133,10 @@
   (when (> (string-length payload) +native-max-input-bytes+)
     (error "native contract payload exceeds maximum input bytes"
            (string-length payload) +native-max-input-bytes+))
-  (let (object (string->json-object payload))
+  (let (object
+        (parameterize ((current-json-read-options
+                        (JSONReadOptions object-as-hash: #t)))
+          (string->json payload)))
     (cond
      ((string=? contract "source-query-receipt")
       (validation-result
@@ -148,15 +155,9 @@
         (artifact-projection-receipt<-json object))))
      (else (error "unsupported native contract" contract)))))
 
-(begin-ffi
-  ((struct poo_flow_scheme_result_v1 status)
-   poo-flow-scheme-result-v1-set-bytes!
-   poo-flow-scheme-native-abi-version
-   poo-flow-scheme-native-descriptor
-   poo-flow-scheme-native-validate
-   native-c-round-trip)
+(C-ffi-macrology)
 
-  (c-declare #<<END-C
+(C-declare #<<END-C
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -229,11 +230,19 @@ static int poo_flow_native_c_round_trip(void) {
 END-C
   )
 
-  (define-c-struct poo_flow_scheme_result_v1
-    ((status . int32))
-    #f #f #t)
+(def-C-type poo_flow_scheme_result_v1 "poo_flow_scheme_result_v1")
+(def-C-type poo_flow_scheme_result_v1-borrowed-ptr*
+  (pointer poo_flow_scheme_result_v1
+           (poo_flow_scheme_result_v1-borrowed-ptr*)))
 
-  (define-c-lambda poo-flow-scheme-result-v1-set-bytes!
+(def-C-lambda poo_flow_scheme_result_v1-status
+  (poo_flow_scheme_result_v1-borrowed-ptr*) int32
+  "___return (___arg1->status);")
+(def-C-lambda poo_flow_scheme_result_v1-status-set!
+  (poo_flow_scheme_result_v1-borrowed-ptr* int32) void
+  "___arg1->status = ___arg2; ___return;")
+
+(def-C-lambda poo-flow-scheme-result-v1-set-bytes!
     (poo_flow_scheme_result_v1-borrowed-ptr* scheme-object) void
     #<<END-C
 free(___arg1->payload);
@@ -253,9 +262,10 @@ ___return;
 END-C
     )
 
-  (define-c-lambda native-c-round-trip () int
+(def-C-lambda native-c-round-trip () int
     "poo_flow_native_c_round_trip")
 
+(begin-foreign
   (c-define (poo-flow-scheme-native-abi-version)
     () unsigned-int32 "poo_flow_scheme_native_abi_version" "extern"
     (poo-flow/src/ffi/runtime-v0-native#native-abi-version))
@@ -265,35 +275,35 @@ END-C
     "poo_flow_scheme_native_descriptor" "extern"
     (with-exception-catcher
      (lambda (exception)
-       (poo_flow_scheme_result_v1-status-set! result -1)
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result -1)
        (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
         result (string->utf8
                 (poo-flow/src/ffi/runtime-v0-native#native-error-payload
                  exception)))
        -1)
      (lambda ()
-       (poo_flow_scheme_result_v1-status-set! result 0)
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result 0)
        (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
         result (string->utf8
                 (poo-flow/src/ffi/runtime-v0-native#native-descriptor-payload)))
-       (poo_flow_scheme_result_v1-status result))))
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status result))))
 
   (c-define (poo-flow-scheme-native-validate contract payload result)
     (UTF-8-string UTF-8-string poo_flow_scheme_result_v1-borrowed-ptr*) int32
     "poo_flow_scheme_native_validate" "extern"
     (with-exception-catcher
      (lambda (exception)
-       (poo_flow_scheme_result_v1-status-set! result -1)
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result -1)
        (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
         result (string->utf8
                 (poo-flow/src/ffi/runtime-v0-native#native-error-payload
                  exception)))
        -1)
      (lambda ()
-       (poo_flow_scheme_result_v1-status-set! result 0)
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result 0)
        (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
         result
         (string->utf8
          (poo-flow/src/ffi/runtime-v0-native#native-validate-payload
           contract payload)))
-       (poo_flow_scheme_result_v1-status result)))))
+       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status result)))))

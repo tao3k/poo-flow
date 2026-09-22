@@ -62,7 +62,7 @@
 ;;; Profile modules should still read like user declarations: one loop-engine
 ;;; row, ordered use-cases, sandbox refs, and no runtime execution.
 ;; : TestCase
-(def user-interface-custom-loop-engine-profile-case
+(def (user-interface-custom-loop-engine-profile-case)
   (test-case "projects custom loop-engine profile use cases"
     (let* ((presentation
             (custom-loop-presentation
@@ -186,4 +186,4 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-profile-test
   (test-suite "poo-flow custom loop-engine profile declarations"
-    user-interface-custom-loop-engine-profile-case))
+    (user-interface-custom-loop-engine-profile-case)))

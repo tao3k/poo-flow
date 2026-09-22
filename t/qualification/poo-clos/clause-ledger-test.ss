@@ -7,8 +7,6 @@
 
 (import (only-in :std/test test-suite test-case check-equal? check)
         (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/1 filter foldl)
-        (only-in :std/srfi/13 string-prefix? string-suffix?)
         (only-in "../../../src/module-system/observability/module-presentation.ss"
                  poo-flow-poo-slot-authoring-datum-observations
                  poo-flow-poo-slot-authoring-file-observations

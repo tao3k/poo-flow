@@ -6,7 +6,7 @@
 ;;; Invariant: a Cedar decision cannot mint or reinterpret authorized-effect evidence.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-cedar-decision
@@ -16,7 +16,9 @@
 
 (def (decision-digest value)
   (hex-encode
-   (sha256 (call-with-output-string (lambda (port) (write value port))))))
+   (sha256
+    (string->utf8
+     (call-with-output-string (lambda (port) (write value port)))))))
 
 (def (poo-flow-cedar-decision identity decision-outcome policy-identity
                               policy-hash entity-hash reason-list)

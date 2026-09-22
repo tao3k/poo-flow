@@ -9,8 +9,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :std/srfi/1
-                 find)
         (only-in :clan/poo/mop element?)
         (only-in "../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot-name

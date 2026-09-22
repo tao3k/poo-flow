@@ -6,9 +6,7 @@
 ;;; Boundary: direct upstream debug consumption, never semantic evidence authority.
 ;;; All output uses in-memory ports and synthetic canaries, never real secrets.
 (import (only-in :std/test test-suite test-case check-equal?)
-        (only-in :std/srfi/13 string-contains)
-        (only-in :clan/base λ)
-        (only-in :clan/debug traced-function)
+        (only-in :clan/poo/support/debug traced-function)
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :clan/poo/object .o .ref .call .all-slots compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type.)
@@ -17,7 +15,7 @@
 
 (define-type (DebugSymbol @ Type.)
   .element?: symbol?
-  .sexp<-: (λ (value) (list 'debug-symbol value)))
+  .sexp<-: (lambda (value) (list 'debug-symbol value)))
 
 ;; Keep captures test-local. This is not a telemetry sink or an output sanitizer.
 (def (contains? text fragment) (if (string-contains text fragment) #t #f))
@@ -46,7 +44,7 @@
       (let ((evaluations 0) (port (open-output-string)))
         (let* ((original (.o (:: self)
                             (payload (begin (set! evaluations (1+ evaluations)) 'value))
-                            (receiver (λ () self))))
+                            (receiver (lambda () self))))
                (wrapped (trace-poo original 'safe-debug-name)))
           (check-equal? evaluations 0)
           (check-equal? (eq? original wrapped) #f)
@@ -75,16 +73,16 @@
 
     (test-case "function trace preserves multiple values and reports calls"
       (let* ((port (open-output-string))
-             (traced (traced-function 'pair (λ (x) (values x (1+ x))) port)))
-        (check-equal? (call-with-values (λ () (traced 4)) list) '(4 5))
+             (traced (traced-function 'pair (lambda (x) (values x (1+ x))) port)))
+        (check-equal? (call-with-values (lambda () (traced 4)) list) '(4 5))
         (let (output (get-output-string port))
           (check-equal? (contains? output ">>> 0") #t)
           (check-equal? (contains? output "<<< 0") #t))))
 
     (test-case "function trace propagates the identical exception without a return event"
       (let* ((port (open-output-string)) (failure (list 'synthetic-failure))
-             (traced (traced-function 'failing (λ () (raise failure)) port))
-             (caught (with-exception-catcher (λ (value) value) traced)))
+             (traced (traced-function 'failing (lambda () (raise failure)) port))
+             (caught (with-exception-catcher (lambda (value) value) traced)))
         (check-equal? (eq? caught failure) #t)
         (let (output (get-output-string port))
           (check-equal? (contains? output ">>> 0") #t)
@@ -99,7 +97,7 @@
           (check-equal? (contains? output canary) #t)))
       (let ((port (open-output-string)) (canary "SYNTHETIC-CONVERSION-CANARY"))
         (parameterize ((current-error-port port))
-          (check-equal? (DDT 'conversion (λ (_) (error "conversion failed")) canary) canary))
+          (check-equal? (DDT 'conversion (lambda (_) (error "conversion failed")) canary) canary))
         (let (output (get-output-string port))
           (check-equal? (contains? output "CONVERSION ERROR") #t)
           (check-equal? (contains? output canary) #t))))))

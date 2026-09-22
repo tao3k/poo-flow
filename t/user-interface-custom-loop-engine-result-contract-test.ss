@@ -71,7 +71,7 @@
 ;;; Invalid result contracts remain reportable config data: presentation and
 ;;; runtime manifests surface diagnostics, but no runtime work is executed.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-result-case
+(def (user-interface-custom-loop-engine-invalid-result-case)
   (test-case "diagnoses invalid loop-engine result contract"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-result-module))
@@ -100,4 +100,4 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-result-contract-test
   (test-suite "poo-flow custom loop-engine result contract"
-    user-interface-custom-loop-engine-invalid-result-case))
+    (user-interface-custom-loop-engine-invalid-result-case)))

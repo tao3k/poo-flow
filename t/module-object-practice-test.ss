@@ -5,7 +5,7 @@
 
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :std/test
                  check
                  check-eq?
@@ -58,7 +58,7 @@
 ;;; This suite keeps object-extension examples executable as policy evidence for
 ;;; downstream module authors.
 ;; : TestCase
-(def module-object-practice-projection-case
+(def (module-object-practice-projection-case)
   (test-case "projects object-owned field contracts into the extension graph"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
@@ -119,7 +119,7 @@
                         "object-core owns contract wrappers"))))
 
 ;; : TestCase
-(def module-object-practice-contribution-performance-case
+(def (module-object-practice-contribution-performance-case)
   (test-case "keeps large object contribution projection linear"
         (let* ((field-count 1000)
                (fields
@@ -161,7 +161,7 @@
           (check-equal? (< best-ms 100) #t))))
 
 ;; : TestCase
-(def module-object-practice-merge-performance-case
+(def (module-object-practice-merge-performance-case)
   (test-case "keeps large object slot config merge bounded"
         (let* ((field-count 1000)
                (fields
@@ -232,7 +232,7 @@
           (check-equal? (< noop-best-ms 50) #t))))
 
 ;; : TestCase
-(def module-object-practice-transformer-case
+(def (module-object-practice-transformer-case)
   (test-case "wraps standard list and map transformers as object contracts"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
@@ -331,7 +331,7 @@
 ;; : TestSuite
 (def module-object-practice-test
   (test-suite "poo-flow module object best practices"
-    module-object-practice-projection-case
-    module-object-practice-contribution-performance-case
-    module-object-practice-merge-performance-case
-    module-object-practice-transformer-case))
+    (module-object-practice-projection-case)
+    (module-object-practice-contribution-performance-case)
+    (module-object-practice-merge-performance-case)
+    (module-object-practice-transformer-case)))

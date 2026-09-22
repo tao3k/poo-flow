@@ -23,11 +23,7 @@
         (only-in "./json-schema-ir.ss"
                  poo-flow-json-schema-node-metadata
                  poo-flow-json-schema-pattern-property-compiled)
-        (only-in :std/srfi/13
-                 string-join)
-        (only-in :std/srfi/1
-                 find)
-        (only-in :std/pregexp
+        (only-in :std/text/pregexp
                  pregexp
                  pregexp-match))
 

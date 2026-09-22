@@ -68,7 +68,7 @@
 ;;; Config presentation is the broadest receipt surface, covering module
 ;;; switches, CI/CD handoff rows, loop-engine rows, and ownership boundaries.
 ;; : (-> Unit TestSuite)
-(def user-interface-config-presentation-test
+(def (user-interface-config-presentation-test)
   (test-case "presents downstream config without descriptor realization"
       (let* ((presentation
               (pooFlowUserConfigPresentation
@@ -260,7 +260,7 @@
 ;;; Profile presentation wraps the config projection while preserving the
 ;;; higher-level Doom-style profile fields users inspect.
 ;; : (-> Unit TestSuite)
-(def user-interface-profile-presentation-case-test
+(def (user-interface-profile-presentation-case-test)
   (test-case "presents profile without descriptor realization"
       (let* ((presentation
               (pooFlowUserProfilePresentation test-poo-flow-user-profile)))
@@ -337,7 +337,7 @@
 ;;; Doctor presentation verifies that valid profiles expose diagnostics and
 ;;; projection rows without descriptor realization.
 ;; : (-> Unit TestSuite)
-(def user-interface-profile-doctor-case-test
+(def (user-interface-profile-doctor-case-test)
   (test-case "doctors valid profile before realization"
       (let* ((doctor-report
               (pooFlowUserProfileDoctor test-poo-flow-user-profile))
@@ -410,7 +410,7 @@
 ;;; Broken-profile doctor output is the regression guard for declaration
 ;;; mistakes remaining visible as data instead of failing during presentation.
 ;; : (-> Unit TestSuite)
-(def user-interface-broken-profile-doctor-case-test
+(def (user-interface-broken-profile-doctor-case-test)
   (test-case "reports profile declaration mistakes like doctor output"
       (let* ((presentation
               (pooFlowUserProfileDoctorPresentation test-poo-flow-user-broken-profile))
@@ -438,7 +438,7 @@
 ;;; interface contract while each case remains a separately inspectable owner.
 (def user-interface-presentation-test
   (test-suite "poo-flow user interface presentation"
-    user-interface-config-presentation-test
-    user-interface-profile-presentation-case-test
-    user-interface-profile-doctor-case-test
-    user-interface-broken-profile-doctor-case-test))
+    (user-interface-config-presentation-test)
+    (user-interface-profile-presentation-case-test)
+    (user-interface-profile-doctor-case-test)
+    (user-interface-broken-profile-doctor-case-test)))

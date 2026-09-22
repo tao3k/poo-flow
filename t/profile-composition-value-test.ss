@@ -108,5 +108,3 @@
         "t/fixtures/composition-value/import.ss"
         official-catalog)
        true))))
-
-(run-tests! profile-composition-value-test)

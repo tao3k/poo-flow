@@ -6,8 +6,8 @@
 ;;; Optional Provider role: relational admission before runtime projection.
 (import (only-in :clan/poo/object .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/srfi/1 every)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list every)
+        (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/modules/governance/types
                  poo-flow-governance-profile?
                  poo-flow-governance-assessment?)
@@ -70,9 +70,10 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string
-      (lambda (port)
-        (write (map assessment->canonical assessment-values) port)))))))
+     (string->utf8
+      (call-with-output-string
+       (lambda (port)
+         (write (map assessment->canonical assessment-values) port))))))))
 
 (def (poo-flow-cedar-governance-contract
       composition-identity profile-values assessment-values proof-value)

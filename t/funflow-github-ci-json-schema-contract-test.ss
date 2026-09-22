@@ -9,13 +9,11 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :std/srfi/1
-                 member)
         (only-in :clan/poo/object
                  object<-alist)
-        (only-in :std/text/json
-                 read-json-key-as-symbol?
-                 string->json-object)
+        (only-in :std/encoding/json
+                 JSONReadOptions
+                 string->json)
         (only-in "../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot-name
                  poo-flow-native-contract-slots)
@@ -147,12 +145,14 @@
         (check-equal? (funflow-github-ci-test-ref alist-receipt 'checked-slots)
                       '(name run-name on env defaults concurrency permissions jobs))
         (check-equal? (funflow-github-ci-test-ref poo-receipt 'valid?) #t)))
-    (test-case "validates std/text/json native hash objects directly"
+    (test-case "validates native JSON hash objects directly"
       (let* ((string-key-workflow
-              (string->json-object funflow-github-ci-native-json))
+              (string->json funflow-github-ci-native-json
+                            (JSONReadOptions object-as-hash: #t)))
              (symbol-key-workflow
-              (parameterize ((read-json-key-as-symbol? #t))
-                (string->json-object funflow-github-ci-native-json)))
+              (string->json funflow-github-ci-native-json
+                            (JSONReadOptions object-as-hash: #t
+                                             key-as-symbol: #t)))
              (string-key-receipt
               (poo-flow-funflow-github-ci-validate-workflow->alist
                string-key-workflow))

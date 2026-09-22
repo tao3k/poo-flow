@@ -7,8 +7,8 @@
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/srfi/1 every)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list every)
+        (only-in :std/encoding/hex hex-encode)
         "types.ss")
 
 (export poo-flow-proof-digest
@@ -22,7 +22,8 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string (lambda (port) (write value port)))))))
+     (string->utf8
+      (call-with-output-string (lambda (port) (write value port))))))))
 
 (def (proof-index values identity-slot label)
   (let (index (make-hash-table))

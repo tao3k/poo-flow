@@ -5,8 +5,7 @@
 ;;; Boundary: declarative Bundle v1 wire-model constructors and validators;
 ;;; lowering algorithms and arena mutation remain in their dedicated owners.
 (import (only-in :std/crypto/digest sha256)
-        (only-in :std/sort stable-sort)
-        (only-in :std/srfi/1 fold-right)
+        (only-in :std/list/list fold-right)
         (only-in :clan/poo/object .ref .slot? object? object<-alist)
         :poo-flow/src/utilities/functional)
 
@@ -258,7 +257,7 @@
                          (symbol->string domain)
                          "/"
                          (semantic-id->string source)))
-         (digest (sha256 canonical)))
+         (digest (sha256 (string->utf8 canonical))))
     (feature-bundle-v1-compact-id
      domain source
      (digest-segment->uint64 digest 0)

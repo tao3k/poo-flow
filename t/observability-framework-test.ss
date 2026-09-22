@@ -5,8 +5,6 @@
 
 ;;; Real Module admission -> native observation -> explanation -> upstream debug.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
-        (only-in :std/srfi/13 string-contains)
-        (only-in :clan/base λ)
         (only-in :clan/poo/object .o .cc .ref .slot? .all-slots)
         (only-in :clan/poo/mop element? validate TypeError?)
         "../src/module-system/observability/interface.ss"
@@ -103,7 +101,7 @@
 
     (test-case "source-owned obligation code survives without a central code registry"
       (let* ((contract (poo-flow-predicate-contract
-                        'domain-specific symbol? (λ (_c _x) '(domain-policy-denied))))
+                        'domain-specific symbol? (lambda (_c _x) '(domain-policy-denied))))
              (event (poo-flow-observe-contract-admission (framework-context) contract 'value))
              (explanation (poo-flow-observation-explain event))
              (failure (car (.ref explanation 'failures))))
@@ -135,7 +133,7 @@
     (test-case "producer is evaluated once and native explanation can be refined"
       (let* ((count 0)
              (contract (poo-flow-predicate-contract
-                        'counted symbol? (λ (_candidate _context) (set! count (1+ count)) '())))
+                        'counted symbol? (lambda (_candidate _context) (set! count (1+ count)) '())))
              (event (poo-flow-observe-contract-admission (framework-context) contract 'value))
              (specialized (.o (:: @ event) (.explain 'domain-specific-explanation))))
         (poo-flow-observation-explain event)
@@ -161,7 +159,7 @@
          (poo-flow-observe-contract-admission (.o) SemanticModuleContract (framework-module)) TypeError?)))
 
     (test-case "cyclic supplied evidence is incomplete inspection, not a Module cycle verdict"
-      (let* ((contract (poo-flow-predicate-contract 'denied symbol? (λ (_c _x) '(denied))))
+      (let* ((contract (poo-flow-predicate-contract 'denied symbol? (lambda (_c _x) '(denied))))
              (receipt (poo-flow-contract-admit contract 'value #f))
              (cyclic (.o (:: self receipt) responsibility: 'cycle
                          (responsibility-evidence (list self))))

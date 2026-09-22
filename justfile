@@ -127,19 +127,19 @@ test-contribute-atomic contribution="lambda-aitia" module="sdlc" test_file="unit
 # Execute the root-owned, mechanism-only cross-contribution qualification.
 [group('test')]
 test-standards-multi-industry-profile-composition:
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-aitia:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v t/qualification/standards-multi-industry/profile-composition-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-aitia:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v 3 t/qualification/standards-multi-industry/profile-composition-test.ss
 
 # Keep the 10k scale fixture out of the ordinary unit-test worker. This
 # dedicated gate owns its benchmark budget and emits the full native receipt.
 [group('test')]
 test-standards-resolution-performance:
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gambit_test_runtime_options }} test -v t/performance/standards-resolution-performance-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gambit_test_runtime_options }} test -v 3 t/performance/standards-resolution-performance-test.ss
 
 # Keep the 10k Sources Lock fixture outside the ordinary unit-test worker. The
 # Scenario measures canonical construction separately from indexed lookup.
 [group('test')]
 test-sources-lock-performance:
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gambit_test_runtime_options }} test -v t/performance/sources-lock-performance-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gambit_test_runtime_options }} test -v 3 t/performance/sources-lock-performance-test.ss
 
 # Let gxtest qualify source first, then build the admitted contribution.
 [group('check')]
@@ -312,19 +312,19 @@ check-healthcare-gql: _prepare-gerbil-parser
 # environment, then require exact equality with Lambda's retained projection.
 [group('check')]
 check-healthcare-hl7v2-migration: _prepare-gerbil-parser
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v t/qualification/healthcare-hl7v2-migration/parser-receipt-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v 3 t/qualification/healthcare-hl7v2-migration/parser-receipt-test.ss
 
 # Qualify parser-owned FHIRPath syntax without claiming evaluator semantics.
 [group('check')]
 check-healthcare-fhirpath-syntax: _prepare-gerbil-parser
-    GERBIL_PARSER_DIR="{{ gerbil_parser_dir }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
+    GERBIL_PARSER_DIR="{{ gerbil_parser_dir }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v 3 t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
 
 # Replay the pinned external Validator from its local JAR/package cache. The
 # test verifies the binary digest and compares decoded OperationOutcome JSON.
 [group('check')]
 check-healthcare-fhir-reference-validator:
     test -n "{{ fhir_validator_jar }}" && test -f "{{ fhir_validator_jar }}"
-    FHIR_VALIDATOR_JAR="{{ fhir_validator_jar }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 90s gerbil {{ gambit_test_runtime_options }} test -v t/qualification/healthcare-fhir-reference-validator/replay-test.ss
+    FHIR_VALIDATOR_JAR="{{ fhir_validator_jar }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 90s gerbil {{ gambit_test_runtime_options }} test -v 3 t/qualification/healthcare-fhir-reference-validator/replay-test.ss
 
 # Build one Lean module and exactly its import closure.  This is the normal
 # proof-development gate; it never traverses the PooFlowProof aggregate root.
@@ -401,7 +401,7 @@ check-healthcare-standard-migration-lean:
 # bindings whenever the upstream TLA+ model changes.
 [group('check')]
 check-healthcare-standard-migration-proof-impact: check-healthcare-standard-migration-model check-healthcare-standard-migration-lean
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/lambda-episteme/standard-migration-impact" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v t/qualification/healthcare-standard-migration-assurance/impact-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/lambda-episteme/standard-migration-impact" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gambit_test_runtime_options }} test -v 3 t/qualification/healthcare-standard-migration-assurance/impact-test.ss
 
 [group('check')]
 check-healthcare-standard-migration-assurance: check-healthcare-standard-migration-proof-impact

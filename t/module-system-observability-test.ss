@@ -6,9 +6,8 @@
 ;;; Boundary: tests verify strict module-system observability traces.
 ;;; Invariant: trace construction never dereferences POO slots.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref object?)
-        (only-in :std/srfi/13 string-suffix?)
         (only-in :std/test
                  check
                  check-eq?

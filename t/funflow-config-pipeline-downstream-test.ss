@@ -5,8 +5,7 @@
 
 ;;; Boundary: downstream-shaped Funflow POO config lowers to readiness facts.
 
-(import (only-in :std/sugar match)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax

@@ -5,7 +5,7 @@
 ;;; Boundary: Scheme POO canonically owns Batched Merkle evidence semantics.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode))
+        (only-in :std/encoding/hex hex-encode))
 
 (export poo-flow-batched-evidence-leaf
         poo-flow-batched-merkle-root
@@ -33,7 +33,7 @@
 
 ;; : (-> String [Object] String)
 (def (merkle-digest domain fields)
-  (hex-encode (sha256 (canonical-packet domain fields))))
+  (hex-encode (sha256 (string->utf8 (canonical-packet domain fields)))))
 
 ;; : (-> Symbol Integer String Integer Integer String String String String Symbol PooBatchedEvidenceLeaf)
 (def (poo-flow-batched-evidence-leaf

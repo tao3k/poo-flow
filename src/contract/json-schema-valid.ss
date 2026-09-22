@@ -40,9 +40,7 @@
                  poo-flow-json-schema-null?)
         (only-in "./json-schema-receipt.ss"
                  poo-flow-json-schema-contract-artifact-normalization)
-        (only-in :std/srfi/1
-                 fold)
-        (only-in :std/pregexp
+        (only-in :std/text/pregexp
                  pregexp
                  pregexp-match))
 

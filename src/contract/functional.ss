@@ -7,19 +7,9 @@
 ;;; Invariant: this module owns contract data plumbing, not JSON Schema
 ;;; semantics, object contracts, or runtime execution.
 
-(import (only-in :std/srfi/1
-                 any
-                 append-map
-                 every
-                 find
-                 filter-map
-                 fold-right
-                 map
-                 member
-                 remove)
-        (only-in :std/srfi/13
-                 string-drop
-                 string-prefix?))
+(import (only-in :std/list/list append-map)
+        (only-in :std/string/misc
+                 string-drop))
 
 (export poo-flow-contract-key->string
         poo-flow-contract-key->symbol

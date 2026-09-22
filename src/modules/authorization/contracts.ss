@@ -6,8 +6,8 @@
 ;;; Optional module role: relations spanning Provider and capability values.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/srfi/1 delete-duplicates every find)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list delete-duplicates/hash every find)
+        (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/modules/authorization/objects
                  AuthorizationCapabilityContractExecutor)
@@ -34,21 +34,22 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string
-      (lambda (port)
-        (write
-         (list 'poo-flow.authorization-capability-contract.v1
-               (.ref provider 'identity)
-               (.ref provider 'engines)
-               (.ref provider 'arbitration)
-               (.ref provider 'runtime-owner)
-               (map (lambda (capability)
-                      (list (.ref capability 'identity)
-                            (.ref capability 'action)
-                            (.ref capability 'event-kind)
-                            (.ref capability 'risk)))
-                    capabilities))
-         port)))))))
+     (string->utf8
+      (call-with-output-string
+       (lambda (port)
+         (write
+          (list 'poo-flow.authorization-capability-contract.v1
+                (.ref provider 'identity)
+                (.ref provider 'engines)
+                (.ref provider 'arbitration)
+                (.ref provider 'runtime-owner)
+                (map (lambda (capability)
+                       (list (.ref capability 'identity)
+                             (.ref capability 'action)
+                             (.ref capability 'event-kind)
+                             (.ref capability 'risk)))
+                     capabilities))
+          port))))))))
 
 (def (poo-flow-authorization-capabilities-digest provider capabilities)
   (require-authorization-values provider capabilities)
@@ -58,7 +59,7 @@
       provider-value capability-values)
   (require-authorization-values provider-value capability-values)
   (unless (= (length (.ref provider-value 'engines))
-             (length (delete-duplicates (.ref provider-value 'engines))))
+             (length (delete-duplicates/hash (.ref provider-value 'engines))))
     (error "authorization Provider engine identities must be distinct"
            (.ref provider-value 'engines)))
   (unless (or (not (find (lambda (capability)

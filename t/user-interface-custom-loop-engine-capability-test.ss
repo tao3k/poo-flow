@@ -108,7 +108,7 @@
 ;;; backend capability registry. Marlin is the runtime owner, not a backend
 ;;; capability value.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-capability-case
+(def (user-interface-custom-loop-engine-invalid-capability-case)
   (test-case "diagnoses invalid loop-engine capability backend"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-capability-module))
@@ -144,7 +144,7 @@
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-capability-performance-case
+(def (user-interface-custom-loop-engine-invalid-capability-performance-case)
   (test-case "keeps invalid capability presentation inside benchmark contract"
     (let* ((summary
             (custom-loop-invalid-capability-summary))
@@ -164,5 +164,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-capability-test
   (test-suite "poo-flow custom loop-engine capability policy"
-    user-interface-custom-loop-engine-invalid-capability-case
-    user-interface-custom-loop-engine-invalid-capability-performance-case))
+    (user-interface-custom-loop-engine-invalid-capability-case)
+    (user-interface-custom-loop-engine-invalid-capability-performance-case)))

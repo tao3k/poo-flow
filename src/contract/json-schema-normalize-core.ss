@@ -11,10 +11,6 @@
 (import (only-in "./json-schema-ir.ss"
                  poo-flow-json-schema-node-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/srfi/1
-                 every
-                 iota
-                 map)
         (only-in "./functional.ss"
                  poo-flow-contract-json-object?
                  poo-flow-contract-json-array->list

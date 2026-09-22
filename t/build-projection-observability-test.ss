@@ -5,9 +5,7 @@
 
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/ports read-all-as-string)
-        (only-in :std/srfi/13 string-contains string-prefix?)
         (only-in :clan/poo/object .o)
-        (only-in :gerbil/gambit spawn thread-join! thread-sleep!)
         (only-in "../src/module-system/observability/config.ss"
                  poo-flow-default-build-observability-policy)
         (only-in "../src/module-system/observability/build-projection.ss"
@@ -136,7 +134,7 @@
                           (let loop ((sequence 0))
                             (when (< sequence records-per-worker)
                               (poo-flow-write-observation-line!
-                               "[poo-flow-test] worker=~a sequence=~a"
+                               "[poo-flow-test] worker=%a sequence=%a"
                                worker-id sequence)
                               (loop (+ sequence 1))))))))
                    (iota worker-count))))

@@ -7,8 +7,7 @@
 (export #t)
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :std/sort sort)
-        (only-in :std/srfi/1 fold))
+        (only-in :std/list/list fold))
 
 (def +poo-flow-runtime-v0-layout-version+ 1)
 (def +poo-flow-runtime-v0-event-header-bytes+ 96)

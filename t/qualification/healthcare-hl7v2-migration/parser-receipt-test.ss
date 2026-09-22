@@ -19,6 +19,8 @@
                  parse-artifact-ref parse-artifact-roundtrip
                  parse-artifact-success? parse-artifact-valid?))
 
+(export healthcare-hl7v2-parser-receipt-test)
+
 (def fixture-path
   "packages/lambda-episteme/modules/healthcare/standards/migration/fixtures/au-adt-a08-patient.hl7")
 
@@ -125,5 +127,3 @@
                       => (.ref analysis 'analysis-digest))
                (check (.ref migration-receipt 'workflow-stages)
                       => +healthcare-standard-migration-ai-workflow-stages+)))))))))
-
-(run-tests! healthcare-hl7v2-parser-receipt-test)

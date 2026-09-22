@@ -13,7 +13,7 @@
                  .ref
                  .slot?
                  object?)
-        (only-in :std/pregexp
+        (only-in :std/text/pregexp
                  pregexp
                  pregexp-match)
         (only-in "../module-system/descriptor/contracts.ss"
@@ -55,7 +55,6 @@
                  poo-flow-json-schema-pattern-property?
                  poo-flow-json-schema-pattern-property->alist))
 
-(import (only-in :std/srfi/1 find every filter-map))
 
 (export poo-flow-json-schema-any?
         poo-flow-json-schema-null?

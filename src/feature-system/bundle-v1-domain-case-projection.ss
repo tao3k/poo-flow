@@ -17,8 +17,7 @@
         feature-bundle-v1-project-domain-case
         require-feature-bundle-v1-domain-case-projection)
 
-(import (only-in :std/srfi/1 iota zip)
-        (only-in :std/sort stable-sort)
+(import (only-in :std/list/list iota)
         (only-in :clan/poo/object .ref .slot? object? object<-alist)
         :poo-flow/src/utilities/functional
         :poo-flow/src/feature-system/domain-case/interface
@@ -81,7 +80,7 @@
 ;; : (forall (a) (-> (List a) [(Pair Integer a)]))
 ;; : (-> List List)
 (def (indexed-values values)
-  (zip (iota (length values)) values))
+  (map list (iota (length values)) values))
 
 ;; : (-> Object Symbol Boolean)
 (def (resolved-handoff-kind? value expected-kind)
@@ -116,7 +115,7 @@
 
 ;; : (-> [List] [List])
 (def (sorted-entries entries)
-  (stable-sort entries entry<?))
+  (list-sort entry<? entries))
 
 ;; : (-> [List] Boolean)
 (def (adjacent-duplicate-entry? entries)

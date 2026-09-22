@@ -69,7 +69,7 @@
 ;;; Duplicate policy coverage ensures a selected use-case has exactly one memory
 ;;; contract before receipts are emitted for Marlin.
 ;; : TestCase
-(def user-interface-custom-loop-engine-duplicate-memory-policy-case
+(def (user-interface-custom-loop-engine-duplicate-memory-policy-case)
   (test-case "rejects duplicate loop-engine memory-policies"
     (check-equal?
      (with-catch
@@ -83,7 +83,7 @@
 ;;; Unmatched policy coverage rejects dangling memory contracts so typoed
 ;;; use-case names do not become inert but misleading runtime handoff data.
 ;; : TestCase
-(def user-interface-custom-loop-engine-unmatched-memory-policy-case
+(def (user-interface-custom-loop-engine-unmatched-memory-policy-case)
   (test-case "rejects loop-engine memory-policy for undeclared use-case"
     (check-equal?
      (with-catch
@@ -99,5 +99,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-memory-policy-test
   (test-suite "poo-flow custom loop-engine memory-policy contracts"
-    user-interface-custom-loop-engine-duplicate-memory-policy-case
-    user-interface-custom-loop-engine-unmatched-memory-policy-case))
+    (user-interface-custom-loop-engine-duplicate-memory-policy-case)
+    (user-interface-custom-loop-engine-unmatched-memory-policy-case)))

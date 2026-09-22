@@ -6,7 +6,7 @@
 ;;; Owner: native Gerbil FFI shim for nono's C ABI.
 ;;; Boundary: this file owns dlopen/dlsym and safe symbol probes only.
 
-(import :std/foreign)
+(import (only-in :std/ffi C-declare def-C-lambda))
 
 (export nono_native_open
         nono_native_close
@@ -19,18 +19,7 @@
         nono_native_capability_roundtrip
         nono_native_apply_null)
 
-(begin-ffi (nono_native_open
-            nono_native_close
-            nono_native_is_loaded
-            nono_native_last_error
-            nono_native_sandbox_is_supported
-            nono_native_support_is_supported
-            nono_native_support_platform
-            nono_native_support_details
-            nono_native_capability_roundtrip
-            nono_native_apply_null)
-
-(c-declare #<<END-C
+(C-declare #<<END-C
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -261,23 +250,23 @@ static int ffi_nono_native_apply_null(void) {
 END-C
 )
 
-(define-c-lambda nono_native_open (char-string) int
+(def-C-lambda nono_native_open (char-string) int
   "ffi_nono_native_open")
-(define-c-lambda nono_native_close () int
+(def-C-lambda nono_native_close () int
   "ffi_nono_native_close")
-(define-c-lambda nono_native_is_loaded () int
+(def-C-lambda nono_native_is_loaded () int
   "ffi_nono_native_is_loaded")
-(define-c-lambda nono_native_last_error () char-string
+(def-C-lambda nono_native_last_error () char-string
   "ffi_nono_native_last_error")
-(define-c-lambda nono_native_sandbox_is_supported () int
+(def-C-lambda nono_native_sandbox_is_supported () int
   "ffi_nono_native_sandbox_is_supported")
-(define-c-lambda nono_native_support_is_supported () int
+(def-C-lambda nono_native_support_is_supported () int
   "ffi_nono_native_support_is_supported")
-(define-c-lambda nono_native_support_platform () char-string
+(def-C-lambda nono_native_support_platform () char-string
   "ffi_nono_native_support_platform")
-(define-c-lambda nono_native_support_details () char-string
+(def-C-lambda nono_native_support_details () char-string
   "ffi_nono_native_support_details")
-(define-c-lambda nono_native_capability_roundtrip () int
+(def-C-lambda nono_native_capability_roundtrip () int
   "ffi_nono_native_capability_roundtrip")
-(define-c-lambda nono_native_apply_null () int
-  "ffi_nono_native_apply_null"))
+(def-C-lambda nono_native_apply_null () int
+  "ffi_nono_native_apply_null")

@@ -14,10 +14,6 @@
                  poo-flow-json-schema-property-record
                  poo-flow-json-schema-pattern-property-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/srfi/1
-                 every
-                 iota
-                 map)
         (only-in "./functional.ss"
                  poo-flow-contract-json-object?
                  poo-flow-contract-json-array->list
@@ -192,7 +188,7 @@
                    properties context)))))))
 
 ;; : (-> JsonObject [Symbol] Alist Pair)
-(import (only-in :std/pregexp pregexp))
+(import (only-in :std/text/pregexp pregexp))
 
 ;; : (-> JsonSchemaPairEntry JsonSchemaPairEntryValue)
 (def (poo-flow-json-schema-pair-entry-value entry)

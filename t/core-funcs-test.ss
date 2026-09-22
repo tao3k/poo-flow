@@ -70,5 +70,3 @@
         ;; Completion updates dependency counts directly; it never rescans
         ;; the source nodes through their accessors.
         (check accessor-calls => 12)))))
-
-(run-tests! core-funcs-test)

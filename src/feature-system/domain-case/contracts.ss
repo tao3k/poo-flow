@@ -10,10 +10,9 @@
 
 (import (only-in :clan/poo/object .ref object?)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/sort sort)
-        (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/text/hex hex-encode)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/encoding/hex hex-encode)
+        (only-in :std/list/list every)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/core/roles
         (only-in :poo-flow/src/utilities/functional
@@ -67,16 +66,16 @@
    (else (call-with-output-string (lambda (port) (write value port))))))
 
 (def (domain-case-sort values id-of)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (domain-case-id->string (id-of left))
-                    (domain-case-id->string (id-of right))))))
+  (list-sort (lambda (left right)
+               (string<? (domain-case-id->string (id-of left))
+                         (domain-case-id->string (id-of right))))
+             (append values '())))
 
 (def (domain-case-sort-ids values)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (domain-case-id->string left)
-                    (domain-case-id->string right)))))
+  (list-sort (lambda (left right)
+               (string<? (domain-case-id->string left)
+                         (domain-case-id->string right)))
+             (append values '())))
 
 (def (domain-case-unique values)
   (delete-duplicates/hash values from-end?: #t))
@@ -256,10 +255,10 @@
         (.ref value 'default-id)
         (.ref value 'merge-algebra)
         (cons 'overrides
-              (sort (append (.ref value 'override-owner-ids) '())
-                    (lambda (left right)
-                      (string<? (domain-case-id->string left)
-                                (domain-case-id->string right)))))
+              (list-sort (lambda (left right)
+                           (string<? (domain-case-id->string left)
+                                     (domain-case-id->string right)))
+                         (append (.ref value 'override-owner-ids) '())))
         (list 'witness (.ref value 'compatibility-witness-id))))
 
 (def (case-type-contract-normalize value)
@@ -277,10 +276,10 @@
         (.ref value 'precondition-id)
         (.ref value 'postcondition-id)
         (cons 'refines
-              (sort (append (.ref value 'refines-contract-ids) '())
-                    (lambda (left right)
-                      (string<? (domain-case-id->string left)
-                                (domain-case-id->string right)))))
+              (list-sort (lambda (left right)
+                           (string<? (domain-case-id->string left)
+                                     (domain-case-id->string right)))
+                         (append (.ref value 'refines-contract-ids) '())))
         (list 'witness (.ref value 'compatibility-witness-id))))
 
 (def (case-projection-normalize value)
@@ -335,7 +334,8 @@
 (def (poo-flow-domain-case-canonical-key descriptor)
   (hex-encode
    (sha256
-    (call-with-output-string (lambda (port) (write descriptor port))))))
+    (string->utf8
+     (call-with-output-string (lambda (port) (write descriptor port)))))))
 
 (def (domain-case-diagnostic code path observed)
   (poo-core-role-object

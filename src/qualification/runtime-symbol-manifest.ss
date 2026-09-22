@@ -9,14 +9,11 @@
 (export #t)
 
 (import (only-in :clan/poo/object .cc .def .ref)
-        (only-in :std/sort sort)
-        (only-in :std/misc/walist walist? walist->alist)
-        (only-in :std/srfi/13 string-contains)
-        (only-in :std/text/json
-                 read-json
-                 read-json-array-as-vector?
-                 read-json-key-as-symbol?
-                 read-json-object-as-walist?))
+        (only-in :std/list/walist PureAList? walist->list)
+        (only-in :std/encoding/json
+                 JSONReadOptions
+                 current-json-read-options
+                 read-json))
 
 (def +poo-flow-runtime-symbol-manifest-schema+
   "poo-flow.runtime-symbol-manifest.v1")
@@ -52,7 +49,7 @@
   (and (list? values) (andmap string? values)))
 
 (def (canonical-symbols values)
-  (sort (append values '()) string<?))
+  (list-sort string<? (append values '())))
 
 (def (invalid-symbol-manifest)
   poo-flow-runtime-symbol-manifest-prototype)
@@ -62,13 +59,12 @@
    (lambda (_failure) (invalid-symbol-manifest))
    (lambda ()
      (let (decoded
-           (parameterize ((read-json-key-as-symbol? #t)
-                          (read-json-object-as-walist? #t)
-                          (read-json-array-as-vector? #f))
+           (parameterize ((current-json-read-options
+                           (JSONReadOptions key-as-symbol: #t)))
              (read-json port)))
-       (if (not (walist? decoded))
+       (if (not (PureAList? decoded))
            (invalid-symbol-manifest)
-           (let (rows (walist->alist decoded))
+           (let (rows (walist->list decoded))
              (.cc poo-flow-runtime-symbol-manifest-prototype
                   'schema (symbol-manifest-ref rows 'schema #f)
                   'schema-version (symbol-manifest-ref rows 'schemaVersion #f)

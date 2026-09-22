@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch
@@ -23,7 +23,9 @@
 ;; : (-> Object DigestHex)
 (def (fixture-digest value)
   (hex-encode
-   (sha256 (call-with-output-string (lambda (port) (write value port))))))
+   (sha256
+    (string->utf8
+     (call-with-output-string (lambda (port) (write value port)))))))
 
 (def (fixture-bundle)
   (let* ((parent-principal (poo-flow-organization-principal 'principal-parent))

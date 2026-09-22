@@ -8,8 +8,7 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/sort sort)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes)
@@ -177,22 +176,22 @@
    (else (call-with-output-string (lambda (port) (write value port))))))
 
 (def (assurance-sort values id-of)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (assurance-id->string (id-of left))
-                    (assurance-id->string (id-of right))))))
+  (list-sort (lambda (left right)
+               (string<? (assurance-id->string (id-of left))
+                         (assurance-id->string (id-of right))))
+             (append values '())))
 
 (def (assurance-sort-values values)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (assurance-id->string left)
-                    (assurance-id->string right)))))
+  (list-sort (lambda (left right)
+               (string<? (assurance-id->string left)
+                         (assurance-id->string right)))
+             (append values '())))
 
 (def (assurance-pair-sort values)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (assurance-id->string (car left))
-                    (assurance-id->string (car right))))))
+  (list-sort (lambda (left right)
+               (string<? (assurance-id->string (car left))
+                         (assurance-id->string (car right))))
+             (append values '())))
 
 (def (tcb->canonical value)
   (list 'tcb
@@ -398,8 +397,9 @@
            (digest-value
             (hex-encode
              (sha256
-              (call-with-output-string
-               (lambda (port) (write canonical port)))))))
+              (string->utf8
+               (call-with-output-string
+                (lambda (port) (write canonical port))))))))
       (.o (kind 'poo-flow.release-assurance-manifest.identity.v1)
           (algorithm 'sha256)
           (digest digest-value)

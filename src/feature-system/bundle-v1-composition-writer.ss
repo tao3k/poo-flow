@@ -17,7 +17,7 @@
 
 ;; : (-> PooPlanNode String)
 (def (plan-node-semantic-id node)
-  (format "~s" (plan-node-id node)))
+  (format "%s" (plan-node-id node)))
 
 ;;; Guard declarations are data. POO Flow compiles them into Bundle v1
 ;;; policy metadata; an admitted receipt is supplied by the execution runtime.
@@ -128,8 +128,8 @@
               (cons
                (feature-bundle-v1-edge
                 (execution-plan-flow-name plan)
-                (format "~s" (car edge))
-                (format "~s" (cadr edge))
+                (format "%s" (car edge))
+                (format "%s" (cadr edge))
                 'poo-flow.bundle-v1.plan-dependency
                 order)
                (cdr state)))))

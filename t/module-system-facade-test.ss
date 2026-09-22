@@ -17,7 +17,6 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/13 string-prefix?)
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
         :poo-flow/src/module-system/loader/source

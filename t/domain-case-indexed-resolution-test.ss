@@ -56,5 +56,3 @@
                       effective)
                  => '(state-ready run-refined))
           (check diagnostics => '()))))))
-
-(run-tests! domain-case-indexed-resolution-test)

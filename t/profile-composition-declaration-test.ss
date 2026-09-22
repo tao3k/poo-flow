@@ -6,7 +6,6 @@
 ;;; Boundary: atomic tests for the compile-time use-composition declaration owner.
 
 (import :std/test
-        :std/srfi/13
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/module-system/profile-composition/declaration-syntax)
 

@@ -3,7 +3,6 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
-        :std/srfi/13
         :clan/poo/object
         :poo-flow/src/policy/protocol-person-promotion
         :poo-flow/src/contract/runtime-v0-abi-schema

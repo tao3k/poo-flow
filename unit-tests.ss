@@ -3,7 +3,10 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+(export main)
+
 (import (only-in :clan/poo/object .cc)
+        (only-in :std/cli/multicall call-entry-point)
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  +testing-discovery-profile+
@@ -68,3 +71,8 @@
     +poo-flow-serial-test-selectors+))
 
 (init-profiled-test-environment! +poo-flow-testing-interface+)
+
+;; The ASP declaration installs the selected entry point.  V19's script
+;; launcher looks up a caller-visible `main`, so expose that trampoline here.
+(def (main . args)
+  (apply call-entry-point args))

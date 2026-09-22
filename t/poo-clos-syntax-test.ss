@@ -7,10 +7,9 @@
 
 (import (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
-        (only-in :std/srfi/13 string-contains)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil/expander datum->syntax)
-        (only-in :gerbil/gambit
+        (only-in :gerbil/runtime/gambit
                  call-with-output-string display-exception
                  with-exception-catcher)
         (only-in "../src/module-system/poo-clos/declaration-ir.ss"

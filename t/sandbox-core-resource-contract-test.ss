@@ -6,7 +6,6 @@
 ;;; Boundary: sandbox resource POO prototypes use harness-backed typed contracts.
 
 (import (only-in :clan/poo/object .def)
-        (only-in :std/sugar filter-map)
         (only-in :std/test
                  check-equal?
                  test-case

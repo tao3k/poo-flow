@@ -11,9 +11,8 @@
 (import "contracts.ss"
         (only-in :clan/poo/object .all-slots .ref object?)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/sort sort)
-        (only-in :std/text/hex hex-encode)
-        (only-in :std/srfi/1 every)
+        (only-in :std/encoding/hex hex-encode)
+        (only-in :std/list/list every)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/core/roles
         (only-in :poo-flow/src/utilities/functional

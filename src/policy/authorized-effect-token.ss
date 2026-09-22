@@ -6,7 +6,7 @@
 ;;; Invariant: validation and consumption are pure immutable transitions.
 (import (only-in :clan/poo/object .o .ref object<-alist)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode))
+        (only-in :std/encoding/hex hex-encode))
 
 (export poo-flow-semantic-root
         poo-flow-effect-binding
@@ -19,7 +19,10 @@
         poo-flow-authorized-effect-token-consume)
 
 (def (canonical-digest value)
-  (hex-encode (sha256 (call-with-output-string (lambda (port) (write value port))))))
+  (hex-encode
+   (sha256
+    (string->utf8
+     (call-with-output-string (lambda (port) (write value port)))))))
 
 (def (poo-flow-effect-binding-digest binding-object)
   (unless (eq? (.ref binding-object 'kind) 'poo-flow-effect-binding)

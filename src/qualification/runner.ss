@@ -11,7 +11,7 @@
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode))
+        (only-in :std/encoding/hex hex-encode))
 
 (def +poo-flow-ac10-release-gates+
   '(scheme-canonical-fixture runtime-v0-installed-consumer
@@ -41,8 +41,9 @@
 (def (poo-flow-qualification-gate-digest gate)
   (hex-encode
    (sha256
-    (call-with-output-string
-     (lambda (port) (write (gate-canonical gate) port))))))
+    (string->utf8
+     (call-with-output-string
+      (lambda (port) (write (gate-canonical gate) port)))))))
 
 (def (poo-flow-agentic-control-plane-gate-registry)
   (list

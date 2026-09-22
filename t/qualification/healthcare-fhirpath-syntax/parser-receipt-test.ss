@@ -5,8 +5,7 @@
 
 (import :std/test
         (only-in :std/misc/ports read-all-as-string)
-        (only-in :std/misc/path path-expand)
-        (only-in :std/srfi/1 filter-map)
+        (only-in :std/string/path path-expand)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/lambda-episteme/modules/healthcare/standards/fhir/config
                  FHIRValidationCapabilities)
@@ -24,6 +23,8 @@
         (only-in :gerbil-parser/src/runtime/artifact
                  parse-artifact-ref parse-artifact-roundtrip
                  parse-artifact-success? parse-artifact-valid?))
+
+(export healthcare-fhirpath-parser-receipt-test)
 
 (def fixture-root
   (path-expand
@@ -85,5 +86,3 @@
     (test-case "syntax qualification does not widen evaluator authority"
       (check (.ref (.ref FHIRValidationCapabilities 'general-fhirpath) 'state)
              => 'not-evaluated))))
-
-(run-tests! healthcare-fhirpath-parser-receipt-test)

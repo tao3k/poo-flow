@@ -60,5 +60,3 @@
                 (eq? (.ref failure 'code)
                      'method-bundle-protocol-mismatch))))
         (check (poo-clos-generic-methods generic) => '())))))
-
-(run-tests! poo-clos-method-bundle-test)

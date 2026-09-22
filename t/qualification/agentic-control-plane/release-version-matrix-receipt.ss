@@ -6,10 +6,10 @@
 ;;; Qualification owner: render one release-version assurance receipt and
 ;;; reflect its acceptance decision in the process status.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :std/misc/walist walist)
-        (only-in :std/text/json json-object->string)
+        (only-in :std/list/walist walist)
+        (only-in :std/encoding/json json->string)
         :poo-flow/src/qualification/release-version-matrix)
 
 (export main)
@@ -26,7 +26,7 @@
          (runtime-abi (poo-flow-release-version-matrix-runtime-abi matrix))
          (proof-vector (poo-flow-release-version-matrix-proof-vector matrix)))
     (display
-     (json-object->string
+     (json->string
       (walist
        (list
         (cons "schema" "poo-flow.release-version-matrix.v1")

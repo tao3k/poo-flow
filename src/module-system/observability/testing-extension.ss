@@ -12,8 +12,7 @@
                  testing-import-footprint-profile
                  testing-interface-add-profile
                  testing-interface-call-with-operation)
-        (only-in :std/misc/path path-expand)
-        (only-in :std/srfi/13 string-join)
+        (only-in :std/string/path path-expand)
         (only-in "build-projection.ss"
                  poo-flow-write-observation-line!)
         (only-in "debug.ss"
@@ -129,17 +128,18 @@
     (thunk)
     (let* ((started-jiffy (current-jiffy))
            (port (current-error-port))
+           (interval
+            (poo-flow-testing-observability-profile-heartbeat-interval-seconds
+             (poo-flow-current-testing-observability-profile)))
            (heartbeat
             (make-thread
              (lambda ()
                (let loop ()
-                 (thread-sleep!
-                  (poo-flow-testing-observability-profile-heartbeat-interval-seconds
-                   (poo-flow-current-testing-observability-profile)))
+                 (thread-sleep! interval)
                  (parameterize ((current-output-port port)
                                 (current-error-port port))
                    (poo-flow-write-observation-line!
-                    "[poo-flow-testing] phase=operation-heartbeat operation=~a elapsedNs=~a"
+                    "[poo-flow-testing] phase=operation-heartbeat operation=%a elapsedNs=%a"
                     operation
                     (poo-flow-testing-elapsed-nanoseconds started-jiffy)))
                  (loop))))))

@@ -5,8 +5,7 @@
 
 ;;; Executable POO-CLOS and separately scoped MOP-EXTENDED clause inventory.
 
-(import (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/1 filter find))
+(import (only-in :clan/poo/object .o .ref))
 
 (export poo-clos-clause-ledger poo-clos-operator-ledger
         poo-clos-required-rows poo-clos-required-operators

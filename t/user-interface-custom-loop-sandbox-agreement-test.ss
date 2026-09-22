@@ -119,7 +119,7 @@
 ;;; Valid sandbox resolution proves the agreement receipt travels through the
 ;;; intent, runtime manifest, and public presentation slots unchanged.
 ;; : TestCase
-(def user-interface-custom-loop-engine-sandbox-case
+(def (user-interface-custom-loop-engine-sandbox-case)
   (test-case "resolves sandbox profile summaries into loop-engine manifest"
     (let* ((presentation
             (custom-loop-presentation/bundles
@@ -186,7 +186,7 @@
 ;;; Invalid but resolvable profiles prove agreement diagnostics can report bad
 ;;; sandbox shapes without throwing from the handoff summary path.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-sandbox-case
+(def (user-interface-custom-loop-engine-invalid-sandbox-case)
   (test-case "diagnoses invalid sandbox profile agreement"
     (let* ((presentation
             (custom-loop-presentation/bundles
@@ -229,5 +229,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-sandbox-agreement-test
   (test-suite "poo-flow custom user-interface loop sandbox agreement"
-    user-interface-custom-loop-engine-sandbox-case
-    user-interface-custom-loop-engine-invalid-sandbox-case))
+    (user-interface-custom-loop-engine-sandbox-case)
+    (user-interface-custom-loop-engine-invalid-sandbox-case)))

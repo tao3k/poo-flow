@@ -8,9 +8,9 @@
 ;;; This module owns only pure policy transition and versioned proof receipts.
 
 (import (only-in :clan/poo/object .def .mix .o .ref)
-        (only-in :std/srfi/1 every filter-map)
+        (only-in :std/list/list every filter-map)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-set-subset?))
 
@@ -34,8 +34,9 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string
-      (lambda (port) (write value port)))))))
+     (string->utf8
+      (call-with-output-string
+       (lambda (port) (write value port))))))))
 
 ;; : (-> Symbol MaybeSymbol Symbol Symbol Symbol Symbol Symbol Symbol String String [Symbol] [Symbol] PooAgentActionEvidenceEnvelope)
 (def (poo-flow-agent-action-evidence-envelope

@@ -45,7 +45,7 @@
 ;;; A loop-engine use-case that references `funflow-cicd` without selecting the
 ;;; Funflow pipeline should be visibly unbacked by Funflow config.
 ;; : TestCase
-(def custom-loop-workflow-missing-funflow-case
+(def (custom-loop-workflow-missing-funflow-case)
   (test-case "reports missing Funflow workflow pipeline agreement"
     (let* ((presentation
             (custom-workflow-presentation
@@ -88,7 +88,7 @@
 ;;; Selecting the Funflow CI/CD pipeline gives the loop-engine workflow ref a
 ;;; concrete pipeline/check-map owner without executing that pipeline.
 ;; : TestCase
-(def custom-loop-workflow-funflow-backed-case
+(def (custom-loop-workflow-funflow-backed-case)
   (test-case "backs loop-engine workflow ref with Funflow pipeline config"
     (let* ((presentation
             (custom-workflow-presentation
@@ -158,5 +158,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-workflow-agreement-test
   (test-suite "poo-flow custom user-interface loop workflow agreement"
-    custom-loop-workflow-missing-funflow-case
-    custom-loop-workflow-funflow-backed-case))
+    (custom-loop-workflow-missing-funflow-case)
+    (custom-loop-workflow-funflow-backed-case)))

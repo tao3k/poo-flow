@@ -7,6 +7,8 @@
         (only-in :clan/poo/object .cc .o .ref)
         :poo-flow/src/modules/proof/interface)
 
+(export proof-module-core-test)
+
 (def proof-module-core-test
   (test-suite
    "POO Proof Module core"
@@ -75,5 +77,3 @@
               (list refinement))))
        (check (.ref assurance 'current?) => #f)
        (check (.ref assurance 'admitted?) => #f)))))
-
-(run-tests! proof-module-core-test)

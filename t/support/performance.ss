@@ -6,8 +6,7 @@
 ;;; Boundary: shared performance-test helpers for synthetic fixture data.
 ;;; Invariant: helper functions are pure except elapsed measurement thunks.
 
-(import :gerbil/gambit
-        (only-in :std/srfi/1 iota)
+(import :gerbil/runtime/gambit
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-p95-elapsed-us))
 
