@@ -7,7 +7,7 @@
 ;;; Invariant: observations are strict POO values without lazy slots or runtime adapters.
 ;;; Intent: make recursive presentation paths visible without participating in them.
 
-(import (only-in :std/sugar filter)
+(import
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)

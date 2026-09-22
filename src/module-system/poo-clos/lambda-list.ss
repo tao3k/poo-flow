@@ -6,7 +6,7 @@
 ;;; Functional argument binding helpers for hygienically lowered CLOS methods.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/srfi/1 drop)
+        (only-in :std/list/list drop)
         "funcs.ss")
 
 (export poo-clos-positional-supplied? poo-clos-positional-argument

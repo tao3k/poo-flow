@@ -8,9 +8,8 @@
 
 (export #t)
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist object?)
-        (only-in :std/srfi/13 string-index string-prefix?)
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-set-subset?))
 

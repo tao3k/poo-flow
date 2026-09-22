@@ -5,7 +5,7 @@
 
 ;;; Shared indexing algorithms for semantic models.
 
-(import (only-in :std/misc/list delete-duplicates/hash))
+(import (only-in :std/list/list delete-duplicates/hash))
 
 (export poo-flow-semantic-index-by poo-flow-semantic-subset?
         poo-flow-semantic-unique-count

@@ -7,7 +7,7 @@
 ;;; Invariant: structural reachability is never temporal proof or authority.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop define-type Type. element?)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list every)
         (only-in :poo-flow/src/graph/types poo-flow-graph-id?))
 
 (export poo-flow-relation-trajectory-witness-kind

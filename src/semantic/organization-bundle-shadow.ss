@@ -7,7 +7,6 @@
 (export #t)
 
 (import (only-in :clan/poo/object .o .ref object?)
-        (only-in :std/sort sort)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/funcs)
 
@@ -39,7 +38,7 @@
             (shadow-write (shadow-fact-identity right))))
 
 (def (shadow-sort facts)
-  (sort (append facts '()) shadow-fact<?))
+  (list-sort shadow-fact<? (append facts '())))
 
 (def (shadow-valid-facet? facet)
   (memq facet +shadow-facet-order+))

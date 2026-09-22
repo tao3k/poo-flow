@@ -5,7 +5,7 @@
 
 ;;; CLOS qualification adapter over the native POO memory-observation owner.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
         (only-in "../../../src/module-system/observability/debug.ss"
                  poo-flow-debug-memory-policy

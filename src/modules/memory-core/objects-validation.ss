@@ -5,8 +5,7 @@
 
 ;;; Boundary: memory policy/catalog validation receipts.
 
-(import (only-in :std/srfi/1 fold)
-        (only-in :std/sugar cut)
+(import (only-in :std/list/list fold)
         (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects

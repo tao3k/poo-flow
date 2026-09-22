@@ -6,7 +6,7 @@
 ;;; Expansion-time short and long method-combination declaration parsing.
 
 (import :gerbil/expander
-        (only-in :std/srfi/1 foldl)
+        (only-in :std/list/list foldl)
         "declaration-ir-core.ss")
 
 (export parse-poo-clos-method-combination-declaration-ir

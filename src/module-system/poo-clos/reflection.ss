@@ -7,7 +7,7 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop element?)
-        (only-in :std/srfi/1 find)
+        (only-in :std/list/list find)
         "types.ss" "objects.ss" "classes.ss" "lifecycle.ss" "dispatch.ss")
 
 (export poo-clos-class-name poo-clos-set-class-name!

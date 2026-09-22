@@ -6,7 +6,7 @@
 ;;; Boundary: CI/CD pipeline assembly and status projection from check maps.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/misc/list delete-duplicates/hash)
+        (only-in :std/list/list delete-duplicates/hash)
         :poo-flow/src/modules/workflow/types
         :poo-flow/src/modules/workflow/objects
         :poo-flow/src/modules/workflow/cicd-funs

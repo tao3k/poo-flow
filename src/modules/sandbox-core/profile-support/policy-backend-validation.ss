@@ -8,7 +8,7 @@
 ;;; Invariant: validation receipts must be deterministic policy evidence for
 ;;; every sandbox backend object.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist object? .slot? .ref)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability

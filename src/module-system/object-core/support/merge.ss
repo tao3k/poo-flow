@@ -5,9 +5,8 @@
 
 ;;; Boundary: config merge result and slot merge algorithms for module objects.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .o .ref)
-        (only-in :std/sugar filter filter-map)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/support/contracts)
 

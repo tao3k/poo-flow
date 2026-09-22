@@ -9,7 +9,7 @@
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
         (only-in :poo-flow/src/modules/memory-core/durable/policy
                  +poo-flow-durable-action-classes+)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list every)
         "types.ss"
         "cicd-projection-syntax.ss")
 

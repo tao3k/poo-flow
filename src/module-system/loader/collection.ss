@@ -7,9 +7,7 @@
 ;;; and user module trees. Selection declarations remain separate POO values.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/srfi/1 every filter)
-        (only-in :std/srfi/13 string-suffix?)
-        (only-in :std/sort sort)
+        (only-in :std/list/list every filter)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive
                  poo-flow-make-value-index
@@ -265,7 +263,7 @@
              (eq? (file-info-type
                    (file-info (path-expand name modules-root)))
                   'directory))
-           (sort (directory-files modules-root) string<?)))
+           (list-sort string<? (directory-files modules-root))))
         module-names)
       '())))
 

@@ -4,7 +4,7 @@
 
 ;;; Boundary: normalizes governor policy descriptors into membership sets.
 ;;; Invariant: set construction preserves descriptor action identities and equality semantics.
-(import :gerbil/gambit
+(import :gerbil/core
         :poo-flow/src/loops/descriptor
         :poo-flow/src/loops/governor-core)
 

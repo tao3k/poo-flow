@@ -5,7 +5,7 @@
 
 ;;; Boundary: shared pure helpers for session policy validation.
 
-(import (only-in :std/srfi/1 fold)
+(import (only-in :std/list/list fold)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax

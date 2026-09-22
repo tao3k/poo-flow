@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .cc .o .ref)
         (only-in :clan/poo/mop element? raise-type-error)
-        (only-in :std/srfi/1 filter-map)
+        (only-in :std/list/list filter-map)
         (only-in "../types.ss"
                  poo-flow-predicate-contract
                  poo-flow-predicate-type))

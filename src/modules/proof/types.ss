@@ -8,7 +8,7 @@
 ;;; grants runtime/action authority.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop define-type Type. element?)
-        (only-in :std/srfi/1 every))
+        (only-in :std/list/list every))
 
 (export +poo-flow-proof-artifact-kind+
         +poo-flow-proof-receipt-kind+

@@ -6,8 +6,7 @@
 ;;; Boundary: flow strands describe Funflow-style interpreter families.
 ;;; Invariant: strand objects are declaration policy, not executable runners.
 
-(import (only-in :std/sugar filter)
-        (only-in :clan/poo/object .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/projection-syntax

@@ -5,7 +5,7 @@
 ;;; Boundary: projects policy evidence into named proof obligations and case vectors.
 ;;; Invariant: proof cases retain source identities and explicit discharge status.
 (import (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :std/srfi/1 find)
+        (only-in :std/list/list find)
         :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-proof-obligation

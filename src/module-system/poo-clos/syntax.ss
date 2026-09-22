@@ -9,7 +9,7 @@
         "lambda-list.ss"
         (for-syntax :gerbil/expander
                     "declaration-ir.ss"
-                    (only-in :std/srfi/1 filter-map find iota)))
+                    (only-in :std/list/list filter-map find iota)))
 
 (export .defclass .defgeneric .defmethod .defmethod-bundle
         .define-method-combination

@@ -4,7 +4,7 @@
 
 ;;; Boundary: immutable feature manifest values with construction-only indexing;
 ;;; activation ordering and dependency resolution remain resolver-owned.
-(import (only-in :std/misc/hash
+(import (only-in :std/hash/misc
                  hash-key?
                  hash-put!
                  hash-ref

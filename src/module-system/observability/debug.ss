@@ -5,15 +5,14 @@
 
 ;;; Boundary: explicit effectful DEVELOPMENT output over aggregate projections.
 ;;; Upstream owns tracing and typed printing. No global hook or tracer is copied.
-(import (only-in :clan/base λ)
+(import (only-in :clan/poo/support/base λ)
         (only-in :clan/poo/object .o .call .ref)
         (only-in :clan/poo/mop validate)
-        (only-in :clan/debug traced-function)
+        (only-in :clan/poo/support/debug traced-function)
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :asp-gerbil-scheme/src/benchmark/memory
                  benchmark-memory-usage)
         (only-in :std/error deferror-class)
-        (only-in :std/sugar cut)
         (only-in "types.ss"
                  PooFlowDebugMemoryPolicyContract
                  PooFlowDebugMemorySampleContract

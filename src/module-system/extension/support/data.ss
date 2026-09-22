@@ -9,7 +9,7 @@
                  .o
                  .ref
                  object?)
-        (only-in :std/sugar filter filter-map))
+)
 
 (export poo-flow-module-extension-node-kind
         poo-flow-module-extension-operation-kind

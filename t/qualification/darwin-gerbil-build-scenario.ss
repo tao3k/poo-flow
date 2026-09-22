@@ -8,7 +8,7 @@
 ;;; observer independent of std/json lets the v18 and v19 jobs measure the
 ;;; build before the application compatibility boundary is evaluated.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-elapsed-ms)
         (only-in :std/misc/process

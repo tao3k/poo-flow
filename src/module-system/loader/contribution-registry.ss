@@ -8,7 +8,7 @@
 ;;; source refs for an explicit package/runtime materialization boundary.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list every)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-make-value-index
                  poo-flow-value-index-put!

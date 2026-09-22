@@ -6,7 +6,7 @@
 ;;; Boundary: pure helpers for graph control proof projections.
 ;;; Invariant: no runtime execution; helpers only shape graph facts.
 
-(import (only-in :std/srfi/1 any every filter fold)
+(import (only-in :std/list/list any every filter fold)
         :poo-flow/src/graph/types-core
         :poo-flow/src/graph/algorithms)
 

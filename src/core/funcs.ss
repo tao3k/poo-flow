@@ -5,8 +5,6 @@
 
 ;;; Reusable algorithmic functions for the POO Flow core.
 
-(import (only-in :std/sort sort))
-
 (export poo-flow-memoize
         poo-flow-make-value-index
         poo-flow-value-index-put!
@@ -29,7 +27,7 @@
                 (path-expand name path)
                 rest))
              tail
-             (sort (directory-files path) string<?)))
+             (list-sort string<? (directory-files path))))
      (else tail))))
 
 (def (poo-flow-directory-files-recursive path)

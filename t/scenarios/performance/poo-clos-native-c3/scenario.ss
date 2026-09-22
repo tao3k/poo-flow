@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Executable witness that POO CLOS projects upstream C3 without a second CPL.
-(import (only-in :gerbil/gambit current-time time->seconds)
+(import (only-in :gerbil/runtime/gambit current-time time->seconds)
         (only-in :clan/poo/object
                  .ref .slot? compute-precedence-list!)
         (only-in :std/sort sort)

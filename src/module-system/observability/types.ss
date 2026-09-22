@@ -7,10 +7,9 @@
 ;;; Invariant: validation dispatches through gerbil-poo descriptors; contract
 ;;; evidence is projected only after the semantic decision has been made.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .cc .mix .o .ref .slot? object? object<-alist)
         (only-in :clan/poo/mop define-type element? validate)
-        (only-in :std/sugar cut)
         (only-in "../types.ss"
                  PooFlowContract.
                  PooFlowNativeObjectContract.

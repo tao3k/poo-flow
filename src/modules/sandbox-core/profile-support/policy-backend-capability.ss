@@ -8,9 +8,8 @@
 ;;; Invariant: capability objects must stay parser-visible and POO-native for
 ;;; shared sandbox profile inheritance.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist object? .slot? .ref)
-        (only-in :std/sugar filter)
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core)
 

@@ -22,8 +22,8 @@
                  Type.
                  element?
                  raise-type-error)
-        (only-in :std/srfi/1 every)
-        (only-in :std/sugar cut))
+        (only-in :std/list/list every)
+)
 
 (export PooFlowType.
         PooFlowContract.

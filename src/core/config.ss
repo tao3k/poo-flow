@@ -6,8 +6,7 @@
 ;;; Boundary: configured entrypoints assemble strategies and runtime adapters.
 ;;; Invariant: config data selects components but never executes workflow tasks.
 
-(import (only-in :std/sugar filter filter-map)
-        :poo-flow/src/core/failure
+(import :poo-flow/src/core/failure
         :poo-flow/src/core/strategy
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/task

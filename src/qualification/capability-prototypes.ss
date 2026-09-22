@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
-        (only-in :std/srfi/1 fold fold-right))
+        (only-in :std/list/list fold fold-right))
 
 (def +poo-flow-versioned-capability-slots+ '(schema-id schema-version))
 (def +poo-flow-revision-bound-capability-slots+ '(source-revision))

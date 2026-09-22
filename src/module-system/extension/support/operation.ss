@@ -8,7 +8,7 @@
 ;;; Each operation family owns application and batching behavior as slots;
 ;;; graph merge helpers remain pure values in support/merge.ss.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .mix .o .ref)
         (only-in :clan/poo/mop .defgeneric)
         :poo-flow/src/module-system/extension/support/data

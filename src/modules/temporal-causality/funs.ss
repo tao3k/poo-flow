@@ -8,9 +8,8 @@
 ;;; and never promoted to temporal causality or action authority.
 (import (only-in :clan/poo/object .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/sort sort)
-        (only-in :std/srfi/1 every filter find)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list every filter find)
+        (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/graph/types
                  poo-flow-graph poo-flow-graph-edge poo-flow-graph-node
                  poo-flow-graph? poo-flow-graph-id poo-flow-graph-nodes
@@ -148,7 +147,8 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string (lambda (port) (write value port)))))))
+     (string->utf8
+      (call-with-output-string (lambda (port) (write value port))))))))
 
 (def (causal-event-position event)
   (.ref (.ref event 'observation) 'logical-position))
@@ -170,7 +170,7 @@
                 (.ref observation 'logical-position)
                 (.ref observation 'provenance-identity)))
         (.ref event 'payload-identity)
-        (sort (.ref event 'causal-parent-identities) string<?)
+        (list-sort string<? (.ref event 'causal-parent-identities))
         (.ref event 'modality)
         (.ref event 'committed?)))
 
@@ -213,7 +213,7 @@
                         (cons parent-identity missing-reverse))))))
           (.ref event 'causal-parent-identities))))
      events)
-    (values (sort events causal-event<?)
+    (values (list-sort causal-event<? events)
             event-index
             (reverse missing-reverse)
             (reverse violations-reverse))))

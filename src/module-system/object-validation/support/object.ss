@@ -5,7 +5,7 @@
 
 ;;; Boundary: object-level diagnostics and validation receipts.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object?)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/support/facts

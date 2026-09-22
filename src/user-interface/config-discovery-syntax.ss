@@ -11,8 +11,7 @@
                  current-expander-context
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source)
-        (only-in :std/srfi/1 filter)
-        (only-in :std/srfi/13 string-suffix?)
+        (only-in :std/list/list filter)
         (rename-in :poo-flow/src/module-system/profile-composition/use-syntax
                    (use-composition poo-flow-use-composition/expression))
         (for-syntax

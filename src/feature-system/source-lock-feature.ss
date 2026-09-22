@@ -8,9 +8,8 @@
 
 (import (only-in :clan/poo/object .def .def! .o .ref object?)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/misc/hash hash-key? hash-put! hash-ref)
-        (only-in :std/sort stable-sort)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/hash/misc hash-key? hash-put! hash-ref)
+        (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/feature-system/model)
 
 (export +sources-lock-feature-id+
@@ -153,7 +152,7 @@
 (def (sources-lock-value lock-id-value revision-value digest-value entry-values
                          (metadata-value '()))
   (let* ((canonical-entries
-          (stable-sort (append entry-values '()) source-lock-entry<?))
+          (list-sort source-lock-entry<? (append entry-values '())))
          (index-value (source-lock-index canonical-entries))
          (entry-count-value (length canonical-entries))
          (byte-count-value

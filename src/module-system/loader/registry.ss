@@ -6,7 +6,7 @@
 ;;; Boundary: maintained and user module entrypoint registry.
 ;;; Invariant: maintained modules enter through validated public interfaces.
 
-(import (only-in :std/sugar filter)
+(import
         :poo-flow/src/module-system/loader/source
         (only-in :poo-flow/src/module-system/loader/collection
                  poo-flow-load-modules

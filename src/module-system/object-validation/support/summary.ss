@@ -5,8 +5,8 @@
 
 ;;; Boundary: object validation catalog summaries and require gates.
 
-(import (only-in :std/srfi/1 fold)
-        :gerbil/gambit
+(import (only-in :std/list/list fold)
+        :gerbil/core
         (only-in :clan/poo/object
                  .+
                  .ref

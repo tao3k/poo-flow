@@ -5,7 +5,7 @@
 ;;; Pure POO values governed by existing CLOS class and effective-slot metadata.
 ;;; These are snapshots, not mutable CLOS lifecycle instances.
 (import (only-in :clan/poo/object .o .ref .slot? object? compute-precedence-list!)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list every)
         (only-in :poo-flow/src/module-system/poo-clos/classes
                  poo-clos-class poo-clos-direct-slot-definition
                  poo-clos-class-effective-slots))

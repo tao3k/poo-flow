@@ -7,8 +7,8 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :clan/poo/mop element?)
-        (only-in :std/misc/hash hash-ref/default)
-        (only-in :std/srfi/1 filter find foldl)
+        (only-in :std/hash/misc hash-ref/default)
+        (only-in :std/list/list filter find foldl)
         "types.ss" "objects.ss" "classes.ss" "funcs.ss")
 
 (export poo-clos-instance?

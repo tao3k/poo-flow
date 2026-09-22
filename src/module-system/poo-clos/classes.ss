@@ -8,9 +8,9 @@
 (import (only-in :clan/poo/object
                  .o .ref .put! .slot? compute-precedence-list!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/misc/hash hash-ref/default hash-remove!)
-        (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 append-map find filter filter-map)
+        (only-in :std/hash/misc hash-ref/default hash-remove!)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list find filter filter-map flatten1)
         "types.ss" "objects.ss" "funcs.ss")
 
 (export ClosDirectSlotDefinition ClosEffectiveSlotDefinition ClosClass
@@ -245,9 +245,9 @@
 ;; : (-> [Pair] Symbol [SchemeValue])
 (def (merged-slot-list descriptions option)
   (unique/identity
-   (append-map
-    (lambda (entry) (.ref (cdr entry) option))
-    descriptions)))
+   (flatten1
+    (map (lambda (entry) (.ref (cdr entry) option))
+         descriptions))))
 
 ;; : (-> [Pair] Symbol ClosEffectiveSlotDefinition)
 (def (compute-effective-slot owner-indexes slot-name)
@@ -281,11 +281,11 @@
   (let* ((owner-indexes (class-direct-slot-indexes class-value))
          (slot-names
           (unique/identity
-           (append-map
-            (lambda (owner-class)
-              (map (lambda (slot) (.ref slot 'identity))
-                   (.ref owner-class 'direct-slots)))
-            (.ref class-value 'class-precedence-list)))))
+           (flatten1
+            (map (lambda (owner-class)
+                   (map (lambda (slot) (.ref slot 'identity))
+                        (.ref owner-class 'direct-slots)))
+                 (.ref class-value 'class-precedence-list))))))
     (map (lambda (slot-name)
            (compute-effective-slot owner-indexes slot-name))
          slot-names)))

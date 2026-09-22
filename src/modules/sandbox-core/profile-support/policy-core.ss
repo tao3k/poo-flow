@@ -8,7 +8,7 @@
 ;;; Invariant: core policy defaults must remain backend-neutral and safe for
 ;;; module loader reuse.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .ref .slot? object?))
 
 (export poo-flow-sandbox-backend-capability-kind

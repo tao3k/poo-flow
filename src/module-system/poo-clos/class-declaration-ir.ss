@@ -6,7 +6,7 @@
 ;;; Expansion-time class and slot declaration parsing.
 
 (import :gerbil/expander
-        (only-in :std/srfi/1 foldl)
+        (only-in :std/list/list foldl)
         "declaration-ir-core.ss")
 
 (export parse-poo-clos-class-declaration-ir)
@@ -226,5 +226,4 @@
          default-initargs: default-initargs slot-missing: slot-missing
          slot-unbound: slot-unbound documentation: documentation
          metaclass: metaclass source: source)))))
-
 

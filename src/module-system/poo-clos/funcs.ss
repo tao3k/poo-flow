@@ -6,9 +6,9 @@
 ;;; Reusable linear-time list and initarg algorithms for the POO CLOS module.
 ;;; Domain files own policy; this factor owns traversal and indexing mechanics.
 
-(import (only-in :std/misc/plist plist?)
+(import (only-in :std/list/plist plist?)
         (only-in :gerbil/runtime/hash list->hash-table-eq)
-        (only-in :std/misc/hash invert-hash<-vector))
+        (only-in :std/hash/misc invert-hash<-vector))
 
 (export poo-clos-initarg-list? poo-clos-initarg-names
         poo-clos-initarg-ref poo-clos-initarg-index

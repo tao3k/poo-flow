@@ -6,7 +6,7 @@
 ;;; Boundary: turn an admitted governance Profile into a generic contribution.
 ;;; Invariant: this projection remains inert and grants no runtime authority.
 (import (only-in :clan/poo/object .ref .slot?)
-        (only-in :std/srfi/1 every)
+        (only-in :std/list/list every)
         (only-in :poo-flow/src/module-system/contribution/objects
                  make-contribution
                  contribution?)

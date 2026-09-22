@@ -5,7 +5,7 @@
 
 ;;; Boundary: field, contribution, and transformer contracts for module objects.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object
                  .cc
                  .mix

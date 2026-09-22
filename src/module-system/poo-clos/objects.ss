@@ -7,8 +7,8 @@
 
 (import (only-in :clan/poo/object .o .ref .put!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/misc/hash hash-ref/default)
-        (only-in :std/srfi/1 iota)
+        (only-in :std/hash/misc hash-ref/default)
+        (only-in :std/list/list iota)
         "types.ss" "funcs.ss")
 
 (export poo-clos-any-specializer poo-clos-class-specializer

@@ -9,7 +9,7 @@
 (import (only-in :gerbil/expander/core
                  current-expander-context
                  expander-context-id)
-        (only-in :std/srfi/13 string-prefix?))
+        )
 
 (export poo-flow-composition-profile-module)
 

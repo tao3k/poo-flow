@@ -9,7 +9,7 @@
 
 ;;; Native nono dynamic-library selection and live-test receipts.
 ;;; - Keep FFI handles isolated while the Scheme layer reports bounded sandbox receipts.
-(import :gerbil/gambit
+(import :gerbil/core
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/nono-sandbox/c-binding-runtime
         :poo-flow/src/module-system/declaration/interface

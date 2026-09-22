@@ -7,7 +7,7 @@
 ;;; Invariant: unresolved profile refs stay visible; no fallback profile is fabricated.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/misc/list delete-duplicates/hash)
+        (only-in :std/list/list delete-duplicates/hash)
         :poo-flow/src/core/projection-syntax
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile?

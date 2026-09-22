@@ -8,9 +8,9 @@
 (import (only-in :clan/poo/object .all-slots .cc .o .ref .slot?)
         (only-in :clan/poo/mop validate)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/misc/hash hash-key? hash-put!)
-        (only-in :std/srfi/1 filter)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/hash/misc hash-key? hash-put!)
+        (only-in :std/list/list filter)
+        (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
         (only-in :poo-flow/src/utilities/functional poo-flow-all?)
@@ -67,7 +67,8 @@
   (string-append
    "sha256:"
    (hex-encode
-    (sha256 (call-with-output-string (lambda (port) (write value port)))))))
+    (sha256 (string->utf8
+             (call-with-output-string (lambda (port) (write value port))))))))
 
 (def (poo-flow-standard-governance-binding
       slot-value owner-value evidence-kind-value content-digest-value

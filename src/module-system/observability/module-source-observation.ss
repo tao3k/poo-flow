@@ -6,7 +6,7 @@
 ;;; Boundary: reader-native source observations for lexical core-call shadows.
 ;;; Invariant: inspection reads datums only and never expands or evaluates code.
 
-(import (only-in :std/sugar filter-map)
+(import
         (only-in "module-presentation.ss"
                  poo-flow-poo-slot-authoring-datum-bindings))
 

@@ -5,7 +5,7 @@
 
 ;;; Boundary: module object validation facts, origins, and source refs.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/module-system/object-core/interface)
 

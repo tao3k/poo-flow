@@ -7,7 +7,7 @@
 ;;; Invariant: syntax remains syntax until the public macro lowers the declaration.
 
 (import :gerbil/expander
-        (only-in :std/srfi/1 fold))
+        (only-in :std/list/list fold))
 
 (export parse-poo-flow-composition-declaration
         composition-declaration-name

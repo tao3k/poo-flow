@@ -12,7 +12,6 @@
                  poo-flow-sandbox-backend-capability/backend-kind
                  poo-flow-sandbox-backend-capability/capabilities
                  poo-flow-sandbox-backend-capability-registry-entries)
-        (only-in :std/sugar filter-map)
         :poo-flow/src/modules/sandbox-core/backend-capability-catalog
         "core.ss"
         "runtime-base.ss"

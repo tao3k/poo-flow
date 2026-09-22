@@ -6,7 +6,7 @@
 ;;; Boundary: loop-engine sandbox profile refs and handoff agreement receipts.
 ;;; Invariant: missing or invalid profiles become diagnostics, never runtime IO.
 
-(import (only-in :std/sugar filter)
+(import
         (only-in "../agent-sandbox/config.ss"
                  poo-flow-sandbox-profile-by-name
                  poo-flow-sandbox-profile-handoff-summary

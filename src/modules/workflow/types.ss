@@ -7,7 +7,7 @@
 ;;; Invariant: this layer imports no workflow object, function, or config owner.
 
 (import (only-in :clan/poo/object object?)
-        (only-in :std/srfi/1 every))
+        (only-in :std/list/list every))
 
 (export +poo-flow-cicd-check-map-schema+
         +poo-flow-cicd-check-receipt-schema+

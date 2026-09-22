@@ -6,7 +6,7 @@
 ;;; Boundary: compose-clause profile projection for composition stages.
 ;;; Invariant: projection scans metadata only; it never evaluates graph/loop.
 
-(import (only-in :std/srfi/1 find)
+(import (only-in :std/list/list find)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/profile-composition/accessors)
 

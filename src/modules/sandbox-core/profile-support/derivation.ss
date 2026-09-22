@@ -5,8 +5,8 @@
 
 ;;; Boundary: sandbox profile derivation metadata and row contributions.
 
-(import (only-in :std/srfi/1 any fold)
-        :gerbil/gambit
+(import (only-in :std/list/list any fold)
+        :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface

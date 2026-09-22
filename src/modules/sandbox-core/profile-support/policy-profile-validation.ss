@@ -8,7 +8,7 @@
 ;;; Invariant: profile validation must reject unsafe partial profiles before a
 ;;; backend can materialize filesystem or resource isolation.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object? .slot? .ref object<-alist)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability

@@ -7,7 +7,7 @@
 ;;; Invariant: loading is single-flight, content-identity checked and never
 ;;; hidden behind an ordinary POO lazy slot reference.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :std/misc/hash hash-remove!)
+        (only-in :std/hash/misc hash-remove!)
         (only-in :poo-flow/src/utilities/functional poo-flow-find)
         "types.ss"
         "objects.ss")

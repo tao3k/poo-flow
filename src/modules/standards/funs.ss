@@ -7,8 +7,8 @@
 ;;; Invariant: these functions never load artifact bodies or invoke a Provider.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/srfi/1 filter)
-        (only-in :std/text/hex hex-encode)
+        (only-in :std/list/list filter)
+        (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-all? poo-flow-map)
         "types.ss"
@@ -32,8 +32,9 @@
    "sha256:"
    (hex-encode
     (sha256
-     (call-with-output-string
-      (lambda (port) (write value port)))))))
+     (string->utf8
+      (call-with-output-string
+       (lambda (port) (write value port))))))))
 
 (def (poo-flow-standard-catalog-find-edition catalog identity)
   (hash-get (.ref catalog 'edition-index) identity))

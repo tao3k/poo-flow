@@ -12,8 +12,8 @@
 ;;; procedure accepting an optional reference resolver.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/misc/list duplicates)
-        (only-in :std/srfi/1 every filter filter-map)
+        (only-in :std/list/list duplicates)
+        (only-in :std/list/list every filter filter-map)
         "types.ss" "objects.ss" "classes.ss" "lifecycle.ss"
         "dispatch.ss")
 

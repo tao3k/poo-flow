@@ -5,7 +5,7 @@
 
 ;;; Boundary: module object schema, slot defaults, and object catalog merge.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object
                  .ref
                  object?
@@ -15,7 +15,6 @@
                  $constant-slot-spec?
                  $constant-slot-spec-value
                  $computed-slot-spec)
-        (only-in :std/sugar find)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/support/contracts
         :poo-flow/src/module-system/object-core/support/merge)

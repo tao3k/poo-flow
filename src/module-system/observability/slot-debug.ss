@@ -6,7 +6,7 @@
 ;;; Boundary: deterministic lazy-slot admission over upstream POO objects.
 ;;; Invariant: debug paths retain symbols only; receivers and values stay out.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object
                  .o
                  .ref
@@ -15,7 +15,7 @@
                  object?
                  $computed-slot-spec)
         (only-in :clan/poo/mop validate)
-        (only-in :clan/debug traced-function)
+        (only-in :clan/poo/support/debug traced-function)
         (only-in :clan/poo/debug DDT)
         (only-in :std/error deferror-class)
         (only-in "types.ss"

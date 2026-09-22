@@ -5,7 +5,7 @@
 
 ;;; Boundary: sandbox profile POO object and prototype projection.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface

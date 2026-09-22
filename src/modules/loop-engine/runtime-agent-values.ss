@@ -7,7 +7,7 @@
 ;;; Invariant: helpers are pure datum transforms over already-materialized
 ;;; receipt rows; they do not realize runtime sessions or tool calls.
 
-(import (only-in :std/misc/list delete-duplicates/hash)
+(import (only-in :std/list/list delete-duplicates/hash)
         "core.ss")
 
 (export poo-flow-loop-engine-runtime-agent-field-values

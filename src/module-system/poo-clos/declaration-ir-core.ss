@@ -6,7 +6,7 @@
 ;;; Shared grammar, immutable IR types, and callable declaration parsing.
 
 (import :gerbil/expander
-        (only-in :std/srfi/1 find filter-map foldl iota))
+        (only-in :std/list/list find filter-map foldl iota))
 
 (export parse-poo-clos-generic-declaration-ir
         parse-poo-clos-method-declaration-ir
@@ -592,4 +592,3 @@
      name: name qualifier: qualifier-value
      lambda-list: (parse-clos-lambda-list lambda-list #t)
      body: body source: source)))
-

@@ -6,7 +6,7 @@
 ;;; Boundary: session config data and linear row projection functions.
 ;;; Invariant: functions stay below syntax/config and perform no runtime work.
 
-(import (only-in :std/sugar filter)
+(import
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/declaration/config-syntax)

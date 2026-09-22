@@ -4,7 +4,7 @@
 
 ;;; Boundary: constant-slot lookup and field indexing for POO object support;
 ;;; inheritance resolution remains owned by object.ss.
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object
                  $constant-slot-spec
                  $constant-slot-spec-value

@@ -7,14 +7,13 @@
 ;;; extension runs. Gerbil's import model then projects those cached contexts;
 ;;; this extension only observes the resulting source set.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure)
         (only-in :asp-gerbil-scheme/src/support/time
                  duration-micros monotonic-micros)
         (only-in :clan/poo/object
                  .o .ref .slot? object? make-object $constant-slot-spec)
-        (only-in :std/sort sort)
         (only-in "build-projection.ss"
                  poo-flow-write-observation-line!)
         (only-in "module-presentation.ss"
@@ -126,10 +125,10 @@
     (let-values (((sources prepared-graph-elapsed-us)
                   (poo-flow-source-admission-phase
                    (lambda ()
-                     (sort
+                     (list-sort
+                      string<?
                       (poo-flow-source-admission-prepared-sources
-                       normalized-root entries)
-                      string<?)))))
+                       normalized-root entries))))))
       (let-values (((scan-result policy-elapsed-us)
                     (poo-flow-source-admission-phase
                      (lambda ()

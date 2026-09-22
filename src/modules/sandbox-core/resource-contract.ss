@@ -6,7 +6,7 @@
 ;;; Boundary: sandbox resources prototype contract and projection helpers.
 ;;; Invariant: resource validation does not import full sandbox profile machinery.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .def .ref .slot? object?)
         (only-in :clan/poo/mop element? raise-type-error)
         (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation

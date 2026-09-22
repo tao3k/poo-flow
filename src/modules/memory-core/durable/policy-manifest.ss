@@ -6,7 +6,7 @@
 ;;; across runtime handoff code and parser-owned policy checks.
 ;;; Invariant: this module must describe durable policy surfaces without
 ;;; depending on provider-specific recovery execution.
-(import :gerbil/gambit
+(import :gerbil/core
         :poo-flow/src/modules/memory-core/durable/policy)
 
 (export +poo-flow-durable-runtime-policy-manifest-schema+

@@ -6,7 +6,7 @@
 ;;; Scheme control-plane edge before provider-specific recovery executes.
 ;;; Invariant: manifest serialization must remain bounded and deterministic for
 ;;; policy reports, Marlin handoff, and checkpoint replay.
-(import :gerbil/gambit
+(import :gerbil/core
         :poo-flow/src/modules/memory-core/durable/policy-manifest
         :poo-flow/src/modules/memory-core/durable/store
         :poo-flow/src/modules/memory-core/durable/store-backend)

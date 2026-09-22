@@ -7,7 +7,6 @@
 ;;; Invariant: diagnostics are data and never realize descriptors or runtimes.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
-        (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
         (only-in "../modules/loop-engine/config.ss"

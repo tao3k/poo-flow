@@ -8,8 +8,7 @@
 (import (only-in :clan/poo/object
                  .ref .slot? object? compute-precedence-list!)
         (only-in :clan/poo/mop element?)
-        (only-in :std/srfi/1 append-map drop filter-map find list-index)
-        (only-in :std/sort stable-sort)
+        (only-in :std/list/list drop filter-map find flatten1)
         "types.ss" "objects.ss" "classes.ss" "method-combination.ss"
         "funcs.ss")
 
@@ -23,11 +22,12 @@
         poo-clos-call-next-method poo-clos-next-method?
         poo-clos-funcall poo-clos-setf)
 
-;;; Identity lookup deliberately uses SRFI list-index: class precedence is a
-;;; finite native C3 value, not a custom recursive search owner.
+;;; Native memq preserves identity comparison; length difference yields its
+;;; position in the finite C3 precedence list without a project-local walker.
 ;; : (forall (a) (-> a [a] (Maybe Natural)))
 (def (identity-index target values)
-  (list-index (lambda (value) (eq? target value)) values))
+  (let (tail (memq target values))
+    (and tail (- (length values) (length tail)))))
 
 ;; : (-> SchemeValue Boolean)
 (def (clos-instance-state-bearing? value)
@@ -108,10 +108,10 @@
 ;; : (forall (a) (-> [(Pair a (Vector Natural))] [Natural]
 ;;        [(Pair a (Vector Natural))]))
 (def (sort-ranked ranked precedence-order)
-  (stable-sort
-   ranked
+  (list-sort
    (lambda (left right)
-     (distances-before? (cdr left) (cdr right) precedence-order))))
+     (distances-before? (cdr left) (cdr right) precedence-order))
+   ranked))
 
 ;;; Applicability is a pure projection from one immutable generic generation;
 ;;; no cache or registry can change the method set during this computation.
@@ -191,9 +191,9 @@
         (let* ((valid-keys
                 (append
                  (.ref lambda-list 'keys)
-                 (append-map
-                  (lambda (method-list) (.ref method-list 'keys))
-                  method-lists)))
+                 (flatten1
+                  (map (lambda (method-list) (.ref method-list 'keys))
+                       method-lists))))
                (allow-other?
                 (or (.ref lambda-list 'allow-other-keys?)
                     (call-allows-other-keys? tail)

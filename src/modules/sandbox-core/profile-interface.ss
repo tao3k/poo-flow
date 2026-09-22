@@ -6,7 +6,7 @@
 ;;; Boundary: public POO-native sandbox profile authoring interface.
 ;;; Invariant: users write Gerbil POO objects; projection stays report-only.
 
-(import (only-in :std/sugar filter)
+(import
         :clan/poo/object
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax)
 

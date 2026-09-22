@@ -6,7 +6,7 @@
 ;;; Boundary: upstream test framework for downstream module-system live cases.
 ;;; Invariant: concrete cases stay under user-interface; this file only runs them.
 
-(import (only-in :gerbil/gambit getenv)
+(import (only-in :gerbil/core getenv)
         (only-in :clan/poo/object make-object)
         (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/process run-process)

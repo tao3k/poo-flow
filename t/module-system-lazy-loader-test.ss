@@ -364,6 +364,7 @@
        (map poo-flow-module-source-ref-value source-refs)
        '("packages/lambda-aitia/modules/ADR/interface.ss"
          "packages/lambda-aitia/modules/assurance/interface.ss"
+         "packages/lambda-aitia/modules/formal-methods/interface.ss"
          "packages/lambda-aitia/modules/gitops/interface.ss"
          "packages/lambda-aitia/modules/sdlc/interface.ss")))))
 

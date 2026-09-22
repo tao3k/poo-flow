@@ -7,7 +7,7 @@
 ;;; Invariant: the root Profile is abstract and an assessment is never authority.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in :std/srfi/1 filter)
+        (only-in :std/list/list filter)
         (only-in :poo-flow/src/modules/governance/types
                  poo-flow-governance-profile-kind
                  poo-flow-governance-source-kind

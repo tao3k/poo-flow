@@ -7,7 +7,7 @@
 ;;; Invariant: transforms derive session values and handoff receipts; they never
 ;;; execute providers, tools, memory stores, selectors, or sandbox runtimes.
 
-(import (only-in :gerbil/gambit fx+)
+(import (only-in :gerbil/core fx+)
         (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/session/objects)
 

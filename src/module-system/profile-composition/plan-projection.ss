@@ -9,8 +9,8 @@
 ;;; nodes remain owned by src/core/plan.ss.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 append-map filter-map fold)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list append-map filter-map fold)
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition/funcs)
 

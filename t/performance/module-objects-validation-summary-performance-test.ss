@@ -6,7 +6,7 @@
 ;;; Boundary: module object validation gates cover catalog summary aggregation.
 ;;; Invariant: summary aggregation stays report-only and never realizes runtime descriptors.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :clan/poo/object .o .ref object?)
         (only-in :std/test
                  check-equal?

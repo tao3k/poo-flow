@@ -7,8 +7,8 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? .put! object?)
         (only-in :clan/poo/mop element?)
-        (only-in :std/misc/hash hash-ref/default)
-        (only-in :std/srfi/1 filter find)
+        (only-in :std/hash/misc hash-ref/default)
+        (only-in :std/list/list filter find)
         "types.ss" "objects.ss" "classes.ss" "dispatch.ss"
         "instance-state.ss" "funcs.ss")
 

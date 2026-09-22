@@ -7,10 +7,9 @@
 ;;; Invariant: this module owns algorithms and combinators, not workflow,
 ;;; sandbox, session, proof, or runtime semantics.
 
-(import (only-in :std/srfi/1
+(import (only-in :std/list/list
                  assoc
                  any
-                 append-map
                  every
                  find
                  filter
@@ -19,13 +18,12 @@
                  fold-right
                  map
                  member
-                 remove)
-        (only-in :std/misc/list
+                 remove
                  delete-duplicates/hash
-                 duplicates)
-        (only-in :std/srfi/13
-                 string-drop
-                 string-prefix?))
+                 duplicates
+                 flatten1)
+        (only-in :std/string/misc
+                 string-drop))
 
 (export poo-flow-fold-left
         poo-flow-fold-right
@@ -162,7 +160,7 @@
 ;;       ```
 ;;     %
 (def (poo-flow-append-map project values)
-  (append-map project values))
+  (flatten1 (map project values)))
 
 ;; poo-flow-any?
 ;;   : (-> Procedure [Object] Boolean)

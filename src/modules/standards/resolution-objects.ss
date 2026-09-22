@@ -10,7 +10,7 @@
 ;;; bundle and its receipt without weakening the public constructors.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/misc/hash hash-ref)
+        (only-in :std/hash/misc hash-ref)
         "types.ss")
 
 (export standard-resolution-admitted-bundle

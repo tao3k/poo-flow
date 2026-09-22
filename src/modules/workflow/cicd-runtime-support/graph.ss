@@ -7,8 +7,8 @@
 ;;; Invariant: graph algorithms emit report facts and never schedule commands.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/misc/hash hash-ensure-modify!)
-        (only-in :std/misc/queue dequeue! enqueue! make-queue queue-empty?)
+        (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :std/struct/queue dequeue! enqueue! make-Queue queue-empty?)
         (only-in :poo-flow/src/graph/types-core
                  poo-flow-graph
                  poo-flow-graph-edge
@@ -67,7 +67,7 @@
        (reverse edges-rev) unresolved-rev))))
 
 (def (poo-flow-cicd-index-ready-order index)
-  (let ((pending (make-queue))
+  (let ((pending (make-Queue))
         (indegrees (poo-flow-cicd-graph-index-indegrees index))
         (dependents (poo-flow-cicd-graph-index-dependents index)))
     (for-each

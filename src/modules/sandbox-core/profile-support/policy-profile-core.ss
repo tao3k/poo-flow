@@ -7,7 +7,7 @@
 ;;; backend-specific modules specialize filesystem, network, and resource policy.
 ;;; Invariant: profile objects must remain composable through POO inheritance.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist .ref .slot?)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability

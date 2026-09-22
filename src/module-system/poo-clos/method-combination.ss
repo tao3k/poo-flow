@@ -9,8 +9,7 @@
 ;;; invocation and effective-method ownership remain in dispatch.ss.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/srfi/1 find)
-        (only-in :std/sugar ormap)
+        (only-in :std/list/list find)
         "types.ss" "objects.ss")
 
 (export poo-clos-methods-with-qualifier

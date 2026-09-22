@@ -7,8 +7,7 @@
 ;;; Invariant: keep POO object construction and hook normalization outside
 ;;; macro parser modules so macro expansion remains shallow and reusable.
 
-(import (only-in :clan/poo/object .all-slots .mix .o .ref object<-alist)
-        (only-in :std/srfi/1 fold))
+(import (only-in :clan/poo/object .all-slots .mix .o .ref object<-alist))
 
 (export poo-flow-scenario-inline-section-slot
         poo-flow-scenario-inline-alist-ref

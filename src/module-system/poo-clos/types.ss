@@ -11,7 +11,7 @@
 (import (only-in :clan/poo/object
                  .o .ref .slot? object? compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type. element?)
-        (only-in :std/sugar cut))
+)
 
 (export ClosSpecializer ClosLambdaList ClosMethod ClosMethodBundle
         ClosMethodGroup ClosMethodCombination

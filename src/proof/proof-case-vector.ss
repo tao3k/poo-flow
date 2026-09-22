@@ -6,8 +6,8 @@
 ;;; Invariant: the hot path writes once into caller-owned storage; no JSON.
 (import (only-in :clan/poo/object .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/srfi/1 iota)
-        (only-in :std/text/hex hex-decode hex-encode)
+        (only-in :std/list/list iota)
+        (only-in :std/encoding/hex hex-decode hex-encode)
         :poo-flow/src/proof/generated/proof-case-vector-v1)
 
 (export poo-flow-proof-case-vector-write!

@@ -18,7 +18,6 @@
         poo-flow-build-bootstrap-port-observations
         poo-flow-build-bootstrap-file-observations)
 
-(import (only-in :std/srfi/13 string-prefix?))
 
 (def poo-flow-module-owner-import-observation-kind
   "poo-flow.module-owner-import-observation.v1")

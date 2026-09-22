@@ -7,7 +7,7 @@
 ;;; Invariant: admission and threat assessment never imply action authority.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop .defgeneric define-type Type. element?)
-        (only-in :std/srfi/1 every))
+        (only-in :std/list/list every))
 
 (export poo-flow-governance-profile-kind
         poo-flow-governance-source-kind

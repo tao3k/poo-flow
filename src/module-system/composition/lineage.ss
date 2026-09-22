@@ -6,8 +6,7 @@
 ;;; Invariant: analysis reports lineage facts without mutating the composed objects.
 (import (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
-        (only-in :std/misc/list duplicates)
-        (only-in :std/srfi/1 any))
+        (only-in :std/list/list duplicates))
 
 (export poo-flow-lineage-analysis-prototype
         poo-flow-lineage-cycle?

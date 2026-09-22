@@ -7,8 +7,8 @@
 ;;; Invariant: report rows summarize proof metadata and runtime gaps without execution.
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 append-map)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list append-map)
         :poo-flow/src/modules/workflow/flows-alignment-specs)
 
 (export poo-flow-funflow-tutorial-alignment-report)

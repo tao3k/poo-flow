@@ -5,7 +5,7 @@
 
 ;;; Boundary: tool, memory, and diagnostic catalog checks for session policy validation.
 
-(import (only-in :std/srfi/1 fold)
+(import (only-in :std/list/list fold)
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/session/policy-validation-support
         :poo-flow/src/modules/session/policy-validation-communication)

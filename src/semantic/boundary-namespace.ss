@@ -8,7 +8,7 @@
 ;;; must not become semantic owners.
 
 (import (only-in :clan/poo/object .def .ref object?)
-        (only-in :std/srfi/13 string-join))
+        )
 
 (export poo-flow-intent-boundary-prototype
         poo-flow-author-boundary-prototype

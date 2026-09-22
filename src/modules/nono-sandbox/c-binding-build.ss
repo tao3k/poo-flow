@@ -9,7 +9,7 @@
 
 ;;; Native nono C binding build manifest and validation.
 ;;; - Keep compiler/include policy explicit before any probe command is materialized.
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .ref object?)
         (only-in :poo-flow/src/core/roles execution-policy-role)
         (only-in :poo-flow/src/core/failure raise-control-plane-failure)

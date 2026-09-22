@@ -5,8 +5,8 @@
 
 ;;; Boundary: pure policy-grant reference collection and merge operations.
 
-(import (only-in :std/misc/list delete-duplicates/hash)
-        (only-in :std/srfi/1 filter map)
+(import (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list filter map)
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy)
 

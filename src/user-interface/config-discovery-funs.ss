@@ -6,7 +6,6 @@
 ;;; Pure path-role predicates shared by config discovery and its admission
 ;;; tests. No filesystem access or expander state belongs here.
 
-(import (only-in :std/srfi/13 string-contains string-suffix?))
 
 (export poo-flow-ui-scenario-declaration?)
 

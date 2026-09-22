@@ -7,13 +7,13 @@
 ;;; Boundary: pure graph algorithms over composed POO graph facts.
 ;;; Invariant: algorithms emit analysis facts only; runtime execution is out.
 
-(import (only-in :std/misc/hash hash-ensure-modify!)
-        (only-in :std/misc/queue
+(import (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :std/struct/queue
                  dequeue!
                  enqueue!
-                 make-queue
+                 make-Queue
                  queue-empty?)
-        (only-in :std/srfi/1 filter)
+        (only-in :std/list/list filter)
         :poo-flow/src/graph/types-core)
 
 (export poo-flow-graph-node-ids
@@ -189,7 +189,7 @@
 
 (def (walk-adjacency/indexed adjacency-index start-ids)
   (let ((visited (make-hash-table))
-        (pending (make-queue)))
+        (pending (make-Queue)))
     (for-each (lambda (id) (enqueue! pending id)) start-ids)
     (let loop ((result-rev '()))
       (if (queue-empty? pending)
@@ -597,7 +597,7 @@
            (lambda (id) (zero? (hash-get indegrees id)))
            node-ids))
          (node-count (length node-ids))
-         (pending (make-queue)))
+         (pending (make-Queue)))
     (for-each (lambda (id) (enqueue! pending id)) ready-ids)
     (let loop ((order-rev '())
                (visited-count 0))

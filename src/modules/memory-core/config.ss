@@ -6,7 +6,7 @@
 ;;; Boundary: public facade for memory-core store specs and catalog receipts.
 ;;; Invariant: users author POO memory specs; runtime memory remains external.
 
-(import (only-in :std/sugar filter)
+(import
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/declaration/config-syntax

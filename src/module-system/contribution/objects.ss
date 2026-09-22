@@ -4,7 +4,7 @@
 
 ;;; Pure contributor admission. No domain registry, discovery, or activation.
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/srfi/1 every append-map delete-duplicates))
+        (only-in :std/list/list every append-map delete-duplicates/hash))
 (export contribution-contract-id Contribution. make-contribution
         contribution? contribution-diagnostics admit-contributions)
 
@@ -58,7 +58,7 @@
   (let* ((valid-values (filter contribution? values))
          (identities (map (lambda (value) (.ref value 'identity)) valid-values))
          (duplicate? (not (= (length identities)
-                            (length (delete-duplicates identities)))))
+                            (length (delete-duplicates/hash identities)))))
          (reasons-value
           (append (if duplicate? '(duplicate-contribution-export) '())
                   (append-map (lambda (value)
