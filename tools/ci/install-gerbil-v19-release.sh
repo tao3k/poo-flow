@@ -5,20 +5,20 @@
 set -euo pipefail
 
 release_root="${1:?usage: install-gerbil-v19-release.sh RELEASE_ROOT}"
-revision=d801e7a1c7f77df421f638e62aaebe370f193c97
+revision=2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb
 
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64)
     release_os=linux
     release_arch=x86_64
-    tag=gerbil-v0.19-d801e7a1c7f77df421f638e62aaebe370f193c97-linux-x86_64-portable-full-single-host-unlimited-patch8bbb52add2b9
-    sha256=44da3780cf450a6b747bf327b837696e0f99d5177a5a8046f9f65cd54e126745
+    tag=gerbil-v0.19-2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb-linux-x86_64-portable-full-single-host-unlimited-patchf5cedd8168cb
+    sha256=9844ba362fdf6f1c5e8a4411e462a466d52dee0d541f8e84f61091cec0e5e740
     ;;
   Darwin-arm64)
     release_os=darwin
     release_arch=aarch64
-    tag=gerbil-v0.19-d801e7a1c7f77df421f638e62aaebe370f193c97-darwin-aarch64-gcc16-arm64-aot-tools-single-host-unlimited-patch16675e99f856
-    sha256=c6a4bc783311670ea56d0c384ebdffae491112ba9bdd253cd763a260a5793d6b
+    tag=gerbil-v0.19-2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb-darwin-aarch64-gcc16-arm64-aot-tools-single-host-unlimited-patchf5cedd8168cb
+    sha256=8d9c88434aed6301eaebb719bf52472f05c2368eafc630e8a9f1d67cc9895a21
     ;;
   *)
     printf 'unsupported Gerbil release host: %s-%s\n' "$(uname -s)" "$(uname -m)" >&2

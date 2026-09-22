@@ -199,7 +199,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "XuRCPHlJdGQ39JRAc13QZGKe8tW4xmWTtAfLPatp+qE=",
+        "usagesDigest": "ANlJ8OO4NlDl/macBoP+7MVZbGgdN1ZEY8V1L1enNxw=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -213,7 +213,7 @@
               "dependency_roots": [],
               "environment": {},
               "expected_version_prefixes": [
-                "Gerbil d801e7a"
+                "Gerbil 2591dcd"
               ],
               "project_library_relative_path": ".gerbil/lib",
               "project_root_marker": "@@//:gerbil.pkg",
