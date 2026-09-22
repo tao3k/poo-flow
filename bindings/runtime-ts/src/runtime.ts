@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+//
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 export const PFW_WASM_STATUS_INVALID_ARGUMENT = 0xffff0001;
 export const PFW_WASM_STATUS_INVALID_SLOT = 0xffff0002;
 export const PFW_WASM_STATUS_SLOT_EXHAUSTED = 0xffff0003;

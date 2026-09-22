@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 100ms)
+ (target_total . 25ms)
+ (regression_budget . 75ms)
+ (expected_over_input_budget . 5ms)
+ (sampleCount . 20)
+ (targetRationale . "Pinned to structural validation and projection selection over 2,000 ordered DomainCase components.")
+ (maxRssMb . 512)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 3)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/domain-case-structural-catalog/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . domain-case-structural-catalog)
+ (optimizationFocus . "hash-indexed component, type and projection catalogs with reverse diagnostic accumulation")
+ (inputShape . "2,000 ordered components, types, parent edges, projections and selected projection ids")
+ (expectedOutcome . "structural diagnostics and ordered projection selection complete without quadratic catalog scans")
+ (expectedRepair . "retain contracts.ss hash catalogs and ordered reverse accumulation; do not restore repeated assoc/find/filter scans")
+ (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (tags poo domain-case contracts stdlib hash performance big-o))

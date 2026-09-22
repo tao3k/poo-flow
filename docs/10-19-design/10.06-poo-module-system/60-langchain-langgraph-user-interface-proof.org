@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.60.10 Purpose
 This document records the LangChain/LangGraph-style user-interface proof case.
 The goal is not to clone LangChain or LangGraph. The goal is to show that POO

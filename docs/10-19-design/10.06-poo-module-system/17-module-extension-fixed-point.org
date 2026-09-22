@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.17 Module Extension Fixed Point
 ** 10.06.17.10 Decision
 POO is the core extension model for =poo-flow=. Workflow, CI/CD, sandbox, and user modules should contribute POO object operations into the module system instead of each feature owning a private merge engine.

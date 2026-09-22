@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 999ms)
+ (target_total . 800ms)
+ (regression_budget . 199ms)
+ (expected_over_input_budget . 25ms)
+ (sampleCount . 20)
+ (targetRationale . "Pinned to exact resolution and immutable receipt construction for 10,000 lightweight Standard editions.")
+ (maxRssMb . 768)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 1)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/standards-resolution/benchmark.ss")
+ (rule . POO-FLOW-STANDARDS-PERFORMANCE-001)
+ (feature . standards-resolution)
+ (optimizationFocus . "catalog-identity admission, indexed edition lookup, bounded dependency traversal and one immutable bundle digest")
+ (inputShape . "10,000 exact Standard roots with no artifact bodies or runtime Provider execution")
+ (expectedOutcome . "10,000 selected editions, 10,000 resolver operations, zero loaded artifacts and one source-bound bundle generation")
+ (expectedRepair . "retain native hash indexes and prove selected object identity against the admitted catalog; do not repeat deep member validation in nested receipts, eagerly load artifacts or add a shadow resolver")
+ (measurementPhases collect-before resolve-exact-roots construct-receipt collect-after assert-time-gate observe-runtime-memory)
+ (tags poo standards resolution receipt performance big-o lazy-loading))

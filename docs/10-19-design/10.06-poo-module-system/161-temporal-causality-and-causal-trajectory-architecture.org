@@ -1,0 +1,370 @@
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+#+title: Temporal Causality and Causal Trajectory Architecture
+#+date: [2026-09-16]
+#+property: SDD_KIND architecture-decision
+#+property: STATUS implemented-m2-bounded-healthcare-model
+
+* Decision and terminology
+
+=Temporal Causality= is a POO Flow core module, not an SDLC-only algorithm and
+not a Healthcare-only ontology.  =Impact Analysis= is one derived operation of
+that module; it is not the module name.  Vertical contributors declare domain
+events, relations, time observations and risk semantics; the core owns causal
+event graphs, causal trajectories, counterfactual trajectories, snapshot-bound
+closure, witness paths, incomplete-frontier handling and inert analysis
+receipts.
+
+These names follow established literature rather than introducing a new grand
+term.  Temporal graphs are used for event ordering and temporal reasoning;
+causal event graphs represent directed cause/effect relations; dynamic causal
+graphs and patient trajectories are used for longitudinal healthcare; and
+counterfactual trajectories describe bounded alternatives under an
+intervention.  The architecture keeps these concepts distinct.
+
+Terminology references:
+
+- Xiong et al., [[https://aclanthology.org/2024.acl-long.563/][Large Language Models Can Learn Temporal Reasoning]], uses a
+  temporal graph as the intermediate representation for temporal reasoning;
+- Roy et al., [[https://doi.org/10.1609/aaaiss.v3i1.31204][Causal Event Graph-Guided Language-based Spatiotemporal
+  Question Answering]], represents events as nodes and cause/effect relations
+  as edges;
+- Jensen et al., [[https://www.nature.com/articles/s41467-020-18682-4][Disease trajectory browser for exploring temporal,
+  population-wide disease progression patterns]], uses patient/disease
+  trajectories for longitudinal healthcare analysis.
+
+The first Healthcare application is a prescription correction.  If a medicine
+order is wrong, the system must distinguish:
+
+- *past*: administrations and observations already committed before discovery;
+- *present*: an active order, current exposure and effects still in progress;
+- *future*: scheduled administrations and obligations within an explicit
+  horizon;
+- *counterfactual*: bounded alternative traces under a corrected prescription;
+- *unknown*: missing causal parents, unobserved administrations, incomplete
+  inventory or effects outside the selected horizon.
+
+These sets must never be collapsed into one =affected= list.  Structural
+dependency, temporal reachability, clinical causality, risk and action
+authority are independent dimensions.
+
+* Authority model
+
+The source of truth is an identity-bound POO =CausalEventGraph=.  It may contain
+observed facts, declared future candidates, derived events, hypotheses and
+counterfactuals.  An immutable =CausalCut= is a projection of only committed
+events whose logical position is not later than its explicit =as-of-position=.
+Future plans and counterfactual alternatives therefore cannot be mistaken for
+facts that have already happened.  A complete Impact input binds at least:
+
+| Field | Purpose |
+|-------+---------|
+| Scenario and Case identity | vertical and concrete situation boundary |
+| subject identity | Patient or other protected enterprise subject |
+| change-event identity | the corrected/revoked prescription or changed feature |
+| graph and Profile revision | exact semantic dependency snapshot |
+| causal-event-graph identity | exact fact and candidate inventory |
+| causal-cut identity | admitted events and all known causal parents |
+| observation identity | explicit time observation; never an implicit live clock |
+| policy identity | rules under which Impact is evaluated |
+| horizon | bounded prospective and counterfactual scope |
+
+An Impact receipt contains witness paths and separates =past-effects=,
+=present-exposures=, =future-obligations=, =counterfactual-traces= and
+=unknown-frontier=.  Completeness is always qualified: complete relative to an
+identified cut, selected relations and horizon is not global clinical
+completeness.
+
+* Standard trajectory and Impact contract
+
+=PooFlowCausalTrajectoryContract= is the domain-neutral admission standard for
+every vertical Case that presents a correct path beside an error path.  It has
+two explicit layers:
+
+| Layer | Slots | Admitted modality |
+|-------+-------+-------------------|
+| operational | =trigger-event-id=, =intended-event-ids= | trigger is committed =observed=; intended members are =observed=, =declared= or =derived= |
+| operational | =error-event-paths= | uncommitted =counterfactual= only |
+| Impact | =intended-impact-event-ids= | uncommitted =hypothesized= only |
+| Impact | =error-impact-event-ids= | uncommitted =hypothesized= only |
+
+Identity sets are disjoint.  The intended path is ordered from the trigger;
+each error path branches from the trigger or intended path; and Impact members
+must be causally reachable from their corresponding path.  Missing identities,
+incomplete event graphs, broken paths and modality violations produce typed
+=PooFlowCausalTrajectoryAssessment= diagnostics.  Assessment uses one adjacency
+index and two multi-root traversals, so its bound is O(V + E + declared
+trajectory members), not one graph traversal per member.
+
+=OntologyCase= exposes only the declarative =.add-trajectory= slot.  Its
+composition receipt owns =trajectory-assessments= and
+=trajectory-handoff-ready?=.  A rejected trajectory also blocks the overall
+Governance handoff.  In particular, changing an error-path event from
+=counterfactual= to =observed= cannot promote it into fact; admission returns
+=trajectory-contract-rejected= before any effect handoff.
+
+** POO contract and formal Provider projection law
+
+The trajectory contract is declared exactly once as the POO value stored in a
+Case's =.add-trajectory= slot.  Its =PooFlowCausalTrajectoryAssessment= and
+=trajectory-assessment-digest= are the common identity consumed by every
+formal boundary.  TLA+, Lean and Cedar do not own parallel Case configuration
+languages.
+
+Single-contract admission is a functional operation over POO slots.  The open
+crossing between a formal Provider and a vertical Profile is different: both
+axes can gain implementations independently, so it uses the POO CLOS generic
+=HealthcareFormalAssuranceProjectionGeneric=.  The TLA+ Provider and Lean
+Provider specialize on =AIClinicalDecisionSupportProfile= through separate
+methods published by =HealthcareFormalAssuranceProjectionMethods=.  The base
+Provider method fails closed when no vertical method exists.  Cedar already
+uses the equivalent Provider/Profile multi-dispatch in
+=HealthcareAuthorizationProjectionGeneric=.
+
+#+begin_export mermaid
+flowchart LR
+    C["Case .add-trajectory POO slots"] -->|"functional admission"| S["POO trajectory assessment"]
+    S -->|"stable assessment digest"| G["CLOS formal-assurance generic"]
+    TP["TLA+ Provider"] -->|"class specializer"| G
+    LP["Lean Provider"] -->|"class specializer"| G
+    HP["Healthcare Profile"] -->|"eql specializer"| G
+    G -->|"TLA and Lean method bindings"| A["Assurance digest"]
+    A -->|"trajectoryHandoffReady plus digest"| CP["Cedar Provider/Profile generic"]
+    CP -->|"current action only"| H["Dual-engine authority host"]
+#+end_export
+
+The assurance digest includes the canonical CLOS method outputs, so changing
+the Provider evidence, Profile crossing, contract identity or assessment
+digest changes the authority input.  A method result is still inert evidence;
+only the final Cedar dual-engine boundary may authorize an effect.
+
+* Four-language responsibility
+
+** Scheme and POO — semantic and receipt owner
+
+Gerbil POO owns declarative Event, Decision, Effect, Observation, Profile,
+Scenario and Case objects.  It validates identities, seals the event graph,
+derives the committed causal cut, projects the finite graph and produces
+deterministic witness paths.  It also
+combines its native temporal classification with independently admitted TLC
+and Lean evidence into one inert assurance receipt.  Content-bound GQL Sources
+remain non-authoritative analysis contracts until the downstream MRR Rust
+library executes them through gerbil-parser's native FFI and returns a separate
+execution receipt.
+
+Scheme must not infer a clinical causal fact merely because two nodes are
+reachable.  Relations carry modality, for example =declared=, =observed=,
+=derived= or =hypothesized=.  A hypothesized drug effect remains a candidate
+for review until admitted evidence promotes it; graph reachability alone never
+does so.
+
+The existing =sdlc-change-impact= already demonstrates deterministic shortest
+witness paths, selected-relation scope, recheck sets and partial/invalid
+inventory states.  That operation should move under the POO Flow Temporal
+Causality core and be reused by SDLC and Healthcare rather than copied into a
+second vertical framework.
+
+** GQL — snapshot-bound relation question
+
+GQL selects candidate paths over the sealed graph:
+
+- which administrations derive from the changed prescription;
+- which observations occurred after those administrations;
+- which active and scheduled orders depend on the revoked medicine;
+- which Cases, Profiles, policies and verification obligations must be
+  reassessed.
+
+GQL returns graph witnesses, not causality, temporal safety or permission.  A
+query is bound to the graph digest and causal-cut identity.  Empty results on
+an incomplete graph are =unknown=, never proof of no Impact.  Gerbil-parser
+syntax/roundtrip admission remains separate from execution admission.
+
+** TLA+ and TLC — bounded transition and counterexample owner
+
+The Healthcare model defines states such as =Ordered=, =Validated=,
+=Administered=, =ErrorDiscovered=, =Revoked=, =Reassessed=, =Corrected= and
+=Closed=.  TLC explores interleavings of administration, late evidence,
+revocation, notification and correction within a finite patient/horizon model.
+
+Required safety properties include:
+
+- after =ErrorDiscovered= or =Revoked=, no new administration is committed
+  from the old order;
+- a committed past administration is never silently erased or rewritten;
+- a late event creates a new causal cut or suspends evaluation;
+- missing causal parents prevent a complete Impact receipt;
+- correction requires a new prescription identity and a fresh authorization;
+- a counterfactual trace never becomes an observed clinical fact.
+
+Required liveness properties include eventual reassessment and notification
+under explicitly stated fairness assumptions.  TLC establishes these only for
+the bounded model it exhausts; it is not a general mathematical proof.
+
+** Lean — invariant, refinement and non-overclaim proof owner
+
+Lean proves the general contracts that every implementation and bounded model
+must respect.  Existing proof families already supply important pieces:
+
+- =ExplicitTemporalObservations=: no implicit live-clock evaluation; changed
+  observations change evaluation identity;
+- =EventIngressCausalCut=: immutable causal cuts, suspension on missing parents
+  and no silent late-event mutation;
+- =IncrementalFixedPointCacheCorrectness=: every reachable dependent is
+  scheduled and an affected strongly connected component cannot partially
+  commit;
+- =ReceiptContextLineagePrefixClosure=: past/current lineage is published while
+  a future position cannot be claimed as already published;
+- =UseCompositionCedarInputIdentityTransitionLineageClosure=: prior, current and
+  future authority-context positions remain distinct.
+
+The Healthcare refinement must additionally prove that the Scheme projection
+preserves prescription, administration and observation identity; an active
+wrong-prescription blocker prevents Provider handoff; past facts remain
+immutable; prospective results are horizon-qualified; and an unknown frontier
+cannot be converted into an allow decision.
+
+Lean does not prove that one medicine caused one real-world symptom unless the
+premises contain admitted clinical evidence for that relation.  It proves the
+correct handling of whatever evidence and modality the receipt actually binds.
+
+** Lean module ownership mirrors POO Module ownership
+
+Lean's native module, root and library-target model is the proof equivalent of
+the Scheme PackageSpec boundary.  A proof-bearing =src/modules/<owner>= has one
+Lake library named =PooFlowModule<Owner>Proof=.  Its =roots= are the public
+proof roots for that owner, and Lake alone derives their import closure.
+
+Scenario names do not own foundational proof libraries.  Healthcare composes
+the =governance=, =temporal-causality= and =authorization= libraries; it does
+not replace them with a =Healthcare= build graph.  Likewise, a module without
+an admitted Lean contract receives no placeholder library.
+
+The ordinary proof gates are therefore:
+
+#+begin_src shell
+lake build PooFlowModuleTemporalCausalityProof
+lake build PooFlowModuleGovernanceProof
+lake build PooFlowModuleAuthorizationProof
+#+end_src
+
+The repository-wide =PooFlowProof= root remains available only as an explicit
+integration qualification.  CI isolates module libraries in separate matrix
+lanes, so changing one POO Module cannot implicitly turn its local validation
+into a build of every enterprise proof family.
+
+* End-to-end protocol
+
+#+begin_export mermaid
+flowchart LR
+    E[POO clinical events] --> EG[Identity-bound causal event graph]
+    EG --> C[Committed causal cut at as-of]
+    EG --> G[POO relation graph]
+    G --> S[Scheme structural witnesses]
+    G -. declared GQL Sources .-> Q[MRR Rust analysis boundary]
+    EG --> M[TLA+ finite transition model]
+    M --> T[TLC traces / counterexamples]
+    C --> L[Lean invariant and refinement obligations]
+    S --> I[Impact receipt]
+    T --> I
+    L --> I
+    I --> A[Cedar current-action request]
+    A --> H[Dual-engine Runtime Host]
+#+end_export
+
+1. Scheme admits facts and candidates into =G_t=, then derives committed cut
+   =C_t= at an explicit logical position.
+2. The POO Graph projection binds =G_t=, =C_t=, Profile/policy revisions and relation
+   modalities.
+3. Scheme materializes deterministic structural witnesses and the unknown
+   frontier.
+4. Gerbil-parser separately qualifies the declared GQL source bytes; a later
+   MRR Rust execution receipt may add non-authoritative analysis witnesses.
+5. TLC explores bounded present/future/counterfactual transitions.
+6. Lean proves generic invariants and the Healthcare refinement boundary.
+7. Scheme combines the native, TLC and Lean receipts without treating one as
+   proof of another.
+8. Cedar separately decides whether the exact next action may execute; the
+   dual-engine Host remains the authority boundary.
+
+* Healthcare relation vocabulary
+
+The first slice should add concrete POO declarations rather than generic raw
+facts:
+
+| Node | Essential identity |
+|------|--------------------|
+| Prescription | prescription revision and prescriber |
+| Medication Order | order revision, Patient and Encounter |
+| Administration Event | immutable dose/effect commit identity |
+| Observation | provenance and temporal observation identity |
+| Care Obligation | notification, monitoring, reversal or reassessment |
+| Outcome Hypothesis | explicitly non-observed counterfactual/risk candidate |
+
+Core relations include =SUPERSEDES=, =ORDERS=, =AUTHORIZES_ADMINISTRATION=,
+=ADMINISTERED_AS=, =OBSERVED_AFTER=, =DERIVED_FROM=, =REQUIRES_REASSESSMENT=
+and =REMEDIATES=.  A possible causal relation must carry a non-factual modality;
+the framework must not manufacture =CAUSED_BY= from temporal ordering.
+
+* Derived analysis states
+
+| Status | Meaning |
+|--------+---------|
+| =snapshot-scoped-impact= | structural dependency only; no temporal claim |
+| =partial-temporal-classification= | Scheme found useful witnesses but a causal parent frontier is open |
+| =bounded-temporal-classification= | Scheme classified the complete declared inventory relative to one cut and horizon; no model-checking claim |
+| =invalid-causal-cut= | causal parent ordering violates the declared temporal order |
+| =bounded-temporal-impact= | future status reserved for a TLC receipt that exhausted the declared finite model |
+| =assurance-closed-impact= | required Lean refinements and identities close |
+| =action-blocked= | current authorization must fail closed |
+
+None of these statuses itself authorizes release or clinical action.  That
+requires a fresh, exact Cedar decision at the effect boundary.
+
+* Delivery sequence
+
+- [X] Establish =src/modules/temporal-causality/= as the POO Flow core owner of
+   causal event graphs, causal trajectories and deterministic witness-path
+   analysis.  SDLC adaptation remains a separate compatibility-preserving task.
+- [X] Standardize intended paths, error paths, intended Impact and error Impact
+   as typed POO contracts; integrate their assessments into Ontology Case
+   admission and migrate the AI-prescription and personal-care Cases.
+- [X] Extend Healthcare with immutable Prescription, Administration Event,
+   Observation and Care Obligation POO declarations.
+- [X] Add parser-qualified GQL queries for retrospective, current and prospective
+   candidate paths plus explicit unknown-frontier queries.
+- [ ] Bind those GQL queries to an MRR Rust execution receipt through the
+   gerbil-parser native FFI; parser qualification alone is not query execution
+   and Lambda must not add a subprocess or a second graph runtime.
+- [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
+   native parser qualification and byte-exact roundtrip are closed.
+- [X] Run official TLC model exhaustion through the explicit devenv-backed
+   assurance gate and retain its typed receipt.  The exact AI-assisted
+   prescription model generates 16 states, closes 11 distinct states at graph
+   depth 7, leaves an empty queue and finds no counterexample.
+- [X] Add generic Lean Temporal Causality theorems refining the existing
+   =EventIngressCausalCut= contract.
+- [X] Add the Healthcare-specific Lean refinement from the declared Case events
+   into those generic contracts as =PooFlowScenarioHealthcareProof=.
+- [X] Bind the exact assurance digest and closed-state blocker into the existing
+   Cedar Healthcare snapshot without placing clinical semantics inside the
+   Cedar Provider.  Release remains false until the current Cedar boundary.
+- [X] Bind TLA+ and Lean formal Providers to the Healthcare Profile and the
+   shared POO trajectory assessment through CLOS multi-dispatch; bind the same
+   assessment digest into Cedar request admission.
+
+* Rejected designs
+
+- one unqualified =IMPACTS= edge or flat affected list;
+- treating temporal order as clinical causality;
+- rewriting past events when a prescription is corrected;
+- predicting an unbounded future;
+- accepting an empty GQL result as no Impact on an incomplete inventory;
+- treating TLC model checking as a Lean theorem;
+- treating a Lean theorem or Impact receipt as a current Cedar permit;
+- copying the POO trajectory slots into a second TLA, Lean or Cedar-facing Case
+  contract DSL;
+- replacing Provider/Profile multi-dispatch with a central symbolic =case=;
+- implementing a second Healthcare graph runtime or query language.

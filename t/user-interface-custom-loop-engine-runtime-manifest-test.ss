@@ -1,15 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify concrete loop-engine runtime manifest projection.
 ;;; Invariant: manifest rows are inert Marlin handoff data, not execution.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/src/loops/governor-marlin
                  +loop-governor-marlin-loop-engine-discovery-schema+
                  loop-governor-marlin-loop-engine-discovery)
@@ -17,9 +21,9 @@
                  poo-flow-cubeSandbox-module-bundles)
         (only-in :poo-flow/src/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
-        (only-in :poo-flow/t/support/loop-engine-runtime-manifest-receipts
+        (only-in "./support/loop-engine-runtime-manifest-receipts"
                  check-custom-loop-runtime-manifest-request-receipts)
-        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
+        (only-in "../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-engine-runtime-manifest-test)
@@ -570,7 +574,7 @@
 ;;; Runtime manifest is the ABI handoff surface that Marlin can consume without
 ;;; guessing the loop-engine entrypoint or request shape.
 ;; : TestCase
-(def user-interface-custom-loop-engine-runtime-manifest-case
+(def (user-interface-custom-loop-engine-runtime-manifest-case)
   (test-case "projects custom loop-engine runtime manifest"
     (let* ((presentation
             (custom-loop-presentation
@@ -605,6 +609,22 @@
        intent
        runtime-manifest
        runtime-manifest-request)
+      ;; Retained-memory contract: presentation, manifest, and handoff views
+      ;; share the single materialized request graph instead of rebuilding
+      ;; equal deep copies.
+      (check-equal? (eq? (test-ref intent 'session-agent-graph)
+                         (test-ref runtime-manifest-request
+                                   'session-agent-graph))
+                    #t)
+      (check-equal? (eq? (test-ref intent 'runtime-snapshot)
+                         (test-ref runtime-manifest-request
+                                   'runtime-snapshot))
+                    #t)
+      (check-equal? (eq? (test-ref (test-ref intent
+                                             'runtime-handoff-facts)
+                                   'agent-profiles)
+                         (test-ref runtime-manifest-request 'agent-profiles))
+                    #t)
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 
 ;;; The suite keeps ABI handoff assertions separate from profile projection so
@@ -612,4 +632,4 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-runtime-manifest-test
   (test-suite "poo-flow custom loop-engine runtime manifest"
-    user-interface-custom-loop-engine-runtime-manifest-case))
+    (user-interface-custom-loop-engine-runtime-manifest-case)))

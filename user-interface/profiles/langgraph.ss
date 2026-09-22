@@ -1,8 +1,15 @@
 ;;; -*- Gerbil -*-
-;;; User Interface reusable profile fragment: LangGraph-style state graph.
-;;; Invariant: included by load!; the loader owns imports and generated export.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(.o (session (.o (name 'langgraph-multi-agent-session)
+;;; User Interface reusable Profile library: LangGraph-style state graph.
+
+(import (only-in :clan/poo/object .def .o))
+(export langgraph)
+
+(.def langgraph
+    (session (.o (name 'langgraph-multi-agent-session)
                  (contract 'session-spawns-subagents)
                  (policy 'subagent-handoff-is-explicit)))
     (state (.o (name 'langgraph-typed-checkpointed-state)

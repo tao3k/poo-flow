@@ -1,9 +1,13 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.89 POO Native Lazy Evaluation Research
 :PROPERTIES:
 :JD_ID:     10.06.89
 :STATUS:    active
 :OWNER:     poo-flow
-:EVIDENCE:  .data/gerbil-poo/object.ss, .data/gerbil-poo/proto.ss, .data/gerbil/src/std/lazy.ss, src/module-system/load-syntax.ss
+:EVIDENCE:  .data/gerbil-poo/object.ss, .data/gerbil-poo/proto.ss, .data/gerbil/src/std/lazy.ss, src/module-system/loader/fragment-syntax.ss
 :END:
 
 * Scope

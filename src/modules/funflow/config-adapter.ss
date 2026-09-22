@@ -1,9 +1,16 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: adapts module configuration into Funflow and CI/CD POO projections.
+;;; Invariant: adapters reuse module contracts and do not execute workflow effects.
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax
-        :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
         :poo-flow/src/modules/funflow/config-prototypes
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/funs)
 
 (export poo-flow-funflow-require
         poo-flow-funflow-symbol-list?
@@ -119,7 +126,7 @@
      pipeline-name
      (poo-flow-funflow-poo-checks->cicd-checks
       (.ref pipeline 'checks))
-     (poo-flow-module-field-rows/tail
+     (poo-flow-product-field-rows/tail
       metadata
       (source 'funflow-poo-config)
       (pipeline pipeline-name)))))

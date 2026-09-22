@@ -1,9 +1,16 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: owns canonical organization-bundle values, normalization, and validation.
+;;; Invariant: normalized content identity is stable across equivalent input ordering.
 (export #t)
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/sort
-        :std/text/hex)
+(import (only-in :clan/poo/object .o .ref object?)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/encoding/hex hex-encode)
+        "funcs.ss")
 
 (def +poo-flow-organization-bundle-schema+
   'poo-flow.organization-bundle.draft.3)
@@ -152,12 +159,12 @@
             (semantic-id-string (poo-flow-organization-object-id right))))
 
 (def (semantic-sort objects)
-  (sort (append objects '()) semantic-object<?))
+  (list-sort semantic-object<? (append objects '())))
 
 (def (semantic-symbol-sort values)
-  (sort (append values '())
-        (lambda (left right)
-          (string<? (semantic-id-string left) (semantic-id-string right)))))
+  (list-sort (lambda (left right)
+               (string<? (semantic-id-string left) (semantic-id-string right)))
+             (append values '())))
 
 (def (principal->canonical value)
   (list 'principal (poo-flow-organization-object-id value)))
@@ -274,7 +281,9 @@
     (case algorithm
       ((sha256)
        (hex-encode
-        (sha256 (poo-flow-organization-canonical->string canonical))))
+        (sha256
+         (string->utf8
+          (poo-flow-organization-canonical->string canonical)))))
       (else (error "unsupported Bundle digest algorithm" algorithm)))))
 
 (def (poo-flow-organization-bundle-identity bundle)
@@ -299,32 +308,16 @@
          (stable-semantic-value? (cdr value))))
    (else #f)))
 
-(def (semantic-find id objects)
-  (find (lambda (value) (equal? id (poo-flow-organization-object-id value)))
-        objects))
+(def (semantic-index objects)
+  (poo-flow-semantic-index-by poo-flow-organization-object-id objects))
 
 (def (semantic-duplicate-ids objects)
-  (let loop ((rest (semantic-sort objects)) (previous #f) (duplicates '()))
-    (if (null? rest)
-      (reverse duplicates)
-      (let (id (poo-flow-organization-object-id (car rest)))
-        (loop (cdr rest)
-              id
-              (if (and previous (equal? previous id))
-                (cons id duplicates)
-                duplicates))))))
+  (poo-flow-semantic-adjacent-duplicate-identities
+   poo-flow-organization-object-id (semantic-sort objects)))
 
-(def (semantic-subset? child parent)
-  (andmap (lambda (value) (member value parent)) child))
+(def semantic-subset? poo-flow-semantic-subset?)
 
-(def (semantic-unique-count values)
-  (let loop ((rest values) (seen '()))
-    (if (null? rest)
-      (length seen)
-      (loop (cdr rest)
-            (if (member (car rest) seen)
-              seen
-              (cons (car rest) seen))))))
+(def semantic-unique-count poo-flow-semantic-unique-count)
 
 (def (semantic-proper-subset? child parent)
   (and (semantic-subset? child parent)
@@ -337,6 +330,7 @@
         (cons 'expected expected)
         (cons 'observed observed)))
 
+;;; Validation boundary: collect cross-facet diagnostics against one canonical bundle identity.
 (def (poo-flow-organization-bundle-validate/unsafe bundle . maybe-identity)
   (let* ((organization (.ref bundle 'organization))
          (authority (.ref bundle 'authority))
@@ -352,6 +346,23 @@
          (effects (facet-entities protocol 'tool-effect))
          (transitions (facet-entities protocol 'protocol-transition))
          (obligations (facet-entities evidence 'evidence-obligation))
+         (principal-index (semantic-index principals))
+         (role-index (semantic-index roles))
+         (agent-index (semantic-index agents))
+         (capability-index (semantic-index capabilities))
+         (context-index (semantic-index contexts))
+         (effect-index (semantic-index effects))
+         (transition-index (semantic-index transitions))
+         (delegation-index
+          (let (index (make-hash-table))
+            (for-each
+             (lambda (value)
+               (hash-put! index
+                          (list (.ref value 'parent-id) (.ref value 'child-id)
+                                (.ref value 'capability-id))
+                          value))
+             delegations)
+            index))
          (epoch (.ref bundle 'epoch))
          (identity-value (if (pair? maybe-identity)
                            (car maybe-identity)
@@ -359,8 +370,7 @@
          (diagnostic-values '()))
     (def (reject! code path expected observed)
       (set! diagnostic-values
-            (append diagnostic-values
-                    (list (diagnostic code path expected observed)))))
+            (cons (diagnostic code path expected observed) diagnostic-values)))
     (for-each
      (lambda (entry)
        (let ((name (car entry)) (facet (cdr entry)))
@@ -393,25 +403,29 @@
     (let ((identity-entities
            (append principals roles agents capabilities effects
                    transitions obligations)))
-      (for-each
+      (let (identity-kind-index (make-hash-table))
+        (for-each
+         (lambda (value)
+           (let* ((id (.ref value 'id))
+                  (kinds (or (hash-get identity-kind-index id) '())))
+             (hash-put! identity-kind-index id (cons (.ref value 'kind) kinds))))
+         identity-entities)
+        (for-each
        (lambda (id)
-         (let ((kinds (map (lambda (value) (.ref value 'kind))
-                           (filter (lambda (value)
-                                     (equal? (.ref value 'id) id))
-                                   identity-entities))))
+         (let (kinds (reverse (hash-get identity-kind-index id)))
            (when (> (semantic-unique-count kinds) 1)
              (reject! 'incompatible-shared-identity
                       (list 'identity-universe id) 'one-kind kinds))))
-       (semantic-duplicate-ids identity-entities)))
+       (semantic-duplicate-ids identity-entities))))
     (for-each
      (lambda (agent)
        (let ((agent-id (.ref agent 'id))
              (principal-id (.ref agent 'principal-id))
              (role-id (.ref agent 'role-id)))
-         (unless (semantic-find principal-id principals)
+         (unless (hash-key? principal-index principal-id)
            (reject! 'missing-principal (list 'agents agent-id 'principal)
                     'declared principal-id))
-         (unless (semantic-find role-id roles)
+         (unless (hash-key? role-index role-id)
            (reject! 'missing-role (list 'agents agent-id 'role)
                     'declared role-id))))
      agents)
@@ -428,7 +442,7 @@
                (child-id (.ref child 'id))
                (parent-authority (.ref parent 'authorities))
                (child-authority (.ref child 'authorities))
-               (context (semantic-find child-id contexts)))
+               (context (hash-get context-index child-id)))
           (unless (equal? (.ref child 'parent-id) parent-id)
             (reject! 'invalid-parent-binding (list 'agents child-id 'parent)
                      parent-id (.ref child 'parent-id)))
@@ -447,12 +461,8 @@
                      'parent-visible-subset (.ref context 'visible)))
           (for-each
            (lambda (authority)
-             (let (delegation
-                   (find (lambda (value)
-                           (and (equal? (.ref value 'parent-id) parent-id)
-                                (equal? (.ref value 'child-id) child-id)
-                                (equal? (.ref value 'capability-id) authority)))
-                         delegations))
+             (let (delegation (hash-get delegation-index
+                                        (list parent-id child-id authority)))
                (unless delegation
                  (reject! 'undelegated-authority
                           (list 'agents child-id 'authorities authority)
@@ -462,7 +472,7 @@
      (lambda (effect)
        (let* ((effect-id (.ref effect 'id))
               (capability-id (.ref effect 'capability-id))
-              (capability (semantic-find capability-id capabilities)))
+              (capability (hash-get capability-index capability-id)))
          (unless capability
            (reject! 'undeclared-tool-effect
                     (list 'tool-effects effect-id 'capability)
@@ -474,12 +484,12 @@
              (capability-id (.ref transition 'capability-id)))
          (for-each
           (lambda (participant)
-            (unless (semantic-find participant agents)
+            (unless (hash-key? agent-index participant)
               (reject! 'missing-protocol-participant
                        (list 'protocol transition-id 'participants participant)
                        'declared-agent participant)))
           (.ref transition 'participants))
-         (unless (semantic-find capability-id capabilities)
+         (unless (hash-key? capability-index capability-id)
            (reject! 'unauthorized-protocol-capability
                     (list 'protocol transition-id 'capability)
                     'declared-capability capability-id))))
@@ -490,15 +500,15 @@
              (subject-id (.ref obligation 'subject-id))
              (target-kind (.ref obligation 'target-kind))
              (target-id (.ref obligation 'target-id)))
-         (unless (semantic-find subject-id agents)
+         (unless (hash-key? agent-index subject-id)
            (reject! 'missing-evidence-subject
                     (list 'evidence obligation-id 'subject)
                     'declared-agent subject-id))
          (unless
           (case target-kind
-            ((transition) (semantic-find target-id transitions))
-            ((effect) (semantic-find target-id effects))
-            ((subject) (semantic-find target-id agents))
+            ((transition) (hash-get transition-index target-id))
+            ((effect) (hash-get effect-index target-id))
+            ((subject) (hash-get agent-index target-id))
             (else #f))
           (reject! 'missing-evidence-target
                    (list 'evidence obligation-id 'target)
@@ -515,6 +525,7 @@
         (reject! 'bundle-identity-mismatch '(identity)
                  (poo-flow-organization-bundle-identity->alist computed)
                  (poo-flow-organization-bundle-identity->alist identity-value))))
+    (set! diagnostic-values (reverse diagnostic-values))
     (.o (kind 'poo-flow.organization-bundle.validation-receipt.v1)
         (identity identity-value)
         (accepted? (null? diagnostic-values))

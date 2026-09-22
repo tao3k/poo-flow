@@ -1,15 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable runtime store contract receipts for Rust/Marlin handoff.
 ;;; Invariant: tests validate receipt projection only; no runtime store runs.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store)
 
 (export durable-runtime-store-contract-test)
 
@@ -163,5 +166,3 @@
                       +poo-flow-durable-runtime-store-contract-receipt-schema+)
         (check-equal? (test-ref (cadr rows) 'store-id) 'runtime-store/ci)
         (check-equal? (test-ref (cadr rows) 'runtime-executed) #f)))))
-
-(run-tests! durable-runtime-store-contract-test)

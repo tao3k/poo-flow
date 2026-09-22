@@ -1,3 +1,9 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: declares the default model catalog and selection policy objects.
+;;; Invariant: configuration is inert data; provider invocation remains runtime-owned.
 (export poo-flow-model-core-fast-text-model
         poo-flow-model-core-tool-json-model
         poo-flow-model-core-default-catalog

@@ -1,16 +1,21 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused tests for loop-engine to Funflow workflow agreement.
 ;;; Invariant: workflow agreement is report-only and never executes a pipeline.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-funflow-cicd-case
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        (only-in "../user-interface/custom/my-module/cases/funflow-cicd"
+                 poo-flow-custom-my-module-funflow-cicd-case)
+        (only-in "../user-interface/custom/my-module/cases/loop-engine"
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-workflow-agreement-test)
@@ -40,7 +45,7 @@
 ;;; A loop-engine use-case that references `funflow-cicd` without selecting the
 ;;; Funflow pipeline should be visibly unbacked by Funflow config.
 ;; : TestCase
-(def custom-loop-workflow-missing-funflow-case
+(def (custom-loop-workflow-missing-funflow-case)
   (test-case "reports missing Funflow workflow pipeline agreement"
     (let* ((presentation
             (custom-workflow-presentation
@@ -83,7 +88,7 @@
 ;;; Selecting the Funflow CI/CD pipeline gives the loop-engine workflow ref a
 ;;; concrete pipeline/check-map owner without executing that pipeline.
 ;; : TestCase
-(def custom-loop-workflow-funflow-backed-case
+(def (custom-loop-workflow-funflow-backed-case)
   (test-case "backs loop-engine workflow ref with Funflow pipeline config"
     (let* ((presentation
             (custom-workflow-presentation
@@ -153,5 +158,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-workflow-agreement-test
   (test-suite "poo-flow custom user-interface loop workflow agreement"
-    custom-loop-workflow-missing-funflow-case
-    custom-loop-workflow-funflow-backed-case))
+    (custom-loop-workflow-missing-funflow-case)
+    (custom-loop-workflow-funflow-backed-case)))

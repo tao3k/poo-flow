@@ -1,18 +1,21 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: JSON Schema bridge emits executable POO Flow slot contracts.
 
 (import (only-in :std/test
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :std/srfi/1
-                 find)
-        (only-in "../src/utilities/contracts.ss"
-                 poo-flow-object-type-contract-slots
-                 poo-flow-slot-contract-slot
-                 poo-flow-slot-contract-predicate
-                 poo-flow-slot-contract-predicate-key
-                 poo-flow-slot-contract-value-kind)
+        (only-in :clan/poo/mop element?)
+        (only-in "../src/module-system/descriptor/contracts.ss"
+                 poo-flow-contract-slot-name
+                 poo-flow-contract-slot-predicate-key
+                 poo-flow-contract-slot-report-kind
+                 poo-flow-contract-slot-type
+                 poo-flow-native-contract-slots)
         (only-in "../src/contract/json-schema-receipt.ss"
                  poo-flow-json-schema->contract-artifact
                  poo-flow-json-schema-contract-artifact-object-contract
@@ -51,12 +54,16 @@
 ;;     %
 (def (json-schema-bridge-test-slot object-contract slot-name)
   (let (slot (find (lambda (candidate)
-                     (eq? (poo-flow-slot-contract-slot candidate)
+                     (eq? (poo-flow-contract-slot-name candidate)
                           slot-name))
-                   (poo-flow-object-type-contract-slots object-contract)))
+                   (poo-flow-native-contract-slots object-contract)))
     (if slot
       slot
       (error "missing generated JSON Schema slot" slot-name))))
+
+(def (json-schema-bridge-test-slot-predicate slot-contract)
+  (lambda (value)
+    (element? (poo-flow-contract-slot-type slot-contract) value)))
 
 ;; json-schema-bridge-test-schema
 ;;   : JsonLikeSchema
@@ -260,27 +267,27 @@
              (maybe-slot
               (json-schema-bridge-test-slot object-contract 'maybe))
              (tags?
-              (poo-flow-slot-contract-predicate tags-slot))
+              (json-schema-bridge-test-slot-predicate tags-slot))
              (name?
-              (poo-flow-slot-contract-predicate name-slot))
+              (json-schema-bridge-test-slot-predicate name-slot))
              (label?
-              (poo-flow-slot-contract-predicate label-slot))
+              (json-schema-bridge-test-slot-predicate label-slot))
              (bucket?
-              (poo-flow-slot-contract-predicate bucket-slot))
+              (json-schema-bridge-test-slot-predicate bucket-slot))
              (score?
-              (poo-flow-slot-contract-predicate score-slot))
+              (json-schema-bridge-test-slot-predicate score-slot))
              (choice?
-              (poo-flow-slot-contract-predicate choice-slot))
+              (json-schema-bridge-test-slot-predicate choice-slot))
              (numeric?
-              (poo-flow-slot-contract-predicate numeric-slot))
+              (json-schema-bridge-test-slot-predicate numeric-slot))
              (maybe?
-              (poo-flow-slot-contract-predicate maybe-slot)))
+              (json-schema-bridge-test-slot-predicate maybe-slot)))
         (check-equal? (json-schema-bridge-test-ref receipt 'valid?) #t)
         (check-equal? (json-schema-bridge-test-ref receipt 'diagnostic-count) 0)
         (check-equal? (length (json-schema-bridge-test-ref receipt 'type-facts)) 8)
-        (check-equal? (poo-flow-slot-contract-value-kind tags-slot) 'List)
+        (check-equal? (poo-flow-contract-slot-report-kind tags-slot) 'List)
         (check-equal?
-         (poo-flow-slot-contract-predicate-key choice-slot)
+         (poo-flow-contract-slot-predicate-key choice-slot)
          'poo-flow-json-schema-one-of-generated?)
         (check-equal? (tags? '("a" "b")) #t)
         (check-equal? (tags? '("a" 1)) #f)

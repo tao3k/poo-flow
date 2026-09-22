@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: JSON Schema normalized IR for contract generation.
 ;;; Invariant: this file owns data shape only; parsing and emission live in
 ;;; neighboring owners.
@@ -237,6 +241,7 @@
    (poo-flow-json-schema-node->alist
     (poo-flow-json-schema-pattern-property-schema pattern-property))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowJsonSchemaObject Alist)
 (def (poo-flow-json-schema-object->alist object)
   (list
@@ -265,6 +270,7 @@
    (cons 'metadata
          (poo-flow-json-schema-diagnostic-metadata diagnostic))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowJsonSchemaNormalization Alist)
 (def (poo-flow-json-schema-normalization->alist normalization)
   (list

@@ -1,12 +1,24 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream memory-core case loaded by custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: standalone downstream memory-core case module.
 ;;; Invariant: this declares memory store specs and validation receipts only;
 ;;; no memory backend recall or commit is executed.
 
-(let* ((selection
+(import :poo-flow/src/modules/session/syntax
+        :poo-flow/src/modules/memory-core/config
+        (only-in :poo-flow/src/module-system/declaration/interface
+                 poo-flow-user-module-selection-flag-entry
+                 poo-flow-user-module-selection->alist))
+
+(export poo-flow-custom-my-module-memory-core-case)
+
+(def poo-flow-custom-my-module-memory-core-case
+  (let* ((selection
         (car
-         (use-module memory-core
-           :config
+         (poo-flow-memory-configs
            (.def (project-memory-store @ memory-store-spec
                                        store-ref store-kind namespace
                                        scopes recall-policies commit-policies
@@ -50,4 +62,4 @@
   (list
    (poo-flow-user-module-selection->alist selection)
    (poo-flow-memory-catalog->alist catalog)
-   (memory-catalog-validation-row validation)))
+   (memory-catalog-validation-row validation))))

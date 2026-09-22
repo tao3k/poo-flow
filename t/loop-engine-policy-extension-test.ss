@@ -1,14 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused tests for loop-engine POO-native policy extensions.
 ;;; Invariant: extension receipts are report-only and runtime-owned by Marlin.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/loop-engine-policy-extension)
+        :poo-flow/src/modules/loop-engine/policy-extension)
 
 (export loop-engine-policy-extension-test)
 
@@ -102,7 +105,7 @@
 ;;; Coordination coverage proves cross-loop ownership and collision facts are
 ;;; carried as inert policy receipts rather than Scheme locks.
 ;; : TestCase
-(def loop-engine-policy-extension-coordination-case
+(def (loop-engine-policy-extension-coordination-case)
   (test-case "projects loop-engine coordination policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (coordination-receipt
@@ -147,7 +150,7 @@
 ;;; Observability coverage proves run-log, budget, and lifecycle signals are
 ;;; declared as receipt data while Marlin retains execution control.
 ;; : TestCase
-(def loop-engine-policy-extension-observability-case
+(def (loop-engine-policy-extension-observability-case)
   (test-case "projects loop-engine observability policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (observability-receipt
@@ -167,7 +170,7 @@
 ;;; Safety coverage proves path, connector, and human-gate policy facts are
 ;;; visible without enabling Scheme-side mutations.
 ;; : TestCase
-(def loop-engine-policy-extension-safety-case
+(def (loop-engine-policy-extension-safety-case)
   (test-case "projects loop-engine safety policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (safety-receipt
@@ -190,7 +193,7 @@
 ;;; Collection coverage keeps the family tests separate from the invariant
 ;;; that every extension receipt is lowered through the generic receipt list.
 ;; : TestCase
-(def loop-engine-policy-extension-collection-case
+(def (loop-engine-policy-extension-collection-case)
   (test-case "lowers policy-extension receipts through the generic collection"
     (let (receipts (custom-loop-policy-extension-receipts))
       (check-equal? (map (lambda (receipt) (test-ref receipt 'kind))
@@ -208,7 +211,7 @@
 ;;; Invalid-slot coverage keeps policy-extension mixins honest: malformed slot
 ;;; values must fail before any runtime handoff row can be assembled.
 ;; : TestCase
-(def loop-engine-policy-extension-invalid-slot-case
+(def (loop-engine-policy-extension-invalid-slot-case)
   (test-case "rejects invalid loop-engine policy-extension slot types"
     (check-equal?
      (with-catch
@@ -224,8 +227,8 @@
 ;; : TestSuite
 (def loop-engine-policy-extension-test
   (test-suite "loop-engine POO-native policy extension"
-    loop-engine-policy-extension-coordination-case
-    loop-engine-policy-extension-observability-case
-    loop-engine-policy-extension-safety-case
-    loop-engine-policy-extension-collection-case
-    loop-engine-policy-extension-invalid-slot-case))
+    (loop-engine-policy-extension-coordination-case)
+    (loop-engine-policy-extension-observability-case)
+    (loop-engine-policy-extension-safety-case)
+    (loop-engine-policy-extension-collection-case)
+    (loop-engine-policy-extension-invalid-slot-case)))

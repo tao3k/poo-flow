@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 40 Module Registry Scale Architecture
 ** 40.10 Problem
 The module-system facade became the largest build hotspot because it acted as a compile-time fan-in point. A public facade that imports concrete modules, large POO object owners, presentation code, and loader behavior will grow slower as the module catalog grows. A Doom Emacs sized catalog cannot depend on a facade that recompiles the world whenever the catalog gets wider.
@@ -10,17 +14,34 @@ The root fix is an architectural boundary, not another local import trim:
 ** 40.20 Boundary
 The module-system path is split into three layers.
 
-1. =src/module-system/module-registry.ss=
+1. =src/module-system/loader/registry.ss=
 
-This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
+This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/loader/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
 
-2. =src/module-system/loader-tree.ss=
+2. =src/module-system/loader/tree.ss=
 
 This owner consumes registry source refs and turns them into lazy-load plans, auto-import graphs, and strict load/catalog operations. Loader behavior stays here because it is an action boundary. Registry users can inspect module sources without forcing descriptor realization.
 
 3. =src/module-system/facade.ss=
 
 The facade re-exports stable module-system contracts only. Concrete workflow, sandbox, profile, presentation, and object modules should be imported from their real owner by callers that need them. The facade must not be used as a convenience import for downstream implementation modules.
+
+4. =src/user-interface/facade.ss=
+
+The User Interface facade follows the same bounded rule. It owns stable
+entrypoint, presentation, and observation mechanics. Module System loading is
+imported from its own interface by the consumer that needs it. A concrete capability is
+exported by =src/modules/<module-name>/interface.ss= and is loaded only when a
+configuration selects that module. In particular, durable memory behavior is
+owned by =src/modules/memory-core/interface.ss= and session lifecycle behavior
+is owned by =src/modules/session/interface.ss=; neither is re-exported by the
+global User Interface facade.
+
+The facade is an advanced presentation owner and is not the production
+User Interface bootstrap. Top-level =user-interface/init.ss= imports the
+lightweight =src/user-interface/init-declaration-syntax.ss= owner directly.
+The PackageSpec follows that real import edge, so it does not initialize the
+presentation graph for a declaration-only user entry.
 
 ** 40.30 Growth Rule
 Adding a new concrete module should follow this shape:
@@ -46,6 +67,38 @@ Focused receipts after the split:
 - historical compiled CLI experiments validated that bypassing package-env startup matters, but the current focused test gate is native =gxtest=.
 - =gxtest t/module-system-lazy-loader-test.ss=: validates native focused tests, =real 8.94s=.
 
+The clean Bazel bootstrap was also reduced from ten roots to seven by removing
+the three framework sources already governed as lazy registry entries:
+=init-syntax.ss=, =config-discovery-syntax.ss= and =declaration-case.ss=. In the
+same checkout, the ten-root Gerbil action used 107.456 seconds and peaked at
+5,363,187,712 bytes. The seven-root action used 23.746 seconds and peaked at
+2,872,836,096 bytes; total Bazel wall time was 44.836 seconds. Focused consumers
+then imported and exercised all three lazy owners successfully. This receipt
+measures one cold comparison and establishes the ownership correction; future
+performance claims use repeated scenario statistics.
+
+The testing Observability extension was then removed from the production
+BuildSpec, leaving six framework roots. Its focused test explicitly imports and
+compiles the owner in the independent testing lane. After the User Interface
+root was corrected to the actual init declaration owner, the exact six-root
+cold Gerbil action completed in 22.457 seconds with a 2,784,985,088-byte peak
+process-tree footprint. Runnable process count was 6 under the native core limit
+7, and total Bazel wall time was 41.443 seconds.
+
+Module admission also performs a reader-native owner-import inspection over
+every =.ss= file below each module root. An implementation role importing an
+aggregate framework surface emits
+=poo-flow.module-owner-import-observation.v1= and fails admission with
+=POO-FLOW-MODULE-E008=. The check reads datums only and never expands or
+evaluates module source. Its repository gate covers all maintained module role
+files, including nonstandard private helpers below the canonical role owners.
+
+The native unit-test entrypoint does not rely on the production PackageSpec to
+publish test-only owners. =unit-tests.ss= imports
+=observability/testing-extension.ss= through its relative source owner, so the
+extension is expanded only inside the test process. No test BuildSpec, alternate
+builder, or added production root is needed.
+
 The package-env receipt is the removed cost center. Native runner startup is sub-second; focused tests remain bounded by =gxtest= and the module/test load graph, while the millisecond gate lives inside the registry scenario so the test distinguishes module catalog expansion from runner startup and Gerbil compilation work.
 
 ** 40.55 Fast Gate Entrypoint
@@ -60,8 +113,81 @@ Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-o
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
 - import =src/modules/*= from =src/module-system/facade.ss=;
+- import =src/modules/*= from =src/user-interface/facade.ss=;
+- import or re-export the aggregate =src/module-system/facade.ss= from
+  =src/user-interface/facade.ss=;
+- promote a registry-owned lazy framework source into the package bootstrap
+  without an explicit consumer and a cold-build receipt;
+- promote a testing extension into the production bootstrap merely so focused
+  tests can import it;
 - move loader backends, resolver activation, or extension graph logic into =module-registry.ss=;
 - use filesystem scans as the default registry expansion path;
 - make tests pass by relying on facade to leak concrete owner symbols.
 
 When a new module family is needed, add manifest data to =module-registry.ss=, add loader/action behavior to =loader-tree.ss= or the real owner, and keep facade imports bounded to stable module-system contracts.
+
+** 40.70 Native build configuration
+
+=build.ss= is the unique package build entry.  It declares one POO PackageSpec
+and delegates to the same ASP Build API and =std/make= executor for development,
+CI, Bazel, and release builds.  Its =public-entry-modules= slot names nine
+stable public owners: the four framework interfaces plus Bundle v1 writing,
+Runtime v0 schema, Cedar authority, proof-vector, and runtime-symbol owners
+used directly by published bindings.  ASP revision
+=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062= projects the native import
+closure and =std/make= compiles that result.  The entry contains no
+=all-gerbil-modules= scan, package-local owner import, test PackageSpec, or
+second build script.
+
+Native unit CI builds the public package once and then invokes =unit-tests.ss=.
+Its ASP Testing Interface discovers atomic files and delegates selected batches
+to native =gxtest=.  The POO testing profile projects =.gerbil/lib= before the
+repository source root into the child Gerbil load path.  Compiled public and
+FFI owners therefore win, while qualification, policy, evidence, and scenario
+owners outside the public package closure resolve from source for the selected
+atomic test.  This source-root decision is Scheme POO configuration; no
+user-facing environment setting or =build-test.ss= exists.
+
+The build entry must not import a =:poo-flow= or =./src= owner.  Such an import
+loads the package module before the same =std/make= invocation checks it; macOS
+then emits numbered replacement objects and the warm build never becomes
+current.  The Observability source-admission gate reports this as
+=build-bootstrap-self-import= with =declare-package-spec-only= as the repair.
+Build-time resource observation remains outside the package action: the shared
+Bazel Gerbil resource guard records effective cores, elapsed time, process-tree
+RSS, and runnable saturation.  The runtime Observability module remains an
+ordinary POO Flow library owner and is never used to bootstrap its own build.
+
+Repository-owned command helpers and user configuration are not package
+artifacts.  The PackageSpec excludes the two contribution observation commands
+and =user-interface/custom/my-module/config.ss= explicitly; atomic tests still
+load the user-owned configuration by its relative source boundary.
+=build.ss= remains the sole =defbuild-script= entry.  The default native source
+catalog projected 512 targets and its isolated Bazel action exceeded the local
+180-second bound.  Passing the interface roots through PackageSpec =modules=
+produced only those direct native targets plus the nono-C prelude, but CI then
+failed while importing =src/core/api.ssi=: =std/make= does not compile the
+transitive package closure from root strings.  The smaller count was an
+incomplete artifact, not a performance improvement.
+
+The corrected =public-entry-modules= projection produces 236 package modules;
+the explicit nono-C prelude makes 237 BuildSpec targets.  With ASP
+=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062=, two nine-root A/B samples measured
+2.03--2.08 seconds for direct projection and 20.12--25.11 seconds for the
+complete closure.  These wall-clock values are observations, not fixed
+constants.  Closure membership is the admission condition.  That closure
+interval occurs before =std/make= and is
+owned by ASP's Gerbil Import Model projection; it must not be reported as an
+=std/make= fixed cost.  The 227-file POO test run then completed successfully in
+about 82 seconds with 12 native batches.  Four resource-sensitive suites now
+run in fresh serialized processes, including the memory-monitor containment
+suite that overflowed a reused 56-file Ubuntu heap.
+
+The Runtime-WASM workflow separately materializes
+=//gerbil:dependency_packages= before the package action.  This exposes and
+caches =gerbil-utils=, =gerbil-poo=, and ASP compilation instead of charging
+their cold build to POO Flow.  Existing 30-minute job and 25-minute package
+timeouts remain unchanged.  A local verbose probe that changed Bazel
+=action_env= was discarded as performance evidence because Bazel explicitly
+invalidated its analysis cache and spent 213 seconds only on external
+dependencies before the probe was stopped.

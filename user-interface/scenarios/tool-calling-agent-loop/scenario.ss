@@ -1,0 +1,55 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; -*- Gerbil -*-
+;;; Reusable Scenario object; root config decides whether to compose it.
+
+(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        :poo-flow/user-interface/profiles/tool-calling)
+(export tool-calling-agent-loop-scenario)
+
+(def tool-calling-agent-loop-scenario
+  (use-composition tool-calling-agent-loop
+  (use-module tool-calling as tool
+    (profiles
+      tool-request
+      tool-schema
+      tool-permission
+      sandbox-scope
+      argument-validation
+      untrusted-observation
+      tool-cooldown
+      result-contract
+      runtime-binding
+      receipt-gate
+      observability))
+  (compose
+    (profiles tool
+      tool-request
+      tool-schema
+      tool-permission
+      sandbox-scope
+      argument-validation
+      untrusted-observation
+      tool-cooldown
+      result-contract
+      runtime-binding
+      receipt-gate
+      observability))
+  (stage production
+    (graph tool-calling-agent-loop-graph)
+    (loop #:fuel 5 #:exit tool-result-accepted)
+    (prove tool-request-has-owner-session
+           tool-arguments-match-schema
+           tool-permission-before-call
+           tool-scope-contained
+           validate-arguments-before-runtime
+           tool-output-cannot-authorize-policy
+           cooldown-before-retry
+           tool-result-before-downstream-step
+           runtime-binding-matches-tool-contract
+           runtime-receipt-matches-tool-plan
+           trace-covers-tool-request-call-result)
+    (handoff python-runtime-tool-plane))))

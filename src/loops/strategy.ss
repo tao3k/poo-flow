@@ -1,9 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: loop strategies compose policy descriptors into inert handoff data.
 ;;; Invariant: local execution here is harness-only validation, never production runtime.
 
 (import (only-in :clan/poo/object .o object?)
-        (only-in :std/srfi/95 sort)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/object-syntax
@@ -271,7 +274,7 @@
 ;;; plans do not pay quadratic insertion cost during contract projection.
 ;; : (-> [LoopPatternDescriptor] [LoopPatternDescriptor])
 (def (loop-sort-patterns descriptors)
-  (sort descriptors loop-pattern-prioritized-before?))
+  (list-sort loop-pattern-prioritized-before? descriptors))
 
 ;;; Boundary: loop strategy selected patterns from fields is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection

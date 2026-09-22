@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: makefile-tool runtime stages prove descriptor handoff behavior.
 ;;; Invariant: tests emulate runtime responses without executing Makefile work.
 
@@ -10,13 +14,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/workflow/flows
-        :poo-flow/src/modules/workflow/syntax)
+        :poo-flow/src/modules/workflow/flows)
 
 (export tutorial-makefile-runtime-test)
 
@@ -112,14 +114,17 @@
         (cons 'request request)
         (cons 'artifact-handle artifact)))
 
-(defpoo-makefile-tool-workflow macro-makefile-runtime-flow
-  macro-makefile-runtime-flow)
+;; : Flow
+(def macro-makefile-runtime-flow
+  (make-makefile-tool-workflow 'macro-makefile-runtime-flow))
 
-(defpoo-makefile-tool-runtime-command-descriptor macro-makefile-tool-cli
-  macro-makefile-tool-cli
-  "/usr/bin/poo-flow-runtime"
-  (list (cons 'runtime-name "poo-flow-runtime")
-        (cons 'tutorial 'macro-stage)))
+;; : RuntimeCommandDescriptor
+(def macro-makefile-tool-cli
+  (make-makefile-tool-runtime-command-descriptor
+   'macro-makefile-tool-cli
+   "/usr/bin/poo-flow-runtime"
+   (list (cons 'runtime-name "poo-flow-runtime")
+         (cons 'tutorial 'macro-stage))))
 
 ;;; This suite protects tutorial runtime receipts so documentation examples stay
 ;;; aligned with executable behavior.

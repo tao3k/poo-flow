@@ -1,17 +1,21 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile validation is the policy gate between inherited
 ;;; profile objects and runtime sandbox execution.
 ;;; Invariant: profile validation must reject unsafe partial profiles before a
 ;;; backend can materialize filesystem or resource isolation.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object? .slot? .ref object<-alist)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-validation
         :poo-flow/src/modules/sandbox-core/profile-support/policy-profile-core
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
-        (only-in :poo-flow/src/module-system/durable-policy
+        (only-in :poo-flow/src/modules/memory-core/durable/policy
                  poo-flow-durable-policy?
                  poo-flow-durable-policy-diagnostic->alist
                  poo-flow-durable-policy-diagnostics

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: 10.06.77 Gerbil Scheme High Performance Implementation Report
 
 * Executive Summary
@@ -43,7 +47,7 @@ Local =.data/gerbil-poo= research exposed these important POO owners:
 
 Local =src= evidence shows these current POO Flow anchors:
 
-- =src/module-system/tool-calling-control.ss=: fact-set, fact-ref,
+- =src/modules/tool-core/calling-control.ss=: fact-set, fact-ref,
   runtime-validation proof facts, and index ref surfaces.
 - =src/core/runtime-protocol.ss=: runtime request/response schemas,
   runtime response normalization, adapter conversion, and invalid response

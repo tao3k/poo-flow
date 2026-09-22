@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify maintained root declaration cases.
 ;;; Invariant: cases are downstream declarations and report data, never runtime work.
 
@@ -10,15 +14,14 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-config-presentation-kind
                  poo-flow-user-config?)
-        (only-in :poo-flow/src/module-system/declaration-case
+        (only-in :poo-flow/src/user-interface/declaration-case
                  pooFlowRootDeveloperDeclarationCase
                  poo-flow-declaration-case?
                  poo-flow-declaration-case-name
@@ -34,7 +37,7 @@
                  poo-flow-declaration-case-trace-stages
                  poo-flow-declaration-case-trace-safe?
                  poo-flow-declaration-case-presentation-matches?)
-        (only-in :poo-flow/src/module-system/root-profile
+        (only-in :poo-flow/src/user-interface/root-profile
                  pooFlowRootConfig)
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles))
@@ -69,12 +72,12 @@
         (check-equal? (poo-flow-declaration-case-name case-object)
                       'developer)
         (check-equal? (poo-flow-declaration-case-case-file case-object)
-                      "src/module-system/declaration-case.ss")
+                      "src/user-interface/declaration-case.ss")
         (check-equal? (poo-flow-declaration-case-init-file case-object)
                       "user-interface/init.ss")
         (check-equal? (poo-flow-declaration-case-custom-module-file
                        case-object)
-                      "user-interface/custom/my-module/config.ss")
+                      "user-interface/custom/my-module/interface.ss")
         (check-equal? (.ref case-object 'declaration-owned?) #t)
         (check-equal? (.ref case-object 'declarative-only?) #t)
         (check-equal? (.ref case-object 'runtime-owner) "marlin-agent-core")
@@ -100,7 +103,10 @@
                feature-facts
                '(custom . my-module)))
              (cicd-intent (car (.ref presentation 'cicd-intents))))
-        (check-equal? (.ref presentation 'module-count) 8)
+        (check-equal?
+         (.ref presentation 'module-count)
+         (length
+          (poo-flow-declaration-case-expected-module-keys case-object)))
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-declaration-case-expected-module-keys
                        case-object))
@@ -114,7 +120,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'entrypoint
                        custom-module)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (poo-flow-declaration-case-alist-value
                        'flags
                        custom-module)
@@ -122,7 +128,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-index
                        custom-fact)
-                      7)
+                      8)
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-phase
                        custom-fact)

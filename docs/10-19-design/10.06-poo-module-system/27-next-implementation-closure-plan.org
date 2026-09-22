@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: 10.06.27 Next Implementation Closure Plan
 
 * 10.06.27 Next Implementation Closure Plan
@@ -21,7 +25,7 @@ inspect and validate a workflow handoff before any runtime executes.
 The following surfaces are now implemented enough to treat as the current
 baseline:
 
-- =src/modules/workflow/cicd.ss= owns inert workflow CI/CD check and check-map
+- =src/modules/workflow/objects.ss= owns inert workflow CI/CD check and check-map
   objects.
 - =src/modules/funflow/config.ss= lowers compact
   =(use-module funflow :config (pipeline ...))= declarations into workflow
@@ -33,7 +37,7 @@ baseline:
 - =pooFlowUserProfilePresentation= and
   =pooFlowUserProfileDoctorPresentation= forward the same workflow CI/CD
   projection surface.
-- =src/module-system/declaration-case.ss= treats the expanded workflow CI/CD
+- =src/user-interface/declaration-case.ss= treats the expanded workflow CI/CD
   trace stages as part of the maintained downstream declaration case.
 - Focused tests now cover Funflow pipeline lowering, workflow check maps,
   user-interface CI/CD presentation, profile presentation, declaration cases,
@@ -218,11 +222,11 @@ Reason:
 - It keeps runtime execution outside Scheme while giving Rust a stable payload contract.
 
 Prior M2 owner files:
-- =src/modules/workflow/cicd.ss= for workflow-owned manifest/check-map
+- =src/modules/workflow/{objects,funs}.ss= for workflow-owned manifest/check-map
   validation if the validation is check-map specific.
-- =src/module-system/base.ss= for user-config presentation validation if the
+- =src/module-system/declaration/interface.ss= for user-config presentation validation if the
   validation consumes module-selected manifest maps and summary rows.
-- =src/module-system/profile-config.ss= only forwards results; it should not own
+- =src/user-interface/profile-config.ss= only forwards results; it should not own
   validation logic.
 
 Prior M2 tests:
@@ -232,7 +236,7 @@ Prior M2 tests:
 - =t/declaration-case-test.ss= for maintained downstream case closure.
 
 Current M4 owner files:
-- =src/modules/workflow/cicd.ss= for the workflow CI/CD handoff manifest payload.
+- =src/modules/workflow/funs.ss= for the workflow CI/CD handoff manifest payload.
 - =src/core/config.ss= for configured registry policy and validation evidence.
 - =src/core/runtime-adapter.ss= for existing runtime command manifest vocabulary.
 
@@ -252,8 +256,8 @@ Exit criteria:
 - Generic presentation fixtures with CI/CD intent but no check-map still expose stable empty ABI rows.
 - No provider-specific CI/CD adapter or runtime execution is added.
 Status 2026-06-20:
-- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/base.ss=.
-- Forwarded the new projection through profile and doctor presentations in =src/module-system/profile-config.ss=.
+- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/declaration/interface.ss=.
+- Forwarded the new projection through profile and doctor presentations in =src/user-interface/profile-config.ss=.
 - Added a user-interface result gate in =t/user-interface-cicd-test.ss= that starts from downstream Funflow config and reaches ABI payload data.
 - Updated =t/user-interface-presentation-test.ss= trace stages and empty-fixture coverage.
 *** 10.06.27.46 M6: Tutorial Alignment User-Interface Handoff Gate

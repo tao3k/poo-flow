@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Internal support shared by semantic tool-core object owners.
 
 (import (only-in :clan/poo/object .ref)
@@ -11,9 +15,8 @@
         poo-flow-tool-alist?
         poo-flow-tool-valid-sandbox-profile-ref?)
 
-(defrules poo-flow-tool-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+(def (poo-flow-tool-field-rows . rows)
+  rows)
 
 (def (poo-flow-tool-slot object key default-value)
   (with-catch

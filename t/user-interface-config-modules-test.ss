@@ -1,5 +1,9 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: tests custom user config fragments loaded by `load!`.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: tests custom user config profile modules.
 ;;; Invariant: user fragments remain declarative module selections.
 
 (import (only-in :std/test
@@ -10,16 +14,19 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
         test-case
         test-error
         test-suite)
-        :poo-flow/src/module-system/facade
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/agent-sandbox/config
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-session-module
-                 poo-flow-custom-my-module-task-module
-                 poo-flow-custom-my-module-cicd-module
+        (only-in "../user-interface/custom/my-module/profiles/session"
+                 poo-flow-custom-my-module-session-module)
+        (only-in "../user-interface/custom/my-module/profiles/task"
+                 poo-flow-custom-my-module-task-module)
+        (only-in "../user-interface/custom/my-module/profiles/cicd"
+                 poo-flow-custom-my-module-cicd-module)
+        (only-in "../user-interface/custom/my-module/profiles/object-extension"
                  poo-flow-custom-my-module-object-extension-module))
 
 (export user-interface-config-modules-test)
@@ -41,7 +48,7 @@
 ;;; remains owned by upstream modules.
 (def user-interface-config-modules-test
   (test-suite "poo-flow user interface config modules"
-    (test-case "loads custom profile fragments with load!"
+    (test-case "imports custom profile modules through their owner"
       (let* ((session-profiles
               (config-module-profiles
                (car poo-flow-custom-my-module-session-module)))
@@ -79,10 +86,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-only)))
                          (access . read-only))
                         (cpu . 2)
@@ -103,10 +109,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-write)))
                          (mounts . declared)
                          (access . read-write))

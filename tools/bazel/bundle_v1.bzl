@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Hermetic Bundle v1 images generated from downstream POO Flow Scheme."""
 
 load(
@@ -101,7 +105,7 @@ poo_flow_bundle_v1 = rule(
         "bundle_id": attr.string(mandatory = True),
         "descriptor_out": attr.output(mandatory = True),
         "project": attr.label(
-            default = Label("//scheme:runtime_wasm_generator_compile"),
+            default = Label("//gerbil:compile"),
             providers = [GerbilProjectInfo],
         ),
         "src": attr.label(

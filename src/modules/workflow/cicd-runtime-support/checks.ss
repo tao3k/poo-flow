@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: per-check runtime projections and per-check-to-map manifest/receipt
 ;;; projection helpers for CI/CD runtime handoff.
 
@@ -7,7 +11,9 @@
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
                  runtime-command-fields->manifest)
-        :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
+        :poo-flow/src/modules/workflow/cicd-funs
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
         :poo-flow/src/modules/workflow/cicd-runtime-support/graph)
@@ -30,6 +36,7 @@
 ;; Durable fields are a bounded runtime receipt projection. They are derived
 ;; from validated POO check metadata once, then copied into runtime handoff
 ;; alists so Marlin never has to inspect the POO object graph.
+;; : (forall (a) (-> PooFlowCicdCheck [a]))
 ;; : (-> PooFlowCicdCheck [Alist])
 (def (poo-flow-cicd-check-artifact-provenance check)
   (let ((producer-check (poo-flow-cicd-check-name check))

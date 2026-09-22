@@ -1,7 +1,14 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +18,41 @@ from tools.bazel import scheme_projection_artifact_tool as projection_tool
 
 
 class SchemeProjectionArtifactToolTest(unittest.TestCase):
+    def test_native_failure_preserves_the_gerbil_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "flow.ss"
+            projection = root / "runtime-load-projection.ss"
+            compiled_root = root / "compiled"
+            dependency_root = root / "dependencies"
+            fake_gxi = root / "gxi"
+
+            source.write_text("(use-composition smoke)\n", encoding="utf-8")
+            projection.write_text(";; projection\n", encoding="utf-8")
+            (compiled_root / "lib").mkdir(parents=True)
+            dependency_root.mkdir()
+            fake_gxi.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' 'native projection diagnostic'\n"
+                "exit 70\n",
+                encoding="utf-8",
+            )
+            fake_gxi.chmod(0o755)
+            diagnostic = io.StringIO()
+
+            with contextlib.redirect_stderr(diagnostic):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    projection_tool._load_projection_rows(
+                        gxi=fake_gxi,
+                        source=source,
+                        projection=projection,
+                        compiled_root=compiled_root,
+                        dependency_root=dependency_root,
+                        project_dependency_roots=(),
+                    )
+
+            self.assertIn("native projection diagnostic", diagnostic.getvalue())
+
     def test_main_writes_packaged_digest_envelope(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -20,6 +62,7 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             dependency_marker = root / "dependencies" / ".root"
             project_dependency_root = root / "package"
             loadpath_capture = root / "loadpath.txt"
+            runner_capture = root / "runner.ss"
             output = root / "flow.ss.poo-flow-projection.sexp"
             fake_gxi = root / "gxi"
 
@@ -32,6 +75,7 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             fake_gxi.write_text(
                 "#!/bin/sh\n"
                 f"printf '%s' \"$GERBIL_LOADPATH\" >'{loadpath_capture}'\n"
+                f"cat \"$1\" >'{runner_capture}'\n"
                 "printf '%s\\n' '((\"schema\" \"projection.v1\") "
                 "(\"name\" \"smoke\"))'\n",
                 encoding="utf-8",
@@ -88,6 +132,15 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             self.assertEqual(
                 artifact["rows"],
                 (("schema", "projection.v1"), ("name", "smoke")),
+            )
+            runner_source = runner_capture.read_text(encoding="utf-8")
+            self.assertIn(
+                ":poo-flow/src/module-system/profile-composition/interface",
+                runner_source,
+            )
+            self.assertNotIn(
+                ":poo-flow/src/user-interface/init-syntax",
+                runner_source,
             )
 
 

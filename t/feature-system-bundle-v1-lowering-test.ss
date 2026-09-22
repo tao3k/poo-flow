@@ -1,4 +1,8 @@
-(export feature-system-bundle-v1-lowering-test-suite)
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(export feature-system-bundle-v1-lowering-test)
 
 (import :std/test
         :clan/poo/object
@@ -15,7 +19,7 @@
 (def (sample-symbol component-id label)
   (feature-bundle-v1-symbol 'component component-id label 1))
 
-(def feature-system-bundle-v1-lowering-test-suite
+(def feature-system-bundle-v1-lowering-test
   (test-suite
    "feature-system Bundle v1 lowering"
 
@@ -200,5 +204,3 @@
       (check (.ref (.ref descriptor 'components) 'count) => 0)
       (check (.ref (.ref descriptor 'edges) 'count) => 0)
       (check (.ref (.ref descriptor 'evidence-obligations) 'count) => 0)))))
-
-(run-tests! feature-system-bundle-v1-lowering-test-suite)

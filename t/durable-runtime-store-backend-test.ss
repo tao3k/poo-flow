@@ -1,19 +1,22 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: durable runtime store backend negotiation for Marlin handoff.
 ;;; Invariant: tests validate backend selection and ABI projection only; no
 ;;; runtime store process is started.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
         :poo-flow/src/core/runtime-protocol
         :poo-flow/src/core/runtime-adapter
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend)
 
 (export durable-runtime-store-backend-test)
 
@@ -222,5 +225,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'runtime-store-contract-not-ready)
          #t)))))
-
-(run-tests! durable-runtime-store-backend-test)

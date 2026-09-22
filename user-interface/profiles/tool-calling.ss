@@ -1,4 +1,14 @@
-(.o (tool-request
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; -*- Gerbil -*-
+
+(import (only-in :clan/poo/object .def .o))
+(export tool-calling)
+
+(.def tool-calling
+    (tool-request
      (.o (name 'tool-calling-request)
          (contract 'agent-requests-declared-tool)
          (policy 'tool-request-has-owner-session)))

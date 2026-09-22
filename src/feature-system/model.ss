@@ -1,4 +1,13 @@
-(import :clan/poo/object
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: owns the POO prototypes for features, profiles, selections, and receipts.
+;;; Invariant: model objects remain inert values; resolution and runtime effects live elsewhere.
+(import (only-in :clan/poo/object
+                 .ref
+                 .slot?
+                 object<-alist)
         :poo-flow/src/core/roles
         :poo-flow/src/utilities/functional)
 
@@ -27,18 +36,11 @@
         feature-diagnostic
         feature-activation-plan)
 
-;; The alist is an internal encoding for clan/poo constant slot specs.  Public
-;; Feature authoring is made of named POO fragments and functional composition.
-(def (constant-feature-object slot-values)
-  (let ((object (make-object)))
-    (object-slots-set! object (role-constant-slots slot-values))
-    object))
-
 (def (one-feature-slot slot value)
-  (constant-feature-object (list (cons slot value))))
+  (object<-alist (list (cons slot value))))
 
 (def (feature-descriptor-base feature-id owner-module-id)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'feature-id feature-id)
     (cons 'owner-module-id owner-module-id))))
@@ -79,7 +81,7 @@
          (feature-descriptor-ids descriptors)))
 
 (def (feature-option-schema option-id value-type default-value required?)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-option-schema)
     (cons 'option-id option-id)
@@ -88,14 +90,14 @@
     (cons 'required? required?))))
 
 (def (feature-option-value option-id value)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-option-value)
     (cons 'option-id option-id)
     (cons 'value value))))
 
 (def (feature-option-values . option-values)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-option-values)
     (cons 'values (copy-feature-values option-values)))))
@@ -131,7 +133,7 @@
     (error "missing required POO Feature slot" 'feature-id))
   (unless (.slot? spec 'owner-module-id)
     (error "missing required POO Feature slot" 'owner-module-id))
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-descriptor)
     (cons 'feature-id (.ref spec 'feature-id))
@@ -170,7 +172,7 @@
   (feature-option-values))
 
 (def (feature-selection descriptor (option-values (empty-feature-options)))
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-selection)
     (cons 'feature-id (.ref descriptor 'feature-id))
@@ -178,7 +180,7 @@
     (cons 'option-values option-values))))
 
 (def (feature-profile profile-id selections (contracts '()))
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-profile)
     (cons 'profile-id profile-id)
@@ -186,7 +188,7 @@
     (cons 'contracts (copy-feature-values contracts)))))
 
 (def (feature-diagnostic code feature-id related-id detail)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-diagnostic)
     (cons 'code code)
@@ -196,7 +198,7 @@
 
 (def (feature-activation-plan profile status ordered-selections
                               feature-ids diagnostics)
-  (constant-feature-object
+  (object<-alist
    (list
     (cons 'kind 'feature-activation-plan)
     (cons 'profile profile)

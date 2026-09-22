@@ -1,14 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused user-interface loop-engine POO slot contract failures.
 ;;; Invariant: malformed slots fail before presentation emits intent rows.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-slot-contract-test)
 
@@ -81,7 +85,7 @@
 
 ;;; POO object slot contracts fail before presentation can emit bad intent rows.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-poo-slot-case
+(def (user-interface-custom-loop-engine-invalid-poo-slot-case)
   (test-case "rejects invalid loop-engine POO object slot types"
     (check-equal?
      (with-catch
@@ -94,7 +98,7 @@
 ;;; Memory policy gets the same POO slot contract treatment as other loop
 ;;; objects: malformed recall/commit declarations never become receipts.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-memory-slot-case
+(def (user-interface-custom-loop-engine-invalid-memory-slot-case)
   (test-case "rejects invalid loop-engine memory-policy slot types"
     (check-equal?
      (with-catch
@@ -107,7 +111,7 @@
 
 ;;; Compression policy has the same fail-fast POO slot boundary as memory.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-compression-slot-case
+(def (user-interface-custom-loop-engine-invalid-compression-slot-case)
   (test-case "rejects invalid loop-engine compression-policy slot types"
     (check-equal?
      (with-catch
@@ -121,6 +125,6 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-slot-contract-test
   (test-suite "poo-flow custom loop-engine slot contracts"
-    user-interface-custom-loop-engine-invalid-poo-slot-case
-    user-interface-custom-loop-engine-invalid-memory-slot-case
-    user-interface-custom-loop-engine-invalid-compression-slot-case))
+    (user-interface-custom-loop-engine-invalid-poo-slot-case)
+    (user-interface-custom-loop-engine-invalid-memory-slot-case)
+    (user-interface-custom-loop-engine-invalid-compression-slot-case)))

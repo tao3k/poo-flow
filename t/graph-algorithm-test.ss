@@ -1,13 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: shared graph algorithms remain report-only POO projections.
 ;;; Invariant: graph tests must not schedule, run adapters, or write state.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .def .o .ref)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms)
 
@@ -45,9 +48,44 @@
    (list (poo-flow-graph-edge 'a 'a)
          (poo-flow-graph-edge 'a 'b))))
 
+;; Two SCCs with two concrete edges that project to one condensation edge.
+(def graph-algorithm-condensation-dedup-sample
+  (poo-flow-graph
+   'condensation-dedup-sample
+   (list (poo-flow-graph-node 'a)
+         (poo-flow-graph-node 'b)
+         (poo-flow-graph-node 'c)
+         (poo-flow-graph-node 'd))
+   (list (poo-flow-graph-edge 'a 'b)
+         (poo-flow-graph-edge 'b 'a)
+         (poo-flow-graph-edge 'c 'd)
+         (poo-flow-graph-edge 'd 'c)
+         (poo-flow-graph-edge 'a 'c)
+         (poo-flow-graph-edge 'b 'd))))
+
+;; : PooFlowGraph
+(.def (graph-declarative-slot-sample @ graph)
+  (graph-id 'declarative-slot-graph)
+  (.add-node
+   (.o source: (poo-flow-graph-node 'source 'Source)
+       target: (poo-flow-graph-node 'target 'Target)))
+  (.add-edge
+   (.o source-declares-target:
+       (poo-flow-graph-edge 'source 'target 'declares))))
+
 ;; : TestSuite
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
+    (test-case "Graph derives algorithm values from declarative POO slots"
+      (check-equal? (poo-flow-graph-node-ids graph-declarative-slot-sample)
+                    '(source target))
+      (check-equal? (poo-flow-graph-edge-pairs graph-declarative-slot-sample)
+                    '((source target)))
+      (check-equal?
+       (poo-flow-graph-nodes
+        (poo-flow-graph 'declarative-slot-graph '() '()))
+       '()))
+
     (test-case "projects adjacency, frontiers, reachability, and topology"
       (let ((analysis (poo-flow-graph-analysis-receipt
                        graph-algorithm-sample)))
@@ -147,6 +185,11 @@
                        graph-algorithm-self-loop-sample)))
         (check-equal? (.ref analysis 'components) '((a) (b)))
         (check-equal? (.ref analysis 'cyclic-components) '((a)))
+        (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))
+    (test-case "deduplicates projected condensation edges"
+      (let ((analysis
+             (poo-flow-graph-loop-analysis-receipt
+              graph-algorithm-condensation-dedup-sample)))
+        (check-equal? (.ref analysis 'components) '((a b) (c d)))
+        (check-equal? (.ref analysis 'cyclic-components) '((a b) (c d)))
         (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))))
-
-(run-tests! graph-algorithm-test)

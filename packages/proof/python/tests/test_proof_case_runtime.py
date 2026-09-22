@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 from __future__ import annotations
 
 import os
@@ -69,7 +73,12 @@ def scheme_vector() -> tuple[bytes, bytes]:
             [str(homebrew), "/usr/bin", "/bin", "/usr/sbin", "/sbin"]
         )
     completed = subprocess.run(
-        ["gxpkg", "env", "gxi", "tools/emit-proof-case-vector.ss"],
+        [
+            "gxpkg",
+            "env",
+            "gxi",
+            "packages/proof/t/fixtures/emit-proof-case-vector.ss",
+        ],
         cwd=REPO_ROOT,
         env=env,
         check=True,

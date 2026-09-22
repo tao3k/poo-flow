@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+gerbil_dependency_sources = use_extension(
+    "@gerbil_bazel//gerbil:extensions.bzl",
+    "gerbil",
+)
+gerbil_dependency_sources.source_package(
+    name = "gerbil_poo_sources",
+    canonical_uri = "https://github.com/tao3k/gerbil-poo",
+    package = "gerbil-poo",
+    revision = "307b035cd5e078dcaad5ba7d69ad52a028b2bca0",
+    sha256 = "bf36a46ef30290d471903c0a71228a919ef7a4dfec1d5c0366670a9ea7339d0d",
+    strip_prefix = "gerbil-poo-307b035cd5e078dcaad5ba7d69ad52a028b2bca0",
+    urls = [
+        "https://github.com/tao3k/gerbil-poo/archive/307b035cd5e078dcaad5ba7d69ad52a028b2bca0.tar.gz",
+    ],
+)
+gerbil_dependency_sources.source_package(
+    name = "asp_gerbil_scheme_sources",
+    canonical_uri = "https://github.com/tao3k/asp-gerbil-scheme",
+    package = "asp-gerbil-scheme",
+    revision = "5904e020e3b0199de272f094d65e3220482f2ee4",
+    sha256 = "5fe74b0937d3ca1c4cebccda41ebe4d7e9f10bf4c35c56a2f319b68586f07d77",
+    strip_prefix = "asp-gerbil-scheme-5904e020e3b0199de272f094d65e3220482f2ee4",
+    urls = [
+        "https://github.com/tao3k/asp-gerbil-scheme/archive/5904e020e3b0199de272f094d65e3220482f2ee4.tar.gz",
+    ],
+)
+use_repo(
+    gerbil_dependency_sources,
+    "asp_gerbil_scheme_sources",
+    "gerbil_poo_sources",
+)

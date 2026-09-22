@@ -1,10 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: backend validation keeps sandbox provider checks separate from
 ;;; profile authoring syntax and runtime execution.
 ;;; Invariant: validation receipts must be deterministic policy evidence for
 ;;; every sandbox backend object.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist object? .slot? .ref)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability

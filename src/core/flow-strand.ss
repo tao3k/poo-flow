@@ -1,9 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: flow strands describe Funflow-style interpreter families.
 ;;; Invariant: strand objects are declaration policy, not executable runners.
 
-(import (only-in :std/sugar filter)
-        (only-in :clan/poo/object .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/projection-syntax

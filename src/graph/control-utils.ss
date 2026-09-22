@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: pure helpers for graph control proof projections.
 ;;; Invariant: no runtime execution; helpers only shape graph facts.
 
-(import (only-in :std/srfi/1 any every filter fold)
-        :poo-flow/src/graph/types
+(import (only-in :std/list/list any every filter fold)
+        :poo-flow/src/graph/types-core
         :poo-flow/src/graph/algorithms)
 
 (export +poo-flow-graph-conditional-edge-kinds+
@@ -72,11 +76,14 @@
 
 ;; : (-> PooFlowGraph [Object] [Object] [Object])
 (def (graph-dead-end-ids graph-value reachable-ids finish-ids)
-  (select-ids
-   (lambda (id)
-     (and (not (id-member? id finish-ids))
-          (null? (poo-flow-graph-outgoing-ids graph-value id))))
-   reachable-ids))
+  (let ((finish-index (ids->membership-index finish-ids))
+        (outgoing-node-index
+         (edge-source-index (poo-flow-graph-edges graph-value))))
+    (select-ids
+     (lambda (id)
+       (and (not (hash-key? finish-index id))
+            (not (hash-key? outgoing-node-index id))))
+     reachable-ids)))
 
 ;; : (-> [Object] [Object] [Object] [Object] [Object] [[Object Object]] [Object] Boolean)
 (def (control-finish-total? node-ids
@@ -195,10 +202,14 @@
 
 ;; : (-> [PooFlowGraphEdge] [Object] [[Object Object]] [[Object Object]])
 (def (undeclared-edge-pairs/rev edges node-ids pairs-rev)
+  (undeclared-edge-pairs/indexed/rev
+   edges (ids->membership-index node-ids) pairs-rev))
+
+(def (undeclared-edge-pairs/indexed/rev edges node-index pairs-rev)
   (fold
    (lambda (edge pairs)
-     (if (and (id-member? (poo-flow-graph-edge-from edge) node-ids)
-              (id-member? (poo-flow-graph-edge-to edge) node-ids))
+     (if (and (hash-key? node-index (poo-flow-graph-edge-from edge))
+              (hash-key? node-index (poo-flow-graph-edge-to edge)))
        pairs
        (cons (list (poo-flow-graph-edge-from edge)
                    (poo-flow-graph-edge-to edge))
@@ -212,21 +223,35 @@
 
 ;; : (-> [Object] [Object] [Object])
 (def (remove-ids ids-to-remove ids)
-  (filter
-   (lambda (id)
-     (not (id-member? id ids-to-remove)))
-   ids))
+  (let (remove-index (ids->membership-index ids-to-remove))
+    (filter
+     (lambda (id) (not (hash-key? remove-index id)))
+     ids)))
 
 ;; : (-> [Object] [Object] [Object])
 (def (intersection-ids ids candidates)
-  (filter
-   (lambda (id)
-     (id-member? id candidates))
-   ids))
+  (let (candidate-index (ids->membership-index candidates))
+    (filter
+     (lambda (id) (hash-key? candidate-index id))
+     ids)))
 
 ;; : (-> [Object] [Object] Boolean)
 (def (ids-subset? subset ids)
-  (if (every (lambda (id) (id-member? id ids)) subset) #t #f))
+  (let (id-index (ids->membership-index ids))
+    (if (every (lambda (id) (hash-key? id-index id)) subset) #t #f)))
+
+(def (ids->membership-index ids)
+  (let (index (make-hash-table))
+    (for-each (lambda (id) (hash-put! index id #t)) ids)
+    index))
+
+(def (edge-source-index edges)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (edge)
+       (hash-put! index (poo-flow-graph-edge-from edge) #t))
+     edges)
+    index))
 
 ;; : (-> Object [Object] Boolean)
 (def (id-member? id ids)

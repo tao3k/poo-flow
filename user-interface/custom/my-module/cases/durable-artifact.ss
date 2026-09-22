@@ -1,10 +1,19 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream durable artifact policy case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream durable artifact policy Case imported through its
+;;; precise owner when selected.
 ;;; Invariant: this declares artifact policy validation data only; Scheme does
 ;;; not store, publish, index, or retain artifacts at runtime.
 
-(let* ((custom-artifact-profile
+(import :poo-flow/src/modules/memory-core/durable/artifact-policy)
+
+(export poo-flow-custom-my-module-durable-artifact-case)
+
+(def poo-flow-custom-my-module-durable-artifact-case
+  (let* ((custom-artifact-profile
         (artifact-profile custom-report
           :extends report/base
           :scope (tenant project workflow session human-handoff publish-channel)
@@ -70,4 +79,4 @@
    (cons 'valid?
          (poo-flow-durable-artifact-policy-receipt-valid?
           artifact-policy-receipt))
-   (cons 'runtime-executed #f)))
+   (cons 'runtime-executed #f))))

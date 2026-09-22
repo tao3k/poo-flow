@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: owns object/property/pattern-property parsing for normalized JSON
 ;;; Schema IR and delegates shared registry behavior to normalize-core.
 ;;; Invariant: parser-owned facts from this owner describe schema shape and
@@ -10,10 +14,6 @@
                  poo-flow-json-schema-property-record
                  poo-flow-json-schema-pattern-property-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/srfi/1
-                 every
-                 iota
-                 map)
         (only-in "./functional.ss"
                  poo-flow-contract-json-object?
                  poo-flow-contract-json-array->list
@@ -188,7 +188,7 @@
                    properties context)))))))
 
 ;; : (-> JsonObject [Symbol] Alist Pair)
-(import (only-in :std/pregexp pregexp))
+(import (only-in :std/text/pregexp pregexp))
 
 ;; : (-> JsonSchemaPairEntry JsonSchemaPairEntryValue)
 (def (poo-flow-json-schema-pair-entry-value entry)

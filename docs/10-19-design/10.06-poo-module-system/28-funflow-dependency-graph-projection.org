@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+TITLE: 10.06.28 Funflow Dependency Graph Projection
 
 ** 10.06.28.10 Question
@@ -12,7 +16,7 @@ Funflow =:needs= lowers into workflow-owned CI/CD dependency facts:
 - =src/modules/funflow/config.ss= accepts a single symbol or a list of symbols
   for =:needs=.
 - Non-symbol dependency refs are rejected at the Funflow config boundary.
-- =src/modules/workflow/cicd.ss= exposes
+- =src/modules/workflow/interface.ss= exposes
   =poo-flow-cicd-check-dependency-refs= and
   =poo-flow-cicd-check-map->dependency-graph=.
 - The dependency graph projects =nodes=, =duplicate-nodes=, =edges=,

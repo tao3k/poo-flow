@@ -1,13 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: scenario coverage for POO-native composition user interface.
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? test-case test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/profile-composition-builders
-        :poo-flow/src/module-system/profile-composition-accessors)
+        :poo-flow/src/module-system/profile-composition/interface)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 ;; : PooModule
 (def session-module
@@ -40,41 +41,43 @@
                 (tool 'llm)
                 (streaming #t)))))
 
-;; : PooFlowComposition
+;; : PooFlowScenarioCase
 (def rag-composition
-  (poo-flow-composition-object
+  (poo-flow-scenario-case
    'rag-agent
-   (list (poo-flow-composition-module-binding 'session session-module)
-         (poo-flow-composition-module-binding 'sandbox sandbox-module)
-         (poo-flow-composition-module-binding 'retriever retriever-module)
-         (poo-flow-composition-module-binding 'llm llm-module))
+   (list (poo-flow-scenario-module-binding 'session session-module)
+         (poo-flow-scenario-module-binding 'sandbox sandbox-module)
+         (poo-flow-scenario-module-binding 'retriever retriever-module)
+         (poo-flow-scenario-module-binding 'llm llm-module))
+   '()
    (list
-    (poo-flow-composition-stage
+    (poo-flow-scenario-stage
      'develop
-     (list (poo-flow-composition-clause
+     (list (poo-flow-scenario-clause
             'compose
             (list (poo-flow-profile-ref session-module 'dev)
                   (poo-flow-profile-ref sandbox-module 'local)
                   (poo-flow-profile-ref retriever-module 'mock)
                   (poo-flow-profile-ref llm-module 'debug)))))
-    (poo-flow-composition-stage
+    (poo-flow-scenario-stage
      'production
-     (list (poo-flow-composition-clause
+     (list (poo-flow-scenario-clause
             'compose
             (list (poo-flow-profile-ref session-module 'hardened)
                   (poo-flow-profile-ref sandbox-module 'restricted)
                   (poo-flow-profile-ref retriever-module 'vector-store)
                   (poo-flow-profile-ref llm-module 'chat)))
-           (poo-flow-composition-clause 'graph '(guarded-rag-flow))
-           (poo-flow-composition-clause
+           (poo-flow-scenario-clause 'graph '(guarded-rag-flow))
+           (poo-flow-scenario-clause
             'loop
             '(#:fuel 8 #:exit answer-ready))
-           (poo-flow-composition-clause
+           (poo-flow-scenario-clause
             'prove
             '(scope-contained
               dependency-ready
               graph-reachable
-              loop-progress)))))))
+              loop-progress)))))
+   '()))
 
 ;; : (-> List Symbol Any)
 (def (alist-value key alist)
@@ -83,25 +86,26 @@
    ((eq? key (caar alist)) (cdar alist))
    (else (alist-value key (cdr alist)))))
 
-;; : (-> PooFlowCompositionStage Symbol Any)
+;; : (-> PooFlowScenarioStage Symbol Any)
 (def (stage-clause-payload composition-stage clause-kind)
-  (let loop ((clauses (poo-flow-composition-stage-clauses composition-stage)))
+  (let loop ((clauses (poo-flow-scenario-stage-clauses composition-stage)))
     (cond
      ((null? clauses) #f)
      ((eq? (.ref (car clauses) 'clause-kind) clause-kind)
       (.ref (car clauses) 'payload))
      (else (loop (cdr clauses))))))
 
-(test-suite "poo-flow POO-native composition interface"
+(def poo-flow-composition-test
+  (test-suite "poo-flow POO-native composition interface"
   (test-case "builds staged composition from module profile slots"
-    (check-equal? (poo-flow-composition? rag-composition) #t)
-    (check-equal? (poo-flow-composition-name rag-composition) 'rag-agent)
-    (check-equal? (map poo-flow-composition-stage-name
-                       (poo-flow-composition-stages rag-composition))
+    (check-equal? (poo-flow-scenario-case? rag-composition) #t)
+    (check-equal? (poo-flow-scenario-case-name rag-composition) 'rag-agent)
+    (check-equal? (map poo-flow-scenario-stage-name
+                       (poo-flow-scenario-case-stages rag-composition))
                   '(develop production))
-    (check-equal? (length (poo-flow-composition-modules rag-composition)) 4))
+    (check-equal? (length (poo-flow-scenario-case-modules rag-composition)) 4))
   (test-case "selects exact profile slots from POO module objects"
-    (let* ((production-stage (cadr (poo-flow-composition-stages
+    (let* ((production-stage (cadr (poo-flow-scenario-case-stages
                                     rag-composition)))
            (profiles (stage-clause-payload production-stage 'compose)))
       (check-equal? (map (lambda (profile) (.ref profile 'name)) profiles)
@@ -112,7 +116,7 @@
       (check-equal? (.ref (car profiles) 'audit-required) #t)
       (check-equal? (.ref (cadr profiles) 'network) #f)))
   (test-case "keeps graph loop and proof clauses as stage metadata"
-    (let ((production-stage (cadr (poo-flow-composition-stages
+    (let ((production-stage (cadr (poo-flow-scenario-case-stages
                                    rag-composition))))
       (check-equal? (stage-clause-payload production-stage 'graph)
                     '(guarded-rag-flow))
@@ -122,4 +126,4 @@
                     '(scope-contained
                       dependency-ready
                       graph-reachable
-                      loop-progress)))))
+                      loop-progress))))))

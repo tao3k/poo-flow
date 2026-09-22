@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Phase-Aware Composition Macro Architecture
 #+subtitle: Hygienic Expansion, Module Ownership, and Bounded Compile-Time Work
 #+date: 2026-07-09
@@ -57,7 +61,7 @@ single-instantiation behavior, and compile-time allocation.
 |-------+----------------+----------------|
 | =profile-composition.ss= | Stable composition facade | =use-composition= plus explicitly selected native POO extension helpers |
 | =profile-composition-use-syntax.ss= | Thin public macro and final lowering | =use-composition= only |
-| =profile-composition-syntax-plan.ss= | Phase-owned grammar parser, validation, and immutable syntax plan | Compile-time import only |
+| =profile-composition-declaration-syntax.ss= | Phase-owned grammar parser, validation, and immutable declaration model | Compile-time import only |
 | =profile-composition-builders.ss= | Ordinary POO composition, module-binding, stage, and clause builders | Selected through the facade |
 | =profile-composition-inline-runtime.ss= | Runtime construction of inline/imported POO profiles | Selected through the facade; no wildcard re-export from syntax owner |
 
@@ -66,7 +70,7 @@ the complete runtime module.  Generated identifiers carry their original
 module bindings, so lowering does not require exposing private runtime helpers
 as user configuration.
 
-The syntax-plan owner is compiled macro support.  It is imported through the
+The declaration syntax owner is compiled macro support.  It is imported through the
 canonical phase-adjusted Gerbil module path for the active compiler.  It must
 not be loaded with =load=, evaluated from source, or stored in a mutable module
 global.
@@ -76,14 +80,14 @@ global.
 #+begin_src mermaid
 flowchart LR
   A["use-composition syntax object"] --> B["shape and literal validation"]
-  B --> C["immutable composition syntax plan"]
+  B --> C["immutable composition declaration model"]
   C --> D["single lowering traversal"]
   D --> E["ordinary POO-native builder forms"]
   E --> F["composition POO object"]
   F --> G["receipt or runtime projection"]
 #+end_src
 
-The syntax plan retains syntax objects for the composition name, module name,
+The declaration model retains syntax objects for the composition name, module name,
 alias, profile expressions, extension expressions, clauses, and stages.  It is
 a private phase-owned class with named fields, constructors, and accessors.  It
 exists only to model expander state and syntax objects; runtime semantic owners
@@ -145,7 +149,7 @@ are matched as syntax literals, not through =symbol->string=.
 
 The following rules are mandatory:
 
-- preserve source and lexical context while parsing and planning;
+- preserve source and lexical context while parsing declarations;
 - use binding-aware literal comparison for grammar identifiers;
 - keep profile expressions, =:extends= expressions, and hook expressions as
   syntax objects;
@@ -156,9 +160,9 @@ The following rules are mandatory:
 - do not place hidden activation, I/O, connector calls, or runtime execution in
   the expansion.
 
-* Syntax Plan Contract
+* Declaration Model Contract
 
-One parse produces one immutable plan containing:
+One parse produces one immutable declaration model containing:
 
 - composition name syntax;
 - imported module and alias syntax;
@@ -178,7 +182,10 @@ The parser validates before lowering:
 - known top-level and stage clause kinds;
 - valid =profile= and =profiles= shapes.
 
-The lowering pass consumes the plan without reparsing source forms.
+The lowering pass consumes the declaration model without reparsing source
+forms.  This compile-time value is deliberately not called a Plan: it contains
+no execution nodes, dependency schedule, runtime authority, or handoff state.
+Only the lazy Scenario Case projection may publish an execution plan.
 
 * Error Contract
 
@@ -210,7 +217,7 @@ forms.
 - Do not use nested =apply append= over mapped profile groups.
 - Do not rescan all forms independently for compose and stage output.
 - Do not construct temporary POO runtime objects during expansion.
-- Reuse the compiled syntax-plan module through the Gerbil module registry.
+- Reuse the compiled declaration syntax module through the Gerbil module registry.
 
 For =n= profile references and =m= stage clauses, the target work is
 =O(n + m)= and generated form count is also =O(n + m)=.
@@ -230,14 +237,15 @@ The evidence matrix contains:
 | cold expansion | Full module-context, runtime/meta generation, and compiler path |
 | warm expansion | Module-context reuse and no duplicate expansion |
 | generated forms | Linear output-size assertion |
-| repeated runs | RSS stability and absence of monotonic growth |
+| repeated runs | elapsed stability without reducing scenario scale |
 
 The pre-refactor implementation is measured first and stored as the baseline.
-The replacement must not regress elapsed time or peak RSS at 1,000 profiles,
-must complete the 5,000-profile case without monotonic RSS growth, and must show
-module-context reuse on the warm path.  Thresholds are recorded from the real
-baseline receipt; profile count, iteration count, and build concurrency are not
-reduced to pass the gate.
+The replacement must not regress elapsed time at 1,000 profiles, must complete
+the 5,000-profile case, and must show module-context reuse on the warm path.
+Test-process memory enforcement is supplied declaratively by the ASP Gerbil
+Scheme POO Testing Profile; this compiler benchmark does not duplicate it with
+a platform-specific process wrapper.  Profile count, iteration count, and build
+concurrency are not reduced to pass the gate.
 
 * Harness Evidence
 
@@ -302,8 +310,8 @@ The phase-aware refactor landed on 2026-07-09 with these owners:
 - =profile-composition.ss= is the stable facade;
 - =profile-composition-use-syntax.ss= exports only =use-composition= and owns
   final lowering;
-- =profile-composition-syntax-plan.ss= is imported with =for-syntax= and owns
-  binding-aware validation plus immutable syntax-plan classes;
+- =profile-composition-declaration-syntax.ss= is imported with =for-syntax= and owns
+  binding-aware validation plus immutable declaration syntax classes;
 - =profile-composition-builders.ss= and
   =profile-composition-inline-runtime.ss= remain ordinary POO runtime owners;
 - the legacy =profile-composition-main-syntax.ss= owner was removed without a
@@ -317,18 +325,11 @@ hygiene, duplicate rejection, and expansion-time rejection of alias-only legacy
 syntax.
 
 The real expansion gate lives in
-=t/scenarios/performance/composition-macro-expansion/=.  Its current receipt is:
-
-| Case | Gerbil elapsed | Peak RSS | Result |
-|------+----------------+----------+--------|
-| 1,000 profiles | 1.000 s | 124.75 MiB | pass |
-| 5,000 profiles, first run | 2.850 s | 192.77 MiB | pass |
-| 5,000 profiles, second run | 2.570 s | 193.41 MiB | pass |
-
-Repeated 5,000-profile RSS drift is 0.64 MiB.  The gate uses =gxc -S= so it
-measures Gerbil expansion and Scheme generation without attributing Gambit C
-compiler memory to the composition macro.  Full native compilation remains a
-separate package-build backend gate.
+=t/scenarios/performance/composition-macro-expansion/=.  It uses =gxc -S= and
+the upstream =:clan/timestamp#call-with-timing= clock, so it measures Gerbil
+expansion and Scheme generation without a platform-specific =/usr/bin/time=
+parser.  Full native compilation remains a separate package-build backend gate,
+while runtime heap limits remain owned by the ASP POO Testing Profile.
 
 The upstream Harness owns three corresponding policy scenarios:
 

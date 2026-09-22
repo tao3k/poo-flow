@@ -1,11 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream runtime materialization receipt case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream runtime materialization receipt case.
 ;;; Invariant: this is runtime handoff data only; no synchronize, sandbox open,
 ;;; provider call, or IO replay happens in Scheme.
 
-(use-module session-core
-  :config
+(import :poo-flow/src/modules/session/syntax)
+
+(export poo-flow-custom-my-module-session-materialization-case)
+
+(def poo-flow-custom-my-module-session-materialization-case
+  (poo-flow-session-cases
   (session-case custom-session-materialization-case
     (metadata (source . user-interface)
               (case . session-materialization))
@@ -60,4 +67,4 @@
                   (declared-sandbox-handle-refs
                    . (sandbox/custom-build-handle))))))
     (rows (session-materialization-row pending)
-          (session-materialization-row failed))))
+          (session-materialization-row failed)))))

@@ -1,23 +1,27 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused user-interface loop-engine capability backend checks.
 ;;; Invariant: capability backends name registry backend-kind values, never
 ;;; runtime owners.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation-config
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-capability-test)
 
@@ -104,7 +108,7 @@
 ;;; backend capability registry. Marlin is the runtime owner, not a backend
 ;;; capability value.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-capability-case
+(def (user-interface-custom-loop-engine-invalid-capability-case)
   (test-case "diagnoses invalid loop-engine capability backend"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-capability-module))
@@ -140,7 +144,7 @@
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-capability-performance-case
+(def (user-interface-custom-loop-engine-invalid-capability-performance-case)
   (test-case "keeps invalid capability presentation inside benchmark contract"
     (let* ((summary
             (custom-loop-invalid-capability-summary))
@@ -160,5 +164,5 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-capability-test
   (test-suite "poo-flow custom loop-engine capability policy"
-    user-interface-custom-loop-engine-invalid-capability-case
-    user-interface-custom-loop-engine-invalid-capability-performance-case))
+    (user-interface-custom-loop-engine-invalid-capability-case)
+    (user-interface-custom-loop-engine-invalid-capability-performance-case)))

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Scenario expected: the receipt boundary is generated once as a struct, and
 ;;; ->alist is the only runtime-language projection boundary.
 

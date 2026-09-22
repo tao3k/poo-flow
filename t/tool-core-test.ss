@@ -1,13 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: POO-native tool specs and policy-catalog validation.
 ;;; Invariant: Scheme builds tool handoff receipts only; no tool runtime starts.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/src/modules/tool-core/objects-policy-refs
+                 poo-flow-tool-merge-policy-tool-refs
+                 poo-flow-tool-unique-symbols)
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/tool-core/config)
 
@@ -25,6 +31,17 @@
 ;; : TestSuite
 (def tool-core-test
   (test-suite "poo-flow tool-core"
+    (test-case "deduplicates policy refs while preserving wildcard and seed semantics"
+      (check-equal?
+       (poo-flow-tool-unique-symbols
+        '(calculator * shell calculator audit shell)
+        '(audit))
+       '(calculator shell))
+      (check-equal?
+       (poo-flow-tool-merge-policy-tool-refs
+        '(calculator shell calculator)
+        '(* shell audit calculator))
+       '(calculator shell audit)))
     (test-case "authors custom tool specs and projects handoff manifests"
       (let* ((calculator
               (poo-flow-tool-spec
@@ -215,5 +232,3 @@
                         tool-spec-missing-sandbox-profile
                         tool-grant-action-not-supported))
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! tool-core-test)

@@ -1,27 +1,26 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Scenario: user-interface CrewAI-style composition instance.
 
-(import (only-in :clan/poo/object .ref)
-        (only-in :std/test check-equal? run-tests! test-case test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/profile-composition-accessors)
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :std/test check-equal? test-case test-suite)
+        (only-in :poo-flow/src/module-system/loader/fragment-syntax load!)
+        (only-in :poo-flow/src/module-system/profile-composition/use-syntax
+                 use-composition)
+        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+                 poo-flow-scenario-case?)
+        :poo-flow/src/module-system/profile-composition/accessors
+        :poo-flow/user-interface/scenarios/crewai/scenario)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
-
-(def crewai
-  (eval (call-with-input-file "user-interface/profiles/crewai.ss" read)))
-
-(def poo-flow-custom-module-crewai-module crewai)
-
-(load! "../user-interface/cases/crewai")
 
 (def crewai-composition
-  poo-flow-custom-module-crewai-case)
+  crewai-scenario)
 
 (def (stage-clause-payload stage kind)
-  (let loop ((clauses (poo-flow-composition-stage-clauses stage)))
+  (let loop ((clauses (poo-flow-scenario-stage-clauses stage)))
     (cond
      ((null? clauses) (error "missing composition clause" kind))
      ((equal? (.ref (car clauses) 'clause-kind) kind)
@@ -29,24 +28,24 @@
      (else (loop (cdr clauses))))))
 
 (def (single-stage composition)
-  (car (poo-flow-composition-stages composition)))
+  (car (poo-flow-scenario-case-stages composition)))
 
-(run-tests!
+(def crewai-user-composition-test
  (test-suite "crewai user composition"
   (test-case "crewai declares one reusable production composition"
     (let* ((stage (single-stage crewai-composition))
            (compose-payload
-            (poo-flow-composition-profiles crewai-composition))
+            (poo-flow-scenario-case-profiles crewai-composition))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove))
            (handoff-payload (stage-clause-payload stage 'handoff)))
-      (check-equal? (poo-flow-composition? crewai-composition) #t)
-      (check-equal? (poo-flow-composition-name crewai-composition) 'crewai)
-      (check-equal? (length (poo-flow-composition-modules
+      (check-equal? (poo-flow-scenario-case? crewai-composition) #t)
+      (check-equal? (poo-flow-scenario-case-name crewai-composition) 'crewai)
+      (check-equal? (length (poo-flow-scenario-case-modules
                              crewai-composition))
                     1)
-      (check-equal? (poo-flow-composition-stage-name stage) 'production)
+      (check-equal? (poo-flow-scenario-stage-name stage) 'production)
       (check-equal? (length compose-payload) 14)
       (check-equal? (map (lambda (profile) (.ref profile 'name))
                          compose-payload)

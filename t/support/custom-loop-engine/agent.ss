@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Agent graph, receipt, and handoff checks for custom loop-engine tests.
 
 (import (only-in :std/test check-equal?)
         (only-in :clan/poo/object object?)
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
-        :poo-flow/t/support/custom-loop-engine/fixtures)
+        "./fixtures")
 
 (export check-custom-loop-agent-boundary)
 

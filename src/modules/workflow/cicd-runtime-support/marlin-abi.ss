@@ -1,7 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Marlin ABI projection for CI/CD runtime handoff.
 
-(import :poo-flow/src/modules/workflow/cicd-core
+(import :poo-flow/src/modules/workflow/types
+        :poo-flow/src/modules/workflow/objects
+        :poo-flow/src/modules/workflow/cicd-funs
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
         :poo-flow/src/modules/workflow/cicd-runtime-support/checks)

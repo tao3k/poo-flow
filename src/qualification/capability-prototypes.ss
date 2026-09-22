@@ -1,10 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: orthogonal POO capabilities for qualification object families.
 
 (export #t)
 
-(import :clan/poo/object
-        :poo-flow/src/core/object-syntax)
+(import (only-in :clan/poo/object .ref)
+        :poo-flow/src/core/object-syntax
+        (only-in :std/list/list fold fold-right))
 
 (def +poo-flow-versioned-capability-slots+ '(schema-id schema-version))
 (def +poo-flow-revision-bound-capability-slots+ '(source-revision))
@@ -153,16 +158,21 @@
                (slots (cdr descriptor))
                (duplicate-id? (memq id ids))
                (collisions
-                (filter (lambda (slot) (memq slot owned)) slots)))
+                (filter (lambda (slot) (memq slot owned)) slots))
+               (diagnostics
+                (fold-right
+                 (lambda (slot out)
+                   (cons (list 'slot-owner-conflict slot) out))
+                 diagnostics
+                 collisions))
+               (diagnostics
+                (if duplicate-id?
+                  (cons (list 'duplicate-capability id) diagnostics)
+                  diagnostics)))
           (loop (cdr rest)
                 (cons id ids)
-                (append slots owned)
-                (append
-                 (if duplicate-id?
-                     (list (list 'duplicate-capability id)) '())
-                 (map (lambda (slot) (list 'slot-owner-conflict slot))
-                      collisions)
-                 diagnostics))))))
+                (fold cons owned slots)
+                diagnostics)))))
 
 (def (poo-flow-qualification-capability-composition-assert! descriptors)
   (let (diagnostics

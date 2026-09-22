@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: assemble AC-10 release evidence without re-deciding owner results.
 
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier
         :poo-flow/src/qualification/agentic-control-plane-fixture

@@ -1,14 +1,17 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 set -eu
 
 gxi=$1
 fixture=$2
 harness=$3
 clan_package=$4
-utils_package=$5
 
 if [ -z "${GERBIL_LOADPATH:-}" ]; then
-  GERBIL_LOADPATH=$PWD:$(dirname "$clan_package"):$(dirname "$utils_package")
+  GERBIL_LOADPATH=$PWD:$(dirname "$clan_package")
   export GERBIL_LOADPATH
 fi
 

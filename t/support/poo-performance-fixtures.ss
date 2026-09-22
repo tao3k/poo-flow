@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: benchmark fixture catalog for POO performance scenarios.
 
 (export poo-performance-load-fixture
@@ -46,6 +50,8 @@
         poo-performance-marlin-runtime-handoff-profile-fixture
         poo-performance-prototype-composition-cache-fixture-path
         poo-performance-prototype-composition-cache-fixture
+        poo-performance-observability-slot-guard-fixture-path
+        poo-performance-observability-slot-guard-fixture
         poo-performance-composition-profile-declaration-fixture-path
         poo-performance-composition-profile-declaration-fixture
         poo-performance-composition-profiles-bulk-fixture-path
@@ -260,6 +266,15 @@
    poo-performance-prototype-composition-cache-fixture-path))
 
 ;; : String
+(def poo-performance-observability-slot-guard-fixture-path
+  "t/scenarios/performance/poo-observability-slot-guard/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-observability-slot-guard-fixture)
+  (poo-performance-load-fixture
+   poo-performance-observability-slot-guard-fixture-path))
+
+;; : String
 (def poo-performance-composition-profile-declaration-fixture-path
   "t/scenarios/performance/poo-composition-profile-declaration/benchmark.ss")
 
@@ -353,6 +368,7 @@
         poo-performance-benchmark-fixture-family-fixture-path
         poo-performance-marlin-runtime-handoff-profile-fixture-path
         poo-performance-prototype-composition-cache-fixture-path
+        poo-performance-observability-slot-guard-fixture-path
         poo-performance-composition-profile-declaration-fixture-path
         poo-performance-composition-profiles-bulk-fixture-path
         poo-performance-composition-local-override-fixture-path

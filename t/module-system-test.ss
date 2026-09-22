@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: module-system tests cover descriptor activation, not loading.
 
 (import (only-in :std/test
@@ -8,14 +12,14 @@
                  check-false
                  check-not-equal?
                  check-output
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/projection
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/api
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/loader/resolver)
 
 (export module-system-test)
 
@@ -96,9 +100,9 @@
              (registry (make-poo-flow-module-registry-source 'kernel-profile))
              (generated (make-poo-flow-module-generated-source 'generated-runtime))
              (custom-entrypoint
-              (poo-flow-module-custom-config-entrypoint "./custom/my-module"))
+              (poo-flow-module-custom-interface-entrypoint "./custom/my-module"))
              (custom
-              (make-poo-flow-module-custom-config-source "./custom/my-module"))
+              (make-poo-flow-module-custom-interface-source "./custom/my-module"))
              (custom-metadata
               (poo-flow-module-source-ref-metadata custom))
              (local-shape (poo-flow-module-source-ref->alist local)))
@@ -119,12 +123,12 @@
         (check-equal? (cdr (assoc 'value local-shape))
                       "modules/remote-runtime.ss")
         (check-equal? custom-entrypoint
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (poo-flow-module-source-ref-kind custom) 'local)
         (check-equal? (poo-flow-module-source-ref-value custom)
-                      "./custom/my-module/config.ss")
+                      "./custom/my-module/interface.ss")
         (check-equal? (cdr (assoc 'entrypoint custom-metadata))
-                      "./custom/my-module/config.ss")))
+                      "./custom/my-module/interface.ss")))
     (test-case "macro syntax expands to the same descriptor contract"
       (let* ((task-descriptor
               (make-task-family-descriptor 'macro-job

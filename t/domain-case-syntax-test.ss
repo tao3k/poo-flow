@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: expansion and runtime checks for DomainCase authoring macros.
 
 (import (only-in :std/test
@@ -8,8 +12,8 @@
                  test-suite)
         :clan/poo/object
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/domain-case
-        :poo-flow/src/module-system/domain-case-syntax)
+        :poo-flow/src/feature-system/domain-case/interface
+        :poo-flow/src/feature-system/domain-case/syntax)
 
 (export domain-case-syntax-test)
 

@@ -1,8 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: audit-friendly downstream agent sandbox profile declarations.
-;;; Invariant: loaded by tests as an independent fragment; it does not execute.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(let ((audit-base-capabilities
+;;; Boundary: audit-friendly downstream agent sandbox profile declarations.
+;;; Invariant: imported by tests as an independent module; it does not execute.
+
+(import :poo-flow/src/user-interface/init-syntax)
+
+(export poo-flow-custom-module-agent-sandbox-audit-module)
+
+(def poo-flow-custom-module-agent-sandbox-audit-module
+  (let ((audit-base-capabilities
        '(process-run filesystem-read filesystem-write tmpdir))
       (audit-branch-capabilities
        '(process-run filesystem-read tmpdir cache-mount))
@@ -62,4 +71,4 @@
          audit-session-name
          branch-scope
          "feature/agent-sandbox-audit"
-         audit-branch-metadata)))))
+         audit-branch-metadata))))))

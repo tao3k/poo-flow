@@ -1,14 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: sandbox profile core owns reusable profile objects before
 ;;; backend-specific modules specialize filesystem, network, and resource policy.
 ;;; Invariant: profile objects must remain composable through POO inheritance.
 
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object object<-alist .ref .slot?)
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core
         :poo-flow/src/modules/sandbox-core/profile-support/policy-backend-capability
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
-        (only-in :poo-flow/src/module-system/durable-policy
+        (only-in :poo-flow/src/modules/memory-core/durable/policy
                  poo-flow-durable-policy/default
                  poo-flow-durable-policy?
                  poo-flow-durable-policy-name))

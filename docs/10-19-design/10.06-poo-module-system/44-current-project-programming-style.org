@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.44 Current Project Programming Style
 This document is the current programming contract for =poo-flow=.  It is not a
 general Gerbil style guide.  It tells agents how to write and repair code in
@@ -43,6 +47,25 @@ New code must follow these rules:
    Users should select modules and public factors.  They should not compose
    kernel hooks by hand to make a module work.
 
+6. Every maintained, contributor, and user module has one public entrypoint.
+   The stable shell is =modules/<module-name>/{types,objects,funs,config,interface}.ss=.
+   =interface.ss= imports and re-exports the four role owners; an optional
+   =syntax.ss= is also imported and re-exported when present.  Runtime
+   consumers load module collections through =poo-flow-load-modules= and may
+   not substitute =config.ss=, =objects.ss=, or a hand-maintained source list
+   as a parallel public entrypoint.  The package =build.ss= instead declares
+   stable public closure roots through ASP PackageSpec; importing the package
+   loader there would expand the package while its artifacts are being built.
+
+The =poo-flow-load-modules= hygienic form accepts exactly one source-collection
+expression.  It validates the required role files, rejects a module-local
+=init.ss=, checks the role dependency direction, and projects one
+=interface.ss= source reference per direct child module.  Domain authors may
+add focused files and may choose native Gerbil dispatch, MOP/CLOS composition,
+POO prototypes, pure functions, or a small hygienic rule according to the
+behavior.  The loader constrains the public shell and dependency direction; it
+does not prescribe one low-level dispatch pattern for every module.
+
 ** 10.06.44.20 Upstream Gerbil Feature Baseline
 The harness research identifies stable high-yield Gerbil owners:
 
@@ -68,6 +91,80 @@ feature is a repeated declaration frame, use a macro.  If the feature is object
 behavior, use POO objects, classes, interfaces, or generic dispatch.  If the
 feature is a public boundary, use contracts and receipts.
 
+** 10.06.44.25 POO Slot And CLOS Dispatch Ownership
+
+Dispatch follows the number of independently extensible axes; it does not
+follow how sophisticated a feature sounds.
+
+Every public module first closes four responsibilities.  File names are not
+evidence by themselves: an empty =types.ss= beside a 400-line =objects.ss=
+does not satisfy this contract.
+
+| Layer | Sole responsibility | Normal Gerbil/POO mechanism |
+|-------+---------------------+-----------------------------|
+| =types= | value boundary, shape and invariant admission | =define-type=, predicates, closed vocabulary |
+| =objects= | inert POO values, prototypes and one-receiver behavior | =.o=, =.def=, slot =.defgeneric= |
+| =funs/contracts= | pure algorithms, relations, validation and receipts | functions, indexes, contract objects |
+| =config/provider= | concrete Profile/Provider composition and open crossings | POO composition; CLOS method bundles only for independent axes |
+
+Imports MUST flow from boundary to composition: =types -> objects ->
+funs/contracts -> config/provider=.  A lower layer MUST NOT import a higher
+layer merely to recover a convenient concrete value.  =interface.ss= may
+re-export the closed surface but owns no behavior.
+
+An empty layer is admissible only when the module has no responsibility of
+that kind.  Its boundary comment MUST say why.  It is not admissible to leave a
+role empty while placing its behavior in =objects.ss= or =config.ss=.  Before
+adding CLOS, reviewers MUST name both independently growing axes and the owner
+of each method bundle.  If that sentence cannot be written, use a slot generic
+or a function instead.
+
+| Shape | Required owner |
+|-------+----------------|
+| User declaration or configuration | POO object slots such as =.add-trajectory= |
+| One receiver family whose descendants replace one behavior | =.defgeneric= slot dispatch |
+| Pure validation, indexing or graph traversal | named functional helper |
+| Provider/executor crossed with Profile, Scenario, Case or contract kind | POO CLOS generic, specializers and method bundle |
+| Runtime ABI or proof-engine payload | projection of an already admitted POO value |
+
+A public contract MUST remain one POO object.  Formal languages, providers and
+runtimes consume a named projection or digest of that object; they MUST NOT
+publish a second user-facing record DSL for the same contract.  In particular,
+a temporal trajectory is declared once through slots such as
+=trigger-event-id=, =intended-event-ids=, =error-event-paths= and Impact slots.
+TLA+, Lean and Cedar may keep their native internal models, but their receipts
+must bind the same POO contract and assessment identity.
+
+CLOS is mandatory when both sides may grow independently.  The canonical
+shape is:
+
+#+begin_src scheme
+(def FormalAssuranceGeneric
+  (poo-clos-generic-function 'formal-assurance-project 4))
+
+(def TLAHealthcareMethod
+  (poo-clos-method
+   'tla-healthcare-trajectory
+   (list (poo-clos-class-specializer TLAProvider)
+         (poo-clos-eql-specializer HealthcareProfile)
+         (poo-clos-any-specializer)
+         (poo-clos-any-specializer))
+   (lambda (frame provider profile trajectory receipt)
+     (project-tla-healthcare-trajectory
+      provider profile trajectory receipt))))
+#+end_src
+
+Methods are published through =.defmethod-bundle= and composed into the
+generic.  A base Provider method SHOULD fail closed for an unsupported
+Provider/Profile crossing.  Do not replace this dispatch with a symbolic
+=case=, a provider-name table, or Profile-specific conditionals in the generic
+caller.
+
+Conversely, do not manufacture a CLOS generic for a single object axis.  A
+Profile's own =.assess-governance= behavior remains slot dispatch; a graph BFS
+remains a function.  The purpose of CLOS is open multi-dispatch and method
+combination, not decorative abstraction.
+
 ** 10.06.44.30 Repair Bad Agent Code
 Use this table while reviewing generated Scheme:
 
@@ -87,6 +184,48 @@ Use this table while reviewing generated Scheme:
 Do not "simplify" these repairs back into alists.  Alists are acceptable only at
 projection boundaries, metadata payloads, or small diagnostics where the owning
 POO object is already known.
+
+** 10.06.44.35 Normative Mermaid State And Edge Semantics
+
+Architecture relationships that are materially clearer as a graph MUST be
+recorded in the owning Org RFC with a Mermaid export block.  A diagram shown
+only in discussion is not durable specification evidence.
+
+#+begin_export mermaid
+flowchart LR
+    A["State 1: declaration parsed"] -->|"lexical resolution"| B["State 2: immutable declaration model"]
+    B -->|"evidence gate satisfied"| C["State 3: runtime lowering authorized"]
+    C -->|"one owner-scoped operation"| D["State 4: POO result"]
+    D -. "observation only; no precedence" .-> E["Receipt and trace projection"]
+#+end_export
+
+Mermaid nodes SHOULD name a semantic entity or an explicit state.  Edges MUST
+label nontrivial relationships, including:
+
+- state transition or lowering phase;
+- source-order or lineage precedence;
+- containment versus lazy dependency;
+- authority grant, decision, or continuation commit;
+- evidence and qualification gate;
+- owner handoff or runtime barrier;
+- an explicit absence of inheritance, override, or cross-boundary precedence.
+
+Solid edges denote an operative transition, contribution, containment, or
+dependency unless the label states otherwise.  Dotted edges SHOULD be used for
+observation, advisory relationships, or an explicitly non-precedence relation.
+Sibling boundaries MUST NOT be visually merged through an unlabeled edge.
+
+Diagrams supplement normative prose and do not replace it.  State names,
+edge labels, authority boundaries, and evidence gates in a diagram MUST agree
+with the surrounding RFC text.  Durable source uses Org syntax:
+
+#+begin_example
+#+begin_export mermaid
+...
+#+end_export
+#+end_example
+
+Markdown fences are not a project documentation format.
 
 ** 10.06.44.40 Macro And Metaprogramming Policy
 Use Gerbil macros when all of these are true:
@@ -110,14 +249,39 @@ Use the smallest macro tier:
 4. Macro objects only when the macro itself has classed behavior and the owner
    module benefits from explicit expander state.
 
+*** Static POO Declaration Lowering
+
+A public Profile or config declaration remains POO-native even when its macro
+uses a cheaper upstream constructor internally.  For a bounded declaration
+whose grammar accepts only =(slot value)= rows, the macro SHOULD lower directly
+to =object<-alist= (or an equally direct =make-object= wrapper owned by
+=gerbil-poo=) instead of regenerating one =.o= form and asking the =.o= expander
+to rediscover that every row is constant.  The public form, result, and
+extension boundary remain a named POO declaration and a native POO object; an
+alist is not exposed as the user model.
+
+This exception is compile-time-specific and requires same-source A/B evidence.
+It MUST NOT be generalized to an arbitrary =.o= expression.  Keep =.o= when a
+form needs prototype inheritance, defaults, computed or inherited slot
+methods, lexical =self=, =next-method=, match syntax, or dynamic composition.
+Runtime and hot-loop construction require their own runtime benchmark and must
+not be rewritten merely because the static declaration benchmark is faster.
+
+The executable evidence is
+=t/scenarios/performance/static-poo-prototype-lowering/=.  Its two compiler
+fixtures differ only in lowering strategy and protect both the semantic object
+contract and the expansion-time improvement.
+
 ** 10.06.44.42 Phase, Hygiene, And Module Context
 Macros that parse a project language must preserve Gerbil syntax context.  The
 parser owns syntax objects, source locations, grammar validation, and a bounded
-compile-time plan.  Runtime modules own POO construction and policy behavior.
+compile-time declaration model.  Runtime modules own POO construction and
+policy behavior.  The term Plan is reserved for a Scenario Case execution
+projection with nodes and dependency semantics.
 
 Use these ownership rules:
 
-- put reusable grammar parsing and immutable expansion plans in a dedicated
+- put reusable grammar parsing and immutable declaration models in a dedicated
   syntax-support module;
 - import syntax support through =for-syntax= rather than loading or evaluating
   its source;
@@ -127,7 +291,7 @@ Use these ownership rules:
 - rely on Gerbil module registration for one compiled module context instead of
   mutable global macro registries or bespoke source collectors;
 - keep runtime and macro artifacts in their native phases and never project a
-  syntax plan into JSON, an alist DSL, or a runtime row.
+  declaration model into JSON, an alist DSL, or a runtime row.
 
 Grammar identifiers must be compared with binding-aware syntax operations.
 Do not identify fixed grammar with =symbol->string=, printed text, or unscoped
@@ -150,7 +314,7 @@ The reference architecture is
 Stable large POO object families must not hand-write the same predicate,
 accessor, and boundary projection pattern for every object.
 
-Use =src/module-system/object-family-syntax.ss= when the family has:
+Use =src/module-system/object-family/syntax.ss= when the family has:
 
 - one stable =kind= slot;
 - fixed public slot accessors;
@@ -297,6 +461,29 @@ contract syntax, profile declaration syntax, policy selector syntax,
 =use-module= branches, and static runtime handoff schemas.  Do not repeatedly
 parse fixed declaration syntax at runtime.
 
+** 10.06.44.85 Reference-Grade Scheme Expression And Test Protocol
+The local =.data/gerbil-poo= and =.data/gerbil-persist= checkouts are reference
+corpora for expression quality.  They are not dependencies and their source is
+not copied wholesale.  New POO Flow code should preserve the following
+division of responsibility demonstrated by those repositories:
+
+- public extensible behavior uses POO prototypes, =define-type=, slot
+  generics, or CLOS according to the number of open dispatch axes;
+- private traversal records use a small =defstruct= when positional lists would
+  otherwise create an implicit =car=/=cadr= protocol;
+- graph and collection algorithms use named functions plus Gerbil iteration,
+  SRFI folds, and standard hash/set operations with visible complexity;
+- a =defrule= in a test may bind a repeated protocol vocabulary and expand to
+  ordinary assertions, but it must not contain the behavior being tested;
+- semantic lists remain lists: ordered Profiles, clauses, node identifiers,
+  user syntax payloads, and public projection rows must not be wrapped merely
+  to eliminate the word =list=.
+
+A source file must own one of object construction, syntax lowering, graph
+planning, runtime handoff, or test protocol.  Combining several owners in one
+large helper file is a refactoring signal even when every individual function
+is pure.
+
 ** 10.06.44.90 Module, Factor, Plugin, And Fixture Boundary
 Each module is made from:
 
@@ -370,6 +557,62 @@ Performance is part of style.
 - Do not lower test/build concurrency to hide performance regressions.
 - Add focused performance scenarios for object-family, macro-expansion,
   projection, and selection hot paths when a change touches shared behavior.
+
+** 10.06.44.123 Import And Build-Root Ownership
+
+Imports express ownership and demand. Build roots express the minimum artifacts
+needed to bootstrap the production package. They are not interchangeable lists.
+
+Use these rules:
+
+1. A normal module consumer imports =modules/<name>/interface.ss=. Code inside
+   that module uses relative imports for its role owners. A cross-domain
+   implementation imports the precise public owner, using =only-in= when it
+   needs a bounded symbol set.
+2. =interface.ss= may use =export (import: ...)= to close and publish its own
+   =types=, =objects=, =funs=, =config=, and optional =syntax= roles. A global
+   facade must export a deliberate stable surface; it must not wildcard-reexport
+   another aggregate facade or concrete module, profile, scenario, or testing
+   owners.
+3. A production BuildSpec root must correspond to a separately required
+   bootstrap artifact. Registry source refs, advanced authoring forms, profiles,
+   scenarios, declaration cases, and testing extensions remain lazy unless a
+   production root has a direct consumer that needs them.
+   For User Interface startup, the root is the owner imported by top-level
+   =user-interface/init.ss=; an advanced presentation facade is not a substitute
+   for that owner.
+4. Do not list both a facade and a compatibility child, or both a module
+   =interface.ss= and its internal roles, as independent roots. Native Gerbil
+   imports already close the dependency graph. Any deliberate exception needs
+   a source-owner explanation and a cold-build receipt.
+5. Production, contribution, profile/scenario, and testing lanes select their
+   own roots. Tests explicitly import their test support. A test dependency is
+   not evidence that the production bootstrap owns that dependency.
+6. Diagnose root changes with the existing ASP Build API and upstream
+   =std/make=. Record root count, compile count, elapsed action time, peak
+   process-tree memory, and saturation. Do not add a scheduler, currentness
+   cache, source expander, or duplicate dependency graph to compensate for an
+   incorrect import boundary.
+7. =poo-flow-load-modules= applies the reader-native owner-import admission
+   policy to every Scheme file under a module root. An aggregate framework
+   import produces =poo-flow.module-owner-import-observation.v1= and
+   =POO-FLOW-MODULE-E008= with the exact source scope, imported owner, stable
+   diagnostic code, and =import-precise-owner= repair. This gate must remain
+   evaluation-free so authoring diagnostics cannot execute module code.
+   In particular, =module-system/contribution/interface.ss= is the public
+   contribution composition surface, not an implementation owner. Module roles
+   import the precise contribution owner, such as =contribution/objects.ss=,
+   and use =only-in= when they need a bounded constructor set.
+
+#+begin_export mermaid
+flowchart LR
+    Build["Production BuildSpec"] -->|"stable bootstrap root"| Facade["Bounded interface or facade"]
+    Module["modules/name/interface.ss"] -->|"module-owned closure"| Roles["types, objects, funs, config, syntax"]
+    Registry["POO module registry"] -. "lazy source reference" .-> Lazy["profile, scenario, or advanced owner"]
+    Consumer["Selected consumer"] -->|"explicit import"| Lazy
+    Test["Independent testing lane"] -->|"explicit import"| TestOwner["testing extension"]
+    TestOwner -. "no production ownership" .-> Build
+#+end_export
 
 ** 10.06.44.125 Build-Stage Receipts And Warm-Cache Measurement
 
@@ -447,7 +690,11 @@ object-local slot values already materialized by =.ref=.
    Do not use instance mutation as a policy-evolution mechanism.
 6. Keep slot names distinct from lexical value bindings in dynamic POO forms.
    Public macros must preserve hygiene and generate distinct value bindings so
-   a slot cannot recursively force itself through a same-name capture.
+   a slot cannot recursively force itself through a same-name capture. This
+   applies to both =slot: initializer= and =(slot initializer)= spellings.
+   =t/module-system-observability-test.ss= is the reader-native source gate:
+   it scans =src/**/*.ss= through the module-system authoring observations and
+   must report zero diagnostics without expanding or realizing any POO object.
 7. Use =std/lazy= only for a pure deferred calculation that is not naturally a
    POO slot. It is a Scheme control-plane mechanism, not a runtime concurrency
    primitive.
@@ -482,7 +729,7 @@ The static declaration path is:
 #+begin_src text
 AI-authored declaration
   -> syntax parser and binding-aware grammar validation
-  -> bounded immutable compile-time plan
+  -> bounded immutable compile-time declaration model
   -> ordinary POO-native or functional expansion
   -> constructor/contract/receipt validation
   -> proof-fact or runtime-handoff projection

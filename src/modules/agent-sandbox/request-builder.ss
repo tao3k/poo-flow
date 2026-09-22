@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: agent-sandbox request builders live here.
 ;;; Boundary:
 ;;; - Field and profile validation happen before normalized request assembly.
@@ -8,8 +12,7 @@
 ;;; Policy evidence:
 ;;; - The named-field macro and profiled flow both call these constructors.
 
-(import :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/alist
+(import :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/request-field

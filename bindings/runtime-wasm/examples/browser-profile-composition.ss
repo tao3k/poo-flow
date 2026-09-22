@@ -1,9 +1,17 @@
 #!/usr/bin/env gxi
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :poo-flow/src/module-system/profile-composition)
+;;; Example owner: a browser profile remains declarative until a downstream
+;;; runtime chooses to realize its staged composition.
+
+(import :poo-flow/src/module-system/profile-composition/interface)
 
 (export browser-profile-composition)
 
+;;; Composition boundary: this example is a pure declarative value; runtime
+;;; scheduling and evidence effects remain behind the selected runtime profile.
 (def browser-profile-composition
   (use-composition browser-profile-composition
     (use-module agentic-research as research

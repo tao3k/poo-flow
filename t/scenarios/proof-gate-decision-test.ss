@@ -1,6 +1,15 @@
-(import :poo-flow/src/proof/proof-fact-wire
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-decision
         :poo-flow/src/proof/proof-gate-receipts)
+
+(def proof-gate-decision-test
+  (test-suite "proof gate decision"
+    (test-case "derives accepted and rejected decisions"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -74,4 +83,4 @@
 (assert-equal 'runtime-owner-reason-count
               (length (poo-flow-proof-gate-decision-rejection-reasons
                        runtime-owner-decision))
-              2)
+              2))))

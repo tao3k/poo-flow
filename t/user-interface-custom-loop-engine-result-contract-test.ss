@@ -1,15 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: focused user-interface loop-engine result contract diagnostics.
 ;;; Invariant: invalid result contracts are reported, never executed.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-result-contract-test)
 
@@ -67,7 +71,7 @@
 ;;; Invalid result contracts remain reportable config data: presentation and
 ;;; runtime manifests surface diagnostics, but no runtime work is executed.
 ;; : TestCase
-(def user-interface-custom-loop-engine-invalid-result-case
+(def (user-interface-custom-loop-engine-invalid-result-case)
   (test-case "diagnoses invalid loop-engine result contract"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-result-module))
@@ -96,4 +100,4 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-result-contract-test
   (test-suite "poo-flow custom loop-engine result contract"
-    user-interface-custom-loop-engine-invalid-result-case))
+    (user-interface-custom-loop-engine-invalid-result-case)))

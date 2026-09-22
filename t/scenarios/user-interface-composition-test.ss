@@ -1,14 +1,16 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: scenario coverage for user-interface use-composition syntax.
 
 (import (only-in :clan/poo/object .o .ref)
-         (only-in :std/test check-equal? run-tests! test-case test-suite)
-         :gslph/src/testing/memory-profile
-         :poo-flow/src/module-system/profile-composition)
+         (only-in :std/test check-equal? test-case test-suite)
+         :poo-flow/src/module-system/profile-composition/interface)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
-;; : PooFlowComposition
+;; : PooFlowScenarioCase
 (def rag-agent
   (use-composition rag-agent
     (use-module agent as agent
@@ -24,27 +26,27 @@
       (loop #:fuel 4 #:exit done)
       (prove scope-contained graph-reachable loop-progress))))
 
-;; : (-> PooFlowCompositionStage Symbol Any)
+;; : (-> PooFlowScenarioStage Symbol Any)
 (def (stage-clause-payload composition-stage clause-kind)
-  (let loop ((clauses (poo-flow-composition-stage-clauses composition-stage)))
+  (let loop ((clauses (poo-flow-scenario-stage-clauses composition-stage)))
     (cond
      ((null? clauses) #f)
      ((eq? (.ref (car clauses) 'clause-kind) clause-kind)
       (.ref (car clauses) 'payload))
      (else (loop (cdr clauses))))))
 
-(run-tests!
+(def user-interface-composition-test
  (test-suite "poo-flow user-interface composition macro"
   (test-case "defines a named composition from module profile slots"
-    (check-equal? (poo-flow-composition? rag-agent) #t)
-    (check-equal? (poo-flow-composition-name rag-agent) 'rag-agent)
-    (check-equal? (length (poo-flow-composition-modules rag-agent)) 1))
+    (check-equal? (poo-flow-scenario-case? rag-agent) #t)
+    (check-equal? (poo-flow-scenario-case-name rag-agent) 'rag-agent)
+    (check-equal? (length (poo-flow-scenario-case-modules rag-agent)) 1))
   (test-case "selects exact POO module slot profiles"
-    (let ((profiles (poo-flow-composition-profiles rag-agent)))
+    (let ((profiles (poo-flow-scenario-case-profiles rag-agent)))
       (check-equal? (map (lambda (profile) (.ref profile 'name)) profiles)
                     '(session-hardened sandbox-restricted))))
   (test-case "keeps graph loop and proof metadata on the stage"
-    (let ((production-stage (car (poo-flow-composition-stages rag-agent))))
+    (let ((production-stage (car (poo-flow-scenario-case-stages rag-agent))))
       (check-equal? (stage-clause-payload production-stage 'graph)
                     '(guarded-flow))
       (let ((loop-payload (stage-clause-payload production-stage 'loop)))

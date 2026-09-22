@@ -1,18 +1,17 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: user-owned custom module facade.
-;;; Invariant: the facade re-exports focused profile/case owners and does not
-;;; load every declaration into one compiled aggregate module.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :poo-flow/user-interface/custom/my-module/profiles/all
-        :poo-flow/user-interface/custom/my-module/cases/cicd-owner
-        :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
-        :poo-flow/user-interface/custom/my-module/cases/session-owner
-        :poo-flow/user-interface/custom/my-module/cases/runtime-owner
-        :poo-flow/user-interface/custom/my-module/cases/durable-owner)
+;;; Boundary: lightweight configuration owned by this user module. Concrete
+;;; Profiles and Scenario fixtures remain precise submodule imports.
 
-(export (import: :poo-flow/user-interface/custom/my-module/profiles/all)
-        (import: :poo-flow/user-interface/custom/my-module/cases/cicd-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/session-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/runtime-owner)
-        (import: :poo-flow/user-interface/custom/my-module/cases/durable-owner))
+(import (only-in :clan/poo/object .o)
+        "types.ss")
+(export poo-flow-custom-my-module-config)
+
+(def poo-flow-custom-my-module-config
+  (.o identity: +poo-flow-custom-my-module-identity+
+      profile-source: 'profiles
+      scenario-source: 'cases
+      runtime-executed?: #f))

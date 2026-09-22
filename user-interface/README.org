@@ -1,6 +1,10 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * User Interface Contribution Library
 
-This directory models the downstream surface that users and agents read before writing POO Flow configuration. Stable policy objects should live in =profiles/=, and reusable workflow compositions should live in =cases/=.
+This directory models the downstream surface that users and agents read before writing POO Flow configuration. Stable policy objects live in =profiles/=, and reusable workflow compositions live in =scenarios/<name>/scenario.ss=.
 
 * Reusable Profiles
 
@@ -9,12 +13,12 @@ This directory models the downstream surface that users and agents read before w
 - =profiles/crewai.ss=: CrewAI-style profile slots for agents, tasks, crews, processes, flow state/router/persist, guardrails, human input, observability, and runtime handoff.
 - =profiles/tool-calling.ss=: framework-neutral tool calling profile slots for tool request, schema, permission, sandbox scope, cooldown, runtime binding, receipts, and observability.
 
-* Reusable Cases
+* Reusable Scenarios
 
-- =cases/langchain.ss=: LangChain-style composition.
-- =cases/langgraph.ss=: LangGraph-style guarded state graph composition.
-- =cases/crewai.ss=: CrewAI-style crew/flow composition that reuses profile slots instead of cloning CrewAI's Python runtime surface.
-- =cases/tool-calling-agent-loop.ss=: framework-neutral tool calling control-plane composition for agent loop/tool/state runtime handoff.
+- =scenarios/langchain/scenario.ss=: LangChain-style composition.
+- =scenarios/langgraph/scenario.ss=: LangGraph-style guarded state graph composition.
+- =scenarios/crewai/scenario.ss=: CrewAI-style crew/flow composition that reuses profile slots instead of cloning CrewAI's Python runtime surface.
+- =scenarios/tool-calling-agent-loop/scenario.ss=: framework-neutral tool calling control-plane composition for agent loop/tool/state runtime handoff.
 
 * Rule
 
@@ -23,12 +27,13 @@ The public user path is POO-native composition:
 #+begin_src scheme
 (use-composition my-composition
   (modules
-    (use-profile crewai as crew))
+    (use-module crewai as crew
+      (profiles agent task flow-router)))
+  (compose
+    (profiles crew agent task flow-router))
   (stage production
-    (compose
-      (profile crew agent)
-      (profile crew task)
-      (profile crew flow-router))))
+    (graph crew-workflow)
+    (loop #:fuel 4 #:exit final-output)))
 #+end_src
 
 Do not add a parallel JSON, alist, or framework-specific DSL for these scenarios.

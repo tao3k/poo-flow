@@ -1,10 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Semantic: P0 boundary names and namespace descriptors.
 ;;; Invariant: these names define ownership; projections and runtime handoff
 ;;; must not become semantic owners.
 
 (import (only-in :clan/poo/object .def .ref object?)
-        (only-in :std/srfi/13 string-join))
+        )
 
 (export poo-flow-intent-boundary-prototype
         poo-flow-author-boundary-prototype

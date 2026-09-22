@@ -1,8 +1,20 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+
 ;;; Boundary: pure graph algorithms over composed POO graph facts.
 ;;; Invariant: algorithms emit analysis facts only; runtime execution is out.
 
-(import :poo-flow/src/graph/types)
+(import (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :std/struct/queue
+                 dequeue!
+                 enqueue!
+                 make-Queue
+                 queue-empty?)
+        (only-in :std/list/list filter)
+        :poo-flow/src/graph/types-core)
 
 (export poo-flow-graph-node-ids
         poo-flow-graph-edge-pairs
@@ -18,83 +30,69 @@
         poo-flow-graph-acyclic?
         poo-flow-graph-topological-order
         poo-flow-graph-topological-order/acyclic
+        poo-flow-graph-analysis-receipts
         poo-flow-graph-analysis-receipt
         poo-flow-graph-loop-analysis-receipt)
 
-;; : (-> [PooFlowGraphNode] [Object] [Object])
-(def (poo-flow-graph-node-ids/rev nodes ids-rev)
-  (if (null? nodes)
-    ids-rev
-    (poo-flow-graph-node-ids/rev
-     (cdr nodes)
-     (cons (poo-flow-graph-node-id (car nodes)) ids-rev))))
+(import :poo-flow/src/graph/algorithms-list-support)
 
-;; : (-> PooFlowGraph [Object])
-(def (poo-flow-graph-node-ids graph-value)
-  (reverse
-   (poo-flow-graph-node-ids/rev
-    (poo-flow-graph-nodes graph-value)
-    '())))
+(def (graph-adjacency-ref index id)
+  (or (hash-get index id) '()))
 
-;; : (-> [PooFlowGraphEdge] [[Object Object]] [[Object Object]])
-(def (poo-flow-graph-edge-pairs/rev edges pairs-rev)
-  (if (null? edges)
-    pairs-rev
-    (poo-flow-graph-edge-pairs/rev
-     (cdr edges)
-     (cons (list (poo-flow-graph-edge-from (car edges))
-                 (poo-flow-graph-edge-to (car edges)))
-           pairs-rev))))
+(def (ids->adjacency-map ids index)
+  (map (lambda (id)
+         (cons id (graph-adjacency-ref index id)))
+       ids))
 
-;; : (-> PooFlowGraph [[Object Object]])
-(def (poo-flow-graph-edge-pairs graph-value)
-  (reverse
-   (poo-flow-graph-edge-pairs/rev
-    (poo-flow-graph-edges graph-value)
-    '())))
-
-;; : (-> PooFlowGraph Object [Object])
 (def (poo-flow-graph-outgoing-ids graph-value id)
-  (edge-targets-from id (poo-flow-graph-edges graph-value)))
+  (graph-adjacency-ref (poo-flow-graph-outgoing-index graph-value) id))
 
 ;; : (-> PooFlowGraph Object [Object])
 (def (poo-flow-graph-incoming-ids graph-value id)
-  (edge-sources-to id (poo-flow-graph-edges graph-value)))
+  (graph-adjacency-ref (poo-flow-graph-incoming-index graph-value) id))
 
 ;; : (-> PooFlowGraph Alist)
 (def (poo-flow-graph-outgoing-map graph-value)
-  (ids->outgoing-map graph-value
-                     (poo-flow-graph-node-ids graph-value)))
+  (ids->adjacency-map
+   (poo-flow-graph-node-ids graph-value)
+   (poo-flow-graph-outgoing-index graph-value)))
 
 ;; : (-> PooFlowGraph Alist)
 (def (poo-flow-graph-incoming-map graph-value)
-  (ids->incoming-map graph-value
-                     (poo-flow-graph-node-ids graph-value)))
+  (ids->adjacency-map
+   (poo-flow-graph-node-ids graph-value)
+   (poo-flow-graph-incoming-index graph-value)))
 
 ;; : (-> PooFlowGraph [Object])
 (def (poo-flow-graph-root-ids graph-value)
-  (select-ids
-   (lambda (id)
-     (null? (poo-flow-graph-incoming-ids graph-value id)))
-   (poo-flow-graph-node-ids graph-value)))
+  (let (incoming-index (poo-flow-graph-incoming-index graph-value))
+    (filter
+     (lambda (id)
+       (null? (graph-adjacency-ref incoming-index id)))
+     (poo-flow-graph-node-ids graph-value))))
 
 ;; : (-> PooFlowGraph [Object])
 (def (poo-flow-graph-terminal-ids graph-value)
-  (select-ids
-   (lambda (id)
-     (null? (poo-flow-graph-outgoing-ids graph-value id)))
-   (poo-flow-graph-node-ids graph-value)))
+  (let (outgoing-index (poo-flow-graph-outgoing-index graph-value))
+    (filter
+     (lambda (id)
+       (null? (graph-adjacency-ref outgoing-index id)))
+     (poo-flow-graph-node-ids graph-value))))
 
 ;; : (-> PooFlowGraph [Object] [Object])
 (def (poo-flow-graph-reachable-ids graph-value start-ids)
-  (reverse (walk-reachable graph-value start-ids '())))
+  (walk-adjacency/indexed
+   (poo-flow-graph-outgoing-index graph-value)
+   start-ids))
 
 ;; : (-> PooFlowGraph [Object] [Object])
 (def (poo-flow-graph-dependency-cone graph-value target-ids)
-  (reverse (walk-dependency-cone graph-value target-ids '())))
+  (walk-adjacency/indexed
+   (poo-flow-graph-incoming-index graph-value)
+   target-ids))
 
 ;; : (-> PooFlowGraph MaybeList)
-(def (cycle-dfs/indexed graph-value outgoing-index id stack states)
+(def (cycle-dfs/indexed outgoing-index id stack states)
   (let ((state (hash-get states id)))
     (cond
      ((eq? state 'visiting)
@@ -105,7 +103,6 @@
       (hash-put! states id 'visiting)
         (let ((cycle
                (cycle-dfs-neighbors/indexed
-                graph-value
                 outgoing-index
                 (or (hash-get outgoing-index id) '())
                 (cons id stack)
@@ -113,33 +110,28 @@
         (hash-put! states id 'visited)
         cycle)))))
 
-(def (cycle-dfs-neighbors/indexed
-      graph-value outgoing-index ids stack states)
+(def (cycle-dfs-neighbors/indexed outgoing-index ids stack states)
   (cond
    ((null? ids) #f)
    (else
-    (or (cycle-dfs/indexed graph-value
-                           outgoing-index
+    (or (cycle-dfs/indexed outgoing-index
                            (car ids)
                            stack
                            states)
-        (cycle-dfs-neighbors/indexed graph-value
-                                     outgoing-index
+        (cycle-dfs-neighbors/indexed outgoing-index
                                      (cdr ids)
                                      stack
                                      states)))))
 
-(def (find-cycle-from-nodes/indexed graph-value outgoing-index ids states)
+(def (find-cycle-from-nodes/indexed outgoing-index ids states)
   (cond
    ((null? ids) #f)
    (else
-    (or (cycle-dfs/indexed graph-value
-                           outgoing-index
+    (or (cycle-dfs/indexed outgoing-index
                            (car ids)
                            '()
                            states)
-        (find-cycle-from-nodes/indexed graph-value
-                                       outgoing-index
+        (find-cycle-from-nodes/indexed outgoing-index
                                        (cdr ids)
                                        states)))))
 
@@ -148,17 +140,69 @@
     outgoing-index
     (let* ((edge-pair (car edge-pairs))
            (source (car edge-pair))
-           (target (cadr edge-pair))
-           (targets (hash-get outgoing-index source)))
-      (hash-put! outgoing-index
-                 source
-                 (cons target (or targets '())))
+           (target (cadr edge-pair)))
+      (hash-ensure-modify! outgoing-index
+                           source
+                           (lambda () '())
+                           (lambda (targets) (cons target targets)))
       (edge-pairs->outgoing-index (cdr edge-pairs) outgoing-index))))
 
 (def (poo-flow-graph-outgoing-index graph-value)
   (edge-pairs->outgoing-index
    (reverse (poo-flow-graph-edge-pairs graph-value))
    (make-hash-table)))
+
+(def (edge-pairs->incoming-index edge-pairs incoming-index)
+  (if (null? edge-pairs)
+    incoming-index
+    (let* ((edge-pair (car edge-pairs))
+           (source (car edge-pair))
+           (target (cadr edge-pair)))
+      (hash-ensure-modify! incoming-index
+                           target
+                           (lambda () '())
+                           (lambda (sources) (cons source sources)))
+      (edge-pairs->incoming-index (cdr edge-pairs) incoming-index))))
+
+(def (poo-flow-graph-incoming-index graph-value)
+  (edge-pairs->incoming-index
+   (reverse (poo-flow-graph-edge-pairs graph-value))
+   (make-hash-table)))
+
+(def (graph-adjacency-indexes edge-pairs)
+  (let ((outgoing-index (make-hash-table))
+        (incoming-index (make-hash-table)))
+    (for-each
+     (lambda (edge-pair)
+       (let ((source (car edge-pair))
+             (target (cadr edge-pair)))
+         (hash-ensure-modify! outgoing-index
+                              source
+                              (lambda () '())
+                              (lambda (targets) (cons target targets)))
+         (hash-ensure-modify! incoming-index
+                              target
+                              (lambda () '())
+                              (lambda (sources) (cons source sources)))))
+     (reverse edge-pairs))
+    (values outgoing-index incoming-index)))
+
+(def (walk-adjacency/indexed adjacency-index start-ids)
+  (let ((visited (make-hash-table))
+        (pending (make-Queue)))
+    (for-each (lambda (id) (enqueue! pending id)) start-ids)
+    (let loop ((result-rev '()))
+      (if (queue-empty? pending)
+        (reverse result-rev)
+        (let (id (dequeue! pending))
+          (if (hash-key? visited id)
+            (loop result-rev)
+            (begin
+              (hash-put! visited id #t)
+              (for-each
+               (lambda (neighbor) (enqueue! pending neighbor))
+               (graph-adjacency-ref adjacency-index id))
+              (loop (cons id result-rev)))))))))
 
 (def (strong-components-pop! root-id stack on-stack component)
   (let* ((members (vector-ref stack 0))
@@ -256,7 +300,7 @@
                                    next-index
                                    components)))
 
-(def (graph-strong-components/indexed graph-value outgoing-index)
+(def (graph-strong-components/indexed node-ids outgoing-index)
   (let ((indices (make-hash-table))
         (lowlinks (make-hash-table))
         (on-stack (make-hash-table))
@@ -264,7 +308,7 @@
         (next-index (vector 0))
         (components (vector '())))
     (strong-components-walk-nodes!
-     (poo-flow-graph-node-ids graph-value)
+     node-ids
      outgoing-index
      indices
      lowlinks
@@ -274,14 +318,8 @@
      components)
     (reverse (vector-ref components 0))))
 
-(def (graph-strong-components/internal graph-value)
-  (graph-strong-components/indexed
-   graph-value
-   (poo-flow-graph-outgoing-index graph-value)))
-
 (def (poo-flow-graph-cycle-path graph-value)
   (find-cycle-from-nodes/indexed
-   graph-value
    (poo-flow-graph-outgoing-index graph-value)
    (poo-flow-graph-node-ids graph-value)
    (make-hash-table)))
@@ -292,36 +330,36 @@
 
 ;; : (-> PooFlowGraph MaybeList)
 (def (poo-flow-graph-topological-order graph-value)
-  (let ((cycle-path (poo-flow-graph-cycle-path graph-value)))
-    (if cycle-path
-      #f
-      (poo-flow-graph-topological-order/acyclic graph-value))))
+  (poo-flow-graph-topological-order/acyclic graph-value))
 
 ;; : (-> PooFlowGraph MaybeList)
 (def (poo-flow-graph-topological-order/acyclic graph-value)
-  ;; Caller already established that no cycle path exists.
-  (topological-walk (poo-flow-graph-node-ids graph-value)
-                    (poo-flow-graph-edges graph-value)
-                    '()))
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value))
+         (outgoing-index (poo-flow-graph-outgoing-index graph-value)))
+    (topological-order/indexed node-ids edge-pairs outgoing-index)))
 
 ;; : (-> [Object] [Object] [Object])
 (def (poo-flow-graph-analysis-start-ids roots maybe-start+target)
-  (if (null? maybe-start+target)
+  (if (or (null? maybe-start+target)
+          (not (car maybe-start+target)))
     roots
     (car maybe-start+target)))
 
 ;; : (-> [Object] [Object] [Object])
 (def (poo-flow-graph-analysis-target-ids terminals maybe-start+target)
   (if (or (null? maybe-start+target)
-          (null? (cdr maybe-start+target)))
+          (null? (cdr maybe-start+target))
+          (not (cadr maybe-start+target)))
     terminals
     (cadr maybe-start+target)))
 
 ;; : (-> PooFlowGraph MaybeList MaybeList)
-(def (poo-flow-graph-analysis-topological-order* graph-value cycle-path)
+(def (poo-flow-graph-analysis-topological-order*
+      node-ids edge-pairs outgoing-index cycle-path)
   (if cycle-path
     #f
-    (poo-flow-graph-topological-order/acyclic graph-value)))
+    (topological-order/indexed node-ids edge-pairs outgoing-index)))
 
 ;; : (-> MaybeList Alist)
 (def (poo-flow-graph-analysis-diagnostics cycle-path)
@@ -329,97 +367,145 @@
     (list (cons 'cycle-path cycle-path))
     '()))
 
+;; : (-> PooFlowGraph [Object] [[Object Object]] HashTable HashTable List PooFlowGraphAnalysis)
+(def (graph-analysis-receipt/indexed graph-value node-ids edge-pairs
+                                     outgoing-index incoming-index
+                                     maybe-start+target)
+  (let* ((roots
+              (filter
+               (lambda (id)
+                 (null? (graph-adjacency-ref incoming-index id)))
+               node-ids))
+             (terminals
+              (filter
+               (lambda (id)
+                 (null? (graph-adjacency-ref outgoing-index id)))
+               node-ids))
+             (start-ids
+              (poo-flow-graph-analysis-start-ids roots maybe-start+target))
+             (target-ids
+              (poo-flow-graph-analysis-target-ids terminals maybe-start+target))
+             (cycle-path
+              (find-cycle-from-nodes/indexed
+               outgoing-index node-ids (make-hash-table)))
+             (topological-order
+              (poo-flow-graph-analysis-topological-order*
+               node-ids edge-pairs outgoing-index cycle-path))
+             (diagnostics
+              (poo-flow-graph-analysis-diagnostics cycle-path)))
+        (poo-flow-graph-analysis
+         (poo-flow-graph-id graph-value)
+         (length node-ids)
+         (length edge-pairs)
+         roots
+         terminals
+         (walk-adjacency/indexed outgoing-index start-ids)
+         (walk-adjacency/indexed incoming-index target-ids)
+         topological-order
+         cycle-path
+         diagnostics)))
+
 ;; : (-> PooFlowGraph PooFlowGraphAnalysis)
 (def (poo-flow-graph-analysis-receipt graph-value . maybe-start+target)
-  (let* ((roots (poo-flow-graph-root-ids graph-value))
-         (terminals (poo-flow-graph-terminal-ids graph-value))
-         (start-ids
-          (poo-flow-graph-analysis-start-ids roots maybe-start+target))
-         (target-ids
-          (poo-flow-graph-analysis-target-ids terminals maybe-start+target))
-         (cycle-path (poo-flow-graph-cycle-path graph-value))
-         (topological-order
-          (poo-flow-graph-analysis-topological-order* graph-value
-                                                      cycle-path))
-         (diagnostics
-          (poo-flow-graph-analysis-diagnostics cycle-path)))
-    (poo-flow-graph-analysis
-     (poo-flow-graph-id graph-value)
-     (length (poo-flow-graph-nodes graph-value))
-     (length (poo-flow-graph-edges graph-value))
-     roots
-     terminals
-     (poo-flow-graph-reachable-ids graph-value start-ids)
-     (poo-flow-graph-dependency-cone graph-value target-ids)
-     topological-order
-     cycle-path
-     diagnostics)))
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value)))
+    (let-values (((outgoing-index incoming-index)
+                  (graph-adjacency-indexes edge-pairs)))
+      (graph-analysis-receipt/indexed
+       graph-value node-ids edge-pairs outgoing-index incoming-index
+       maybe-start+target))))
+
+;; : (-> PooFlowGraph [Object] [[Object Object]] HashTable PooFlowGraphLoopAnalysis)
+(def (graph-loop-analysis-receipt/indexed graph-value node-ids edge-pairs
+                                          outgoing-index)
+  (let-values (((components component-index)
+                  (order-components/indexed
+                   node-ids
+                   (graph-strong-components/indexed node-ids outgoing-index))))
+      (let* ((cyclic-components
+              (select-cyclic-components components outgoing-index))
+             (condensation-edges
+              (graph-condensation-edges
+               edge-pairs
+               component-index))
+             (diagnostics
+              (poo-flow-graph-loop-analysis-diagnostics cyclic-components)))
+        (poo-flow-graph-loop-analysis
+         (poo-flow-graph-id graph-value)
+         components
+         cyclic-components
+         condensation-edges
+         diagnostics))))
+
+;; Build the shared graph projection and adjacency indexes once when callers
+;; require both the ordinary and loop-analysis receipts.
+;; : (-> PooFlowGraph (Values PooFlowGraphAnalysis PooFlowGraphLoopAnalysis))
+(def (poo-flow-graph-analysis-receipts graph-value . maybe-start+target)
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value)))
+    (let-values (((outgoing-index incoming-index)
+                  (graph-adjacency-indexes edge-pairs)))
+      (values
+       (graph-analysis-receipt/indexed
+        graph-value node-ids edge-pairs outgoing-index incoming-index
+        maybe-start+target)
+       (graph-loop-analysis-receipt/indexed
+        graph-value node-ids edge-pairs outgoing-index)))))
 
 ;; : (-> PooFlowGraph PooFlowGraphLoopAnalysis)
 (def (poo-flow-graph-loop-analysis-receipt graph-value)
-  (let* ((outgoing-index (poo-flow-graph-outgoing-index graph-value))
-         (node-ids (poo-flow-graph-node-ids graph-value))
-         (components
-          (ordered-components-from-nodes
-           node-ids
-           (graph-strong-components/indexed graph-value outgoing-index)))
-         (cyclic-components
-          (select-cyclic-components components outgoing-index))
-         (component-index
-          (components->component-index components (make-hash-table) 0))
-         (condensation-edges
-          (graph-condensation-edges
-           (poo-flow-graph-edge-pairs graph-value)
-           component-index))
-         (diagnostics
-          (poo-flow-graph-loop-analysis-diagnostics cyclic-components)))
-    (poo-flow-graph-loop-analysis
-     (poo-flow-graph-id graph-value)
-     components
-     cyclic-components
-     condensation-edges
-     diagnostics)))
+  (let* ((node-ids (poo-flow-graph-node-ids graph-value))
+         (edge-pairs (poo-flow-graph-edge-pairs graph-value))
+         (outgoing-index
+          (edge-pairs->outgoing-index (reverse edge-pairs)
+                                      (make-hash-table))))
+    (graph-loop-analysis-receipt/indexed
+     graph-value node-ids edge-pairs outgoing-index)))
 
 (def (poo-flow-graph-loop-analysis-diagnostics cyclic-components)
   (if (null? cyclic-components)
     '()
     (list (cons 'cyclic-components cyclic-components))))
 
-(def (ordered-components-from-nodes node-ids components)
-  (cond
-   ((null? node-ids) '())
-   (else
-    (let ((component (component-containing (car node-ids) components)))
-      (if component
-        (cons (order-component-members component node-ids)
-              (ordered-components-from-nodes
-               (cdr node-ids)
-               (remove-component component components)))
-        (ordered-components-from-nodes (cdr node-ids) components))))))
+(def (index-component-members! members membership component-id)
+  (for-each
+   (lambda (member) (hash-put! membership member component-id))
+   members))
 
-(def (component-containing id components)
-  (cond
-   ((null? components) #f)
-   ((id-member? id (car components)) (car components))
-   (else (component-containing id (cdr components)))))
+(def (components->membership components)
+  (let (membership (make-hash-table))
+    (let loop ((remaining components) (component-id 0))
+      (unless (null? remaining)
+        (index-component-members! (car remaining) membership component-id)
+        (loop (cdr remaining) (+ component-id 1))))
+    membership))
 
-(def (remove-component component components)
-  (cond
-   ((null? components) '())
-   ((equal? component (car components))
-    (remove-component component (cdr components)))
-   (else
-    (cons (car components)
-          (remove-component component (cdr components))))))
-
-(def (order-component-members component node-ids)
-  (cond
-   ((null? node-ids) '())
-   ((id-member? (car node-ids) component)
-    (cons (car node-ids)
-          (order-component-members component (cdr node-ids))))
-   (else
-    (order-component-members component (cdr node-ids)))))
+;; Preserve declared node order without repeatedly scanning every component.
+;; Returns both ordered components and the node -> ordered component projection.
+(def (order-components/indexed node-ids components)
+  (let ((membership (components->membership components))
+        (raw->ordered (make-hash-table))
+        (members-rev (make-hash-table))
+        (component-index (make-hash-table))
+        (raw-order-rev '())
+        (next-ordered-id 0))
+    (for-each
+     (lambda (node-id)
+       (let (raw-id (hash-get membership node-id))
+         (unless (hash-key? raw->ordered raw-id)
+           (hash-put! raw->ordered raw-id next-ordered-id)
+           (set! raw-order-rev (cons raw-id raw-order-rev))
+           (set! next-ordered-id (+ next-ordered-id 1)))
+         (hash-put! component-index node-id (hash-get raw->ordered raw-id))
+         (hash-ensure-modify! members-rev
+                              raw-id
+                              (lambda () '())
+                              (lambda (members) (cons node-id members)))))
+     node-ids)
+    (values
+     (map (lambda (raw-id) (reverse (hash-get members-rev raw-id)))
+          (reverse raw-order-rev))
+     component-index)))
 
 (def (select-cyclic-components components outgoing-index)
   (cond
@@ -432,30 +518,13 @@
 
 (def (component-cyclic? component outgoing-index)
   (or (not (null? (cdr component)))
-      (id-member? (car component)
-                  (or (hash-get outgoing-index (car component)) '()))))
-
-(def (components->component-index components component-index next-id)
-  (if (null? components)
-    component-index
-    (begin
-      (component-index-put-members! (car components)
-                                    component-index
-                                    next-id)
-      (components->component-index (cdr components)
-                                   component-index
-                                   (+ next-id 1)))))
-
-(def (component-index-put-members! members component-index component-id)
-  (unless (null? members)
-    (hash-put! component-index (car members) component-id)
-    (component-index-put-members! (cdr members)
-                                  component-index
-                                  component-id)))
+      (member (car component)
+              (graph-adjacency-ref outgoing-index (car component)))))
 
 (def (graph-condensation-edges edge-pairs component-index)
   (reverse
-   (graph-condensation-edges/rev edge-pairs component-index '() '())))
+   (graph-condensation-edges/rev
+    edge-pairs component-index (make-hash-table) '())))
 
 (def (graph-condensation-edges/rev edge-pairs component-index seen edges-rev)
   (cond
@@ -466,134 +535,17 @@
            (target-component (hash-get component-index (cadr edge-pair)))
            (component-edge (list source-component target-component)))
       (if (or (= source-component target-component)
-              (id-member? component-edge seen))
+              (hash-key? seen component-edge))
         (graph-condensation-edges/rev (cdr edge-pairs)
                                       component-index
                                       seen
                                       edges-rev)
-        (graph-condensation-edges/rev (cdr edge-pairs)
-                                      component-index
-                                      (cons component-edge seen)
-                                      (cons component-edge edges-rev)))))))
-
-;; : (-> Object [PooFlowGraphEdge] [Object])
-(def (edge-targets-from id edges)
-  (cond
-   ((null? edges) '())
-   ((equal? id (poo-flow-graph-edge-from (car edges)))
-    (cons (poo-flow-graph-edge-to (car edges))
-          (edge-targets-from id (cdr edges))))
-   (else
-    (edge-targets-from id (cdr edges)))))
-
-;; : (-> Object [PooFlowGraphEdge] [Object])
-(def (edge-sources-to id edges)
-  (cond
-   ((null? edges) '())
-   ((equal? id (poo-flow-graph-edge-to (car edges)))
-    (cons (poo-flow-graph-edge-from (car edges))
-          (edge-sources-to id (cdr edges))))
-   (else
-    (edge-sources-to id (cdr edges)))))
-
-;; : (-> PooFlowGraph [Object] Alist)
-(def (ids->outgoing-map graph-value ids)
-  (cond
-   ((null? ids) '())
-   (else
-    (cons (cons (car ids)
-                (poo-flow-graph-outgoing-ids graph-value (car ids)))
-          (ids->outgoing-map graph-value (cdr ids))))))
-
-;; : (-> PooFlowGraph [Object] Alist)
-(def (ids->incoming-map graph-value ids)
-  (cond
-   ((null? ids) '())
-   (else
-    (cons (cons (car ids)
-                (poo-flow-graph-incoming-ids graph-value (car ids)))
-          (ids->incoming-map graph-value (cdr ids))))))
-
-;; : (-> Predicate [Object] [Object])
-(def (select-ids predicate ids)
-  (cond
-   ((null? ids) '())
-   ((predicate (car ids))
-    (cons (car ids)
-          (select-ids predicate (cdr ids))))
-   (else
-    (select-ids predicate (cdr ids)))))
-
-;; : (-> PooFlowGraph [Object] [Object] [Object])
-(def (walk-reachable graph-value pending visited)
-  (cond
-   ((null? pending) visited)
-   ((id-member? (car pending) visited)
-    (walk-reachable graph-value (cdr pending) visited))
-   (else
-    (walk-reachable graph-value
-                    (append (cdr pending)
-                            (poo-flow-graph-outgoing-ids graph-value
-                                                         (car pending)))
-                    (cons (car pending) visited)))))
-
-;; : (-> PooFlowGraph [Object] [Object] [Object])
-(def (walk-dependency-cone graph-value pending visited)
-  (cond
-   ((null? pending) visited)
-   ((id-member? (car pending) visited)
-    (walk-dependency-cone graph-value (cdr pending) visited))
-   (else
-    (walk-dependency-cone graph-value
-                          (append (cdr pending)
-                                  (poo-flow-graph-incoming-ids graph-value
-                                                               (car pending)))
-                          (cons (car pending) visited)))))
-
-;; : (-> PooFlowGraph [Object] [Object] MaybeList)
-(def (find-cycle-from-nodes graph-value ids visited)
-  (cond
-   ((null? ids) #f)
-   ((id-member? (car ids) visited)
-    (find-cycle-from-nodes graph-value (cdr ids) visited))
-   (else
-    (let* ((result (cycle-dfs graph-value (car ids) '() visited))
-           (cycle-path (car result))
-           (visited* (cadr result)))
-      (if cycle-path
-        cycle-path
-        (find-cycle-from-nodes graph-value (cdr ids) visited*))))))
-
-;; : (-> PooFlowGraph Object [Object] [Object] [MaybeList [Object]])
-(def (cycle-dfs graph-value id stack visited)
-  (cond
-   ((id-member? id stack)
-    (list (cycle-path-from id stack) visited))
-   ((id-member? id visited)
-    (list #f visited))
-   (else
-    (cycle-dfs-neighbors graph-value
-                         (poo-flow-graph-outgoing-ids graph-value id)
-                         (cons id stack)
-                         (cons id visited)))))
-
-;; : (-> PooFlowGraph [Object] [Object] [Object] [MaybeList [Object]])
-(def (cycle-dfs-neighbors graph-value neighbors stack visited)
-  (cond
-   ((null? neighbors) (list #f visited))
-   (else
-    (let* ((result (cycle-dfs graph-value
-                              (car neighbors)
-                              stack
-                              visited))
-           (cycle-path (car result))
-           (visited* (cadr result)))
-      (if cycle-path
-        (list cycle-path visited*)
-        (cycle-dfs-neighbors graph-value
-                             (cdr neighbors)
-                             stack
-                             visited*))))))
+        (begin
+          (hash-put! seen component-edge #t)
+          (graph-condensation-edges/rev (cdr edge-pairs)
+                                        component-index
+                                        seen
+                                        (cons component-edge edges-rev))))))))
 
 ;; : (-> Object [Object] [Object])
 (def (cycle-path-from id stack)
@@ -616,56 +568,46 @@
     (cons (car path-tail)
           (cycle-path-close (cdr path-tail) id)))))
 
-;; : (-> [Object] [PooFlowGraphEdge] [Object] [Object])
-(def (topological-walk remaining-ids remaining-edges order)
-  (cond
-   ((null? remaining-ids) order)
-   (else
-    (let ((ready-ids (ids-without-incoming remaining-ids
-                                           remaining-edges)))
-      (if (null? ready-ids)
-        #f
-        (topological-walk (remove-ids ready-ids remaining-ids)
-                          (remove-edges-from ready-ids remaining-edges)
-                          (append order ready-ids)))))))
+(def (graph-indegrees node-ids edge-pairs)
+  (let (indegrees (make-hash-table))
+    (for-each (lambda (id) (hash-put! indegrees id 0)) node-ids)
+    (for-each
+     (lambda (edge-pair)
+       (let (target (cadr edge-pair))
+         (when (hash-key? indegrees target)
+           (hash-put! indegrees target
+                      (+ 1 (hash-get indegrees target))))))
+     edge-pairs)
+    indegrees))
 
-;; : (-> [Object] [PooFlowGraphEdge] [Object])
-(def (ids-without-incoming ids edges)
-  (select-ids
-   (lambda (id)
-     (not (edge-target-member? id edges)))
-   ids))
+(def (topological-enqueue-targets! targets indegrees pending)
+  (for-each
+   (lambda (target)
+     (when (hash-key? indegrees target)
+       (let (next-indegree (- (hash-get indegrees target) 1))
+         (hash-put! indegrees target next-indegree)
+         (when (zero? next-indegree)
+           (enqueue! pending target)))))
+   targets))
 
-;; : (-> [Object] [Object] [Object])
-(def (remove-ids ids-to-remove ids)
-  (cond
-   ((null? ids) '())
-   ((id-member? (car ids) ids-to-remove)
-    (remove-ids ids-to-remove (cdr ids)))
-   (else
-    (cons (car ids)
-          (remove-ids ids-to-remove (cdr ids))))))
-
-;; : (-> [Object] [PooFlowGraphEdge] [PooFlowGraphEdge])
-(def (remove-edges-from source-ids edges)
-  (cond
-   ((null? edges) '())
-   ((id-member? (poo-flow-graph-edge-from (car edges)) source-ids)
-    (remove-edges-from source-ids (cdr edges)))
-   (else
-    (cons (car edges)
-          (remove-edges-from source-ids (cdr edges))))))
-
-;; : (-> Object [PooFlowGraphEdge] Boolean)
-(def (edge-target-member? id edges)
-  (cond
-   ((null? edges) #f)
-   ((equal? id (poo-flow-graph-edge-to (car edges))) #t)
-   (else (edge-target-member? id (cdr edges)))))
-
-;; : (-> Object [Object] Boolean)
-(def (id-member? id ids)
-  (cond
-   ((null? ids) #f)
-   ((equal? id (car ids)) #t)
-   (else (id-member? id (cdr ids)))))
+(def (topological-order/indexed node-ids edge-pairs outgoing-index)
+  (let* ((indegrees (graph-indegrees node-ids edge-pairs))
+         (ready-ids
+          (filter
+           (lambda (id) (zero? (hash-get indegrees id)))
+           node-ids))
+         (node-count (length node-ids))
+         (pending (make-Queue)))
+    (for-each (lambda (id) (enqueue! pending id)) ready-ids)
+    (let loop ((order-rev '())
+               (visited-count 0))
+      (if (queue-empty? pending)
+        (if (= visited-count node-count)
+          (reverse order-rev)
+          #f)
+        (let (id (dequeue! pending))
+          (topological-enqueue-targets!
+           (graph-adjacency-ref outgoing-index id)
+           indegrees
+           pending)
+          (loop (cons id order-rev) (+ visited-count 1)))))))

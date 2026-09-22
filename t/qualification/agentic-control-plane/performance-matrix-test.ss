@@ -1,9 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
-        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/qualification/performance-matrix)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
+(export performance-matrix-test)
 
 (def performance-matrix-test
   (test-suite "AC-10 S5 performance matrix"
@@ -22,5 +25,3 @@
         (check (.ref receipt 'unsupported-dimensions)
                => '((restore . no-runtime-benchmark-owner)
                     (absolute-latency-budget . insufficient-host-series)))))))
-
-(run-tests! performance-matrix-test)

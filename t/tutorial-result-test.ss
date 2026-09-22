@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tutorial result tests mirror Funflow's local/config outputs.
 ;;; Invariant: each stage proves a user-visible result, not only an API shape.
 
@@ -10,12 +14,9 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        (only-in :std/sugar
-                 filter)
         :poo-flow/src/core/api)
 
 (export tutorial-result-test)

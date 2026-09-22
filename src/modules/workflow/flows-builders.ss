@@ -1,11 +1,23 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: composed workflow builders for Docker, Store, Tensorflow, and makefile examples.
 ;;; Invariant: builders produce descriptors and runtime command manifests only.
 
-(import :poo-flow/src/core/api
+(import (only-in :poo-flow/src/core/task
+                 execution-request-request execution-request-plan-id)
+        (only-in :poo-flow/src/core/strategy make-local-eager-strategy)
+        (only-in :poo-flow/src/core/runtime-adapter make-rust-adapter)
+        (only-in :poo-flow/src/core/config make-run-config)
+        (only-in :poo-flow/src/core/flow
+                 default-flow-declaration-registry external-flow flow-then)
+        (only-in :poo-flow/src/core/runtime-command-descriptor
+                 make-stdout-runtime-command-descriptor)
         :poo-flow/src/core/projection-syntax
-        :poo-flow/src/modules/docker
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/docker/funs
+        :poo-flow/src/modules/workflow/store)
 
 (export make-docker-store-run-config
         make-ccompilation-flow
@@ -86,7 +98,7 @@
       (docker-enable-strategy (make-local-eager-strategy)))
      (make-store-enabled-adapter
       (make-docker-enabled-adapter (make-rust-adapter command)))
-     (poo-flow-core-field-rows/tail
+     (poo-flow-product-field-rows/tail
       options
       (runtime 'rust)
       (extensions '(docker store)))
@@ -209,6 +221,7 @@
 ;;; - It serializes request metadata without running Makefile or process work.
 ;; | RuntimeArgumentBuilder = (-> RuntimeEnvelope [String])
 ;; : (-> [Alist] RuntimeArgumentBuilder)
+;; : (forall (o) (-> [o] RuntimeArgumentBuilder))
 ;; make-makefile-tool-runtime-arguments
 ;;   : (-> [Alist] RuntimeArgumentBuilder)
 ;;   | contract: options produce an envelope serializer, not runtime execution
@@ -282,7 +295,7 @@
                      options
                      'arguments
                      (make-makefile-tool-runtime-arguments options)))
-         (metadata (poo-flow-core-field-rows/tail
+         (metadata (poo-flow-product-field-rows/tail
                     (workflow-options-without options 'arguments)
                     (workflow 'makefile-tool)
                     (runtime 'rust-cli-compatible))))

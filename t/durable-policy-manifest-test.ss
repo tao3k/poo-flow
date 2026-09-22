@@ -1,6 +1,10 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import :std/test
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-policy-manifest)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/policy-manifest)
 
 (export durable-policy-manifest-test)
 
@@ -48,5 +52,3 @@
         (check-equal? (string? payload) #t)
         (check-equal? (u8vector? bytes) #t)
         (check-equal? (> (u8vector-length bytes) 0) #t)))))
-
-(run-tests! durable-policy-manifest-test)

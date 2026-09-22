@@ -1,17 +1,20 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: bridge existing durable rows into runtime store operation rows.
 ;;; Invariant: bridge tests validate projection only; no runtime store runs.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend
-        :poo-flow/src/module-system/durable-runtime-store-operation
-        :poo-flow/src/module-system/durable-runtime-store-operation-bridge)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend
+        :poo-flow/src/modules/memory-core/durable/store-operation
+        :poo-flow/src/modules/memory-core/durable/store-operation-bridge)
 
 (export durable-runtime-store-operation-bridge-test)
 
@@ -164,5 +167,3 @@
         (check-equal? (test-ref row 'operation-kind) 'claim-job-lease)
         (check-equal? (test-ref row 'valid?) #f)
         (check-equal? (test-ref row 'diagnostic-count) 1)))))
-
-(run-tests! durable-runtime-store-operation-bridge-test)

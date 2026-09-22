@@ -1,9 +1,8 @@
 (export make-bundle-v1-domain-case-runtime-handoff-plan)
 
-(import (only-in :std/srfi/1 iota)
-        :clan/poo/object
+(import :clan/poo/object
         :poo-flow/src/utilities/functional
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/feature-system/interface)
 
 (def (fixture-id prefix index)

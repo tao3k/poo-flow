@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 * 10.06.59 Intent
 This document records the implemented typed contract between Scheme fact
 emission and Lean proof targets.  It is not a plan document: the concrete

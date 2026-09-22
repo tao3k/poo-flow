@@ -1,9 +1,13 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: pure graph runtime receipts for proof-backed UI cases.
 ;;; Invariant: this executor records graph semantics; it never calls tools/models.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/graph/types)
+        :poo-flow/src/graph/types-core)
 
 (export +poo-flow-graph-branch-choice-kind+
         +poo-flow-graph-runtime-policy-kind+
@@ -406,6 +410,7 @@
            policy-name)))
     diagnostics))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowGraphRuntimeReceipt Alist)
 (def (poo-flow-graph-runtime-receipt->lean-facts receipt)
   (let* ((receipt-ref
@@ -444,6 +449,7 @@
      (cons 'graph.runtime/reusable-production-case
            reusable-production-case?))))
 
+;; : (forall (v) (-> [(Pair Symbol v)] Boolean))
 ;; : (-> Alist Boolean)
 (def (poo-flow-graph-runtime-lean-fact-contract-complete? facts)
   (and (andmap (lambda (key)

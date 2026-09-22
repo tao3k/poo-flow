@@ -1,11 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: effective multi-agent session policy validation.
 ;;; Invariant: validation inspects composed POO policies and bounded attempts;
 ;;; it does not run tools, hooks, providers, sandboxes, or communication.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -431,5 +434,3 @@
          (poo-flow-session-policy-validation-receipt-runtime-executed?
           receipt)
          #f)))))
-
-(run-tests! session-policy-validation-test)

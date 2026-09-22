@@ -1,7 +1,11 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tool, memory, and diagnostic catalog checks for session policy validation.
 
-(import (only-in :std/srfi/1 fold)
+(import (only-in :std/list/list fold)
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/session/policy-validation-support
         :poo-flow/src/modules/session/policy-validation-communication)
@@ -121,6 +125,7 @@
     (poo-flow-session-validation-row-ref validation-row key default)
     default))
 
+;; : (forall (r d) (-> Symbol Symbol [r] [d] [d]))
 ;; : (-> Symbol Symbol [Symbol] [Alist] [Alist])
 (def (poo-flow-session-denied-ref-diagnostics/rev code
                                                    scope-ref
@@ -136,6 +141,7 @@
    diagnostics-rev
    refs))
 
+;; : (forall (a d) (-> Symbol [a] [d] [d]))
 ;; : (-> Symbol [PooSessionToolAttempt] [Alist] [Alist])
 (def (poo-flow-session-tool-attempt-diagnostics/rev code
                                                      attempts
@@ -189,6 +195,7 @@
          (cons 'channel-id
                (poo-flow-session-validation-row-ref row 'channel-id #f)))))
 
+;; : (forall (r d) (-> Symbol PooSessionPolicy [r] [d] [d]))
 ;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
 (def (poo-flow-session-communication-channel-receipt-diagnostics/rev
       scope-ref
@@ -209,6 +216,7 @@
    diagnostics-rev
    rows))
 
+;; : (forall (r d) (-> Symbol PooSessionPolicy [r] [d] [d]))
 ;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
 (def (poo-flow-session-communication-channel-diagnostics/rev scope-ref
                                                              policy
@@ -228,6 +236,7 @@
    diagnostics-rev
    rows))
 
+;; : (forall (r d) (-> Symbol PooSessionPolicy [r] [d] [d]))
 ;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
 (def (poo-flow-session-communication-target-diagnostics/rev scope-ref
                                                             policy
@@ -247,6 +256,7 @@
    diagnostics-rev
    rows))
 
+;; : (forall (a d) (-> PooSessionPolicy [a] [d] [d]))
 ;; : (-> PooSessionPolicy [PooSessionToolAttempt] [Alist] [Alist])
 (def (poo-flow-session-hook-inheritance-diagnostics/rev agent-tool-policy
                                                         denied-hook-attempts

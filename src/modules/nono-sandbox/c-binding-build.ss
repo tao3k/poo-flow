@@ -1,13 +1,18 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Owner: nono-sandbox C binding build/probe metadata lives here.
 ;;; Boundary: this module describes host-side compile probes and include policy.
 ;;; Runtime contract: native loading lives in native.ss; irreversible apply is gated.
 
 ;;; Native nono C binding build manifest and validation.
 ;;; - Keep compiler/include policy explicit before any probe command is materialized.
-(import :gerbil/gambit
+(import :gerbil/core
         (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/core/api
+        (only-in :poo-flow/src/core/roles execution-policy-role)
+        (only-in :poo-flow/src/core/failure raise-control-plane-failure)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile

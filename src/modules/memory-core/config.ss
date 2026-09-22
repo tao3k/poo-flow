@@ -1,11 +1,15 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for memory-core store specs and catalog receipts.
 ;;; Invariant: users author POO memory specs; runtime memory remains external.
 
-(import (only-in :std/sugar filter)
+(import
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/config-prototype-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
         :poo-flow/src/modules/memory-core/objects)
 
 (export (import: :poo-flow/src/modules/memory-core/objects)
@@ -19,7 +23,18 @@
         poo-flow-memory-core-poo-catalog->catalog
         poo-flow-memory-core-prototype-super
         poo-flow-memory-core-poo-config-flags
+        poo-flow-memory-configs
         poo-flow-memory-core-module-bundles)
+
+(defsyntax (poo-flow-memory-configs stx)
+  (syntax-case stx ()
+    ((_ config-form ...)
+     (syntax
+      (poo-flow-module-configs
+       memory-core
+       poo-flow-memory-core-poo-config-flags
+       (quoted :config config-form ...)
+       config-form ...)))))
 
 (defpoo-module-config-prototype
   memory-store-spec

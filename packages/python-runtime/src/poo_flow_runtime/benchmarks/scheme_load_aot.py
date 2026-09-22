@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 """Public Scheme load AOT benchmark surface."""
 
 from __future__ import annotations
@@ -15,7 +19,7 @@ from ._scheme_load_aot_types import (
 
 
 SCHEME_LOAD_AOT_DEFAULT_SOURCE = Path(
-    "packages/python-runtime/tests/fixtures/funflow_user_module.ss"
+    "packages/python-runtime/t/fixtures/funflow_user_module.ss"
 )
 
 

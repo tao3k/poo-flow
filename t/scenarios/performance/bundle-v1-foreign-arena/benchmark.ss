@@ -1,4 +1,8 @@
-(import :gerbil/gambit
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import :gerbil/runtime/gambit
         :clan/poo/object
         (only-in :std/srfi/1 iota)
         :poo-flow/src/utilities/functional

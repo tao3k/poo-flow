@@ -1,10 +1,22 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream durable recovery scenario case loaded by
-;;; custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: downstream durable recovery scenario case.
 ;;; Invariant: this is crash/replay/repair handoff data only; Scheme does not
 ;;; replay event logs, claim leases, repair state, or run workflow commands.
 
-(let* ((durable-policy
+(import :poo-flow/src/modules/memory-core/config
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/recovery-scenario
+        :poo-flow/src/modules/session/config)
+
+(export poo-flow-custom-my-module-durable-recovery-case)
+
+(def poo-flow-custom-my-module-durable-recovery-case
+  (let* ((durable-policy
         (poo-flow-durable-policy
          'durable/custom-recovery
          'objects.shared.durable
@@ -92,4 +104,4 @@
          '(agent/nono)
          '((metadata . ((source . user-interface)
                         (case . durable-recovery)))))))
-  (poo-flow-durable-recovery-scenario->alist scenario))
+    (poo-flow-durable-recovery-scenario->alist scenario)))

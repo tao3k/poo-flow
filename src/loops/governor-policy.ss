@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: governor policy projection, validation, and Marlin contract facts.
 ;;; Invariant: runtime snapshots are inputs; this owner never locks or mutates them.
 
@@ -41,7 +45,12 @@
                  loop-governor-state-key
                  loop-governor-strategy))
 
-(import ./governor-policy-sets.ss)
+(import (only-in ./governor-policy-sets.ss
+                 loop-governor-member?
+                 loop-governor-pattern-conflicted-by-set?
+                 loop-governor-pattern-denied-by-set?
+                 loop-governor-pattern-open?
+                 loop-governor-value-set))
 
 (export loop-governor-state-field
         loop-governor-budget-limit

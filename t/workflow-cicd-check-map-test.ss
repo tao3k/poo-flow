@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: workflow CI/CD check maps are inert POO control-plane data.
 ;;; Invariant: tests prove receipts and runtime readiness without execution.
 
@@ -6,10 +10,10 @@
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
+                 )
         (only-in :clan/poo/object .ref object?)
         :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/cicd)
+        :poo-flow/src/modules/workflow/interface)
 
 (export workflow-cicd-check-map-test)
 
@@ -30,7 +34,7 @@
     (poo-flow-cicd-check
      'build
      'ci/build
-     '("gxpkg" "build")
+     '("gerbil" "build")
      '()
      '()
      '(build-log)
@@ -42,7 +46,7 @@
     (poo-flow-cicd-check
      'test
      'ci/check
-     '("gxtest" "t/unit-tests.ss")
+     '("gerbil" "env" "./unit-tests.ss")
      '()
      '()
      '(test-receipt)
@@ -69,7 +73,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 4)
@@ -87,7 +90,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-only)))
                 (access . read-only))
                (cpu . 1)
@@ -117,7 +119,7 @@
         (check-equal? (poo-flow-cicd-check-name build-check) 'build)
         (check-equal? (poo-flow-cicd-check-profile build-check) 'ci/build)
         (check-equal? (poo-flow-cicd-check-command test-check)
-                      '("gxtest" "t/unit-tests.ss"))
+                      '("gerbil" "env" "./unit-tests.ss"))
         (check-equal? (poo-flow-cicd-check-dependency-refs build-check)
                       '())
         (check-equal? (poo-flow-cicd-check-dependency-refs test-check)
@@ -140,7 +142,7 @@
         (check-equal? (cicd-test-alist-ref build-receipt 'check) 'build)
         (check-equal? (cicd-test-alist-ref build-receipt 'profile) 'ci/build)
         (check-equal? (cicd-test-alist-ref build-receipt 'command)
-                      '("gxpkg" "build"))
+                      '("gerbil" "build"))
         (check-equal? (cicd-test-alist-ref build-receipt 'artifacts)
                       '(build-log))
         (check-equal? (cicd-test-alist-ref build-receipt 'cache)
@@ -170,7 +172,7 @@
                                            'sandbox-unresolved-profile-refs)
                       '(ci/build))
         (check-equal? (cicd-test-alist-ref runtime-ready 'argv)
-                      '("gxpkg" "build"))))
+                      '("gerbil" "build"))))
     (test-case "resolves sandbox profile summaries when catalog is provided"
       (let* ((check-map (cicd-test-check-map))
              (receipts

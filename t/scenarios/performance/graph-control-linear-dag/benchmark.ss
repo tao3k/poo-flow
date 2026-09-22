@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 100ms)
+ (target_total . 25ms)
+ (regression_budget . 75ms)
+ (expected_over_input_budget . 5ms)
+ (sampleCount . 20)
+ (targetRationale . "Pinned to the complete control receipt over a 1,000-node linear DAG.")
+ (maxRssMb . 256)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 3)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/graph-control-linear-dag/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . graph-control-linear-dag)
+ (optimizationFocus . "one shared core analysis receipt plus hash-indexed membership and dead-end projection")
+ (inputShape . "1,000 graph nodes and 999 directed edges in one linear DAG")
+ (expectedOutcome . "control reachability, finish totality and diagnostics are projected without repeated full-edge scans")
+ (expectedRepair . "reuse graph/algorithms receipt facts and std hash indexes; do not restore per-node graph index construction")
+ (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (tags poo graph control stdlib hash performance big-o))

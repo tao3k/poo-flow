@@ -1,14 +1,17 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: custom user-interface durable operation bridge scenario.
 ;;; Invariant: user config bridges durable rows to operation receipts only;
 ;;; Marlin owns runtime store execution.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in "../user-interface/custom/my-module/cases/durable-operation-bridge"
                  poo-flow-custom-my-module-durable-operation-bridge-case))
 
 (export user-interface-custom-durable-operation-bridge-test)
@@ -45,5 +48,3 @@
         (check-equal? (test-ref handoff-row 'handoff-ready?) #t)
         (check-equal? (test-ref handoff-row 'operation-count) 7)
         (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-operation-bridge-test)

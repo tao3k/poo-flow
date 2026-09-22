@@ -1,7 +1,11 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import :gerbil/gambit
+(import :gerbil/runtime/gambit
         (only-in :std/test
                  check
                  check-eq?
@@ -10,13 +14,13 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core)
+        "./support/performance"
+        (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface)
 
 (export module-object-practice-test)
 
@@ -34,7 +38,7 @@
 (def (large-object-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'Any
+   PooFlowModuleAnyType
    'override
    #f
    '((scope . large-object-performance)
@@ -44,7 +48,7 @@
 (def (large-object-list-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'List
+   PooFlowModuleListType
    'append
    '()
    '((scope . large-object-performance)
@@ -54,12 +58,12 @@
 ;;; This suite keeps object-extension examples executable as policy evidence for
 ;;; downstream module authors.
 ;; : TestCase
-(def module-object-practice-projection-case
+(def (module-object-practice-projection-case)
   (test-case "projects object-owned field contracts into the extension graph"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'append
                  '(filesystem-read)
                  '((scope . best-practice)
@@ -67,7 +71,7 @@
                (note-field
                 (poo-flow-module-field-contract
                  'note
-                 'String
+                 PooFlowModuleStringType
                  'override
                  "unset"
                  '((scope . best-practice)
@@ -115,7 +119,7 @@
                         "object-core owns contract wrappers"))))
 
 ;; : TestCase
-(def module-object-practice-contribution-performance-case
+(def (module-object-practice-contribution-performance-case)
   (test-case "keeps large object contribution projection linear"
         (let* ((field-count 1000)
                (fields
@@ -140,7 +144,7 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-object-contributions practice-object
@@ -157,7 +161,7 @@
           (check-equal? (< best-ms 100) #t))))
 
 ;; : TestCase
-(def module-object-practice-merge-performance-case
+(def (module-object-practice-merge-performance-case)
   (test-case "keeps large object slot config merge bounded"
         (let* ((field-count 1000)
                (fields
@@ -198,12 +202,12 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node contributions))))
                (noop-best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node
@@ -228,12 +232,12 @@
           (check-equal? (< noop-best-ms 50) #t))))
 
 ;; : TestCase
-(def module-object-practice-transformer-case
+(def (module-object-practice-transformer-case)
   (test-case "wraps standard list and map transformers as object contracts"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'override
                  '(filesystem-read process-run cache-mount)
                  '((scope . best-practice)
@@ -241,7 +245,7 @@
                (metadata-field
                 (poo-flow-module-field-contract
                  'metadata-map
-                 'Map
+                 PooFlowModuleMapType
                  'override
                  '((stage . default))
                  '((scope . best-practice)
@@ -327,7 +331,7 @@
 ;; : TestSuite
 (def module-object-practice-test
   (test-suite "poo-flow module object best practices"
-    module-object-practice-projection-case
-    module-object-practice-contribution-performance-case
-    module-object-practice-merge-performance-case
-    module-object-practice-transformer-case))
+    (module-object-practice-projection-case)
+    (module-object-practice-contribution-performance-case)
+    (module-object-practice-merge-performance-case)
+    (module-object-practice-transformer-case)))

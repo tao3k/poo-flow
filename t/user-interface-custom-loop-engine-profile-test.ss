@@ -1,15 +1,19 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: tests verify profile-style loop-engine user declarations.
 ;;; Invariant: profile projection is report-only and never executes loops.
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/facade
+        (only-in "../user-interface/custom/my-module/profiles/loops"
                  poo-flow-custom-my-module-loops-module))
 
 (export user-interface-custom-loop-engine-profile-test)
@@ -58,7 +62,7 @@
 ;;; Profile modules should still read like user declarations: one loop-engine
 ;;; row, ordered use-cases, sandbox refs, and no runtime execution.
 ;; : TestCase
-(def user-interface-custom-loop-engine-profile-case
+(def (user-interface-custom-loop-engine-profile-case)
   (test-case "projects custom loop-engine profile use cases"
     (let* ((presentation
             (custom-loop-presentation
@@ -182,4 +186,4 @@
 ;; : TestSuite
 (def user-interface-custom-loop-engine-profile-test
   (test-suite "poo-flow custom loop-engine profile declarations"
-    user-interface-custom-loop-engine-profile-case))
+    (user-interface-custom-loop-engine-profile-case)))

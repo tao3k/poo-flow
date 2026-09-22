@@ -1,8 +1,12 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Scheme POO owns semantic roots and one-shot effect capabilities.
 ;;; Invariant: validation and consumption are pure immutable transitions.
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex)
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/encoding/hex hex-encode))
 
 (export poo-flow-semantic-root
         poo-flow-effect-binding
@@ -15,7 +19,10 @@
         poo-flow-authorized-effect-token-consume)
 
 (def (canonical-digest value)
-  (hex-encode (sha256 (call-with-output-string (lambda (port) (write value port))))))
+  (hex-encode
+   (sha256
+    (string->utf8
+     (call-with-output-string (lambda (port) (write value port)))))))
 
 (def (poo-flow-effect-binding-digest binding-object)
   (unless (eq? (.ref binding-object 'kind) 'poo-flow-effect-binding)

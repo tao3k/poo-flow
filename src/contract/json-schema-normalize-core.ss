@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: owns the core JSON Schema normalization parser entry points and
 ;;; parser registry plumbing used by the contract harness.
 ;;; Invariant: callers should trust this owner for parser-visible diagnostics
@@ -7,10 +11,6 @@
 (import (only-in "./json-schema-ir.ss"
                  poo-flow-json-schema-node-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/srfi/1
-                 every
-                 iota
-                 map)
         (only-in "./functional.ss"
                  poo-flow-contract-json-object?
                  poo-flow-contract-json-array->list

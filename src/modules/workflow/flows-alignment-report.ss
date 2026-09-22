@@ -1,8 +1,14 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: Funflow tutorial alignment report projections.
 ;;; Invariant: report rows summarize proof metadata and runtime gaps without execution.
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list append-map)
         :poo-flow/src/modules/workflow/flows-alignment-specs)
 
 (export poo-flow-funflow-tutorial-alignment-report)
@@ -170,18 +176,10 @@
 ;;; Duplicate runtime owners collapse into the first observed matrix row.
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-runtime-owner-symbols specs)
-  (reverse
-   (foldl
-    (lambda (spec owners-rev)
-      (foldl
-       (lambda (owner owner-acc)
-         (if (member owner owner-acc)
-           owner-acc
-           (cons owner owner-acc)))
-       owners-rev
-       (.ref spec 'runtime-owned)))
-    '()
-    specs)))
+  (delete-duplicates/hash
+   (append-map (lambda (spec) (.ref spec 'runtime-owned)) specs)
+   table: (make-hash-table-eq)
+   from-end?: #t))
 
 ;;; Boundary: deferred output aggregation keeps spec order without repeated
 ;;; append growth while preserving each spec's local deferred order.

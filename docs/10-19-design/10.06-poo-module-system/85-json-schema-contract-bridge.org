@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: 10.06.85 JSON Schema Contract Bridge
 #+date: 2026-07-08
 #+startup: showall
@@ -85,7 +89,7 @@ src/contract/json-schema-receipt.ss
 src/contract/json-schema-validate.ss
 src/modules/funflow/github-ci-contract.ss
 t/support/json-schema-contract-performance.ss
-t/json-schema-contract-performance-test.ss
+t/performance/json-schema-contract-performance-test.ss
 packages/python-runtime/src/poo_flow_runtime/json_schema_contract.py
 schemas/json/github-workflow.json
 #+end_src
@@ -108,7 +112,7 @@ owns validation keyword metadata and generated constraint predicate
 composition.
 
 =t/support/json-schema-contract-performance.ss= builds deterministic recursive
-contract workloads. The paired =t/json-schema-contract-performance-test.ss=
+contract workloads. The paired =t/performance/json-schema-contract-performance-test.ss=
 gate measures both the boolean hot path and the receipt/projection path in
 microseconds. Large GitHub CI fixtures remain as a scale check, but =jobs= is
 only one fixture: the same validator recurses through any normalized
@@ -205,7 +209,7 @@ The P0 gate is:
 - confirm dynamic map values recurse through both GitHub CI jobs and generic
   user stage/task schemas plus additional-property profile/limit schemas;
 - confirm recursive map-value validation stays inside the benchmark budget in
-  =t/json-schema-contract-performance-test.ss=, including microsecond average
+  =t/performance/json-schema-contract-performance-test.ss=, including microsecond average
   gates for the boolean hot path and receipt path. The current gate keeps the
   small recursive hot path under =50us= and the receipt/projection path under
   =90us= on the best-of-five focused run;

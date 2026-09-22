@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: JSON Schema validation keyword constraints.
 ;;; Invariant: this owner stores small constraint metadata and compiles it into
 ;;; predicates; it does not parse full schemas or emit object contracts.
@@ -16,11 +20,9 @@
                  poo-flow-json-schema-node-metadata
                  poo-flow-json-schema-node-record
                  poo-flow-json-schema-diagnostic-record)
-        (only-in :std/pregexp
+        (only-in :std/text/pregexp
                  pregexp
-                 pregexp-match)
-        (only-in :std/srfi/1
-                 filter-map))
+                 pregexp-match))
 
 (export +poo-flow-json-schema-constraint-keywords+
         poo-flow-json-schema-parse-result-with-constraints

@@ -1,12 +1,25 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: downstream loop-engine case loaded by custom/my-module/config.ss.
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Boundary: standalone downstream loop-engine case module.
 ;;; Invariant: pure use-module declaration; runtime work stays in Marlin.
 
 ;;; This case configures one concrete loop handoff story: an agent proposes a
 ;;; CI/CD repair, peer agents judge it, and a human node reviews release risk.
 ;; : [PooUserModuleSelection]
-(use-module loop-engine
-  :config
+(import :poo-flow/src/modules/loop-engine/config
+        :poo-flow/src/modules/session/syntax
+        (only-in :poo-flow/src/loops/spec-evolution
+                 external-feedback-receipt-prototype
+                 spec-change-proposal-prototype
+                 spec-evolution-review-item-prototype))
+
+(export poo-flow-custom-my-module-loop-engine-case)
+
+(def poo-flow-custom-my-module-loop-engine-case
+  (poo-flow-loop-engine-configs
   (.def (current-system-build-loop @ loop-engine-use-case
                                    name level mode workflow)
     name: 'current-system-build-loop
@@ -259,4 +272,4 @@
       #f
       '((source . loop-engine)
         (use-case . current-system-recovery-loop)))))
-)
+))

@@ -1,7 +1,11 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Contract: scenario test for P0 boundary namespace validation.
 
-(eval '(import "./src/contract/boundary-namespace.ss"))
+(import :std/test)
 
 ;; : (-> PooFlowBoundaryNamespaceExpr PooFlowBoundaryNamespaceValue)
 (def (boundary-eval expr)
@@ -15,7 +19,13 @@
 (def (boundary-test-nested-ref row outer-key inner-key)
   (boundary-test-ref (boundary-test-ref row outer-key) inner-key))
 
-(def author-namespace
+(export boundary-namespace-test)
+
+(def boundary-namespace-test
+  (test-suite "boundary-namespace-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/contract/boundary-namespace.ss"))
+      (def author-namespace
   (boundary-eval
    '(poo-flow-boundary-namespace 'author '(init))))
 
@@ -109,4 +119,4 @@
                     'blocked)
                (member 'disallowed-public-category
                        (boundary-test-ref feedback 'diagnostic-codes)))
-    (error "invalid namespace feedback should explain repair action")))
+    (error "invalid namespace feedback should explain repair action"))))))

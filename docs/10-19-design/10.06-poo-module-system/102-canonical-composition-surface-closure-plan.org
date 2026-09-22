@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 #+title: Canonical Composition Surface Closure Implementation Plan
 
 * Delivery rule
@@ -10,7 +14,7 @@ changes without staging or committing them.
 
 1. Add or update a focused parser test so the accepted module form contains the
    exact =use-module module-name as alias= prefix and optional profile clauses.
-2. Repair the syntax-plan list deconstruction without changing profile, compose,
+2. Replace the declaration parser's positional fold state without changing profile, compose,
    or stage semantics.
 3. Delete the legacy-specific parser branch and diagnostic text.
 4. Prove invalid non-canonical forms report only
@@ -33,7 +37,7 @@ changes without staging or committing them.
 
 * Step 4 — Artifact and regression gates
 
-1. Compile the syntax plan, syntax lowering, accessor owner, and facade with the
+1. Compile the declaration parser, syntax lowering, accessor owner, and facade with the
    host Nix C include variables removed per command.
 2. Run composition syntax smoke and profile composition tests.
 3. Run LangChain/LangGraph, CrewAI, and tool-calling scenarios.

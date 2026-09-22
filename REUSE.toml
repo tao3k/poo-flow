@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+version = 1
+
+[[annotations]]
+path = [
+  "LICENSE",
+  "**/LICENSE",
+  "LICENSES/**",
+  ".bazelversion",
+  "*.lock",
+  "**/*.json",
+  "**/*.lock",
+  "**/*.typed",
+  "**/*.txt",
+  "**/*.receipt",
+  "**/*.hex",
+  "**/*.vector",
+  "**/fixtures/**",
+  "**/generated/**",
+  "**/static/**",
+  "packages/proof/lean/lean-toolchain",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"

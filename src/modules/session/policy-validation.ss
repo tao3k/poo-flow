@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: public facade for effective session policy validation receipts.
 ;;; Implementation lives in policy-validation-* modules so catalog, transport,
 ;;; and receipt projection checks remain independently auditable.

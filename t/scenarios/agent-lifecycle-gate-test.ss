@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 ;;; Boundary: AI agent lifecycle proof gate scenario tests.
 ;;; Invariant: lifecycle gates reject unsafe session/sandbox/loop/subagent policy.
 
@@ -6,10 +10,8 @@
                  check-equal?
                  test-case
                  test-suite)
-        :gslph/src/testing/memory-profile
-        :poo-flow/src/module-system/agent-lifecycle-gate)
+        :poo-flow/src/modules/session/lifecycle-gate)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export agent-lifecycle-gate-test)
 
