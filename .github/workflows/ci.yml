@@ -49,9 +49,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: release-v0.19-d801e7a
+            gerbil-label: release-v0.19-2591dcd
           - os: macos-26
-            gerbil-label: release-v0.19-d801e7a
+            gerbil-label: release-v0.19-2591dcd
     env:
       GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/${{ matrix.gerbil-label }}
     steps:
@@ -357,7 +357,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: release-v0.19-d801e7a
+            gerbil-label: release-v0.19-2591dcd
             gerbil-install: release
             dependency-timeout-minutes: 12
             compile-timeout-minutes: 12
@@ -801,7 +801,7 @@ jobs:
       matrix:
         include:
           - os: macos-26
-            gerbil-label: release-v0.19-d801e7a
+            gerbil-label: release-v0.19-2591dcd
             gerbil-install: release
             dependency-timeout-minutes: 12
             external-module-mode: analysis
