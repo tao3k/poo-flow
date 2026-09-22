@@ -6,11 +6,11 @@
 ;;; Narrow public module-source facade used by builds and downstream loaders.
 
 (import :poo-flow/src/module-system/loader/collection
-        :poo-flow/src/module-system/loader/contribution-registry
+        :poo-flow/src/module-system/loader/official-contributions
         :poo-flow/src/module-system/loader/selection)
 
 (export (except-out
          (import: :poo-flow/src/module-system/loader/collection)
          poo-flow-module-source-collection-role-entrypoints)
-        (import: :poo-flow/src/module-system/loader/contribution-registry)
+        (import: :poo-flow/src/module-system/loader/official-contributions)
         (import: :poo-flow/src/module-system/loader/selection))

@@ -354,8 +354,8 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
-(def (module-system-lazy-loader-aitia-registry-case)
-  (test-case "official Aitia registry resolves local roots or defers materialization"
+(def (module-system-lazy-loader-aitia-submodule-source-case)
+  (test-case "official Aitia submodule source resolves only checked-out roots"
     (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
            (source-refs
             (poo-flow-module-selection-source-refs
@@ -367,15 +367,7 @@
            "packages/lambda-aitia/modules/assurance/interface.ss"
            "packages/lambda-aitia/modules/gitops/interface.ss"
            "packages/lambda-aitia/modules/sdlc/interface.ss"))
-        (begin
-          (check-equal? (map poo-flow-module-source-ref-kind source-refs)
-                        '(registry))
-          (check-equal? (map poo-flow-module-source-ref-value source-refs)
-                        '(lambda-aitia))
-          (check-equal?
-           (cdr (assq 'materialization
-                      (poo-flow-module-source-ref-metadata (car source-refs))))
-           'required))))))
+        (check-equal? source-refs '())))))
 
 ;; : TestCase
 (def (module-system-lazy-loader-auto-import-removal-case)
@@ -413,5 +405,5 @@
     (module-system-lazy-loader-module-tree-case)
     (module-system-lazy-loader-src-modules-case)
     (module-system-lazy-loader-user-root-case)
-    (module-system-lazy-loader-aitia-registry-case)
+    (module-system-lazy-loader-aitia-submodule-source-case)
     (module-system-lazy-loader-auto-import-removal-case)))

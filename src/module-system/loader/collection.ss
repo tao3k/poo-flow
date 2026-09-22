@@ -109,18 +109,22 @@
 ;;; flat <modules-root>/<module-name> repository convention.
 (def (poo-flow-module-source-collection-default-locate collection module-key
                                                        entrypoint-roles)
-  (let* ((module-name (cdr module-key))
-         (module-root
-          (path-expand
-           (symbol->string module-name)
-           (poo-flow-module-source-collection-modules-root collection)))
-         (interface-path (path-expand "interface.ss" module-root)))
-    (if (file-exists? interface-path)
-      (map (lambda (entrypoint-role)
-             (poo-flow-module-source-entrypoint
-              collection module-key module-root entrypoint-role))
-           entrypoint-roles)
-      '())))
+  (let (module-name (cdr module-key))
+    (if (eq? module-name
+             (poo-flow-module-source-collection-identity collection))
+      (poo-flow-module-source-collection-role-entrypoints
+       collection 'interface)
+      (let* ((module-root
+              (path-expand
+               (symbol->string module-name)
+               (poo-flow-module-source-collection-modules-root collection)))
+             (interface-path (path-expand "interface.ss" module-root)))
+        (if (file-exists? interface-path)
+          (map (lambda (entrypoint-role)
+                 (poo-flow-module-source-entrypoint
+                  collection module-key module-root entrypoint-role))
+               entrypoint-roles)
+          '())))))
 
 (def (poo-flow-module-source-collection-locate collection module-key)
   ((.ref collection 'locate) collection module-key '(interface)))

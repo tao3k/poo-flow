@@ -8,7 +8,7 @@
 
 (import :poo-flow/src/module-system/loader/backend
         :poo-flow/src/module-system/loader/collection
-        :poo-flow/src/module-system/loader/contribution-registry
+        :poo-flow/src/module-system/loader/official-contributions
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree)
 
@@ -40,7 +40,7 @@
         make-poo-flow-user-interface-module-load-path
         poo-flow-maintained-module-source
         poo-flow-default-module-load-path
-        (import: :poo-flow/src/module-system/loader/contribution-registry)
+        (import: :poo-flow/src/module-system/loader/official-contributions)
         poo-flow-module-loader-entry-prototype
         make-poo-flow-module-loader-entry
         poo-flow-module-loader-entry?
