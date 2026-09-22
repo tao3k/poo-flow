@@ -206,7 +206,7 @@
     (make-poo-flow-contribution-registry-entry
      'lambda-episteme
      "https://github.com/tao3k/lambda-episteme.git"
-     "70f9075ca9c42b70777ae738341391464008bcbe"
+     "831530f505a14d44434dbea993a36441ec61e9d4"
      "packages/lambda-episteme"
      "modules"
      '(decision-kind diataxis healthcare ontology))
