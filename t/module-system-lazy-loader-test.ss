@@ -355,7 +355,11 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
-  (test-case "official Aitia submodule source resolves only checked-out roots"
+  (test-case "official submodule sources resolve by selected checkout identity"
+    (check-equal?
+     (map poo-flow-module-source-collection-identity
+          poo-flow-official-contribution-sources)
+     '(poo-flow-official-contributions))
     (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
            (source-refs
             (poo-flow-module-selection-source-refs

@@ -7,7 +7,7 @@
 ;;; and user module trees. Selection declarations remain separate POO values.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/list/list every filter)
+        (only-in :std/list/list append-map every filter)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive
                  poo-flow-make-value-index
@@ -41,6 +41,7 @@
         poo-flow-module-load-path-collections
         poo-flow-module-load-path-locate
         make-poo-flow-contribution-module-source
+        make-poo-flow-contribution-root-module-source
         make-poo-flow-contribution-module-load-path
         make-poo-flow-user-interface-module-source
         make-poo-flow-user-interface-module-load-path
@@ -431,6 +432,35 @@
 (def (make-poo-flow-contribution-module-source identity-value source-root-value)
   (make-poo-flow-module-source-collection
    identity-value 'contributor source-root-value "modules"))
+
+;;; A contribution root is an on-demand projection over checked-out package
+;;; directories.  The selected module identity chooses packages/<identity>;
+;;; no contributor name, URL, or revision is registered in Scheme.
+(def (poo-flow-contribution-root-locate collection module-key entrypoint-roles)
+  (let* ((identity (cdr module-key))
+         (source-root
+          (path-expand
+           (symbol->string identity)
+           (poo-flow-module-source-collection-source-root collection)))
+         (contribution
+          (make-poo-flow-contribution-module-source identity source-root)))
+    (if (file-exists?
+         (poo-flow-module-source-collection-modules-root contribution))
+      (append-map
+       (lambda (entrypoint-role)
+         (poo-flow-module-source-collection-role-entrypoints
+          contribution entrypoint-role))
+       entrypoint-roles)
+      '())))
+
+(def (make-poo-flow-contribution-root-module-source identity-value
+                                                     source-root-value)
+  (.o (:: @ poo-flow-module-source-collection-prototype)
+      (identity identity-value)
+      (owner 'contributor)
+      (source-root source-root-value)
+      (modules-directory ".")
+      (locate poo-flow-contribution-root-locate)))
 
 (def (make-poo-flow-contribution-module-load-path identity-value
                                                   source-root-value)

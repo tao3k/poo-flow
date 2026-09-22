@@ -5,7 +5,7 @@
 
 ;;; Boundary: checked-out official contribution source collections.
 ;;; Invariant: Git submodule gitlinks own revisions and .gitmodules owns URLs;
-;;; this module only composes local module source roots.
+;;; this module only exposes the packages root for identity-driven discovery.
 
 (import :poo-flow/src/module-system/loader/collection)
 
@@ -14,10 +14,8 @@
 
 (def poo-flow-official-contribution-sources
   (list
-   (make-poo-flow-contribution-module-source
-    'lambda-episteme "packages/lambda-episteme")
-   (make-poo-flow-contribution-module-source
-    'lambda-aitia "packages/lambda-aitia")))
+   (make-poo-flow-contribution-root-module-source
+    'poo-flow-official-contributions "packages")))
 
 (def poo-flow-official-contribution-load-path
   (extend-poo-flow-module-load-path
