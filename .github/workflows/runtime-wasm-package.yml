@@ -18,6 +18,7 @@ on:
       - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
+      - tools/ci/install-gerbil-v19-release.sh
   pull_request:
     paths:
       - bindings/runtime-wasm/**
@@ -30,6 +31,7 @@ on:
       - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
+      - tools/ci/install-gerbil-v19-release.sh
   workflow_dispatch:
 
 permissions:
@@ -56,13 +58,10 @@ jobs:
       - name: Install Gerbil and WebAssembly toolchain
         shell: bash
         run: |
+          set -euo pipefail
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
           brew install jq openssl pkg-config sqlite zlib emscripten binaryen bazelisk
-          formula="tao3k/gerbil/gerbil-scheme"
-          brew install --force-bottle "$formula"
-          formula_info="$(brew info --json=v2 "$formula" 2>/dev/null)"
-          poured_from_bottle="$(jq -r '.formulae[0].installed[-1].poured_from_bottle // false' <<< "$formula_info")"
-          test "$poured_from_bottle" = true
+          bash tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/v0.19-d801e7a"
 
       - name: Declare Bazel disk-cache generation
         shell: bash

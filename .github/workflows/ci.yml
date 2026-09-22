@@ -49,14 +49,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
-          - os: macos-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
+            gerbil-label: release-v0.19-d801e7a
+          - os: macos-26
+            gerbil-label: release-v0.19-d801e7a
     env:
-      GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
-      GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/${{ matrix.gerbil-label }}
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -100,58 +97,9 @@ jobs:
           echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
           "$gcc_bin" --version
 
-      - name: Restore native Gerbil install cache
-        id: native-gerbil-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
-          restore-keys: |
-            native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
-
-      - name: Build native Gerbil
-        if: steps.native-gerbil-cache.outputs.cache-hit != 'true'
-        env:
-          GERBIL_REF: ${{ matrix.gerbil-ref }}
-        run: |
-          build_cores() {
-            if [ -n "${GERBIL_BUILD_CORES:-}" ]; then
-              printf '%s\n' "$GERBIL_BUILD_CORES"
-            else
-              nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || {
-                echo "::error::Unable to determine GERBIL_BUILD_CORES" >&2
-                return 1
-              }
-            fi
-          }
-          mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-          rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
-          git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
-          cd "$GERBIL_SRC"
-          git checkout "$GERBIL_REF"
-          # GitHub may schedule the same OS/architecture on CPUs with different
-          # instruction sets. Gerbil defaults to --enable-march=native, so a
-          # cached install is not portable unless the architecture is cleared.
-          ./configure --prefix="$GERBIL_PREFIX" --enable-march=
-          echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
-          . ./build-env.sh
-          for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            GERBIL_BUILD_CORES="$(build_cores)" ./src/build.sh "$target"
-          done
-          ./install.sh
-
-      - name: Save native Gerbil install cache
-        if: steps.native-gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
-
-      - name: Activate native Gerbil
-        run: |
-          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          "$GERBIL_PREFIX/bin/gerbil" --version
-          "$GERBIL_PREFIX/bin/gerbil" interactive -e '(displayln "gerbil-ready")'
+      - name: Install immutable Gerbil v0.19 release
+        shell: bash
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
 
       - name: Restore native Gerbil package cache
         id: native-gerbil-pkg-cache
