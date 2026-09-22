@@ -60,7 +60,7 @@
     (error "invalid source-admission observability profile" profile))
   (when (.ref profile 'emit-summary?)
     (poo-flow-write-observation-line!
-     "[poo-flow-observability] phase=source-scanned profile=~a owner=~a module=~a files=~a observations=~a diagnostics=~a preparedGraphElapsedUs=~a policyElapsedUs=~a elapsedUs=~a"
+     "[poo-flow-observability] phase=source-scanned profile=%a owner=%a module=%a files=%a observations=%a diagnostics=%a preparedGraphElapsedUs=%a policyElapsedUs=%a elapsedUs=%a"
      (.ref profile 'identity)
      (.ref profile 'owner)
      (.ref profile 'module)
@@ -73,7 +73,7 @@
   (when (and (.ref profile 'emit-diagnostics?)
              (> (.ref receipt 'diagnostic-count) 0))
     (poo-flow-write-observation-line!
-     "[poo-flow-observability] phase=source-diagnostics profile=~a owner=~a module=~a diagnostics=~a"
+     "[poo-flow-observability] phase=source-diagnostics profile=%a owner=%a module=%a diagnostics=%a"
      (.ref profile 'identity)
      (.ref profile 'owner)
      (.ref profile 'module)
