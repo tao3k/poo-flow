@@ -5,14 +5,13 @@
 ;;; Benchmark owner: this file isolates one conversion-heavy FFI control path
 ;;; so its receipt cannot be mistaken for the production payload data plane.
 
-(import (only-in :std/foreign begin-ffi c-declare define-c-lambda)
+(import (only-in :std/ffi C-include def-C-lambda)
         (only-in :std/iter for in-range))
 (export main)
 
-(begin-ffi (runtime-v0-status-name/native)
-  (c-declare "#include \"poo_flow/runtime_v0.h\"")
-  (define-c-lambda runtime-v0-status-name/native (unsigned-int) char-string
-    "___return ((char*)poo_flow_runtime_v0_status_name(___arg1));"))
+(C-include "\"poo_flow/runtime_v0.h\"")
+(def-C-lambda runtime-v0-status-name/native (unsigned-int) char-string
+  "poo_flow_runtime_v0_status_name")
 
 ;;; Measurement boundary:
 ;;; - This executable measures the conversion-heavy control path only.

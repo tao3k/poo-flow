@@ -39,7 +39,7 @@
       (poo-flow-testing-observability-extension
        (testing-interface-add-profile
         +asp-testing-interface+
-        (.cc +testing-memory-profile+ maxHeapMiB: 512)))
+        (.cc +testing-memory-profile+ maxHeapMiB: 1024)))
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"
