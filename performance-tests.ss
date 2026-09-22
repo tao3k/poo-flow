@@ -5,15 +5,15 @@
 
 ;;; Native performance entrypoint using the same ASP scheduler as unit tests.
 
-(import (only-in :clan/testing find-test-files)
+(import (only-in :asp-gerbil-scheme/testing-runner-api
+                 testing-interface-test-files)
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-map-profile
                  testing-interface-run-test-files!)
-        (only-in :std/srfi/1 filter foldl)
-        (only-in :std/srfi/13 string-prefix?)
+        (only-in :std/list/list filter foldl)
         (only-in "src/module-system/observability/testing-extension.ss"
                  poo-flow-testing-observability-extension))
 
@@ -43,7 +43,9 @@
          (string-prefix?
           "./t/module-system-poo-performance-test-support/"
           path)))
-   (find-test-files "." "-test.ss$")))
+   (testing-interface-test-files
+    +poo-flow-performance-testing-interface+
+    "performance-tests.ss")))
 
 (displayln "[poo-performance-testing] phase=entry-ready")
 (force-output)

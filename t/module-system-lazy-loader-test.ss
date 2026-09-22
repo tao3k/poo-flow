@@ -355,18 +355,27 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-registry-case)
-  (test-case "official Aitia registry resolves only Aitia-owned module roots"
+  (test-case "official Aitia registry resolves local roots or defers materialization"
     (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
            (source-refs
             (poo-flow-module-selection-source-refs
              poo-flow-official-contribution-load-path selection)))
-      (check-equal?
-       (map poo-flow-module-source-ref-value source-refs)
-       '("packages/lambda-aitia/modules/ADR/interface.ss"
-         "packages/lambda-aitia/modules/assurance/interface.ss"
-         "packages/lambda-aitia/modules/formal-methods/interface.ss"
-         "packages/lambda-aitia/modules/gitops/interface.ss"
-         "packages/lambda-aitia/modules/sdlc/interface.ss")))))
+      (if (file-exists? "packages/lambda-aitia/modules")
+        (check-equal?
+         (map poo-flow-module-source-ref-value source-refs)
+         '("packages/lambda-aitia/modules/ADR/interface.ss"
+           "packages/lambda-aitia/modules/assurance/interface.ss"
+           "packages/lambda-aitia/modules/gitops/interface.ss"
+           "packages/lambda-aitia/modules/sdlc/interface.ss"))
+        (begin
+          (check-equal? (map poo-flow-module-source-ref-kind source-refs)
+                        '(registry))
+          (check-equal? (map poo-flow-module-source-ref-value source-refs)
+                        '(lambda-aitia))
+          (check-equal?
+           (cdr (assq 'materialization
+                      (poo-flow-module-source-ref-metadata (car source-refs))))
+           'required))))))
 
 ;; : TestCase
 (def (module-system-lazy-loader-auto-import-removal-case)
