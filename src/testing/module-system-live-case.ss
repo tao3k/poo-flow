@@ -446,6 +446,7 @@
                                                                  workspace)))
      (workdir workspace)
      (mounts (list (list (cons 'path workspace)
+                         (cons 'kind 'directory)
                          (cons 'mode 'read-write)
                          (cons 'purpose 'isolated-project-workspace))))
      (network-policy
