@@ -95,9 +95,14 @@ test-contribute contribution="lambda-aitia" module="sdlc":
     case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test_root="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-{{ contribution }}-module-test.XXXXXX")"
     trap 'rm -rf -- "$test_root"' EXIT
-    runner="./run-contribute-test.ss"
-    if test "{{ contribution }}" = "lambda-aitia"; then runner="./packages/lambda-aitia/run-test.ss"; fi
-    test_directory="packages/{{ contribution }}/t/{{ module }}"
+    if test "{{ contribution }}" = "lambda-aitia"; then
+        cd "{{ contribution_source_root }}/lambda-aitia"
+        runner="./run-test.ss"
+        test_directory="t/{{ module }}"
+    else
+        runner="./run-contribute-test.ss"
+        test_directory="packages/{{ contribution }}/t/{{ module }}"
+    fi
     test -d "$test_directory"
     GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="$test_root" GERBIL_LOADPATH="{{ contribution_source_root }}/{{ contribution }}:{{ justfile_directory() }}:$test_root/lib:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gxi {{ gambit_test_runtime_options }} "$runner" "$test_directory"
 
@@ -118,9 +123,14 @@ test-contribute-atomic contribution="lambda-aitia" module="sdlc" test_file="unit
     case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test_root="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-{{ contribution }}-atomic-test.XXXXXX")"
     trap 'rm -rf -- "$test_root"' EXIT
-    runner="./run-contribute-test.ss"
-    if test "{{ contribution }}" = "lambda-aitia"; then runner="./packages/lambda-aitia/run-test.ss"; fi
-    test_path="packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    if test "{{ contribution }}" = "lambda-aitia"; then
+        cd "{{ contribution_source_root }}/lambda-aitia"
+        runner="./run-test.ss"
+        test_path="t/{{ module }}/{{ test_file }}"
+    else
+        runner="./run-contribute-test.ss"
+        test_path="packages/{{ contribution }}/t/{{ module }}/{{ test_file }}"
+    fi
     test -f "$test_path"
     GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="$test_root" GERBIL_LOADPATH="{{ contribution_source_root }}/{{ contribution }}:{{ justfile_directory() }}:$test_root/lib:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi {{ gambit_test_runtime_options }} "$runner" "$test_path"
 
