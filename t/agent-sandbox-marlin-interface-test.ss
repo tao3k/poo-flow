@@ -41,6 +41,7 @@
                        (args '("--print" "hello"))
                        (workdir "/workspace")
                        (mounts '(((path . "/workspace")
+                                  (kind . directory)
                                   (mode . read-write))))
                        (network-policy '((mode . proxy-only)))
                        (output-policy 'artifact)
