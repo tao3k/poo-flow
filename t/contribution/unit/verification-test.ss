@@ -31,6 +31,18 @@
       (poo-flow-revoke-verification! a receipt)
       (check-equal? (poo-flow-verification-valid? a receipt claim 1) #f)
       (check-exception (poo-flow-verify a claim 10 10) Error?)))
+  (test-case "forged and copied adapter presentations cannot validate a receipt"
+    (let* ((adapter (poo-flow-verification-adapter "host" operation snapshot))
+           (claim (.o claim: "trusted"))
+           (receipt (poo-flow-verify adapter claim 0 10))
+           (forged (.o identity: "host"
+                       admits?: (lambda (receipt value now) #t)))
+           (copied (.o (:: @ adapter))))
+      (check-equal? (poo-flow-verification-valid? forged receipt claim 1) #f)
+      (check-equal? (poo-flow-verification-valid? copied receipt claim 1) #f)
+      (check-exception (poo-flow-verify forged claim 1 2) Error?)
+      (.put! adapter 'identity "other")
+      (check-equal? (poo-flow-verification-valid? adapter receipt claim 1) #f)))
   (test-case "an operation cannot change the value it is attesting"
     (let ((adapter (poo-flow-verification-adapter "mutating"
                      (lambda (v now until) (.put! v 'claim "changed") #t) snapshot)))
@@ -47,5 +59,14 @@
       (check-equal? (poo-flow-verification-admission-valid? cloned trusted) #f)
       (check-equal? (poo-flow-verification-admission-valid? admission other) #f)
       (check-equal? (poo-flow-verification-admission-valid? admission trusted) #t)
+      (check-equal?
+       (poo-flow-verification-admission-valid?
+        (.o identity: "indexed" instant: 1
+            admits?: (lambda (value) #t)) trusted)
+       #f)
+      (check-equal?
+       (poo-flow-verification-admission-valid?
+        (.o (:: @ admission)) trusted)
+       #f)
       (poo-flow-revoke-verification! adapter receipt)
       (check-equal? (poo-flow-verification-admission-valid? admission trusted) #f)))))
