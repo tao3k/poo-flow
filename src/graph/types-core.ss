@@ -72,18 +72,18 @@
   (map (lambda (slot) (.ref declarations slot))
        (.all-slots declarations)))
 
-;; `.add-node` and `.add-edge` are declarative object slots.  Their child
-;; slots carry named Graph values; `nodes` and `edges` are lazy projections for
-;; the existing algorithm boundary.
+;; Noun-valued declaration slots carry named Graph values. Native slot algebra
+;; owns replacement and refinement; `nodes` and `edges` are lazy projections
+;; for the existing algorithm boundary.
 (def graph
   (.o
       kind: +poo-flow-graph-prototype-kind+
       schema: 'poo-flow.graph.v1
       graph-id: #f
-      .add-node: (.o)
-      .add-edge: (.o)
-      nodes: (poo-flow-graph-declaration-values .add-node)
-      edges: (poo-flow-graph-declaration-values .add-edge)
+      (node-declarations ? (.o))
+      (edge-declarations ? (.o))
+      nodes: (poo-flow-graph-declaration-values node-declarations)
+      edges: (poo-flow-graph-declaration-values edge-declarations)
       metadata: '()
       runtime-executed: #f))
 

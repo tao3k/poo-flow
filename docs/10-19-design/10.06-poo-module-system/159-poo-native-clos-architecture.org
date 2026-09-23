@@ -11,6 +11,11 @@ This document defines the stable architecture and acceptance boundary for the
 POO-native CLOS extension.  It is not a delivery plan.  Implementation order,
 temporary slices, and historical test-run identifiers are deliberately absent.
 
+This extension is governed by
+[[file:164-capability-gradient-and-default-expression-surface.org][POO Flow Capability Gradient and Default Expression Surface]].
+Its declarations belong to the opt-in extension surface.  They are not the
+default Profile, Scenario, Case, Policy or Flow authoring language.
+
 The Common Lisp HyperSpec is a semantic reference and conformance-vector source
 for class, instance, generic-function, method, method-combination,
 class-change, class-redefinition, and load-form behavior.  It does not own the
@@ -79,7 +84,7 @@ flowchart LR
 | Instance lifecycle | allocate, initialize, shared-initialize, reinitialize, slot-boundp, slot-makunbound, slot-missing, and slot-unbound |
 | Evolution | change-class, update-instance-for-different-class, class redefinition, dependency propagation, explicit obsolescence, and lazy instance convergence |
 | Load forms | two-phase creation/initialization, cycle-safe reference resolution, selected-slot saving, unbound preservation, and class-name association |
-| Declaration surface | POO-native =.defclass=, =.defgeneric=, =.defmethod=, and =.define-method-combination= |
+| Extension declaration surface | Opt-in POO-native =.defclass=, =.defgeneric=, =.defmethod=, and =.define-method-combination= for admitted multi-axis or meta behavior; never ordinary value configuration |
 | Reflection | defensive class, slot, method, generic, specializer, dependency, and generation projections |
 | MOP-EXTENDED | sealed read-only portable profile outside the POO CLOS core acceptance denominator |
 

@@ -61,6 +61,7 @@ The public facade lives in =src/module-system/api.ss=. The implementation owners
 - [[file:42-openrath-session-multi-agent-audit.org][42 OpenRath Session Multi-Agent Audit]]
 - [[file:43-session-memory-recovery-rfc.org][43 Session Memory Durable Policy RFC]]
 - [[file:44-current-project-programming-style.org][44 Current Project Programming Style]]
+- [[file:164-capability-gradient-and-default-expression-surface.org][164 POO Flow Capability Gradient and Default Expression Surface]]
 - [[file:45-durable-policy-research-agenda.org][45 Durable Policy Research Agenda]]
 - [[file:83-funflow-use-module-macro-ir.org][83 FunFlow use-module Macro IR]]
 - [[file:84-funflow-local-module-composition-ui.org][84 FunFlow Local Module Composition UI]]
