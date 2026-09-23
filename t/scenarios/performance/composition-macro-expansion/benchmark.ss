@@ -6,7 +6,10 @@
 ;;; Boundary: compiler-process benchmark for the production composition macro.
 
 (import :std/misc/process
-        (only-in :clan/timestamp call-with-timing)
+        (only-in :std/time/precise
+                 current-time-precise
+                 PreciseTime-seconds
+                 PreciseTime-nseconds)
         (only-in :clan/poo/object .o .ref))
 
 (export run-composition-macro-expansion-case
@@ -45,16 +48,22 @@
       max-elapsed-ms)
   (unless (file-exists? output-directory)
     (create-directory* output-directory))
-  (let-values (((elapsed-nanos ignored-output)
-                (call-with-timing
-                 (lambda ()
-                   (run-process
-                    (list "gxc"
-                          "-S"
-                          "-d"
-                          output-directory
-                          source)
-                    stderr-redirection: #t)))))
+  (let* ((started-at (current-time-precise))
+         (ignored-output
+          (run-process
+           (list "gxc"
+                 "-S"
+                 "-d"
+                 output-directory
+                 source)
+           stderr-redirection: #t))
+         (finished-at (current-time-precise))
+         (elapsed-nanos
+          (+ (* (- (PreciseTime-seconds finished-at)
+                   (PreciseTime-seconds started-at))
+                1000000000)
+             (- (PreciseTime-nseconds finished-at)
+                (PreciseTime-nseconds started-at)))))
     (let (elapsed-ms (/ elapsed-nanos 1000000.0))
     (let ((source-value source)
           (profile-count-value profile-count)
@@ -72,7 +81,7 @@
           (gsc-executed #f)
           (elapsed-ms elapsed-ms-value)
           (max-elapsed-ms max-elapsed-ms-value)
-          (timing-source ":clan/timestamp#call-with-timing")
+          (timing-source ":std/time/precise#current-time-precise")
           (pass pass-value))))))
 
 ;; : (-> PooBenchmarkSuiteReceipt)

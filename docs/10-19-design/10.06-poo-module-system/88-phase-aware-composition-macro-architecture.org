@@ -326,7 +326,7 @@ syntax.
 
 The real expansion gate lives in
 =t/scenarios/performance/composition-macro-expansion/=.  It uses =gxc -S= and
-the upstream =:clan/timestamp#call-with-timing= clock, so it measures Gerbil
+the upstream =:std/time/precise#current-time-precise= clock, so it measures Gerbil
 expansion and Scheme generation without a platform-specific =/usr/bin/time=
 parser.  Full native compilation remains a separate package-build backend gate,
 while runtime heap limits remain owned by the ASP POO Testing Profile.

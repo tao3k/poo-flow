@@ -42,7 +42,7 @@
        #f)
       (check-equal?
        (.ref case-1000 'timing-source)
-       ":clan/timestamp#call-with-timing")
+       ":std/time/precise#current-time-precise")
       (check-equal?
        (.ref receipt 'pass)
        #t)))))
