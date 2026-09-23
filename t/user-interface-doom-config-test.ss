@@ -10,13 +10,18 @@
         :poo-flow/src/module-system/loader/collection
         (only-in :poo-flow/src/module-system/loader/source
                  poo-flow-module-source-ref-value)
+        (only-in :poo-flow/user-interface/profiles/langchain langchain)
+        (only-in :poo-flow/user-interface/scenarios/langchain/scenario
+                 langchain-scenario)
+        (only-in :poo-flow/user-interface/scenarios/tool-calling-agent-loop/scenario
+                 tool-calling-agent-loop-scenario)
         :poo-flow/user-interface/config)
 
 (export user-interface-doom-config-test)
 
 (def user-interface-doom-config-test
   (test-suite
-   "Doom-style User Interface roots and discovery"
+   "Doom-style User Interface roots"
    (test-case
     "config directly composes reusable Profiles across three stages"
     (check-equal?
@@ -33,7 +38,7 @@
           (poo-flow-scenario-case-stages default-agent-control-plane))
      '(development staging production)))
    (test-case
-    "directory discovery re-exports Profile and Scenario objects"
+    "Profile and Scenario libraries retain explicit import paths"
     (check-equal? (.ref (.ref langchain 'memory) 'name)
                   'langchain-stateless-memory)
     (check-equal? (poo-flow-scenario-case? langchain-scenario) #t)

@@ -34,8 +34,8 @@ self-dependency that fails in a hermetic Bazel image. After bootstrap, module
 selection resolves through the ordered POO load path. Available
 =src/modules/<module-name>/interface.ss= roots remain catalog data, so adding
 100 or 1,000 unselected modules does not widen the package bootstrap.
-=init-syntax.ss=, =config-discovery-syntax.ss= and =declaration-case.ss= are
-registered framework source refs rather than bootstrap targets. The ordinary
+=init-syntax.ss= and =declaration-case.ss= are registered framework source refs
+rather than bootstrap targets. The ordinary
 =user-interface/init.ss= path uses the smaller =init-declaration-syntax.ss=
 owner, so those advanced authoring and presentation sources compile only for a
 consumer that imports them.
@@ -43,11 +43,12 @@ consumer that imports them.
 not the owner imported by =user-interface/init.ss=, and therefore is not a
 production bootstrap root.
 
-The final =user-interface/config.ss= imports public Profiles, each
-=scenarios/<name>/scenario.ss= declaration, and Profiles below each Scenario.
+The final =user-interface/config.ss= explicitly imports only the POO values it
+composes. Reusable Profiles and =scenarios/<name>/scenario.ss= values keep
+stable module paths and are never implicitly re-exported by the root config.
 Case declarations and auxiliary assurance or Provider projections remain
-demand-loaded.  Directory discovery therefore scales with reusable composition
-inputs instead of importing every implementation file in every vertical Case.
+demand-loaded. Gerbil's native import graph therefore closes over selected
+values without a second filesystem scan or mutable expander-context cache.
 =module-system/observability/testing-extension.ss= follows the same ownership
 rule from the testing side: it is imported and compiled by the focused testing
 lane, not by every production bootstrap.

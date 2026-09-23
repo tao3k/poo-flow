@@ -57,7 +57,6 @@
     "src/module-system/profile-composition/interface.ss"
     "src/user-interface/profile-core.ss"
     "src/user-interface/init-declaration-syntax.ss"
-    "src/user-interface/config-discovery-syntax.ss"
     "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
     "src/modules/authorization/interface.ss"
