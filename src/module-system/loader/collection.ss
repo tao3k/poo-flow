@@ -7,7 +7,7 @@
 ;;; and user module trees. Selection declarations remain separate POO values.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/list/list append-map every filter)
+        (only-in :std/list/list every filter)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive
                  poo-flow-make-value-index
@@ -446,11 +446,14 @@
           (make-poo-flow-contribution-module-source identity source-root)))
     (if (file-exists?
          (poo-flow-module-source-collection-modules-root contribution))
-      (append-map
-       (lambda (entrypoint-role)
-         (poo-flow-module-source-collection-role-entrypoints
-          contribution entrypoint-role))
-       entrypoint-roles)
+      ;; std/list/list append-map reverses each produced list.  Entrypoint order
+      ;; is part of the loader contract, so flatten the bounded role projection
+      ;; with native map/apply/append and preserve both role and module order.
+      (apply append
+             (map (lambda (entrypoint-role)
+                    (poo-flow-module-source-collection-role-entrypoints
+                     contribution entrypoint-role))
+                  entrypoint-roles))
       '())))
 
 (def (make-poo-flow-contribution-root-module-source identity-value

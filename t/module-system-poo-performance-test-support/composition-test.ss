@@ -22,8 +22,8 @@
     (list receipt
           (poo-performance-composition-construction-count))))
 
-;; : TestCase
-(def module-system-poo-performance-profile-declaration-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-profile-declaration-case)
   (test-case "gates inline profile declarations as native POO objects"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -36,8 +36,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-profiles-bulk-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-profiles-bulk-case)
   (test-case "gates grouped profiles import and compose syntax"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -49,8 +49,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-local-override-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-local-override-case)
   (test-case "gates local native POO override profiles"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -62,8 +62,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-hook-override-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-hook-override-case)
   (test-case "gates reusable profile hook overrides"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -75,8 +75,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-native-object-reuse-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-native-object-reuse-case)
   (test-case "gates direct native POO object reuse"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -89,8 +89,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-native-object-reuse-large-library-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-native-object-reuse-large-library-case)
   (test-case "gates 2048 native POO profiles plus hook variants"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -104,7 +104,7 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-(def module-system-poo-performance-composition-lazy-demand-case
+(def (module-system-poo-performance-composition-lazy-demand-case)
   (test-case "gates POO composition lazy demand object reuse"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -117,8 +117,8 @@
       (check-equal? construction-count 0)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-native-object-list-indexed-family-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-native-object-list-indexed-family-case)
   (test-case "gates Project Harness-style POO object-list indexed family"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -131,8 +131,8 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-macro-style-matrix-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-macro-style-matrix-case)
   (test-case "gates high-performance composition macro styles"
     (let* ((observed
             (poo-performance-composition-run-observed-gate
@@ -148,12 +148,12 @@
 ;; : TestSuite
 (def composition-test
   (test-suite "poo-flow composition macro POO performance"
-    module-system-poo-performance-profile-declaration-case
-    module-system-poo-performance-profiles-bulk-case
-    module-system-poo-performance-local-override-case
-    module-system-poo-performance-hook-override-case
-    module-system-poo-performance-native-object-reuse-case
-    module-system-poo-performance-native-object-reuse-large-library-case
-    module-system-poo-performance-composition-lazy-demand-case
-    module-system-poo-performance-native-object-list-indexed-family-case
-    module-system-poo-performance-macro-style-matrix-case))
+    (module-system-poo-performance-profile-declaration-case)
+    (module-system-poo-performance-profiles-bulk-case)
+    (module-system-poo-performance-local-override-case)
+    (module-system-poo-performance-hook-override-case)
+    (module-system-poo-performance-native-object-reuse-case)
+    (module-system-poo-performance-native-object-reuse-large-library-case)
+    (module-system-poo-performance-composition-lazy-demand-case)
+    (module-system-poo-performance-native-object-list-indexed-family-case)
+    (module-system-poo-performance-macro-style-matrix-case)))

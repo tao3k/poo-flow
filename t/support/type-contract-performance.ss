@@ -7,8 +7,7 @@
 ;;; Invariant: workloads measure Scheme contract operations, not gxi startup,
 ;;; package loading, Lean execution, or Marlin runtime work.
 
-(import (only-in :std/srfi/1 fold iota)
-        (only-in "./performance.ss"
+(import (only-in "./performance.ss"
                  poo-flow-performance-build-list)
         (only-in "../../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!

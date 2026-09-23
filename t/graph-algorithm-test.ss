@@ -10,7 +10,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .def .o .ref)
+        (only-in :clan/poo/object .def .o .ref .slot?)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms)
 
@@ -66,10 +66,10 @@
 ;; : PooFlowGraph
 (.def (graph-declarative-slot-sample @ graph)
   (graph-id 'declarative-slot-graph)
-  (.add-node
+  (node-declarations =>.+
    (.o source: (poo-flow-graph-node 'source 'Source)
        target: (poo-flow-graph-node 'target 'Target)))
-  (.add-edge
+  (edge-declarations =>.+
    (.o source-declares-target:
        (poo-flow-graph-edge 'source 'target 'declares))))
 
@@ -77,6 +77,12 @@
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
     (test-case "Graph derives algorithm values from declarative POO slots"
+      (check-equal? (.slot? graph-declarative-slot-sample
+                            'node-declarations)
+                    #t)
+      (check-equal? (.slot? graph-declarative-slot-sample
+                            (string->symbol ".add-node"))
+                    #f)
       (check-equal? (poo-flow-graph-node-ids graph-declarative-slot-sample)
                     '(source target))
       (check-equal? (poo-flow-graph-edge-pairs graph-declarative-slot-sample)

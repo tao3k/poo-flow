@@ -4,7 +4,6 @@
 
 (import :gerbil/runtime/gambit
         :clan/poo/object
-        (only-in :std/srfi/1 iota)
         :poo-flow/src/utilities/functional
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/bundle-v1-foreign-arena)

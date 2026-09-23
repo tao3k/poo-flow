@@ -24,7 +24,7 @@ gerbil env gerbil test t/performance/profile-composition-performance-test.ss
 #+end_src
 
 The focused test records compiler elapsed time with the upstream
-=:clan/timestamp#call-with-timing= API and verifies generated profile counts.
+=:std/time/precise#current-time-precise= API and verifies generated profile counts.
 Runtime memory enforcement belongs to the ASP Gerbil Scheme POO Testing Profile;
 the compiler subprocess is build work and is not re-wrapped by a local memory
 runner.

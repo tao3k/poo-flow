@@ -8,8 +8,10 @@
 (import (only-in :gerbil/expander
                  current-expander-compiling?
                  import-module)
-        (only-in :clan/timestamp call-with-timing)
-        (only-in :std/misc/path path-expand))
+        (only-in :std/time/precise
+                 current-time-precise
+                 PreciseTime-seconds
+                 PreciseTime-nseconds))
 
 (export static-poo-prototype-lowering-benchmark)
 
@@ -24,9 +26,15 @@
    (path-expand +static-poo-prototype-scenario-root+ (current-directory))))
 
 (def (static-poo-prototype-expansion-elapsed-ms path)
-  (let-values (((elapsed-nanoseconds ignored-result)
-                (call-with-timing
-                 (lambda () (import-module path #t #f)))))
+  (let* ((started-at (current-time-precise))
+         (ignored-result (import-module path #t #f))
+         (finished-at (current-time-precise))
+         (elapsed-nanoseconds
+          (+ (* (- (PreciseTime-seconds finished-at)
+                   (PreciseTime-seconds started-at))
+                1000000000)
+             (- (PreciseTime-nseconds finished-at)
+                (PreciseTime-nseconds started-at)))))
     (/ elapsed-nanoseconds 1000000.0)))
 
 (def (static-poo-prototype-lowering-benchmark)

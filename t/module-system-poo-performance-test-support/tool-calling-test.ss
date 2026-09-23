@@ -12,7 +12,6 @@
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
-        (only-in :std/sugar filter)
         "../support/poo-performance-fixtures"
         "../support/poo-performance-object-scenarios"
         "../support/poo-performance"
@@ -131,8 +130,8 @@
       (filter module-system-poo-performance-tool-calling-valid-pair?
               pairs))))
 
-;; : TestCase
-(def module-system-poo-performance-tool-calling-object-list-control-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-tool-calling-object-list-control-case)
   (test-case "validates tool-call proof objects through stable POO lists"
     (let* ((pair-count 96)
            (rounds 4)
@@ -173,4 +172,4 @@
 ;; : TestSuite
 (def tool-calling-test
   (test-suite "poo-flow module system POO tool-calling performance"
-    module-system-poo-performance-tool-calling-object-list-control-case))
+    (module-system-poo-performance-tool-calling-object-list-control-case)))

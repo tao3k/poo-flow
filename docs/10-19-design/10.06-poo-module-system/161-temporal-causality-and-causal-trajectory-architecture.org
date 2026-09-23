@@ -99,7 +99,7 @@ incomplete event graphs, broken paths and modality violations produce typed
 index and two multi-root traversals, so its bound is O(V + E + declared
 trajectory members), not one graph traversal per member.
 
-=OntologyCase= exposes only the declarative =.add-trajectory= slot.  Its
+=OntologyCase= exposes only the declarative =trajectory-declarations= slot.  Its
 composition receipt owns =trajectory-assessments= and
 =trajectory-handoff-ready?=.  A rejected trajectory also blocks the overall
 Governance handoff.  In particular, changing an error-path event from
@@ -109,7 +109,7 @@ Governance handoff.  In particular, changing an error-path event from
 ** POO contract and formal Provider projection law
 
 The trajectory contract is declared exactly once as the POO value stored in a
-Case's =.add-trajectory= slot.  Its =PooFlowCausalTrajectoryAssessment= and
+Case's =trajectory-declarations= slot.  Its =PooFlowCausalTrajectoryAssessment= and
 =trajectory-assessment-digest= are the common identity consumed by every
 formal boundary.  TLA+, Lean and Cedar do not own parallel Case configuration
 languages.
@@ -126,7 +126,7 @@ uses the equivalent Provider/Profile multi-dispatch in
 
 #+begin_export mermaid
 flowchart LR
-    C["Case .add-trajectory POO slots"] -->|"functional admission"| S["POO trajectory assessment"]
+    C["Case trajectory-declarations POO slots"] -->|"functional admission"| S["POO trajectory assessment"]
     S -->|"stable assessment digest"| G["CLOS formal-assurance generic"]
     TP["TLA+ Provider"] -->|"class specializer"| G
     LP["Lean Provider"] -->|"class specializer"| G

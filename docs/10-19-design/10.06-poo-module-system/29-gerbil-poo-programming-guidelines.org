@@ -90,6 +90,19 @@ to demonstrate completeness by calling every operator in ordinary user config.
 The operators form different semantic layers.  The owner of a value determines
 which layer is admissible.
 
+This is an implementation capability map, not the default authoring surface.
+The normative disclosure order and admission boundary are defined by
+[[file:164-capability-gradient-and-default-expression-surface.org][POO Flow Capability Gradient and Default Expression Surface]].
+Ordinary users remain at object, slot, extension and composition even when the
+selected Module uses generics, CLOS or MOP internally.
+
+Declaration slots MUST use domain nouns rather than reproduce an action DSL.
+Use =events=, =trajectories=, =sources= or =capabilities= with the native slot
+algebra: ===>.+= for nested POO refinement, ===>= plus a named pure combiner for
+collection transformation, and =?= for inherited defaults.  Command-shaped
+slots such as =.add-event= and =.remove-event= are misleading and
+non-conforming; runtime methods and effect requests may still use verbs.
+
 | Capability | Native surface | Meaning | Normal POO Flow owner |
 |------------+----------------+---------+-----------------------|
 | Prototype declaration | =.o=, =.def=, =object<-alist=, =object<-fun= | Define an open recursive specification | Module and Profile objects; named boundary adapters only for =object<-= forms |

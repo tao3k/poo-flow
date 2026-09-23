@@ -66,8 +66,8 @@
     (+ (* slot-total rounds)
        (quotient (* rounds (- rounds 1)) 2))))
 
-;; : TestCase
-(def module-system-poo-performance-fixed-slot-projection-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-fixed-slot-projection-case)
   (test-case "projects fixed POO slots once before scalar loops"
     (let* ((rounds 4000)
            (expected (module-system-poo-performance-fixed-slot-sum
@@ -89,4 +89,4 @@
 ;; : TestSuite
 (def projection-test
   (test-suite "poo-flow module system POO projection performance"
-    module-system-poo-performance-fixed-slot-projection-case))
+    (module-system-poo-performance-fixed-slot-projection-case)))

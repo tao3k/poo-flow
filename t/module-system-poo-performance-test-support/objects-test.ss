@@ -33,8 +33,8 @@
   (force-output))
 
 ;; : (-> String Integer Symbol)
-;; : TestCase
-(def module-system-poo-performance-construction-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-construction-case)
   (test-case "constructs large module objects at one boundary"
         (let* ((field-count 600)
                (object (poo-performance-module-object field-count))
@@ -49,8 +49,8 @@
                         field-count)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-materialization-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-materialization-case)
   (test-case "materializes default slots once before repeated work"
         (let* ((object (poo-performance-module-object 400))
                (slots (poo-flow-module-object-default-slots object))
@@ -64,8 +64,8 @@
                         79800)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-validation-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-validation-case)
   (test-case "validates stable POO object shape once before scalar loop"
         (let* ((object (poo-performance-module-object 300))
                (valid? (poo-flow-module-object? object))
@@ -81,8 +81,8 @@
           (check-equal? (length slots) 300)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-catalog-validation-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-catalog-validation-case)
   (test-case "validates inherited object catalogs with indexed field origins"
         (let* ((objects
                 (poo-performance-module-object-catalog 40 160))
@@ -103,8 +103,8 @@
           (module-system-poo-performance-display-receipt receipt)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-object-iteration-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-object-iteration-case)
   (test-case "iterates object graph nodes after one materialization boundary"
         (let* ((objects
                 (poo-performance-module-object-catalog 80 120))
@@ -125,8 +125,8 @@
            80)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-clone-override-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-clone-override-case)
   (test-case "applies clone overrides after one default-slot materialization"
         (let* ((object (poo-performance-module-object 320))
                (default-slots
@@ -154,8 +154,8 @@
                         320)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-field-lookup-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-field-lookup-case)
   (test-case "reuses field contract lookup through contribution loops"
         (let* ((field-count 600)
                (object (poo-performance-module-object field-count))
@@ -173,8 +173,8 @@
           (check-equal? (length entries) field-count)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-composition-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-composition-case)
   (test-case "composes object contributions through one merge boundary"
         (let* ((object-count 32)
                (field-count 80)
@@ -205,11 +205,11 @@
 ;; : TestSuite
 (def objects-test
   (test-suite "poo-flow module system POO object performance"
-    module-system-poo-performance-construction-case
-    module-system-poo-performance-materialization-case
-    module-system-poo-performance-validation-case
-    module-system-poo-performance-catalog-validation-case
-    module-system-poo-performance-object-iteration-case
-    module-system-poo-performance-clone-override-case
-    module-system-poo-performance-field-lookup-case
-    module-system-poo-performance-composition-case))
+    (module-system-poo-performance-construction-case)
+    (module-system-poo-performance-materialization-case)
+    (module-system-poo-performance-validation-case)
+    (module-system-poo-performance-catalog-validation-case)
+    (module-system-poo-performance-object-iteration-case)
+    (module-system-poo-performance-clone-override-case)
+    (module-system-poo-performance-field-lookup-case)
+    (module-system-poo-performance-composition-case)))

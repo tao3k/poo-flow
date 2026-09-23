@@ -8,7 +8,6 @@
 ;;; Scheme control-plane graph analysis and never execute workflow commands.
 
 (import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :std/sort sort)
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-elapsed-us)
         "../support/performance"
         :poo-flow/src/modules/workflow/interface)
@@ -51,7 +50,7 @@
      (cons 'valid? (workflow-cicd-graph-performance-ref graph 'valid?)))))
 
 (def (workflow-cicd-graph-performance-median values)
-  (let (ordered (sort (append values '()) <))
+  (let (ordered (list-sort < (append values '())))
     (list-ref ordered (quotient (length ordered) 2))))
 
 ;;; Alternate pair order so process scheduling and cache warmth affect both

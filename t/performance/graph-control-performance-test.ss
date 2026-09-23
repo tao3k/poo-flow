@@ -5,8 +5,7 @@
 
 ;;; Boundary: exclusive end-to-end complexity gate for graph control receipts.
 
-(import (only-in :std/srfi/1 iota)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?

@@ -19,6 +19,9 @@
                  test-suite)
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
+        (only-in :poo-flow/src/core/failure
+                 execution-failure?
+                 execution-failure-code)
         (only-in :poo-flow/src/module-system/load poo-flow-modules!)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
@@ -38,6 +41,14 @@
 ;;; reaching into loader internals.
 ;; : (-> Unit Integer)
 (def lazy-loader-call-count 0)
+
+;;; Optional contribution checkouts are external package state.  Capture the
+;;; typed loader result so the absent-checkout branch proves the public
+;;; contract without requiring CI to initialize every contribution submodule.
+;; : (-> Thunk Value)
+(def (capture-lazy-loader-failure thunk)
+  (with-catch (lambda (failure) failure)
+              thunk))
 
 ;;; Module fixture is inert descriptor data used by the test loader backend.
 ;; : (-> Unit PooModuleDescriptor)
@@ -355,23 +366,30 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
-  (test-case "official submodule sources resolve by selected checkout identity"
+  (test-case "official contribution sources are optional and resolve by checkout identity"
     (check-equal?
      (map poo-flow-module-source-collection-identity
           poo-flow-official-contribution-sources)
      '(poo-flow-official-contributions))
-    (let* ((selection (caar (poo-flow-modules! :custom (lambda-aitia))))
-           (source-refs
-            (poo-flow-module-selection-source-refs
-             poo-flow-official-contribution-load-path selection)))
+    (let (selection (caar (poo-flow-modules! :custom (lambda-aitia))))
       (if (file-exists? "packages/lambda-aitia/modules")
-        (check-equal?
-         (map poo-flow-module-source-ref-value source-refs)
-         '("packages/lambda-aitia/modules/ADR/interface.ss"
-           "packages/lambda-aitia/modules/assurance/interface.ss"
-           "packages/lambda-aitia/modules/gitops/interface.ss"
-           "packages/lambda-aitia/modules/sdlc/interface.ss"))
-        (check-equal? source-refs '())))))
+        (let (source-refs
+              (poo-flow-module-selection-source-refs
+               poo-flow-official-contribution-load-path selection))
+          (check-equal?
+           (map poo-flow-module-source-ref-value source-refs)
+           '("packages/lambda-aitia/modules/ADR/interface.ss"
+             "packages/lambda-aitia/modules/assurance/interface.ss"
+             "packages/lambda-aitia/modules/gitops/interface.ss"
+             "packages/lambda-aitia/modules/sdlc/interface.ss")))
+        (let (failure
+              (capture-lazy-loader-failure
+               (lambda ()
+                 (poo-flow-module-selection-source-refs
+                  poo-flow-official-contribution-load-path selection))))
+          (check-equal? (execution-failure? failure) #t)
+          (check-equal? (execution-failure-code failure)
+                        'missing-module-source))))))
 
 ;; : TestCase
 (def (module-system-lazy-loader-auto-import-removal-case)

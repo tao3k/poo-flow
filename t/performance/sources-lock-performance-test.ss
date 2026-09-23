@@ -8,7 +8,6 @@
 ;;; canonical lock construction, digest construction, indexing and lookup.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :std/srfi/1 iota last)
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?

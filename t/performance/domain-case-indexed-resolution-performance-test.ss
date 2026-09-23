@@ -5,8 +5,7 @@
 
 ;;; Boundary: exclusive complexity gate for DomainCase winner resolution.
 
-(import (only-in :std/srfi/1 iota)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :std/test check-equal? test-case test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?

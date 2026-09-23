@@ -7,8 +7,6 @@
 (import (only-in :gerbil/runtime/gambit current-time time->seconds)
         (only-in :clan/poo/object
                  .ref .slot? compute-precedence-list!)
-        (only-in :std/sort sort)
-        (only-in :std/srfi/1 filter-map)
         "../../../../src/module-system/poo-clos/classes.ss")
 
 (def +sample-count+ 40)
@@ -67,7 +65,7 @@
         (loop (+ index 1) (cons elapsed times) value)))))
 
 (def (median values)
-  (let (ordered (sort values <))
+  (let (ordered (list-sort < values))
     (list-ref ordered (quotient (length ordered) 2))))
 
 ;; Warm the module and the upstream C3 caches before collecting the 40-sample

@@ -1,0 +1,380 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: POO Flow Capability Gradient and Default Expression Surface
+#+date: [2026-09-23]
+#+property: SDD_KIND architecture-decision
+#+property: STATUS proposed-normative-surface-contract
+
+* Decision
+
+POO Flow MAY have a high capability ceiling without imposing the same height
+on its default expression surface.  The ordinary interface is a functional
+object value language: users declare values, extend maintained prototypes,
+compose named values, and inspect the resulting effective object.  Generic
+dispatch, CLOS, C3/C4, macros and the MOP remain available at progressively
+deeper extension boundaries, but they are not ordinary configuration concepts.
+
+The short contract is:
+
+#+begin_quote
+Objects are ordinary values.  Extension is ordinary composition.  Abstraction
+is optional.  Meta-abstraction is exceptional.
+#+end_quote
+
+Equivalently:
+
+#+begin_example
+Value first
+Composition second
+Abstraction on demand
+Meta-programming last
+#+end_example
+
+This RFC constrains every public Module, Profile, Scenario, Case, Policy and
+Flow interface.  More specialized implementation and conformance RFCs MUST
+follow this surface contract.
+
+* Capability height is not expression height
+
+POO Flow has two independent axes.
+
+| Axis | Question | Progression |
+|------+----------+-------------|
+| capability height | What can the implementation express? | POO value -> prototype composition -> higher-order function -> generic/CLOS dispatch -> MOP |
+| expression height | What must this author understand? | object -> extend -> compose -> define behavior -> change meta-semantics |
+
+Adding an implementation capability MUST NOT automatically raise the
+expression height of a user-facing declaration.  A Module may internally use
+CLOS to cross a Provider and a Profile while the user still selects one named
+Profile and supplies ordinary slot values.
+
+Complexity SHOULD become visible as diagnostics, provenance or an explicit
+advanced extension interface.  It MUST NOT become an unavoidable syntax tax.
+
+* One semantic model, three surfaces
+
+The three surfaces below are progressive views of one Gerbil POO semantic
+model.  They are not three languages and MUST NOT produce parallel config,
+class or runtime object hierarchies.
+
+** Default value surface
+
+The default surface serves application users and vertical-domain authors.  Its
+concept budget is deliberately small:
+
+- object;
+- slot;
+- extend;
+- compose.
+
+A Profile, Scenario, Case, Policy or Flow is first an ordinary named POO value.
+An extension means a base value plus declared differences.  Composition means
+selecting maintained named values and allowing the kernel to derive one
+deterministic effective object.
+
+The default surface MAY use native Gerbil POO declaration forms or a thin,
+hygienic domain declaration that lowers directly to them.  A thin declaration
+MUST preserve object identity, native slot semantics, source locations,
+provenance and ordinary POO extension.  It MUST NOT introduce a second AST,
+record DSL, JSON language, evaluator or merge algebra.
+
+Default examples and ordinary UI MUST NOT require the author to understand:
+
+- class versus instance;
+- constructor, factory or builder patterns;
+- specializers, applicable methods or method combination;
+- MRO, C3/C4 or linearization algorithms;
+- slot metaobjects, class metaobjects or MOP lifecycle;
+- raw =(lambda (self super) ...)= behavior hooks.
+
+** Extension surface
+
+The extension surface serves Module, Provider and framework-extension authors.
+It MAY use named higher-order functions, slot generics, CLOS generics,
+specializers, method bundles, contracts and projections.
+
+Every advanced extension MUST name its owner and answer an admission question:
+
+| Candidate mechanism | Required evidence |
+|---------------------+-------------------|
+| named function | data-dependent or reusable pure behavior |
+| higher-order constructor/combinator | a reusable family that produces ordinary POO values or functions |
+| slot generic | one receiver family whose descendants replace one behavior |
+| CLOS generic | two or more independently extensible axes and an owner for every method bundle |
+| bounded macro | repeated static declaration structure that lowers to ordinary POO or functional code |
+
+If the same behavior is expressible as a slot value, prototype extension or
+named pure function, an extension author MUST NOT raise it to CLOS or MOP.
+
+** Meta surface
+
+The meta surface serves POO Flow kernel maintainers.  It owns linearization,
+slot resolution, method selection and combination, metaobject lifecycle,
+macro-expansion infrastructure and controlled instrumentation.
+
+The meta surface is opt-in.  It MUST NOT be imported transitively by the
+default Module facade, used as ordinary Profile configuration, or presented as
+the first explanation of a composition failure.  Meta-level changes require a
+dedicated owner, positive and negative semantic evidence, and a demonstrated
+need that native POO values, functions and the extension surface cannot meet.
+
+* Single semantic model law
+
+Every accepted declaration follows one authority flow:
+
+#+begin_export mermaid
+flowchart LR
+    D["Default object declaration"] -->|"native value or thin lowering"| V["POO value"]
+    V -->|"prototype extension and composition"| E["Effective object"]
+    E -->|"named operation or admitted generic"| R["Receipt or behavior result"]
+    R -->|"explicit projection"| H["Runtime or proof handoff"]
+    E -. "inspect" .-> P["Provenance and composition explanation"]
+    M["MOP and linearization"] -. "internal semantics only" .-> E
+#+end_export
+
+The following are forbidden:
+
+- a simple-user object model beside an advanced-user object model;
+- a CLOS-facing configuration DSL beside the POO value declaration;
+- a Provider-specific option map that owns semantics already present in a
+  Profile or Case;
+- a proof, ABI or runtime record that becomes a second user-facing contract;
+- a macro or MOP facility that silently changes authority, performs effects or
+  hides composition provenance.
+
+Cedar, Lean, TLA+, MRR, Rust, Python and other runtimes consume projections or
+receipts bound to the admitted effective object.  They do not replace it.
+
+* Default expression laws
+
+** Value-first law
+
+The user names or receives a value.  A default declaration MUST NOT require a
+class definition followed by construction, a factory, a builder or an explicit
+instance lifecycle merely to express configuration.
+
+** Composition-second law
+
+Ordinary specialization is base plus differences.  Reusable Profiles and
+CaseComponents MAY supply maintained behavior and defaults; a user selects and
+extends them.  Composition order is deterministic and inspectable, but its
+linearization algorithm remains an implementation detail until a conflict must
+be explained.
+
+** Behavior-on-demand law
+
+Not every slot is a configurable function.  Pure algorithms remain named
+functions.  One-receiver replacement uses a slot generic.  CLOS is reserved
+for real open crossings.  Raw closures and symbolic dispatch tables are not
+ordinary domain declarations.
+
+** Meta-last law
+
+Ordinary users MUST NOT configure a linearizer, slot resolver, method cache,
+method combination or class lifecycle.  A meta extension is admitted only when
+it changes how domain objects are defined or combined rather than defining one
+more domain object.
+
+* Native slot algebra contract
+
+User-facing declaration slots name domain values, not editing commands.  Their
+composition MUST use the native Gerbil POO slot algebra documented by
+=gerbil-poo/doc/poo.md=.  POO Flow MUST use that algebra instead of encoding a
+second add/remove/replace language in slot names, constructors, evaluators or
+Case projection code.
+
+| Declaration intent | Native slot form | Required semantics |
+|--------------------+------------------+--------------------|
+| replace one value | =(slot value)= | the child deliberately overrides the inherited computation |
+| provide a fallback | =(slot ? default)= | the default participates in native inherited-default selection |
+| transform an inherited value | =(slot => named-combiner arguments ...)= | a named pure function receives the inherited value and returns the refined value |
+| refine a nested POO value | =(slot =>.+ overriding-object)= | the overriding object extends the inherited slot object through native POO composition |
+| conditionally inherit | =(slot (next) expression)= | exceptional implementation surface with an explicit need and tests |
+
+The declaration vocabulary follows these laws:
+
+- collection slots use plural domain nouns such as =events=, =trajectories=,
+  =authorizations=, =sources=, =profiles= and =capabilities=;
+- composition operations remain in the slot form: ===>.+= means nested POO
+  refinement, ===>= means functional refinement, =?= means inherited default,
+  and a plain slot definition means replacement;
+- command-shaped declaration slots such as =.add-event=, =.remove-event= or
+  =.replace-event= are forbidden because they duplicate the native algebra and
+  create a parallel action DSL;
+- an ordered list accumulation MUST use ===>= with a named pure combiner and a
+  documented ordering law; repeated =append= hidden in an evaluator is not a
+  slot algebra;
+- actual runtime actions MAY use verbs, but they are methods or effect
+  requests, not declaration collections.
+
+Base prototypes SHOULD declare empty collection fallbacks with =?= rather than
+ordinary overriding constants.  For example:
+
+#+begin_src scheme
+(.def OntologyCase
+  (profile-selection ? (.o))
+  (events ? (.o))
+  (trajectories ? (.o)))
+
+(.def (PrescriptionCase @ OntologyCase)
+  (profile-selection =>.+
+    (.o healthcare: HealthcareProfile))
+  (events =>.+
+    (.o prescription: PrescriptionEvent))
+  (trajectories =>.+
+    (.o safety: PrescriptionSafetyTrajectory)))
+#+end_src
+
+The names remain declarative, but their behavior is now inherited from the
+native POO object model.  A further Case extension can add one event or replace
+one named event while retaining the rest of the effective object.
+
+Derived projections such as =events=, =trajectories= and =compositions= MAY
+materialize ordered lists for validation or runtime handoff.  They MUST be lazy
+projections of the effective noun-slot object and MUST NOT become a second
+source of merge semantics.
+
+** Exclusion, revocation and removal
+
+Native POO provides override, default and inherited refinement, but it does not
+publish an ordinary pure slot-deletion operator.  POO Flow MUST NOT hide that
+fact behind a generic =.remove-*= declaration vocabulary.
+
+Configuration selection MAY exclude an inherited identity through ===>= and a
+named pure exclusion function or through an explicit exclusion value.  The
+result MUST preserve the parent, source identity and an observable exclusion
+receipt.
+
+Identity-bearing facts are not configuration entries.  An observed Event,
+Authorization, Prescription or trajectory fact MUST NOT disappear from a
+derived object.  A vertical domain expresses =revoked=, =superseded=,
+=invalidated= or =remediated= with a new identity-bound fact and relation.
+Removal of a prototype definition itself belongs to the controlled meta or
+maintenance surface, never to ordinary domain authoring.
+
+Mutation forms such as =.put!=, =.set!=, =.putslot!=, =.setslot!=, =.def!= and
+=.putdefault!= are forbidden in default declarations.  They remain controlled
+runtime, instrumentation or REPL capabilities and cannot implement ordinary
+Profile or Case composition.
+
+* Presentation and observability order
+
+The default presentation begins with the effective object, not its mechanism.
+The required disclosure order is:
+
+#+begin_example
+Effective result
+  -> field or slot provenance
+  -> composition and override chain
+  -> advanced dispatch or linearization details
+  -> source declaration
+#+end_example
+
+For example, a user first sees that =retries= is =5=.  The next view explains
+that =ProductionProfile= overrides =BaseProfile=.  Only an explicit advanced
+view exposes the C3/C4 precedence or the source-level POO form.
+
+Composition diagnostics MUST identify the conflicting named values,
+constraints and source locations.  They MAY attach advanced C3/C4 or method
+selection evidence, but the ordinary message MUST remain understandable
+without those concepts.
+
+* Source ownership and visibility
+
+A stable Module entrypoint does not imply that every exported capability is an
+equally ordinary authoring concept.  The default interface MUST remain cheap
+and value-oriented.  Advanced Provider or CLOS owners MAY expose explicit
+opt-in extension interfaces, but they MUST NOT be imported or re-exported by
+the default user facade merely for completeness.
+
+Directories named =user-interface= and maintained introductory examples are
+part of the default expression surface.  They SHOULD contain declared objects,
+slot values, maintained constructors and composition.  A raw behavior lambda,
+direct CLOS declaration, MOP import or low-level graph/proof/runtime constructor
+in those locations requires an explicit exception and a migration issue; file
+placement alone does not waive the surface contract.
+
+* Review admission questions
+
+Every new public construct is reviewed in this order:
+
+1. Is the author defining a domain value or changing how values are defined?
+2. Can a maintained object, slot or prototype extension express it?
+3. If behavior is required, can a named pure function own it?
+4. If dispatch is required, how many axes grow independently?
+5. Why must the ordinary user see this mechanism?
+6. What effective-value and provenance view explains the result?
+
+Failure to answer question 5 keeps the mechanism outside the default surface.
+
+* Executable acceptance
+
+The surface contract is complete only when it has executable evidence.  The
+policy MUST be syntax-aware; a regex ban on names is insufficient.
+
+- A positive fixture declares, extends and composes a realistic Profile and
+  Case using only the default concept budget.
+- The effective object and its slot provenance have deterministic golden
+  projections.
+- A composition conflict has a default diagnostic and a separate advanced
+  explanation.
+- Negative fixtures reject a raw MOP import, a direct CLOS declaration and a
+  raw behavior hook from a default user-interface owner unless an explicit
+  reviewed exception is present.
+- Native slot-algebra fixtures prove that noun-valued collection slots retain
+  inherited named declarations, override only matching identities and never
+  mutate their parents.  The focused executable owner is
+  =t/poo-native-slot-algebra-test.ss=.
+- Extension fixtures prove that slot dispatch and Provider/Profile CLOS consume
+  the same POO values used by the default fixture.
+- Runtime fixtures prove that an ABI or proof projection cannot become an
+  alternate semantic owner.
+- A real vertical Case is readable and safely editable without knowledge of
+  CLOS, C3/C4, MOP or runtime projection details.
+
+The first real vertical acceptance owner is the Healthcare AI-assisted
+prescription Case.  Its user-facing declaration is not accepted merely because
+it compiles; it must satisfy the default concept budget while retaining the
+same Governance, Temporal Causality and Cedar behavior.
+
+* Migration rule
+
+Migration is direct.  Do not preserve a lower-quality default surface through
+compatibility aliases or a parallel legacy interface.  Move reusable behavior
+into maintained Profiles, CaseComponents, named functions or Provider method
+bundles, then leave the user declaration as values and composition.
+
+Migration MUST retain semantic and performance evidence:
+
+- effective-object equality at the declared boundary;
+- stable identity and provenance;
+- the same positive and negative Governance/authorization results;
+- no eager import of the advanced CLOS/MOP closure;
+- no repeated traversal, duplicate index construction or asymptotic
+  regression.
+
+* Rejected designs
+
+- advertising the complete POO/CLOS/MOP capability map as the default UI;
+- creating separate simple, advanced and meta DSLs;
+- requiring a class for every Profile or Case;
+- exposing C3/C4 or method combination as routine configuration;
+- replacing native POO values with raw alists, records or JSON rows;
+- hiding runtime effects, authority changes or merge policy behind a friendly
+  declaration macro;
+- calling an interface simple while its ordinary examples require raw lambdas,
+  graph constructors, specializers or proof-engine payloads.
+
+* Adoption sequence
+
+- [X] Establish the normative capability-gradient and surface contract.
+- [X] Make the Current Project Programming Style subordinate to this RFC.
+- [X] Reclassify POO CLOS declarations as an opt-in extension surface.
+- [X] Define the native noun-slot algebra for default declarations.
+- [X] Add a native inheritance fixture for default/refinement semantics.
+- [ ] Add syntax-aware positive and negative surface fixtures.
+- [ ] Audit maintained README and =user-interface= examples.
+- [ ] Migrate one Healthcare Profile and Case without semantic regression.
+- [ ] Add Effective Object and provenance-first presentation evidence.

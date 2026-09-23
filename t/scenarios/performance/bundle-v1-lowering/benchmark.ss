@@ -2,8 +2,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/srfi/1 iota)
-        :clan/poo/object
+(import :clan/poo/object
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/utilities/functional)
 
