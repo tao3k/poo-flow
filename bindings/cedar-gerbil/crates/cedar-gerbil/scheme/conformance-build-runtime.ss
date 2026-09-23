@@ -8,7 +8,7 @@
 (export cedar-conformance-build!)
 
 (import (only-in :std/make make)
-        (only-in :std/misc/path path-expand)
+        (only-in :gerbil/core path-expand)
         (only-in :std/source this-source-file)
         :gerbil-scheme-rust/scheme/program-build)
 

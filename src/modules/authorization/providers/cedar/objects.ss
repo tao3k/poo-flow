@@ -141,12 +141,17 @@
       generation: generation-value runtime-bundle: bundle-value bundle-epoch: epoch-value
       policy-revision: policy-value revocation-epoch: revocation-value))
 
-;; : (-> String PositiveInteger CedarRuntimeCapability)
-(def (poo-flow-cedar-runtime-capability action-value event-value)
+;; : (-> String PositiveInteger [Boolean] CedarRuntimeCapability)
+(def (poo-flow-cedar-runtime-capability action-value event-value
+                                        source-admission-required?:
+                                        (required-value #f))
   (require-value "Cedar action must be text" (text? action-value) action-value)
   (require-value "runtime event kind must be a positive uint32"
                  (and (positive? event-value) (<= event-value 4294967295)) event-value)
-  (.o (:: @ Capability.) action: action-value event-kind: event-value))
+  (require-value "source admission requirement must be Boolean"
+                 (boolean? required-value) required-value)
+  (.o (:: @ Capability.) action: action-value event-kind: event-value
+      source-admission-required?: required-value))
 
 ;; : (-> CedarAuthorityContext CedarProofBinding (List CedarPolicy) CedarSchema CedarEntities (List CedarRuntimeCapability) CedarAuthoritySnapshot)
 (def (poo-flow-cedar-authority-snapshot context-value proof-value policy-values
@@ -255,7 +260,12 @@
                        (map (lambda (policy) (runtime-record (cons "identity" (.ref policy 'identity)) (cons "source" (.ref policy 'source))))
                             (.ref value 'policies))))
      (cons "capabilities" (list->vector
-                           (map (lambda (capability) (runtime-record (cons "action" (.ref capability 'action)) (cons "event_kind" (.ref capability 'event-kind))))
+                           (map (lambda (capability)
+                                  (runtime-record
+                                   (cons "action" (.ref capability 'action))
+                                   (cons "event_kind" (.ref capability 'event-kind))
+                                   (cons "source_admission_required"
+                                         (.ref capability 'source-admission-required?))))
                                 (.ref value 'capabilities)))))))
 
 ;; : (-> CedarAuthorizationRequest HashTable)

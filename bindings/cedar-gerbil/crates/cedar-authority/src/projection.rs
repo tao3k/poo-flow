@@ -26,6 +26,7 @@ pub struct PolicySource {
 pub struct Capability {
     pub action: String,
     pub event_kind: u32,
+    pub source_admission_required: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -139,7 +140,7 @@ pub struct Snapshot {
     schema: Schema,
     policies: PolicySet,
     entities: Entities,
-    capabilities: BTreeMap<String, u32>,
+    capabilities: BTreeMap<String, (u32, bool)>,
     policy_digest: String,
     entity_digest: String,
     schema_digest: String,
@@ -343,7 +344,12 @@ impl Snapshot {
                 .map_err(cedar_error("capability-invalid"))?
                 .to_string();
             if capability.event_kind == 0
-                || capabilities.insert(action, capability.event_kind).is_some()
+                || capabilities
+                    .insert(
+                        action,
+                        (capability.event_kind, capability.source_admission_required),
+                    )
+                    .is_some()
             {
                 return Err(Error::new(
                     "capability-invalid",
@@ -381,10 +387,20 @@ impl Snapshot {
             EntityUid::from_str(&proposal.action).map_err(cedar_error("cedar-request-invalid"))?;
         let resource = EntityUid::from_str(&proposal.resource)
             .map_err(cedar_error("cedar-request-invalid"))?;
-        let event_kind = *self
-            .capabilities
-            .get(&action.to_string())
-            .ok_or_else(|| Error::new("capability-not-granted", action.to_string()))?;
+        let (event_kind, source_admission_required) =
+            *self
+                .capabilities
+                .get(&action.to_string())
+                .ok_or_else(|| Error::new("capability-not-granted", action.to_string()))?;
+        // This requirement belongs to the administrative capability, not to
+        // caller-editable context. Removing all preflight fields cannot turn
+        // a source-bound action into an ordinary Cedar grant.
+        if source_admission_required {
+            return Err(Error::new(
+                "runtime-source-admission-required",
+                "this action requires Runtime-owned source admission",
+            ));
+        }
         let mut context_json = proposal.context.clone();
         let fields = context_json
             .as_object_mut()
