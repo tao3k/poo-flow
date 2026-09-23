@@ -25,7 +25,6 @@ _SCHEME_LOAD_DEPENDENCIES = (
     Path("src/module-system/profile-composition/declaration-syntax.ss"),
     Path("src/module-system/profile-composition/core.ss"),
     Path("src/module-system/profile-composition/inline-runtime.ss"),
-    Path("src/module-system/profile-composition/profile-syntax.ss"),
     Path("src/module-system/profile-composition/use-syntax.ss"),
     Path("src/modules/funflow/config.ss"),
     Path("src/modules/funflow/config-prototypes.ss"),
