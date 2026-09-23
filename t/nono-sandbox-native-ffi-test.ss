@@ -41,7 +41,7 @@
     (command "sh")
     (args '("-lc" "printf native-ffi"))
     (workdir ".")
-    (mounts '(((path . ".") (mode . read))))
+    (mounts '(((path . ".") (kind . directory) (mode . read))))
     (network-policy '((mode . blocked)))
     (capabilities '((allow-commands . ("sh"))))
     (metadata '((test . native-ffi))))))

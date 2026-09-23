@@ -18,8 +18,7 @@
         :poo-flow/src/modules/agent-sandbox/request-field
         :poo-flow/src/modules/agent-sandbox/request-validation)
 
-(export make-agent-sandbox-request
-        make-agent-sandbox-request-with
+(export make-agent-sandbox-request-with
         make-agent-sandbox-request-from-fields)
 
 ;;; Normalized assembly is concrete: one validated profile plus one validated
@@ -75,34 +74,6 @@
 ;;   | result: validated inert request alist for adapter handoff.
 (def (make-agent-sandbox-request-with profile fields-thunk)
   (agent-sandbox-normalized-request profile (fields-thunk)))
-
-;;; Positional construction is compatibility glue for older call sites. New
-;;; code should prefer named fields or the request macro.
-;; : (-> AgentSandboxProfile Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata AgentSandboxRequest)
-(def (make-agent-sandbox-request profile
-                                 command
-                                 args
-                                 env
-                                 workdir
-                                 mounts
-                                 network-policy
-                                 capabilities
-                                 resource-policy
-                                 output-policy
-                                 metadata)
-  (make-agent-sandbox-request-from-fields
-   profile
-   (agent-sandbox-field-rows
-    (command command)
-    (args args)
-    (env env)
-    (workdir workdir)
-    (mounts mounts)
-    (network-policy network-policy)
-    (capabilities capabilities)
-    (resource-policy resource-policy)
-    (output-policy output-policy)
-    (metadata metadata))))
 
 ;;; Named-field construction is the preferred typed contract for callers.
 ;;; Missing optional fields receive deterministic defaults during assembly.

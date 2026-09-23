@@ -84,6 +84,7 @@
 (def (nono-c-binding-mount-validation-errors mount index)
   (if (list? mount)
     (let* ((path (agent-sandbox-alist-ref mount 'path #f))
+           (kind (agent-sandbox-alist-ref mount 'kind #f))
            (mode (agent-sandbox-alist-ref mount 'mode #f)))
       (nono-c-binding-runtime-rows/tail
        (if (string? path)
@@ -93,14 +94,23 @@
            (field 'mount-path)
            (index index)
            (code 'missing-or-invalid-path))))
-       (if (nono-c-binding-access-mode-info mode)
-         '()
-         (list
-          (nono-c-binding-runtime-field-rows
-           (field 'mount-mode)
-           (index index)
-           (value mode)
-           (code 'unsupported-access-mode))))))
+       (nono-c-binding-runtime-rows/tail
+        (if (memq kind '(file directory path))
+          '()
+          (list
+           (nono-c-binding-runtime-field-rows
+            (field 'mount-kind)
+            (index index)
+            (value kind)
+            (code 'unsupported-mount-kind))))
+        (if (nono-c-binding-access-mode-info mode)
+          '()
+          (list
+           (nono-c-binding-runtime-field-rows
+            (field 'mount-mode)
+            (index index)
+            (value mode)
+            (code 'unsupported-access-mode)))))))
     (list
      (nono-c-binding-runtime-field-rows
       (field 'mount)
@@ -213,14 +223,10 @@
         (errors errors)
         (runtime-manifest runtime-manifest))))))
 
-;;; Mount manifests accept both `kind` and legacy `type` so older sandbox
-;;; descriptors can be normalized without changing the C capability call shape.
+;;; Mount manifests carry one canonical kind selected before C projection.
 ;; : (-> Mount Symbol)
 (def (nono-c-binding-mount-kind mount)
-  (agent-sandbox-alist-ref
-   mount
-   'kind
-   (agent-sandbox-alist-ref mount 'type 'directory)))
+  (agent-sandbox-alist-ref mount 'kind #f))
 
 ;;; Boundary: nono c binding mount function is the policy-visible edge for
 ;;; sandbox behavior, keeping validation, lookup, or projection

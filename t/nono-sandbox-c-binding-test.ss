@@ -142,6 +142,7 @@
                        (env '((OPENAI_API_KEY . redacted)))
                        (workdir "/workspace")
                        (mounts '(((path . "/workspace")
+                                  (kind . directory)
                                   (mode . read-write))
                                  ((path . "/workspace/config.json")
                                   (kind . file)
@@ -203,6 +204,7 @@
                        (args '("--print" "hello"))
                        (workdir "/workspace")
                        (mounts '(((path . "/workspace")
+                                  (kind . directory)
                                   (mode . read-write))))
                        (network-policy '((mode . blocked)))))
              (runtime-manifest
@@ -257,19 +259,30 @@
         (check-equal? (test-ref live-default 'runtime-executed) #f)
         (check-equal? (test-ref live-default 'would-apply?)
                       #f)))
-    (test-case "rejects non-nono and unsupported C binding policy"
+    (test-case "rejects non-nono, unsupported, and legacy mount policy"
       (let* ((cube-request
               (agent-sandbox-request
                (make-cube-agent-sandbox-profile 'python-template)
                (command "python")
                (args '("-c" "print(1)"))
                (workdir "/workspace")
-               (mounts '(((path . "/workspace") (mode . read))))))
+               (mounts '(((path . "/workspace")
+                          (kind . directory)
+                          (mode . read))))))
              (nono-request
               (agent-sandbox-request
                (make-nono-agent-sandbox-profile 'always-further/opencode)
                (command "opencode")
-               (mounts '(((path . "/workspace") (mode . execute))))))
+               (mounts '(((path . "/workspace")
+                          (kind . directory)
+                          (mode . execute))))))
+             (legacy-type-request
+              (agent-sandbox-request
+               (make-nono-agent-sandbox-profile 'always-further/opencode)
+               (command "opencode")
+               (mounts '(((path . "/workspace")
+                          (type . directory)
+                          (mode . read))))))
              (cube-failure
               (with-catch (lambda (failure) failure)
                           (lambda ()
@@ -279,10 +292,18 @@
               (with-catch (lambda (failure) failure)
                           (lambda ()
                             (agent-sandbox-request->nono-c-binding-manifest
-                             nono-request)))))
+                             nono-request))))
+             (legacy-type-failure
+              (with-catch (lambda (failure) failure)
+                          (lambda ()
+                            (agent-sandbox-request->nono-c-binding-manifest
+                             legacy-type-request)))))
         (check-equal? (execution-failure? cube-failure) #t)
         (check-equal? (execution-failure-code cube-failure)
                       'invalid-nono-c-binding-manifest)
         (check-equal? (execution-failure? mode-failure) #t)
         (check-equal? (execution-failure-code mode-failure)
+                      'invalid-nono-c-binding-manifest)
+        (check-equal? (execution-failure? legacy-type-failure) #t)
+        (check-equal? (execution-failure-code legacy-type-failure)
                       'invalid-nono-c-binding-manifest)))))
