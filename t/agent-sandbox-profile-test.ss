@@ -275,18 +275,10 @@
             (request-failure
              (with-catch (lambda (failure) failure)
                          (lambda ()
-                           (make-agent-sandbox-request
+                           (agent-sandbox-request
                             valid-profile
-                            #f
-                            '()
-                            '()
-                            #f
-                            '()
-                            #f
-                            #f
-                            #f
-                            'artifact
-                            '())))))
+                            (command #f)
+                            (output-policy 'artifact))))))
        (check-equal? (execution-failure? profile-failure) #t)
        (check-equal? (execution-failure-code profile-failure)
                      'invalid-agent-sandbox-profile)

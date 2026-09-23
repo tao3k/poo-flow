@@ -85,6 +85,7 @@
    (args '("-lc" "printf poo-flow-native-cicd"))
    (workdir ".")
    (mounts '(((path . ".")
+              (kind . directory)
               (mode . read-write))))
    (network-policy +custom-cicd-ci-check-network-policy+)
    (capabilities '((allow-commands . ("sh" "gxpkg"))))
