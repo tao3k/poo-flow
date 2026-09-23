@@ -31,6 +31,23 @@
                  poo-flow-current-composition-ref)
         (only-in :poo-flow/src/module-system/profile-composition/value-loader
                  poo-flow-load-composition-value)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 +poo-flow-profile-export-kind+
+                 +poo-flow-profile-selection-proof-kind+
+                 +poo-flow-profile-bundle-kind+
+                 +poo-flow-profile-composition-strategy-kind+
+                 PooFlowProfileExport
+                 PooFlowProfileSelectionProof
+                 PooFlowProfileBundle
+                 PooFlowProfileCompositionStrategy
+                 profiles
+                 compose
+                 poo-flow-profile-export
+                 poo-flow-module-profiles
+                 poo-flow-select-module-profiles
+                 poo-flow-profile-bundle
+                 poo-flow-profile-bundle?
+                 poo-flow-profile-bundle-root)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
@@ -91,6 +108,22 @@
         current-poo-flow-composition-catalog
         poo-flow-current-composition-ref
         poo-flow-load-composition-value
+        +poo-flow-profile-export-kind+
+        +poo-flow-profile-selection-proof-kind+
+        +poo-flow-profile-bundle-kind+
+        +poo-flow-profile-composition-strategy-kind+
+        PooFlowProfileExport
+        PooFlowProfileSelectionProof
+        PooFlowProfileBundle
+        PooFlowProfileCompositionStrategy
+        profiles
+        compose
+        poo-flow-profile-export
+        poo-flow-module-profiles
+        poo-flow-select-module-profiles
+        poo-flow-profile-bundle
+        poo-flow-profile-bundle?
+        poo-flow-profile-bundle-root
         poo-flow-profile-ref
         poo-flow-scenario-module-binding
         poo-flow-scenario-clause

@@ -399,7 +399,7 @@ projection checklists as implemented.
 | Local Lean closure | =accepted= | =lake build=: 108/108 jobs |
 | AXLE independent declaration check | =accepted= | Request =c738e2fa-88b0-47c1-9d13-27373ce4eec2=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =24ec2383-397e-4ff0-935c-9fadc471be09= cannot resolve local module prefix =PooFlowProof= |
-| Module/ProfileBundle/imports implementation | =not-admitted= | All 58 Module, selection, identity, algebra, imports, macro, composition, projection, and admission items remain pending |
+| Module/ProfileBundle value layer | =partial-qualified= | Native package build: 261 targets; root suite: 243 files; indexed selection plus idempotent composition: 1,000 Profiles 24 ms, 5,000 Profiles 180 ms |
 
 The accepted AXLE request replaced the project import with =import Mathlib=
 and independently verified all 56 theorem declarations.  The preserved-import
@@ -408,10 +408,15 @@ request records the separate project-module visibility blocker.
 The formal result proves the selection-union laws without adding Mathlib to the
 local Lean project, establishes capability attenuation and the separation of
 Module definition identity from instance identity, and fixes recursive cycle
-ownership at the existing POO Flow fixed-point boundary.  It does not establish
-concrete =gerbil-poo= constructors, ~use-module~ expansion, imports traversal,
-backend projection, or executable receipts.  Implementation remains
-fail-closed until those original checklist items pass.
+ownership at the existing POO Flow fixed-point boundary.  The executable value
+layer now owns typed Profile exports, one Module-owned export index, selection
+proofs, ProfileBundle fusion, the first-class =profiles= strategy, pure
+=compose=, and an explicit root projection.  Focused syntax tests also verify
+the target two thin bindings without putting either macro in charge of value
+semantics.  Recursive imports closure, capability intersection, backend
+projection, and the repository-wide public cutover from the old clause parser
+remain fail-closed implementation work; this partial receipt does not admit the
+complete Module closure.
 
 * Reachability before closure
 
