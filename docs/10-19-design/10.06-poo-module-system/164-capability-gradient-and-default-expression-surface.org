@@ -10,11 +10,13 @@
 * Decision
 
 POO Flow MAY have a high capability ceiling without imposing the same height
-on its default expression surface.  The ordinary interface is a functional
-object value language: users declare values, extend maintained prototypes,
-compose named values, and inspect the resulting effective object.  Generic
-dispatch, CLOS, C3/C4, macros and the MOP remain available at progressively
-deeper extension boundaries, but they are not ordinary configuration concepts.
+on its default expression surface.  The ordinary interface is the native
+=gerbil-poo= object, prototype and slot algebra: users declare values, extend
+maintained prototypes, compose named values, and inspect the resulting
+effective object.  It is not a Jsonnet-inspired language, a JSON-like model,
+or a second functional-object DSL.  Generic dispatch, CLOS, C3/C4, macros and
+the MOP remain available at progressively deeper extension boundaries, but
+they are not ordinary configuration concepts.
 
 The short contract is:
 
@@ -35,6 +37,54 @@ Meta-programming last
 This RFC constrains every public Module, Profile, Scenario, Case, Policy and
 Flow interface.  More specialized implementation and conformance RFCs MUST
 follow this surface contract.
+
+* Normative reading order
+
+The current authority order is:
+
+1. this RFC for the default expression surface and capability disclosure;
+2. RFC 29 for native =gerbil-poo= operators and prototype discipline;
+3. RFC 44 for repository roles, dispatch ownership and macro admission;
+4. RFC 45-92 for the thin =user-composition= binding boundary;
+5. RFC 45-93 for =use-module= selection and ProfileBundle algebra; and
+6. RFC 45-95 for aggregate Profile responsibility reachability.
+
+An older RFC, receipt, example or README that shows =use-composition= as a
+clause parser, exposes =stage/graph/loop/prove/handoff= in root config, or
+introduces a parallel command-slot vocabulary is historical evidence and
+cannot override this order.
+
+* Five mechanism constraints
+
+The following five constraints are normative together.  A Scenario or Case
+that uses native noun slots but violates dispatch, type, macro or
+root-composition ownership is not POO-native.
+
+1. Profile behavior with one independently extensible receiver family MUST use
+   native =gerbil-poo= slot dispatch through =.defgeneric=.  A descendant
+   specializes behavior by replacing or refining the method slot through
+   native prototype inheritance.  A symbolic dispatcher, registry or class
+   simulation is not an equivalent implementation.
+2. A Provider or executor crossed with a Profile, Scenario, Case or contract
+   kind MUST use the POO CLOS generic, class/eql specializers and an owned
+   method bundle when both axes grow independently.  CLOS is not the ordinary
+   declaration surface and MUST NOT be introduced for a single receiver axis.
+3. =define-type= admits boundary values, shapes and invariants such as change,
+   check, decision, receipt and projection contracts.  It MUST NOT simulate a
+   class hierarchy, Profile inheritance or Scenario behavior.
+4. =defrule= or =defrules= MAY remove repeated static Profile declaration
+   framing only when the expansion is ordinary native POO construction.  It
+   MUST NOT own behavior, precedence, stage semantics or a second object
+   language.
+5. A root =config.ss= composes already maintained Profiles and Standards.  It
+   MUST NOT declare or parse a parallel stage, graph, loop, proof, handoff,
+   Provider or runtime DSL.  Those responsibilities remain reachable native
+   POO values owned by the selected Profiles and their extension modules.
+
+These constraints define module mechanism ownership, not five public concepts.
+They complement rather than replace the object-level slot algebra
+below.  The ordinary author still sees native POO values, slots, prototype
+extension and composition.
 
 * Capability height is not expression height
 
@@ -179,11 +229,12 @@ more domain object.
 
 * Native slot algebra contract
 
-User-facing declaration slots name domain values, not editing commands.  Their
-composition MUST use the native Gerbil POO slot algebra documented by
-=gerbil-poo/doc/poo.md=.  POO Flow MUST use that algebra instead of encoding a
-second add/remove/replace language in slot names, constructors, evaluators or
-Case projection code.
+User-facing declarations MUST use the native Gerbil POO slot algebra documented
+by =gerbil-poo/doc/poo.md=.  Domain slots name values such as =events=,
+=edges=, =profiles= and =sources=.  The base prototype supplies a default
+computation and a descendant refines the inherited nested object with ===>.+=.
+POO Flow MUST not place a second command vocabulary, action AST or patch
+language around those slots.
 
 | Declaration intent | Native slot form | Required semantics |
 |--------------------+------------------+--------------------|
@@ -195,41 +246,43 @@ Case projection code.
 
 The declaration vocabulary follows these laws:
 
-- collection slots use plural domain nouns such as =events=, =trajectories=,
+- collection slots use domain nouns such as =events=, =edges=, =trajectories=,
   =authorizations=, =sources=, =profiles= and =capabilities=;
 - composition operations remain in the slot form: ===>.+= means nested POO
   refinement, ===>= means functional refinement, =?= means inherited default,
   and a plain slot definition means replacement;
-- command-shaped declaration slots such as =.add-event=, =.remove-event= or
-  =.replace-event= are forbidden because they duplicate the native algebra and
-  create a parallel action DSL;
+- a parallel command-slot vocabulary is forbidden because native slot forms
+  already own replacement, defaults and inherited refinement;
+- a domain slot MUST NOT be reinterpreted by a central symbolic dispatcher,
+  action registry, clause parser or Case-specific patch evaluator;
 - an ordered list accumulation MUST use ===>= with a named pure combiner and a
   documented ordering law; repeated =append= hidden in an evaluator is not a
   slot algebra;
-- actual runtime actions MAY use verbs, but they are methods or effect
-  requests, not declaration collections.
+- a runtime effect remains a method or explicit effect request; declaring a
+  noun slot never executes that effect.
 
 Base prototypes SHOULD declare empty collection fallbacks with =?= rather than
 ordinary overriding constants.  For example:
 
 #+begin_src scheme
 (.def OntologyCase
-  (profile-selection ? (.o))
-  (events ? (.o))
-  (trajectories ? (.o)))
+  (events ? (.o)))
 
 (.def (PrescriptionCase @ OntologyCase)
-  (profile-selection =>.+
-    (.o healthcare: HealthcareProfile))
   (events =>.+
-    (.o prescription: PrescriptionEvent))
-  (trajectories =>.+
-    (.o safety: PrescriptionSafetyTrajectory)))
+    (.o prescription: PrescriptionEvent)))
+
+(.def (ReviewedPrescriptionCase @ PrescriptionCase)
+  (events =>.+
+    (.o prescription: ReviewedPrescriptionEvent
+        review: ClinicalReviewEvent)))
 #+end_src
 
-The names remain declarative, but their behavior is now inherited from the
-native POO object model.  A further Case extension can add one event or replace
-one named event while retaining the rest of the effective object.
+The slot remains declarative: accessing the effective =events= slot
+returns the composed nested POO value and does not perform a runtime action.
+The reviewed Case replaces the named =prescription= contribution, adds
+=review=, retains every other inherited contribution and never mutates either
+parent prototype.
 
 Derived projections such as =events=, =trajectories= and =compositions= MAY
 materialize ordered lists for validation or runtime handoff.  They MUST be lazy
@@ -239,8 +292,8 @@ source of merge semantics.
 ** Exclusion, revocation and removal
 
 Native POO provides override, default and inherited refinement, but it does not
-publish an ordinary pure slot-deletion operator.  POO Flow MUST NOT hide that
-fact behind a generic =.remove-*= declaration vocabulary.
+publish an ordinary pure slot-deletion operator.  POO Flow MUST keep exclusion
+explicit instead of inventing a generic declaration vocabulary for deletion.
 
 Configuration selection MAY exclude an inherited identity through ===>= and a
 named pure exclusion function or through an explicit exclusion value.  The

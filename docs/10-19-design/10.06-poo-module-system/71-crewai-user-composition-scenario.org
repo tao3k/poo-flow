@@ -5,6 +5,13 @@
 #+title: CrewAI-Style User Composition Scenario
 #+startup: overview
 
+* Status
+
+Historical scenario evidence.  Its stage/clause example is not a current
+authoring contract.  RFC 164 and RFC 29 require native noun slots and the
+five module-writing constraints; RFC 45-95 requires ordinary roots to select a
+prepared aggregate Profile such as =production=.
+
 * Purpose
 
 This document records the CrewAI-style user composition scenario. CrewAI is a reference framework for collaborative agents, crews, tasks, and flows; it is not the source of truth for POO Flow. The POO Flow fact surface remains profile objects, strategy composition, graph/loop facts, runtime handoff receipts, and Lean proof obligations.

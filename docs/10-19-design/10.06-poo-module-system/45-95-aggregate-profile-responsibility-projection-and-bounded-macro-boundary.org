@@ -59,14 +59,14 @@ closure preserves:
 
 The graph, loop, proof, handoff, and stage responsibilities are POO objects or
 POO facts reachable from the selected aggregate. They are not sibling clauses
-interpreted by =use-composition=.
+interpreted by =user-composition=.
 
 * Public composition surface
 
 The ordinary user surface remains flat:
 
 #+begin_src scheme
-(use-composition crewai-system
+(user-composition crewai-system
   (compose profiles
     (use-module crewai production)))
 #+end_src
@@ -87,7 +87,7 @@ select(crewai, production)
 #+end_example
 
 No =stage=, =graph=, =loop=, =prove=, or =handoff= clause is accepted inside
-=use-composition=. No second composition wrapper is introduced.
+=user-composition=. No second composition wrapper is introduced.
 
 * Aggregate Profile type
 
@@ -251,7 +251,7 @@ A bounded macro may:
 
 The ordinary interface may therefore retain:
 
-- =use-composition= as a thin binding macro;
+- =user-composition= as a thin binding macro;
 - =use-module= as a thin Module-selection macro;
 - narrowly owned declaration macros for repeated internal object families.
 
@@ -366,7 +366,7 @@ facts and cannot create authority.
 
 #+begin_src mermaid
 sequenceDiagram
-  participant User as "use-composition"
+  participant User as "user-composition"
   participant Select as "use-module"
   participant Module as "Module"
   participant Bundle as "production ProfileBundle"
@@ -406,8 +406,8 @@ The following alternatives are rejected:
 
 - treating =production= as a universal stage keyword;
 - keeping =stage=, =graph=, =loop=, =prove=, and =handoff= as peer clauses in
-  =use-composition=;
-- making =use-composition= interpret case semantics;
+  =user-composition=;
+- making =user-composition= interpret case semantics;
 - making =compose= a macro-owned language;
 - flattening a ProfileBundle until low-level identity disappears;
 - storing responsibilities only in generated runtime data;
@@ -439,7 +439,7 @@ The following alternatives are rejected:
 
 ** Macro governance
 
-- [ ] =use-composition= performs only thin hygienic binding.
+- [ ] =user-composition= performs only thin hygienic binding.
 - [ ] =use-module= performs only hygienic Module selection.
 - [ ] =compose= remains a pure function.
 - [ ] =profiles= remains a first-class strategy.

@@ -7,7 +7,10 @@
 
 * Status
 
-The architecture in this RFC is accepted.
+The value-level responsibility split in this RFC remains accepted.  Its
+=use-composition= binding name is historical and is superseded by RFC 45-92's
+thin =user-composition= boundary.  It does not define a compatibility alias or
+authorize the retired clause grammar.
 
 This acceptance freezes expansion responsibility for the already
 accepted public surface.  It does not introduce a new form, broaden

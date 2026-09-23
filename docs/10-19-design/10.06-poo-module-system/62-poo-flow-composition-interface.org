@@ -5,6 +5,15 @@
 #+title: POO Flow Composition Interface
 #+property: header-args :mkdirp yes
 
+* Status
+
+Historical grammar evidence.  The public stage/clause syntax in this document
+is superseded by RFC 45-92, RFC 45-95 and RFC 164.  Current =config.ss= files
+compose maintained Profiles and Standards only; domain operations are native
+=gerbil-poo= slots, and graph/loop/proof/handoff responsibilities are reachable
+POO values rather than sibling clauses.  Do not copy the examples below into
+current code.
+
 * Purpose
 
 `profile-composition` is the core composer for turning several module profiles

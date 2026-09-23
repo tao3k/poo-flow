@@ -19,7 +19,7 @@ surface, migration period, or deprecation protocol.
 
 This document owns:
 
-- the exact public shape of the target ~use-composition~ macro;
+- the exact public shape of the target ~user-composition~ macro;
 - its binding, identity, hygiene, phase, and root-instantiation obligations;
 - the boundary between the macro and value-level Profile composition;
 - the boundary between semantic POO ~imports~ and physical Gerbil module

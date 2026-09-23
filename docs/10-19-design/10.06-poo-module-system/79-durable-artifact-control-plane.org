@@ -2,6 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+* Status
+
+The artifact ownership model remains current.  Any later stage/clause examples
+are historical and are superseded by RFC 164, RFC 29, RFC 44 and RFC 45-95.
+Current roots compose prepared Profiles and Standards; they do not declare a
+stage DSL.
+
 * Scope
 This document defines the POO Flow artifact control-plane direction.
 

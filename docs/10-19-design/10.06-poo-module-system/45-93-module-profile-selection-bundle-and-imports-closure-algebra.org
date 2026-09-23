@@ -34,7 +34,7 @@ It does not own:
 
 - Profile prototype evaluation;
 - the implementation of ~compose~;
-- the ~use-composition~ binding macro;
+- the ~user-composition~ binding macro;
 - package installation;
 - physical Gerbil module loading;
 - control-policy priority;
@@ -603,7 +603,7 @@ remains inspectable native POO and functional code.
 * Current implementation gap
 
 The current declaration parser treats ~use-module~ as a private form in the
-second operand position of ~use-composition~.
+second operand position of ~user-composition~.
 
 The current path:
 
@@ -774,10 +774,10 @@ Implementation may begin only when:
 
 * Composition entry correction
 
-The only public root-binding form is ~use-composition~:
+The only public root-binding form is ~user-composition~:
 
 #+begin_src scheme
-(use-composition composition-name
+(user-composition composition-name
   composition-expression)
 #+end_src
 
@@ -786,9 +786,9 @@ Any earlier binding name in this RFC is invalid and does not define an
 alternative, legacy, compatibility, migration, or deprecation surface.
 
 #+begin_src typst
-$ E := { op("use-composition") } $
+$ E := { op("user-composition") } $
 
-$ AdmittedEntry(e) iff e = op("use-composition") $
+$ AdmittedEntry(e) iff e = op("user-composition") $
 #+end_src
 
 The synchronized Lean owners are

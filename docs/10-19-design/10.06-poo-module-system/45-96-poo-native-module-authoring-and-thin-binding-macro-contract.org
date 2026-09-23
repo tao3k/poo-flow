@@ -191,21 +191,21 @@ Module authors construct a complete POO object.
 Composition users select an exported ProfileBundle:
 
 #+begin_src scheme
-(use-composition crewai-system
+(user-composition crewai-system
   (compose profiles
     (use-module crewai production)))
 #+end_src
 
 The ordinary composition form does not expose Module construction.
 
-The authoring macro does not replace =use-module=, =use-composition=, =compose=,
+The authoring macro does not replace =use-module=, =user-composition=, =compose=,
 or =profiles=:
 
 - the Module binding macro binds one Module object;
 - =use-module= selects a stable export from a Module;
 - =compose= remains a pure function;
 - =profiles= remains a first-class strategy;
-- =use-composition= binds one completed composition expression.
+- =user-composition= binds one completed composition expression.
 
 * Semantic Module and Gerbil module separation
 
@@ -400,7 +400,7 @@ The following alternatives are rejected:
 - treating Gerbil module loading as POO Module semantics;
 - exposing current composition builder helpers as the new public API;
 - accepting raw alists or records as the ordinary Module authoring interface;
-- nesting =use-composition= inside Module authoring;
+- nesting =user-composition= inside Module authoring;
 - adding a compatibility wrapper around the rejected clause architecture.
 
 * Conformance checklist
@@ -449,7 +449,7 @@ The following alternatives are rejected:
 - [ ] =use-module= remains the selection interface.
 - [ ] =compose= remains a pure function.
 - [ ] =profiles= remains a first-class strategy.
-- [ ] =use-composition= remains the composition binding interface.
+- [ ] =user-composition= remains the composition binding interface.
 - [ ] Advanced extension remains POO-native.
 - [ ] No parallel clause DSL is introduced.
 

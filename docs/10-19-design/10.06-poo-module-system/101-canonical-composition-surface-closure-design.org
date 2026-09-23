@@ -6,8 +6,13 @@
 
 * Status
 
-Approved in conversation on 2026-07-11.  Implementation and focused
-qualification are complete.
+Historical grammar receipt.  Approved in conversation on 2026-07-11, before
+the direct-replacement architecture in RFC 45-92, RFC 45-95 and RFC 164.  Its
+contextual clause parser, stage syntax and examples are not current public
+contracts and must not be copied into new code.
+
+Implementation and focused qualification were complete for that historical
+grammar.
 
 The preceding statement records the historical delivery, not acceptance of
 every subsequent contextual-clause refinement below.  The unchecked delivery

@@ -144,7 +144,7 @@ or a function instead.
 
 | Shape | Required owner |
 |-------+----------------|
-| User declaration or configuration | noun-valued POO slots such as =trajectories=; native =?=, ===>= and ===>.+= express default, functional refinement and nested-object refinement |
+| User declaration or configuration | noun-valued POO slots such as =events=, =edges= and =trajectories=; native =?=, ===>= and ===>.+= own defaults, functional refinement and nested-object refinement without a parallel command-slot vocabulary |
 | One receiver family whose descendants replace one behavior | =.defgeneric= slot dispatch |
 | Pure validation, indexing or graph traversal | named functional helper |
 | Provider/executor crossed with Profile, Scenario, Case or contract kind | POO CLOS generic, specializers and method bundle |

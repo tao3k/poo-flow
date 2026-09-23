@@ -171,8 +171,8 @@ lower into object attributes:
   cache-intents: '(gerbil-build-cache))
 #+end_src
 
-This keeps update semantics on POO object attributes rather than creating
-bespoke =remove-task= or =remove-node= APIs or public row operators.
+This keeps update semantics on POO object attributes rather than creating a
+second command vocabulary or public row operators.
 
 * 10.06.26.60 Implementation Slices
 

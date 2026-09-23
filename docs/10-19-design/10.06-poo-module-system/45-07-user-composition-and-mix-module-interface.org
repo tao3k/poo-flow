@@ -7,6 +7,13 @@
 #+parent: 45-mix-profile-recursive-composition-and-recoverable-control.org
 #+depends_on: 45-05-lineage-and-cycle-detection.org 45-06-gerbil-poo-api-alignment.org
 
+* Status correction
+
+Historical draft.  Its public =use-composition= clause grammar is superseded by
+RFC 45-92, RFC 45-95 and RFC 164.  Current code must use native noun slots
+for object-level algebra and a thin root binding over already composed Profile
+values; no compatibility surface is implied.
+
 * Normative responsibility
 
 This module exclusively owns the public composition shape and the internal
