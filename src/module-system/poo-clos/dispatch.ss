@@ -47,12 +47,9 @@
   (and (object? argument)
        (let* ((argument-class (argument-clos-class argument))
               (index
-               (if (element? ClosClass target)
-                 (and argument-class
-                      (poo-clos-class-precedence-position
-                       argument-class target))
-                 (identity-index target
-                                 (compute-precedence-list! argument)))))
+               (and argument-class
+                    (poo-clos-class-precedence-position
+                     argument-class target))))
          (and index (+ index 1)))))
 
 ;; : (-> SchemeValue Natural)
@@ -72,6 +69,12 @@
     ((eql) (and (eqv? argument (.ref specializer 'target)) 0))
     ((class)
      (class-target-distance (.ref specializer 'target) argument))
+    ((prototype)
+     (and (object? argument)
+          (let (index
+                (identity-index (.ref specializer 'target)
+                                (compute-precedence-list! argument)))
+            (and index (+ index 1)))))
     ((any) (universal-specializer-distance argument))
     (else #f)))
 

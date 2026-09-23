@@ -9,7 +9,7 @@
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop element?)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-method-combination-test)
 
@@ -37,7 +37,7 @@
  declared-values$poo-clos-generic
  (poo-clos-method
   'declared-animal
-  (list (poo-clos-class-specializer combination-animal-class))
+  (list (poo-clos-prototype-specializer combination-animal-class))
   (lambda (_frame _object) 'animal)
   qualifier: 'declared-collect))
 
@@ -45,7 +45,7 @@
  declared-values$poo-clos-generic
  (poo-clos-method
   'declared-dog
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (_frame _object) 'dog)
   qualifier: 'declared-collect))
 
@@ -64,14 +64,14 @@
  declared-long-values$poo-clos-generic
  (poo-clos-method
   'declared-long-animal
-  (list (poo-clos-class-specializer combination-animal-class))
+  (list (poo-clos-prototype-specializer combination-animal-class))
   (lambda (_frame _object) 'animal)))
 
 (poo-clos-generic-binding-add-method!
  declared-long-values$poo-clos-generic
  (poo-clos-method
   'declared-long-dog
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (frame object)
     (list 'dog (poo-clos-call-next-method frame object)))))
 
@@ -83,7 +83,7 @@
  declared-reordered-values$poo-clos-generic
  (poo-clos-method
   'reordered-animal
-  (list (poo-clos-class-specializer combination-animal-class))
+  (list (poo-clos-prototype-specializer combination-animal-class))
   (lambda (_frame _object) 'animal)
   qualifier: 'declared-collect))
 
@@ -91,7 +91,7 @@
  declared-reordered-values$poo-clos-generic
  (poo-clos-method
   'reordered-dog
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (_frame _object) 'dog)
   qualifier: 'declared-collect))
 
@@ -134,7 +134,7 @@
  configured-long-values$poo-clos-generic
  (poo-clos-method
   'configured-around
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (frame _object . _arguments)
     (list 'around (poo-clos-call-next-method frame)))
   qualifier: 'around lambda-list: configured-long-lambda-list))
@@ -143,7 +143,7 @@
  configured-long-values$poo-clos-generic
  (poo-clos-method
   'configured-animal
-  (list (poo-clos-class-specializer combination-animal-class))
+  (list (poo-clos-prototype-specializer combination-animal-class))
   (lambda (frame _object . _arguments)
     (list 'animal
           (if (poo-clos-next-method? frame)
@@ -155,7 +155,7 @@
  configured-long-values$poo-clos-generic
  (poo-clos-method
   'configured-dog
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (frame _object . _arguments)
     (list 'dog
           (if (poo-clos-next-method? frame)
@@ -171,7 +171,7 @@
  optional-configured-values$poo-clos-generic
  (poo-clos-method
   'optional-configured-around
-  (list (poo-clos-class-specializer combination-dog-class))
+  (list (poo-clos-prototype-specializer combination-dog-class))
   (lambda (frame _object)
     (list 'around (poo-clos-call-next-method frame)))
   qualifier: 'around))
@@ -244,8 +244,8 @@
          (failure-code? 'required-method-group-empty))))
 
     (test-case "numeric built-ins combine in admitted specificity order"
-      (let* ((animal (poo-clos-class-specializer combination-animal-class))
-             (dog (poo-clos-class-specializer combination-dog-class))
+      (let* ((animal (poo-clos-prototype-specializer combination-animal-class))
+             (dog (poo-clos-prototype-specializer combination-dog-class))
              (plus
               (add-methods
                (poo-clos-generic-function 'score 1 method-combination: '+)
@@ -268,8 +268,8 @@
         (check-equal? (poo-clos-call minimum combination-dog) 3)))
 
     (test-case "list order and sequence built-ins preserve their operators"
-      (let* ((animal (poo-clos-class-specializer combination-animal-class))
-             (dog (poo-clos-class-specializer combination-dog-class))
+      (let* ((animal (poo-clos-prototype-specializer combination-animal-class))
+             (dog (poo-clos-prototype-specializer combination-dog-class))
              (collect
               (poo-clos-short-method-combination
                'collect 'list order: 'most-specific-last))
@@ -300,8 +300,8 @@
 
     (test-case "and, or, and progn retain short-circuit evaluation"
       (let ((trace '())
-            (animal (poo-clos-class-specializer combination-animal-class))
-            (dog (poo-clos-class-specializer combination-dog-class)))
+            (animal (poo-clos-prototype-specializer combination-animal-class))
+            (dog (poo-clos-prototype-specializer combination-dog-class)))
         (def (record value result)
           (lambda ()
             (set! trace (append trace (list value)))
@@ -410,8 +410,8 @@
                terminal)))
         (check-equal? (poo-clos-call generic 'payload)
                       '(next-fallback terminal (payload))))
-      (let* ((animal (poo-clos-class-specializer combination-animal-class))
-             (dog (poo-clos-class-specializer combination-dog-class))
+      (let* ((animal (poo-clos-prototype-specializer combination-animal-class))
+             (dog (poo-clos-prototype-specializer combination-dog-class))
              (reverse-protocol
               (poo-clos-generic-protocol
                'reverse
@@ -448,8 +448,8 @@
                      (let (methods (append around primary))
                        (poo-clos-call-method
                         effective-method (car methods) (cdr methods))))))))
-             (animal (poo-clos-class-specializer combination-animal-class))
-             (dog (poo-clos-class-specializer combination-dog-class))
+             (animal (poo-clos-prototype-specializer combination-animal-class))
+             (dog (poo-clos-prototype-specializer combination-dog-class))
              (around
               (poo-clos-method
                'around (list dog)

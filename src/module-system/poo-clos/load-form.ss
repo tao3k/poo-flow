@@ -126,7 +126,7 @@
 ;;; time rather than retaining the source class as the result.
 ;; : ClosSpecializer
 (def make-load-form-class-specializer
-  (poo-clos-class-specializer (.ref ClosClass 'proto)))
+  (poo-clos-prototype-specializer (.ref ClosClass 'proto)))
 
 ;; : (-> ClosClass Thunk)
 (def (proper-class-creation-form class)

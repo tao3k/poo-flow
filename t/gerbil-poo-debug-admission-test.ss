@@ -67,7 +67,7 @@
              (module (poo-flow-semantic-module
                       (poo-flow-semantic-identity 'debug 'module) imports: imports))
              (wrapped (trace-poo module 'safe-module-name)))
-        (check-equal? (length (.all-slots wrapped)) 4)
+        (check-equal? (length (.all-slots wrapped)) 5)
         (check-equal? (eq? (.ref wrapped 'imports) imports) #t)
         (check-equal? (eq? (.ref wrapped 'identity) (.ref module 'identity)) #t)))
 

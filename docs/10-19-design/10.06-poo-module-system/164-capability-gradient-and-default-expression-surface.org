@@ -86,6 +86,33 @@ They complement rather than replace the object-level slot algebra
 below.  The ordinary author still sees native POO values, slots, prototype
 extension and composition.
 
+* Module Interface authoring Contract
+
+Every loaded POO Module has one native POO =Interface= object as its public
+entry.  The Interface carries an =authoring= Profile whose =types=, =objects=,
+=funs=, =config= and =interface= slots contain extensible source-role Contract
+objects.  These objects describe admitted responsibility, forbidden competing
+surface forms, native repair operators and the freedom retained by the module
+owner.  They do not parse or execute a second language.
+
+The loader MUST read each stable role as inert Scheme datums and admit it
+through that Interface Profile before exposing its entrypoint.  A vertical
+module MAY refine a role Profile or contribute a method bundle; it MUST NOT
+replace the native POO object model with an external rule table.
+
+Cross-role admission is a real open crossing and therefore dispatches on
+=AuthoringExecutor x SourceRole x ModuleInterface=.  Native POO prototypes use
+the explicit CLOS prototype specializer; CLOS classes use the class
+specializer.  A native prototype MUST NOT masquerade as a CLOS class, and no
+duplicate marker-class hierarchy may be manufactured only to obtain dispatch.
+
+The default Contract is deliberately bounded.  It rejects competing public
+command-slot vocabulary and top-level stage/runtime DSL forms, while leaving
+ordinary functions, internal algorithms and vertical-domain implementation
+open.  Diagnostics must name the module, role, violated rule, subject, native
+repair operators and retained freedom so an agent can repair the source rather
+than merely suppress the gate.
+
 * Capability height is not expression height
 
 POO Flow has two independent axes.

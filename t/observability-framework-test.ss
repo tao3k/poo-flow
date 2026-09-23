@@ -5,7 +5,7 @@
 
 ;;; Real Module admission -> native observation -> explanation -> upstream debug.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
-        (only-in :clan/poo/object .o .cc .ref .slot? .all-slots)
+        (only-in :clan/poo/object .o .cc .ref .slot?)
         (only-in :clan/poo/mop element? validate TypeError?)
         "../src/module-system/observability/interface.ss"
         "../src/module-system/observability/debug.ss"
@@ -37,7 +37,11 @@
         (check-equal? (element? PooFlowObservationContract event) #t)
         (check-equal? (element? PooFlowAdmissionObservationContract event) #t)
         (check-equal? (element? SemanticModuleContract event) #f)
-        (check-equal? (length (.all-slots module)) 4)
+        (check-equal? (.slot? module 'identity) #t)
+        (check-equal? (.slot? module 'imports) #t)
+        (check-equal? (.slot? module 'capabilities) #t)
+        (check-equal? (.slot? module 'profiles) #t)
+        (check-equal? (.slot? module 'authoring) #t)
         (check-equal? (eq? (.ref event 'source) (.ref context 'source)) #t)
         (check-equal? (eq? (.ref event 'generation) (.ref context 'generation)) #t)
         (check-equal? (eq? (.ref event 'causes) (.ref context 'causes)) #t)

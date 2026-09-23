@@ -15,7 +15,7 @@
         (only-in "../src/module-system/poo-clos/declaration-ir.ss"
                  parse-poo-clos-class-declaration-ir
                  parse-poo-clos-generic-declaration-ir)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-syntax-test)
 

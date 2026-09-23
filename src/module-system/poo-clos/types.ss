@@ -68,7 +68,7 @@
   (and (list? value) (andmap name? value)))
 
 (def (specializer-kind? value)
-  (if (memq value '(any class eql)) #t #f))
+  (if (memq value '(any class prototype eql)) #t #f))
 
 (def (qualifier? value)
   (or (symbol? value)
@@ -115,7 +115,8 @@
                 (list specializer-kind? any-value?))
        (case (.ref candidate 'kind)
          ((any) (not (.ref candidate 'target)))
-         ((class) (object? (.ref candidate 'target)))
+         ((class) (element? ClosClass (.ref candidate 'target)))
+         ((prototype) (object? (.ref candidate 'target)))
          ((eql) #t)
          (else #f))))
 

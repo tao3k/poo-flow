@@ -8,7 +8,7 @@
 (import (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-generic-evolution-test)
 

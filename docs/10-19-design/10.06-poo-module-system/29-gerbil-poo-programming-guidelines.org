@@ -192,6 +192,17 @@ Provider/Profile crossings, =define-type= owns boundary admission, =defrule=
 only removes declaration repetition, and root =config.ss= only composes
 Profiles and Standards.
 
+The POO Module =Interface= is itself the entry object for those five roles.  Its
+=authoring= Profile contains =types=, =objects=, =funs=, =config= and
+=interface= Contract slots.  A module refines those POO values; it does not
+register a second rule DSL.  The loader reads source as inert datums and uses
+the Profile to return an actionable repair diagnostic before loading.
+
+When CLOS crosses an executor, source role and Module Interface, specialize a
+native prototype with =poo-clos-prototype-specializer=.  Reserve
+=poo-clos-class-specializer= for a true CLOS class.  This keeps native POO C3
+ancestry authoritative and avoids a duplicate marker-class hierarchy.
+
 The corresponding Session is a different object.  A Session is created for
 one Scheme-side evaluation with =(.mix scenario-session-prototype)=.  It may
 hold =state=, =current-stage=, =observations=, and =last-receipt= in its

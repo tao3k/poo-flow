@@ -6,7 +6,7 @@
 (import :std/test
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop element?)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-method-bundle-test)
 

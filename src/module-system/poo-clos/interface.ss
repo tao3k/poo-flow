@@ -17,6 +17,7 @@
         ClosEffectiveSlotDefinition ClosClass ClosInstanceState ClosSlotCell
         ClosMopProfile
         poo-clos-any-specializer poo-clos-class-specializer
+        poo-clos-prototype-specializer
         poo-clos-eql-specializer poo-clos-method poo-clos-generic-function
         poo-clos-add-method poo-clos-remove-method poo-clos-failure?
         poo-clos-unbound-slot? poo-clos-unbound-slot-instance
