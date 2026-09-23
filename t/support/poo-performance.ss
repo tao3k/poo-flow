@@ -22,8 +22,7 @@
                  .ref
                  .setslot!
                  $constant-slot-spec)
-        :poo-flow/src/module-system/object-family/indexed
-        (only-in :std/sugar ormap))
+        :poo-flow/src/module-system/object-family/indexed)
 
 (export poo-performance-fixture-policy-contract-pass?
         poo-performance-display-receipt

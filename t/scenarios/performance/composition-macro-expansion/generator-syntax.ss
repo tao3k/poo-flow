@@ -6,7 +6,8 @@
 ;;; Boundary: declarative fixture generator for composition expansion gates.
 
 (import "../../../../src/module-system/profile-composition/interface"
-        (for-syntax :std/stxutil))
+        (for-syntax
+         (only-in :gerbil/core/expander stx-identifier)))
 
 (export define-composition-expansion-case
         define-composition-module-index-case)

@@ -12,7 +12,6 @@
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
-        (only-in :std/sugar filter)
         "../support/poo-performance-fixtures"
         "../support/poo-performance-object-scenarios"
         "../support/poo-performance"

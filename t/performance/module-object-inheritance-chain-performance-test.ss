@@ -14,7 +14,6 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        (only-in :std/srfi/1 fold)
         "../support/performance"
         (only-in :poo-flow/src/module-system/object-core/interface
                  poo-flow-module-object)

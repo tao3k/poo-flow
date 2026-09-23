@@ -14,7 +14,6 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        (only-in :std/srfi/1 fold)
         "../support/performance"
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor

@@ -9,7 +9,6 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :std/test check-equal? test-case test-suite)
-        (only-in :std/srfi/1 iota)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?

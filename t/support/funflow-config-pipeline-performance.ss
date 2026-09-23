@@ -6,7 +6,6 @@
 ;;; Boundary: Funflow user-interface pipeline benchmark helpers.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :std/sugar foldl)
         "./performance"
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-settings

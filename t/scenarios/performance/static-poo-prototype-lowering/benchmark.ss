@@ -8,8 +8,7 @@
 (import (only-in :gerbil/expander
                  current-expander-compiling?
                  import-module)
-        (only-in :clan/timestamp call-with-timing)
-        (only-in :std/misc/path path-expand))
+        (only-in :clan/timestamp call-with-timing))
 
 (export static-poo-prototype-lowering-benchmark)
 

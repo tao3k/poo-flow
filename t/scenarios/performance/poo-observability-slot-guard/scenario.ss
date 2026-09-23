@@ -5,8 +5,7 @@
 
 ;;; One semantic sample for ASP's native P95 benchmark runner.
 
-(import (only-in :std/srfi/1 iota)
-        (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/module-system/observability/debug
                  PooFlowDebugSlotPolicyContract
                  poo-flow-debug-poo

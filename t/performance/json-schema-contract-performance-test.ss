@@ -11,7 +11,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :std/sort sort)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-elapsed-us
                  benchmark-p95-elapsed-ms
@@ -58,7 +57,7 @@
 
 ;; : (-> [Rational] Rational)
 (def (json-schema-contract-performance-median values)
-  (let (ordered (sort (append values '()) <))
+  (let (ordered (list-sort < (append values '())))
     (list-ref ordered (quotient (length ordered) 2))))
 
 ;;; Measure each native/alist pair in alternating order.  The pair owns the
