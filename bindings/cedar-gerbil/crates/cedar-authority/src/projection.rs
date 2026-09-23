@@ -395,6 +395,15 @@ impl Snapshot {
                 "caller cannot supply context.poo_flow",
             ));
         }
+        // POO-native preflight projections are caller-editable input. Until a
+        // Runtime-owned source admission exists, even a permissive Cedar
+        // policy must not turn one into an effect grant.
+        if fields.contains_key("poo_flow_preflight_only") {
+            return Err(Error::new(
+                "runtime-source-admission-required",
+                "preflight-only context has no Runtime source admission",
+            ));
+        }
         fields.insert("poo_flow".into(), json!({
             "intentDigest": proposal.intent_digest,
             "handoffDigest": canonical::digest("poo-flow/cedar/runtime-handoff", &proposal.handoff)?,

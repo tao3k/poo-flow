@@ -578,6 +578,22 @@ fn snapshot_and_request_failures_do_not_manufacture_decisions() {
 }
 
 #[test]
+fn preflight_only_request_requires_runtime_source_admission() {
+    let snapshot = Snapshot::new(bootstrap()).unwrap();
+    let mut request = proposal();
+    request.context["poo_flow_preflight_only"] = json!(true);
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+    request.context["poo_flow_preflight_only"] = json!(false);
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+}
+
+#[test]
 fn formatting_order_and_duplicate_policy_identity_preserve_semantic_digest() {
     let initial = Snapshot::new(bootstrap())
         .unwrap()

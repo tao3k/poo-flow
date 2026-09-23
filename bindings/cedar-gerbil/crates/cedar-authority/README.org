@@ -64,6 +64,12 @@ digest mismatch becomes a typed failure; neither worker is an external engine
 artifact or a public CLI contract. Receipts bind the one Host artifact digest,
 the Host generation, and the two linked component identities.
 
+An explicit =poo_flow_preflight_only= context field is rejected before either
+engine runs, regardless of its value. A POO-native preflight request is editable
+input, not Runtime source admission; a permissive Cedar policy cannot promote
+that marked request to a grant. This guard does not attest unmarked requests or
+implement Aitia's source-bound authorization and effect gate.
+
 The truncated-varint counterexample =[0xff]= currently reaches a panic in the
 pinned upstream =Protobuf/Varint.lean=, =find_end_of_varint_helper=. Its empty
 check covers the original cursor, but its unchecked access uses =pos + n=.
