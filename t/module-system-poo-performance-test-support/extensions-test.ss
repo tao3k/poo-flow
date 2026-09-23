@@ -22,8 +22,8 @@
 
 (export extensions-test)
 
-;; : TestCase
-(def module-system-poo-performance-extension-children-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-extension-children-case)
   (test-case "merges extension children through indexed override boundary"
         (let* ((base-count 500)
                (extra-count 1600)
@@ -55,8 +55,8 @@
            3400)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-cross-targeting-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-cross-targeting-case)
   (test-case "preserves same-pass targeting after cross contribution child creation"
         (let* ((child-count 900)
                (target
@@ -97,8 +97,8 @@
            'same-pass)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
-;; : TestCase
-(def module-system-poo-performance-local-coalescing-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-local-coalescing-case)
   (test-case "coalesces adjacent local contributions before graph traversal"
         (let* ((child-count 900)
                (contribution-count 900)
@@ -133,6 +133,6 @@
 ;; : TestSuite
 (def extensions-test
   (test-suite "poo-flow module system POO extension performance"
-    module-system-poo-performance-extension-children-case
-    module-system-poo-performance-cross-targeting-case
-    module-system-poo-performance-local-coalescing-case))
+    (module-system-poo-performance-extension-children-case)
+    (module-system-poo-performance-cross-targeting-case)
+    (module-system-poo-performance-local-coalescing-case)))

@@ -23,8 +23,8 @@
 
 (export contracts-test)
 
-;; : TestCase
-(def module-system-poo-performance-fixture-contract-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-fixture-contract-case)
   (test-case "keeps every POO performance fixture inside upstream benchmark contract"
         (let (fixtures (poo-performance-fixtures))
         (check-equal? (length fixtures) 31)
@@ -45,8 +45,8 @@
               fixtures)
          (map (lambda (_) #t) fixtures)))))
 
-;; : TestCase
-(def module-system-poo-performance-fixture-policy-reject-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-fixture-policy-reject-case)
   (test-case "rejects fixtures that miss POO performance policy evidence"
         (let (fixture
               '((feature . missing-poo-policy)
@@ -56,8 +56,8 @@
            (poo-performance-fixture-policy-contract-pass? fixture)
            #f))))
 
-;; : TestCase
-(def module-system-poo-performance-api-evidence-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-api-evidence-case)
   (test-case "keeps POO benchmark evidence anchored to gerbil-poo APIs"
         (let (receipt (poo-performance-api-usage-call-receipt))
           (check-equal? (cdr (assoc 'name receipt)) 'poo-api-evidence)
@@ -70,8 +70,8 @@
             'dynamic)
            #t))))
 
-;; : TestCase
-(def module-system-poo-performance-large-profile-projection-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-large-profile-projection-case)
   (test-case "projects large POO profiles through stable descriptor vectors"
         (let (descriptors
               (poo-performance-large-profile-projection-descriptors))
@@ -97,8 +97,8 @@
             (poo-performance-large-profile-projection-gate-receipt 1000))
            #t))))
 
-;; : TestCase
-(def module-system-poo-performance-indexed-family-layout-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-indexed-family-layout-case)
   (test-case "reuses indexed POO family layout for large profile projection"
         (let* ((object (poo-performance-large-profile-indexed-object))
                (descriptors
@@ -132,8 +132,8 @@
            (poo-performance-large-profile-indexed-valid-count 1000)
            1000))))
 
-;; : TestCase
-(def module-system-poo-indexed-family-core-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-indexed-family-core-case)
   (test-case "projects stable POO family slots through indexed module API"
         (let* ((family
                 (poo-indexed-family
@@ -171,8 +171,8 @@
            (vector-ref descriptors 1)
            '(limit . 128)))))
 
-;; : TestCase
-(def module-system-poo-performance-generated-receipt-boundary-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-generated-receipt-boundary-case)
   (test-case "projects generated receipt accessors only at runtime boundary"
         (let (receipt-alist
               (poo-performance-generated-receipt-boundary-alist))
@@ -196,8 +196,8 @@
             (poo-performance-generated-receipt-boundary-gate-receipt 1000))
            #t))))
 
-;; : TestCase
-(def module-system-poo-performance-runtime-response-family-case
+;; Registers one case in the enclosing TestSuite.
+(def (module-system-poo-performance-runtime-response-family-case)
   (test-case "reuses runtime response family descriptors at adapter boundary"
         (let* ((adapter-response
                 (make-adapter-result
@@ -244,11 +244,11 @@
 ;; : TestSuite
 (def contracts-test
   (test-suite "poo-flow module system POO performance contracts"
-    module-system-poo-performance-fixture-contract-case
-    module-system-poo-performance-fixture-policy-reject-case
-    module-system-poo-performance-api-evidence-case
-    module-system-poo-performance-large-profile-projection-case
-    module-system-poo-performance-indexed-family-layout-case
-    module-system-poo-indexed-family-core-case
-    module-system-poo-performance-generated-receipt-boundary-case
-    module-system-poo-performance-runtime-response-family-case))
+    (module-system-poo-performance-fixture-contract-case)
+    (module-system-poo-performance-fixture-policy-reject-case)
+    (module-system-poo-performance-api-evidence-case)
+    (module-system-poo-performance-large-profile-projection-case)
+    (module-system-poo-performance-indexed-family-layout-case)
+    (module-system-poo-indexed-family-core-case)
+    (module-system-poo-performance-generated-receipt-boundary-case)
+    (module-system-poo-performance-runtime-response-family-case)))
