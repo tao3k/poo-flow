@@ -51,7 +51,7 @@ poo_flow_library_path := env_var_or_default("GERBIL_LOADPATH", poo_flow_gerbil_p
 # sibling checkout whose branch may differ from the declared dependency.
 gerbil_parser_dir := poo_flow_gerbil_path + "/pkg/github.com/tao3k/gerbil-parser"
 gerbil_parser_path := poo_flow_gerbil_path
-gerbil_parser_library_path := gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory() + ":" + poo_flow_library_path
+gerbil_parser_library_path := poo_flow_library_path + ":" + gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory()
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
 governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
 governance_tlc_config := justfile_directory() + "/packages/proof/tla/GovernanceCore.cfg"
@@ -319,6 +319,12 @@ check: build test
 _prepare-gerbil-parser:
     test -f "{{ gerbil_parser_dir }}/gerbil.pkg"
     GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil interactive -e '(begin (import :gerbil-parser/src/runtime/artifact) (displayln "gerbil-parser-v19-ready"))'
+
+# Atomically qualify the POO-native TLA+ syntax projection. TLC remains a
+# separate semantic gate; no source acceptance is presented as model checking.
+[group('check')]
+check-tla-interface: _prepare-gerbil-parser
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 4 t/qualification/tla-plus-interface/interface-test.ss
 
 # Qualify Case-owned GQL Sources from the parser owner's package environment.
 # Lambda stays independent of gerbil-parser; parser acceptance is not execution.

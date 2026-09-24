@@ -153,18 +153,22 @@ authority evidence for accepted residual risk, and absence of Governance
 action authority.
 
 Syntax qualification uses =gerbil-parser='s native
-=tla-plus.native-core.v1= parser.  POO Flow does not contain a second TLA+
-parser and does not add =gerbil-parser= as a production dependency.  The
-=just check-governance-tla= lane first establishes a local =gxpkg link= from
-the parser's isolated package environment to this POO Flow checkout, builds
-the parser through its own PackageSpec, then requires a valid, successful,
-byte-exact ParseArtifact.  This direction is required because =gerbil-parser=
-itself consumes POO Flow; reversing the package edge would create a cycle.
+=tla-plus.native-core.v1= parser, pinned in =gerbil.pkg=.  POO Flow's
+=src/modules/tla-plus/interface.ss= retains POO-native qualification
+identities and exposes a named advanced accessor to the *same* parser-owned
+CST.  It neither copies that tree into a second object family, implements
+another TLA+ grammar, nor interprets temporal semantics.  =just
+check-tla-interface= tests this boundary atomically; the
+=just check-governance-tla= lane qualifies the selected model's syntax and
+byte-exact roundtrip.  The parser package also pins a POO Flow revision; this
+versioned dependency graph must be qualified when either pin changes, without
+introducing an unversioned source loop.
 
-The native v1 parser deliberately excludes multiline layout, PlusCal and full
-proof syntax.  Therefore this receipt proves admitted TLA+ syntax and
-losslessness, not temporal semantics.  TLC remains the owner of state-space
-model checking.  The TLA+ language pack owns one public
+The pinned native v1 parser accepts the qualified multiline declarations,
+named instances and qualified operators exercised by the atomic interface
+test; it does not claim PlusCal or full proof syntax.  This receipt proves
+admitted TLA+ syntax and losslessness, not temporal semantics.  TLC remains
+the owner of state-space model checking.  The TLA+ language pack owns one public
 =qualify-tla-plus-model= API that composes, without conflating, both owners:
 it obtains the native parser acceptance and then runs the official Nixpkgs
 =tlaplus= distribution over the same source.  POO Flow's
