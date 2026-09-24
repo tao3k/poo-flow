@@ -15,11 +15,11 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-01-mix-module-expansion",
         "rfc": "45-01",
-        "source_path": "src/module-system/profile-composition/use-syntax.ss",
-        "source_symbol": "use-composition",
-        "source_kind": "macro",
-        "test_path": "t/profile-composition-test.ss",
-        "test_symbol": "profile-composition-test",
+        "source_path": "src/module-system/profile-composition/profile-bundle.ss",
+        "source_symbol": "compose",
+        "source_kind": "function",
+        "test_path": "t/profile-bundle-test.ss",
+        "test_symbol": "profile-bundle-test",
         "target_name": "rfc45_01_mix_sources",
     },
     {
@@ -75,11 +75,11 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-07-public-composition",
         "rfc": "45-07",
-        "source_path": "src/module-system/profile-composition/use-syntax.ss",
-        "source_symbol": "use-composition",
+        "source_path": "src/module-system/profile-composition/binding-syntax.ss",
+        "source_symbol": "user-composition",
         "source_kind": "macro",
-        "test_path": "t/profile-composition-test.ss",
-        "test_symbol": "profile-composition-test",
+        "test_path": "t/profile-binding-syntax-test.ss",
+        "test_symbol": "profile-binding-syntax-test",
         "target_name": "rfc45_07_composition_sources",
     },
 ]

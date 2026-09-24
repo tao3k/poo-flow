@@ -138,6 +138,10 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
                 ":poo-flow/src/module-system/profile-composition/interface",
                 runner_source,
             )
+            self.assertIn(
+                ":poo-flow/src/modules/funflow/profile-library",
+                runner_source,
+            )
             self.assertNotIn(
                 ":poo-flow/src/user-interface/init-syntax",
                 runner_source,

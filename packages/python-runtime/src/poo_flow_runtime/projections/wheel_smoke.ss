@@ -3,11 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: packaged Python runtime projection smoke flow.
+;;; Boundary: packaged Python runtime projection smoke value.
+;;; This file is included as one expression by the Bazel/Python projection
+;;; adapters.  Root declaration belongs to user configuration; adapters project
+;;; the same ProfileBundle value without introducing a top-level binding.
 
-(user-composition wheel-smoke
+(poo-flow-profile-bundle-root
+ 'wheel-smoke
   (compose profiles
     (use-module FunflowProfileModule as ff github-ci python-anyio)
     WheelSmokeScenarioProfile))
-
-wheel-smoke
