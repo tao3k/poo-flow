@@ -61,9 +61,7 @@ Measure the scenario with the native Gerbil test runner through the captured
 project environment:
 
 #+begin_src sh
-./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
-  gxtest \
-  t/performance/observability-slot-performance-test.ss
+just test-performance
 #+end_src
 
 The native ASP V1 receipts' =elapsedNs=, =p50Ns=, =p95Ns=, =maxNs=,
@@ -71,5 +69,4 @@ The native ASP V1 receipts' =elapsedNs=, =p50Ns=, =p95Ns=, =maxNs=,
 are the performance evidence.  Bazel may run
 the same test as a dependency-closure and acceptance gate, but its sandbox,
 compilation, and launcher wall time must not be reported as POO performance.
-Project documentation and automation use the checked-in
-=.devenv/devenv-profile-exec= launcher contract.
+The root Justfile owns the native heap/debug launch boundary.

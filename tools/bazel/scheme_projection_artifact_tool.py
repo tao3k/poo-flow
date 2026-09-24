@@ -88,7 +88,8 @@ def _load_projection_rows(
     project_dependency_roots: tuple[Path, ...],
 ) -> tuple[object, ...]:
     runner_source = (
-        "(import :poo-flow/src/module-system/profile-composition/interface)\n"
+        "(import :poo-flow/src/module-system/profile-composition/interface\n"
+        "        :poo-flow/src/modules/funflow/profile-library)\n"
         f"(include {_scheme_string(str(projection))})\n"
         "(poo-flow-runtime-load-write!\n"
         f" (begin (include {_scheme_string(str(source))})))\n"

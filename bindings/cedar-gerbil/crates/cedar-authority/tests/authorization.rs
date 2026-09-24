@@ -40,7 +40,8 @@ fn bootstrap() -> Bootstrap {
             {"identity": "permit-run", "source": "permit(principal == User::\"alice\", action == Action::\"run\", resource == Job::\"demo\") when { context.approved };"},
             {"identity": "forbid-blocked", "source": "forbid(principal, action, resource) when { context.blocked };"}
         ],
-        "entities_json": "[]", "capabilities": [{"action": "Action::\"run\"", "event_kind": 1}]
+        "entities_json": "[]", "capabilities": [{"action": "Action::\"run\"", "event_kind": 1,
+            "source_admission_required": false}]
     })).unwrap()
 }
 
@@ -122,7 +123,8 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
         "entities_json": entities.to_string(),
         "capabilities": [{
             "action": "Healthcare::Action::\"administerMedication\"",
-            "event_kind": 4101
+            "event_kind": 4101,
+            "source_admission_required": false
         }]
     }))
     .unwrap()
@@ -574,6 +576,55 @@ fn snapshot_and_request_failures_do_not_manufacture_decisions() {
             .unwrap()
             .code,
         "cedar-runtime-handshake-mismatch"
+    );
+}
+
+#[test]
+fn preflight_only_request_requires_runtime_source_admission() {
+    let snapshot = Snapshot::new(bootstrap()).unwrap();
+    let mut request = proposal();
+    request.context["poo_flow_preflight_only"] = json!(true);
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+    request.context["poo_flow_preflight_only"] = json!(false);
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+}
+
+#[test]
+fn source_bound_capability_rejects_stripped_preflight_context() {
+    let mut incomplete = serde_json::to_value(bootstrap()).unwrap();
+    incomplete["capabilities"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("source_admission_required");
+    assert!(serde_json::from_value::<Bootstrap>(incomplete).is_err());
+    let mut administrative = bootstrap();
+    administrative.capabilities[0].source_admission_required = true;
+    let snapshot = Snapshot::new(administrative).unwrap();
+    let mut request = proposal();
+    request.context["poo_flow_preflight_only"] = json!(true);
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+    request
+        .context
+        .as_object_mut()
+        .unwrap()
+        .remove("poo_flow_preflight_only");
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
+    );
+    request.context = json!({"approved": true, "blocked": false});
+    assert_eq!(
+        snapshot.prepare(&request).err().unwrap().code,
+        "runtime-source-admission-required"
     );
 }
 

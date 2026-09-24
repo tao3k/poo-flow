@@ -8,6 +8,8 @@ exports_files([
     "gerbil-dependencies.MODULE.bazel",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
     "t/module-system-observability-test.ss",
+    "t/profile-binding-syntax-test.ss",
+    "t/profile-bundle-test.ss",
     "t/profile-composition-test.ss",
 ])
 

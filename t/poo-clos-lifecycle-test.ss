@@ -9,7 +9,7 @@
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref object?)
         (only-in :clan/poo/mop Type element?)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-lifecycle-test)
 

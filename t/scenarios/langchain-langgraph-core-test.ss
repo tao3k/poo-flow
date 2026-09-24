@@ -5,7 +5,7 @@
 
 ;;; Scenario: user-interface LangChain and LangGraph composition instances.
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .all-slots .def .o .ref .slot?)
         (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
@@ -13,6 +13,10 @@
         :poo-flow/src/graph/runtime-executor
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/module-system/profile-composition/interface
+        (rename-in
+         (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
+                  use-module)
+         (use-module use-profile-module))
         :poo-flow/src/module-system/profile-composition/accessors
         :poo-flow/user-interface/profiles/langchain
         :poo-flow/user-interface/profiles/langgraph
@@ -26,30 +30,18 @@
 (def langgraph-composition
   langgraph-scenario)
 
-(def audited-langchain-module
-  (.o (:: self langchain)
-      (model (.o (name 'langchain-audited-chat-model)
-                 (contract 'single-turn-input-output)
-                 (policy 'audit-model-call-before-terminal)))))
+(.def AuditedLangChainModelProfile
+  (identity 'model)
+  (name 'langchain-audited-chat-model)
+  (contract 'single-turn-input-output)
+  (policy 'audit-model-call-before-terminal))
 
-(def audited-langchain-composition
-  (use-composition audited-langchain
-    (use-module chain as chain
-      (profiles audited-langchain-module
-        memory
-        prompt
-        model
-        parser
-        no-tool))
-    (compose
-      (profiles chain memory prompt model parser no-tool))
-    (stage production
-      (graph langchain-linear-chain)
-      (loop #:fuel 1 #:exit parsed-output)
-      (prove chain-order
-             prompt-before-model
-             parser-after-model
-             no-implicit-tool-branch))))
+(user-composition audited-langchain-composition
+  (compose profiles
+    (use-profile-module LangChainModule as chain memory prompt)
+    AuditedLangChainModelProfile
+    (use-profile-module LangChainModule as chain parser no-tool)
+    LangChainProductionProfile))
 
 (def langchain-linear-control-graph
   (poo-flow-graph
@@ -181,16 +173,11 @@
                        needle-length))
    (else #f)))
 
-(def (stage-clause-payload stage kind)
-  (let loop ((clauses (poo-flow-scenario-stage-clauses stage)))
-    (cond
-     ((null? clauses) (error "missing composition clause" kind))
-     ((equal? (.ref (car clauses) 'clause-kind) kind)
-      (.ref (car clauses) 'payload))
-     (else (loop (cdr clauses))))))
-
 (def (single-stage composition)
-  (car (poo-flow-scenario-case-stages composition)))
+  (.ref (poo-flow-scenario-case-stages composition) 'production))
+
+(def (profile-identity profile)
+  (.ref profile (if (.slot? profile 'identity) 'identity 'name)))
 
 (def langchain-langgraph-core-test
  (test-suite "langchain and langgraph user compositions"
@@ -198,22 +185,18 @@
     (let* ((stage (single-stage langchain-composition))
            (compose-payload
             (poo-flow-scenario-case-profiles langchain-composition))
-           (graph-payload (stage-clause-payload stage 'graph))
-           (loop-payload (stage-clause-payload stage 'loop))
-           (prove-payload (stage-clause-payload stage 'prove)))
+           (loop-value (.ref stage 'loop)))
       (check-equal? (poo-flow-scenario-case? langchain-composition) #t)
       (check-equal? (poo-flow-scenario-case-name langchain-composition)
                     'langchain)
       (check-equal? (length (poo-flow-scenario-case-modules
                              langchain-composition))
                     1)
-      (check-equal? (poo-flow-scenario-stage-name stage) 'production)
-      (check-equal? (length compose-payload) 5)
-      (check-equal? graph-payload '(langchain-linear-chain))
-      (check-equal? (length loop-payload) 4)
-      (check-equal? (cadr loop-payload) 1)
-      (check-equal? (cadddr loop-payload) 'parsed-output)
-      (check-equal? prove-payload
+      (check-equal? (length compose-payload) 6)
+      (check-equal? (.ref stage 'graph) 'langchain-linear-chain)
+      (check-equal? (.ref loop-value 'fuel) 1)
+      (check-equal? (.ref loop-value 'exit) 'parsed-output)
+      (check-equal? (.all-slots (.ref stage 'proofs))
                     '(chain-order
                       prompt-before-model
                       parser-after-model
@@ -245,38 +228,33 @@
             (car (poo-flow-scenario-case-modules
                   audited-langchain-composition)))
            (module (.ref module-binding 'module)))
-      (check-equal? (length compose-payload) 5)
-      (check-equal? (map (lambda (profile) (.ref profile 'name))
-                         compose-payload)
-                    '(memory prompt model parser no-tool))
-      (check-equal? (.ref (.ref module 'model) 'module) 'chain)))
+      (check-equal? (length compose-payload) 6)
+      (check-equal? (map profile-identity compose-payload)
+                    '(memory prompt model parser no-tool
+                      langchain-production))
+      (check-equal? (.ref (.ref module 'identity) 'name) 'langchain)))
 
   (test-case "langgraph state graph declares bounded loop and handoff"
     (let* ((stage (single-stage langgraph-composition))
            (compose-payload
             (poo-flow-scenario-case-profiles langgraph-composition))
-           (graph-payload (stage-clause-payload stage 'graph))
-           (loop-payload (stage-clause-payload stage 'loop))
-           (prove-payload (stage-clause-payload stage 'prove))
-           (handoff-payload (stage-clause-payload stage 'handoff)))
+           (loop-value (.ref stage 'loop)))
       (check-equal? (poo-flow-scenario-case? langgraph-composition) #t)
       (check-equal? (poo-flow-scenario-case-name langgraph-composition)
                     'langgraph)
       (check-equal? (length (poo-flow-scenario-case-modules
                              langgraph-composition))
                     1)
-      (check-equal? (poo-flow-scenario-stage-name stage) 'production)
-      (check-equal? (length compose-payload) 7)
-      (check-equal? graph-payload '(langgraph-state-graph))
-      (check-equal? (length loop-payload) 4)
-      (check-equal? (cadr loop-payload) 8)
-      (check-equal? (cadddr loop-payload) 'terminal-edge)
-      (check-equal? prove-payload
+      (check-equal? (length compose-payload) 8)
+      (check-equal? (.ref stage 'graph) 'langgraph-state-graph)
+      (check-equal? (.ref loop-value 'fuel) 8)
+      (check-equal? (.ref loop-value 'exit) 'terminal-edge)
+      (check-equal? (.all-slots (.ref stage 'proofs))
                     '(declared-branch-targets
                       typed-state-merge
                       bounded-loop-progress
                       explicit-runtime-handoff))
-      (check-equal? handoff-payload '(marlin-control-plane))))
+      (check-equal? (.ref stage 'handoff) 'marlin-control-plane)))
 
   (test-case "graph core accepts explicit LangGraph loop edges"
     (let* ((analysis (poo-flow-graph-control-analysis-receipt

@@ -10,7 +10,7 @@
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :clan/poo/object .o .ref .call .all-slots compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type.)
-        "../src/module-system/semantic-module/objects.ss")
+        :poo-flow/src/module-system/semantic-module/objects)
 (export gerbil-poo-debug-admission-test)
 
 (define-type (DebugSymbol @ Type.)
@@ -67,7 +67,7 @@
              (module (poo-flow-semantic-module
                       (poo-flow-semantic-identity 'debug 'module) imports: imports))
              (wrapped (trace-poo module 'safe-module-name)))
-        (check-equal? (length (.all-slots wrapped)) 4)
+        (check-equal? (length (.all-slots wrapped)) 5)
         (check-equal? (eq? (.ref wrapped 'imports) imports) #t)
         (check-equal? (eq? (.ref wrapped 'identity) (.ref module 'identity)) #t)))
 

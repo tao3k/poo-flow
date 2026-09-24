@@ -8,6 +8,7 @@
 ;;; public import closure consumed by users and the ASP build API.
 
 (import :poo-flow/src/module-system/interface
+        :poo-flow/src/module-system/authoring/interface
         :poo-flow/src/module-system/composition/interface
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/declaration/interface
@@ -25,6 +26,7 @@
         :poo-flow/src/module-system/semantic-module/interface)
 
 (export (import: :poo-flow/src/module-system/interface)
+        (import: :poo-flow/src/module-system/authoring/interface)
         (import: :poo-flow/src/module-system/composition/interface)
         (import: :poo-flow/src/module-system/contribution/interface)
         (import: :poo-flow/src/module-system/declaration/interface)

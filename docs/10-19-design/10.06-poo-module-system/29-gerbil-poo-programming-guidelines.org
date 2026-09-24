@@ -97,11 +97,11 @@ Ordinary users remain at object, slot, extension and composition even when the
 selected Module uses generics, CLOS or MOP internally.
 
 Declaration slots MUST use domain nouns rather than reproduce an action DSL.
-Use =events=, =trajectories=, =sources= or =capabilities= with the native slot
-algebra: ===>.+= for nested POO refinement, ===>= plus a named pure combiner for
-collection transformation, and =?= for inherited defaults.  Command-shaped
-slots such as =.add-event= and =.remove-event= are misleading and
-non-conforming; runtime methods and effect requests may still use verbs.
+Use =events=, =edges=, =trajectories=, =sources= or =capabilities= with the
+native slot algebra: ===>.+= for nested POO refinement, ===>= plus a named pure
+combiner for collection transformation, and =?= for inherited defaults.
+A parallel command-slot vocabulary duplicates those native forms and is
+non-conforming.
 
 | Capability | Native surface | Meaning | Normal POO Flow owner |
 |------------+----------------+---------+-----------------------|
@@ -180,16 +180,28 @@ This is why =src/core/flow.ss= owns the functional kernel and why workflow modul
 ** 10.06.29.65 Scenario Case Expression Model
 
 A POO Flow Scenario is not merely a record containing a graph name, and it is
-not the heavy runtime execution itself.  It is a composed control-plane object
-with five kinds of slots:
+not the heavy runtime execution itself.  It is a composed control-plane POO
+object.  Its domain algebra is expressed by noun-valued slots such as
+=profile-selection=, =events=, =edges= and =trajectories=.  Defaults use =?=,
+nested contributions use ===>.+=, transformations use ===>=, and ordinary
+inheritance owns precedence.
 
-| Slot family | Example | Evaluation rule |
-|-------------+---------+-----------------|
-| Identity | =scenario-id=, =schema-version= | constant, inherited, inspectable |
-| Composition inputs | =modules=, =profiles=, =stages=, =policies= | accumulated with C3 and named functional combinators |
-| Derived facts | =effective-profiles=, =stage-graph=, =admission-plan= | lazy slots, forced only by the requested operation |
-| Behavior | =prepare=, =admit=, =project=, =present= | methods called with =.call=; refinable by Scenario prototypes |
-| Boundary facts | =runtime-owner=, =handoff-schema= | immutable description of the explicit runtime handoff |
+This object-level rule is distinct from the five module-writing constraints in
+RFC 164: slot generics own one-receiver behavior, CLOS owns real open
+Provider/Profile crossings, =define-type= owns boundary admission, =defrule=
+only removes declaration repetition, and root =config.ss= only composes
+Profiles and Standards.
+
+The POO Module =Interface= is itself the entry object for those five roles.  Its
+=authoring= Profile contains =types=, =objects=, =funs=, =config= and
+=interface= Contract slots.  A module refines those POO values; it does not
+register a second rule DSL.  The loader reads source as inert datums and uses
+the Profile to return an actionable repair diagnostic before loading.
+
+When CLOS crosses an executor, source role and Module Interface, specialize a
+native prototype with =poo-clos-prototype-specializer=.  Reserve
+=poo-clos-class-specializer= for a true CLOS class.  This keeps native POO C3
+ancestry authoritative and avoids a duplicate marker-class hierarchy.
 
 The corresponding Session is a different object.  A Session is created for
 one Scheme-side evaluation with =(.mix scenario-session-prototype)=.  It may
@@ -212,25 +224,38 @@ flowchart LR
 #+end_export
 
 The distinction closes a recurring design gap in the current User Interface:
-=use-composition= is the declarative composition root, while the object it
-produces must expose behavior through slots.  Syntax parses and lowers the
-declaration; it must not become a second interpreter for Scenario behavior.
+=user-composition= is the thin declarative root binding, while the object it
+binds exposes behavior through slots.  The macro preserves one ordinary value
+expression; it does not parse or lower a second Scenario language.
 
-The ordinary authoring shape should therefore remain small:
+The maintainer/vertical-author shape should therefore remain small and fully
+native:
 
 #+begin_src scheme
-(.def (github-release-case @ [gitops-case nasa-sdlc-case])
-  profiles: => append '(developer staging production)
-  prepare: prepare-github-release
-  admit: admit-github-release
-  project: project-github-workflow)
+(.def OntologyCase
+  (events ? (.o)))
 
-(.call github-release-case prepare repository-facts)
+(.def (PrescriptionCase @ OntologyCase)
+  (events =>.+
+    (.o prescription: PrescriptionEvent)))
+
+(.def (ReviewedPrescriptionCase @ PrescriptionCase)
+  (events =>.+
+    (.o prescription: ReviewedPrescriptionEvent
+        review: ClinicalReviewEvent)))
 #+end_src
 
-The named functions remain pure.  Inheritance selects or refines them, =.call=
-expresses that they are object behavior, and a projection produces the GitHub
-Workflow or Marlin handoff only after admission.
+The effective slot is one nested POO object.  The child overrides only the
+named =prescription= contribution, adds =review=, retains unrelated inherited
+events, and does not mutate either parent.
+
+Do not copy this construction layer into the ordinary root User Interface.
+The root =config.ss= only selects and composes the maintained value.  When a
+slot such as =stages= needs progressive disclosure, its Contract admits one
+POO StageSpace whose named slots may contain either direct inert values or
+nested POO values.  Direct values are the low-abstraction case; nested =.o=
+values deliberately opt into inheritance and native slot refinement.  They are
+not two syntaxes and MUST NOT be routed through two evaluators.
 
 Use native type objects or a slot generic when one receiver family owns the
 behavior.  Use POO Flow CLOS only when independently extensible axes cross.
@@ -239,7 +264,7 @@ For example, =Scenario.prepare= is normally a method slot; projecting
 universal requirement that every Module contain both mechanisms.
 
 The first production closure of this model is owned by
-=src/module-system/profile-composition/scenario-case.ss=.  =use-composition=
+=src/module-system/profile-composition/scenario-case.ss=.  =user-composition=
 now returns =poo-flow.scenario-case.v1= directly; the former inert
 =poo-flow.composition= identity and public compatibility accessors are removed.
 The Case owns lazy =execution-plan=, =admission=, and =presentation= slots plus

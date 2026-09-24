@@ -80,9 +80,6 @@
       (check-equal? (.slot? graph-declarative-slot-sample
                             'node-declarations)
                     #t)
-      (check-equal? (.slot? graph-declarative-slot-sample
-                            (string->symbol ".add-node"))
-                    #f)
       (check-equal? (poo-flow-graph-node-ids graph-declarative-slot-sample)
                     '(source target))
       (check-equal? (poo-flow-graph-edge-pairs graph-declarative-slot-sample)

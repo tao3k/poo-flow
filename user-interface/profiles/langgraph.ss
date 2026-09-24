@@ -5,28 +5,54 @@
 
 ;;; User Interface reusable Profile library: LangGraph-style state graph.
 
-(import (only-in :clan/poo/object .def .o))
-(export langgraph)
+(import (only-in :clan/poo/object .def .o .ref)
+        (only-in :poo-flow/src/module-system/semantic-module/objects
+                 poo-flow-semantic-identity
+                 poo-flow-semantic-module)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 poo-flow-profile-export
+                 poo-flow-module-profiles))
+(export langgraph LangGraphModule)
 
 (.def langgraph
-    (session (.o (name 'langgraph-multi-agent-session)
+    (session (.o (identity 'session)
+                 (name 'langgraph-multi-agent-session)
                  (contract 'session-spawns-subagents)
                  (policy 'subagent-handoff-is-explicit)))
-    (state (.o (name 'langgraph-typed-checkpointed-state)
+    (state (.o (identity 'state)
+               (name 'langgraph-typed-checkpointed-state)
                (contract 'state-schema-is-closed)
                (policy 'state-updates-are-merged)))
-    (router (.o (name 'langgraph-conditional-router)
+    (router (.o (identity 'router)
+                (name 'langgraph-conditional-router)
                 (contract 'predicate-selects-next-node)
                 (policy 'branch-target-is-declared)))
-    (agent-node (.o (name 'langgraph-agent-node)
+    (agent-node (.o (identity 'agent-node)
+                    (name 'langgraph-agent-node)
                     (contract 'agent-node-reads-state)
                     (policy 'agent-node-writes-state-delta)))
-    (tool-node (.o (name 'langgraph-tool-node)
+    (tool-node (.o (identity 'tool-node)
+                   (name 'langgraph-tool-node)
                    (contract 'tool-node-has-permission-scope)
                    (policy 'tool-node-requires-route)))
-    (bounded-loop (.o (name 'langgraph-bounded-loop)
+    (bounded-loop (.o (identity 'bounded-loop)
+                      (name 'langgraph-bounded-loop)
                       (contract 'fuel-decreases-on-step)
                       (policy 'loop-has-progress-measure)))
-    (runtime-handoff (.o (name 'langgraph-runtime-handoff)
+    (runtime-handoff (.o (identity 'runtime-handoff)
+                         (name 'langgraph-runtime-handoff)
                          (contract 'runtime-boundary-is-explicit)
                          (policy 'handoff-after-proof-gate))))
+
+(def LangGraphModule
+  (poo-flow-semantic-module
+   (poo-flow-semantic-identity 'user-interface 'langgraph)
+   profiles:
+   (poo-flow-module-profiles
+    (poo-flow-profile-export 'session (.ref langgraph 'session))
+    (poo-flow-profile-export 'state (.ref langgraph 'state))
+    (poo-flow-profile-export 'router (.ref langgraph 'router))
+    (poo-flow-profile-export 'agent-node (.ref langgraph 'agent-node))
+    (poo-flow-profile-export 'tool-node (.ref langgraph 'tool-node))
+    (poo-flow-profile-export 'bounded-loop (.ref langgraph 'bounded-loop))
+    (poo-flow-profile-export 'runtime-handoff (.ref langgraph 'runtime-handoff)))))

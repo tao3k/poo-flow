@@ -3,18 +3,18 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Run: ./.devenv/devenv-profile-exec gxi t/scenarios/observability-admission-demo.ss
+;;; Run: gerbil env gerbil interactive t/scenarios/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)
-        (only-in "../../src/module-system/observability/interface.ss"
+        (only-in :poo-flow/src/module-system/observability/interface
                  poo-flow-observation-identity
                  poo-flow-observation-context
                  poo-flow-observation-provenance
                  poo-flow-observe-contract-admission
                  poo-flow-observation-explain)
-        (only-in "../../src/module-system/observability/debug.ss"
+        (only-in :poo-flow/src/module-system/observability/debug
                  poo-flow-observation-debug)
-        (only-in "../../src/module-system/semantic-module/objects.ss"
+        (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract
                  poo-flow-semantic-identity
                  poo-flow-semantic-module))

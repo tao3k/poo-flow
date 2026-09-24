@@ -4,6 +4,12 @@
 
 #+title: Canonical Composition Surface Closure Qualification Receipt
 
+* Status
+
+Historical qualification receipt for the retired clause grammar.  RFC 45-92,
+RFC 45-95 and RFC 164 supersede the public shape below.  The receipt remains as
+evidence of what was tested; it is not current authoring guidance.
+
 * Result
 
 The composition refactor is closed around one public grammar:

@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Contract: domain nouns compose through native gerbil-poo slot algebra.
+;;; Contract: domain noun slots compose through native gerbil-poo algebra.
 ;;; Invariant: refinements retain inherited declarations and never mutate their
 ;;; parent objects.
 
@@ -12,12 +12,12 @@
 
 (export poo-native-slot-algebra-test)
 
-(.def NativeCase
+(.def OntologyCase
   (profile-selection ? (.o))
   (events ? (.o))
   (trajectories ? (.o)))
 
-(.def (NativePrescriptionCase @ NativeCase)
+(.def (PrescriptionCase @ OntologyCase)
   (profile-selection =>.+
     (.o common: (.o evidence: 'evidence-profile)
         healthcare: (.o base: 'healthcare-base-profile)))
@@ -26,7 +26,7 @@
   (trajectories =>.+
     (.o safety: 'prescription-safety-trajectory)))
 
-(.def (NativeReviewedPrescriptionCase @ NativePrescriptionCase)
+(.def (ReviewedPrescriptionCase @ PrescriptionCase)
   ;; Refinement is recursive: the outer slot retains named groups and the
   ;; inner slot retains entries inside the common group.
   (profile-selection =>.+
@@ -40,39 +40,39 @@
    "native POO noun-slot algebra"
 
    (test-case "base collection defaults remain empty"
-     (check-equal? (.all-slots (.get NativeCase profile-selection)) '())
-     (check-equal? (.all-slots (.get NativeCase events)) '())
-     (check-equal? (.all-slots (.get NativeCase trajectories)) '()))
+     (check-equal? (.all-slots (.get OntologyCase profile-selection)) '())
+     (check-equal? (.all-slots (.get OntologyCase events)) '())
+     (check-equal? (.all-slots (.get OntologyCase trajectories)) '()))
 
    (test-case "refinement retains identities and overrides one identity"
      (check-equal?
-      (.get NativePrescriptionCase events prescription)
+      (.get PrescriptionCase events prescription)
       'prescription-event)
      (check-equal?
-      (.get NativeReviewedPrescriptionCase events prescription)
+      (.get ReviewedPrescriptionCase events prescription)
       'reviewed-prescription-event)
      (check-equal?
-      (.get NativeReviewedPrescriptionCase events review)
+      (.get ReviewedPrescriptionCase events review)
       'clinical-review-event)
      (check-equal?
-      (.get NativePrescriptionCase events prescription)
+      (.get PrescriptionCase events prescription)
       'prescription-event))
 
    (test-case "selection recursively refines named groups"
      (check-equal?
-      (.get NativeReviewedPrescriptionCase
+      (.get ReviewedPrescriptionCase
             profile-selection common evidence)
       'evidence-profile)
      (check-equal?
-      (.get NativeReviewedPrescriptionCase
+      (.get ReviewedPrescriptionCase
             profile-selection common privacy)
       'privacy-profile)
      (check-equal?
-      (.get NativeReviewedPrescriptionCase
+      (.get ReviewedPrescriptionCase
             profile-selection healthcare base)
       'healthcare-base-profile))
 
    (test-case "unmentioned noun slots remain inherited"
      (check-equal?
-      (.get NativeReviewedPrescriptionCase trajectories safety)
+      (.get ReviewedPrescriptionCase trajectories safety)
       'prescription-safety-trajectory))))

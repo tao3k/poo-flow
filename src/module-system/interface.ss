@@ -6,7 +6,11 @@
 ;;; Boundary: Marlin-style module interface and config helpers.
 ;;; Invariant: interface values are schemas and metadata, not loaders.
 
-(import (only-in :clan/poo/object .all-slots .o .ref object?))
+(import (only-in :clan/poo/object .all-slots .o .ref object?)
+        (only-in :clan/poo/mop validate)
+        (only-in :poo-flow/src/module-system/semantic-module/objects
+                 ModuleAuthoringProfileContract
+                 poo-flow-default-module-authoring-profile))
 
 (export poo-flow-modules-kind
         poo-flow-brand-name
@@ -26,6 +30,7 @@
         poo-flow-module-interface?
         poo-flow-module-interface-id
         poo-flow-module-interface-schemas
+        poo-flow-module-interface-authoring
         poo-flow-module-interface-metadata
         poo-flow-string-required
         poo-flow-string-constant
@@ -104,6 +109,7 @@
       id: "anonymous-poo-module-interface"
       brand-name: poo-flow-brand-name
       schemas: (.o)
+      authoring: (poo-flow-default-module-authoring-profile)
       metadata: '()))
 
 ;;; Boundary: module kind= predicate is the policy-visible edge for module-
@@ -153,12 +159,17 @@
    (else '())))
 
 ;;; Boundary: schemas live on the interface, user values live in config objects.
-;; : (-> InterfaceId InterfaceSchemaObject InterfaceMetadata PooModuleInterface)
-(def (poo-flow-module-interface interface-id-value schema-object metadata-value)
-  (.o (:: @ (list poo-flow-module-interface-prototype))
-      id: interface-id-value
-      schemas: schema-object
-      metadata: metadata-value))
+;; : (-> InterfaceId InterfaceSchemaObject InterfaceMetadata authoring: ModuleAuthoringProfile PooModuleInterface)
+(def (poo-flow-module-interface interface-id-value schema-object metadata-value
+                                authoring: (authoring-value
+                                            (poo-flow-default-module-authoring-profile)))
+  (let (admitted-authoring
+        (validate ModuleAuthoringProfileContract authoring-value))
+    (.o (:: @ (list poo-flow-module-interface-prototype))
+        id: interface-id-value
+        schemas: schema-object
+        authoring: admitted-authoring
+        metadata: metadata-value)))
 
 ;;; Boundary: interface detection uses kind slots, not constructor identity.
 ;; : (-> PooModuleInterfaceCandidate Boolean)
@@ -174,6 +185,10 @@
 ;; : (-> PooModuleInterface InterfaceSchemaObject)
 (def (poo-flow-module-interface-schemas interface)
   (.ref interface 'schemas))
+
+;; : (-> PooModuleInterface ModuleAuthoringProfile)
+(def (poo-flow-module-interface-authoring interface)
+  (.ref interface 'authoring))
 
 ;; : (-> PooModuleInterface InterfaceMetadata)
 (def (poo-flow-module-interface-metadata interface)

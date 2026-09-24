@@ -23,7 +23,7 @@ def _runtime_projection_fixture(root: Path) -> None:
 
 def _source_fixture(root: Path) -> Path:
     source = root / "flow.ss"
-    source.write_text("(use-composition cached-flow)\n", encoding="utf-8")
+    source.write_text("(user-composition cached-flow CachedProfile)\n", encoding="utf-8")
     return source
 
 
@@ -73,7 +73,10 @@ def test_scheme_projection_cache_invalidates_when_source_changes(
     monkeypatch.setattr(scheme_runner.subprocess, "run", _fake_scheme_run(calls))
 
     scheme_load.load_projection_rows(source, cwd=tmp_path)
-    source.write_text("(use-composition changed-flow)\n;; changed\n", encoding="utf-8")
+    source.write_text(
+        "(user-composition changed-flow ChangedProfile)\n;; changed\n",
+        encoding="utf-8",
+    )
     scheme_load.load_projection_rows(source, cwd=tmp_path)
 
     assert len(calls) == 2

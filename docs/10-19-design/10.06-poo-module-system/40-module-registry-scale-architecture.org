@@ -68,9 +68,11 @@ Focused receipts after the split:
 - =gxtest t/module-system-lazy-loader-test.ss=: validates native focused tests, =real 8.94s=.
 
 The clean Bazel bootstrap was also reduced from ten roots to seven by removing
-the three framework sources already governed as lazy registry entries:
-=init-syntax.ss=, =config-discovery-syntax.ss= and =declaration-case.ss=. In the
-same checkout, the ten-root Gerbil action used 107.456 seconds and peaked at
+three framework sources from the bootstrap closure. At that historical point
+they were =init-syntax.ss=, =config-discovery-syntax.ss= and
+=declaration-case.ss=; =config-discovery-syntax.ss= has since been retired in
+favor of explicit native imports. In the same checkout, the ten-root Gerbil
+action used 107.456 seconds and peaked at
 5,363,187,712 bytes. The seven-root action used 23.746 seconds and peaked at
 2,872,836,096 bytes; total Bazel wall time was 44.836 seconds. Focused consumers
 then imported and exercised all three lazy owners successfully. This receipt

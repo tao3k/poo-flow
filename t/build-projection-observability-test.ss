@@ -6,9 +6,9 @@
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .o)
-        (only-in "../src/module-system/observability/config.ss"
+        (only-in :poo-flow/src/module-system/observability/config
                  poo-flow-default-build-observability-policy)
-        (only-in "../src/module-system/observability/build-projection.ss"
+        (only-in :poo-flow/src/module-system/observability/build-projection
                  poo-flow-make-observed-package-spec-projector
                  poo-flow-observe-build-projection
                  poo-flow-write-observation-line!
@@ -82,8 +82,33 @@
         (check-equal?
          (contains?
           performance-source
-          "(poo-flow-testing-observability-extension +asp-testing-interface+)")
+         "(poo-flow-testing-observability-extension +asp-testing-interface+)")
          #t)))
+
+    (test-case "Just test launch is fail-closed before Profile loading"
+      (let (source (call-with-input-file "justfile" read-all-as-string))
+        (check-equal?
+         (contains? source
+                    "env_var_or_default(\"GERBIL_TEST_MAX_HEAP\", \"1G\")")
+         #t)
+        (check-equal?
+         (contains? source
+                    "env_var_or_default(\"GERBIL_TEST_DEBUG\", \"q\")")
+         #t)
+        (check-equal?
+         (contains? source
+                    "gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss")
+         #t)
+        (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)
+        (check-equal? (contains? source "rm -rf") #f)))
+
+    (test-case "unit tests inherit the ASP per-worker memory profile"
+      (let (source (call-with-input-file "unit-tests.ss" read-all-as-string))
+        (check-equal?
+         (contains? source
+                    "(poo-flow-testing-observability-extension\n       +asp-testing-interface+)")
+         #t)
+        (check-equal? (contains? source "maxHeapMiB: 1024") #f)))
 
     (test-case "default policy measures catalog size without an invented limit"
       (let (port (open-output-string))

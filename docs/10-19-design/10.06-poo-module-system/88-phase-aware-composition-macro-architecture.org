@@ -10,11 +10,15 @@
 
 * Status
 
-This document is the approved architecture contract for the next
-=use-composition= refactor.  It applies the Gerbil macro and module model from
+Historical macro-architecture evidence.  Its public clause grammar and parser
+ownership are superseded by RFC 45-92's thin binding macro, RFC 45-95's
+Profile-owned responsibilities, and RFC 164's native noun-slot surface.
+It must not be used to reintroduce a stage DSL or a second action evaluator.
+
+The document applied the Gerbil macro and module model from
 [[file:/Users/guangtao/ghq/github.com/tao3k/agent-semantic-protocols/languages/gerbil-scheme-language-project-harness/docs/10-19-research/11.12-gerbil-macro-module-system-research.org][Gerbil Macro And Module System Research]] to =poo-flow=.
 
-It extends, but does not replace,
+It historically extended, but does not replace,
 [[file:44-current-project-programming-style.org][Current Project Programming Style]].  Runtime execution remains outside this
 project.  The refactor changes composition declaration, expansion, ownership,
 and evidence; it does not add a Scheme runtime executor.

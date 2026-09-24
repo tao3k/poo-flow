@@ -488,7 +488,7 @@
     generic-value))
 
 (def class-metaobject-specializer
-  (poo-clos-class-specializer (.ref ClosClass 'proto)))
+  (poo-clos-prototype-specializer (.ref ClosClass 'proto)))
 (def standard-instance-specializer
   (poo-clos-class-specializer poo-clos-standard-object-class))
 

@@ -21,8 +21,9 @@ implementation must produce before POO Flow may claim that one
 - ~gerbil-poo~ is the unique Scheme implementation of POO used by POO Flow.
 - POO Flow reuses its object and prototype semantics; it does not implement a
   second fixed-point library.
-- The public composition entry is ~use-composition~, not
-  ~user-composition~.
+- The historical public-entry decision in this RFC is superseded by RFC 45-92.
+  Scale evidence applies to the admitted value graph and does not own the
+  current binding-macro name or authorize a clause grammar.
 - Modules, Profiles, imports, identities, capabilities, and receipts are
   POO-native objects or projections of POO-native objects.
 - A generator may create executable evidence graphs, but it is not a second

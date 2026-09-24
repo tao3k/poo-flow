@@ -10,17 +10,17 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/mop element?)
-        (only-in "../src/module-system/descriptor/contracts.ss"
+        (only-in :poo-flow/src/module-system/descriptor/contracts
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-predicate-key
                  poo-flow-contract-slot-report-kind
                  poo-flow-contract-slot-type
                  poo-flow-native-contract-slots)
-        (only-in "../src/contract/json-schema-receipt.ss"
+        (only-in :poo-flow/src/contract/json-schema-receipt
                  poo-flow-json-schema->contract-artifact
                  poo-flow-json-schema-contract-artifact-object-contract
                  poo-flow-json-schema-contract-artifact->alist)
-        (only-in "../src/contract/json-schema-validate.ss"
+        (only-in :poo-flow/src/contract/json-schema-validate
                  poo-flow-json-schema-contract-artifact-validate
                  poo-flow-json-schema-object-contract-validation->alist))
 

@@ -5,6 +5,13 @@
 #+title: Tool Calling Control Plane
 #+startup: overview
 
+* Status
+
+The control-plane requirements remain current; the embedded stage/clause UI is
+historical.  RFC 164, RFC 29, RFC 44 and RFC 45-95 own current authoring:
+native noun slots, maintained Profile responsibilities and no stage DSL in
+=config.ss=.
+
 * Purpose
 
 Tool calling is a first-class control-plane concern. LangChain, LangGraph, CrewAI, Pi Agent core, and similar frameworks all need an agent to choose tools, pass arguments, receive results, update state, and continue the loop. POO Flow should not treat that as an incidental node label. It should model the policy layer explicitly, then lower the verified plan to a runtime language such as Python.

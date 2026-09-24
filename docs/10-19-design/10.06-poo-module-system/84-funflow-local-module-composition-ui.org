@@ -4,6 +4,13 @@
 
 * 10.06.84 FunFlow Local Module Composition UI
 
+** Status
+
+Historical UI grammar.  The stage/step/edge syntax below is superseded by RFC
+164, RFC 29, RFC 44, RFC 45-92 and RFC 45-95.  Current roots select prepared
+Profiles and Standards; Funflow responsibilities remain reachable POO values
+owned by those Profiles.
+
 This note fixes the public authoring boundary between =use-module funflow= and
 =use-composition=. The intent is to keep FunFlow capability loading inside the
 composition scope while preventing =use-composition= from becoming a backend or

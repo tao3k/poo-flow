@@ -1,63 +1,43 @@
+;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; -*- Gerbil -*-
-;;; Reusable Scenario object; root config decides whether to compose it.
+;;; Reusable Scenario: native Profile selection plus noun-slot metadata.
 
-(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
-                 use-composition)
+(import (only-in :clan/poo/object .def .o)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 profiles compose)
+        :poo-flow/src/module-system/profile-composition/binding-syntax
         :poo-flow/user-interface/profiles/crewai)
-(export crewai-scenario)
+(export CrewAIProductionProfile crewai-scenario)
 
-(def crewai-scenario
-  (use-composition crewai
-  (use-module crewai as crew
-    (profiles
-      agent
-      task
-      crew
-      planning
-      memory
-      knowledge
-      sequential-process
-      flow-state
-      flow-router
-      flow-persist
-      guardrail
-      human-input
-      observability
-      runtime-handoff))
-  (compose
-    (profiles crew
-      agent
-      task
-      crew
-      planning
-      memory
-      knowledge
-      sequential-process
-      flow-state
-      flow-router
-      flow-persist
-      guardrail
-      human-input
-      observability
-      runtime-handoff))
-  (stage production
-    (graph crewai-flow-graph)
-    (loop #:fuel 6 #:exit final-output)
-    (prove agent-tool-scope-contained
-           task-dependencies-closed
-           crew-members-declared
-           planning-before-task-dispatch
-           memory-scope-contained
-           knowledge-sources-declared
-           task-order-respects-dependencies
-           router-targets-declared
-           checkpoint-before-resume
-           guardrail-before-downstream-task
-           human-review-before-final-output
-           trace-covers-agent-task-flow
-           handoff-after-proof-gate)
-    (handoff marlin-control-plane))))
+(.def CrewAIProductionProfile
+  (identity 'crewai-production)
+  (stages
+   (.o production:
+       (.o graph: 'crewai-flow-graph
+           loop: (.o fuel: 6 exit: 'final-output)
+           proofs:
+           (.o agent-tool-scope-contained: #t
+               task-dependencies-closed: #t
+               crew-members-declared: #t
+               planning-before-task-dispatch: #t
+               memory-scope-contained: #t
+               knowledge-sources-declared: #t
+               task-order-respects-dependencies: #t
+               router-targets-declared: #t
+               checkpoint-before-resume: #t
+               guardrail-before-downstream-task: #t
+               human-review-before-final-output: #t
+               trace-covers-agent-task-flow: #t
+               handoff-after-proof-gate: #t)
+           handoff: 'marlin-control-plane))))
+
+(user-composition crewai-scenario
+  (compose profiles
+    (use-module CrewAIModule as crew
+      agent task crew planning memory knowledge sequential-process flow-state
+      flow-router flow-persist guardrail human-input observability
+      runtime-handoff)
+    CrewAIProductionProfile))

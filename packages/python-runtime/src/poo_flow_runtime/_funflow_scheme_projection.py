@@ -137,8 +137,8 @@ def _origin(value: Any) -> str:
     origin = _text(value)
     if origin == "use-module-funflow":
         return "use-module funflow"
-    if origin == "use-composition-funflow":
-        return "use-composition funflow"
+    if origin == "user-composition-funflow":
+        return "user-composition funflow"
     return origin
 
 

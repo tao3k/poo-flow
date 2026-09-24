@@ -27,6 +27,8 @@ py_test(
         ":ownership.bzl",
         "//:scheme_build_sources",
         "//:t/module-system-observability-test.ss",
+        "//:t/profile-binding-syntax-test.ss",
+        "//:t/profile-bundle-test.ss",
         "//:t/profile-composition-test.ss",
     ],
     imports = ["."],
@@ -44,6 +46,8 @@ gerbil_project_test(
     tests = [
         ":owner-contract-test.ss",
         "//:t/module-system-observability-test.ss",
+        "//:t/profile-binding-syntax-test.ss",
+        "//:t/profile-bundle-test.ss",
         "//:t/profile-composition-test.ss",
     ],
 )

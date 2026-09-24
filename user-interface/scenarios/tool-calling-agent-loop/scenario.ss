@@ -1,55 +1,39 @@
+;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; -*- Gerbil -*-
-;;; Reusable Scenario object; root config decides whether to compose it.
-
-(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
-                 use-composition)
+(import (only-in :clan/poo/object .def .o)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 profiles compose)
+        :poo-flow/src/module-system/profile-composition/binding-syntax
         :poo-flow/user-interface/profiles/tool-calling)
-(export tool-calling-agent-loop-scenario)
+(export ToolCallingAgentLoopProfile tool-calling-agent-loop-scenario)
 
-(def tool-calling-agent-loop-scenario
-  (use-composition tool-calling-agent-loop
-  (use-module tool-calling as tool
-    (profiles
-      tool-request
-      tool-schema
-      tool-permission
-      sandbox-scope
-      argument-validation
-      untrusted-observation
-      tool-cooldown
-      result-contract
-      runtime-binding
-      receipt-gate
-      observability))
-  (compose
-    (profiles tool
-      tool-request
-      tool-schema
-      tool-permission
-      sandbox-scope
-      argument-validation
-      untrusted-observation
-      tool-cooldown
-      result-contract
-      runtime-binding
-      receipt-gate
-      observability))
-  (stage production
-    (graph tool-calling-agent-loop-graph)
-    (loop #:fuel 5 #:exit tool-result-accepted)
-    (prove tool-request-has-owner-session
-           tool-arguments-match-schema
-           tool-permission-before-call
-           tool-scope-contained
-           validate-arguments-before-runtime
-           tool-output-cannot-authorize-policy
-           cooldown-before-retry
-           tool-result-before-downstream-step
-           runtime-binding-matches-tool-contract
-           runtime-receipt-matches-tool-plan
-           trace-covers-tool-request-call-result)
-    (handoff python-runtime-tool-plane))))
+(.def ToolCallingAgentLoopProfile
+  (identity 'tool-calling-agent-loop-production)
+  (stages
+   (.o production:
+       (.o graph: 'tool-calling-agent-loop-graph
+           loop: (.o fuel: 5 exit: 'tool-result-accepted)
+           proofs:
+           (.o tool-request-has-owner-session: #t
+               tool-arguments-match-schema: #t
+               tool-permission-before-call: #t
+               tool-scope-contained: #t
+               validate-arguments-before-runtime: #t
+               tool-output-cannot-authorize-policy: #t
+               cooldown-before-retry: #t
+               tool-result-before-downstream-step: #t
+               runtime-binding-matches-tool-contract: #t
+               runtime-receipt-matches-tool-plan: #t
+               trace-covers-tool-request-call-result: #t)
+           handoff: 'python-runtime-tool-plane))))
+
+(user-composition tool-calling-agent-loop-scenario
+  (compose profiles
+    (use-module ToolCallingModule as tool
+      tool-request tool-schema tool-permission sandbox-scope
+      argument-validation untrusted-observation tool-cooldown result-contract
+      runtime-binding receipt-gate observability)
+    ToolCallingAgentLoopProfile))

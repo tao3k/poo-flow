@@ -10,7 +10,7 @@
         "objects.ss"
         "verification.ss")
 (export .o .ref .mix .extend .slot? object?
-        use-composition poo-flow-scenario-case-profiles
+        use-module user-composition poo-flow-scenario-case-profiles
         poo-flow-map poo-flow-append-map poo-flow-all? poo-flow-any?
         (import: "model.ss")
         (import: "objects.ss")

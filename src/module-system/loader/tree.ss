@@ -6,7 +6,16 @@
 ;;; Boundary: lazy plans, auto-import graphs, and catalog loading for module trees.
 ;;; Invariant: static entrypoint metadata lives in module-registry and stays loader-free.
 
-(import :poo-flow/src/core/failure
+(import (only-in :clan/poo/object .o)
+        :poo-flow/src/core/failure
+        (only-in :poo-flow/src/module-system/interface
+                 poo-flow-module-interface)
+        (only-in :poo-flow/src/module-system/authoring/interface
+                 poo-flow-module-authoring-admit-port
+                 poo-flow-module-authoring-admission-accepted?
+                 poo-flow-module-authoring-admission-diagnostics)
+        (only-in :poo-flow/src/module-system/semantic-module/objects
+                 poo-flow-user-root-module-authoring-profile)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/selection
@@ -23,6 +32,7 @@
         poo-flow-module-auto-imports-node
         poo-flow-module-auto-imports-mk-merge
         poo-flow-module-auto-imports-result-source-refs
+        poo-flow-user-tree-config-authoring-validate!
         poo-flow-user-tree-lazy-load-plans
         poo-flow-module-selection-source-refs
         poo-flow-module-bundles-source-refs
@@ -79,10 +89,37 @@
      (poo-flow-src-modules-source-refs)
      metadata)))
 
-;;; Boundary: user-root tree loading is lazy and never evaluates init.ss.
+;;; Boundary: the ordinary config root composes maintained values.  Admission
+;;; reads inert Scheme data and rejects attempts to reopen the maintainer-only
+;;; .def/.o layer before a lazy plan can expose the source.
+;; : (-> Path PooModuleAuthoringAdmission)
+(def (poo-flow-user-tree-config-authoring-validate! user-root-path)
+  (let* ((source-ref (poo-flow-user-tree-config-source user-root-path))
+         (path (poo-flow-module-source-ref-value source-ref))
+         (interface
+          (poo-flow-module-interface
+           "user-root-config" (.o)
+           '((source-owner . user))
+           authoring: (poo-flow-user-root-module-authoring-profile)))
+         (admission
+          (call-with-input-file
+           path
+           (lambda (port)
+             (poo-flow-module-authoring-admit-port
+              interface 'config port)))))
+    (unless (poo-flow-module-authoring-admission-accepted? admission)
+      (error "POO-FLOW-MODULE-E010 user config must compose maintained values"
+             path
+             (car (poo-flow-module-authoring-admission-diagnostics
+                   admission))))
+    admission))
+
+;;; Boundary: user-root tree loading is lazy and never evaluates init.ss or
+;;; config.ss.  It does admit config.ss as inert data before publishing plans.
 ;; : (-> [PooModuleLoaderBackend] Path [PooFlowLazyLoadPlan])
 (def (poo-flow-user-tree-lazy-load-plans backends user-root-path
                                          . maybe-metadata)
+  (poo-flow-user-tree-config-authoring-validate! user-root-path)
   (let (metadata
         (if (null? maybe-metadata) '() (car maybe-metadata)))
     (poo-flow-module-source-refs->lazy-load-plans

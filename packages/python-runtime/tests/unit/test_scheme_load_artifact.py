@@ -24,7 +24,7 @@ def _runtime_projection_fixture(root: Path) -> Path:
 
 def _source_fixture(root: Path) -> Path:
     source = root / "flow.ss"
-    source.write_text("(use-composition artifact-flow)\n", encoding="utf-8")
+    source.write_text("(user-composition artifact-flow ArtifactProfile)\n", encoding="utf-8")
     return source
 
 
@@ -100,7 +100,10 @@ def test_scheme_projection_ignores_stale_artifact_and_falls_back(
         projection_path=projection,
         rows=_projection_rows("stale"),
     )
-    source.write_text("(use-composition changed-artifact-flow)\n", encoding="utf-8")
+    source.write_text(
+        "(user-composition changed-artifact-flow ChangedArtifactProfile)\n",
+        encoding="utf-8",
+    )
     calls: list[tuple[str, ...]] = []
 
     def fake_run(

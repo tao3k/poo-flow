@@ -5,11 +5,9 @@
 
 ;;; Scenario: user-interface CrewAI-style composition instance.
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .all-slots .o .ref .slot?)
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :poo-flow/src/module-system/loader/fragment-syntax load!)
-        (only-in :poo-flow/src/module-system/profile-composition/use-syntax
-                 use-composition)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
                  poo-flow-scenario-case?)
         :poo-flow/src/module-system/profile-composition/accessors
@@ -19,36 +17,25 @@
 (def crewai-composition
   crewai-scenario)
 
-(def (stage-clause-payload stage kind)
-  (let loop ((clauses (poo-flow-scenario-stage-clauses stage)))
-    (cond
-     ((null? clauses) (error "missing composition clause" kind))
-     ((equal? (.ref (car clauses) 'clause-kind) kind)
-      (.ref (car clauses) 'payload))
-     (else (loop (cdr clauses))))))
-
-(def (single-stage composition)
-  (car (poo-flow-scenario-case-stages composition)))
+(def (profile-name profile)
+  (.ref profile (if (.slot? profile 'name) 'name 'identity)))
 
 (def crewai-user-composition-test
  (test-suite "crewai user composition"
   (test-case "crewai declares one reusable production composition"
-    (let* ((stage (single-stage crewai-composition))
+    (let* ((stage-space (poo-flow-scenario-case-stages crewai-composition))
+           (stage (.ref stage-space 'production))
            (compose-payload
             (poo-flow-scenario-case-profiles crewai-composition))
-           (graph-payload (stage-clause-payload stage 'graph))
-           (loop-payload (stage-clause-payload stage 'loop))
-           (prove-payload (stage-clause-payload stage 'prove))
-           (handoff-payload (stage-clause-payload stage 'handoff)))
+           (loop-value (.ref stage 'loop)))
       (check-equal? (poo-flow-scenario-case? crewai-composition) #t)
       (check-equal? (poo-flow-scenario-case-name crewai-composition) 'crewai)
       (check-equal? (length (poo-flow-scenario-case-modules
                              crewai-composition))
                     1)
-      (check-equal? (poo-flow-scenario-stage-name stage) 'production)
-      (check-equal? (length compose-payload) 14)
-      (check-equal? (map (lambda (profile) (.ref profile 'name))
-                         compose-payload)
+      (check-equal? (.all-slots stage-space) '(production))
+      (check-equal? (length compose-payload) 15)
+      (check-equal? (map profile-name compose-payload)
                     '(agent
                       task
                       crew
@@ -62,12 +49,12 @@
                       guardrail
                       human-input
                       observability
-                      runtime-handoff))
-      (check-equal? graph-payload '(crewai-flow-graph))
-      (check-equal? (length loop-payload) 4)
-      (check-equal? (cadr loop-payload) 6)
-      (check-equal? (cadddr loop-payload) 'final-output)
-      (check-equal? prove-payload
+                      runtime-handoff
+                      crewai-production))
+      (check-equal? (.ref stage 'graph) 'crewai-flow-graph)
+      (check-equal? (.ref loop-value 'fuel) 6)
+      (check-equal? (.ref loop-value 'exit) 'final-output)
+      (check-equal? (.all-slots (.ref stage 'proofs))
                     '(agent-tool-scope-contained
                       task-dependencies-closed
                       crew-members-declared
@@ -81,4 +68,4 @@
                       human-review-before-final-output
                       trace-covers-agent-task-flow
                       handoff-after-proof-gate))
-      (check-equal? handoff-payload '(marlin-control-plane))))))
+      (check-equal? (.ref stage 'handoff) 'marlin-control-plane)))))

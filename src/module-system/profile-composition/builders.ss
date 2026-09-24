@@ -10,8 +10,6 @@
 
 (export poo-flow-profile-ref
         poo-flow-scenario-module-binding
-        poo-flow-scenario-clause
-        poo-flow-scenario-stage
         poo-flow-scenario-profile-binding)
 
 ;;; Selects a profile slot from a POO module object.
@@ -43,32 +41,6 @@
     (.o (kind 'poo-flow.scenario.module-binding.v1)
         (alias alias-value)
         (module module-value))))
-
-;;; Stores one stage clause payload without interpreting engine semantics.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-scenario-clause 'graph '(guarded-flow))
-;;   | result: clause object tagged by clause kind
-;; : (-> Symbol PooFlowScenarioPayload PooFlowScenarioClause)
-(def (poo-flow-scenario-clause kind payload)
-  (let ((kind-value kind)
-        (payload-value payload))
-    (.o (kind 'poo-flow.scenario.clause.v1)
-        (clause-kind kind-value)
-        (payload payload-value))))
-
-;;; Builds a named composition stage from clause objects.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-scenario-stage 'production clauses)
-;;   | result: stage object with name and ordered clauses
-;; : (-> Symbol List PooFlowScenarioStage)
-(def (poo-flow-scenario-stage name clauses)
-  (let ((name-value name)
-        (clauses-value clauses))
-    (.o (kind 'poo-flow.scenario.stage.v1)
-        (name name-value)
-        (clauses clauses-value))))
 
 ;;; Builds the top-level composition object with composition-level profiles.
 ;; : (-> Symbol List List List PooFlowScenarioCase)

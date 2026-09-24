@@ -15,8 +15,11 @@ The maintained kernel module implementations are upstream-owned under
 - =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 
 =user-interface/init.ss= exports enabled category/module/feature rows.
-=user-interface/config.ss= directly declares final compositions and receives
-Profiles and Scenarios through deterministic sibling-directory discovery.
+=user-interface/config.ss= imports the canonical composition constructor and
+directly composes already maintained Profiles and Standards. Reusable Profiles
+and Scenarios remain separately importable modules; the root does not scan or
+re-export them and does not declare a stage, graph, loop, proof, handoff,
+Provider or runtime DSL.
 
 This directory models the downstream repository surface that a POO Flow user
 would maintain. It is intentionally root-level and separate from =src=. POO Flow
@@ -29,7 +32,9 @@ The downstream surface follows the project invariant: POO Flow is 100% POO-nativ
 The files here stay declarative:
 
 - =init.ss= lists optional feature patches/custom modules through =poo-flow!= category rows.
-- =config.ss= directly declares =use-composition= values.
+- =config.ss= uses the thin =user-composition= binding and directly composes
+  maintained Profile and Standard values with explicit imports; operational
+  responsibilities remain owned by those values.
 - =custom/<module-name>/{types,objects,funs,config,interface}.ss= is the stable
   user-maintained module shell; concrete subowners remain precise imports.
 - =profiles/*.ss= contributes stable reusable profile objects.

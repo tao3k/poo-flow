@@ -9,17 +9,17 @@
 
 (import (only-in "./performance.ss"
                  poo-flow-performance-build-list)
-        (only-in "../../src/module-system/descriptor/contracts.ss"
+        (only-in :poo-flow/src/module-system/descriptor/contracts
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
                  poo-flow-native-contract
                  poo-flow-native-contract->alist
                  poo-flow-native-contract-slots)
-        (only-in "../../src/type-facts/objects.ss"
+        (only-in :poo-flow/src/type-facts/objects
                  poo-flow-native-contract->type-facts
                  poo-flow-native-contract->lean-fact-contracts)
-        (only-in "../../src/modules/session/policy.ss"
+        (only-in :poo-flow/src/modules/session/policy
                  PooFlowSessionPolicyContract
                  PooFlowSessionToolGrantContract
                  poo-flow-session-policy-require-slots!

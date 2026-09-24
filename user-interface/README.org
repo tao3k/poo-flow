@@ -22,18 +22,29 @@ This directory models the downstream surface that users and agents read before w
 
 * Rule
 
-The public user path is POO-native composition:
+Object-level Case extension uses native =gerbil-poo= noun slots:
 
 #+begin_src scheme
-(use-composition my-composition
-  (modules
-    (use-module crewai as crew
-      (profiles agent task flow-router)))
-  (compose
-    (profiles crew agent task flow-router))
-  (stage production
-    (graph crew-workflow)
-    (loop #:fuel 4 #:exit final-output)))
+(.def OntologyCase
+  (events ? (.o)))
+
+(.def (PrescriptionCase @ OntologyCase)
+  (events =>.+
+    (.o prescription: PrescriptionEvent)))
+
+(.def (ReviewedPrescriptionCase @ PrescriptionCase)
+  (events =>.+
+    (.o prescription: ReviewedPrescriptionEvent
+        review: ClinicalReviewEvent)))
 #+end_src
 
-Do not add a parallel JSON, alist, or framework-specific DSL for these scenarios.
+The root config only composes prepared Profiles and Standards:
+
+#+begin_src scheme
+(user-composition my-composition
+  (compose profiles
+    (use-module crewai production)))
+#+end_src
+
+Do not add a parallel JSON/alist language, action evaluator, stage grammar, or
+framework-specific DSL for these scenarios.

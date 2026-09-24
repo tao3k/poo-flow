@@ -5,7 +5,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        "../src/modules/standards/interface")
+        :poo-flow/src/modules/standards/interface)
 
 (export standards-core-test)
 

@@ -8,15 +8,13 @@
 ;;; `use-module` surface; module-specific projection remains behind this
 ;;; Funflow module boundary.
 
-(import (only-in :clan/poo/object .ref .slot? object? object<-alist)
+(import (only-in :clan/poo/object .all-slots .ref .slot? object? object<-alist)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-key)
         (only-in :poo-flow/src/module-system/profile-composition/accessors
                  poo-flow-scenario-case-name
                  poo-flow-scenario-case-profiles
-                 poo-flow-scenario-stage-clauses
-                 poo-flow-scenario-stage-name
                  poo-flow-scenario-case-stages)
         (only-in :poo-flow/src/module-system/profile-composition/scenario-case
                  poo-flow-scenario-case?)
@@ -63,40 +61,19 @@
    (else
     (poo-flow-runtime-load-has-funflow-profile? (cdr profiles)))))
 
-;; : (-> PooObject Symbol)
-(def (poo-flow-runtime-load-step-clause-name clause)
-  (let ((payload (.ref clause 'payload)))
-    (if (and (pair? payload)
-             (symbol? (car payload)))
-      (car payload)
-      (error "runtime load expected step clause payload" payload))))
-
-;; : (-> PooObject [Symbol])
-(def (poo-flow-runtime-load-clause-step-names clause)
-  (if (eq? (.ref clause 'clause-kind) 'step)
-    (list (poo-flow-runtime-load-step-clause-name clause))
-    '()))
-
-;; : (-> [PooObject] [Symbol])
-(def (poo-flow-runtime-load-clause-list-step-names clauses)
-  (cond
-   ((null? clauses) '())
-   (else
-    (append (poo-flow-runtime-load-clause-step-names (car clauses))
-            (poo-flow-runtime-load-clause-list-step-names (cdr clauses))))))
-
 ;; : (-> PooObject [Symbol])
 (def (poo-flow-runtime-load-stage-step-names stage)
-  (poo-flow-runtime-load-clause-list-step-names
-   (poo-flow-scenario-stage-clauses stage)))
+  (if (and (object? stage) (.slot? stage 'steps))
+    (.all-slots (.ref stage 'steps))
+    '()))
 
-;; : (-> [PooObject] [Symbol])
-(def (poo-flow-runtime-load-composition-step-names stages)
-  (cond
-   ((null? stages) '())
-   (else
-    (append (poo-flow-runtime-load-stage-step-names (car stages))
-            (poo-flow-runtime-load-composition-step-names (cdr stages))))))
+;; : (-> PooObject [Symbol])
+(def (poo-flow-runtime-load-composition-step-names stage-space)
+  (apply append
+         (map (lambda (stage-name)
+                (poo-flow-runtime-load-stage-step-names
+                 (.ref stage-space stage-name)))
+              (.all-slots stage-space))))
 
 ;; : (-> Symbol Alist)
 (def (poo-flow-runtime-load-node-row node)
@@ -116,16 +93,14 @@
 (def (poo-flow-runtime-load-edge-row edge)
   (if (and (pair? edge)
            (pair? (cdr edge))
-           (pair? (cddr edge))
-           (null? (cdddr edge))
-           (eq? (cadr edge) '->)
+           (null? (cddr edge))
            (symbol? (car edge))
-           (symbol? (caddr edge)))
+           (symbol? (cadr edge)))
     (list (cons 'kind 'poo-flow.funflow.dag-edge)
           (cons 'from (car edge))
-          (cons 'to (caddr edge))
+          (cons 'to (cadr edge))
           (cons 'runtime-executed #f))
-    (error "runtime load expected edge payload shaped as (from -> to)" edge)))
+    (error "runtime load expected edge payload shaped as (from to)" edge)))
 
 ;; : (-> [Object] [Alist])
 (def (poo-flow-runtime-load-edge-rows edges)
@@ -136,38 +111,27 @@
           (poo-flow-runtime-load-edge-rows (cdr edges))))))
 
 ;; : (-> PooObject [Alist])
-(def (poo-flow-runtime-load-clause-edge-rows clause)
-  (if (eq? (.ref clause 'clause-kind) 'edges)
-    (poo-flow-runtime-load-edge-rows (.ref clause 'payload))
+(def (poo-flow-runtime-load-stage-edge-rows stage)
+  (if (and (object? stage) (.slot? stage 'edges))
+    (poo-flow-runtime-load-edge-rows
+     (map (lambda (edge-name) (.ref (.ref stage 'edges) edge-name))
+          (.all-slots (.ref stage 'edges))))
     '()))
 
-;; : (-> [PooObject] [Alist])
-(def (poo-flow-runtime-load-clause-list-edge-rows clauses)
-  (cond
-   ((null? clauses) '())
-   (else
-    (append (poo-flow-runtime-load-clause-edge-rows (car clauses))
-            (poo-flow-runtime-load-clause-list-edge-rows (cdr clauses))))))
-
 ;; : (-> PooObject [Alist])
-(def (poo-flow-runtime-load-stage-edge-rows stage)
-  (poo-flow-runtime-load-clause-list-edge-rows
-   (poo-flow-scenario-stage-clauses stage)))
-
-;; : (-> [PooObject] [Alist])
-(def (poo-flow-runtime-load-composition-edge-rows stages)
-  (cond
-   ((null? stages) '())
-   (else
-    (append (poo-flow-runtime-load-stage-edge-rows (car stages))
-            (poo-flow-runtime-load-composition-edge-rows (cdr stages))))))
+(def (poo-flow-runtime-load-composition-edge-rows stage-space)
+  (apply append
+         (map (lambda (stage-name)
+                (poo-flow-runtime-load-stage-edge-rows
+                 (.ref stage-space stage-name)))
+              (.all-slots stage-space))))
 
 ;; : (-> Symbol Symbol Symbol Alist)
 (def (poo-flow-runtime-load-source-map-row composition-name stage-name step-name)
   (list (cons 'stage step-name)
-        (cons 'source 'use-composition-funflow)
+        (cons 'source 'user-composition-funflow)
         (cons 'path
-              (list 'use-composition 'funflow composition-name stage-name step-name))))
+              (list 'user-composition 'funflow composition-name stage-name step-name))))
 
 ;; : (-> Symbol Symbol [Symbol] [Alist])
 (def (poo-flow-runtime-load-source-map-stage-rows composition-name stage-name nodes)
@@ -183,22 +147,20 @@
            stage-name
            (cdr nodes))))))
 
-;; : (-> PooObject PooObject [Alist])
-(def (poo-flow-runtime-load-stage-source-map-rows composition stage)
+;; : (-> PooObject Symbol PooObject [Alist])
+(def (poo-flow-runtime-load-stage-source-map-rows composition stage-name stage)
   (poo-flow-runtime-load-source-map-stage-rows
    (poo-flow-scenario-case-name composition)
-   (poo-flow-scenario-stage-name stage)
+   stage-name
    (poo-flow-runtime-load-stage-step-names stage)))
 
-;; : (-> PooObject [PooObject] [Alist])
-(def (poo-flow-runtime-load-composition-source-map-rows composition stages)
-  (cond
-   ((null? stages) '())
-   (else
-    (append (poo-flow-runtime-load-stage-source-map-rows composition
-                                                         (car stages))
-            (poo-flow-runtime-load-composition-source-map-rows composition
-                                                               (cdr stages))))))
+;; : (-> PooObject PooObject [Alist])
+(def (poo-flow-runtime-load-composition-source-map-rows composition stage-space)
+  (apply append
+         (map (lambda (stage-name)
+                (poo-flow-runtime-load-stage-source-map-rows
+                 composition stage-name (.ref stage-space stage-name)))
+              (.all-slots stage-space))))
 
 ;; : (-> PooObject PooObject)
 (def (poo-flow-runtime-load-composition->funflow-plan composition)
@@ -220,7 +182,7 @@
       (cons 'schema 'poo-flow.modules.funflow.plan.v1)
       (cons 'name (poo-flow-scenario-case-name composition))
       (cons 'version 1)
-      (cons 'origin 'use-composition-funflow)
+      (cons 'origin 'user-composition-funflow)
       (cons 'normalized-flow (poo-flow-scenario-case-name composition))
       (cons 'node-table
             (list->vector (poo-flow-runtime-load-node-rows nodes)))

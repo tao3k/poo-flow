@@ -203,6 +203,31 @@
         (check-equal?
          (.ref (.ref snapshot 'proof-binding) 'composition)
          "test/governance")))
+    (test-case "Cedar capability owns the source-admission requirement"
+      (let* ((protected
+              (poo-flow-cedar-runtime-capability
+               "test::Action" 1 source-admission-required?: #t))
+             (profiles (list TestGovernanceProfile))
+             (assessments
+              (list (poo-flow-governance-evaluate
+                     TestGovernanceProfile (.o))))
+             (snapshot
+              (poo-flow-cedar-governance-snapshot
+               "test/governance" profiles assessments test-context
+               (test-proof "test/governance" profiles assessments)
+               (list test-policy) test-schema test-entities
+               (list protected)))
+             (runtime
+              (poo-flow-cedar-authority-snapshot->runtime snapshot))
+             (capability (vector-ref (hash-get runtime "capabilities") 0)))
+        (check-equal? (.ref test-capability 'source-admission-required?) #f)
+        (check-equal? (.ref protected 'source-admission-required?) #t)
+        (check-equal?
+         (hash-get capability "source_admission_required") #t)
+        (check-exception
+         (poo-flow-cedar-runtime-capability
+          "test::Action" 1 source-admission-required?: 'yes)
+         true)))
     (test-case "Cedar adapter rejects another composition"
       (check-exception
        (let* ((profiles (list TestGovernanceProfile))

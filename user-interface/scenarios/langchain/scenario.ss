@@ -3,23 +3,26 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Reusable Scenario object; root config decides whether to compose it.
-
-(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
-                 use-composition)
+(import (only-in :clan/poo/object .def .o)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 profiles compose)
+        :poo-flow/src/module-system/profile-composition/binding-syntax
         :poo-flow/user-interface/profiles/langchain)
-(export langchain-scenario)
+(export LangChainProductionProfile langchain-scenario)
 
-(def langchain-scenario
-  (use-composition langchain
-  (use-module langchain as chain
-    (profiles memory prompt model parser no-tool))
-  (compose
-   (profiles chain memory prompt model parser no-tool))
-  (stage production
-    (graph langchain-linear-chain)
-    (loop #:fuel 1 #:exit parsed-output)
-    (prove chain-order
-           prompt-before-model
-           parser-after-model
-           no-implicit-tool-branch))))
+(.def LangChainProductionProfile
+  (identity 'langchain-production)
+  (stages
+   (.o production:
+       (.o graph: 'langchain-linear-chain
+           loop: (.o fuel: 1 exit: 'parsed-output)
+           proofs:
+           (.o chain-order: #t
+               prompt-before-model: #t
+               parser-after-model: #t
+               no-implicit-tool-branch: #t)))))
+
+(user-composition langchain-scenario
+  (compose profiles
+    (use-module LangChainModule as chain memory prompt model parser no-tool)
+    LangChainProductionProfile))

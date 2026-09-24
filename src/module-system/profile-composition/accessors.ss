@@ -11,9 +11,7 @@
 (export poo-flow-scenario-case-name
         poo-flow-scenario-case-modules
         poo-flow-scenario-case-profiles
-        poo-flow-scenario-case-stages
-        poo-flow-scenario-stage-name
-        poo-flow-scenario-stage-clauses)
+        poo-flow-scenario-case-stages)
 
 ;;; Returns the symbolic composition name.
 ;;   | doc m%
@@ -38,29 +36,11 @@
 (def (poo-flow-scenario-case-profiles composition)
   (.ref composition 'profiles))
 
-;;; Returns all stages in declaration order.
+;;; Returns the native named Stage slot space.
 ;;   | doc m%
 ;;       # Examples
 ;;       (poo-flow-scenario-case-stages composition)
-;;   | result: ordered composition stages
-;; : (-> PooFlowScenarioCase List)
+;;   | result: POO Stage slot space
+;; : (-> PooFlowScenarioCase PooObject)
 (def (poo-flow-scenario-case-stages composition)
   (.ref composition 'stages))
-
-;;; Returns the name of a composition stage.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-scenario-stage-name production-stage)
-;;   | result: stage name symbol
-;; : (-> PooFlowScenarioStage Symbol)
-(def (poo-flow-scenario-stage-name composition-stage)
-  (.ref composition-stage 'name))
-
-;;; Returns raw clause objects stored on a stage.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-scenario-stage-clauses production-stage)
-;;   | result: ordered stage clause objects
-;; : (-> PooFlowScenarioStage List)
-(def (poo-flow-scenario-stage-clauses composition-stage)
-  (.ref composition-stage 'clauses))

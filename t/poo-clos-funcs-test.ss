@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
-        (only-in "../src/module-system/poo-clos/funcs.ss"
+        (only-in :poo-flow/src/module-system/poo-clos/funcs
                  poo-clos-initarg-list? poo-clos-initarg-ref
                  poo-clos-initarg-index poo-clos-initarg-index-first-of
                  poo-clos-identity-index poo-clos-leftmost-index-by

@@ -17,8 +17,6 @@
                  poo-flow-load-profile-module-binding)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-bundle)
-        (only-in :poo-flow/src/module-system/profile-composition/profile-syntax
-                 poo-flow-composition-profile-module)
         (only-in :poo-flow/src/user-interface/profile-config
                  poo-flow-user-profile-module-bundles
                  poo-flow-user-profile-name)
@@ -40,15 +38,12 @@
 
 (export module-macro-surface-test)
 
-;;; Both identifier macros must preserve the call-site binding while sharing
+;;; The loader identifier macro preserves the call-site binding while using
 ;;; the canonical fallback module name outside a custom/<name> source tree.
 (def poo-flow-custom-module-syntax-probe-module 'syntax-probe-binding)
 
 (def load-profile-binding
   (poo-flow-load-profile-module-binding syntax-probe))
-
-(def composition-profile-binding
-  (poo-flow-composition-profile-module syntax-probe))
 
 ;;; Profile extension remains a POO-native declaration and appends complete
 ;;; module bundles without flattening individual module selection rows.
@@ -134,9 +129,8 @@
 ;; : TestSuite
 (def module-macro-surface-test
   (test-suite "poo-flow public module macro surface"
-    (test-case "identifier macros preserve the generated binding"
-      (check-equal? load-profile-binding 'syntax-probe-binding)
-      (check-equal? composition-profile-binding 'syntax-probe-binding))
+    (test-case "loader identifier macro preserves the generated binding"
+      (check-equal? load-profile-binding 'syntax-probe-binding))
     (test-case "profile extension appends bundles to a POO profile"
       (check-equal? (poo-flow-user-profile-name macro-extended-profile)
                     'macro-extended)

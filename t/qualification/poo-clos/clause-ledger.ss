@@ -138,7 +138,7 @@
 (def poo-clos-evidence-suites
   (list
    (evidence-suite 'dispatch "t/poo-clos-dispatch-test.ss"
-                   'poo-clos-dispatch-test 11)
+                   'poo-clos-dispatch-test 12)
    (evidence-suite 'lifecycle "t/poo-clos-lifecycle-test.ss"
                    'poo-clos-lifecycle-test 14)
    (evidence-suite 'syntax "t/poo-clos-syntax-test.ss"

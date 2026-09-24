@@ -34,7 +34,7 @@ authoritative observation evidence. The pre-existing metadata catalog in
 * Running a real example
 
 #+begin_src sh
-./.devenv/devenv-profile-exec gxi t/scenarios/observability-admission-demo.ss
+gerbil env gerbil interactive t/scenarios/observability-admission-demo.ss
 #+end_src
 
 The example creates a real SemanticModule, replaces its imports responsibility
@@ -277,7 +277,7 @@ projection value and runtime-executed boundary unchanged.
 * Verification
 
 #+begin_src sh
-./.devenv/devenv-profile-exec gxtest t/observability-framework-test.ss t/observability-feedback-test.ss t/type-contract-foundation-test.ss t/gerbil-poo-debug-admission-test.ss t/semantic-module-test.ss t/module-system-observability-test.ss
+just test
 #+end_src
 
 =//gerbil:observability_framework_test= registers the framework gate. Native

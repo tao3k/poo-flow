@@ -4,10 +4,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: behavioral Scenario Case and fresh Session objects for one closed
-;;; use-composition value.
+;;; user-composition value.
 ;;; Invariant: planning remains pure; only a fresh Session instance mutates.
 
-(import (only-in :clan/poo/object .call .mix .o .put! .ref .set! object?)
+(import (only-in :clan/poo/object .all-slots .call .mix .o .put! .ref .set! object?)
         (rename-in (only-in :poo-flow/src/core/plan
                             execution-plan?
                             plan-node-count)
@@ -67,7 +67,7 @@
         (accepted? accepted-value)
         (module-count (length (.ref composition 'modules)))
         (profile-count (length (.ref composition 'profiles)))
-        (stage-count (length (.ref composition 'stages)))
+        (stage-count (length (.all-slots (.ref composition 'stages))))
         (plan-node-count
          (if (and accepted-value (execution-plan? plan-value))
            (core-plan-node-count plan-value)

@@ -123,10 +123,10 @@ def test_funflow_scheme_plan_projection_runs_in_python_runtime() -> None:
         assert receipt.status == "passed"
         assert receipt.trace == ("build", "test", "package")
         assert receipt.state["artifact"] == "passed:artifact"
-        assert projection.origin == "use-composition funflow"
+        assert projection.origin == "user-composition funflow"
         assert (
             projection.source_map["build"]
-            == "use-composition/funflow/python-runtime-ci/default/build"
+            == "user-composition/funflow/python-runtime-ci/default/build"
         )
 
     anyio.run(scenario)
@@ -150,5 +150,5 @@ def test_funflow_scheme_load_reuses_projection_cache() -> None:
         projection = load_poo_flow(SCHEME_FIXTURE, actions=actions, cwd=REPO_ROOT)
     elapsed = time.perf_counter() - started
 
-    assert projection.origin == "use-composition funflow"
+    assert projection.origin == "user-composition funflow"
     assert elapsed < 0.25

@@ -12,6 +12,7 @@
         "types.ss" "funcs.ss")
 
 (export poo-clos-any-specializer poo-clos-class-specializer
+        poo-clos-prototype-specializer
         poo-clos-eql-specializer poo-clos-method poo-clos-generic-function
         poo-clos-add-method poo-clos-remove-method poo-clos-failure?
         poo-clos-unbound-slot? poo-clos-unbound-slot-instance
@@ -162,11 +163,21 @@
            'invalid-specializer))
 
 ;;; A CLOS class target remains the identity-preserved class metaobject across
-;;; generations. Raw native prototypes remain an explicit bridge.
-;; : (-> (U ClosClass POOObject) ClosSpecializer)
+;;; generations. Native prototypes use poo-clos-prototype-specializer.
+;; : (-> ClosClass ClosSpecializer)
 (def (poo-clos-class-specializer target-value)
   (checked ClosSpecializer
            (.o (:: @ ClosSpecializer.) kind: 'class target: target-value)
+           'invalid-specializer))
+
+;;; Native POO prototype dispatch is explicit instead of overloading class
+;;; terminology.  Applicability follows the prototype's native C3 ancestry;
+;;; no shadow hierarchy or marker CLOS class is introduced.
+;; : (-> POOObject ClosSpecializer)
+(def (poo-clos-prototype-specializer prototype-value)
+  (checked ClosSpecializer
+           (.o (:: @ ClosSpecializer.)
+               kind: 'prototype target: prototype-value)
            'invalid-specializer))
 
 ;;; Eql retains the Scheme value itself; dispatch applies the documented

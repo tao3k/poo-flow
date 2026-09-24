@@ -15,6 +15,14 @@
                  poo-flow-value-index-ref)
         (only-in :poo-flow/src/module-system/loader/import-policy
                  poo-flow-module-owner-import-file-observations)
+        (only-in :poo-flow/src/module-system/interface
+                 poo-flow-module-interface)
+        (only-in :poo-flow/src/module-system/authoring/interface
+                 poo-flow-module-authoring-admit-port
+                 poo-flow-module-authoring-admission-accepted?
+                 poo-flow-module-authoring-admission-diagnostics)
+        (only-in :poo-flow/src/module-system/semantic-module/objects
+                 poo-flow-default-module-authoring-profile)
         :poo-flow/src/module-system/loader/source)
 
 (export poo-flow-module-source-collection-prototype
@@ -237,17 +245,50 @@
    (filter (lambda (path) (string-suffix? ".ss" path))
            (poo-flow-directory-files-recursive module-root))))
 
-(def (poo-flow-module-default-style-validate! _collection module-name module-root)
+;;; The loader applies the Interface-owned authoring Profile to each stable
+;;; role before exposing any entrypoint.  Admission reads inert datums only;
+;;; it neither expands nor evaluates module source.
+(def (poo-flow-module-role-authoring-validate! collection module-name
+                                                 module-root)
+  (let* ((style-policy (.ref collection 'style-policy))
+         (authoring (.ref style-policy 'authoring))
+         (interface
+          (poo-flow-module-interface
+           module-name (.o)
+           (list (cons 'source-owner
+                       (poo-flow-module-source-collection-owner collection)))
+           authoring: authoring)))
+    (for-each
+     (lambda (role)
+       (let* ((path
+               (path-expand
+                (string-append (symbol->string role) ".ss") module-root))
+              (admission
+               (call-with-input-file
+                path
+                (lambda (port)
+                  (poo-flow-module-authoring-admit-port
+                   interface role port)))))
+         (unless (poo-flow-module-authoring-admission-accepted? admission)
+           (error "POO-FLOW-MODULE-E009 role violates Interface authoring Contract"
+                  module-name role path
+                  (car (poo-flow-module-authoring-admission-diagnostics
+                        admission))))))
+     '(types objects funs config interface))))
+
+(def (poo-flow-module-default-style-validate! collection module-name module-root)
   (when (file-exists? (path-expand "init.ss" module-root))
     (error "POO-FLOW-MODULE-E005 init.ss belongs to the User Interface root"
            module-name))
   (poo-flow-module-interface-validate! module-name module-root)
   (poo-flow-module-dependency-direction-validate! module-name module-root)
   (poo-flow-module-owner-imports-validate! module-name module-root)
+  (poo-flow-module-role-authoring-validate! collection module-name module-root)
   module-root)
 
 (def poo-flow-module-style-policy-prototype
   (.o (module-style-policy? #t)
+      (authoring (poo-flow-default-module-authoring-profile))
       (validate poo-flow-module-default-style-validate!)))
 
 (def poo-flow-default-module-style-policy

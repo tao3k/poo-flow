@@ -3,12 +3,14 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Real POO object construction used only by native conformance qualification.
-(import (only-in :std/foreign begin-ffi c-define)
-        (only-in :std/text/json json-object->string)
+(import (only-in :std/ffi C-ffi-macrology)
+        (only-in :std/encoding/json json->string)
         (only-in :clan/poo/object .o)
         :poo-flow/src/modules/authorization/providers/cedar/objects
         (only-in :gerbil-scheme-rust/scheme/native gerbil-rs-root-string))
-(export main snapshot-root allow-root deny-root forbid-root)
+(export main)
+
+(C-ffi-macrology)
 
 ;; : (-> [String] Void)
 (def (main . _) (void))
@@ -44,17 +46,17 @@
   (with-catch (lambda (_) 0)
     (lambda ()
       (gerbil-rs-root-string
-       (json-object->string (poo-flow-cedar-authority-snapshot->runtime (snapshot)))))))
+       (json->string (poo-flow-cedar-authority-snapshot->runtime (snapshot)))))))
 ;; : (-> CedarPrincipal Boolean NativeRoot)
 (def (project-request principal blocked?)
   (with-catch (lambda (_) 0)
     (lambda ()
-      (gerbil-rs-root-string (json-object->string
+      (gerbil-rs-root-string (json->string
         (poo-flow-cedar-authorization-request->runtime (request principal blocked?)))))))
 
-;; begin-ffi bodies are raw Gambit forms, not Gerbil-expanded references.
+;; begin-foreign bodies are raw Gambit forms, not Gerbil-expanded references.
 ;; Keep exception handling in the ordinary Gerbil functions and qualify them.
-(begin-ffi (snapshot-root allow-root deny-root forbid-root)
+(begin-foreign
   (c-define (snapshot-root) () int64 "poo_flow_cedar_snapshot_root" "extern"
     (poo-flow/bindings/cedar-gerbil/crates/cedar-gerbil/scheme/conformance#project-snapshot))
   (c-define (allow-root) () int64 "poo_flow_cedar_allow_root" "extern"

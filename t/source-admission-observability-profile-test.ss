@@ -5,7 +5,7 @@
 
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .o .ref)
-        (only-in "../src/module-system/observability/source-admission.ss"
+        (only-in :poo-flow/src/module-system/observability/source-admission
                  poo-flow-source-admission-observability-profile-prototype
                  poo-flow-source-admission-observability-profile?))
 

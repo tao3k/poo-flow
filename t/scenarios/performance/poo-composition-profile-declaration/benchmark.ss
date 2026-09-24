@@ -18,7 +18,7 @@
  (sourcePath . "t/scenarios/performance/poo-composition-profile-declaration/benchmark.ss")
  (feature . poo-composition-profile-declaration)
  (rule . GERBIL-SCHEME-AGENT-R045)
- (optimizationFocus . "use-composition profile declarations produce POO objects without alist runtime adapters")
+ (optimizationFocus . "native Profile values compose without parser or alist runtime adapters")
 (inputShape . "inline profile declarations composed into one production stage")
 (expectedOutcome . "stage profile declarations materialize as native POO profile objects")
 (expectedRepair . "keep profile declaration macro expansion POO-native and avoid per-read adapter allocation")

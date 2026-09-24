@@ -2,7 +2,10 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test :poo-flow/src/module-system/contribution/interface)
+(import :std/test
+        :poo-flow/src/module-system/contribution/interface
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 compose profiles))
 (export contract-test)
 
 (def sample (make-contribution "test/sample" "1" "test-owner"
@@ -24,9 +27,9 @@
                           (list (.o (:: @ sample) core-contract: 'future))
                           '(test-read)) 'reasons)
                     '(incompatible-core-contract)))
-    (test-case "existing composition syntax keeps explicit profile values"
-      (let ((selection
-             (use-composition selection
-               (use-module test as contribution (profile sample))
-               (compose (profile contribution sample)))))
-        (check-equal? (eq? (car (poo-flow-scenario-case-profiles selection)) sample) #t)))))
+    (test-case "native composition keeps explicit Profile payloads"
+      (let* ((profile (.o identity: 'sample-contribution payload: sample))
+             (selection (compose profiles profile)))
+        (check-equal? (eq? (.ref (car (.ref selection 'profiles)) 'payload)
+                           sample)
+                      #t)))))

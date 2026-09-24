@@ -8,7 +8,7 @@
 (import (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .o .ref)
-        "../src/module-system/poo-clos/interface.ss")
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export poo-clos-dispatch-test)
 
@@ -30,30 +30,30 @@
 
 (def poo-clos-dispatch-test
   (test-suite "POO-native CLOS multi-dispatch conformance"
-    (test-case "class and any specializers participate in multi-argument dispatch"
+    (test-case "native prototype and any specializers participate in multi-argument dispatch"
       (let* ((generic (poo-clos-generic-function 'meet 2))
              (generic
               (poo-clos-add-method
                generic
                (primary-method
                 'animal-animal
-                (list (poo-clos-class-specializer animal-class)
-                      (poo-clos-class-specializer animal-class))
+                (list (poo-clos-prototype-specializer animal-class)
+                      (poo-clos-prototype-specializer animal-class))
                 'animal-animal)))
              (generic
               (poo-clos-add-method
                generic
                (primary-method
                 'dog-any
-                (list (poo-clos-class-specializer dog-class) any-specializer)
+                (list (poo-clos-prototype-specializer dog-class) any-specializer)
                 'dog-any)))
              (generic
               (poo-clos-add-method
                generic
                (primary-method
                 'animal-cat
-                (list (poo-clos-class-specializer animal-class)
-                      (poo-clos-class-specializer cat-class))
+                (list (poo-clos-prototype-specializer animal-class)
+                      (poo-clos-prototype-specializer cat-class))
                 'animal-cat))))
         (check-equal? (poo-clos-call generic dog dog) 'dog-any)
         (check-equal? (poo-clos-call generic dog cat) 'dog-any)
@@ -66,12 +66,17 @@
               (loop (cdr methods)
                     (let (method (car methods))
                       (poo-clos-add-method
-                       result
+                      result
                        (poo-clos-method
                         (.ref method 'identity) (.ref method 'specializers)
                         (.ref method 'body)
                         qualifier: (.ref method 'qualifier)
                         lambda-list: (.ref method 'lambda-list))))))))))
+
+    (test-case "native prototypes cannot masquerade as CLOS classes"
+      (check-exception
+       (poo-clos-class-specializer animal-class)
+       (failure-code? 'invalid-specializer)))
 
     (test-case "eql specializers are more specific than class specializers"
       (let* ((generic (poo-clos-generic-function 'feed 1))
@@ -79,7 +84,7 @@
               (poo-clos-add-method
                generic
                (primary-method
-                'dog (list (poo-clos-class-specializer dog-class)) 'dog)))
+                'dog (list (poo-clos-prototype-specializer dog-class)) 'dog)))
              (generic
               (poo-clos-add-method
                generic
@@ -115,8 +120,8 @@
           (poo-clos-call-next-method frame replacement))
         (def (after-animal _frame _animal) (record 'after-animal))
         (def (after-dog _frame _dog) (record 'after-dog))
-        (let* ((animal (poo-clos-class-specializer animal-class))
-               (dog-specializer (poo-clos-class-specializer dog-class))
+        (let* ((animal (poo-clos-prototype-specializer animal-class))
+               (dog-specializer (poo-clos-prototype-specializer dog-class))
                (generic
                 (foldl
                  (lambda (method generic)
@@ -146,13 +151,13 @@
               (poo-clos-add-method
                generic
                (poo-clos-method
-                'animal (list (poo-clos-class-specializer animal-class))
+                'animal (list (poo-clos-prototype-specializer animal-class))
                 terminal)))
              (generic
               (poo-clos-add-method
                generic
                (poo-clos-method
-                'dog (list (poo-clos-class-specializer dog-class))
+                'dog (list (poo-clos-prototype-specializer dog-class))
                 delegate))))
         (check-exception (poo-clos-call generic dog)
                          (failure-code? 'changed-applicable-methods))))
