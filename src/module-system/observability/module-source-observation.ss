@@ -149,14 +149,13 @@
            scope definition identifier)))
    +poo-flow-scheme-lexical-call-shadow-procedures+))
 
-;;; Definition discovery stays on reader data and recognizes only ordinary
-;;; function headers.  Quoted examples and syntax templates are not code.
-;; : (forall (a) (-> Symbol a [Alist]))
-;; : (-> Symbol Value [Alist])
-(def (poo-flow-scheme-lexical-call-shadow-datum-observations scope datum)
+;;; Tail-passing discovery keeps nested source traversal linear: each pair is
+;;; visited once and no recursive result list is copied by `append`.
+(def (poo-flow-scheme-lexical-call-shadow-datum-observations/into
+      scope datum tail)
   (cond
-   ((not (pair? datum)) '())
-   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) '())
+   ((not (pair? datum)) tail)
+   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) tail)
    ((and (memq (car datum) '(def define))
          (pair? (cdr datum))
          (pair? (cadr datum))
@@ -166,14 +165,26 @@
            (body (cddr datum))
            (formals
             (poo-flow-scheme-lexical-call-shadow-formal-names (cdr header))))
-      (append
+      (foldr
+       cons
+       (poo-flow-scheme-lexical-call-shadow-datum-observations/into
+        scope body tail)
        (poo-flow-scheme-lexical-call-shadow-local-observations
-        scope definition formals body)
-       (poo-flow-scheme-lexical-call-shadow-datum-observations scope body))))
+        scope definition formals body))))
    (else
-    (append
-     (poo-flow-scheme-lexical-call-shadow-datum-observations scope (car datum))
-     (poo-flow-scheme-lexical-call-shadow-datum-observations scope (cdr datum))))))
+    (poo-flow-scheme-lexical-call-shadow-datum-observations/into
+     scope
+     (car datum)
+     (poo-flow-scheme-lexical-call-shadow-datum-observations/into
+      scope (cdr datum) tail)))))
+
+;;; Definition discovery stays on reader data and recognizes only ordinary
+;;; function headers.  Quoted examples and syntax templates are not code.
+;; : (forall (a) (-> Symbol a [Alist]))
+;; : (-> Symbol Value [Alist])
+(def (poo-flow-scheme-lexical-call-shadow-datum-observations scope datum)
+  (poo-flow-scheme-lexical-call-shadow-datum-observations/into
+   scope datum '()))
 
 ;; : (-> Symbol InputPort [Alist])
 ;; poo-flow-scheme-lexical-call-shadow-port-observations
@@ -245,52 +256,64 @@
                   'bind-prototype-once-before-repeated-construction)))
      (cons 'runtime-executed #f))))
 
-;; : (-> Symbol Value [Alist])
-(def (poo-flow-scheme-inline-prototype-refs-observations scope refs)
+;; : (-> Symbol Value [Alist] [Alist])
+(def (poo-flow-scheme-inline-prototype-refs-observations/into scope refs tail)
   (if (pair? refs)
-    (let (prototype-ref (car refs))
-      (append
-       (if (poo-flow-scheme-inline-prototype-ref? prototype-ref)
-         (list (poo-flow-scheme-inline-prototype-observation
-                scope prototype-ref))
-         '())
-       (poo-flow-scheme-inline-prototype-refs-observations scope (cdr refs))))
-    '()))
+    (let* ((prototype-ref (car refs))
+           (next
+            (poo-flow-scheme-inline-prototype-refs-observations/into
+             scope (cdr refs) tail)))
+      (if (poo-flow-scheme-inline-prototype-ref? prototype-ref)
+        (cons (poo-flow-scheme-inline-prototype-observation
+               scope prototype-ref)
+              next)
+        next))
+    tail))
 
 ;;; Source datums may use dotted `.o` forms.  Walk the pair spine instead of
 ;;; requiring every constructor clause list to be proper.
-;; : (-> Symbol Value [Alist])
-(def (poo-flow-scheme-inline-prototype-super-observations scope clauses)
+;; : (-> Symbol Value [Alist] [Alist])
+(def (poo-flow-scheme-inline-prototype-super-observations/into
+      scope clauses tail)
   (if (pair? clauses)
-    (let (clause (car clauses))
-      (append
-       (if (and (pair? clause)
-                (eq? (car clause) '::)
-                (pair? (cdr clause)))
-         (poo-flow-scheme-inline-prototype-refs-observations
-          scope (cddr clause))
-         '())
-       (poo-flow-scheme-inline-prototype-super-observations
-        scope (cdr clauses))))
-    '()))
+    (let* ((clause (car clauses))
+           (next
+            (poo-flow-scheme-inline-prototype-super-observations/into
+             scope (cdr clauses) tail)))
+      (if (and (pair? clause)
+               (eq? (car clause) '::)
+               (pair? (cdr clause)))
+        (poo-flow-scheme-inline-prototype-refs-observations/into
+         scope (cddr clause) next)
+        next))
+    tail))
 
 ;;; The walker observes only direct super expressions.  A `.ref` in an
 ;;; ordinary slot initializer may be runtime-dependent and is not this rule.
 ;;; Quoted examples and syntax templates remain inert.
+(def (poo-flow-scheme-inline-prototype-datum-observations/into
+      scope datum tail)
+  (cond
+   ((not (pair? datum)) tail)
+   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) tail)
+   ((eq? (car datum) '.o)
+    (poo-flow-scheme-inline-prototype-super-observations/into
+     scope
+     (cdr datum)
+     (poo-flow-scheme-inline-prototype-datum-observations/into
+      scope (cdr datum) tail)))
+   (else
+    (poo-flow-scheme-inline-prototype-datum-observations/into
+     scope
+     (car datum)
+     (poo-flow-scheme-inline-prototype-datum-observations/into
+      scope (cdr datum) tail)))))
+
 ;; : (forall (a) (-> Symbol a [Alist]))
 ;; : (-> Symbol Value [Alist])
 (def (poo-flow-scheme-inline-prototype-datum-observations scope datum)
-  (cond
-   ((not (pair? datum)) '())
-   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) '())
-   ((eq? (car datum) '.o)
-    (append
-     (poo-flow-scheme-inline-prototype-super-observations scope (cdr datum))
-     (poo-flow-scheme-inline-prototype-datum-observations scope (cdr datum))))
-   (else
-    (append
-     (poo-flow-scheme-inline-prototype-datum-observations scope (car datum))
-     (poo-flow-scheme-inline-prototype-datum-observations scope (cdr datum))))))
+  (poo-flow-scheme-inline-prototype-datum-observations/into
+   scope datum '()))
 
 ;; : (-> Symbol InputPort [Alist])
 ;; poo-flow-scheme-inline-prototype-port-observations
