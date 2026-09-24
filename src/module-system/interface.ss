@@ -30,6 +30,7 @@
         poo-flow-module-interface?
         poo-flow-module-interface-id
         poo-flow-module-interface-schemas
+        poo-flow-module-interface-schema-spec
         poo-flow-module-interface-authoring
         poo-flow-module-interface-metadata
         poo-flow-string-required
@@ -109,6 +110,8 @@
       id: "anonymous-poo-module-interface"
       brand-name: poo-flow-brand-name
       schemas: (.o)
+      (schema-index
+       (poo-flow-module-interface-schema-index schemas))
       authoring: (poo-flow-default-module-authoring-profile)
       metadata: '()))
 
@@ -159,6 +162,25 @@
    (else '())))
 
 ;;; Boundary: schemas live on the interface, user values live in config objects.
+;;; The effective schema object owns one derived lookup slot so every downstream
+;;; projection shares the same linear construction instead of rescanning slots.
+;; : (-> InterfaceSchemaObject HashTable)
+(def (poo-flow-module-interface-schema-index schema-object)
+  (let (index (make-hash-table))
+    (when (object? schema-object)
+      (for-each
+       (lambda (slot-name)
+         (let (option-id
+               (if (symbol? slot-name)
+                 (symbol->string slot-name)
+                 slot-name))
+           (when (hash-key? index option-id)
+             (error "duplicate normalized Module Interface schema id"
+                    option-id))
+           (hash-put! index option-id (.ref schema-object slot-name))))
+       (.all-slots schema-object)))
+    index))
+
 ;; : (-> InterfaceId InterfaceSchemaObject InterfaceMetadata authoring: ModuleAuthoringProfile PooModuleInterface)
 (def (poo-flow-module-interface interface-id-value schema-object metadata-value
                                 authoring: (authoring-value
@@ -185,6 +207,14 @@
 ;; : (-> PooModuleInterface InterfaceSchemaObject)
 (def (poo-flow-module-interface-schemas interface)
   (.ref interface 'schemas))
+
+;;; Boundary: consumers ask the Interface for one schema spec; the hash table
+;;; remains a derived slot implementation rather than a second public model.
+;; : (-> PooModuleInterface OptionId MaybeInterfaceSchemaSpec)
+(def (poo-flow-module-interface-schema-spec interface option-id)
+  (let (index (.ref interface 'schema-index))
+    (and (hash-table? index)
+         (hash-get index option-id))))
 
 ;; : (-> PooModuleInterface ModuleAuthoringProfile)
 (def (poo-flow-module-interface-authoring interface)

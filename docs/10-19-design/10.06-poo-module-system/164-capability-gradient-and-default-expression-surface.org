@@ -264,6 +264,14 @@ functions.  One-receiver replacement uses a slot generic.  CLOS is reserved
 for real open crossings.  Raw closures and symbolic dispatch tables are not
 ordinary domain declarations.
 
+An Interface MAY own a derived index or another inert projection slot when the
+projection is constructed once from the Interface's effective noun slots and
+is reused by multiple consumers.  The public API exposes domain lookup or
+validation behavior; the mutable hash table, vector or cache representation is
+not itself a user-configurable concept.  Cross-object traversal remains a
+named pure algorithm unless one receiver family genuinely requires overridable
+slot dispatch.
+
 ** Meta-last law
 
 Ordinary users MUST NOT configure a linearizer, slot resolver, method cache,
