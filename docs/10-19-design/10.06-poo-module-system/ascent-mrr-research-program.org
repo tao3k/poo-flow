@@ -67,6 +67,68 @@ This slice establishes orchestration and evidence behavior.  It does not prove
 general Datalog semantics, deletion maintenance, a new optimizer, BYODS parity,
 cross-platform runtime conformance, or an Ascent replacement.
 
+* Why search and reasoning matter to an Agent
+
+An Agent must repeatedly choose what to inspect, what to believe, what to do
+next, and when to stop or escalate.  These are different questions.  Search
+finds source-bound candidates under an exact snapshot and selector; MRR can
+derive consequences and preserve support; a model can make a bounded judgment
+under uncertainty; POO Flow controls context projection, policy, capability,
+and handoff.  The value is measured by better task outcomes with less
+unsupported action, latency, and model cost, not by fixed-point throughput
+alone.
+
+The control path to study is:
+
+#+begin_example
+source-bound retrieval -> MRR admitted facts and derivations
+  -> POO Flow bounded context -> model judgment proposal
+  -> POO Flow authorization -> runtime effect -> new source observation
+#+end_example
+
+Concrete retrieval belongs to its source/search producer.  POO Flow does not
+add a second text index, parser, or graph language.  A retrieved passage is
+evidence only when its source identity, revision, selector, and coverage are
+known.  MRR inference may show what follows from such facts; neither a search
+hit nor a model score is semantic admission.
+
+** Jev as a decision-model case
+
+TypeSafe AI's [[https://docs.typesafe.ai/introduction][Jev documentation]]
+describes one supplied state and independent typed questions returning Choice,
+Score, or Noul values.  Its [[https://docs.typesafe.ai/confidence][confidence
+guide]] delegates thresholds and action handling to application code.  Jev is
+therefore a useful example of a fast *judgment provider*, not an authority for
+source truth, derivation, or external effects.  Vendor speed and calibration
+claims must be measured on our own tasks with independent labels.
+
+For a model-routing or next-action Choice, POO Flow first removes options that
+violate capability, budget, or dependency constraints.  It then projects a
+compact, provenance-bound state and asks the model to rank the remaining
+options.  The returned option, probability distribution, model version,
+question criteria, and input-state digest form a judgment proposal.  MRR
+admission and POO Flow authorization remain separate gates; a high score
+cannot widen capability or repair missing evidence.  An explicit abstain,
+request-more-evidence, or human handoff route is required when coverage or
+confidence is inadequate.
+
+** Scenarios and measurable value
+
+| Scenario | Search and reasoning contribution | Model judgment and controlled action | Outcome to measure |
+|----------+-----------------------------------+--------------------------------------+--------------------|
+| coding Agent changes an API | locate exact definitions/callers/tests; infer transitive impact and invalidated assumptions | choose next test or reviewer route from allowed options; authorize edits/tests separately | task success, missed affected files, stale-source actions, tests per successful change |
+| incident or security triage | join logs, topology, source versions, and competing causal paths; retain supporting and contradicting evidence | rank investigation or escalation route without turning a risk score into permission to remediate | time to correct diagnosis, false escalation, unsupported remediation, evidence recall |
+| research or knowledge Agent | retrieve source passages and revisions; derive claim dependencies and contradiction/coverage gaps | choose what evidence to fetch next or when to abstain | grounded-answer accuracy, unsupported claims, retrieval cost, explanation fidelity |
+
+Each scenario needs a frozen source snapshot, task, allowed actions, independent
+outcome labels, failure cases, and a replayable trace.  A claim that an Agent
+improved requires a task-level comparison, not only a model accuracy score.
+At minimum compare a generative-model-only workflow, search plus model,
+search plus Jev-style judgments, and the full MRR/POO Flow evidence path under
+the same tools and budgets.  Report end-to-end success, coverage, calibrated
+abstention, unauthorized-action rate, latency, token/model cost, and receipt
+size.  Vendor model agreement may be a diagnostic; it is not ground truth.
+
 * Research lanes after the first slice
 
 ** Source change and revocation
