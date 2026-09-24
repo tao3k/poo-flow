@@ -10,7 +10,9 @@
                  PooFlowGqlQueryLanguage.
                  PooFlowQueryResultContract.)
         (only-in "funs.ss" poo-flow-query-admit)
-        (only-in "gql.ss" poo-flow-query->gql))
+        (only-in "gql.ss" poo-flow-query->gql)
+        (only-in "contracts.ss" poo-flow-query-bind-execution-receipt)
+        (only-in "providers/mrr/config.ss" MrrGqlQueryProvider))
 
 (export PooFlowQueryModule.)
 
@@ -22,5 +24,7 @@
       (.o gql: PooFlowGqlQueryLanguage.)
       element-space: PooFlowQueryElementSpace.
       result-contract: PooFlowQueryResultContract.
+      providers: (.o mrr: MrrGqlQueryProvider)
       .admit-query: poo-flow-query-admit
-      .project-gql: poo-flow-query->gql))
+      .project-gql: poo-flow-query->gql
+      .bind-execution-receipt: poo-flow-query-bind-execution-receipt))

@@ -24,9 +24,16 @@
                  poo-flow-query-program-kind
                  poo-flow-query-element-space-kind
                  poo-flow-query-result-contract-kind
+                 poo-flow-query-provider-kind
+                 poo-flow-query-execution-candidate-kind
+                 poo-flow-source-query-receipt-kind
                  PooFlowQuery PooFlowQueryLanguage PooFlowQueryProgram
                  PooFlowQueryElementSpace
-                 PooFlowQueryResultContract))
+                 PooFlowQueryResultContract
+                 PooFlowQueryProvider
+                 PooFlowQueryExecutionCandidate
+                 PooFlowSourceQueryReceipt)
+        :poo-flow/src/module-system/poo-clos/interface)
 
 (export PooFlowQuery.
         PooFlowQueryLanguage.
@@ -43,9 +50,18 @@
         PooFlowGqlQueryProgram.
         PooFlowQueryElementSpace.
         PooFlowQueryResultContract.
+        QueryReceiptBindingExecutor
         poo-flow-query-element-space
         poo-flow-gql-query-program?
-        poo-flow-query-result-contract)
+        poo-flow-query-result-contract
+        poo-flow-query-provider
+        poo-flow-query-execution-candidate
+        poo-flow-source-query-receipt)
+
+;;; Provider packages specialize this executor class and publish their binding
+;;; methods through an owned bundle.  The Query core never invokes a runtime.
+(def QueryReceiptBindingExecutor
+  (poo-clos-class 'query/receipt-binding-executor))
 
 (def (query-program-has-slots? value slots)
   (and (object? value)
@@ -168,3 +184,59 @@
        result-kind: result-kind-value
        required-fields: required-fields-value
        max-results: max-results-value)))
+
+(def (poo-flow-query-provider identity-value supported-languages-value
+                              runtime-owner-value receipt-executor-value)
+  (validate
+   PooFlowQueryProvider
+   (.o kind: poo-flow-query-provider-kind
+       identity: identity-value
+       supported-languages: supported-languages-value
+       runtime-owner: runtime-owner-value
+       receipt-executor: receipt-executor-value
+       runtime-executed?: #f
+       action-authority?: #f)))
+
+(def (poo-flow-query-execution-candidate
+      provider-identity-value query-identity-value query-version-value
+      semantic-revision-value source-content-identity-value
+      parser-identity-value provenance-root-value result-digest-value
+      result-count-value complete?-value)
+  (validate
+   PooFlowQueryExecutionCandidate
+   (.o kind: poo-flow-query-execution-candidate-kind
+       provider-identity: provider-identity-value
+       query-identity: query-identity-value
+       query-version: query-version-value
+       semantic-revision: semantic-revision-value
+       source-content-identity: source-content-identity-value
+       parser-identity: parser-identity-value
+       provenance-root: provenance-root-value
+       result-digest: result-digest-value
+       result-count: result-count-value
+       complete?: complete?-value
+       runtime-executed?: #t
+       mutation-authority?: #f
+       action-authority?: #f)))
+
+(def (poo-flow-source-query-receipt candidate result-contract-identity-value
+                                    diagnostic-values)
+  (validate
+   PooFlowSourceQueryReceipt
+   (.o kind: poo-flow-source-query-receipt-kind
+       provider-identity: (.ref candidate 'provider-identity)
+       query-identity: (.ref candidate 'query-identity)
+       query-version: (.ref candidate 'query-version)
+       semantic-revision: (.ref candidate 'semantic-revision)
+       source-content-identity: (.ref candidate 'source-content-identity)
+       parser-identity: (.ref candidate 'parser-identity)
+       provenance-root: (.ref candidate 'provenance-root)
+       result-digest: (.ref candidate 'result-digest)
+       result-count: (.ref candidate 'result-count)
+       complete?: (.ref candidate 'complete?)
+       result-contract-identity: result-contract-identity-value
+       admitted?: (null? diagnostic-values)
+       diagnostics: diagnostic-values
+       runtime-executed?: #t
+       mutation-authority?: #f
+       action-authority?: #f)))

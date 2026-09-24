@@ -133,6 +133,59 @@
        (check (.ref receipt 'action-authority?) => #f)
        (check (.ref receipt 'runtime-executed?) => #f)))
 
+   (test-case "binds an admitted MRR candidate through Provider x Query dispatch"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (candidate
+             (poo-flow-query-execution-candidate
+              'mrr
+              'healthcare/case-profile-relations
+              "1"
+              "sha256:space-v1"
+              (poo-flow-query-source-content-identity Query)
+              'gerbil-parser
+              "sha256:provenance-v1"
+              "sha256:result-v1"
+              3
+              #t))
+            (receipt
+             (poo-flow-query-bind-execution-receipt
+              MrrGqlQueryProvider Query admission candidate)))
+       (check (poo-flow-source-query-receipt? receipt) => #t)
+       (check (.ref receipt 'admitted?) => #t)
+       (check (.ref receipt 'diagnostics) => '())
+       (check (.ref receipt 'provider-identity) => 'mrr)
+       (check (.ref receipt 'result-contract-identity)
+              => 'healthcare/query-result)
+       (check (.ref receipt 'runtime-executed?) => #t)
+       (check (.ref receipt 'mutation-authority?) => #f)
+       (check (.ref receipt 'action-authority?) => #f)))
+
+   (test-case "rejects drifted or over-bound Provider evidence"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (candidate
+             (poo-flow-query-execution-candidate
+              'mrr
+              'healthcare/case-profile-relations
+              "1"
+              "sha256:space-v2"
+              "sha256:wrong-source"
+              'other-parser
+              "sha256:provenance-v1"
+              "sha256:result-v1"
+              17
+              #f))
+            (receipt
+             (poo-flow-query-bind-execution-receipt
+              MrrGqlQueryProvider Query admission candidate)))
+       (check (.ref receipt 'admitted?) => #f)
+       (check (map car (.ref receipt 'diagnostics))
+              => '(semantic-revision-mismatch
+                   source-content-identity-mismatch
+                   parser-identity-mismatch
+                   query-result-bound-exceeded
+                   incomplete-query-result))
+       (check (.ref receipt 'action-authority?) => #f)))
+
    (test-case "rejects undeclared Elements without widening the space"
      (let* ((query
              (validate

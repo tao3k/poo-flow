@@ -8,7 +8,9 @@
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element?)
         (only-in :gerbil/core hash-get hash-put!)
-        (only-in :std/list/list every))
+        (only-in :std/list/list every)
+        (only-in :poo-flow/src/module-system/poo-clos/interface
+                 poo-clos-instance?))
 
 (export poo-flow-query-kind
         poo-flow-query-language-kind
@@ -16,18 +18,27 @@
         poo-flow-query-element-space-kind
         poo-flow-query-result-contract-kind
         poo-flow-query-admission-receipt-kind
+        poo-flow-query-provider-kind
+        poo-flow-query-execution-candidate-kind
+        poo-flow-source-query-receipt-kind
         PooFlowQuery
         PooFlowQueryLanguage
         PooFlowQueryProgram
         PooFlowQueryElementSpace
         PooFlowQueryResultContract
         PooFlowQueryAdmissionReceipt
+        PooFlowQueryProvider
+        PooFlowQueryExecutionCandidate
+        PooFlowSourceQueryReceipt
         poo-flow-query?
         poo-flow-query-language?
         poo-flow-query-program?
         poo-flow-query-element-space?
         poo-flow-query-result-contract?
-        poo-flow-query-admission-receipt?)
+        poo-flow-query-admission-receipt?
+        poo-flow-query-provider?
+        poo-flow-query-execution-candidate?
+        poo-flow-source-query-receipt?)
 
 (def poo-flow-query-kind 'poo-flow.query)
 (def poo-flow-query-language-kind 'poo-flow.query.language)
@@ -35,6 +46,10 @@
 (def poo-flow-query-element-space-kind 'poo-flow.query.element-space)
 (def poo-flow-query-result-contract-kind 'poo-flow.query.result-contract)
 (def poo-flow-query-admission-receipt-kind 'poo-flow.query.admission-receipt)
+(def poo-flow-query-provider-kind 'poo-flow.query.provider)
+(def poo-flow-query-execution-candidate-kind
+  'poo-flow.query.execution-candidate)
+(def poo-flow-source-query-receipt-kind 'poo-flow.query.source-receipt)
 
 (def (query-stable-identity? value)
   (or (symbol? value)
@@ -188,6 +203,77 @@
 (define-type (PooFlowQueryAdmissionReceipt @ Type.)
   .element?: query-admission-receipt-shape?)
 
+(def (query-provider-shape? value)
+  (and (query-has-slots?
+        value '(kind identity supported-languages runtime-owner
+                     receipt-executor runtime-executed? action-authority?))
+       (eq? (.ref value 'kind) poo-flow-query-provider-kind)
+       (query-stable-identity? (.ref value 'identity))
+       (query-symbol-list? (.ref value 'supported-languages))
+       (query-unique-identities? (.ref value 'supported-languages))
+       (symbol? (.ref value 'runtime-owner))
+       (poo-clos-instance? (.ref value 'receipt-executor))
+       (eq? (.ref value 'runtime-executed?) #f)
+       (eq? (.ref value 'action-authority?) #f)))
+
+(define-type (PooFlowQueryProvider @ Type.)
+  .element?: query-provider-shape?)
+
+(def (query-execution-candidate-shape? value)
+  (and (query-has-slots?
+        value '(kind provider-identity query-identity query-version
+                     semantic-revision source-content-identity parser-identity
+                     provenance-root result-digest result-count complete?
+                     runtime-executed? mutation-authority? action-authority?))
+       (eq? (.ref value 'kind) poo-flow-query-execution-candidate-kind)
+       (query-stable-identity? (.ref value 'provider-identity))
+       (query-stable-identity? (.ref value 'query-identity))
+       (query-revision? (.ref value 'query-version))
+       (query-revision? (.ref value 'semantic-revision))
+       (query-revision? (.ref value 'source-content-identity))
+       (query-stable-identity? (.ref value 'parser-identity))
+       (query-revision? (.ref value 'provenance-root))
+       (query-revision? (.ref value 'result-digest))
+       (exact-integer? (.ref value 'result-count))
+       (>= (.ref value 'result-count) 0)
+       (boolean? (.ref value 'complete?))
+       (eq? (.ref value 'runtime-executed?) #t)
+       (eq? (.ref value 'mutation-authority?) #f)
+       (eq? (.ref value 'action-authority?) #f)))
+
+(define-type (PooFlowQueryExecutionCandidate @ Type.)
+  .element?: query-execution-candidate-shape?)
+
+(def (source-query-receipt-shape? value)
+  (and (query-has-slots?
+        value '(kind provider-identity query-identity query-version
+                     semantic-revision source-content-identity parser-identity
+                     provenance-root result-digest result-count complete?
+                     result-contract-identity admitted? diagnostics
+                     runtime-executed? mutation-authority? action-authority?))
+       (eq? (.ref value 'kind) poo-flow-source-query-receipt-kind)
+       (query-stable-identity? (.ref value 'provider-identity))
+       (query-stable-identity? (.ref value 'query-identity))
+       (query-revision? (.ref value 'query-version))
+       (query-revision? (.ref value 'semantic-revision))
+       (query-revision? (.ref value 'source-content-identity))
+       (query-stable-identity? (.ref value 'parser-identity))
+       (query-revision? (.ref value 'provenance-root))
+       (query-revision? (.ref value 'result-digest))
+       (exact-integer? (.ref value 'result-count))
+       (>= (.ref value 'result-count) 0)
+       (boolean? (.ref value 'complete?))
+       (query-stable-identity? (.ref value 'result-contract-identity))
+       (boolean? (.ref value 'admitted?))
+       (list? (.ref value 'diagnostics))
+       (eq? (.ref value 'admitted?) (null? (.ref value 'diagnostics)))
+       (eq? (.ref value 'runtime-executed?) #t)
+       (eq? (.ref value 'mutation-authority?) #f)
+       (eq? (.ref value 'action-authority?) #f)))
+
+(define-type (PooFlowSourceQueryReceipt @ Type.)
+  .element?: source-query-receipt-shape?)
+
 (def (poo-flow-query? value)
   (element? PooFlowQuery value))
 
@@ -205,3 +291,12 @@
 
 (def (poo-flow-query-admission-receipt? value)
   (element? PooFlowQueryAdmissionReceipt value))
+
+(def (poo-flow-query-provider? value)
+  (element? PooFlowQueryProvider value))
+
+(def (poo-flow-query-execution-candidate? value)
+  (element? PooFlowQueryExecutionCandidate value))
+
+(def (poo-flow-source-query-receipt? value)
+  (element? PooFlowSourceQueryReceipt value))
