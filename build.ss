@@ -66,6 +66,7 @@
     "src/modules/authorization/providers/cedar/interface.ss"
     "src/modules/governance/interface.ss"
     "src/modules/proof/interface.ss"
+    "src/modules/query/interface.ss"
     "src/modules/standards/interface.ss"
     "src/modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))

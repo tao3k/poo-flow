@@ -17,6 +17,12 @@ A Query is an immutable, bounded, read-only POO object.  Its predicate is a
 named pure function with declared dependencies.  Public Query slots do not
 contain raw strings, lists, vectors or anonymous lambdas.
 
+The Query Module exposes supported languages through one inheritable
+=languages= noun slot.  Each language object owns a =.program?= slot Contract:
+Scheme admits a named POO expression, while GQL admits a content-bound
+=gerbil-parser= receipt.  A raw GQL string and the parser's internal alist are
+both boundary values, never the public =program= slot.
+
 GQL is an optional Provider projection/execution surface.  It returns a receipt
 bound to Query identity, provider identity and semantic revision.  The result
 is evidence, never action authority.  Python adapters and MRR/Rust consumers

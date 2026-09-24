@@ -93,6 +93,11 @@ Do not put raw GQL text, query alists or anonymous lambdas in =query= or
 an identified projection whose receipt binds Query, Contract, source and
 result identities.
 
+Publish language support through the Query Module's =languages= POO slot.
+Language-specific =.program?= slots perform single dispatch over named Scheme
+program objects or parser-admitted GQL program receipts.  Do not copy the GQL
+grammar, parser or ParseArtifact alist into POO Flow.
+
 The executable owner is
 =src/module-system/authoring/contracts.ss=.  It rejects mechanically certain
 raw Query initializers while preserving ordinary pure functions, vertical
