@@ -21,19 +21,6 @@ typedef struct {
   size_t length;
 } poo_flow_scheme_result_v1;
 
-typedef struct {
-  const char *provider_identity;
-  const char *query_identity;
-  const char *query_version;
-  const char *semantic_revision;
-  const char *source_content_identity;
-  const char *parser_identity;
-  const char *provenance_root;
-  const char *result_digest;
-  uint64_t result_count;
-  uint8_t complete;
-} poo_flow_scheme_query_execution_candidate_v1;
-
 void poo_flow_scheme_result_v1_init(poo_flow_scheme_result_v1 *result);
 void poo_flow_scheme_result_v1_release(poo_flow_scheme_result_v1 *result);
 uint32_t poo_flow_scheme_native_abi_version(void);
@@ -41,9 +28,6 @@ int32_t poo_flow_scheme_native_descriptor(poo_flow_scheme_result_v1 *result);
 int32_t poo_flow_scheme_native_validate(char *contract,
                                         char *payload,
                                         poo_flow_scheme_result_v1 *result);
-int32_t poo_flow_scheme_native_validate_query_execution_candidate(
-    poo_flow_scheme_query_execution_candidate_v1 *candidate,
-    poo_flow_scheme_result_v1 *result);
 
 #ifdef __cplusplus
 }

@@ -338,11 +338,11 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - [ ] Bind those GQL queries to an MRR Rust execution receipt through the
    gerbil-parser native FFI; parser qualification alone is not query execution
    and Lambda must not add a subprocess or a second graph runtime.  POO Flow's
-   typed candidate, CLOS admission, and typed C11 transport are ready; the
+   typed candidate, CLOS admission, and Scheme-owned typed Rust projection are ready; the
    remaining owner is the MRR Rust adapter from its admitted physical result
    receipt.  That adapter must combine the MRR-owned row count, result digest
    and bound-query evidence with the original POO execution binding.  It may
-   not reconstruct a JSON Query model or invent parser, source, provenance or
+   not reconstruct a Query model or invent parser, source, provenance or
    semantic-revision identities from the result receipt.
 - [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
    native parser qualification and byte-exact roundtrip are closed.

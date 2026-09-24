@@ -146,21 +146,6 @@
    (json-required object "result-count")
    (json-required object "complete")))
 
-(def (native-validate-query-execution-candidate-fields
-      provider-identity query-identity query-version semantic-revision
-      source-content-identity parser-identity provenance-root result-digest
-      result-count complete?)
-  (let (candidate
-        (poo-flow-query-execution-candidate
-         (string->symbol provider-identity)
-         (string->symbol query-identity)
-         query-version semantic-revision source-content-identity
-         (string->symbol parser-identity)
-         provenance-root result-digest result-count complete?))
-    (unless (poo-flow-query-execution-candidate? candidate)
-      (error "invalid canonical query execution candidate" candidate))
-    (validation-result "query-execution-candidate" '())))
-
 (def (admission-receipt<-json object)
   (poo-flow-runtime-language-admission-receipt
    (source-query-receipt<-json
@@ -237,19 +222,6 @@ typedef struct {
   size_t length;
 } poo_flow_scheme_result_v1;
 
-typedef struct {
-  const char *provider_identity;
-  const char *query_identity;
-  const char *query_version;
-  const char *semantic_revision;
-  const char *source_content_identity;
-  const char *parser_identity;
-  const char *provenance_root;
-  const char *result_digest;
-  uint64_t result_count;
-  uint8_t complete;
-} poo_flow_scheme_query_execution_candidate_v1;
-
 void poo_flow_scheme_result_v1_init(poo_flow_scheme_result_v1 *result) {
   if (result == NULL) return;
   result->status = 0;
@@ -270,19 +242,6 @@ int32_t poo_flow_scheme_native_descriptor(poo_flow_scheme_result_v1 *result);
 int32_t poo_flow_scheme_native_validate(char *contract,
                                         char *payload,
                                         poo_flow_scheme_result_v1 *result);
-int32_t poo_flow_scheme_native_validate_query_execution_candidate(
-    poo_flow_scheme_query_execution_candidate_v1 *candidate,
-    poo_flow_scheme_result_v1 *result);
-
-static int poo_flow_scheme_query_execution_candidate_v1_valid(
-    const poo_flow_scheme_query_execution_candidate_v1 *candidate) {
-  return candidate != NULL && candidate->provider_identity != NULL &&
-         candidate->query_identity != NULL && candidate->query_version != NULL &&
-         candidate->semantic_revision != NULL &&
-         candidate->source_content_identity != NULL &&
-         candidate->parser_identity != NULL && candidate->provenance_root != NULL &&
-         candidate->result_digest != NULL && candidate->complete <= 1u;
-}
 
 static int poo_flow_native_c_round_trip(void) {
   static const char source_query[] =
@@ -291,14 +250,14 @@ static int poo_flow_native_c_round_trip(void) {
     "\"parser-version\":\"1\",\"query-id\":\"q1\",\"query-version\":\"1\","
     "\"selected-node-identities\":[\"node-1\"],\"representation\":\"ast-data\","
     "\"provenance-root\":\"sha256:provenance\",\"result-digest\":\"sha256:result\"}";
-  static poo_flow_scheme_query_execution_candidate_v1 candidate = {
-    "mrr", "q1", "1", "revision-1", "sha256:source", "gerbil-parser",
-    "sha256:provenance", "sha256:result", 1u, 1u
-  };
-  static poo_flow_scheme_query_execution_candidate_v1 invalid_candidate = {
-    "mrr", "q1", "1", "revision-1", "sha256:source", "gerbil-parser",
-    "sha256:provenance", "sha256:result", 1u, 2u
-  };
+  static const char query_execution_candidate[] =
+    "{\"provider-identity\":\"mrr\",\"query-identity\":\"q1\","
+    "\"query-version\":\"1\",\"semantic-revision\":\"revision-1\","
+    "\"source-content-identity\":\"sha256:source\","
+    "\"parser-identity\":\"gerbil-parser\","
+    "\"provenance-root\":\"sha256:provenance\","
+    "\"result-digest\":\"sha256:result\",\"result-count\":1,"
+    "\"complete\":true}";
   poo_flow_scheme_result_v1 result;
 
   if (poo_flow_scheme_native_abi_version() != 1u) return 1;
@@ -320,29 +279,13 @@ static int poo_flow_native_c_round_trip(void) {
     return 4;
   }
   poo_flow_scheme_result_v1_release(&result);
-  if (poo_flow_scheme_native_validate_query_execution_candidate(&candidate,
-                                                                &result) != 0 ||
+  if (poo_flow_scheme_native_validate("query-execution-candidate",
+                                      (char *)query_execution_candidate,
+                                      &result) != 0 ||
       result.status != 0 || result.payload == NULL ||
       strstr((const char *)result.payload, "\"valid\":true") == NULL) {
     poo_flow_scheme_result_v1_release(&result);
     return 5;
-  }
-  poo_flow_scheme_result_v1_release(&result);
-  if (poo_flow_scheme_native_validate_query_execution_candidate(
-          &invalid_candidate, &result) != -1 ||
-      result.status != -1 || result.payload == NULL ||
-      strstr((const char *)result.payload,
-             "poo-flow.scheme-native-error.v1") == NULL) {
-    poo_flow_scheme_result_v1_release(&result);
-    return 6;
-  }
-  poo_flow_scheme_result_v1_release(&result);
-  if (poo_flow_scheme_native_validate_query_execution_candidate(NULL, &result) != -1 ||
-      result.status != -1 || result.payload == NULL ||
-      strstr((const char *)result.payload,
-             "poo-flow.scheme-native-error.v1") == NULL) {
-    poo_flow_scheme_result_v1_release(&result);
-    return 7;
   }
   poo_flow_scheme_result_v1_release(&result);
   if (poo_flow_scheme_native_validate("unknown", "{}", &result) != -1 ||
@@ -350,7 +293,7 @@ static int poo_flow_native_c_round_trip(void) {
       strstr((const char *)result.payload,
              "poo-flow.scheme-native-error.v1") == NULL) {
     poo_flow_scheme_result_v1_release(&result);
-    return 8;
+    return 6;
   }
   poo_flow_scheme_result_v1_release(&result);
   return 0;
@@ -362,11 +305,6 @@ END-C
 (def-C-type poo_flow_scheme_result_v1-borrowed-ptr*
   (pointer poo_flow_scheme_result_v1
            (poo_flow_scheme_result_v1-borrowed-ptr*)))
-(def-C-type poo_flow_scheme_query_execution_candidate_v1
-  "poo_flow_scheme_query_execution_candidate_v1")
-(def-C-type poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*
-  (pointer poo_flow_scheme_query_execution_candidate_v1
-           (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*)))
 
 (def-C-lambda poo_flow_scheme_result_v1-status
   (poo_flow_scheme_result_v1-borrowed-ptr*) int32
@@ -374,40 +312,6 @@ END-C
 (def-C-lambda poo_flow_scheme_result_v1-status-set!
   (poo_flow_scheme_result_v1-borrowed-ptr* int32) void
   "___arg1->status = ___arg2; ___return;")
-
-(def-C-lambda poo-flow-query-candidate-valid/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) int
-  "___return (poo_flow_scheme_query_execution_candidate_v1_valid(___arg1));")
-(def-C-lambda poo-flow-query-candidate-provider/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->provider_identity);")
-(def-C-lambda poo-flow-query-candidate-query/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->query_identity);")
-(def-C-lambda poo-flow-query-candidate-version/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->query_version);")
-(def-C-lambda poo-flow-query-candidate-revision/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->semantic_revision);")
-(def-C-lambda poo-flow-query-candidate-source/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->source_content_identity);")
-(def-C-lambda poo-flow-query-candidate-parser/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->parser_identity);")
-(def-C-lambda poo-flow-query-candidate-provenance/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->provenance_root);")
-(def-C-lambda poo-flow-query-candidate-digest/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) UTF-8-string
-  "___return ((char *)___arg1->result_digest);")
-(def-C-lambda poo-flow-query-candidate-count/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) unsigned-int64
-  "___return (___arg1->result_count);")
-(def-C-lambda poo-flow-query-candidate-complete/native
-  (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*) unsigned-int8
-  "___return (___arg1->complete);")
 
 (def-C-lambda poo-flow-scheme-result-v1-set-bytes!
     (poo_flow_scheme_result_v1-borrowed-ptr* scheme-object) void
@@ -473,38 +377,4 @@ END-C
         (string->utf8
          (poo-flow/src/ffi/runtime-v0-native#native-validate-payload
           contract payload)))
-       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status result))))
-
-  (c-define (poo-flow-scheme-native-validate-query-execution-candidate
-             candidate result)
-    (poo_flow_scheme_query_execution_candidate_v1-borrowed-ptr*
-     poo_flow_scheme_result_v1-borrowed-ptr*)
-    int32
-    "poo_flow_scheme_native_validate_query_execution_candidate" "extern"
-    (with-exception-catcher
-     (lambda (exception)
-       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result -1)
-       (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
-        result (string->utf8
-                (poo-flow/src/ffi/runtime-v0-native#native-error-payload
-                 exception)))
-       -1)
-     (lambda ()
-       (unless (= (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-valid/native candidate) 1)
-         (error "invalid native query execution candidate pointer or field"))
-       (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status-set! result 0)
-       (poo-flow/src/ffi/runtime-v0-native#poo-flow-scheme-result-v1-set-bytes!
-        result
-        (string->utf8
-         (poo-flow/src/ffi/runtime-v0-native#native-validate-query-execution-candidate-fields
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-provider/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-query/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-version/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-revision/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-source/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-parser/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-provenance/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-digest/native candidate)
-          (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-count/native candidate)
-          (not (zero? (poo-flow/src/ffi/runtime-v0-native#poo-flow-query-candidate-complete/native candidate))))))
        (poo-flow/src/ffi/runtime-v0-native#poo_flow_scheme_result_v1-status result)))))
