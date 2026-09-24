@@ -21,11 +21,11 @@ gerbil_dependency_sources.source_package(
     name = "asp_gerbil_scheme_sources",
     canonical_uri = "https://github.com/tao3k/asp-gerbil-scheme",
     package = "asp-gerbil-scheme",
-    revision = "52eb1f07d9815a851d335fe604249b6094114199",
-    sha256 = "7cb0a38efcfb152e98ccf85327a80f578fd5e79e6597358d2137cac588b55432",
-    strip_prefix = "asp-gerbil-scheme-52eb1f07d9815a851d335fe604249b6094114199",
+    revision = "c0c3124d30fe7afc3902f404519bb87ed1c0f447",
+    sha256 = "ae940763e28b1c57db1aba3d47cf26dbb57758014360f53000f7863d565cfa34",
+    strip_prefix = "asp-gerbil-scheme-c0c3124d30fe7afc3902f404519bb87ed1c0f447",
     urls = [
-        "https://github.com/tao3k/asp-gerbil-scheme/archive/52eb1f07d9815a851d335fe604249b6094114199.tar.gz",
+        "https://github.com/tao3k/asp-gerbil-scheme/archive/c0c3124d30fe7afc3902f404519bb87ed1c0f447.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(
@@ -43,11 +43,11 @@ gerbil_dependency_sources.source_package(
     name = "gerbil_parser_sources",
     canonical_uri = "https://github.com/tao3k/gerbil-parser",
     package = "gerbil-parser",
-    revision = "8af7343431eb33e54b21e870760a02f900e78872",
-    sha256 = "ca026572bba4446dc0f8e511060cfe73e727b2d768d3336b0e7e5d26bd5877f1",
-    strip_prefix = "gerbil-parser-8af7343431eb33e54b21e870760a02f900e78872",
+    revision = "d59190e53d6b667f682a8ec88b1f6f3324ff74bd",
+    sha256 = "9c5d5e799fceeafc37c518c8b6266f3d6caef72edeb634b8d627178bc7163be7",
+    strip_prefix = "gerbil-parser-d59190e53d6b667f682a8ec88b1f6f3324ff74bd",
     urls = [
-        "https://github.com/tao3k/gerbil-parser/archive/8af7343431eb33e54b21e870760a02f900e78872.tar.gz",
+        "https://github.com/tao3k/gerbil-parser/archive/d59190e53d6b667f682a8ec88b1f6f3324ff74bd.tar.gz",
     ],
 )
 use_repo(
