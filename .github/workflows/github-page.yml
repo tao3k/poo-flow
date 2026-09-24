@@ -66,6 +66,16 @@ jobs:
         with:
           node-version: 24
 
+      - name: Restore static render cache
+        id: pages-render-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.ORG_ZHIXING_ROOT }}/.cache/org-zhixing-pages-render
+          key: >-
+            ${{ runner.os }}-org-zhixing-render-${{ hashFiles('ORG_ZHIXING_REV') }}-${{ hashFiles('org-zhixing.toml', 'docs/**/*.org') }}
+          restore-keys: |
+            ${{ runner.os }}-org-zhixing-render-${{ hashFiles('ORG_ZHIXING_REV') }}-
+
       - name: Install Org Zhixing
         working-directory: ${{ env.ORG_ZHIXING_ROOT }}
         run: |
@@ -85,6 +95,13 @@ jobs:
             --content "$GITHUB_WORKSPACE/docs" \
             --base /poo-flow/ \
             --out "$PAGES_OUTPUT"
+
+      - name: Save static render cache
+        if: success() && steps.pages-render-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.ORG_ZHIXING_ROOT }}/.cache/org-zhixing-pages-render
+          key: ${{ steps.pages-render-cache.outputs.cache-primary-key }}
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5
