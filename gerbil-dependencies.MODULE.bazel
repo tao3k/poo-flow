@@ -28,8 +28,32 @@ gerbil_dependency_sources.source_package(
         "https://github.com/tao3k/asp-gerbil-scheme/archive/52eb1f07d9815a851d335fe604249b6094114199.tar.gz",
     ],
 )
+gerbil_dependency_sources.source_package(
+    name = "poo_flow_parser_foundation_sources",
+    canonical_uri = "https://github.com/tao3k/poo-flow",
+    package = "poo-flow",
+    revision = "2ce55a9810f8559cc0f40a6c877a52ab7893c166",
+    sha256 = "a8ca33a6880f04da0ef2c1f62788f49687199125d9b59f4d5e38636bc59555f6",
+    strip_prefix = "poo-flow-2ce55a9810f8559cc0f40a6c877a52ab7893c166",
+    urls = [
+        "https://github.com/tao3k/poo-flow/archive/2ce55a9810f8559cc0f40a6c877a52ab7893c166.tar.gz",
+    ],
+)
+gerbil_dependency_sources.source_package(
+    name = "gerbil_parser_sources",
+    canonical_uri = "https://github.com/tao3k/gerbil-parser",
+    package = "gerbil-parser",
+    revision = "64759f899d7f1462265984b998834cb00e541f1f",
+    sha256 = "e8775ee4bc5d25ef577eeeacefb1b36d45855a4ef8ddbe079b9842891b349168",
+    strip_prefix = "gerbil-parser-64759f899d7f1462265984b998834cb00e541f1f",
+    urls = [
+        "https://github.com/tao3k/gerbil-parser/archive/64759f899d7f1462265984b998834cb00e541f1f.tar.gz",
+    ],
+)
 use_repo(
     gerbil_dependency_sources,
     "asp_gerbil_scheme_sources",
+    "gerbil_parser_sources",
     "gerbil_poo_sources",
+    "poo_flow_parser_foundation_sources",
 )

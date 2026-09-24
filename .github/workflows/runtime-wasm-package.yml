@@ -115,6 +115,8 @@ jobs:
         run: |
           test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:asp_gerbil_scheme_package)')"
           test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:gerbil_poo_package)')"
+          test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:gerbil_parser_package)')"
+          test -n "$(bazelisk query 'somepath(//gerbil:gerbil_parser_package, //gerbil:poo_flow_parser_foundation_package)')"
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: 12
