@@ -11,6 +11,7 @@ path = [
   "LICENSES/**",
   ".bazelversion",
   "VERSION",
+  "ORG_ZHIXING_REV",
   "*.lock",
   "**/*.json",
   "**/*.lock",
