@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: POO Flow Research Program for MRR and Ascent
+#+DATE: 2026-09-25
+#+STATUS: research proposal
+
+* Question and first decision
+
+Can POO Flow make Ascent-style reasoning composable, governable, and independently
+checkable for Agent systems while MRR retains the meaning and admission of
+facts?  The first implementation should exercise the complete *control and
+evidence path* in Gerbil Scheme and native POO Flow values.  It should invoke
+the existing MRR/Ascent evaluator for fixed-point computation.  A Scheme
+implementation of semi-naive joins, indexes, or BYODS is not a prerequisite.
+
+This is a research plan, not a claim that the full path is implemented or that
+an Ascent replacement has been selected.  The existing
+[[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][control-plane RFC]]
+continues to own POO Flow's organization, Bundle, runtime interface, and
+effect-authorization boundaries.  MRR's
+[[https://github.com/tao3k/meta-relational-reasoning/blob/main/docs/architecture/0003-mrr-ascent-evaluation.org][bounded Ascent RFC]]
+continues to own the current candidate/admission split.  The corresponding
+[[https://github.com/tao3k/meta-relational-reasoning/blob/main/research/ascent-poo-flow-research-program.org][MRR research program]]
+owns the semantic questions and evaluator experiments.
+
+* Ownership and executable path
+
+| Step | Owner | Output or invariant |
+|------+-------+---------------------|
+| source snapshot and typed rule bundle | source owner and MRR | exact source identities, generation, validated RulePackId |
+| strategy declaration | POO Flow | POO-native policy object and functional composition; budget, capability, cancellation, evidence requirement |
+| request projection | POO Flow | inert, typed external evaluation request bound to the MRR bundle and organization epoch |
+| fixed-point evaluation | MRR adapter using Ascent | bounded candidate receipt; no live publication or identity allocation |
+| semantic admission | MRR lineage and transition owners | complete, generation-bound, identity-bound admitted result or typed rejection |
+| decision and handoff | POO Flow | policy decision over admitted evidence, followed by authorized runtime handoff |
+| external effect and feedback | admitted runtime and source owner | effect receipt; observations return as proposals |
+
+The POO Flow declaration must be an ordinary Gerbil POO object/prototype with
+named functional combinators.  It must not add an alist rule DSL, duplicate the
+MRR ReasoningBundle grammar, or interpret logical rules.  The external boundary
+must consume typed MRR receipts; POO Flow must not link MRR into its semantic
+core or infer admission from an Ascent completion flag.  A result from a
+cancelled, partial, expired, or mismatched generation cannot authorize a
+handoff.  An admitted semantic result also cannot grant effect authority by
+itself: the POO Flow decision and runtime effect remain separate claims.
+
+* First vertical slice: Scheme plus POO Flow
+
+1. Declare one POO-native reasoning strategy that selects an existing MRR rule
+   pack, an exact input generation, resource bounds, and evidence requirements.
+   Its projection contains references and policy only; MRR owns rule and fact
+   semantics.
+2. Compose a pure flow: validate strategy, project request, invoke an external
+   MRR provider, inspect its typed receipt, request MRR admission, and create an
+   inert decision/handoff value.  Keep IO in the explicit provider/runtime
+   boundary; a test provider may replay fixed receipts.
+3. Replay complete, truncated, stale-generation, cancelled, and rejected
+   receipts.  Only a complete MRR-admitted result may reach decision evaluation;
+   only a separate POO Flow authorization may reach runtime handoff.
+4. Compare the projected request and consumed receipt against the current MRR
+   API on an exact source revision.  A Scheme-only mock of fixed-point results
+   is insufficient to claim integrated closure.
+
+This slice establishes orchestration and evidence behavior.  It does not prove
+general Datalog semantics, deletion maintenance, a new optimizer, BYODS parity,
+cross-platform runtime conformance, or an Ascent replacement.
+
+* Research lanes after the first slice
+
+** Source change and revocation
+
+POO Flow controls snapshot selection, capability scope, expiry, cancellation,
+and retry.  MRR decides which facts and derivations survive a source generation
+change.  The cross-layer property is that no stale receipt can authorize a new
+decision.  Incremental evaluation must be compared with full recomputation
+after each insertion and retraction.
+
+** Evidence-aware optimization
+
+POO Flow may select an evaluation profile or physical plan under a budget.  MRR
+must first define the rule semantics and complete evidence requirements; the
+candidate engine may then try Ascent indexes, parallel evaluation, or BYODS.
+Two plans are interchangeable only when they produce the same admitted
+semantic result and required evidence for the same generation.  A faster plan
+with a partial or weaker receipt is not an equivalent plan.
+
+** Agent-facing explanation and action
+
+MRR owns recursive provenance, WHY/WHY-NOT, and Impact meaning.  POO Flow owns
+which admitted explanation is projected into a task's context and which actor
+may act on it.  A model or tool observation remains a proposal until its source
+and MRR admission paths accept it.  The control-plane proof obligation is
+temporal: admission, authorization, and effect must occur in that order, with
+revocation and generation changes invalidating stale work.
+
+* Reading and research hypotheses
+
+- [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent]] supplies a macro-compiled, semi-naive fixed-point baseline.
+- [[https://kmicinski.com/assets/byods.pdf][BYODS]] supplies a relation-storage and compiled-join seam.
+- [[https://arxiv.org/abs/2203.16684][DBSP]] motivates exact incremental maintenance across richer operations.
+- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun]] motivates static monotonicity and termination checks.
+- [[https://effect.systems/doc/pldi-2023-egglog/paper.pdf][egglog]] demonstrates equality saturation plus Datalog; reuse its results
+  before proposing another equality engine.
+
+These works motivate experiments, not POO Flow semantic ownership over MRR or
+a claim that a particular backend is already superior.
+
+* Acceptance evidence for the first slice
+
+- POO-native declaration and functional composition are inspectable before IO.
+- Exact RulePackId, source generation, organization epoch, capability scope,
+  bounds, and receipt schema survive request projection.
+- A live MRR provider produces one complete closure receipt and one admitted
+  result for the same source snapshot; replay fixtures cover failures.
+- Truncation, stale generation, rejection, revocation, and cancellation cannot
+  reach runtime handoff.
+- Source/receipt/decision/effect identities remain independently visible in a
+  trace; no single receipt is promoted into another owner's authority.
+
+Subsequent algorithm work requires independent semantic and performance
+evidence on recursive, multi-support, update-heavy workloads.  The first
+slice's success is a control-plane result, not algorithm parity.
