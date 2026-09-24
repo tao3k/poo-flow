@@ -27,36 +27,36 @@
   (.o (:: @ PooFlowGqlQueryProgram.)
       identity: 'healthcare-case-profile-relations
       match:
-      (.o (:: @ PooFlowQueryPath.)
-          start: (.o (:: @ PooFlowQueryNode.) binding: 's label: 'Scenario)
+      (.o (:: @ GqlQueryPath.)
+          start: (.o (:: @ GqlQueryNode.) binding: 's label: 'Scenario)
           next:
-          (.o (:: @ PooFlowQueryStep.)
+          (.o (:: @ GqlQueryStep.)
               relation: 'HAS_CASE
-              target: (.o (:: @ PooFlowQueryNode.) binding: 'c label: 'Case)
+              target: (.o (:: @ GqlQueryNode.) binding: 'c label: 'Case)
               next:
-              (.o (:: @ PooFlowQueryStep.)
+              (.o (:: @ GqlQueryStep.)
                   relation: 'HAS_EFFECTIVE_PROFILE
                   target:
-                  (.o (:: @ PooFlowQueryNode.) binding: 'p label: 'Profile))))
+                  (.o (:: @ GqlQueryNode.) binding: 'p label: 'Profile))))
       where:
-      (.o (:: @ PooFlowQueryEquals.)
+      (.o (:: @ GqlQueryEquals.)
           left:
-          (.o (:: @ PooFlowQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
           right:
-          (.o (:: @ PooFlowQueryLiteral.)
+          (.o (:: @ GqlQueryLiteral.)
               literal-kind: 'string value: "healthcare"))
       project:
-      (.o (:: @ PooFlowQueryProjection.)
+      (.o (:: @ GqlQueryProjection.)
           expression:
-          (.o (:: @ PooFlowQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
           next:
-          (.o (:: @ PooFlowQueryProjection.)
+          (.o (:: @ GqlQueryProjection.)
               expression:
-              (.o (:: @ PooFlowQueryProperty.) binding: 'c property: 'id)
+              (.o (:: @ GqlQueryProperty.) binding: 'c property: 'id)
               next:
-              (.o (:: @ PooFlowQueryProjection.)
+              (.o (:: @ GqlQueryProjection.)
                   expression:
-                  (.o (:: @ PooFlowQueryProperty.)
+                  (.o (:: @ GqlQueryProperty.)
                       binding: 'p property: 'identity))))))
 
 (def Query
@@ -107,12 +107,12 @@
      (let (escaped
            (.o (:: @ CaseProfileProgram)
                where:
-               (.o (:: @ PooFlowQueryEquals.)
+               (.o (:: @ GqlQueryEquals.)
                    left:
-                   (.o (:: @ PooFlowQueryProperty.)
+                   (.o (:: @ GqlQueryProperty.)
                        binding: 's property: 'identity)
                    right:
-                   (.o (:: @ PooFlowQueryLiteral.)
+                   (.o (:: @ GqlQueryLiteral.)
                        literal-kind: 'string value: "patient's-case"))))
        (check
         (poo-flow-query-program->gql escaped)

@@ -63,7 +63,11 @@ The Query object declares identity, a GQL-aligned POO program, result bounds,
 completeness, evidence requirements, visibility request and result Contract.
 Raw GQL strings, query alists and anonymous evaluator lambdas are not Query
 objects.  The core pure projector deterministically renders the admitted AST;
-a named Provider may execute the resulting GQL source.
+a named Provider may execute the resulting GQL source.  The syntax prototypes,
+structural validator and pure source projector are owned together by the
+declared =gerbil-parser= revision.  POO Flow extends the parser-owned Program
+prototype only with governance metadata and admission; it does not copy the
+GQL syntax graph or renderer.
 
 The canonical Query Module publishes a =languages= noun slot containing one
 =gql= semantic language.  Its =authoring-surface= is =scheme-poo= and its
@@ -106,7 +110,7 @@ flowchart LR
   E --> A
   R --> A
   Q --> A
-  A --> G["Pure GQL projection"]
+  A --> G["Parser-owned pure GQL projection"]
   G --> X["MRR/runtime execution"]
   X --> NR["Optional typed native refinement"]
   NR --> SR["SourceQueryReceipt"]
@@ -114,7 +118,8 @@ flowchart LR
   ER -. "never grants" .-> AU["Action authority"]
 #+end_export
 
-Gerbil-parser proves source parsing, syntax contract and byte-exact roundtrip.
+Gerbil-parser owns the POO-native GQL syntax graph and pure projection, then
+proves source parsing, syntax contract and byte-exact roundtrip.
 The GQL runtime proves only its execution receipt.  POO Flow admits that
 receipt against the original Query and Contract identities.  Graph witnesses
 do not by themselves prove causality, temporal safety, authorization or

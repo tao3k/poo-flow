@@ -46,7 +46,10 @@ darwin_openssl_prefix := env_var_or_default("OPENSSL_PREFIX", homebrew_openssl_p
 gerbil_darwin_env := if os() == "macos" { if gerbil_homebrew_runtime == "true" { "env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='" + darwin_openssl_prefix + "/include' LIBRARY_PATH='" + darwin_openssl_prefix + "/lib'" } else { "env" } } else { "env" }
 poo_flow_gerbil_path := env_var_or_default("GERBIL_PATH", justfile_directory() + "/.gerbil")
 poo_flow_library_path := env_var_or_default("GERBIL_LOADPATH", poo_flow_gerbil_path + "/lib")
-gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
+# gerbil.pkg is the parser revision authority.  Resolve source-owned fixtures
+# through gxpkg's installed package root; never fall back to an arbitrary
+# sibling checkout whose branch may differ from the declared dependency.
+gerbil_parser_dir := poo_flow_gerbil_path + "/pkg/github.com/tao3k/gerbil-parser"
 gerbil_parser_path := poo_flow_gerbil_path
 gerbil_parser_library_path := gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory() + ":" + poo_flow_library_path
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
