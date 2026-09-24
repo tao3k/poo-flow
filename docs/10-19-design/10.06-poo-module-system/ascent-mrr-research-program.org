@@ -62,6 +62,26 @@ pairs in MRR's Ascent fixture.  The matching MRR test
 passed independently.  This establishes set-level parity for that finite
 fixture.  It does not establish semi-naive evaluation, shortest-distance
 lattice behavior, support selection, or an MRR-admissible receipt.
+The same fixture also verifies a withdrawn edge against a fresh POO instance:
+the removed path disappears while the earlier demanded instance remains
+unchanged.  That is snapshot isolation for this experiment, not incremental
+deletion maintenance or generation-bound MRR admission.
+
+The public =mrr-closure-tool= was also run on corresponding string-valued
+snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
+each run; the POO fixture produced the same candidate-pair counts after the
+documented integer encoding.
+
+| Source snapshot | POO reachable pairs | MRR admitted candidates | MRR Ada-to-Cy decision |
+|-----------------+---------------------+-------------------------+------------------------|
+| Ada/Bob, Bob/Cy, Ada/Dan, Dan/Cy | 5 | 5 | true |
+| remove Bob/Cy | 4 | 4 | true |
+| also remove Dan/Cy | 2 | 2 | false |
+
+Each CLI invocation admitted a separately constructed snapshot; these calls
+do not test MRR transition-based retraction or prove that a POO candidate
+receipt can be admitted.  The =mrr-ascent=, facade, and conformance package
+tests passed locally with 37 tests across eight suites.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing

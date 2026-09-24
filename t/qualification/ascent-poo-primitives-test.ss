@@ -79,4 +79,18 @@
                     reachability inputs))
           (check-equal? (.ref cyclic 'closure)
                         '((1 1) (1 2) (1 3) (2 1) (2 2) (2 3)
-                          (3 1) (3 2) (3 3))))))))
+                          (3 1) (3 2) (3 3))))
+        ;; A source withdrawal creates a new POO instance. The old demanded
+        ;; value stays bound to its original input snapshot.
+        (let (retracted
+              (.mix (.o (edges '((1 2) (1 4) (4 3))))
+                    reachability inputs))
+          (check-equal? (.ref retracted 'closure)
+                        '((1 2) (1 3) (1 4) (4 3)))
+          (check-equal? (.ref program 'closure)
+                        '((1 2) (1 3) (1 4) (2 3) (4 3))))
+        (let (disconnected
+              (.mix (.o (edges '((1 2) (1 4))))
+                    reachability inputs))
+          (check-equal? (.ref disconnected 'closure)
+                        '((1 2) (1 4))))))))
