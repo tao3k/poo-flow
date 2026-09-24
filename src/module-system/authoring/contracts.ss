@@ -10,15 +10,15 @@
         (only-in :clan/poo/mop Type. define-type element? validate)
         (only-in :std/list/list any filter-map find)
         (only-in :poo-flow/src/core/funcs
-                 poo-flow-read-datums/append-map)
+                 poo-flow-read-datums/append-map
+                 poo-flow-scheme-datum-find)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface-prototype
                  poo-flow-module-interface?
                  poo-flow-module-interface-id
                  poo-flow-module-interface-authoring)
         (only-in :poo-flow/src/module-system/observability/module-presentation
-                 poo-flow-poo-slot-authoring-datum-bindings
-                 poo-flow-scheme-datum-find)
+                 poo-flow-poo-slot-authoring-datum-bindings)
         :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor. ModuleSourceRole.

@@ -7,6 +7,7 @@
 
 (export poo-flow-memoize
         poo-flow-read-datums/append-map
+        poo-flow-scheme-datum-find
         poo-flow-make-value-index
         poo-flow-value-index-put!
         poo-flow-value-index-ref
@@ -26,6 +27,25 @@
       (if (eof-object? datum)
         (reverse values-rev)
         (read-next (foldl cons values-rev (project datum)))))))
+
+;;; Find the first truthy projection in inert Scheme reader data. Quoted syntax
+;;; stays opaque. This core owner deliberately uses the native pair walk: a
+;;; std/list import here leaks into generated .ssi consumers, and pair walking
+;;; is also required for dotted source forms that list combinators reject.
+;; : (-> (-> Value Value) Value Value)
+(def (poo-flow-scheme-datum-find predicate datum)
+  (cond
+   ((vector? datum)
+    (or (predicate datum)
+        (poo-flow-scheme-datum-find predicate (vector->list datum))))
+   ((not (pair? datum)) (predicate datum))
+   ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
+         (pair? (cdr datum)))
+    #f)
+   (else
+    (or (predicate datum)
+        (poo-flow-scheme-datum-find predicate (car datum))
+        (poo-flow-scheme-datum-find predicate (cdr datum))))))
 
 ;;; One deterministic tree walk shared by source observability, build
 ;;; projection, and User Interface discovery. The tail accumulator avoids
