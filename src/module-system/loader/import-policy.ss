@@ -6,6 +6,9 @@
 ;;; Boundary: reader-native policy for imports written inside a POO module role.
 ;;; Invariant: this owner reads datums only; it never expands or evaluates them.
 
+(import (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map))
+
 (export poo-flow-module-owner-import-observation-kind
         poo-flow-module-forbidden-aggregate-imports
         poo-flow-module-owner-import-datum-observations
@@ -70,17 +73,9 @@
 
 ;; : (-> Symbol InputPort [Alist])
 (def (poo-flow-module-owner-import-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (let collect
-             ((remaining
-               (poo-flow-module-owner-import-datum-observations scope datum))
-              (next observations-rev))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-module-owner-import-datum-observations scope <>)
+   port))
 
 ;; : (-> Symbol PathString [Alist])
 (def (poo-flow-module-owner-import-file-observations scope path)
@@ -167,14 +162,9 @@
     '()))
 
 (def (poo-flow-build-bootstrap-import-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (loop
-         (foldl cons observations-rev
-                (poo-flow-build-bootstrap-import-datum-observations
-                 scope datum)))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-build-bootstrap-import-datum-observations scope <>)
+   port))
 
 (def (poo-flow-build-bootstrap-import-file-observations scope path)
   (call-with-input-file
@@ -193,13 +183,9 @@
 
 ;; : (-> Symbol InputPort [Alist])
 (def (poo-flow-build-bootstrap-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (loop
-         (foldl cons observations-rev
-                (poo-flow-build-bootstrap-datum-observations scope datum)))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-build-bootstrap-datum-observations scope <>)
+   port))
 
 ;; : (-> Symbol PathString [Alist])
 (def (poo-flow-build-bootstrap-file-observations scope path)

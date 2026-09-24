@@ -9,6 +9,8 @@
 (import (only-in :clan/poo/object .def .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
         (only-in :std/list/list any filter-map find)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface-prototype
                  poo-flow-module-interface?
@@ -339,19 +341,15 @@
 
 ;; : (-> PooModuleInterface Symbol InputPort PooModuleAuthoringAdmission)
 (def (poo-flow-module-authoring-admit-port interface role-name port)
-  (let loop ((diagnostics '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (poo-flow-module-authoring-admission
-         interface
-         (poo-flow-module-authoring-role interface role-name)
-         (reverse diagnostics))
-        (let (admission
-              (poo-flow-module-authoring-admit-datum
-               interface role-name datum))
-          (loop
-           (foldl cons diagnostics
-                  (.ref admission 'diagnostics))))))))
+  (poo-flow-module-authoring-admission
+   interface
+   (poo-flow-module-authoring-role interface role-name)
+   (poo-flow-read-datums/append-map
+    (lambda (datum)
+      (.ref (poo-flow-module-authoring-admit-datum
+             interface role-name datum)
+            'diagnostics))
+    port)))
 
 (def (poo-flow-module-authoring-admission? value)
   (element? PooFlowModuleAuthoringAdmission value))

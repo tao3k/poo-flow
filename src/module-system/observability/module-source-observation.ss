@@ -7,6 +7,9 @@
 ;;; Invariant: inspection reads datums only and never expands or evaluates code.
 
 (import
+        (only-in :std/list/list any)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map)
         (only-in "module-presentation.ss"
                  poo-flow-poo-slot-authoring-datum-bindings))
 
@@ -94,12 +97,10 @@
 
 ;; : (-> Symbol Value Boolean)
 (def (poo-flow-scheme-lexical-call-shadow-called-in-poo? identifier datum)
-  (let loop
-       ((bindings (poo-flow-poo-slot-authoring-datum-bindings datum)))
-    (and (pair? bindings)
-         (or (poo-flow-scheme-lexical-call-shadow-identifier-called?
-              identifier (cdar bindings))
-             (loop (cdr bindings))))))
+  (any (lambda (binding)
+         (poo-flow-scheme-lexical-call-shadow-identifier-called?
+          identifier (cdr binding)))
+       (poo-flow-poo-slot-authoring-datum-bindings datum)))
 
 ;; : (forall (a) (-> Symbol a Boolean))
 ;; : (-> Symbol Value Boolean)
@@ -192,18 +193,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-scheme-lexical-call-shadow-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (let collect
-             ((remaining
-               (poo-flow-scheme-lexical-call-shadow-datum-observations
-                scope datum))
-              (next observations-rev))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-scheme-lexical-call-shadow-datum-observations scope <>)
+   port))
 
 ;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
 ;; : (-> Symbol PathString [Alist])
@@ -317,18 +309,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-scheme-inline-prototype-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (let collect
-             ((remaining
-               (poo-flow-scheme-inline-prototype-datum-observations
-                scope datum))
-              (next observations-rev))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-scheme-inline-prototype-datum-observations scope <>)
+   port))
 
 ;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
 ;; : (-> Symbol PathString [Alist])

@@ -9,6 +9,8 @@
 
 (import
         (only-in :std/list/list any)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map)
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
@@ -451,17 +453,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-poo-slot-authoring-port-observations scope port)
-  (let loop ((observations '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations)
-        (let collect
-             ((remaining
-               (poo-flow-poo-slot-authoring-datum-observations scope datum))
-              (next observations))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-poo-slot-authoring-datum-observations scope <>)
+   port))
 
 ;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
 ;; : (-> Symbol PathString [Alist])

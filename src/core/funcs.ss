@@ -6,6 +6,7 @@
 ;;; Reusable algorithmic functions for the POO Flow core.
 
 (export poo-flow-memoize
+        poo-flow-read-datums/append-map
         poo-flow-make-value-index
         poo-flow-value-index-put!
         poo-flow-value-index-ref
@@ -13,6 +14,18 @@
         poo-flow-make-frontier-state
         poo-flow-frontier-state-ready-ids
         poo-flow-frontier-state-complete!)
+
+;;; Stream Scheme datums from a port while preserving the source order of the
+;;; zero-or-more values projected from each datum.  `read-all` is preferable
+;;; when callers actually need the complete datum list; observation owners use
+;;; this helper so a large source file never has to be materialized twice.
+;; : (forall (a) (-> (-> SchemeDatum [a]) InputPort [a]))
+(def (poo-flow-read-datums/append-map project port)
+  (let read-next ((values-rev '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse values-rev)
+        (read-next (foldl cons values-rev (project datum)))))))
 
 ;;; One deterministic tree walk shared by source observability, build
 ;;; projection, and User Interface discovery. The tail accumulator avoids

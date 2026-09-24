@@ -7,7 +7,7 @@
 ;;; and user module trees. Selection declarations remain separate POO values.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/list/list every filter)
+        (only-in :std/list/list any every filter)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive
                  poo-flow-make-value-index
@@ -155,14 +155,7 @@
 ;;; Gerbil methods, functional combinators, and thin hygienic syntax according
 ;;; to the semantics it actually needs.
 (def (poo-flow-module-read-datums path)
-  (call-with-input-file
-   path
-   (lambda (port)
-     (let loop ((datums '()))
-       (let (datum (read port))
-         (if (eof-object? datum)
-           (reverse datums)
-           (loop (cons datum datums))))))))
+  (call-with-input-file path read-all))
 
 (def (poo-flow-module-role-reference? datum module-name role)
   (let ((leaf (string-append role ".ss"))
@@ -183,13 +176,13 @@
      (else #f))))
 
 (def (poo-flow-module-top-form-references-role? datums head module-name role)
-  (let loop ((rest datums))
-    (and (pair? rest)
-         (let (form (car rest))
-           (or (and (pair? form) (eq? (car form) head)
-                    (poo-flow-module-role-reference?
-                     (cdr form) module-name role))
-               (loop (cdr rest)))))))
+  (and (any (lambda (form)
+              (and (pair? form)
+                   (eq? (car form) head)
+                   (poo-flow-module-role-reference?
+                    (cdr form) module-name role)))
+            datums)
+       #t))
 
 (def (poo-flow-module-interface-validate! module-name module-root)
   (let* ((interface-path (path-expand "interface.ss" module-root))
@@ -453,16 +446,13 @@
 
 ;;; First matching source wins; selection syntax is source-neutral.
 (def (poo-flow-module-load-path-locate load-path module-key)
-  (let loop ((collections
-              (poo-flow-module-load-path-collections load-path)))
-    (if (null? collections)
-      '()
-      (let (source-refs
-           (poo-flow-module-source-collection-locate
-             (car collections) module-key))
-        (if (pair? source-refs)
-          source-refs
-          (loop (cdr collections)))))))
+  (or (any (lambda (collection)
+             (let (source-refs
+                   (poo-flow-module-source-collection-locate
+                    collection module-key))
+               (and (pair? source-refs) source-refs)))
+           (poo-flow-module-load-path-collections load-path))
+      '()))
 
 (def poo-flow-maintained-module-source
   (make-poo-flow-module-source-collection
