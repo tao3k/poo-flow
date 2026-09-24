@@ -15,7 +15,7 @@
 (def +poo-flow-runtime-v0-abi-schema+
   (.o (kind 'poo-flow.runtime-v0.abi-schema.1)
       (abi-major 0)
-      (abi-minor 4)
+      (abi-minor 1)
       (bundle-schema "poo-flow.organization-bundle.draft.3")
       (control-packet-schema "poo-flow.runtime-v0.control-packet.1")
       (promotion-request-schema

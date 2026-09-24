@@ -1,6 +1,6 @@
 schema=poo-flow.runtime-v0.contract-vector.1
 abi-major=0
-abi-minor=4
+abi-minor=1
 bundle-schema=poo-flow.organization-bundle.draft.3
 control-packet-schema=poo-flow.runtime-v0.control-packet.1
 promotion-request-schema=poo-flow.runtime-language.promotion-request.1

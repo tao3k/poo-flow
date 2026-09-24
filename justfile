@@ -466,6 +466,11 @@ check-license-contract:
     python3 scripts/check_license_contract.py
     python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
+# Validate every first-party manifest and Runtime ABI projection against VERSION.
+[group('check')]
+check-version-contract:
+    python3 scripts/check_version_contract.py
+
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]
 lock-check:

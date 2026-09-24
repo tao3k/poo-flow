@@ -64,7 +64,7 @@ def receipt(
 def test_python_consumes_the_contract_derived_abi_vector(
     promotion_request: PromotionRequest,
 ) -> None:
-    assert ABI_MINOR == 3
+    assert ABI_MINOR == 1
     assert promotion_request.idempotency_key == (
         "promotion-1",
         "materialization-1",

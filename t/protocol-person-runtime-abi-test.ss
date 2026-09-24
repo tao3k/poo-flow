@@ -94,7 +94,7 @@
        (check vector
               => (read-text-file
                   "t/fixtures/runtime-language-abi/promotion-request-v1.vector"))
-       (check (and (string-contains vector "abi-minor=4") #t) => #t)
+       (check (and (string-contains vector "abi-minor=1") #t) => #t)
        (check (and (string-contains vector "promotion-id=promotion-1") #t)
               => #t)
        (check (and (string-contains vector "materialization-id=materialization-1")

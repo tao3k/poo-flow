@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #define POO_FLOW_RUNTIME_V0_ABI_MAJOR 0u
-#define POO_FLOW_RUNTIME_V0_ABI_MINOR 4u
+#define POO_FLOW_RUNTIME_V0_ABI_MINOR 1u
 #define POO_FLOW_RUNTIME_V0_BUNDLE_SCHEMA "poo-flow.organization-bundle.draft.3"
 #define POO_FLOW_RUNTIME_V0_CONTROL_PACKET_SCHEMA "poo-flow.runtime-v0.control-packet.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_REQUEST_SCHEMA "poo-flow.runtime-language.promotion-request.1"

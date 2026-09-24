@@ -34,9 +34,10 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Validate repository and package licenses
+      - name: Validate repository license and version contracts
         run: |
           python3 scripts/check_license_contract.py
+          python3 scripts/check_version_contract.py
           python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
   native-gerbil-tests:

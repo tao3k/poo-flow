@@ -19,7 +19,7 @@ CONTRACT_ARTIFACT_PROJECTION_RECEIPT_SCHEMA = (
     "poo-flow.contract.artifact-projection-receipt.1"
 )
 ABI_MAJOR = 0
-ABI_MINOR = 3
+ABI_MINOR = 1
 
 REQUIRED_CAPABILITIES = (
     "PROMOTION_MATERIALIZE",
