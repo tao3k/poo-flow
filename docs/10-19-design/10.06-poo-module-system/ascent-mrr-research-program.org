@@ -8,12 +8,49 @@
 
 * Question and first decision
 
-Can POO Flow make Ascent-style reasoning composable, governable, and independently
-checkable for Agent systems while MRR retains the meaning and admission of
-facts?  The first implementation should exercise the complete *control and
-evidence path* in Gerbil Scheme and native POO Flow values.  It should invoke
-the existing MRR/Ascent evaluator for fixed-point computation.  A Scheme
-implementation of semi-naive joins, indexes, or BYODS is not a prerequisite.
+Can the native POO fixed point carry the Ascent kernel inside POO
+Flow while MRR retains the meaning and admission of facts?  The first work is
+an executable mapping of relation declarations, rule refinements, recursive
+dependencies, and demanded results onto =.o=, =.mix=, =self=, and =.ref=.
+The existing MRR/Ascent evaluator supplies an independent oracle for the same
+input snapshot.  POO Flow must not add a second generic fixed-point driver.
+
+This distinction needs an explicit test.  The native POO fixed point ties
+together *slot computations* across composed prototypes and evaluates demanded
+slots lazily.  Ascent computes the *least relation closure* under rules.  A
+directly self-referential slot is not automatically a semi-naive relation
+engine: =object.ss= caches a slot only after its computation returns.
+The research question is which relation algebra and laziness representation
+make these two semantics coincide, and where a separate backend operation is
+still needed.  The experiment must establish this with executable evidence,
+not terminology alone.
+
+** POO and Gerbil standard library audit before implementation
+
+These are existing library facilities, not a proposed custom kernel API.
+For reproducibility, the local POO reference checkout inspected here is
+=307b035cd5e078dcaad5ba7d69ad52a028b2bca0= and the Gerbil source is
+=d801e7a1c7f77df421f638e62aaebe370f193c97=.  The original POO Flow
+workspace's =manifest.ss= names POO revision =1b38411=, while its installed
+package checkout is =e8c57dd44f610c634cf738b130907e0e29fe8ccf=.
+The capability test below ran against that local installed environment; it
+does not establish exact-manifest qualification.  Before kernel parity claims,
+run it in an isolated environment resolving the declared revision and record
+the source and installed artifact identities.
+
+| Facility | Verified implementation | Reuse and limit for ASCENT |
+|----------+-------------------------+----------------------------|
+| prototype precedence | =gerbil-poo/object.ss= calls Gerbil =:gerbil/runtime/c3= =c4-linearize=; Gerbil's C4 extends C3 with suffix/struct constraints | use native precedence for rule/profile refinements; do not write another ordering algorithm |
+| open recursion and demand | =.o=, =.mix=, =self=, =.ref= compose slot computations; =.ref= memoizes completed values | use for late-bound rule inputs and demand; test recursive relation behavior explicitly |
+| persistent relation storage candidates | =clan/poo/table.ss= supplies generic map/set, merge, union, difference, count, iterators; =trie.ss= supplies an integer-key persistent trie | use as the first storage substrate and benchmark it; tuple keys need a defined encoding |
+| name collision | =methods.table .join= merges map entries | this is *table union*, not the relational join in an Ascent rule body |
+| remaining proof obligation | no general semi-naive relation-rule evaluator appears in the inspected POO dependency | establish closure and incremental-delta behavior against Ascent before claiming kernel parity |
+
+The corresponding upstream sources are
+[[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/object.ss][POO object]],
+[[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/table.ss][POO table]],
+[[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/trie.ss][POO trie]], and
+[[https://github.com/mighty-gerbils/gerbil/blob/d801e7a1c7f77df421f638e62aaebe370f193c97/src/gerbil/runtime/c3.ss][Gerbil C4]].
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
@@ -32,40 +69,42 @@ owns the semantic questions and evaluator experiments.
 | source snapshot and typed rule bundle | source owner and MRR | exact source identities, generation, validated RulePackId |
 | strategy declaration | POO Flow | POO-native policy object and functional composition; budget, capability, cancellation, evidence requirement |
 | request projection | POO Flow | inert, typed external evaluation request bound to the MRR bundle and organization epoch |
-| fixed-point evaluation | MRR adapter using Ascent | bounded candidate receipt; no live publication or identity allocation |
+| fixed-point evaluation | POO-native kernel experiment, checked against MRR/Ascent | bounded candidate receipt; no live publication or identity allocation |
 | semantic admission | MRR lineage and transition owners | complete, generation-bound, identity-bound admitted result or typed rejection |
 | decision and handoff | POO Flow | policy decision over admitted evidence, followed by authorized runtime handoff |
 | external effect and feedback | admitted runtime and source owner | effect receipt; observations return as proposals |
 
 The POO Flow declaration must be an ordinary Gerbil POO object/prototype with
-named functional combinators.  It must not add an alist rule DSL, duplicate the
-MRR ReasoningBundle grammar, or interpret logical rules.  The external boundary
-must consume typed MRR receipts; POO Flow must not link MRR into its semantic
-core or infer admission from an Ascent completion flag.  A result from a
+named functional combinators.  It must not add an alist rule DSL or duplicate
+the MRR ReasoningBundle grammar.  The native experiment may evaluate candidate
+relations, but MRR remains the independent semantic oracle and admission
+owner.  POO Flow must not infer admission from a POO result or an Ascent
+completion flag.  A result from a
 cancelled, partial, expired, or mismatched generation cannot authorize a
 handoff.  An admitted semantic result also cannot grant effect authority by
 itself: the POO Flow decision and runtime effect remain separate claims.
 
-* First vertical slice: Scheme plus POO Flow
+* First vertical slice: native POO kernel mapping
 
-1. Declare one POO-native reasoning strategy that selects an existing MRR rule
-   pack, an exact input generation, resource bounds, and evidence requirements.
-   Its projection contains references and policy only; MRR owns rule and fact
-   semantics.
-2. Compose a pure flow: validate strategy, project request, invoke an external
-   MRR provider, inspect its typed receipt, request MRR admission, and create an
-   inert decision/handoff value.  Keep IO in the explicit provider/runtime
-   boundary; a test provider may replay fixed receipts.
-3. Replay complete, truncated, stale-generation, cancelled, and rejected
-   receipts.  Only a complete MRR-admitted result may reach decision evaluation;
-   only a separate POO Flow authorization may reach runtime handoff.
-4. Compare the projected request and consumed receipt against the current MRR
-   API on an exact source revision.  A Scheme-only mock of fixed-point results
-   is insufficient to claim integrated closure.
+1. Resolve the exact POO library dependency and prove with executable tests
+   that later POO refinements can supply relation inputs to earlier rule slots,
+   and that demand and memoization have the expected behavior.
+2. Represent a small positive recursive program as native prototypes and
+   functional relation operations.  Compare transitive closure, duplicate
+   facts, multiple derivations, and a cycle with MRR/Ascent.  Record whether
+   native slot demand alone reaches the least relation closure; if it does not,
+   identify the minimum missing operation at the relation/backend seam.
+3. Bind an exact MRR RulePackId and source generation to each candidate result.
+   Keep rule/fact semantics, lineage, and admission in MRR.  Test completion,
+   truncation, cancellation, stale generation, and source withdrawal before a
+   candidate can enter a POO Flow decision.
+4. Compose the existing policy and runtime handoff path over admitted results.
+   Only separate POO Flow authorization may reach an external effect.
 
-This slice establishes orchestration and evidence behavior.  It does not prove
-general Datalog semantics, deletion maintenance, a new optimizer, BYODS parity,
-cross-platform runtime conformance, or an Ascent replacement.
+The first two steps measure whether the native POO fixed point is sufficient
+for the selected relation fragment.  Later steps establish control and evidence
+behavior.  A transitive-closure match alone does not prove general Datalog,
+deletion maintenance, BYODS parity, or an Ascent replacement.
 
 * Why search and reasoning matter to an Agent
 
@@ -174,8 +213,11 @@ a claim that a particular backend is already superior.
 - POO-native declaration and functional composition are inspectable before IO.
 - Exact RulePackId, source generation, organization epoch, capability scope,
   bounds, and receipt schema survive request projection.
-- A live MRR provider produces one complete closure receipt and one admitted
-  result for the same source snapshot; replay fixtures cover failures.
+- Native POO tests demonstrate late-bound rule inputs and demand behavior on
+  the resolved library dependency; recursive closure matches independent MRR/Ascent
+  fixtures, or the precise missing relation operation is documented.
+- A complete candidate receipt and one MRR-admitted result refer to the same
+  source snapshot; replay fixtures cover failures.
 - Truncation, stale generation, rejection, revocation, and cancellation cannot
   reach runtime handoff.
 - Source/receipt/decision/effect identities remain independently visible in a
