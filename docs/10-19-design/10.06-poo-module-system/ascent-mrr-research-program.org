@@ -80,8 +80,10 @@ documented integer encoding.
 
 Each CLI invocation admitted a separately constructed snapshot; these calls
 do not test MRR transition-based retraction or prove that a POO candidate
-receipt can be admitted.  The =mrr-ascent=, facade, and conformance package
-tests passed locally with 37 tests across eight suites.
+receipt can be admitted.  MRR's
+=source_snapshots_match_the_poo_reachability_fixture= test now checks all
+three full candidate sets.  The =mrr-ascent=, facade, and conformance package
+tests passed locally with 38 tests across eight suites.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
