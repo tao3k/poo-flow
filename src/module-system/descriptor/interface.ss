@@ -417,17 +417,6 @@
 (def (poo-flow-module-names modules)
   (map poo-flow-module-name modules))
 
-;;; Boundary: module member name predicate is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> ModuleName [ModuleName] Boolean)
-(def (poo-flow-module-member-name? value names)
-  (cond
-   ((null? names) #f)
-   ((equal? value (car names)) #t)
-   (else
-    (poo-flow-module-member-name? value (cdr names)))))
-
 ;;; Boundary: import profiles can be descriptor values or closed-world names.
 ;; : (-> ModuleImportValue ModuleImportProfile)
 (def (poo-flow-module-import-profile import-value)
@@ -485,18 +474,28 @@
 ;;; Boundary: module missing imports for name is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> Symbol ModuleImportList [Symbol] [MissingModuleImport])
-(def (poo-flow-module-missing-imports-for-name module-name imports available-names)
+;; : (-> Symbol ModuleImportList HashTable [MissingModuleImport])
+(def (poo-flow-module-missing-imports-for-name module-name imports available-index)
   (cond
    ((null? imports) '())
    ((not (poo-flow-module-named-import? (car imports)))
-    (poo-flow-module-missing-imports-for-name module-name (cdr imports) available-names))
-   ((poo-flow-module-member-name? (poo-flow-module-import-name (car imports)) available-names)
-    (poo-flow-module-missing-imports-for-name module-name (cdr imports) available-names))
+    (poo-flow-module-missing-imports-for-name
+     module-name
+     (cdr imports)
+     available-index))
+   ((hash-key? available-index
+               (poo-flow-module-import-name (car imports)))
+    (poo-flow-module-missing-imports-for-name
+     module-name
+     (cdr imports)
+     available-index))
    (else
     (cons (list (cons 'module module-name)
                 (cons 'import (poo-flow-module-import-name (car imports))))
-          (poo-flow-module-missing-imports-for-name module-name (cdr imports) available-names)))))
+          (poo-flow-module-missing-imports-for-name
+           module-name
+           (cdr imports)
+           available-index)))))
 
 ;;; Boundary: inline profiles join activation closure before name validation.
 ;;; Intent: prefab-style imports behave like concrete module values, not missing names.
@@ -535,31 +534,35 @@
    '()))
 
 ;;; Boundary: per-module missing import details preserve module/import pairs.
-;; : (-> PooModuleDescriptor [Symbol] [MissingModuleImport])
-(def (poo-flow-module-missing-imports-for descriptor available-names)
+;; : (-> PooModuleDescriptor HashTable [MissingModuleImport])
+(def (poo-flow-module-missing-imports-for descriptor available-index)
   (poo-flow-module-missing-imports-for-name
    (poo-flow-module-name descriptor)
    (poo-flow-module-imports descriptor)
-   available-names))
+   available-index))
 
 ;;; Boundary: module missing imports from is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> [PooModuleDescriptor] [Symbol] [MissingModuleImport])
-(def (poo-flow-module-missing-imports-from modules available-names)
+;; : (-> [PooModuleDescriptor] HashTable [MissingModuleImport])
+(def (poo-flow-module-missing-imports-from modules available-index)
   (foldr append
          '()
          (map (lambda (module)
-                (poo-flow-module-missing-imports-for module available-names))
+                (poo-flow-module-missing-imports-for module available-index))
               modules)))
 
 ;;; Boundary: missing import checks run over the same closure activation uses.
 ;; : (-> [PooModuleDescriptor] [MissingModuleImport])
 (def (poo-flow-module-missing-imports modules)
-  (let (closed-modules (poo-flow-module-closure modules))
+  (let* ((closed-modules (poo-flow-module-closure modules))
+         (available-index (make-hash-table)))
+    (for-each (lambda (module-name)
+                (hash-put! available-index module-name #t))
+              (poo-flow-module-names closed-modules))
     (poo-flow-module-missing-imports-from
      closed-modules
-     (poo-flow-module-names closed-modules))))
+     available-index)))
 
 ;;; Boundary: activation may only proceed after closed-world imports validate.
 ;; : (-> [PooModuleDescriptor] Boolean)

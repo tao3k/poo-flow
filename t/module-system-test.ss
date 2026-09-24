@@ -92,6 +92,17 @@
         (check-equal? (execution-failure-code failure) 'missing-module-imports)
         (check-equal? (cdr (assoc 'module (car missing))) 'feature)
         (check-equal? (cdr (assoc 'import (car missing))) 'foundation)))
+    (test-case "resolves named imports through the closure name index"
+      (let ((foundation
+             (make-empty-poo-flow-module-descriptor 'foundation '() '()))
+            (feature
+             (make-empty-poo-flow-module-descriptor
+              'feature
+              '(foundation)
+              '())))
+        (check-equal?
+         (poo-flow-module-missing-imports (list feature foundation))
+         '())))
     (test-case "module closure admits shared inline imports once"
       (let* ((shared
               (make-empty-poo-flow-module-descriptor 'shared '() '()))
