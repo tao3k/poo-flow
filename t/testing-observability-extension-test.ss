@@ -5,12 +5,14 @@
 
 
 (import :std/test
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .ref .slot?)
         (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
+                 testing-interface-profile-enabled?
                  testing-interface-call-with-operation
                  testing-interface-run-test-batch!)
-        (only-in :poo-flow/src/module-system/observability/testing-extension
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+
                  +poo-flow-testing-import-footprint-profile+
                  poo-flow-native-observability-enabled?
                  make-poo-flow-testing-observability-profile
@@ -21,6 +23,13 @@
 
 (def testing-observability-extension-test
   (test-suite "POO Flow native testing observability extension"
+    (test-case "the public POO Flow interface owns the ASP extension once"
+      (check (.slot? +poo-flow-testing-interface+ 'around-operation) => #t)
+      (check (testing-interface-profile-enabled?
+              +poo-flow-testing-interface+
+              'import-footprint)
+             => #t))
+
     (test-case "source roots are owned by the POO testing profile"
       (let (profile
             (make-poo-flow-testing-observability-profile

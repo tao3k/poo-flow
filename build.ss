@@ -49,6 +49,7 @@
  (spec poo-flow-native-spec)
  (public-entry-modules
   '("src/core/api.ss"
+    "testing-api.ss"
     "src/graph/interface.ss"
     "src/module-system/api.ss"
     "src/module-system/load.ss"
@@ -78,7 +79,6 @@
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `("src/module-system/observability/testing-extension"
-               ,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))
