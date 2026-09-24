@@ -68,7 +68,9 @@ jobs:
 
       - name: Install Org Zhixing
         working-directory: ${{ env.ORG_ZHIXING_ROOT }}
-        run: npm ci
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
