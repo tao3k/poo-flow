@@ -199,6 +199,7 @@ check-aitia-native:
 [group('dependency')]
 deps:
     {{ gerbil_darwin_env }} gerbil deps --install
+    {{ gerbil_darwin_env }} gerbil clean
 
 # Clean only native Gerbil package build artifacts.
 [group('build')]
