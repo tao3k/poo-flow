@@ -5,6 +5,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
+        (only-in :clan/poo/object .ref)
         (only-in :std/encoding/json
                  JSONReadOptions
                  current-json-read-options
@@ -12,8 +13,14 @@
         (only-in :poo-flow/src/ffi/runtime-v0-native
                  native-abi-version
                  native-descriptor-payload
+                 native-query-execution-candidate->json
+                 native-query-execution-candidate<-json
                  native-validate-payload
-                 native-c-round-trip))
+                 native-c-round-trip)
+        (only-in :poo-flow/src/modules/query/objects
+                 poo-flow-query-execution-candidate)
+        (only-in :poo-flow/src/modules/query/types
+                 poo-flow-query-execution-candidate?))
 
 (export runtime-v0-native-ffi-test)
 
@@ -28,6 +35,11 @@
 JSON
   )
 
+(def valid-query-execution-candidate
+  (poo-flow-query-execution-candidate
+   'mrr 'healthcare-impact "1" "healthcare-1" "sha256:source"
+   'gerbil-parser "sha256:provenance" "sha256:result" 0 #f))
+
 (def runtime-v0-native-ffi-test
   (test-suite "Runtime v0 Scheme-native C ABI"
     (test-case "descriptor is versioned and bounded"
@@ -36,9 +48,9 @@ JSON
         (check (hash-get descriptor "schema")
                => "poo-flow.scheme-native-descriptor.v1")
         (check (hash-get descriptor "runtimeAbiMajor") => 0)
-        (check (hash-get descriptor "runtimeAbiMinor") => 3)
+        (check (hash-get descriptor "runtimeAbiMinor") => 1)
         (check (hash-get descriptor "maximumInputBytes") => (* 16 1024 1024))
-        (check (length (hash-get descriptor "contracts")) => 3)))
+        (check (length (hash-get descriptor "contracts")) => 4)))
     (test-case "valid POO contract crosses as a validation receipt"
       (let (receipt
             (runtime-test-json-object
@@ -46,6 +58,32 @@ JSON
                                       valid-source-query)))
         (check (hash-get receipt "valid") => #t)
         (check (length (hash-get receipt "failures")) => 0)))
+    (test-case "MRR execution candidate becomes the canonical Query object"
+      (let* ((wire
+              (native-query-execution-candidate->json
+               valid-query-execution-candidate))
+             (object (runtime-test-json-object wire))
+             (candidate (native-query-execution-candidate<-json object))
+             (receipt
+              (runtime-test-json-object
+               (native-validate-payload "query-execution-candidate"
+                                        wire))))
+        (check (poo-flow-query-execution-candidate? candidate) => #t)
+        (check (.ref candidate 'query-identity) => 'healthcare-impact)
+        (check (.ref candidate 'complete?) => #f)
+        (check (hash-get receipt "valid") => #t)
+        (check (length (hash-get receipt "failures")) => 0)))
+    (test-case "execution candidate rejects invalid runtime evidence"
+      (check-exception
+       (native-validate-payload
+        "query-execution-candidate"
+        "{\"provider-identity\":\"mrr\",\"query-identity\":\"q1\",\"query-version\":\"1\",\"semantic-revision\":\"r1\",\"source-content-identity\":\"sha256:source\",\"parser-identity\":\"gerbil-parser\",\"provenance-root\":\"sha256:provenance\",\"result-digest\":\"sha256:result\",\"result-count\":-1,\"complete\":false}")
+       true))
+    (test-case "qualification receipt cannot substitute for execution evidence"
+      (check-exception
+       (native-validate-payload "query-execution-candidate"
+                                valid-source-query)
+       true))
     (test-case "semantic failure remains typed rather than exceptional"
       (let* ((invalid
               (string-append

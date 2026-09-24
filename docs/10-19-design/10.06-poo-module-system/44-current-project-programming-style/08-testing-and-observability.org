@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Programming Style 08 - Testing And Observability
+
+* Testing surface
+
+Tests use Gerbil's native =gerbil test= / =gxtest= lifecycle.  POO Flow extends
+the ASP Testing Policy through native POO slots; it does not create a second
+test runner.  Per-test memory, performance, debug and trace Profiles are
+declarative values selected by the Testing Interface.
+
+Default =just= tests retain a bounded heap so an agent-authored infinite loop
+or leak fails locally.  Build memory and test-runtime memory are different
+concerns: parallel compilation may use available machine resources, while each
+test execution must retain its declared safety envelope.
+
+* Observability
+
+Observability reports first-event latency, active phase, elapsed time, memory
+and final receipt without becoming execution authority.  A timeout must show
+which admitted owner or Provider is active.  Tests may refine the observability
+Profile for a module, but may not insert ad hoc =display= calls as the only
+diagnostic contract.
+
+* Evidence order
+
+Compile changed modules directly, run atomic tests, then affected scenarios and
+public consumers.  Keep build wall time, macro-expansion time and runtime test
+time distinct.  A focused green result does not qualify independent closure;
+the completion report names exactly which gate ran and which remains blocked.

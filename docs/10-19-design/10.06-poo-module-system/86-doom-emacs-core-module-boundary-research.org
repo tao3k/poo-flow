@@ -252,7 +252,7 @@ functional values.  It is not the owner of the runtime.
 | Init/config/packages phases | Contribution phases and projections | Keep phase ownership explicit enough for ordering and diagnostics. |
 | =modulep!= style checks | Explicit data predicates and receipts | Prefer inspectable predicate inputs over hidden ambient source context. |
 | Package declaration/sync | Runtime/package/backend projection lanes | Reconcile external effects through explicit operations and receipts. |
-| =doom doctor= / =doom sync= | =profile-doctor=, projection receipts, scenario diagnostics | Diagnostics are first-class operations, not afterthoughts. |
+| =doom doctor= / =doom sync= | Testing Policy slots, projection receipts, scenario diagnostics | Diagnostics are first-class operations, not afterthoughts. |
 | Profiles | Higher-level composition profiles | Profiles select modules/factors/plugins; they do not replace module kernels. |
 | Built-in modules | =src/modules/<domain>= module owners | Concrete modules live under domain owners, not under the core module-system mechanics. |
 | Macro helpers | Gerbil declarative/procedural macros | Macros compress authoring and expand into normal POO/functional values. |
@@ -395,7 +395,7 @@ The current =poo-flow= design still needs implementation-level checks for:
 - plugin-slot validation: plugin contributions must attach only where declared;
 - macro expansion receipts: user macros should be explainable by doctor and
   scenarios;
-- profile-doctor output: diagnostics should show selected modules, public
+- Testing Policy output: diagnostics should show selected modules, public
   factors, plugin factors, inherited kernels, and rejected overrides;
 - fixture discipline: scenarios can inspect internal receipts but must not turn
   internal hooks into public API.

@@ -69,6 +69,16 @@ entry modules and exceptional native options; ASP projects the native import
 closure, while =std/build-script= and =std/make= retain command, dependency,
 currentness, and execution ownership.
 
+This closure is a *target-selection contract*, not a V19 graph optimizer.
+Gerbil V19 already owns dependency identity, deduplication, currentness, and
+planning inside =std/make=.  ASP only turns the public-entry declaration into
+the complete set of local package targets because passing one root source to
+=std/make= does not materialize all of its imported modules as package
+artifacts.  A same-target V19 A/B found no stable performance advantage over
+an explicit complete target declaration.  Consequently, target-count
+reduction against a full source catalog must never be reported as an
+improvement to the native graph algorithm.
+
 Neither POO Flow nor ASP imports =clan/building=, initializes a parallel build
 environment, or maintains a second source graph.  The package root may contain
 research checkouts, generated state, user examples, docs, and fixtures, but
@@ -86,7 +96,8 @@ The public ASP PackageSpec keeps the declaration small while =std/make= reads
 timestamp-invalid Gerbil compilation free. The durable engineering improvement
 for =poo-flow= is therefore:
 1. keep =build.ss= thin and package-manager-owned;
-2. keep package discovery positive by scanning the intended include dirs;
+2. declare the intended public package surface positively and let ASP project
+   only the target set required by that declaration;
 3. reduce expensive POO/macro expansion in hot modules;
 4. use =GERBIL_BUILD_CORES= for parallel compiler work instead of custom thread orchestration in =build.ss=.
 ** 10.06.39.30 Finding: Gerbil Bootstrap Uses Direct Compiler Groups

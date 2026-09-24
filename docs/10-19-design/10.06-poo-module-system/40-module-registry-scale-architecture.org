@@ -132,12 +132,10 @@ When a new module family is needed, add manifest data to =module-registry.ss=, a
 
 =build.ss= is the unique package build entry.  It declares one POO PackageSpec
 and delegates to the same ASP Build API and =std/make= executor for development,
-CI, Bazel, and release builds.  Its =public-entry-modules= slot names nine
-stable public owners: the four framework interfaces plus Bundle v1 writing,
-Runtime v0 schema, Cedar authority, proof-vector, and runtime-symbol owners
-used directly by published bindings.  ASP revision
-=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062= projects the native import
-closure and =std/make= compiles that result.  The entry contains no
+CI, Bazel, and release builds.  Its =public-entry-modules= slot names the
+stable public owners used directly by the package and published bindings.  The
+=gerbil.pkg=-pinned ASP revision projects their native import closure and
+=std/make= compiles that result.  The entry contains no
 =all-gerbil-modules= scan, package-local owner import, test PackageSpec, or
 second build script.
 
@@ -172,18 +170,22 @@ failed while importing =src/core/api.ssi=: =std/make= does not compile the
 transitive package closure from root strings.  The smaller count was an
 incomplete artifact, not a performance improvement.
 
-The corrected =public-entry-modules= projection produces 236 package modules;
-the explicit nono-C prelude makes 237 BuildSpec targets.  With ASP
-=3f5fb71c59d5ebb3232d9c0cca1f463ccae72062=, two nine-root A/B samples measured
-2.03--2.08 seconds for direct projection and 20.12--25.11 seconds for the
-complete closure.  These wall-clock values are observations, not fixed
-constants.  Closure membership is the admission condition.  That closure
-interval occurs before =std/make= and is
-owned by ASP's Gerbil Import Model projection; it must not be reported as an
-=std/make= fixed cost.  The 227-file POO test run then completed successfully in
-about 82 seconds with 12 native batches.  Four resource-sensitive suites now
-run in fresh serialized processes, including the memory-monitor containment
-suite that overflowed a reused 56-file Ubuntu heap.
+The earlier public-entry experiment compared a complete closure with an
+incomplete direct-root spec.  Its target-count and wall-clock difference
+proved that the direct-root spec omitted required package artifacts; it did
+*not* prove a faster dependency-graph algorithm.  Current Gerbil V19 evidence
+uses an explicit complete target declaration as the same-output control.  On
+that control, ASP closure projection has no established performance advantage
+and is retained solely because closure membership is the package-admission
+condition.  Any future optimization claim must compare the same ordered target
+set, the same outputs, and the complete =build.ss -> std/make= path.
+
+The closure interval occurs before =std/make= and is owned by ASP's target-set
+projection; it must not be reported as an =std/make= fixed cost.  Conversely,
+the target reduction relative to an all-source catalog must not be presented
+as an ASP graph-planning speedup.  Resource-sensitive suites continue to run
+in fresh serialized processes so that memory containment is per-test rather
+than amortized across a reused batch heap.
 
 The Runtime-WASM workflow separately materializes
 =//gerbil:dependency_packages= before the package action.  This exposes and

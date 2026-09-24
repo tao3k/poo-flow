@@ -19,26 +19,21 @@ filegroup(
 )
 
 filegroup(
-    name = "scheme_runtime_sources",
-    srcs = glob([
-        "gerbil.pkg",
+    name = "gerbil_package_sources",
+    # This is only the Bazel sandbox projection. gerbil.pkg owns dependency
+    # identity and build.ss owns the module graph compiled from these files.
+    srcs = ["gerbil.pkg"] + glob([
+        "*.ss",
+        "bindings/nono-c/**/*.h",
         "src/**/*.inc",
         "src/**/*.ss",
+        "user-interface/**/*.ss",
     ]),
 )
 
 filegroup(
     name = "scheme_source_root_marker",
     srcs = ["gerbil.pkg"],
-)
-
-filegroup(
-    name = "scheme_build_sources",
-    srcs = [
-        "build.ss",
-        "user-interface/init.ss",
-        ":scheme_runtime_sources",
-    ] + glob(["bindings/nono-c/**/*.h"]),
 )
 
 filegroup(

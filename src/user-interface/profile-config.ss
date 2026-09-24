@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: public facade for Doom-style profile config, doctor, and presentation.
+;;; Boundary: public facade for profile config, policy, and presentation.
 ;;; Invariant: profile objects, diagnostics, and presentations live in leaf owners.
 
 (import :poo-flow/src/module-system/declaration/interface
@@ -13,7 +13,7 @@
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/user-interface/profile-gate
-        :poo-flow/src/user-interface/profile-doctor
+        :poo-flow/src/user-interface/profile-policy
         :poo-flow/src/user-interface/profile-presentation)
 
 (export (import: :poo-flow/src/module-system/declaration/interface)
@@ -26,10 +26,8 @@
         poo-flow-user-profile-diagnostic-kind
         poo-flow-user-profile-presentation-kind
         poo-flow-user-profile-set-presentation-kind
-        poo-flow-user-profile-doctor-report-kind
-        poo-flow-user-profile-doctor-presentation-kind
-        poo-flow-user-profile-set-doctor-report-kind
-        poo-flow-user-profile-set-doctor-presentation-kind
+        poo-flow-user-profile-policy-receipt-kind
+        poo-flow-user-profile-set-policy-receipt-kind
         poo-flow-user-interface-profile-gate-kind
         poo-flow-user-interface-profile-gate-receipt-kind
         poo-flow-user-interface-profile-gate-fact-keys
@@ -46,14 +44,12 @@
         pooFlowDefaultUserSettings
         poo-flow-default-user-setting-keys
         pooFlowUserConfigFromProfile
-        pooFlowUserProfileDoctor
-        pooFlowUserProfileSetDoctor
+        poo-flow-user-profile-policy-admit
+        poo-flow-user-profile-set-policy-admit
         pooFlowUserProfilePresentation
         pooFlowUserProfileSetPresentation
-        pooFlowUserProfileDoctorPresentation
-        pooFlowUserProfileSetDoctorPresentation
-        poo-flow-user-profile-doctor-ok?
-        poo-flow-user-profile-set-doctor-ok?
+        poo-flow-user-profile-policy-admitted?
+        poo-flow-user-profile-set-policy-admitted?
         poo-flow-user-profile?
         poo-flow-user-profile-set?
         poo-flow-user-profile-name

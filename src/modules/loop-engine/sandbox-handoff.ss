@@ -203,8 +203,8 @@
 (def (poo-flow-user-loop-engine-invalid-sandbox-runtime-summary? summary)
   (not (poo-flow-user-loop-engine-intent-ref summary 'valid? #f)))
 
-;;; Agreement diagnostics are aggregate rows so profile doctor can present one
-;;; actionable sandbox issue per loop intent instead of one row per mount.
+;;; Agreement diagnostics are aggregate rows so presentation and Testing Policy
+;;; can report one actionable sandbox issue per loop intent, not one per mount.
 ;; : (-> [Symbol] [Alist] [Alist] [Symbol] [Alist])
 (def (poo-flow-user-loop-engine-sandbox-handoff-agreement-diagnostics
       refs

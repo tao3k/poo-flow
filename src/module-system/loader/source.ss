@@ -16,7 +16,7 @@
 ;; | SourceRefValue = Path | Symbol | PooModuleSourceRef | Value
 ;; | PooModuleSourceRefCandidate = Value
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/module-system/interface
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
@@ -245,5 +245,5 @@
 ;; : (-> ModuleImportCandidate Boolean)
 (def (poo-flow-import? value)
   (and (object? value)
-       (poo-flow-module-object-has-slot? value 'kind)
+       (.slot? value 'kind)
        (poo-flow-module-kind=? (.ref value 'kind) poo-flow-module-import-kind)))

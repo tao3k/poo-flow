@@ -76,14 +76,35 @@
         (check-equal? (contains? source "\"performance-tests.ss\"") #t)
         (check-equal? (contains? source "\"run-contribute-test.ss\"") #t)))
 
-    (test-case "performance suite declares the POO testing extension"
+    (test-case "Bazel stages one package surface without owning the module graph"
+      (let ((root-build
+             (call-with-input-file "BUILD.bazel" read-all-as-string))
+            (gerbil-build
+             (call-with-input-file "gerbil/BUILD.bazel" read-all-as-string)))
+        (check-equal? (contains? root-build
+                                 "name = \"gerbil_package_sources\"")
+                      #t)
+        (check-equal? (contains? root-build "\"*.ss\"") #t)
+        (check-equal? (contains? root-build "scheme_build_sources") #f)
+        (check-equal? (contains? root-build "\"testing-api.ss\"") #f)
+        (check-equal? (contains? gerbil-build
+                                 "srcs = [\"//:gerbil_package_sources\"]")
+                      #t)
+        (check-equal? (contains? gerbil-build
+                                 "build_script = \"//:build.ss\"")
+                      #t)))
+
+    (test-case "performance suite consumes the public POO testing interface"
       (let (performance-source
             (call-with-input-file "performance-tests.ss" read-all-as-string))
         (check-equal?
          (contains?
           performance-source
-         "(poo-flow-testing-observability-extension +asp-testing-interface+)")
-         #t)))
+          "+poo-flow-testing-interface+")
+         #t)
+        (check-equal?
+         (contains? performance-source "+asp-testing-interface+")
+         #f)))
 
     (test-case "Just test launch is fail-closed before Profile loading"
       (let (source (call-with-input-file "justfile" read-all-as-string))
@@ -102,12 +123,15 @@
         (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)
         (check-equal? (contains? source "rm -rf") #f)))
 
-    (test-case "unit tests inherit the ASP per-worker memory profile"
+    (test-case "unit tests inherit the POO Flow default testing policy"
       (let (source (call-with-input-file "unit-tests.ss" read-all-as-string))
         (check-equal?
-         (contains? source
-                    "(poo-flow-testing-observability-extension\n       +asp-testing-interface+)")
+         (contains? source ":poo-flow/testing-api")
          #t)
+        (check-equal?
+         (contains? source "+poo-flow-testing-interface+")
+         #t)
+        (check-equal? (contains? source "+asp-testing-interface+") #f)
         (check-equal? (contains? source "maxHeapMiB: 1024") #f)))
 
     (test-case "default policy measures catalog size without an invented limit"

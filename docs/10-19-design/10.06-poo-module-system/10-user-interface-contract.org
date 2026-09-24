@@ -56,7 +56,8 @@ management:
 - =pooFlowRootProfileSet= builds the canonical root profile registry.
 - =pooFlowRootConfig= projects root bundle rows into config data.
 - =pooFlowRootProfileSetPresentation= exposes selected/default profile metadata for inspection.
-- =pooFlowRootProfileSetDoctorPresentation= reports duplicate profile names, empty registries, and missing defaults before activation.
+- =+poo-flow-testing-interface+= admits the profile set through its
+  =.check-user-profile-set= policy slot before activation.
 
 =src/user-interface/profile-config.ss= owns profile/config data APIs.
 =src/user-interface/root-profile.ss= owns the root user-interface projection
@@ -84,7 +85,8 @@ files such as =objects.ss=, =config.ss=, or =modules/config.ss=.
 Its normal form is a Doom-like =poo-flow-init-module-bundles= declaration using
 =:category= markers and =+feature= flags for things that can be enabled,
 disabled, or customized. Presentations such as =pooFlowUserConfigPresentation=
-and =pooFlowUserProfileSetDoctorPresentation= are projected by upstream helpers.
+are projected by upstream helpers; declaration admission remains a Testing
+Policy concern and is not duplicated as a presentation object.
 Ordinary users should not have to call =pooFlowUserConfig=,
 =pooFlowUserProfile=, descriptor constructors, loader backend constructors,
 merge internals, or runtime adapters.

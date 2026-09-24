@@ -19,14 +19,8 @@
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
         (only-in :poo-flow/src/user-interface/profile-core
-                 poo-flow-user-profile-doctor-presentation-kind
-                 poo-flow-user-profile-doctor-report-kind
                  poo-flow-user-profile-presentation-kind)
-        (only-in :poo-flow/src/user-interface/profile-doctor
-                 poo-flow-user-profile-doctor-ok?
-                 pooFlowUserProfileDoctor)
         (only-in :poo-flow/src/user-interface/profile-presentation-config
-                 pooFlowUserProfileDoctorPresentation
                  pooFlowUserProfilePresentation)
         "user-interface-fixtures.ss")
 
@@ -334,111 +328,10 @@
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f))))
 
-;;; Doctor presentation verifies that valid profiles expose diagnostics and
-;;; projection rows without descriptor realization.
-;; : (-> Unit TestSuite)
-(def (user-interface-profile-doctor-case-test)
-  (test-case "doctors valid profile before realization"
-      (let* ((doctor-report
-              (pooFlowUserProfileDoctor test-poo-flow-user-profile))
-             (presentation
-              (pooFlowUserProfileDoctorPresentation test-poo-flow-user-profile)))
-        (check-equal? (.ref doctor-report 'kind)
-                      poo-flow-user-profile-doctor-report-kind)
-        (check-equal? (poo-flow-user-profile-doctor-ok? doctor-report) #t)
-        (check-equal? (.ref doctor-report 'profile-diagnostics) '())
-        (check-equal? (.ref presentation 'kind)
-                      poo-flow-user-profile-doctor-presentation-kind)
-        (check-equal? (.ref presentation 'doctor-status) 'ok)
-        (check-equal? (.ref presentation 'diagnostic-count) 0)
-        (check-equal? (.ref presentation 'module-count) 8)
-        (check-equal? (.ref presentation 'feature-count) 8)
-        (check-equal? (.ref presentation 'session-core-intent-count) 1)
-        (check-equal? (.ref presentation 'cicd-intent-count) 1)
-        (check-equal? (.ref presentation
-                            'workflow-cicd-runtime-command-manifest-agreement-valid?)
-                      #t)
-        (check-equal? (.ref presentation
-                            'workflow-cicd-marlin-runtime-handoff-abi-count)
-                      0)
-        (check-equal? (.ref presentation 'workflow-cicd-pipeline-run-count)
-                      0)
-        (check-equal? (.ref presentation 'workflow-cicd-pipeline-result-count)
-                      0)
-        (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
-        (check-equal? (alist-value
-                       'valid?
-                       (car (.ref presentation 'loop-engine-result-contracts)))
-                      #t)
-        (check-equal? (car (.ref presentation 'loop-engine-agent-harnesses))
-                      (alist-value
-                       'agent-harnesses
-                       (car (.ref presentation 'loop-engine-intents))))
-        (check-equal? (car (.ref presentation
-                                  'loop-engine-delegated-operations))
-                      (alist-value
-                       'delegated-operation
-                       (car (.ref presentation 'loop-engine-intents))))
-        (check-equal? (alist-value
-                       'runtime-owner
-                       (car (.ref presentation 'cicd-intents)))
-                      "marlin-agent-core")
-        (check-equal? (alist-value
-                       'stage
-                       (user-interface-presentation-trace-stage
-                        (.ref presentation 'presentation-trace)
-                        'cicd-intents))
-                      'cicd-intents)
-        (check-equal? (alist-value
-                       'stage
-                       (user-interface-presentation-trace-stage
-                        (.ref presentation 'presentation-trace)
-                        'loop-engine-intents))
-                      'loop-engine-intents)
-        (check-equal? (alist-value 'declaration-index
-                                   (car (.ref presentation 'feature-facts)))
-                      0)
-        (check-equal? (.ref presentation 'package-management?) #f)
-        (check-equal? (not
-                       (not
-                        (member "pooFlowUserProfileDoctorPresentation"
-                                (.ref presentation 'api-entrypoints))))
-                      #t)
-        (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f))))
-
-;;; Broken-profile doctor output is the regression guard for declaration
-;;; mistakes remaining visible as data instead of failing during presentation.
-;; : (-> Unit TestSuite)
-(def (user-interface-broken-profile-doctor-case-test)
-  (test-case "reports profile declaration mistakes like doctor output"
-      (let* ((presentation
-              (pooFlowUserProfileDoctorPresentation test-poo-flow-user-broken-profile))
-             (diagnostics (.ref presentation 'profile-diagnostics)))
-        (check-equal? (.ref presentation 'doctor-status) 'error)
-        (check-equal? (.ref presentation 'doctor-ok) #f)
-        (check-equal? (.ref presentation 'diagnostic-count) 3)
-        (check-equal? (diagnostic-code-member?
-                       'duplicate-module-selection
-                       diagnostics)
-                      #t)
-        (check-equal? (diagnostic-code-member?
-                       'inactive-module-bundle
-                       diagnostics)
-                      #t)
-        (check-equal? (diagnostic-code-member?
-                       'missing-setting-key
-                       diagnostics)
-                      #t)
-        (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f))))
-
 ;; : (-> Unit TestSuite)
 ;;; This suite keeps presentation output aligned with the declarative user
 ;;; interface contract while each case remains a separately inspectable owner.
 (def user-interface-presentation-test
   (test-suite "poo-flow user interface presentation"
     (user-interface-config-presentation-test)
-    (user-interface-profile-presentation-case-test)
-    (user-interface-profile-doctor-case-test)
-    (user-interface-broken-profile-doctor-case-test)))
+    (user-interface-profile-presentation-case-test)))

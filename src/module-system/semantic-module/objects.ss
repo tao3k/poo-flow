@@ -56,6 +56,7 @@
         forbidden-imports: '()
         forbidden-forms: '()
         forbid-raw-behavior-hooks?: #f
+        forbid-raw-query-initializers?: #t
         repair-operators: '(? => =>.+ override)
         freedom: freedom-value)))
 
@@ -102,6 +103,7 @@
           poo-clos-method-bundle
           .defmethod-bundle)
         forbid-raw-behavior-hooks?: #t
+        forbid-raw-query-initializers?: #t
         freedom: 'maintained-value-composition-only)))
 (def InterfaceSourceRole.
   (poo-flow-module-source-role

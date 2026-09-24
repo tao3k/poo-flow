@@ -9,14 +9,16 @@
 (import (only-in :clan/poo/object .def .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
         (only-in :std/list/list any filter-map find)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map
+                 poo-flow-scheme-datum-find)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface-prototype
                  poo-flow-module-interface?
                  poo-flow-module-interface-id
                  poo-flow-module-interface-authoring)
         (only-in :poo-flow/src/module-system/observability/module-presentation
-                 poo-flow-poo-slot-authoring-datum-bindings
-                 poo-flow-scheme-datum-find)
+                 poo-flow-poo-slot-authoring-datum-bindings)
         :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor. ModuleSourceRole.
@@ -211,6 +213,46 @@
     #t
     #f))
 
+;;; Query slots are the public semantic boundary, not a place to hide a raw
+;;; string/list language or an anonymous evaluator.  Provider-specific source
+;;; text remains valid behind a named projection object such as `gql-source`;
+;;; only slots that claim Query identity are governed here.
+;; : (-> Symbol Boolean)
+(def (poo-flow-module-authoring-query-slot? slot)
+  (and (symbol? slot)
+       (let (name (symbol->string slot))
+         (or (member slot '(query queries query-predicate query-predicates))
+             (string-suffix? "-query" name)
+             (string-suffix? "-queries" name)))))
+
+;; : (-> SchemeDatum Boolean)
+(def (poo-flow-module-authoring-raw-query-initializer? initializer)
+  (cond
+   ((string? initializer) #t)
+   ((not (pair? initializer)) #f)
+   ((memq (car initializer) '(lambda list vector)) #t)
+   ((and (memq (car initializer) '(quote quasiquote))
+         (pair? (cdr initializer)))
+    (let (quoted (cadr initializer))
+      (or (string? quoted) (pair? quoted) (vector? quoted))))
+   (else #f)))
+
+;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
+(def (poo-flow-module-authoring-query-diagnostics interface role datum)
+  (if (.ref role 'forbid-raw-query-initializers?)
+    (filter-map
+     (lambda (binding)
+       (and (poo-flow-module-authoring-query-slot? (car binding))
+            (poo-flow-module-authoring-raw-query-initializer? (cdr binding))
+            (poo-flow-module-authoring-surface-diagnostic
+             interface role
+             'poo-query-must-be-native-object
+             (car binding)
+             'single-poo-semantic-model
+             'bind-named-poo-query-or-provider-projection)))
+     (poo-flow-poo-slot-authoring-datum-bindings datum))
+    '()))
+
 (def (poo-flow-module-authoring-surface-diagnostic
       interface source-role code-value subject-value rule-value
       recommendation-value)
@@ -267,13 +309,16 @@
 (def (poo-flow-module-authoring-admit/common interface role datum)
   (poo-flow-module-authoring-admission
    interface role
-   (poo-flow-module-authoring-slot-diagnostics interface role datum)))
+   (append
+    (poo-flow-module-authoring-slot-diagnostics interface role datum)
+    (poo-flow-module-authoring-query-diagnostics interface role datum))))
 
 (def (poo-flow-module-authoring-admit/config interface role datum)
   (poo-flow-module-authoring-admission
    interface role
    (append
     (poo-flow-module-authoring-slot-diagnostics interface role datum)
+    (poo-flow-module-authoring-query-diagnostics interface role datum)
     (poo-flow-module-authoring-root-diagnostics interface role datum)
     (poo-flow-module-authoring-default-surface-diagnostics
      interface role datum))))
@@ -339,19 +384,15 @@
 
 ;; : (-> PooModuleInterface Symbol InputPort PooModuleAuthoringAdmission)
 (def (poo-flow-module-authoring-admit-port interface role-name port)
-  (let loop ((diagnostics '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (poo-flow-module-authoring-admission
-         interface
-         (poo-flow-module-authoring-role interface role-name)
-         (reverse diagnostics))
-        (let (admission
-              (poo-flow-module-authoring-admit-datum
-               interface role-name datum))
-          (loop
-           (foldl cons diagnostics
-                  (.ref admission 'diagnostics))))))))
+  (poo-flow-module-authoring-admission
+   interface
+   (poo-flow-module-authoring-role interface role-name)
+   (poo-flow-read-datums/append-map
+    (lambda (datum)
+      (.ref (poo-flow-module-authoring-admit-datum
+             interface role-name datum)
+            'diagnostics))
+    port)))
 
 (def (poo-flow-module-authoring-admission? value)
   (element? PooFlowModuleAuthoringAdmission value))

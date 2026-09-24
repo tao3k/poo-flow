@@ -13,6 +13,7 @@
                  json->string
                  string->json)
         (only-in :clan/poo/object .ref)
+        (only-in :std/hash/misc hash-key?)
         (only-in :gerbil/core call-with-output-string display-exception)
         (only-in ../contract/runtime-v0-abi-schema
                  +poo-flow-runtime-v0-abi-schema+)
@@ -22,10 +23,16 @@
                  poo-flow-runtime-language-admission-receipt
                  poo-flow-runtime-language-admission-receipt-failures
                  poo-flow-contract-artifact-projection-receipt
-                 poo-flow-contract-artifact-projection-receipt-failures))
+                 poo-flow-contract-artifact-projection-receipt-failures)
+        (only-in ../modules/query/objects
+                 poo-flow-query-execution-candidate)
+        (only-in ../modules/query/types
+                 poo-flow-query-execution-candidate?))
 
 (export native-abi-version
         native-descriptor-payload
+        native-query-execution-candidate->json
+        native-query-execution-candidate<-json
         native-validate-payload
         native-error-payload
         native-c-round-trip)
@@ -53,6 +60,7 @@
            (maximumInputBytes +native-max-input-bytes+)
            (contracts
             [(.ref schema 'source-query-receipt-schema)
+             (.ref schema 'query-execution-candidate-schema)
              (.ref schema 'runtime-admission-receipt-schema)
              (.ref schema 'contract-artifact-projection-receipt-schema)])
            (capabilities
@@ -67,8 +75,9 @@
            (lambda (port) (display-exception exception port)))))))
 
 (def (json-required object field)
-  (or (hash-get object field)
-      (error "missing native contract field" field)))
+  (if (hash-key? object field)
+    (hash-get object field)
+    (error "missing native contract field" field)))
 
 (def (json-symbol object field)
   (string->symbol (json-required object field)))
@@ -83,6 +92,12 @@
 (def (json-symbol-list object field)
   (map string->symbol (json-list object field)))
 
+(def (native-identity->json value)
+  (cond
+   ((symbol? value) (symbol->string value))
+   ((string? value) value)
+   (else (error "native contract identity must be a symbol or string" value))))
+
 (def (source-query-receipt<-json object)
   (poo-flow-runtime-language-source-query-receipt
    (json-required object "source-language")
@@ -96,6 +111,40 @@
    (json-symbol object "representation")
    (json-required object "provenance-root")
    (json-required object "result-digest")))
+
+;;; This transport projection deliberately constructs the canonical Query
+;;; object.  Runtime v0 owns the byte boundary; Query owns the semantic shape.
+(def (native-query-execution-candidate->json candidate)
+  (unless (poo-flow-query-execution-candidate? candidate)
+    (error "invalid canonical query execution candidate" candidate))
+  (json->string
+   (hash (provider-identity
+          (native-identity->json (.ref candidate 'provider-identity)))
+         (query-identity
+          (native-identity->json (.ref candidate 'query-identity)))
+         (query-version (.ref candidate 'query-version))
+         (semantic-revision (.ref candidate 'semantic-revision))
+         (source-content-identity
+          (.ref candidate 'source-content-identity))
+         (parser-identity
+          (native-identity->json (.ref candidate 'parser-identity)))
+         (provenance-root (.ref candidate 'provenance-root))
+         (result-digest (.ref candidate 'result-digest))
+         (result-count (.ref candidate 'result-count))
+         (complete (.ref candidate 'complete?)))))
+
+(def (native-query-execution-candidate<-json object)
+  (poo-flow-query-execution-candidate
+   (json-symbol object "provider-identity")
+   (json-symbol object "query-identity")
+   (json-required object "query-version")
+   (json-required object "semantic-revision")
+   (json-required object "source-content-identity")
+   (json-symbol object "parser-identity")
+   (json-required object "provenance-root")
+   (json-required object "result-digest")
+   (json-required object "result-count")
+   (json-required object "complete")))
 
 (def (admission-receipt<-json object)
   (poo-flow-runtime-language-admission-receipt
@@ -143,6 +192,11 @@
        contract
        (poo-flow-runtime-language-source-query-receipt-failures
         (source-query-receipt<-json object))))
+     ((string=? contract "query-execution-candidate")
+      (let (candidate (native-query-execution-candidate<-json object))
+        (unless (poo-flow-query-execution-candidate? candidate)
+          (error "invalid canonical query execution candidate" candidate))
+        (validation-result contract '())))
      ((string=? contract "language-admission-receipt")
       (validation-result
        contract
@@ -196,6 +250,14 @@ static int poo_flow_native_c_round_trip(void) {
     "\"parser-version\":\"1\",\"query-id\":\"q1\",\"query-version\":\"1\","
     "\"selected-node-identities\":[\"node-1\"],\"representation\":\"ast-data\","
     "\"provenance-root\":\"sha256:provenance\",\"result-digest\":\"sha256:result\"}";
+  static const char query_execution_candidate[] =
+    "{\"provider-identity\":\"mrr\",\"query-identity\":\"q1\","
+    "\"query-version\":\"1\",\"semantic-revision\":\"revision-1\","
+    "\"source-content-identity\":\"sha256:source\","
+    "\"parser-identity\":\"gerbil-parser\","
+    "\"provenance-root\":\"sha256:provenance\","
+    "\"result-digest\":\"sha256:result\",\"result-count\":1,"
+    "\"complete\":true}";
   poo_flow_scheme_result_v1 result;
 
   if (poo_flow_scheme_native_abi_version() != 1u) return 1;
@@ -217,12 +279,21 @@ static int poo_flow_native_c_round_trip(void) {
     return 4;
   }
   poo_flow_scheme_result_v1_release(&result);
+  if (poo_flow_scheme_native_validate("query-execution-candidate",
+                                      (char *)query_execution_candidate,
+                                      &result) != 0 ||
+      result.status != 0 || result.payload == NULL ||
+      strstr((const char *)result.payload, "\"valid\":true") == NULL) {
+    poo_flow_scheme_result_v1_release(&result);
+    return 5;
+  }
+  poo_flow_scheme_result_v1_release(&result);
   if (poo_flow_scheme_native_validate("unknown", "{}", &result) != -1 ||
       result.status != -1 || result.payload == NULL ||
       strstr((const char *)result.payload,
              "poo-flow.scheme-native-error.v1") == NULL) {
     poo_flow_scheme_result_v1_release(&result);
-    return 5;
+    return 6;
   }
   poo_flow_scheme_result_v1_release(&result);
   return 0;

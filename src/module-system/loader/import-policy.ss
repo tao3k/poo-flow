@@ -6,6 +6,10 @@
 ;;; Boundary: reader-native policy for imports written inside a POO module role.
 ;;; Invariant: this owner reads datums only; it never expands or evaluates them.
 
+(import (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map
+                 poo-flow-scheme-datum-find))
+
 (export poo-flow-module-owner-import-observation-kind
         poo-flow-module-forbidden-aggregate-imports
         poo-flow-module-owner-import-datum-observations
@@ -33,14 +37,10 @@
     :poo-flow/src/feature-system/interface))
 
 (def (poo-flow-module-import-datum-first-member datum members)
-  (cond
-   ((and (symbol? datum) (memq datum members)) datum)
-   ((pair? datum)
-    (or (poo-flow-module-import-datum-first-member (car datum) members)
-        (poo-flow-module-import-datum-first-member (cdr datum) members)))
-   ((vector? datum)
-    (poo-flow-module-import-datum-first-member (vector->list datum) members))
-   (else #f)))
+  (poo-flow-scheme-datum-find
+   (lambda (candidate)
+     (and (symbol? candidate) (memq candidate members) candidate))
+   datum))
 
 (def (poo-flow-module-owner-import-observation scope owner)
   (list
@@ -70,17 +70,9 @@
 
 ;; : (-> Symbol InputPort [Alist])
 (def (poo-flow-module-owner-import-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (let collect
-             ((remaining
-               (poo-flow-module-owner-import-datum-observations scope datum))
-              (next observations-rev))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-module-owner-import-datum-observations scope <>)
+   port))
 
 ;; : (-> Symbol PathString [Alist])
 (def (poo-flow-module-owner-import-file-observations scope path)
@@ -93,20 +85,18 @@
 ;;; local package owner here creates a loaded-module/currentness cycle on
 ;;; macOS, where the compiler emits numbered replacement objects forever.
 (def (poo-flow-build-bootstrap-package-owner datum)
-  (cond
-   ((string? datum)
-    (and (or (string-prefix? "./src/" datum)
-             (string-prefix? "src/" datum))
-         datum))
-   ((symbol? datum)
-    (let (name (symbol->string datum))
-      (and (string-prefix? ":poo-flow/" name) datum)))
-   ((pair? datum)
-    (or (poo-flow-build-bootstrap-package-owner (car datum))
-        (poo-flow-build-bootstrap-package-owner (cdr datum))))
-   ((vector? datum)
-    (poo-flow-build-bootstrap-package-owner (vector->list datum)))
-   (else #f)))
+  (poo-flow-scheme-datum-find
+   (lambda (candidate)
+     (cond
+      ((string? candidate)
+       (and (or (string-prefix? "./src/" candidate)
+                (string-prefix? "src/" candidate))
+            candidate))
+      ((symbol? candidate)
+       (and (string-prefix? ":poo-flow/" (symbol->string candidate))
+            candidate))
+      (else #f)))
+   datum))
 
 (def (poo-flow-build-bootstrap-import-observation scope owner)
   (list
@@ -130,21 +120,13 @@
   '(poo-flow-load-modules all-gerbil-modules modules))
 
 (def (poo-flow-build-bootstrap-projection-form datum)
-  (cond
-   ((pair? datum)
-    (cond
-     ;; Quoted package data is inert and must not be interpreted as a build
-     ;; projection call.
-     ((eq? (car datum) 'quote) #f)
-     ((memq (car datum)
-            poo-flow-build-bootstrap-forbidden-projection-forms)
-      (car datum))
-     (else
-      (or (poo-flow-build-bootstrap-projection-form (car datum))
-          (poo-flow-build-bootstrap-projection-form (cdr datum))))))
-   ((vector? datum)
-    (poo-flow-build-bootstrap-projection-form (vector->list datum)))
-   (else #f)))
+  (poo-flow-scheme-datum-find
+   (lambda (candidate)
+     (and (pair? candidate)
+          (memq (car candidate)
+                poo-flow-build-bootstrap-forbidden-projection-forms)
+          (car candidate)))
+   datum))
 
 (def (poo-flow-build-bootstrap-projection-observation scope form)
   (list
@@ -167,14 +149,9 @@
     '()))
 
 (def (poo-flow-build-bootstrap-import-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (loop
-         (foldl cons observations-rev
-                (poo-flow-build-bootstrap-import-datum-observations
-                 scope datum)))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-build-bootstrap-import-datum-observations scope <>)
+   port))
 
 (def (poo-flow-build-bootstrap-import-file-observations scope path)
   (call-with-input-file
@@ -193,13 +170,9 @@
 
 ;; : (-> Symbol InputPort [Alist])
 (def (poo-flow-build-bootstrap-port-observations scope port)
-  (let loop ((observations-rev '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations-rev)
-        (loop
-         (foldl cons observations-rev
-                (poo-flow-build-bootstrap-datum-observations scope datum)))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-build-bootstrap-datum-observations scope <>)
+   port))
 
 ;; : (-> Symbol PathString [Alist])
 (def (poo-flow-build-bootstrap-file-observations scope path)

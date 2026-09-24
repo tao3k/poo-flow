@@ -76,6 +76,10 @@
                    surface: (poo-flow-string-constant "poo-flow"))
                '((owner . "poo-flow") (surface . "module-system"))))
              (source (poo-flow-local-source "modules/workspace.ss"))
+             (derived-interface
+              (.o (:: @ interface)
+                  schemas: (.o derived-only:
+                                (poo-flow-string-constant "derived"))))
              (module
               (poo-flow-modules
                interface
@@ -107,6 +111,24 @@
         (check-equal? (poo-flow-module-interface?
                        (poo-flow-module-interface-object module))
                       #t)
+        (check-equal?
+         (.ref (poo-flow-module-interface-schema-spec interface "surface")
+               'constant)
+         "poo-flow")
+        (check-equal?
+         (poo-flow-module-interface-schema-spec interface "missing")
+         #f)
+        (check-equal?
+         (.ref (poo-flow-module-interface-schema-spec
+                derived-interface
+                "derived-only")
+               'constant)
+         "derived")
+        (check-equal?
+         (poo-flow-module-interface-schema-spec
+          derived-interface
+          "surface")
+         #f)
         (check-equal? (cdr (assoc 'workspace-root (poo-flow-module-options module)))
                       "demo")
         (check-equal? (poo-flow-module-extensions module) '(workspace-extension))

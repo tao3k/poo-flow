@@ -15,10 +15,8 @@
         poo-flow-user-profile-diagnostic-kind
         poo-flow-user-profile-presentation-kind
         poo-flow-user-profile-set-presentation-kind
-        poo-flow-user-profile-doctor-report-kind
-        poo-flow-user-profile-doctor-presentation-kind
-        poo-flow-user-profile-set-doctor-report-kind
-        poo-flow-user-profile-set-doctor-presentation-kind
+        poo-flow-user-profile-policy-receipt-kind
+        poo-flow-user-profile-set-policy-receipt-kind
         pooFlowUserProfile
         pooFlowUserProfileSet
         pooFlowUserProfileExtend
@@ -67,25 +65,15 @@
 (def poo-flow-user-profile-set-presentation-kind
   "poo-flow.modules.user-profile-set.presentation.v1")
 
-;;; Profile doctor reports are user-facing diagnostics, not activation receipts.
-;; : (-> Unit PooFlowUserProfileDoctorReportKind)
-(def poo-flow-user-profile-doctor-report-kind
-  "poo-flow.modules.user-profile.doctor-report.v1")
+;;; Test-time profile policy receipts are not activation receipts.
+;; : (-> Unit PooFlowUserProfilePolicyReceiptKind)
+(def poo-flow-user-profile-policy-receipt-kind
+  "poo-flow.modules.user-profile.policy-receipt.v1")
 
-;;; Profile doctor presentations mirror Doom-style doctor output for users.
-;; : (-> Unit PooFlowUserProfileDoctorPresentationKind)
-(def poo-flow-user-profile-doctor-presentation-kind
-  "poo-flow.modules.user-profile.doctor.presentation.v1")
-
-;;; Profile set doctor reports validate profile registries before selection.
-;; : (-> Unit PooFlowUserProfileSetDoctorReportKind)
-(def poo-flow-user-profile-set-doctor-report-kind
-  "poo-flow.modules.user-profile-set.doctor-report.v1")
-
-;;; Profile set doctor presentations mirror registry health for downstream UI.
-;; : (-> Unit PooFlowUserProfileSetDoctorPresentationKind)
-(def poo-flow-user-profile-set-doctor-presentation-kind
-  "poo-flow.modules.user-profile-set.doctor.presentation.v1")
+;;; Profile-set policy receipts validate registries before selection.
+;; : (-> Unit PooFlowUserProfileSetPolicyReceiptKind)
+(def poo-flow-user-profile-set-policy-receipt-kind
+  "poo-flow.modules.user-profile-set.policy-receipt.v1")
 
 ;;; Boundary: profile checks keep root user files independent of constructors.
 ;; : (-> POOObject String Boolean)
@@ -184,7 +172,7 @@
        (poo-flow-user-profile-set-profiles profile-set)))
 
 ;;; Profile lookup is pure data selection; missing profiles are reported by the
-;;; doctor path instead of triggering runtime loading.
+;;; policy path instead of triggering runtime loading.
 ;; : (-> Symbol [PooUserProfile] MaybePooUserProfile)
 (def (poo-flow-user-profile-set-find-profile/add profile-name profiles)
   (cond

@@ -92,6 +92,38 @@
         (check-equal? (execution-failure-code failure) 'missing-module-imports)
         (check-equal? (cdr (assoc 'module (car missing))) 'feature)
         (check-equal? (cdr (assoc 'import (car missing))) 'foundation)))
+    (test-case "resolves named imports through the closure name index"
+      (let ((foundation
+             (make-empty-poo-flow-module-descriptor 'foundation '() '()))
+            (feature
+             (make-empty-poo-flow-module-descriptor
+              'feature
+              '(foundation)
+              '())))
+        (check-equal?
+         (poo-flow-module-missing-imports (list feature foundation))
+         '())))
+    (test-case "module closure admits shared inline imports once"
+      (let* ((shared
+              (make-empty-poo-flow-module-descriptor 'shared '() '()))
+             (left
+              (make-empty-poo-flow-module-descriptor
+               'left
+               (list shared)
+               '()))
+             (right
+              (make-empty-poo-flow-module-descriptor
+               'right
+               (list shared)
+               '()))
+             (root
+              (make-empty-poo-flow-module-descriptor
+               'root
+               (list left right)
+               '())))
+        (check-equal?
+         (poo-flow-module-names (poo-flow-module-closure (list root)))
+         '(root left shared right))))
     (test-case "normalizes source refs as inspectable metadata"
       (let* ((local (make-poo-flow-module-local-source "modules/remote-runtime.ss"))
              (package (make-poo-flow-module-package-source 'remote-runtime))

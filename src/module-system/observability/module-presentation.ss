@@ -8,7 +8,9 @@
 ;;; Intent: make recursive presentation paths visible without participating in them.
 
 (import
-        (only-in :std/list/list any)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-read-datums/append-map
+                 poo-flow-scheme-datum-find)
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
@@ -225,23 +227,6 @@
     runtime-executed?))
   (projections))
 
-;;; Quoted data cannot dispatch a POO slot.  Every other occurrence is treated
-;;; conservatively as source-visible until a future syntax-object walker can
-;;; prove a nearer lexical binder.  This covers direct references and nested
-;;; forms such as `(reverse diagnostics)` without expanding or evaluating code.
-;; : (-> (-> Value Value) Value Value)
-;;; Shared syntax-aware datum traversal.  `any` preserves the first truthy
-;;; evidence and avoids each Contract owner rebuilding its own list walker.
-(def (poo-flow-scheme-datum-find predicate datum)
-  (cond
-   ((not (pair? datum)) (predicate datum))
-   ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
-         (pair? (cdr datum)))
-    #f)
-   (else
-    (or (predicate datum)
-        (any (cut poo-flow-scheme-datum-find predicate <>) datum)))))
-
 ;; : (forall (a) (-> Symbol a Boolean))
 ;; : (-> Symbol Value Boolean)
 (def (poo-flow-poo-slot-authoring-identifier-reference? identifier datum)
@@ -396,12 +381,12 @@
 ;;       ;; => ((values . values) (safe . safe-value))
 ;;       ```
 ;;     %
-(def (poo-flow-poo-slot-authoring-datum-bindings datum)
+(def (poo-flow-poo-slot-authoring-datum-bindings/into datum tail)
   (cond
-   ((not (pair? datum)) '())
+   ((not (pair? datum)) tail)
    ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
          (pair? (cdr datum)))
-    '())
+    tail)
    (else
     (let* ((head (car datum))
            (object-elements
@@ -410,10 +395,19 @@
              ((and (eq? head '.def) (pair? (cdr datum))) (cddr datum))
              (else '())))
            (local-bindings
-            (poo-flow-poo-slot-authoring-form-bindings object-elements)))
-      (append local-bindings
-              (poo-flow-poo-slot-authoring-datum-bindings (car datum))
-              (poo-flow-poo-slot-authoring-datum-bindings (cdr datum)))))))
+            (poo-flow-poo-slot-authoring-form-bindings object-elements))
+           (cdr-bindings
+            (poo-flow-poo-slot-authoring-datum-bindings/into
+             (cdr datum)
+             tail))
+           (child-bindings
+            (poo-flow-poo-slot-authoring-datum-bindings/into
+             (car datum)
+             cdr-bindings)))
+      (foldr cons child-bindings local-bindings)))))
+
+(def (poo-flow-poo-slot-authoring-datum-bindings datum)
+  (poo-flow-poo-slot-authoring-datum-bindings/into datum '()))
 
 ;; : (forall (a) (-> Symbol a [Alist]))
 ;; poo-flow-poo-slot-authoring-datum-observations
@@ -451,17 +445,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-poo-slot-authoring-port-observations scope port)
-  (let loop ((observations '()))
-    (let (datum (read port))
-      (if (eof-object? datum)
-        (reverse observations)
-        (let collect
-             ((remaining
-               (poo-flow-poo-slot-authoring-datum-observations scope datum))
-              (next observations))
-          (if (null? remaining)
-            (loop next)
-            (collect (cdr remaining) (cons (car remaining) next))))))))
+  (poo-flow-read-datums/append-map
+   (cut poo-flow-poo-slot-authoring-datum-observations scope <>)
+   port))
 
 ;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
 ;; : (-> Symbol PathString [Alist])

@@ -9,7 +9,7 @@
 ;; | PooModuleOptionSchemaCandidate = Value
 ;; | PooModuleOptionValidationReceiptCandidate = Value
 
-(import (only-in :clan/poo/object .all-slots .ref)
+(import (only-in :clan/poo/object .all-slots .ref .slot?)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
         (only-in :poo-flow/src/module-system/object-family/syntax
@@ -130,7 +130,7 @@
   (let ((value-type (poo-flow-module-schema-spec-type schema-spec))
         (metadata-value (poo-flow-module-schema-spec-metadata schema-spec)))
     (cond
-     ((poo-flow-module-object-has-slot? schema-spec 'policy)
+     ((.slot? schema-spec 'policy)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value
@@ -138,7 +138,7 @@
        (.ref schema-spec 'policy)
        (poo-flow-module-object-ref/default schema-spec 'default #f)
        metadata-value))
-     ((poo-flow-module-object-has-slot? schema-spec 'constant)
+     ((.slot? schema-spec 'constant)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value
@@ -146,7 +146,7 @@
        'constant
        (.ref schema-spec 'constant)
        metadata-value))
-     ((poo-flow-module-object-has-slot? schema-spec 'default)
+     ((.slot? schema-spec 'default)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value
@@ -307,20 +307,18 @@
      (poo-flow-module-option-schema-metadata schema))))
 
 ;;; Boundary: per-module receipts validate declared option configs only.
-;; : (-> [PooModuleOptionSchema] [PooModuleOptionConfig] [PooModuleOptionValidationReceipt] [PooModuleOptionValidationReceipt])
+;; : (-> (-> OptionId MaybePooModuleOptionSchema) [PooModuleOptionConfig] [PooModuleOptionValidationReceipt] [PooModuleOptionValidationReceipt])
 (def (poo-flow-module-option-validation-receipts/rev
-      schemas
+      schema-ref
       configs
       receipts-rev)
   (if (null? configs)
     receipts-rev
     (let* ((config (car configs))
            (schema
-            (poo-flow-module-find-schema
-             schemas
-             (poo-flow-module-option-config-id config))))
+            (schema-ref (poo-flow-module-option-config-id config))))
       (poo-flow-module-option-validation-receipts/rev
-       schemas
+       schema-ref
        (cdr configs)
        (cons (if schema
                (poo-flow-module-option-schema-validation-receipt schema config)
@@ -329,10 +327,30 @@
 
 ;; : (-> PooModuleDescriptor [PooModuleOptionValidationReceipt])
 (def (poo-flow-module-option-validation-receipts module)
-  (let (schemas (poo-flow-module-option-schemas module))
+  (let* ((interface (poo-flow-module-interface-object module))
+         (schema-ref
+          (if (poo-flow-module-interface? interface)
+            (lambda (option-id)
+              (alet (schema-spec
+                     (poo-flow-module-interface-schema-spec
+                      interface
+                      option-id))
+                (poo-flow-module-schema-from-spec
+                 (poo-flow-module-name module)
+                 option-id
+                 schema-spec)))
+            (let ((schemas (poo-flow-module-option-schemas module))
+                  (index (make-hash-table)))
+              (for-each
+               (lambda (schema)
+                 (hash-put! index
+                            (poo-flow-module-option-schema-id schema)
+                            schema))
+               schemas)
+              (lambda (option-id) (hash-get index option-id))))))
     (reverse
      (poo-flow-module-option-validation-receipts/rev
-      schemas
+      schema-ref
       (poo-flow-module-option-configs module)
       '()))))
 

@@ -8,6 +8,12 @@
 
 * 10.06.29 Gerbil POO Programming Guidelines
 
+This document owns native =gerbil-poo= operators and prototype semantics.  It
+does not own module roles, formal projection or test policy.  Use the modular
+[[file:44-current-project-programming-style.org][Current Project Programming Style]]
+router to select those rules instead of treating this reference catalogue as a
+universal coding checklist.
+
 ** 10.06.29.10 Source Evidence
 
 These guidelines are based on =.data/gerbil-poo=:
@@ -70,6 +76,40 @@ Think in this order:
 Do not start from an alist and then retrofit POO on top. If a concept can be extended, it should first be a prototype slot. Alists are acceptable for final receipts, JSON-like ABI payloads, and report-only facts that do not participate in inheritance.
 
 ** 10.06.29.40 Slot Operator Policy
+
+Before choosing an operator, keep the semantic owner singular:
+
+- an Object is the native POO carrier;
+- an Entity is that Object in an identity-bearing domain role;
+- an Element is an admitted member of one Contract/Scenario observation
+  space;
+- a Relation references Element identities;
+- a Query is a bounded, read-only POO object over those identities;
+- GQL is the graph-read semantics projected from a POO-native AST, never a
+  replacement object model.
+
+Do not mirror the same facts into separate Object, Entity and Element stores.
+Do not put raw GQL text, query alists or anonymous lambdas in =query= or
+=queries= slots.  Bind a named POO Query and place provider source text behind
+an identified projection whose receipt binds Query, Contract, source and
+result identities.
+
+Publish graph Query support through the Query Module's =languages= POO slot.
+It currently contains one =gql= language Contract with a =scheme-poo=
+authoring surface and =gql= source surface.  Do not register Scheme as a peer
+Query language: it is the host notation for the GQL-aligned POO AST.  Do not
+copy the GQL grammar, parser or ParseArtifact alist into POO Flow.
+
+If GQL returns a candidate set that still needs domain rules, apply a named,
+typed and bounded native refinement before result admission.  Do not extend
+GQL merely to encode a vertical Schema predicate.  Add a versioned GQL
+extension or another Provider only after a real Case proves that candidate
+selection itself cannot be expressed by standard GQL.
+
+The executable owner is
+=src/module-system/authoring/contracts.ss=.  It rejects mechanically certain
+raw Query initializers while preserving ordinary pure functions, vertical
+domain slots and Provider implementations.
 
 Use the highest-level POO operator that expresses the intent:
 

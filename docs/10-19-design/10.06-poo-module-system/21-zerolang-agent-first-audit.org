@@ -184,8 +184,7 @@ make agent operation safer and more reusable.
 =init.ss= is not the human projection layer. It is a configuration layer:
 - compact enough for humans to read;
 - structured enough for agents to edit;
-- validated by syntax, POO object contracts, profile doctor checks, and policy
-  warnings;
+- validated by syntax, POO object contracts and Testing Policy slots;
 - projected upstream into the canonical =users= profile and module facts.
 
 The human-facing layer is a loop on top of that configuration and fact graph.

@@ -27,7 +27,8 @@ lean_lib PooFlowModuleSystemProof where
   roots := #[
     `PooFlowProof.PooC3.ModuleProfileBundleImports,
     `PooFlowProof.PooC3.GerbilPooPhysicalRefinement,
-    `PooFlowProof.PooC3.NativeProjectionPipeline
+    `PooFlowProof.PooC3.NativeProjectionPipeline,
+    `PooFlowProof.PooC3.NativeSemanticQueryModel
   ]
 
 lean_lib PooFlowModuleGovernanceProof where

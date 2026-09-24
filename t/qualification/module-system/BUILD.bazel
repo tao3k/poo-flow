@@ -25,7 +25,7 @@ py_test(
     data = [
         ":owner-contract-test.ss",
         ":ownership.bzl",
-        "//:scheme_build_sources",
+        "//:gerbil_package_sources",
         "//:t/module-system-observability-test.ss",
         "//:t/profile-binding-syntax-test.ss",
         "//:t/profile-bundle-test.ss",
@@ -39,7 +39,7 @@ py_test(
 gerbil_project_test(
     name = "owner_contract_test",
     size = "small",
-    srcs = "//:scheme_build_sources",
+    srcs = "//:gerbil_package_sources",
     project = "//gerbil:compile",
     source_root_marker = "//:scheme_source_root_marker",
     tags = ["exclusive"],

@@ -25,6 +25,8 @@ version.ss
 
 # Shared native binding build cache.
 /target/
+/bindings/rust-ir/Cargo.lock
+/bindings/rust-ir/target/
 
 # Local Python packaging and native-extension build outputs.
 __pycache__/

@@ -305,7 +305,9 @@ Phase 3: deepen session policy generation.
 - Completed loop-engine memory receipt follow-up: available use-case projection now uses a loop-engine-runtime owner tail accumulator instead of an anonymous =map= lambda under the user-interface loop-engine and presentation performance gates.
 - Completed loop-engine runtime-agent projection follow-up: agent profile, harness, session, and topology field-value projections now use runtime-agent owner reverse accumulators instead of anonymous =map= lambdas under the loop-engine session-agent graph performance gate.
 - Completed clean optimized build bootstrap follow-up: =runtime-bootstrap= now includes the shared session registry/agent owners and loop-engine intent/session-agent graph/runtime-agent owners so clean =gxpkg build -R -O= no longer depends on stale interface artifacts for the loop-engine session-agent graph performance path.
-- Completed profile presentation/doctor helper follow-up: profile summary module-key rows, profile-set summary rows, profile presentation slot copies, doctor object module-key rows, doctor duplicate module-key scans, workflow CI/CD pipeline names in profile and config presentations, config module-key summaries, and settings alists now use owner-local reverse accumulators instead of anonymous or generic =map= projections under the user-interface presentation performance gate.
+- Profile summaries and presentation slot copies remain optimized, while
+  duplicate and missing-setting admission runs once through POO Flow Testing
+  Policy slots rather than through a second presentation path.
 - Completed durable runtime store operation follow-up: default operation receipt batches and row bridge handoff operation batches now use durable-operation owner reverse accumulators instead of =map= plus =append= frames while preserving Marlin handoff operation order.
 - Completed module-system support projection follow-up: loader tree lazy plans, module registry source refs, diagnostic duplicate details and family/kind rows, interface object alists, projection option config/schema/validation rows, declaration-case trace stages, init-syntax slot groups, and POO slot authoring observations/statuses now use owner-local recursive projection helpers instead of anonymous =map= frames.
 - Completed object validation projection follow-up: field identity rows, field origin rows, harness-field rows, validation batch rows, and validation value projections now use object-validation owner reverse accumulators instead of =map= frames under the module object validation summary performance gate.
@@ -612,20 +614,11 @@ Phase 4: broaden runtime projection generation carefully.
   explicit because they validate metadata and derive graph-owned state. Catalog
   fallback, Funflow graph derivation, manifest projection, and user-facing
   module flags remain local to each module owner.
-- Completed profile/use-module projection cleanup slice: profile doctor
-  diagnostics now use =defpoo-module-final-projection= for their fixed report
-  rows, the unused =poo-flow-use-module-contract-validation->alist= identity
-  route was removed, and declaration-case expected trace stages now include the
-  real =workflow-cicd-functional-dags= presentation stage.
-- Completed profile doctor config reuse slice:
-  =pooFlowUserProfileDoctorPresentation= now builds the user config once and
-  passes the same value through feature, session, CI/CD, workflow, receipt, and
-  loop-engine presentation helpers. The public doctor receipt shape is
-  unchanged.
-- Completed profile doctor loop-engine batch slice:
-  =pooFlowUserProfileDoctorPresentation= now gathers the loop-engine doctor
-  field subset in one accumulator pass instead of scanning
-  =loop-engine-intent-rows= once per public doctor slot.
+- The former Profile Doctor presentation path has been removed.  User and
+  Profile presentations remain shallow report-only values; profile and
+  profile-set admission now extend the ASP Testing Interface once through
+  =+poo-flow-testing-interface+=.  This avoids rebuilding the full presentation
+  graph merely to decide whether a declaration is admissible.
 Phase 4b: keep user fragment loading source-aware and compile-time bounded.
 - Keep =src/module-system/loader/fragment-syntax.ss= as the syntax owner for =load!=
   fragment includes.

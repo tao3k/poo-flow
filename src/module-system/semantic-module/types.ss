@@ -119,6 +119,7 @@
       forbidden-imports: SemanticSymbolList
       forbidden-forms: SemanticSymbolList
       forbid-raw-behavior-hooks?: SemanticBoolean
+      forbid-raw-query-initializers?: SemanticBoolean
       repair-operators: SemanticSymbolList
       freedom: SemanticSymbol))
 

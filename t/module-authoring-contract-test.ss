@@ -169,6 +169,59 @@
        (check-equal?
         (poo-flow-module-authoring-admission-diagnostics admission) '())))
 
+   (test-case "admits named POO Query values and provider projections"
+     (let (admission
+           (poo-flow-module-authoring-admit-datum
+            test-module-interface
+            'objects
+            '(.def (ClinicalQueries @ BaseQueries)
+               (queries =>.+
+                 (.o impact: PrescriptionImpactQuery))
+               (gql-source GqlPrescriptionImpactProjection))))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #t)
+       (check-equal?
+        (poo-flow-module-authoring-admission-diagnostics admission) '())))
+
+   (test-case "rejects a raw Query language hidden in a POO slot"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              test-module-interface
+              'objects
+              '(.def BrokenQuery
+                 (impact-query "MATCH (prescription)-[:AFFECTS]->(patient)"))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'code)
+                     'poo-query-must-be-native-object)
+       (check-equal? (.ref diagnostic 'subject) 'impact-query)
+       (check-equal? (.ref diagnostic 'rule) 'single-poo-semantic-model)
+       (check-equal? (.ref diagnostic 'recommendation)
+                     'bind-named-poo-query-or-provider-projection)))
+
+   (test-case "rejects an anonymous Query evaluator but leaves funs open"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              test-module-interface
+              'objects
+              '(.def BrokenQuery
+                 (query (lambda (elements) (filter selected? elements))))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'code)
+                     'poo-query-must-be-native-object)
+       (check-equal? (.ref diagnostic 'subject) 'query))
+     (check-equal?
+      (poo-flow-module-authoring-admission-accepted?
+       (poo-flow-module-authoring-admit-datum
+        test-module-interface
+        'funs
+        '(def (select-elements elements)
+           (filter selected? elements))))
+      #t))
+
    (test-case "rejects a command-shaped domain slot with an actionable repair"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum

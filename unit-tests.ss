@@ -8,7 +8,6 @@
 (import (only-in :clan/poo/object .cc)
         (only-in :std/cli/multicall call-entry-point)
         (only-in :asp-gerbil-scheme/testing-api
-                 +asp-testing-interface+
                  +testing-discovery-profile+
                  +testing-serial-resource-profile+
                  testing-test-selector
@@ -16,8 +15,8 @@
                  testing-interface-map-profile)
         (only-in :asp-gerbil-scheme/testing-runner-api
                  init-profiled-test-environment!)
-        (only-in "src/module-system/observability/testing-extension.ss"
-                 poo-flow-testing-observability-extension))
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+))
 
 (def +poo-flow-serial-test-selectors+
   (map (lambda (fragment) (testing-test-selector 'contains fragment))
@@ -29,14 +28,13 @@
          ;; its heap budget is independent of earlier batch allocations.
          "observability-framework-test.ss")))
 
-(def +poo-flow-testing-interface+
+(def +poo-flow-project-testing-interface+
   (foldl
     (lambda (selector testing)
       (testing-interface-map-profile
        testing selector +testing-serial-resource-profile+))
     (testing-interface-add-profile
-      (poo-flow-testing-observability-extension
-       +asp-testing-interface+)
+      +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"
@@ -56,7 +54,7 @@
                                 "t/module-system-poo-performance-test-support")))
     +poo-flow-serial-test-selectors+))
 
-(init-profiled-test-environment! +poo-flow-testing-interface+)
+(init-profiled-test-environment! +poo-flow-project-testing-interface+)
 
 ;; The ASP declaration installs the selected entry point.  V19's script
 ;; launcher looks up a caller-visible `main`, so expose that trampoline here.

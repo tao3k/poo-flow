@@ -7,3 +7,5 @@
 .devenv
 .direnv
 .gerbil
+packages/lambda-aitia/.gerbil
+packages/lambda-episteme/.gerbil

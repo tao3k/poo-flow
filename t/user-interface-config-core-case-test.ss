@@ -10,15 +10,16 @@
                  check-equal?
                  test-case
                  test-suite)
+        (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
         (only-in :poo-flow/src/user-interface/profile-core
                  pooFlowUserConfigFromProfile
                  poo-flow-user-profile?
                  poo-flow-user-profile-name
                  poo-flow-user-profile-module-bundles)
-        (only-in :poo-flow/src/user-interface/profile-doctor
-                 pooFlowUserProfileDoctor
-                 poo-flow-user-profile-doctor-ok?)
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+
+                 poo-flow-testing-admit-user-profile!)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-config?
                  poo-flow-user-config-modules
@@ -113,6 +114,9 @@
                       #f)
         (check-equal? (alist-value 'loader-executed? custom-fact)
                       #f)
-        (check-equal? (poo-flow-user-profile-doctor-ok?
-                      (pooFlowUserProfileDoctor test-poo-flow-user-custom-profile))
-                      #t)))))
+        (check-equal?
+         (.ref (poo-flow-testing-admit-user-profile!
+                +poo-flow-testing-interface+
+                test-poo-flow-user-custom-profile)
+               'admitted?)
+         #t)))))

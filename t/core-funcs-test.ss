@@ -5,7 +5,9 @@
 
 (import :std/test
         (only-in :poo-flow/src/core/funcs
-                 poo-flow-memoize poo-flow-make-value-index
+                 poo-flow-memoize poo-flow-read-datums/append-map
+                 poo-flow-scheme-datum-find
+                 poo-flow-make-value-index
                  poo-flow-value-index-put! poo-flow-value-index-ref
                  poo-flow-make-frontier-state
                  poo-flow-frontier-state-ready-ids
@@ -15,6 +17,27 @@
 
 (def core-funcs-test
   (test-suite "POO Flow core algorithm functions"
+    (test-case "streaming datum projection preserves order and empty results"
+      (check
+       (call-with-input-string
+        "(first second)\nskip\n(third)\n"
+        (lambda (port)
+          (poo-flow-read-datums/append-map
+           (lambda (datum) (if (pair? datum) datum '()))
+           port)))
+       => '(first second third)))
+    (test-case "datum search shares quote and dotted-pair semantics"
+      (let (find-target
+            (lambda (datum)
+              (poo-flow-scheme-datum-find
+               (lambda (candidate)
+                 (and (symbol? candidate)
+                      (eq? candidate 'target)
+                      candidate))
+               datum)))
+        (check (find-target '#(ignored (nested target))) => 'target)
+        (check (find-target '(head . target)) => 'target)
+        (check (find-target '(head '(target))) => #f)))
     (test-case "memoization indexes keys and retains false values"
       (let* ((calls 0)
              (memoized

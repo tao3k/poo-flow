@@ -8,6 +8,6 @@ includedir=${prefix}/include
 
 Name: poo-flow-runtime-v0
 Description: POO Flow language-neutral Runtime v0 C ABI
-Version: 0.3
+Version: 0.1.0
 Libs: -L${libdir} -lpoo_flow_runtime_v0
 Cflags: -I${includedir}

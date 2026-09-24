@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Programming Style 01 - Module Interface And Source Roles
+
+* Purpose
+
+Every maintained, contributor and user module has one default public
+=interface.ss=.  The stable shell is
+=modules/<name>/{types,objects,funs,config,interface}.ss=; =syntax.ss= is
+optional.  File names alone are not evidence: each role must own its declared
+responsibility.
+
+| Role | Sole responsibility | Normal mechanism |
+|------+---------------------+------------------|
+| =types= | value boundary, shapes and invariants | =define-type=, predicates, closed vocabulary |
+| =objects= | inert POO values and one-receiver behavior | =.o=, =.def=, slot =.defgeneric= |
+| =funs/contracts= | pure algorithms, indexes, relations and receipts | named functions and Contract objects |
+| =config/provider= | Profile composition and open crossings | POO composition; CLOS only for independent axes |
+| =interface= | one public POO entry and closed re-export | imports/exports only |
+
+Imports flow =types -> objects -> funs/contracts -> config/provider=.
+=interface.ss= closes and re-exports the surface but owns no behavior.  A
+specialized Provider interface may be opt-in; it is never a second default
+entrypoint.
+
+* Executable admission
+
+The Module Interface's =authoring= slot owns a role-indexed Profile.  Loader
+admission dispatches over =AuthoringExecutor x SourceRole x ModuleInterface=
+and returns POO diagnostics.  A vertical author may refine a role object but
+must preserve all unrelated base rules.
+
+Ordinary root user config selects maintained Profiles and Standards.  It may
+not reopen =.def=, =.o=, CLOS or MOP internals.  Maintainers retain those
+facilities in their role-owned modules.
+
+* Rejections
+
+- behavior in =interface.ss=;
+- a lower role importing a higher role;
+- hand-maintained source lists beside the module loader;
+- empty role files used to disguise misplaced responsibility;
+- a package build root that imports the package loader while building it.

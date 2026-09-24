@@ -6,8 +6,6 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
   pull_request:
   workflow_dispatch:
     inputs:
@@ -34,9 +32,11 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Validate repository and package licenses
+      - name: Validate repository license, version, and dependency contracts
         run: |
           python3 scripts/check_license_contract.py
+          python3 scripts/check_version_contract.py
+          python3 scripts/gerbil_dependency_pin.py check
           python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
   native-gerbil-tests:
@@ -124,6 +124,10 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
+          # gerbil-parser currently consumes POO Flow's public module contracts.
+          # Its pinned package may leave older same-namespace artifacts behind;
+          # clean the root package through gxpkg before compiling this checkout.
+          gerbil clean
 
       - name: Save native Gerbil package cache
         if: steps.native-gerbil-pkg-cache.outputs.cache-hit != 'true'

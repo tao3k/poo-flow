@@ -49,6 +49,7 @@
  (spec poo-flow-native-spec)
  (public-entry-modules
   '("src/core/api.ss"
+    "testing-api.ss"
     "src/graph/interface.ss"
     "src/module-system/api.ss"
     "src/module-system/load.ss"
@@ -65,6 +66,9 @@
     "src/modules/authorization/providers/cedar/interface.ss"
     "src/modules/governance/interface.ss"
     "src/modules/proof/interface.ss"
+    "src/modules/query/interface.ss"
+    "src/modules/query/rust-ir.ss"
+    "src/modules/tla-plus/interface.ss"
     "src/modules/standards/interface.ss"
     "src/modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))
@@ -78,7 +82,6 @@
   `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `("src/module-system/observability/testing-extension"
-               ,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))

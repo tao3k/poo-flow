@@ -15,7 +15,7 @@
 (def +poo-flow-runtime-v0-abi-schema+
   (.o (kind 'poo-flow.runtime-v0.abi-schema.1)
       (abi-major 0)
-      (abi-minor 3)
+      (abi-minor 1)
       (bundle-schema "poo-flow.organization-bundle.draft.3")
       (control-packet-schema "poo-flow.runtime-v0.control-packet.1")
       (promotion-request-schema
@@ -26,6 +26,8 @@
        "poo-flow.runtime-language.promotion-idempotency-key.1")
       (source-query-receipt-schema
        "poo-flow.runtime-language.source-query-receipt.1")
+      (query-execution-candidate-schema
+       "poo-flow.query.execution-candidate.1")
       (runtime-admission-receipt-schema
        "poo-flow.runtime-language.admission-receipt.1")
       (contract-artifact-projection-receipt-schema
@@ -49,7 +51,8 @@
              (runtime-v0-capability "LANGUAGE_QUALIFICATION" 11)
              (runtime-v0-capability "SOURCE_QUERY_DATA" 12)
              (runtime-v0-capability "CONTRACT_ADMISSION_RECEIPT" 13)
-             (runtime-v0-capability "CONTRACT_ARTIFACT_PROJECTION" 14)))))
+             (runtime-v0-capability "CONTRACT_ARTIFACT_PROJECTION" 14)
+             (runtime-v0-capability "QUERY_EXECUTION_CANDIDATE" 15)))))
 
 (def (emit-line port . values)
   (for-each (lambda (value) (display value port)) values)
@@ -82,6 +85,8 @@
                (.ref schema 'promotion-idempotency-key-schema) "\"")
     (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_SOURCE_QUERY_RECEIPT_SCHEMA \""
                (.ref schema 'source-query-receipt-schema) "\"")
+    (emit-line port "#define POO_FLOW_QUERY_EXECUTION_CANDIDATE_SCHEMA \""
+               (.ref schema 'query-execution-candidate-schema) "\"")
     (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_ADMISSION_RECEIPT_SCHEMA \""
                (.ref schema 'runtime-admission-receipt-schema) "\"")
     (emit-line port "#define POO_FLOW_CONTRACT_ARTIFACT_PROJECTION_RECEIPT_SCHEMA \""
@@ -118,6 +123,8 @@
                (.ref schema 'promotion-idempotency-key-schema))
     (emit-line port "source-query-receipt-schema="
                (.ref schema 'source-query-receipt-schema))
+    (emit-line port "query-execution-candidate-schema="
+               (.ref schema 'query-execution-candidate-schema))
     (emit-line port "runtime-admission-receipt-schema="
                (.ref schema 'runtime-admission-receipt-schema))
     (emit-line port "contract-artifact-projection-receipt-schema="

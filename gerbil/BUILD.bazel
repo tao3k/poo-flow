@@ -38,11 +38,35 @@ gerbil_project_compile(
     deps = [":gerbil_poo_package"],
 )
 
+gerbil_project_compile(
+    name = "poo_flow_parser_foundation_package",
+    srcs = ["@poo_flow_parser_foundation_sources//:sources"],
+    build_script = "@poo_flow_parser_foundation_sources//:build_script",
+    require_library_output = True,
+    source_resolution_receipts = [
+        "@poo_flow_parser_foundation_sources//:source_resolution_receipt",
+    ],
+    deps = [":asp_gerbil_scheme_package"],
+)
+
+gerbil_project_compile(
+    name = "gerbil_parser_package",
+    srcs = ["@gerbil_parser_sources//:sources"],
+    build_script = "@gerbil_parser_sources//:build_script",
+    require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_parser_sources//:source_resolution_receipt",
+    ],
+    deps = [":poo_flow_parser_foundation_package"],
+)
+
 filegroup(
     name = "dependency_packages",
     srcs = [
         ":asp_gerbil_scheme_package",
+        ":gerbil_parser_package",
         ":gerbil_poo_package",
+        ":poo_flow_parser_foundation_package",
     ],
 )
 
@@ -55,30 +79,20 @@ filegroup(
     for name, project in [
         ("gerbil_poo_package_receipt", ":gerbil_poo_package"),
         ("asp_gerbil_scheme_package_receipt", ":asp_gerbil_scheme_package"),
-    ]
-]
-
-[
-    filegroup(
-        name = name,
-        srcs = [project],
-        output_group = "project_root",
-    )
-    for name, project in [
-        ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
-        ("asp_gerbil_scheme_package_project_root", ":asp_gerbil_scheme_package"),
+        ("poo_flow_parser_foundation_package_receipt", ":poo_flow_parser_foundation_package"),
+        ("gerbil_parser_package_receipt", ":gerbil_parser_package"),
     ]
 ]
 
 gerbil_project_compile(
     name = "compile",
-    srcs = ["//:scheme_build_sources"],
+    srcs = ["//:gerbil_package_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
     env = {
         "GERBIL_BUILD_VERBOSE": "1",
     },
-    deps = [":asp_gerbil_scheme_package"],
+    deps = [":gerbil_parser_package"],
 )
 
 gerbil_project_environment(
@@ -95,19 +109,7 @@ gerbil_project_dev(
         "local",
         "manual",
     ],
-    deps = [":asp_gerbil_scheme_package"],
-)
-
-filegroup(
-    name = "project_root",
-    srcs = [":compile"],
-    output_group = "project_root",
-)
-
-filegroup(
-    name = "compile_log",
-    srcs = [":compile"],
-    output_group = "log",
+    deps = [":gerbil_parser_package"],
 )
 
 gerbil_project_projection(

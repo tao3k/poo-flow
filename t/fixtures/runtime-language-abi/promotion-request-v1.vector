@@ -1,6 +1,6 @@
 schema=poo-flow.runtime-language.promotion-request.1
 abi-major=0
-abi-minor=3
+abi-minor=1
 required-capabilities=(PROMOTION_MATERIALIZE INJECTION_RECEIPT ROLLBACK EXACTLY_ONCE LANGUAGE_QUALIFICATION)
 idempotency-key-schema=poo-flow.runtime-language.promotion-idempotency-key.1
 promotion-id=promotion-1

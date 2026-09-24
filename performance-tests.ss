@@ -8,14 +8,13 @@
 (import (only-in :asp-gerbil-scheme/testing-runner-api
                  testing-interface-test-files)
         (only-in :asp-gerbil-scheme/testing-api
-                 +asp-testing-interface+
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-map-profile
                  testing-interface-run-test-files!)
         (only-in :std/list/list filter foldl)
-        (only-in "src/module-system/observability/testing-extension.ss"
-                 poo-flow-testing-observability-extension))
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+))
 
 ;;; Scenario end-to-end benchmarks admit on wall-clock p95, so every file in
 ;;; the performance lane needs an uncontended process.  This is a test-owned
@@ -33,7 +32,7 @@
       testing
       (testing-test-selector 'contains fragment)
       +testing-serial-resource-profile+))
-   (poo-flow-testing-observability-extension +asp-testing-interface+)
+   +poo-flow-testing-interface+
    +poo-flow-performance-serial-test-fragments+))
 
 (def +poo-flow-performance-test-files+

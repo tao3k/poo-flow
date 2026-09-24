@@ -3,8 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: profile-set cases mirror Doom-style selection before realization.
-;;; Doctor output is checked as POO data so user config remains declarative.
+;;; Boundary: profile-set cases validate selection through Testing Policy.
 
 (import (only-in :std/test
                  check
@@ -19,6 +18,10 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+
+                 poo-flow-testing-admit-user-profile-set!
+                 poo-flow-testing-check-user-profile-set)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/profile-config)
 
@@ -68,18 +71,21 @@
         (check-equal? (.ref presentation 'package-management?) #f)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))
-    (test-case "doctors Doom-style profile sets before selection"
+    (test-case "admits profile sets through the POO testing policy"
       (let* ((valid-report
-              (pooFlowUserProfileSetDoctor test-poo-flow-user-profile-set))
-             (broken-presentation
-              (pooFlowUserProfileSetDoctorPresentation
+              (poo-flow-testing-admit-user-profile-set!
+               +poo-flow-testing-interface+
+               test-poo-flow-user-profile-set))
+             (rejected-receipt
+              (poo-flow-testing-check-user-profile-set
+               +poo-flow-testing-interface+
                test-poo-flow-user-broken-profile-set))
-             (diagnostics (.ref broken-presentation 'profile-diagnostics)))
-        (check-equal? (poo-flow-user-profile-set-doctor-ok? valid-report) #t)
+             (diagnostics (.ref rejected-receipt 'profile-diagnostics)))
+        (check-equal? (.ref valid-report 'admitted?) #t)
         (check-equal? (.ref valid-report 'diagnostic-count) 0)
-        (check-equal? (.ref broken-presentation 'doctor-status) 'error)
-        (check-equal? (.ref broken-presentation 'doctor-ok) #f)
-        (check-equal? (.ref broken-presentation 'diagnostic-count) 2)
+        (check-equal? (.ref rejected-receipt 'policy-status) 'error)
+        (check-equal? (.ref rejected-receipt 'admitted?) #f)
+        (check-equal? (.ref rejected-receipt 'diagnostic-count) 2)
         (check-equal? (diagnostic-code-member?
                        'duplicate-profile-name
                        diagnostics)
@@ -88,6 +94,4 @@
                        'missing-default-profile
                        diagnostics)
                       #t)
-        (check-equal? (.ref broken-presentation 'selected-profile?) #f)
-        (check-equal? (.ref broken-presentation 'package-management?) #f)
-        (check-equal? (.ref broken-presentation 'runtime-executed) #f)))))
+        (check-equal? (.ref rejected-receipt 'runtime-executed) #f)))))

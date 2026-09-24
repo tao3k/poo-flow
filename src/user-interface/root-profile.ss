@@ -17,8 +17,7 @@
                  poo-flow-user-profile-setting-keys
                  pooFlowUserConfigFromProfile)
         (only-in :poo-flow/src/user-interface/profile-presentation
-                 pooFlowUserProfileSetPresentation
-                 pooFlowUserProfileSetDoctorPresentation)
+                 pooFlowUserProfileSetPresentation)
         (only-in :poo-flow/src/user-interface/presentation
                  pooFlowUserConfigPresentation))
 
@@ -28,7 +27,6 @@
         pooFlowRootProfileSet
         pooFlowRootSelectedProfile
         pooFlowRootProfileSetPresentation
-        pooFlowRootProfileSetDoctorPresentation
         pooFlowRootModules
         pooFlowRootSettings
         pooFlowRootSettingKeys
@@ -60,10 +58,6 @@
 ;; : (-> PooUserProfileSet POOObject)
 (def (pooFlowRootProfileSetPresentation profile-set)
   (pooFlowUserProfileSetPresentation profile-set))
-
-;; : (-> PooUserProfileSet POOObject)
-(def (pooFlowRootProfileSetDoctorPresentation profile-set)
-  (pooFlowUserProfileSetDoctorPresentation profile-set))
 
 ;; : (-> PooUserProfile [PooUserModuleSelection])
 (def (pooFlowRootModules profile)

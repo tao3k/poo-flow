@@ -148,9 +148,9 @@ The configured registry path now exposes the same runtime-command manifest map:
   =workflow-cicd-runtime-command-manifest-map-count= and
   =workflow-cicd-runtime-command-manifests= so downstream tools can inspect
   CLI handoff data from the user-facing config surface.
-- =pooFlowUserProfilePresentation= and
-  =pooFlowUserProfileDoctorPresentation= carry the same fields, keeping the
-  profile and doctor surfaces aligned with the base user-config presentation.
+- =pooFlowUserProfilePresentation= carries the same report-only fields as the
+  base user-config presentation.  Profile admission is independently owned by
+  the POO Flow Testing Policy rather than a duplicate doctor presentation.
 - =poo-flow-funflow-pipeline-runtime-command-manifests= gives the Funflow
   module owner a thin, named public projection without duplicating the
   workflow-owned CI/CD manifest implementation.
