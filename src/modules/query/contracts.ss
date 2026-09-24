@@ -37,6 +37,8 @@
 
 (def (candidate-evidence-present? candidate requirement)
   (case requirement
+    ((source-content-identity)
+     (> (string-length (.ref candidate 'source-content-identity)) 0))
     ((provenance-root)
      (> (string-length (.ref candidate 'provenance-root)) 0))
     ((result-digest)
