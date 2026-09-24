@@ -37,7 +37,7 @@ The current AXLE receipt for the complete =EffectBoundary.lean= model is
 =f7dd396f-d644-4fcc-a39d-07f130f8a4f1= with zero failed declarations, errors,
 or warnings.
 
-#+begin_src typst
+#+begin_src text
 #let EFF_005CR_closed(model_receipt, runtime_receipt) = (
   model_receipt.refines_atomic_arbitration
   and runtime_receipt.identifies_atomic_primitive

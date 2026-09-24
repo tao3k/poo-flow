@@ -199,7 +199,7 @@ stateDiagram-v2
   CorrespondenceBlocked --> [*]
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 #let ProjectRetryCapability(receipt, token, authority) = (
   receipt.outcome == RecoveryDecisionOutcome.committed
   and receipt.selectedDecision.permitsRetry == true
