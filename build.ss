@@ -69,7 +69,7 @@
     "src/modules/query/interface.ss"
     "src/modules/query/rust-ir.ss"
     "src/modules/tla-plus/interface.ss"
-    "src/modules/org/interface.ss"
+    "src/semantic/orgize-interface.ss"
     "src/modules/standards/interface.ss"
     "src/modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))
