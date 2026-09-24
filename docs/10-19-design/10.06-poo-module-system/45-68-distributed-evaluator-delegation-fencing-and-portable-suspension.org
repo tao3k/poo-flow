@@ -19,7 +19,7 @@ The distributed unit is an immutable pure demand envelope.  It contains
 semantic identities and an observation cut, but never live action authority or
 a raw Gerbil VM continuation.
 
-#+begin_src typst
+#+begin_src text
 #let demand-envelope(root, input, dependency, cut, policy, demand) = (
   root: root,
   input: input,
@@ -44,7 +44,7 @@ A portable suspension stores resumable data and a resume token; resumption
 requires the same demand identity, observation cut, policy identity, and a
 current fence.
 
-#+begin_src typst
+#+begin_src text
 #let fence-valid(f) = f.current and not f.revoked
 
 #let resume-valid(s, current) = (

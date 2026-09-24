@@ -263,7 +263,7 @@ flowchart LR
     M["Selected artifact materialization"]
     V["Provider-neutral validation closure"]
     H["Runtime Provider"]
-    A["Case admission"]
+    ADMISSION["Case admission"]
 
     C -->|"StandardRef only"| S
     S -->|"exact roots"| R
@@ -271,8 +271,7 @@ flowchart LR
     P -->|"selected transitive closure"| M
     M -->|"typed constraints"| V
     V -->|"explicit bounded handoff"| H
-    H -->|"conformance receipt"| A
-end
+    H -->|"conformance receipt"| ADMISSION
 #+end_src
 
 Catalog discovery and semantic execution remain distinct.  Resolver and loader

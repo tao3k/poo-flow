@@ -19,7 +19,7 @@ Stable module paths and lexical bindings do not imply mutable profile values.
 Every upgrade creates a new module artifact, profile revision, composition-root
 revision, immutable generation, and active-head transition.
 
-#+begin_src typst
+#+begin_src text
 #let upgrade(source, previous) = (
   module-artifact: new-module-artifact-id(source),
   profile-revision: new-profile-revision-id(source),
@@ -44,7 +44,7 @@ revision identities, reuses old approval or capability, or aliases generation
 identity.  Continuations and effects remain bound to the revision that created
 them.
 
-#+begin_src typst
+#+begin_src text
 $ equivalent(revision-a, revision-b)
   ==> may-reuse-semantic-cache(revision-a, revision-b)
   and may-reuse-unchanged-scc-proof(revision-a, revision-b)

@@ -50,7 +50,7 @@ syntax-version token, deprecation period, source rewriter, or runtime adapter.
 Because this is a new architecture, the proof model contains only the canonical
 ~use-composition~ constructor.
 
-#+begin_src typst
+#+begin_src text
 $ E := { op("use-composition") } $
 
 $ AdmittedEntry(e) iff e = op("use-composition") $
@@ -99,7 +99,7 @@ this semantic refinement.
 
 ** Refinement relation
 
-#+begin_src typst
+#+begin_src text
 #let refines(abstract, concrete) = (
   concrete.module_count == abstract.n
   and concrete.module_identities == abstract.module_identities
@@ -156,7 +156,7 @@ In particular, stable Module/Profile identity is an explicit POO Flow slot.  It
 must not be derived from an in-memory object address or treated as a
 ~gerbil.pkg~ package identity.
 
-#+begin_src typst
+#+begin_src text
 $ project(m) := (
     identity: slot(m, "identity"),
     imports: slot(m, "imports"),
@@ -185,7 +185,7 @@ expansion.  The hygienic ~use-composition~ form may project to ordinary
 | fixed-point result | POO Flow observation over native evaluation | exact outcome |
 | composition root | final ~use-composition~ native-object result | exactly one root |
 
-#+begin_src typst
+#+begin_src text
 $ forall m in G_n.modules:
     project(m).identity = abstract(m).identity
     and project(m).imports = abstract(m).imports
@@ -234,7 +234,7 @@ The corresponding negative boundaries are equally normative:
 - ~compose~ with the ~profiles~ strategy operates on admitted Profile values and
   ProfileBundles without changing their definition identities.
 
-#+begin_src typst
+#+begin_src text
 $ imports(m) subset.eq G_n.modules $
 
 $ op("receipt-imports")(m)
@@ -306,7 +306,7 @@ obligations are computed from the selected native Module/Profile graph.  This
 keeps ~use-module~ a pure projection instead of introducing a second materialized
 graph that can drift from the Module definitions.
 
-#+begin_src typst
+#+begin_src text
 $ bundle(m, P) := (
     module: m,
     profiles: P,
@@ -421,7 +421,7 @@ Declared Profile order is semantic because POO prototype composition is
 ordered.  Import traversal order is not semantic; the reachable import closure
 is normalized before encoding.
 
-#+begin_src typst
+#+begin_src text
 $ op("semantic-preimage")(b) := (
     "poo-flow/profile-bundle/semantic/v1",
     op("definition-id")(b.module),
@@ -579,7 +579,7 @@ evidence boundary, not the public composition interface.
 - cache mode and incremental-reuse identity;
 - limit verdict with the measured value and configured envelope.
 
-#+begin_src typst
+#+begin_src text
 $ ExecutableAdmitted(G_n) :=
     Refines(A_n, G_n)
     and Deterministic(G_n)
@@ -804,7 +804,7 @@ Profile order is semantic.  Import traversal order is not semantic.  A lexical
 rename cannot change semantic identity.  Runtime generation cannot change
 semantic identity, but it is an explicit input to activation identity.
 
-#+begin_src typst
+#+begin_src text
 #let semantic-preimage(definition, instance, profiles, imports, capability) = (
   domain: "poo-flow.profile-bundle.semantic.v1",
   definition: definition,
@@ -935,7 +935,7 @@ identity grammar.
 
 The semantic preimage has the following fixed positional schema:
 
-#+begin_src typst
+#+begin_src text
 #let semantic-v1(
   module-definition,
   module-instance,
@@ -982,7 +982,7 @@ representations into stable identities.
 The binary digest and its textual display are different values.  The semantic
 value is a typed reference:
 
-#+begin_src typst
+#+begin_src text
 #let digest-ref(algorithm, domain-version, digest-bytes) = (
   algorithm: algorithm,
   domain-version: domain-version,

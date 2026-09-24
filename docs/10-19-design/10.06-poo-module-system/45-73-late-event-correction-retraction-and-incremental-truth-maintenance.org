@@ -19,7 +19,7 @@ A late event never mutates an old proof into an error.  The old conclusion
 remains historical evidence for its immutable causal cut; reevaluation creates
 a new cut and, when the conclusion changes, a new conclusion identity.
 
-#+begin_src typst
+#+begin_src text
 #let conclusion-id(cut, policy) = (cut, policy)
 
 $ late-event(event, old-cut)
@@ -41,7 +41,7 @@ derivation explicitly invalidates every affected conclusion and selects one
 eligible active revision.  Retraction marks a conclusion inactive but does not
 delete its proof or effect receipts.
 
-#+begin_src typst
+#+begin_src text
 $ monotone(policy)
   ==> reachable(old-cut) subset.eq reachable(new-cut) $
 

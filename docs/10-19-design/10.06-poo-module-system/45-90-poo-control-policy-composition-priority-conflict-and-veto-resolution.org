@@ -21,7 +21,7 @@ The formal surface fixes exact integer priority and makes authority
 intersection and hard-stop processing strict predecessors of priority
 selection.
 
-#+begin_src typst
+#+begin_src text
 #let default-priority = 0
 #let stronger = (left, right) => left > right
 
@@ -44,7 +44,7 @@ Numeric priority orders terminal-effect proposals only.  It cannot bypass
 candidate admission, remove an admitted constraint, defeat a validated hard
 stop, or cross an identity fence.
 
-#+begin_src typst
+#+begin_src text
 #let allowed = "allowed"
 #let intersect = "intersect"
 

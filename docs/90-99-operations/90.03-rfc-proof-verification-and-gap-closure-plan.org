@@ -94,7 +94,7 @@ The proof owners are:
 - =indeterminateRetryRequiresPriorReconciliation=;
 - =reconciliationNoCommitEnablesFreshRetry=.
 
-#+begin_src typst
+#+begin_src text
 #let retry_qualification = (
   EFF_006.structural_causal_link
   and EFF_007.reconciliation_barrier
@@ -127,7 +127,7 @@ boundary-scoped recovery-policy authority defined by 45-03.
 | =REC-004S= | Exact Scheme/=gerbil-poo= and POO Flow constructor correspondence. | =blocked= |
 | =REC-004= | Cross-layer recovery-policy authorization qualification. | =blocked= |
 
-#+begin_src typst
+#+begin_src text
 #let REC_004_closed = (
   REC_004N.counterexample_proven
   and REC_004M.receipt_refinement_proven

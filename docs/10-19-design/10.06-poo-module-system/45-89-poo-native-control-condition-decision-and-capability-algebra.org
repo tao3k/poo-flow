@@ -20,7 +20,7 @@ implementation before the admission checks in this document are complete.
 The formal surface keeps the condition family open while closing terminal
 control effects to four constructors.
 
-#+begin_src typst
+#+begin_src text
 #let TerminalEffect = (
   continue: "Continue",
   suspend: "Suspend",
@@ -48,7 +48,7 @@ Resume is later coordinator admission, not a fifth handler result.  Every
 admitted decision contains exactly one terminal effect, and prototype
 precedence cannot resolve a multiple-effect conflict.
 
-#+begin_src typst
+#+begin_src text
 #let attenuates = "attenuates"
 #let allowed = "allowed"
 #let compose = "compose"

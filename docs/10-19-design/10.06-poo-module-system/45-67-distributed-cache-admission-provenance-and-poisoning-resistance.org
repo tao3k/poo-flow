@@ -20,7 +20,7 @@ A distributed cache transports a candidate, never admission authority.  Local
 use requires an independently produced receipt over the consumer's current
 policy and observation state.
 
-#+begin_src typst
+#+begin_src text
 #let local-checks(candidate, local) = (
   provenance-trusted(candidate.provenance, local.trust-policy)
   and candidate.semantic-key == local.expected-semantic-key
@@ -47,7 +47,7 @@ revocation, incompatible platform, confidentiality violation, or determinism
 conflict prevents admission.  A determinism conflict additionally requires
 quarantine so that the candidate cannot silently overwrite known evidence.
 
-#+begin_src typst
+#+begin_src text
 #let mismatch(candidate, local) = (
   candidate.semantic-key != local.expected-semantic-key
   or not fresh(candidate, local.freshness-contract)

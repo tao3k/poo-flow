@@ -61,7 +61,7 @@ parsed by AXLE from the owner sources, and =pi: C -> D= the longest
 source-owner projection. Generated constants such as structure constructors,
 projections, and recursors therefore map to their source declaration.
 
-#+begin_src typst
+#+begin_src text
 $ S_0 = pi(C) $
 
 $ F(S) = S union

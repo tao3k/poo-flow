@@ -20,7 +20,7 @@ The following equations are the semantic boundary of cache reuse.  A cache hit
 is not itself evidence: semantic reuse is admitted only when the complete
 identity and the freshness contract both match the current graph cut.
 
-#+begin_src typst
+#+begin_src text
 #let cache-id(input, dependency, cut, policy) = (
   input,
   dependency,
@@ -49,7 +49,7 @@ A changed identity invalidates only the reachable demand frontier, but SCC
 membership changes the scheduling granularity: once one member is affected,
 the entire SCC is reevaluated and committed as one unit.
 
-#+begin_src typst
+#+begin_src text
 #let frontier(changed, reaches) = {
   n | exists(i in changed, reaches(i, n))
 }

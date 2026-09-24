@@ -20,7 +20,7 @@ anchor are separate objects.  A valid key is usable only through an exact
 purpose-, scope-, algorithm-, time-, and trust-bound key binding; possession
 alone never grants governance or action authority.
 
-#+begin_src typst
+#+begin_src text
 #let key-use-checks(binding, use, current) = (
   binding.key == use.key
   and binding.purpose == use.purpose
@@ -47,7 +47,7 @@ identities.  Long-term verification evaluates the historical signing-time
 binding, trust policy, revocation observation, algorithm support, and content
 commitment rather than rewriting history from the key's current state.
 
-#+begin_src typst
+#+begin_src text
 $ rotate(principal, predecessor, successor)
   ==> predecessor.key != successor.key
   and predecessor.binding != successor.binding

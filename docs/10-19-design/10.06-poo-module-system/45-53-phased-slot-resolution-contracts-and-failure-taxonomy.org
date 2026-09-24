@@ -41,7 +41,7 @@ Each phase produces the only witness accepted by the following phase.  A phase
 number alone is insufficient because it could be forged without carrying the
 required prior evidence.
 
-#+begin_src typst
+#+begin_src text
 $
   S_0 & = "StructuralProjection"("Metadata") \
   S_1 & = "SemanticAdmission"(S_0, "AdmittedViewIdentity") \

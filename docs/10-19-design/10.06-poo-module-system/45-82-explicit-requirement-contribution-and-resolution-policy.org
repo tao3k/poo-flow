@@ -20,7 +20,7 @@ Resolution is a pure relation inside one explicit operand closure.  Candidate
 construction never searches loaded modules, the filesystem, or a global
 registry.  Complete semantic identities, not lexical names, determine matching.
 
-#+begin_src typst
+#+begin_src text
 #let candidate-closure(requirement, composition-root) = (
   contribution |
   contribution in explicit-operands(composition-root)
@@ -51,7 +51,7 @@ Compatibility is directional from contribution to requirement.  Capability
 contracts do not grant live tokens; priority is local to an exact slot;
 operand order and global profile priority cannot resolve ambiguity.
 
-#+begin_src typst
+#+begin_src text
 #let compatible(contribution, requirement) = (
   contribution.contract satisfies requirement.contract
   and accepts-revision(requirement, contribution.revision)

@@ -11,6 +11,7 @@ on:
     paths:
       - ".github/workflows/github-page.yml"
       - "docs/**"
+      - "ORG_ZHIXING_REV"
       - "org-zhixing.toml"
   workflow_dispatch:
 
@@ -23,9 +24,6 @@ concurrency:
 
 env:
   ORG_ZHIXING_REPOSITORY: tao3k/org-zhixing-themes
-  # Replace main with an immutable release tag or commit after the first
-  # org-zhixing release. The config and workflow are otherwise version-ready.
-  ORG_ZHIXING_REF: main
 
 jobs:
   build:
@@ -45,11 +43,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          ORG_ZHIXING_REV="$(tr -d '[:space:]' < "$GITHUB_WORKSPACE/ORG_ZHIXING_REV")"
+          if [[ ! "$ORG_ZHIXING_REV" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ORG_ZHIXING_REV must contain one full 40-character commit SHA" >&2
+            exit 1
+          fi
           git init "$ORG_ZHIXING_ROOT"
           git -C "$ORG_ZHIXING_ROOT" remote add origin \
             "https://github.com/${ORG_ZHIXING_REPOSITORY}.git"
-          git -C "$ORG_ZHIXING_ROOT" fetch --depth=1 origin "$ORG_ZHIXING_REF"
+          git -C "$ORG_ZHIXING_ROOT" fetch --depth=1 origin "$ORG_ZHIXING_REV"
           git -C "$ORG_ZHIXING_ROOT" checkout --detach FETCH_HEAD
+          test "$(git -C "$ORG_ZHIXING_ROOT" rev-parse HEAD)" = "$ORG_ZHIXING_REV"
 
       - name: Setup Node
         uses: actions/setup-node@v6

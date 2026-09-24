@@ -21,7 +21,7 @@ The formal surface records the expected control interpretation and the
 evidence required before implementation admission.  It does not assert that
 the pending executable probes have already observed these behaviors.
 
-#+begin_src typst
+#+begin_src text
 #let expected-outcome = (
   continuable-signal: "continue-after-signal",
   noncontinuable-signal: "transfer-to-boundary",
@@ -42,7 +42,7 @@ $ "StackTrace" != "resumption-capability" $
 These equations specify the correspondence target.  They remain subject to the
 exact imported bindings and ordered traces required by the executable probes.
 
-#+begin_src typst
+#+begin_src text
 #let implementation-admitted = (
   versions-recorded
   and imports-resolved

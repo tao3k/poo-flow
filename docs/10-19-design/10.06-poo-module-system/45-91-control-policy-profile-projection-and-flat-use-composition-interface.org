@@ -57,7 +57,7 @@ body is one ~(compose profiles ...)~ expression.
       full-receipts)))
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 $ "ordinary-surface" =
   "user-composition"("system", "compose"("profiles", p_1, dots, p_n)) $
 

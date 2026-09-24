@@ -20,7 +20,7 @@ Transport delivery is an arrival candidate, not pure input.  Admission requires
 identity, integrity, schema, provenance, causal coverage, and confidentiality
 checks before the event can enter an immutable causal cut.
 
-#+begin_src typst
+#+begin_src text
 #let ingress-checks(event) = (
   valid-identity(event)
   and valid-integrity(event)
@@ -46,7 +46,7 @@ delivery preserves the event identity.  Watermarks are source-scoped coverage
 evidence, acknowledgements state an exact processing stage, and late events
 never silently mutate a closed cut.
 
-#+begin_src typst
+#+begin_src text
 $ duplicate-delivery(delivery-a, delivery-b)
   ==> event-id(delivery-a) = event-id(delivery-b) $
 

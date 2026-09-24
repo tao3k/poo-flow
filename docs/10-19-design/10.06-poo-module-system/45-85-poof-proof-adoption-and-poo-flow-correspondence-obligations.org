@@ -40,7 +40,7 @@ The formal surface proves the ownership and fail-closed boundaries introduced
 by POO Flow.  It does not restate the POOF denotational proof and does not
 declare the implementation correspondence audit complete.
 
-#+begin_src typst
+#+begin_src text
 #let Authority = (
   theory: "POOF",
   implementation: "gerbil-poo",

@@ -21,7 +21,7 @@ phases, identities, cycles, failure modes, and owners.  A module import edge is
 a lexical code dependency; a profile requirement edge is a semantic dependency
 inside an explicit composition root.
 
-#+begin_src typst
+#+begin_src text
 #let gerbil-edge(module-a, module-b) = (
   role: "GerbilModuleImportEdge",
   source: module-a,
@@ -51,7 +51,7 @@ loaded and the user calls =compose profiles=.  Lazy SCC/fixed-point cycles are
 owned by the semantic graph; macro-phase and circular module-initialization
 failures remain owned by Gerbil.
 
-#+begin_src typst
+#+begin_src text
 $ construct-semantic-graph(receipt)
   ==> required-modules-loaded(receipt)
   and compose-profiles-invoked(receipt) $

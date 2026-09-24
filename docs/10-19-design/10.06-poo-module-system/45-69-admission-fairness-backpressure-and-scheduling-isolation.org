@@ -19,7 +19,7 @@ Resource admission is separate from semantic slot resolution.  Scheduling may
 choose which admitted demand receives finite resources first, but it cannot
 change the POO contribution selected by semantic composition.
 
-#+begin_src typst
+#+begin_src text
 #let consumes(outcome) = outcome == "admitted"
 #let backpressure(outcome) = (
   outcome == "queued"
@@ -41,7 +41,7 @@ conditional: a continuously eligible demand with finite eligible competition
 is eventually scheduled only when the scheduler itself continues to make
 progress.
 
-#+begin_src typst
+#+begin_src text
 #let conserved(parent, dimension) = (
   parent.admitted-child-aggregate.at(dimension)
   <= parent.capacity.at(dimension)

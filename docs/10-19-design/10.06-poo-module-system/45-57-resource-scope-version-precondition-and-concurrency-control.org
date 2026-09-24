@@ -37,7 +37,7 @@ runtime synchronization authority.  A resource name or path does not imply an
 access role, and neither a version observation nor a concurrency precondition
 is itself permission to commit.
 
-#+begin_src typst
+#+begin_src text
 #let resource-scope(resource-id, scope, role, policy-id) = (
   resource-id: resource-id,
   scope: scope,
@@ -73,7 +73,7 @@ Atomic enforcement is a single runtime relation over the precondition, the
 authoritative current state, and the mutation.  It is not a reusable value
 produced by an earlier observation.
 
-#+begin_src typst
+#+begin_src text
 $ AtomicEnforce(P, state_before, mutation) := $
 $ quad state_before.resource = P.resource $
 $ and state_before.scope = P.scope $
