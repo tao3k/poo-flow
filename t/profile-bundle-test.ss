@@ -15,13 +15,13 @@
 (def audit-profile
   (.o identity: 'audit
       name: 'audit
-      stages: '()
+      stages: (.o)
       runtime-executed?: #f))
 
 (def governed-profile
   (.o identity: 'governed
       name: 'governed
-      stages: '()
+      stages: (.o)
       runtime-executed?: #f))
 
 (def module-profiles

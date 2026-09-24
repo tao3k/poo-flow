@@ -102,6 +102,7 @@
         poo-flow-user-tree-init-source
         poo-flow-user-tree-config-source
         poo-flow-user-tree-source-refs
+        poo-flow-user-tree-config-authoring-validate!
         poo-flow-user-tree-lazy-load-plans
         poo-flow-module-selection-source-refs
         poo-flow-module-bundles-source-refs

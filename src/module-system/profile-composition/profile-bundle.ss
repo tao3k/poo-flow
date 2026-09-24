@@ -7,9 +7,9 @@
 ;;; Invariant: selection indexes are built once by the Module owner; composition
 ;;; neither discovers packages nor executes Runtime behavior.
 
-(import (only-in :clan/poo/object .o .ref .slot? object?)
+(import (only-in :clan/poo/object .all-slots .mix .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
-        (only-in :std/list/list append-map delete-duplicates/hash every)
+        (only-in :std/list/list append-map delete-duplicates/hash every fold)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract
                  poo-flow-empty-profiles)
@@ -26,6 +26,7 @@
         PooFlowProfileExport
         PooFlowProfileSelectionProof
         PooFlowProfileBundle
+        PooFlowStageSpace
         PooFlowProfileCompositionStrategy
         profiles
         compose
@@ -47,6 +48,24 @@
   (and (object? value)
        (every (cut .slot? value <>) slots)
        (eq? (.ref value 'kind) kind)))
+
+;;; A Stage space is the progressive-disclosure boundary: the space is always
+;;; a POO object so named stages inherit and override natively, while each slot
+;;; may remain an inert data value.  An object-valued slot opts into recursive
+;;; POO extension.  Executable procedures are never Stage data.
+(def (poo-flow-stage-value-shape? value)
+  (or (object? value) (not (procedure? value))))
+
+(def (poo-flow-stage-space-shape? value)
+  (and (object? value)
+       (every
+        (lambda (stage-name)
+          (and (symbol? stage-name)
+               (poo-flow-stage-value-shape? (.ref value stage-name))))
+        (.all-slots value))))
+
+(define-type (PooFlowStageSpace @ Type.)
+  .element?: poo-flow-stage-space-shape?)
 
 (def (poo-flow-profile-export-shape? value)
   (and (poo-flow-object-shape?
@@ -100,7 +119,7 @@
        (list? (.ref value 'selection-proofs))
        (every (cut element? PooFlowProfileSelectionProof <>)
               (.ref value 'selection-proofs))
-       (list? (.ref value 'stages))
+       (element? PooFlowStageSpace (.ref value 'stages))
        (list? (.ref value 'profile-bindings))
        (list? (.ref value 'provenance))
        (= (length (.ref value 'profiles))
@@ -198,6 +217,18 @@
 (def (poo-flow-profile-ref/default profile slot default)
   (if (.slot? profile slot) (.ref profile slot) default))
 
+;;; Stage spaces are POO objects whose slot names are Scenario stage names.
+;;; Earlier operands retain normal composition precedence; a derived Profile
+;;; refines a stage explicitly with native `=>.+` before entering this fold.
+(def (poo-flow-compose-stage-spaces stage-spaces)
+  (fold
+   (lambda (stage-space accumulated)
+     (unless (object? stage-space)
+       (error "Profile stages must be a POO slot space" stage-space))
+     (.mix accumulated stage-space))
+   (.o)
+   stage-spaces))
+
 (def (poo-flow-profile-export-ref profiles-value profile-identity)
   (unless (and (object? profiles-value)
                (.slot? profiles-value 'export-index))
@@ -236,10 +267,10 @@
                     module-definition instance-identity <>)
                exports))
          (stage-values
-          (append-map
-           (lambda (profile)
-             (poo-flow-profile-ref/default profile 'stages '()))
-           profile-values)))
+          (poo-flow-compose-stage-spaces
+           (map (lambda (profile)
+                  (poo-flow-profile-ref/default profile 'stages (.o)))
+                profile-values))))
     (poo-flow-profile-bundle
      (list (poo-flow-scenario-module-binding instance-name module-value))
      profile-values
@@ -274,7 +305,7 @@
      (poo-flow-profile-ref/default profile 'imports '())
      (poo-flow-profile-ref/default profile 'capabilities '())
      '()
-     (poo-flow-profile-ref/default profile 'stages '())
+     (poo-flow-profile-ref/default profile 'stages (.o))
      '()
      (list (poo-flow-profile-ref/default profile 'provenance 'declared)))))
 
@@ -295,14 +326,13 @@
         (module-seen (make-hash-table))
         (import-seen (make-hash-table))
         (capability-seen (make-hash-table))
-        (stage-seen (make-hash-table-eq))
         (module-bindings-rev '())
         (profiles-rev '())
         (profile-identities-rev '())
         (imports-rev '())
         (capabilities-rev '())
         (proofs-rev '())
-        (stages-rev '())
+        (stage-spaces-rev '())
         (profile-bindings-rev '())
         (provenance-rev '()))
     (for-each
@@ -375,12 +405,8 @@
               (set! capabilities-rev
                     (cons capability-value capabilities-rev))))
           (.ref bundle 'capabilities))
-         (for-each
-          (lambda (stage-value)
-            (unless (hash-key? stage-seen stage-value)
-              (hash-put! stage-seen stage-value #t)
-              (set! stages-rev (cons stage-value stages-rev))))
-          (.ref bundle 'stages))))
+         (set! stage-spaces-rev
+               (cons (.ref bundle 'stages) stage-spaces-rev))))
      operand-values)
     (poo-flow-profile-bundle
      (reverse module-bindings-rev)
@@ -389,7 +415,7 @@
      (reverse imports-rev)
      (reverse capabilities-rev)
      (reverse proofs-rev)
-     (reverse stages-rev)
+     (poo-flow-compose-stage-spaces (reverse stage-spaces-rev))
      (reverse profile-bindings-rev)
      (reverse provenance-rev))))
 

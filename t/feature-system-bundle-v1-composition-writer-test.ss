@@ -8,25 +8,43 @@
 (import :std/test
         :clan/poo/object
         :poo-flow/src/core/plan
+        :poo-flow/src/module-system/semantic-module/objects
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/feature-system/bundle-v1-composition-writer
         :poo-flow/src/feature-system/bundle-v1-lowering)
 
-(def writer-test-composition
-  (use-composition writer-test-composition
-    (use-module writer-test-module as writer
-      (profile source :kind interface :scope evidence
-        :guard (all provenance attribution))
-      (profile target :kind authority :scope action
-        :guard (all verified authority)))
-    (compose
-      (profile writer source)
-      (profile writer target))
-    (stage writer-test-flow
-      (guard (all (receipt source) (authority human)))
-      (step source)
-      (step target)
-      (edges (source target)))))
+(.def WriterSourceProfile
+  (identity 'source)
+  (kind 'interface)
+  (scope 'evidence)
+  (guard '(all provenance attribution)))
+
+(.def WriterTargetProfile
+  (identity 'target)
+  (kind 'authority)
+  (scope 'action)
+  (guard '(all verified authority)))
+
+(def WriterTestModule
+  (poo-flow-semantic-module
+   (poo-flow-semantic-identity 'test 'writer)
+   profiles:
+   (poo-flow-module-profiles
+    (poo-flow-profile-export 'source WriterSourceProfile)
+    (poo-flow-profile-export 'target WriterTargetProfile))))
+
+(.def WriterTestScenarioProfile
+  (identity 'writer-test-flow)
+  (stages
+   (.o writer-test-flow:
+       (.o guard: '(all (receipt source) (authority human))
+           steps: (.o source: #t target: #t)
+           edges: (.o source-target: '(source target))))))
+
+(user-composition writer-test-composition
+  (compose profiles
+    (use-module WriterTestModule as writer source target)
+    WriterTestScenarioProfile))
 
 (def feature-system-bundle-v1-composition-writer-test-suite
   (test-suite

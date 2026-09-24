@@ -10,7 +10,8 @@
 (export SemanticModule. SemanticImports. ModuleSourceRole.
         ModuleAuthoringProfile. ModuleAuthoringExecutor.
         TypesSourceRole. ObjectsSourceRole. FunsSourceRole.
-        ConfigSourceRole. InterfaceSourceRole. ImportContribution.
+        ConfigSourceRole. UserConfigSourceRole.
+        InterfaceSourceRole. ImportContribution.
         SemanticModuleContract ModuleIdentityContract ModuleImportsContract
         ModuleProfilesContract ModuleCapabilitiesContract
         ModuleSourceRoleContract ModuleAuthoringProfileContract
@@ -18,6 +19,7 @@
         poo-flow-semantic-identity poo-flow-semantic-module
         poo-flow-empty-imports poo-flow-empty-capabilities poo-flow-empty-profiles
         poo-flow-default-module-authoring-profile
+        poo-flow-user-root-module-authoring-profile
         poo-flow-import-contribution poo-flow-module-imports)
 
 (def SemanticModule. (.ref SemanticModuleContract 'proto))
@@ -41,15 +43,16 @@
   (.o identity: 'module-authoring/default-executor))
 
 ;; : (-> Symbol [Symbol] [Symbol] [Symbol] Symbol PooModuleSourceRole)
-(def (poo-flow-module-source-role identity-value admitted-forms-value
+(def (poo-flow-module-source-role identity-value recommended-forms-value
                                   forbidden-slot-verbs-value
                                   forbidden-root-forms-value freedom-value)
   (validate ModuleSourceRoleContract
     (.o (:: @ ModuleSourceRole.)
         identity: identity-value
-        admitted-forms: admitted-forms-value
+        recommended-forms: recommended-forms-value
         forbidden-slot-verbs: forbidden-slot-verbs-value
         forbidden-root-forms: forbidden-root-forms-value
+        recursive-root-forms?: #f
         repair-operators: '(? => =>.+ override)
         freedom: freedom-value)))
 
@@ -74,6 +77,19 @@
    '(add remove replace delete)
    '(stage graph loop prove handoff provider runtime)
    'composition-only))
+
+;;; The ordinary user root is deliberately narrower than a maintained module's
+;;; config.ss.  It selects maintained values and never reopens the advanced
+;;; POO object layer; vertical owners retain that layer in their own Profiles.
+(def UserConfigSourceRole.
+  (validate ModuleSourceRoleContract
+    (.o (:: @ ConfigSourceRole.)
+        identity: 'user-config
+        recommended-forms: '(user-composition compose use-module)
+        forbidden-root-forms:
+        '(.def .o stage graph loop prove handoff provider runtime)
+        recursive-root-forms?: #t
+        freedom: 'maintained-value-composition-only)))
 (def InterfaceSourceRole.
   (poo-flow-module-source-role
    'interface '(import export) '(add remove replace delete) '()
@@ -101,6 +117,11 @@
         funs: FunsSourceRole.
         config: ConfigSourceRole.
         interface: InterfaceSourceRole.)))
+
+(def (poo-flow-user-root-module-authoring-profile)
+  (validate ModuleAuthoringProfileContract
+    (.o (:: @ (poo-flow-default-module-authoring-profile))
+        config: UserConfigSourceRole.)))
 
 ;; : (-> ModuleIdentity imports: ModuleImports capabilities: ModuleCapabilities profiles: ModuleProfiles authoring: ModuleAuthoringProfile SemanticModule)
 (def (poo-flow-semantic-module identity-value

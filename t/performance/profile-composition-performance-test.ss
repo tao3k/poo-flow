@@ -17,8 +17,7 @@
     "1000 and 5000 profile expansion remain bounded"
     (let* ((receipt (run-composition-macro-expansion-benchmark))
            (case-1000 (.ref receipt 'case-1000))
-           (case-5000 (.ref receipt 'case-5000-second))
-           (module-index-1000 (.ref receipt 'module-index-1000)))
+           (case-5000 (.ref receipt 'case-5000-second)))
       (check-equal?
        (.ref case-1000 'profile-count)
        1000)
@@ -31,12 +30,6 @@
       (check-equal?
        (.ref case-5000 'generated-compose-reference-count)
        5000)
-      (check-equal?
-       (.ref module-index-1000 'module-count)
-       1000)
-      (check-equal?
-       (.ref module-index-1000 'generated-compose-reference-count)
-       1000)
       (check-equal?
        (.ref case-1000 'gsc-executed)
        #f)

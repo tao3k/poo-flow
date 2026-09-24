@@ -152,6 +152,15 @@ diagnostics.  The default rules constrain public responsibility and competing
 surface vocabulary only; they MUST NOT prescribe internal algorithms or reject
 vertical-domain functions merely because their vocabulary is specialized.
 
+The =config= role has two refinements over the same admission generic.  A
+maintained Module config may construct advanced native POO values.  The
+ordinary root =user-interface/config.ss= may only select and compose those
+maintained values, so =.def= and =.o= are rejected there even when nested under
+a root composition.  This owner-sensitive refinement hides construction
+height without weakening the underlying StageSpace: a named Stage remains a
+real inheritable/overridable POO slot for its maintainer, and a direct inert
+Stage value remains valid when no recursive extension is needed.
+
 Use =poo-clos-prototype-specializer= for a native =gerbil-poo= prototype and
 =poo-clos-class-specializer= only for a real =ClosClass=.  Import package-owned
 Module and CLOS interfaces by their canonical absolute module identity.  A

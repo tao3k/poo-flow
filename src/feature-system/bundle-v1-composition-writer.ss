@@ -43,19 +43,17 @@
 
 ;; : (-> PooCompositionStage MaybeString)
 (def (stage-guard stage)
-  (let loop ((clauses (.ref stage 'clauses)))
-    (cond
-     ((null? clauses) #f)
-     ((eq? (.ref (car clauses) 'clause-kind) 'guard)
-      (guard-payload->string (.ref (car clauses) 'payload)))
-     (else (loop (cdr clauses))))))
+  (and (.slot? stage 'guard)
+       (guard->string (.ref stage 'guard))))
 
 ;; : (-> PooComposition Symbol MaybeString)
 (def (profile-guard composition profile-name)
   (let loop ((profiles (.ref composition 'profiles)))
     (cond
      ((null? profiles) #f)
-     ((eq? (.ref (car profiles) 'name) profile-name)
+     ((eq? (.ref (car profiles)
+                 (if (.slot? (car profiles) 'identity) 'identity 'name))
+           profile-name)
       (let ((profile (car profiles)))
         (if (and (.slot? profile 'guard) (.ref profile 'guard))
           (guard->string (.ref profile 'guard))

@@ -26,12 +26,14 @@
                  poo-flow-module-interface-prototype)
         (only-in :poo-flow/src/module-system/loader/collection
                  make-poo-flow-module-source-collection
+                 make-poo-flow-contribution-module-source
                  poo-flow-module-source-collection-role-entrypoints)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor.
                  ModuleSourceRole.
                  ObjectsSourceRole.
-                 poo-flow-default-module-authoring-profile))
+                 poo-flow-default-module-authoring-profile
+                 poo-flow-user-root-module-authoring-profile))
 
 (export module-authoring-contract-test)
 
@@ -40,6 +42,13 @@
    "test-module"
    (.o)
    '((owner . module-authoring-contract-test))))
+
+(def user-root-module-interface
+  (poo-flow-module-interface
+   "user-root-config"
+   (.o)
+   '((owner . user))
+   authoring: (poo-flow-user-root-module-authoring-profile)))
 
 (def (first-diagnostic admission)
   (car (poo-flow-module-authoring-admission-diagnostics admission)))
@@ -192,6 +201,28 @@
        (check-equal? (.ref diagnostic 'subject) 'stage)
        (check-equal? (.ref diagnostic 'freedom) 'composition-only)))
 
+   (test-case "user-root refinement reports an agent-repairable nested object"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              user-root-module-interface
+              'config
+              '(user-composition broken
+                 (compose profiles
+                   (.o production: maintained-profile)))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'role) 'user-config)
+       (check-equal? (.ref diagnostic 'subject) '.o)
+       (check-equal? (.ref diagnostic 'rule)
+                     'root-config-composition-only)
+       (check-equal? (.ref diagnostic 'recommendation)
+                     'move-responsibility-to-selected-profile-owner)
+       (check-equal? (.ref diagnostic 'repair-operators)
+                     '(? => =>.+ override))
+       (check-equal? (.ref diagnostic 'freedom)
+                     'maintained-value-composition-only)))
+
    (test-case "unknown roles fail at the Interface Profile boundary"
      (check-equal?
       (with-catch
@@ -207,6 +238,15 @@
            (make-poo-flow-module-source-collection
             'invalid-authoring-fixture 'test
             "t/fixtures/module-authoring-invalid" "modules"))
+       (check-exception
+        (poo-flow-module-source-collection-role-entrypoints
+         collection 'interface)
+        true)))
+
+   (test-case "contribution and Lambda sources inherit the same authoring Contract"
+     (let (collection
+           (make-poo-flow-contribution-module-source
+            'invalid-lambda-fixture "t/fixtures/module-authoring-invalid"))
        (check-exception
         (poo-flow-module-source-collection-role-entrypoints
          collection 'interface)

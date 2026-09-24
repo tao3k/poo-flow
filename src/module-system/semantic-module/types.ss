@@ -37,6 +37,11 @@
    'semantic-object candidate (object? candidate)
    (if (object? candidate) '() '(expected-poo-object)) context))
 
+(def (semantic-boolean-classify candidate context)
+  (poo-flow-classification-evidence
+   'semantic-boolean candidate (boolean? candidate)
+   (if (boolean? candidate) '() '(expected-boolean)) context))
+
 ;;; Invariant: module identities use symbols so equality and projection remain canonical.
 (define-type (SemanticSymbol @ PooFlowContract.)
   identity: 'semantic-symbol
@@ -52,6 +57,10 @@
 (define-type (SemanticObject @ PooFlowContract.)
   identity: 'semantic-object
   .classify: semantic-object-classify)
+
+(define-type (SemanticBoolean @ PooFlowContract.)
+  identity: 'semantic-boolean
+  .classify: semantic-boolean-classify)
 
 ;;; Boundary: identity owns exactly the namespace/name pair used by module lookup.
 (define-type (ModuleIdentityContract @ PooFlowNativeObjectContract.)
@@ -95,16 +104,18 @@
       provisions: CapabilityProvisionsContract))
 
 ;;; A source role is an extensible policy value, not a hard-coded linter mode.
-;;; The lists describe admitted syntax and repair vocabulary; execution remains
-;;; owned by the authoring Contract executor.
+;;; The lists describe recommended syntax and repair vocabulary; they are not
+;;; a closed grammar.  Execution remains owned by the authoring Contract
+;;; executor, and refined roles may add contextual prohibitions.
 (define-type (ModuleSourceRoleContract @ PooFlowNativeObjectContract.)
   identity: 'module-source-role
   proto: (semantic-empty-prototype)
   responsibilities:
   (.o identity: SemanticSymbol
-      admitted-forms: SemanticSymbolList
+      recommended-forms: SemanticSymbolList
       forbidden-slot-verbs: SemanticSymbolList
       forbidden-root-forms: SemanticSymbolList
+      recursive-root-forms?: SemanticBoolean
       repair-operators: SemanticSymbolList
       freedom: SemanticSymbol))
 

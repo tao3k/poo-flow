@@ -5,12 +5,12 @@
 
 ;;; Boundary: declarative fixture generator for composition expansion gates.
 
-(import :poo-flow/src/module-system/profile-composition/interface
+(import (only-in :clan/poo/object .def)
+        :poo-flow/src/module-system/profile-composition/interface
         (for-syntax
          (only-in :gerbil/core/expander stx-identifier)))
 
-(export define-composition-expansion-case
-        define-composition-module-index-case)
+(export define-composition-expansion-case)
 
 (begin-syntax
   ;; : (-> Syntax String Fixnum [Syntax])
@@ -22,9 +22,9 @@
          (fx1+ index)
          (cons (stx-identifier template prefix index) out))))))
 
-;;; Emit one real use-composition form with COUNT distinct local POO profiles.
-;;; The outer macro only materializes declarative syntax; use-composition still
-;;; owns declaration validation and lowering on the compiler hot path.
+;;; Emit COUNT real native POO Profile values and one thin user-composition
+;;; binding.  The benchmark measures the production value-level path, not the
+;;; removed clause parser.
 (defsyntax (define-composition-expansion-case stx)
   (syntax-case stx ()
     ((_ binding count)
@@ -38,45 +38,7 @@
              (composition-benchmark-identifiers
               #'binding "profile-" profile-count))
          (with-syntax (((profile-name ...) profile-identifiers))
-           #'(def binding
-               (use-composition binding
-                 (use-module benchmark-catalog as benchmark
-                   (profile profile-name
-                     :kind benchmark-profile) ...)
-                 (compose
-                   (profiles benchmark profile-name ...))
-                 (stage verification
-                   (graph composition-expansion-graph)
-                   (prove profile-count-is-preserved))))))))))
-
-;;; Exercise module-alias admission and reference lookup at scale.  Every alias
-;;; is distinct, so the declaration owner's index should remain linear.
-(defsyntax (define-composition-module-index-case stx)
-  (syntax-case stx ()
-    ((_ binding count)
-     (let (module-count (syntax->datum #'count))
-       (unless (and (fixnum? module-count) (fx> module-count 0))
-         (raise-syntax-error
-          #f
-          "composition module benchmark count must be a positive fixnum"
-          #'count))
-       (let ((module-identifiers
-              (composition-benchmark-identifiers
-               #'module-source "module-" module-count))
-             (alias-identifiers
-              (composition-benchmark-identifiers
-               #'module-alias "alias-" module-count))
-             (profile-identifiers
-              (composition-benchmark-identifiers
-               #'module-profile "profile-" module-count)))
-         (with-syntax (((module-name ...) module-identifiers)
-                       ((alias ...) alias-identifiers)
-                       ((profile-name ...) profile-identifiers))
-           #'(def binding
-               (use-composition binding
-                 (modules
-                  (use-module module-name as alias
-                    (profile profile-name :kind benchmark-profile)) ...)
-                 (compose (profile alias profile-name) ...)
-                 (stage verification
-                   (prove module-alias-index-is-linear))))))))))
+           #'(begin
+               (.def profile-name (identity 'profile-name)) ...
+               (user-composition binding
+                 (compose profiles profile-name ...)))))))))

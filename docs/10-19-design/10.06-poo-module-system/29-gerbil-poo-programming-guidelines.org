@@ -228,7 +228,8 @@ The distinction closes a recurring design gap in the current User Interface:
 binds exposes behavior through slots.  The macro preserves one ordinary value
 expression; it does not parse or lower a second Scenario language.
 
-The ordinary authoring shape should therefore remain small and fully native:
+The maintainer/vertical-author shape should therefore remain small and fully
+native:
 
 #+begin_src scheme
 (.def OntologyCase
@@ -247,6 +248,14 @@ The ordinary authoring shape should therefore remain small and fully native:
 The effective slot is one nested POO object.  The child overrides only the
 named =prescription= contribution, adds =review=, retains unrelated inherited
 events, and does not mutate either parent.
+
+Do not copy this construction layer into the ordinary root User Interface.
+The root =config.ss= only selects and composes the maintained value.  When a
+slot such as =stages= needs progressive disclosure, its Contract admits one
+POO StageSpace whose named slots may contain either direct inert values or
+nested POO values.  Direct values are the low-abstraction case; nested =.o=
+values deliberately opt into inheritance and native slot refinement.  They are
+not two syntaxes and MUST NOT be routed through two evaluators.
 
 Use native type objects or a slot generic when one receiver family owns the
 behavior.  Use POO Flow CLOS only when independently extensible axes cross.

@@ -10,6 +10,7 @@
                  check
                  check-eq?
                  check-equal?
+                 check-exception
                  check-false
                  check-not-equal?
                  check-output
@@ -365,6 +366,19 @@
           (check-equal? lazy-loader-call-count 0))))
 
 ;; : TestCase
+(def (module-system-user-root-authoring-contract-case)
+  (test-case "admits thin root composition and rejects maintainer object syntax"
+    (check-equal?
+     (begin
+       (poo-flow-user-tree-config-authoring-validate! "user-interface")
+       #t)
+     #t)
+    (check-exception
+     (poo-flow-user-tree-config-authoring-validate!
+      "t/fixtures/user-root-authoring-invalid")
+     true)))
+
+;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
   (test-case "official contribution sources are optional and resolve by checkout identity"
     (check-equal?
@@ -428,5 +442,6 @@
     (module-system-lazy-loader-module-tree-case)
     (module-system-lazy-loader-src-modules-case)
     (module-system-lazy-loader-user-root-case)
+    (module-system-user-root-authoring-contract-case)
     (module-system-lazy-loader-aitia-submodule-source-case)
     (module-system-lazy-loader-auto-import-removal-case)))

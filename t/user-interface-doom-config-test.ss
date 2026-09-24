@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :clan/poo/object .ref)
+(import (only-in :clan/poo/object .all-slots .ref)
         (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/module-system/profile-composition/accessors
@@ -32,10 +32,10 @@
     (check-equal?
      (length (poo-flow-scenario-case-modules default-agent-control-plane)) 2)
     (check-equal?
-     (length (poo-flow-scenario-case-profiles default-agent-control-plane)) 18)
+     (length (poo-flow-scenario-case-profiles default-agent-control-plane)) 19)
     (check-equal?
-     (map poo-flow-scenario-stage-name
-          (poo-flow-scenario-case-stages default-agent-control-plane))
+     (.all-slots
+      (poo-flow-scenario-case-stages default-agent-control-plane))
      '(development staging production)))
    (test-case
     "Profile and Scenario libraries retain explicit import paths"

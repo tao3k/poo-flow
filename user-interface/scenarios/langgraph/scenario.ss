@@ -3,38 +3,28 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Reusable Scenario object; root config decides whether to compose it.
-
-(import (only-in :poo-flow/src/module-system/profile-composition/use-syntax
-                 use-composition)
+(import (only-in :clan/poo/object .def .o)
+        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+                 profiles compose)
+        :poo-flow/src/module-system/profile-composition/binding-syntax
         :poo-flow/user-interface/profiles/langgraph)
-(export langgraph-scenario)
+(export LangGraphProductionProfile langgraph-scenario)
 
-(def langgraph-scenario
-  (use-composition langgraph
-  (use-module langgraph as graph
-    (profiles
-      session
-      state
-      router
-      agent-node
-      tool-node
-      bounded-loop
-      runtime-handoff))
-  (compose
-   (profiles graph
-     session
-     state
-     router
-     agent-node
-     tool-node
-     bounded-loop
-     runtime-handoff))
-  (stage production
-    (graph langgraph-state-graph)
-    (loop #:fuel 8 #:exit terminal-edge)
-    (prove declared-branch-targets
-           typed-state-merge
-           bounded-loop-progress
-           explicit-runtime-handoff)
-    (handoff marlin-control-plane))))
+(.def LangGraphProductionProfile
+  (identity 'langgraph-production)
+  (stages
+   (.o production:
+       (.o graph: 'langgraph-state-graph
+           loop: (.o fuel: 8 exit: 'terminal-edge)
+           proofs:
+           (.o declared-branch-targets: #t
+               typed-state-merge: #t
+               bounded-loop-progress: #t
+               explicit-runtime-handoff: #t)
+           handoff: 'marlin-control-plane))))
+
+(user-composition langgraph-scenario
+  (compose profiles
+    (use-module LangGraphModule as graph
+      session state router agent-node tool-node bounded-loop runtime-handoff)
+    LangGraphProductionProfile))

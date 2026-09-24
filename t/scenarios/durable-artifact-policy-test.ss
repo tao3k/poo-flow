@@ -5,19 +5,12 @@
 (import :std/test
         :clan/poo/object
         :poo-flow/src/modules/memory-core/durable/artifact-policy
+        :poo-flow/src/module-system/semantic-module/objects
         :poo-flow/src/module-system/profile-composition/interface)
 
 
-(def (clause-payload clause)
-  (.ref clause 'payload))
-
-(def (stage-clause-payload composition-stage clause-kind)
-  (let loop ((clauses (poo-flow-scenario-stage-clauses composition-stage)))
-    (cond
-     ((null? clauses) #f)
-     ((eq? (.ref (car clauses) 'clause-kind) clause-kind)
-      (.ref (car clauses) 'payload))
-     (else (loop (cdr clauses))))))
+(def (profile-id profile)
+  (.ref profile (if (.slot? profile 'identity) 'identity 'name)))
 
 (def (test-ref row key)
   (let (entry (assoc key row))
@@ -88,55 +81,63 @@
                      ai-vector-search
                      vector-top-k))))
 
-(def artifact-composition
-  (use-composition agent-artifacts
-    (use-module artifact as artifact
-      (profile research-report
-        :extends report/base
-        :scope (session human-handoff publish-channel)
-        :storage (file object vector)
-        :analysis (checksum schema provenance)
-        :publish (human-approved proof-gated))
-      (profile tool-output
-        :extends tool-output/base
-        :scope (session agent tool-call sandbox)
-        :storage (kv checkpoint-store)
-        :analysis (checksum schema)
-        :retention (checkpoint-linked))
-      (profile turso
-        :kind libsql
-        :storage (file-system vector-index checkpoint-store)
-        :capabilities (concurrent-writes
-                       local-first-push-pull
-                       ai-vector-search
-                       vector-top-k)))
-    (compose (profile artifact research-report)
-             (profile artifact tool-output)
-             (profile artifact turso))
-    (stage production
-      (graph artifact-lifecycle)
-      (loop #:fuel 4 #:exit published)
-      (prove artifact-scope-contained
-             artifact-publish-gated
-             database-capability-satisfied))))
+(def ArtifactTestModule
+  (poo-flow-semantic-module
+   (poo-flow-semantic-identity 'test 'artifact)
+   profiles:
+   (poo-flow-module-profiles
+    (poo-flow-profile-export 'research-report
+                             (.ref agent-artifacts 'research-report))
+    (poo-flow-profile-export 'tool-output
+                             (.ref agent-artifacts 'tool-output))
+    (poo-flow-profile-export 'turso (.ref artifact-databases 'turso)))))
 
-(def inline-artifact-composition
-  (use-composition inline-agent-artifacts
-    (use-module artifact as artifact
-      (profile research-report
-        :extends report/base
-        :scope (session human-handoff publish-channel)
-        :storage (file object vector)
-        :analysis (checksum schema provenance)
-        :publish (human-approved proof-gated))
-      (profile internal-report
-        :extends research-report
-        :publish (human-approved proof-gated internal-registry)
-        :retention (project-retained audit-log)))
-    (compose (profile artifact research-report)
-             (profile artifact internal-report))
-    (stage production
-      (prove artifact-scope-contained artifact-publish-gated))))
+(.def ArtifactScenarioProfile
+  (identity 'artifact-production)
+  (stages
+   (.o production:
+       (.o graph: 'artifact-lifecycle
+           loop: (.o fuel: 4 exit: 'published)
+           proofs:
+           (.o artifact-scope-contained: #t
+               artifact-publish-gated: #t
+               database-capability-satisfied: #t)))))
+
+(user-composition artifact-composition
+  (compose profiles
+    (use-module ArtifactTestModule as artifact
+      research-report tool-output turso)
+    ArtifactScenarioProfile))
+
+(.def InternalReportProfile
+  (identity 'internal-report)
+  (name 'internal-report)
+  (extends (.ref agent-artifacts 'research-report))
+  (publish '(human-approved proof-gated internal-registry))
+  (retention '(project-retained audit-log)))
+
+(def InlineArtifactTestModule
+  (poo-flow-semantic-module
+   (poo-flow-semantic-identity 'test 'inline-artifact)
+   profiles:
+   (poo-flow-module-profiles
+    (poo-flow-profile-export 'research-report
+                             (.ref agent-artifacts 'research-report))
+    (poo-flow-profile-export 'internal-report InternalReportProfile))))
+
+(.def InlineArtifactScenarioProfile
+  (identity 'inline-artifact-production)
+  (stages
+   (.o production:
+       (.o proofs:
+           (.o artifact-scope-contained: #t
+               artifact-publish-gated: #t)))))
+
+(user-composition inline-artifact-composition
+  (compose profiles
+    (use-module InlineArtifactTestModule as artifact
+      research-report internal-report)
+    InlineArtifactScenarioProfile))
 
 (def report-artifact
   (durable-artifact report/artifact-1
@@ -370,27 +371,22 @@
 
     (test-case "artifact and database profiles feed inline composition syntax"
       (let* ((stages (poo-flow-scenario-case-stages artifact-composition))
-             (stage (car stages))
+             (stage (.ref stages 'production))
              (compose-payload (poo-flow-scenario-case-profiles
                                artifact-composition))
-             (graph-payload (stage-clause-payload stage 'graph))
-             (loop-payload (stage-clause-payload stage 'loop))
-             (prove-payload (stage-clause-payload stage 'prove)))
+             (loop-value (.ref stage 'loop)))
         (check-equal? (poo-flow-scenario-case? artifact-composition) #t)
         (check-equal? (poo-flow-scenario-case-name artifact-composition)
                       'agent-artifacts)
         (check-equal? (length (poo-flow-scenario-case-modules
                                artifact-composition))
                       1)
-        (check-equal? (poo-flow-scenario-stage-name stage)
-                      'production)
-        (check-equal? (map (lambda (profile) (.ref profile 'name))
-                           compose-payload)
-                      '(research-report tool-output turso))
-        (check-equal? graph-payload '(artifact-lifecycle))
-        (check-equal? (cadr loop-payload) 4)
-        (check-equal? (cadddr loop-payload) 'published)
-        (check-equal? prove-payload
+        (check-equal? (map profile-id compose-payload)
+                      '(research-report tool-output turso artifact-production))
+        (check-equal? (.ref stage 'graph) 'artifact-lifecycle)
+        (check-equal? (.ref loop-value 'fuel) 4)
+        (check-equal? (.ref loop-value 'exit) 'published)
+        (check-equal? (.all-slots (.ref stage 'proofs))
                       '(artifact-scope-contained
                         artifact-publish-gated
                         database-capability-satisfied))))
@@ -399,18 +395,15 @@
       (let* ((modules (poo-flow-scenario-case-modules inline-artifact-composition))
              (module-binding (car modules))
              (module-object (.ref module-binding 'module))
-             (research-profile (.ref module-object 'research-report))
-             (internal-profile (.ref module-object 'internal-report))
              (compose-payload (poo-flow-scenario-case-profiles
                                inline-artifact-composition)))
         (check-equal? (poo-flow-scenario-case? inline-artifact-composition) #t)
-        (check-equal? (.ref research-profile 'name) 'research-report)
-        (check-equal? (.ref research-profile 'source)
-                      'poo-flow.scenario.inline-profile.v1)
-        (check-equal? (.ref (.ref internal-profile 'extends) 'name)
+        (check-equal? (.ref (.ref module-object 'identity) 'name)
+                      'inline-artifact)
+        (check-equal? (.ref (.ref InternalReportProfile 'extends) 'name)
                       'research-report)
-        (check-equal? (.ref internal-profile 'retention)
+        (check-equal? (.ref InternalReportProfile 'retention)
                       '(project-retained audit-log))
-        (check-equal? (map (lambda (profile) (.ref profile 'name))
-                           compose-payload)
-                      '(research-report internal-report))))))
+        (check-equal? (map profile-id compose-payload)
+                      '(research-report internal-report
+                        inline-artifact-production))))))

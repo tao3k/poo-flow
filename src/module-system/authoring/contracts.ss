@@ -7,6 +7,7 @@
 ;;; Invariant: source is read as inert data; this owner never expands or runs it.
 
 (import (only-in :clan/poo/object .def .o .ref .slot? object?)
+        (only-in :clan/poo/mop Type. define-type element? validate)
         (only-in :std/list/list filter-map find)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface-prototype
@@ -23,6 +24,8 @@
 (export ModuleAuthoringAdmissionProtocol
         ModuleAuthoringAdmissionGeneric
         ModuleAuthoringCoreMethods
+        PooFlowModuleAuthoringDiagnostic
+        PooFlowModuleAuthoringAdmission
         poo-flow-module-authoring-role
         poo-flow-module-authoring-admit-datum
         poo-flow-module-authoring-admit-port
@@ -50,6 +53,43 @@
   diagnostics: '()
   runtime-executed?: #f)
 
+(def (poo-flow-module-authoring-diagnostic-shape? value)
+  (and (object? value)
+       (andmap (cut .slot? value <>)
+               '(kind module role code subject rule recommendation
+                      repair-operators freedom runtime-executed?))
+       (eq? (.ref value 'kind) 'poo-flow.module-authoring.diagnostic.v1)
+       (string? (.ref value 'module))
+       (symbol? (.ref value 'role))
+       (symbol? (.ref value 'code))
+       (symbol? (.ref value 'rule))
+       (symbol? (.ref value 'recommendation))
+       (list? (.ref value 'repair-operators))
+       (andmap symbol? (.ref value 'repair-operators))
+       (symbol? (.ref value 'freedom))
+       (eq? (.ref value 'runtime-executed?) #f)))
+
+(define-type (PooFlowModuleAuthoringDiagnostic @ Type.)
+  .element?: poo-flow-module-authoring-diagnostic-shape?)
+
+(def (poo-flow-module-authoring-admission-shape? value)
+  (and (object? value)
+       (andmap (cut .slot? value <>)
+               '(kind module role accepted? diagnostics runtime-executed?))
+       (eq? (.ref value 'kind) 'poo-flow.module-authoring.admission.v1)
+       (string? (.ref value 'module))
+       (symbol? (.ref value 'role))
+       (boolean? (.ref value 'accepted?))
+       (list? (.ref value 'diagnostics))
+       (andmap (cut element? PooFlowModuleAuthoringDiagnostic <>)
+               (.ref value 'diagnostics))
+       (eq? (.ref value 'accepted?)
+            (null? (.ref value 'diagnostics)))
+       (eq? (.ref value 'runtime-executed?) #f)))
+
+(define-type (PooFlowModuleAuthoringAdmission @ Type.)
+  .element?: poo-flow-module-authoring-admission-shape?)
+
 ;; : (-> Symbol [Symbol] (Maybe Symbol))
 (def (poo-flow-module-authoring-forbidden-slot-verb slot verbs)
   (and (symbol? slot)
@@ -65,15 +105,16 @@
 
 ;; : (-> PooModuleInterface PooModuleSourceRole Symbol PooModuleAuthoringDiagnostic)
 (def (poo-flow-module-authoring-slot-diagnostic interface source-role slot)
-  (.o (:: @ ModuleAuthoringDiagnostic)
-      module: (poo-flow-module-interface-id interface)
-      role: (.ref source-role 'identity)
-      code: 'poo-domain-slot-must-be-noun
-      subject: slot
-      rule: 'native-poo-slot-algebra-only
-      recommendation: 'rename-as-domain-noun-and-refine-native-slot
-      repair-operators: (.ref source-role 'repair-operators)
-      freedom: (.ref source-role 'freedom)))
+  (validate PooFlowModuleAuthoringDiagnostic
+    (.o (:: @ ModuleAuthoringDiagnostic)
+        module: (poo-flow-module-interface-id interface)
+        role: (.ref source-role 'identity)
+        code: 'poo-domain-slot-must-be-noun
+        subject: slot
+        rule: 'native-poo-slot-algebra-only
+        recommendation: 'rename-as-domain-noun-and-refine-native-slot
+        repair-operators: (.ref source-role 'repair-operators)
+        freedom: (.ref source-role 'freedom))))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
 (def (poo-flow-module-authoring-slot-diagnostics interface role datum)
@@ -86,39 +127,56 @@
            interface role (car binding))))
    (poo-flow-poo-slot-authoring-datum-bindings datum)))
 
-;; : (-> SchemeDatum [Symbol] (Maybe Symbol))
-(def (poo-flow-module-authoring-forbidden-root-form datum forbidden)
+;; : (-> SchemeDatum [Symbol] Boolean (Maybe Symbol))
+;;; Walk executable child forms, but never reinterpret quoted values or import
+;;; leaf symbols as calls.  This catches a hidden (.o ...) under a root
+;;; composition without turning the Contract into a Scheme parser/evaluator.
+(def (poo-flow-module-authoring-forbidden-root-form datum forbidden recursive?)
   (cond
    ((not (pair? datum)) #f)
    ((memq (car datum) '(quote quasiquote syntax quasisyntax)) #f)
    ((and (symbol? (car datum)) (memq (car datum) forbidden)) (car datum))
-   (else #f)))
+   ((not recursive?) #f)
+   (else
+    (let loop ((children (cdr datum)))
+      (cond
+       ((null? children) #f)
+       ((not (pair? children)) #f)
+       ((and (pair? (car children))
+             (poo-flow-module-authoring-forbidden-root-form
+              (car children) forbidden recursive?))
+        => values)
+       (else (loop (cdr children))))))))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
 (def (poo-flow-module-authoring-root-diagnostics interface source-role datum)
   (let (form
         (poo-flow-module-authoring-forbidden-root-form
-         datum (.ref source-role 'forbidden-root-forms)))
+         datum
+         (.ref source-role 'forbidden-root-forms)
+         (.ref source-role 'recursive-root-forms?)))
     (if form
       (list
-       (.o (:: @ ModuleAuthoringDiagnostic)
-           module: (poo-flow-module-interface-id interface)
-           role: (.ref source-role 'identity)
-           code: 'poo-config-must-compose-maintained-values
-           subject: form
-           rule: 'root-config-composition-only
-           recommendation: 'move-responsibility-to-selected-profile-owner
-           repair-operators: (.ref source-role 'repair-operators)
-           freedom: (.ref source-role 'freedom)))
+       (validate PooFlowModuleAuthoringDiagnostic
+         (.o (:: @ ModuleAuthoringDiagnostic)
+             module: (poo-flow-module-interface-id interface)
+             role: (.ref source-role 'identity)
+             code: 'poo-config-must-compose-maintained-values
+             subject: form
+             rule: 'root-config-composition-only
+             recommendation: 'move-responsibility-to-selected-profile-owner
+             repair-operators: (.ref source-role 'repair-operators)
+             freedom: (.ref source-role 'freedom))))
       '())))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole [PooModuleAuthoringDiagnostic] PooModuleAuthoringAdmission)
 (def (poo-flow-module-authoring-admission interface source-role diagnostic-values)
-  (.o (:: @ ModuleAuthoringAdmission)
-      module: (poo-flow-module-interface-id interface)
-      role: (.ref source-role 'identity)
-      accepted?: (null? diagnostic-values)
-      diagnostics: diagnostic-values))
+  (validate PooFlowModuleAuthoringAdmission
+    (.o (:: @ ModuleAuthoringAdmission)
+        module: (poo-flow-module-interface-id interface)
+        role: (.ref source-role 'identity)
+        accepted?: (null? diagnostic-values)
+        diagnostics: diagnostic-values)))
 
 (def (poo-flow-module-authoring-admit/common interface role datum)
   (poo-flow-module-authoring-admission
@@ -208,9 +266,7 @@
                   (.ref admission 'diagnostics))))))))
 
 (def (poo-flow-module-authoring-admission? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind) 'poo-flow.module-authoring.admission.v1)))
+  (element? PooFlowModuleAuthoringAdmission value))
 
 (def (poo-flow-module-authoring-admission-accepted? admission)
   (.ref admission 'accepted?))

@@ -8,7 +8,7 @@
 ;;; Invariant: internal traversal records are compact structs; public Plan
 ;;; nodes remain owned by src/core/plan.ss.
 
-(import (only-in :clan/poo/object .ref)
+(import (only-in :clan/poo/object .all-slots .o .ref .slot? object?)
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :std/list/list append-map filter-map fold)
         :poo-flow/src/core/plan
@@ -24,9 +24,30 @@
 (defstruct composition-plan-descriptor (key name kind source) transparent: #t)
 (defstruct composition-plan-edge (source-key target-key) transparent: #t)
 (defstruct composition-plan-state (descriptors edges) transparent: #t)
+(defstruct composition-plan-stage-view (name value) transparent: #t)
 
-(def (composition-plan-stage-name stage) (.ref stage 'name))
-(def (composition-plan-stage-clauses stage) (.ref stage 'clauses))
+(def (composition-plan-stage-name stage)
+  (composition-plan-stage-view-name stage))
+(def (composition-plan-stage-target-clauses stage slot kind)
+  (let (stage-value (composition-plan-stage-view-value stage))
+   (if (and (object? stage-value) (.slot? stage-value slot))
+    (map (lambda (target)
+           (.o clause-kind: kind payload: (list target)))
+         (.all-slots (.ref stage-value slot)))
+    '())))
+(def (composition-plan-stage-clauses stage)
+  (let (stage-value (composition-plan-stage-view-value stage))
+    (append
+     (composition-plan-stage-target-clauses stage 'steps 'step)
+     (composition-plan-stage-target-clauses stage 'handoffs 'handoff)
+     (if (and (object? stage-value) (.slot? stage-value 'edges))
+       (list
+        (.o clause-kind: 'edges
+            payload:
+            (map (lambda (edge-name)
+                   (.ref (.ref stage-value 'edges) edge-name))
+                 (.all-slots (.ref stage-value 'edges)))))
+       '()))))
 (def (composition-plan-clause-kind clause) (.ref clause 'clause-kind))
 (def (composition-plan-clause-payload clause) (.ref clause 'payload))
 
@@ -157,7 +178,9 @@
          (targets
           (composition-plan-stage-targets
            stage stage-index binding-index))
-         (descriptor (make-composition-plan-descriptor key stage-name 'case stage)))
+         (descriptor
+          (make-composition-plan-descriptor
+           key stage-name 'case (composition-plan-stage-view-value stage))))
     (let (descriptors+edges
           (fold
            (lambda (target state)
@@ -273,7 +296,12 @@
   (unless (eq? (.ref composition 'kind) 'poo-flow.scenario-case.v1)
     (error "POO-FLOW-PLAN-E100 expected poo-flow.scenario-case.v1" composition))
   (let* ((name (.ref composition 'name))
-         (stages (.ref composition 'stages))
+         (stage-space (.ref composition 'stages))
+         (stages
+          (map (lambda (stage-name)
+                 (make-composition-plan-stage-view
+                  stage-name (.ref stage-space stage-name)))
+               (.all-slots stage-space)))
          (bindings (.ref composition 'profile-bindings))
          (stage-index
           (poo-flow-leftmost-index-by

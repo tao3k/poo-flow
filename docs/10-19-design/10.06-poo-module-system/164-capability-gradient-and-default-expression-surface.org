@@ -5,7 +5,7 @@
 #+title: POO Flow Capability Gradient and Default Expression Surface
 #+date: [2026-09-23]
 #+property: SDD_KIND architecture-decision
-#+property: STATUS proposed-normative-surface-contract
+#+property: STATUS accepted-normative-surface-contract
 
 * Decision
 
@@ -91,9 +91,10 @@ extension and composition.
 Every loaded POO Module has one native POO =Interface= object as its public
 entry.  The Interface carries an =authoring= Profile whose =types=, =objects=,
 =funs=, =config= and =interface= slots contain extensible source-role Contract
-objects.  These objects describe admitted responsibility, forbidden competing
-surface forms, native repair operators and the freedom retained by the module
-owner.  They do not parse or execute a second language.
+objects.  These objects describe recommended responsibility, forbidden
+competing surface forms, native repair operators and the freedom retained by
+the module owner.  They do not define a closed grammar and do not parse or
+execute a second language.
 
 The loader MUST read each stable role as inert Scheme datums and admit it
 through that Interface Profile before exposing its entrypoint.  A vertical
@@ -138,7 +139,8 @@ class or runtime object hierarchies.
 
 ** Default value surface
 
-The default surface serves application users and vertical-domain authors.  Its
+The default surface serves application users and vertical-domain authors, but
+those two owners do not receive the same amount of construction syntax.  Its
 concept budget is deliberately small:
 
 - object;
@@ -150,6 +152,21 @@ A Profile, Scenario, Case, Policy or Flow is first an ordinary named POO value.
 An extension means a base value plus declared differences.  Composition means
 selecting maintained named values and allowing the kernel to derive one
 deterministic effective object.
+
+There are two views of that one object model:
+
+1. the ordinary root =user-interface/config.ss= selects and composes maintained
+   values; it MUST NOT require =.o=, =.def= or nested Stage construction;
+2. the maintainer or vertical owner MAY publish an advanced Profile whose
+   =stages= slot is a =PooFlowStageSpace= POO object.  Each named Stage slot may
+   be either an inert direct value or another POO object that opts into native
+   inheritance and override.
+
+This is progressive disclosure, not a data-versus-object compatibility mode.
+Both views reach the same ProfileBundle and StageSpace Contract, projection
+and runtime handoff.  Module System admission distinguishes the root owner from
+the maintainer owner before projection; it does not guess from data shape at
+runtime and does not manufacture an object on the user's behalf.
 
 The default surface MAY use native Gerbil POO declaration forms or a thin,
 hygienic domain declaration that lowers directly to them.  A thin declaration
