@@ -48,7 +48,7 @@ JSON
         (check (hash-get descriptor "schema")
                => "poo-flow.scheme-native-descriptor.v1")
         (check (hash-get descriptor "runtimeAbiMajor") => 0)
-        (check (hash-get descriptor "runtimeAbiMinor") => 4)
+        (check (hash-get descriptor "runtimeAbiMinor") => 1)
         (check (hash-get descriptor "maximumInputBytes") => (* 16 1024 1024))
         (check (length (hash-get descriptor "contracts")) => 4)))
     (test-case "valid POO contract crosses as a validation receipt"

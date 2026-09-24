@@ -66,7 +66,7 @@
      (let (key (.ref request 'idempotency-key))
        (check (.ref request 'kind)
               => 'poo-flow.runtime-language.promotion-request.1)
-       (check (.ref request 'abi-minor) => 4)
+       (check (.ref request 'abi-minor) => 1)
        (check (.ref request 'runtime-executed) => #f)
        (check (.ref key 'promotion-id) => 'promotion-1)
        (check (.ref key 'materialization-id) => 'materialization-1)
@@ -118,7 +118,7 @@
                                     "QUERY_EXECUTION_CANDIDATE")
                    #t)
               => #t)
-       (check (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor) => 4)
+       (check (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor) => 1)
        (check (.ref +poo-flow-runtime-v0-abi-schema+
                     'source-query-receipt-schema)
               => "poo-flow.runtime-language.source-query-receipt.1")
