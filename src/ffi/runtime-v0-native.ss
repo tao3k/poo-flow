@@ -31,6 +31,7 @@
 
 (export native-abi-version
         native-descriptor-payload
+        native-query-execution-candidate->json
         native-query-execution-candidate<-json
         native-validate-payload
         native-error-payload
@@ -91,6 +92,12 @@
 (def (json-symbol-list object field)
   (map string->symbol (json-list object field)))
 
+(def (native-identity->json value)
+  (cond
+   ((symbol? value) (symbol->string value))
+   ((string? value) value)
+   (else (error "native contract identity must be a symbol or string" value))))
+
 (def (source-query-receipt<-json object)
   (poo-flow-runtime-language-source-query-receipt
    (json-required object "source-language")
@@ -107,6 +114,25 @@
 
 ;;; This transport projection deliberately constructs the canonical Query
 ;;; object.  Runtime v0 owns the byte boundary; Query owns the semantic shape.
+(def (native-query-execution-candidate->json candidate)
+  (unless (poo-flow-query-execution-candidate? candidate)
+    (error "invalid canonical query execution candidate" candidate))
+  (json->string
+   (hash (provider-identity
+          (native-identity->json (.ref candidate 'provider-identity)))
+         (query-identity
+          (native-identity->json (.ref candidate 'query-identity)))
+         (query-version (.ref candidate 'query-version))
+         (semantic-revision (.ref candidate 'semantic-revision))
+         (source-content-identity
+          (.ref candidate 'source-content-identity))
+         (parser-identity
+          (native-identity->json (.ref candidate 'parser-identity)))
+         (provenance-root (.ref candidate 'provenance-root))
+         (result-digest (.ref candidate 'result-digest))
+         (result-count (.ref candidate 'result-count))
+         (complete (.ref candidate 'complete?)))))
+
 (def (native-query-execution-candidate<-json object)
   (poo-flow-query-execution-candidate
    (json-symbol object "provider-identity")

@@ -71,9 +71,12 @@ Flow-owned contract semantics.  It follows Gerbil's =begin-ffi= contract:
 =c-define= exports versioned symbols, =define-c-struct= types the borrowed
 result pointer, and =poo_flow_scheme_result_v1_release= is the sole owner-side
 release operation for copied payload bytes.  It currently exposes a descriptor
-and bounded validation for source-query, language-admission, and artifact-
-projection receipts.  Unsupported contract names and malformed payloads fail
-closed with =poo-flow.scheme-native-error.v1= bytes.
+and bounded validation for source-query receipts, Query execution candidates,
+language-admission receipts, and artifact-projection receipts.  Query execution
+candidates are projected from the canonical POO object by the Scheme boundary;
+the literal C vector remains only an independent language-neutral ABI probe.
+Unsupported contract names and malformed payloads fail closed with
+=poo-flow.scheme-native-error.v1= bytes.
 
 The ordinary Runtime C SDK does not contain a hidden Scheme VM and therefore
 does not ship =scheme_native_v1.h= by itself.  Downstream AOT packages include
