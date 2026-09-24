@@ -11,6 +11,14 @@ This module records the executable diagnosis of the native Gerbil warm-build
 regression.  It is a design and acceptance record, not permission to add a
 POO-Flow-local scheduler, cache, dependency parser, or shell launcher.
 
+The historical timings below compare different target sets and therefore do
+not establish a V19 graph-planning optimization.  They remain useful as the
+failure record that a direct-root BuildSpec is incomplete.  The current
+interpretation is narrower: =public-entry-modules= is package target selection;
+=std/make= is the sole dependency-graph, deduplication, currentness, and
+scheduling owner.  Same-target V19 measurements are maintained by ASP and
+currently show no stable closure-projection speedup.
+
 The verified conclusion is narrower than the original scheduler hypothesis:
 
 - Gerbil =std/make= parallel execution is enabled.
@@ -18,8 +26,9 @@ The verified conclusion is narrower than the original scheduler hypothesis:
 - The complete 387-entry root build can converge to zero native compilation.
 - Its zero-work scan still takes 63.46 seconds and therefore fails the
   30-second warm-build gate.
-- The three public entry interfaces currently have a 45-module all-phase
-  closure.  The integrated zero-work build now completes near five seconds.
+- The then-current three public entry interfaces had a 45-module all-phase
+  closure.  Their historical integrated zero-work build completed near five
+  seconds; this is not a current target count or same-output A/B claim.
 - ASP Build API owns root-only Import Model traversal; POO Flow declares only
   its public entries.  Gerbil =std/make= remains the planner and executor.
 
@@ -98,7 +107,7 @@ interfaces and all syntax/runtime dependency phases.
 
 * ASP Build API resolution
 
-The PackageSpec prototype now exposes =public-entry-modules=.  Its projector
+The PackageSpec prototype exposes =public-entry-modules=.  Its projector
 derives package identity from the downstream =gerbil.pkg=, imports only the
 declared roots, and traverses Gerbil's native =module-context-import= graph once
 with an identity-keyed visited table.  External package contexts remain owned
@@ -106,8 +115,10 @@ by =gxpkg= and are not traversed into the downstream build target set.
 
 This is intentionally different from the removed historical implementation,
 which called =import-module= for every catalog member before calculating extra
-inputs.  The root-only algorithm is O(V+E) in the reachable local graph and
+inputs.  The root-only traversal is bounded by the reachable local graph and
 does not parse source, schedule compilation, or inspect =GERBIL_PATH= outputs.
+This is a semantic projection of package membership, not a replacement or
+acceleration of V19 =std/make='s dependency graph.
 
 The stable downstream declaration is:
 
