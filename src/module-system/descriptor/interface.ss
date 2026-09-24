@@ -500,27 +500,39 @@
 
 ;;; Boundary: inline profiles join activation closure before name validation.
 ;;; Intent: prefab-style imports behave like concrete module values, not missing names.
-;; : (-> [PooModuleDescriptor] [Value] [PooModuleDescriptor])
-(def (poo-flow-module-closure/add modules seen-names)
+;;; A shared native hash index admits each module name once across the complete
+;;; traversal. Pending sibling lists are explicit DFS frames, preserving root,
+;;; inline-import, then sibling order without rebuilding intermediate lists.
+;; : (-> [[PooModuleDescriptor]] HashTable [PooModuleDescriptor] [PooModuleDescriptor])
+(def (poo-flow-module-closure/frames frames seen modules-rev)
   (cond
-   ((null? modules) '())
-   ;; Repeated module names are skipped to keep inline imports finite.
-   ((poo-flow-module-member-name? (poo-flow-module-name (car modules)) seen-names)
-    (poo-flow-module-closure/add (cdr modules) seen-names))
+   ((null? frames) (reverse modules-rev))
+   ((null? (car frames))
+    (poo-flow-module-closure/frames (cdr frames) seen modules-rev))
    (else
-    (let* ((module (car modules))
-           (next-seen (cons (poo-flow-module-name module) seen-names))
-           (inline-modules
-            ;; Only import specs carrying descriptor profiles expand the closure.
-            (poo-flow-module-import-configs (poo-flow-module-imports module))))
-      (cons module
-            (append (poo-flow-module-closure/add inline-modules next-seen)
-                    (poo-flow-module-closure/add (cdr modules) next-seen)))))))
+    (let* ((siblings (car frames))
+           (module (car siblings))
+           (module-name (poo-flow-module-name module))
+           (remaining-frames (cons (cdr siblings) (cdr frames))))
+      (if (hash-key? seen module-name)
+        (poo-flow-module-closure/frames remaining-frames seen modules-rev)
+        (begin
+          (hash-put! seen module-name #t)
+          (poo-flow-module-closure/frames
+           (cons
+            ;; Only import specs carrying descriptor profiles expand closure.
+            (poo-flow-module-import-configs (poo-flow-module-imports module))
+            remaining-frames)
+           seen
+           (cons module modules-rev))))))))
 
-;;; Boundary: public closure starts with an empty seen set.
+;;; Boundary: public closure owns one shared admission index per traversal.
 ;; : (-> [PooModuleDescriptor] [PooModuleDescriptor])
 (def (poo-flow-module-closure modules)
-  (poo-flow-module-closure/add modules '()))
+  (poo-flow-module-closure/frames
+   (list modules)
+   (make-hash-table)
+   '()))
 
 ;;; Boundary: per-module missing import details preserve module/import pairs.
 ;; : (-> PooModuleDescriptor [Symbol] [MissingModuleImport])

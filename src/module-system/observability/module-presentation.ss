@@ -381,12 +381,12 @@
 ;;       ;; => ((values . values) (safe . safe-value))
 ;;       ```
 ;;     %
-(def (poo-flow-poo-slot-authoring-datum-bindings datum)
+(def (poo-flow-poo-slot-authoring-datum-bindings/into datum tail)
   (cond
-   ((not (pair? datum)) '())
+   ((not (pair? datum)) tail)
    ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
          (pair? (cdr datum)))
-    '())
+    tail)
    (else
     (let* ((head (car datum))
            (object-elements
@@ -395,10 +395,19 @@
              ((and (eq? head '.def) (pair? (cdr datum))) (cddr datum))
              (else '())))
            (local-bindings
-            (poo-flow-poo-slot-authoring-form-bindings object-elements)))
-      (append local-bindings
-              (poo-flow-poo-slot-authoring-datum-bindings (car datum))
-              (poo-flow-poo-slot-authoring-datum-bindings (cdr datum)))))))
+            (poo-flow-poo-slot-authoring-form-bindings object-elements))
+           (cdr-bindings
+            (poo-flow-poo-slot-authoring-datum-bindings/into
+             (cdr datum)
+             tail))
+           (child-bindings
+            (poo-flow-poo-slot-authoring-datum-bindings/into
+             (car datum)
+             cdr-bindings)))
+      (foldr cons child-bindings local-bindings)))))
+
+(def (poo-flow-poo-slot-authoring-datum-bindings datum)
+  (poo-flow-poo-slot-authoring-datum-bindings/into datum '()))
 
 ;; : (forall (a) (-> Symbol a [Alist]))
 ;; poo-flow-poo-slot-authoring-datum-observations

@@ -311,6 +311,18 @@
                 (module-observability-test-alist-value 'slot diagnostic))
               (poo-flow-poo-slot-authoring-diagnostics observations))
          '(values before diagnostics policy))))
+    (test-case "reader-native POO bindings preserve nested source order"
+      (check-equal?
+       (poo-flow-poo-slot-authoring-datum-bindings
+        '(begin
+           (.o outer: outer-value
+               nested: (.o inner: inner-value))
+           '(.o ignored: ignored-value)
+           (.def Prototype final: final-value)))
+       '((outer . outer-value)
+         (nested . (.o inner: inner-value))
+         (inner . inner-value)
+         (final . final-value))))
     (test-case "reader-native source inspection catches lexical values calls"
       (let* ((source
               (string-append
