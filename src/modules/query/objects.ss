@@ -20,54 +20,86 @@
 
 (export PooFlowQuery.
         PooFlowQueryLanguage.
-        PooFlowSchemeQueryLanguage.
         PooFlowGqlQueryLanguage.
         PooFlowQueryProgram.
-        PooFlowSchemeQueryProgram.
+        PooFlowQueryNode.
+        PooFlowQueryStep.
+        PooFlowQueryPath.
+        PooFlowQueryProperty.
+        PooFlowQueryLiteral.
+        PooFlowQueryEquals.
+        PooFlowQueryProjection.
         PooFlowGqlQueryProgram.
         PooFlowQueryElementSpace.
         PooFlowQueryResultContract.
         poo-flow-query-element-space
-        poo-flow-scheme-query-program
-        poo-flow-gql-query-program
+        poo-flow-gql-query-program?
         poo-flow-query-result-contract)
 
 (def (query-program-has-slots? value slots)
   (and (object? value)
        (every (lambda (slot) (.slot? value slot)) slots)))
 
-(def (query-content-id? value)
-  (and (string? value)
-       (= (string-length value) 71)
-       (string=? (substring value 0 7) "sha256:")))
-
-(def (scheme-query-program? value)
+(def (query-node? value)
   (and (query-program-has-slots?
-        value '(kind identity language-identity representation entrypoint
-                     immutable?))
-       (eq? (.ref value 'kind) poo-flow-query-program-kind)
-       (eq? (.ref value 'language-identity) 'scheme)
-       (eq? (.ref value 'representation) 'named-poo-expression)
-       (symbol? (.ref value 'entrypoint))
-       (eq? (.ref value 'immutable?) #t)))
+        value '(kind binding label))
+       (eq? (.ref value 'kind) 'poo-flow.query.node)
+       (symbol? (.ref value 'binding))
+       (symbol? (.ref value 'label))))
 
-(def (gql-query-program? value)
+(def (query-step? value)
+  (and (query-program-has-slots?
+        value '(kind relation target next))
+       (eq? (.ref value 'kind) 'poo-flow.query.step)
+       (symbol? (.ref value 'relation))
+       (query-node? (.ref value 'target))
+       (or (not (.ref value 'next)) (query-step? (.ref value 'next)))))
+
+(def (query-path? value)
+  (and (query-program-has-slots? value '(kind start next))
+       (eq? (.ref value 'kind) 'poo-flow.query.path)
+       (query-node? (.ref value 'start))
+       (or (not (.ref value 'next)) (query-step? (.ref value 'next)))))
+
+(def (query-property? value)
+  (and (query-program-has-slots? value '(kind binding property))
+       (eq? (.ref value 'kind) 'poo-flow.query.property)
+       (symbol? (.ref value 'binding))
+       (symbol? (.ref value 'property))))
+
+(def (query-literal? value)
+  (and (query-program-has-slots? value '(kind literal-kind value))
+       (eq? (.ref value 'kind) 'poo-flow.query.literal)
+       (case (.ref value 'literal-kind)
+         ((string) (string? (.ref value 'value)))
+         ((symbol) (symbol? (.ref value 'value)))
+         ((integer) (exact-integer? (.ref value 'value)))
+         ((boolean) (boolean? (.ref value 'value)))
+         (else #f))))
+
+(def (query-equals? value)
+  (and (query-program-has-slots? value '(kind left right))
+       (eq? (.ref value 'kind) 'poo-flow.query.equals)
+       (query-property? (.ref value 'left))
+       (query-literal? (.ref value 'right))))
+
+(def (query-projection? value)
+  (and (query-program-has-slots? value '(kind expression next))
+       (eq? (.ref value 'kind) 'poo-flow.query.projection)
+       (query-property? (.ref value 'expression))
+       (or (not (.ref value 'next))
+           (query-projection? (.ref value 'next)))))
+
+(def (poo-flow-gql-query-program? value)
   (and (query-program-has-slots?
         value '(kind identity language-identity representation
-                     parser-identity syntax-contract source-identity
-                     source-content-id grammar-content-id parsed? roundtrip?
-                     immutable?))
+                     match where project immutable?))
        (eq? (.ref value 'kind) poo-flow-query-program-kind)
        (eq? (.ref value 'language-identity) 'gql)
-       (eq? (.ref value 'representation) 'parser-artifact-receipt)
-       (eq? (.ref value 'parser-identity) 'gerbil-parser)
-       (string? (.ref value 'syntax-contract))
-       (or (symbol? (.ref value 'source-identity))
-           (string? (.ref value 'source-identity)))
-       (query-content-id? (.ref value 'source-content-id))
-       (query-content-id? (.ref value 'grammar-content-id))
-       (eq? (.ref value 'parsed?) #t)
-       (eq? (.ref value 'roundtrip?) #t)
+       (eq? (.ref value 'representation) 'poo-gql-ast)
+       (query-path? (.ref value 'match))
+       (or (not (.ref value 'where)) (query-equals? (.ref value 'where)))
+       (query-projection? (.ref value 'project))
        (eq? (.ref value 'immutable?) #t)))
 
 (def PooFlowQueryProgram.
@@ -77,23 +109,34 @@
       representation: 'poo-object
       immutable?: #t))
 
-(def PooFlowSchemeQueryProgram.
-  (.o (:: @ PooFlowQueryProgram.)
-      language-identity: 'scheme
-      representation: 'named-poo-expression
-      entrypoint: #f))
+(def PooFlowQueryNode.
+  (.o kind: 'poo-flow.query.node binding: #f label: #f))
+
+(def PooFlowQueryStep.
+  (.o kind: 'poo-flow.query.step relation: #f target: #f next: #f))
+
+(def PooFlowQueryPath.
+  (.o kind: 'poo-flow.query.path start: #f next: #f))
+
+(def PooFlowQueryProperty.
+  (.o kind: 'poo-flow.query.property binding: #f property: #f))
+
+(def PooFlowQueryLiteral.
+  (.o kind: 'poo-flow.query.literal literal-kind: #f value: #f))
+
+(def PooFlowQueryEquals.
+  (.o kind: 'poo-flow.query.equals left: #f right: #f))
+
+(def PooFlowQueryProjection.
+  (.o kind: 'poo-flow.query.projection expression: #f next: #f))
 
 (def PooFlowGqlQueryProgram.
   (.o (:: @ PooFlowQueryProgram.)
       language-identity: 'gql
-      representation: 'parser-artifact-receipt
-      parser-identity: 'gerbil-parser
-      syntax-contract: #f
-      source-identity: #f
-      source-content-id: #f
-      grammar-content-id: #f
-      parsed?: #t
-      roundtrip?: #t))
+      representation: 'poo-gql-ast
+      match: #f
+      where: #f
+      project: #f))
 
 (def PooFlowQueryResultContract.
   (.o kind: poo-flow-query-result-contract-kind
@@ -116,6 +159,8 @@
   (.o kind: poo-flow-query-language-kind
       identity: #f
       representation: 'poo-object
+      authoring-surface: 'scheme-poo
+      source-surface: 'unbound
       execution-boundary: 'external-provider
       runtime-owner: 'unbound
       parser-owner: #f
@@ -125,27 +170,19 @@
       action-authority?: #f
       runtime-executed?: #f))
 
-;;; Scheme programs are named POO/pure-function projections.  The public Query
-;;; never stores an anonymous lambda as its language program.
-(def PooFlowSchemeQueryLanguage.
-  (.o (:: @ PooFlowQueryLanguage.)
-      identity: 'scheme
-      representation: 'named-poo-expression
-      execution-boundary: 'pure-control-plane
-      runtime-owner: 'poo-flow
-      .program?: scheme-query-program?))
-
-;;; GQL programs are parser-admitted receipts. Raw source and the parser's
-;;; internal alist artifact never become the public Query value.
+;;; There is one semantic language.  Scheme is the host syntax used to author
+;;; this GQL-aligned POO AST; it is not a competing Query language.
 (def PooFlowGqlQueryLanguage.
   (.o (:: @ PooFlowQueryLanguage.)
       identity: 'gql
-      representation: 'parser-artifact-receipt
+      representation: 'poo-gql-ast
+      authoring-surface: 'scheme-poo
+      source-surface: 'gql
       execution-boundary: 'external-provider
       runtime-owner: 'mrr
       parser-owner: 'gerbil-parser
       syntax-contract: "iso-iec-39075-2024.opengql-1.9.0-syntax.v1"
-      .program?: gql-query-program?))
+      .program?: poo-flow-gql-query-program?))
 
 (def PooFlowQuery.
   (.o kind: poo-flow-query-kind
@@ -154,13 +191,17 @@
       semantic-revision: #f
       element-space-identity: #f
       selected-element-identities: '()
-      language: PooFlowSchemeQueryLanguage.
+      language: PooFlowGqlQueryLanguage.
       program:
-      (.o (:: @ PooFlowSchemeQueryProgram.)
+      (.o (:: @ PooFlowGqlQueryProgram.)
           identity: 'unbound-query-program
-          entrypoint: 'unbound-query-program)
-      domains: '()
-      traversal: '()
+          match:
+          (.o (:: @ PooFlowQueryPath.)
+              start: (.o (:: @ PooFlowQueryNode.) binding: 'x label: 'Element))
+          project:
+          (.o (:: @ PooFlowQueryProjection.)
+              expression:
+              (.o (:: @ PooFlowQueryProperty.) binding: 'x property: 'identity)))
       result-bound: 1
       completeness-requirement: 'bounded
       evidence-requirements: '()
@@ -169,34 +210,6 @@
       mutation-authority?: #f
       action-authority?: #f
       runtime-executed?: #f))
-
-(def (poo-flow-scheme-query-program identity-value entrypoint-value)
-  (let (value
-        (validate
-         PooFlowQueryProgram
-         (.o (:: @ PooFlowSchemeQueryProgram.)
-             identity: identity-value
-             entrypoint: entrypoint-value)))
-    (unless (scheme-query-program? value)
-      (error "invalid Scheme Query program" value))
-    value))
-
-(def (poo-flow-gql-query-program identity-value source-identity-value
-                                 source-content-id-value
-                                 grammar-content-id-value
-                                 syntax-contract-value)
-  (let (value
-        (validate
-         PooFlowQueryProgram
-         (.o (:: @ PooFlowGqlQueryProgram.)
-             identity: identity-value
-             source-identity: source-identity-value
-             source-content-id: source-content-id-value
-             grammar-content-id: grammar-content-id-value
-             syntax-contract: syntax-contract-value)))
-    (unless (gql-query-program? value)
-      (error "invalid parser-admitted GQL Query program" value))
-    value))
 
 (def (poo-flow-query-element-space identity-value semantic-revision-value
                                    element-identities-value complete?-value)

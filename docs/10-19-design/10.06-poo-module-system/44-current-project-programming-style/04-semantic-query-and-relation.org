@@ -13,20 +13,27 @@ stable Element identities and do not embed mutable copies of endpoints.
 
 * Query law
 
-A Query is an immutable, bounded, read-only POO object.  Its predicate is a
-named pure function with declared dependencies.  Public Query slots do not
-contain raw strings, lists, vectors or anonymous lambdas.
+A Query is an immutable, bounded, read-only POO object.  Its program is a
+GQL-aligned POO AST.  Public Query slots do not contain raw strings, lists,
+vectors or anonymous lambdas.
 
 The Query Module exposes supported languages through one inheritable
-=languages= noun slot.  Each language object owns a =.program?= slot Contract:
-Scheme admits a named POO expression, while GQL admits a content-bound
-=gerbil-parser= receipt.  A raw GQL string and the parser's internal alist are
-both boundary values, never the public =program= slot.
+=languages= noun slot.  The graph-read model currently exposes only =gql=.
+Scheme is its elegant =scheme-poo= authoring surface, not another semantic
+language.  A pure projector renders standard GQL, and =gerbil-parser= validates
+the byte-exact source independently.  A raw GQL string and the parser's
+internal alist are boundary values, never the public =program= slot.
 
-GQL is an optional Provider projection/execution surface.  It returns a receipt
+GQL execution returns a receipt
 bound to Query identity, provider identity and semantic revision.  The result
 is evidence, never action authority.  Python adapters and MRR/Rust consumers
 consume the same receipt boundary and do not define another Query model.
+
+When standard GQL is sufficient for candidate discovery but not the final
+domain predicate, use the staged pipeline =GQL candidate set -> typed native
+refinement -> result admission=.  The refinement must be named, bounded and
+Schema-owned.  Higher-order reasoning such as ASCENT sits above admitted facts;
+it does not become a custom GQL clause.
 
 * Executable rule
 

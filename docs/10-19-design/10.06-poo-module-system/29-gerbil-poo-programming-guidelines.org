@@ -85,7 +85,8 @@ Before choosing an operator, keep the semantic owner singular:
   space;
 - a Relation references Element identities;
 - a Query is a bounded, read-only POO object over those identities;
-- GQL is a Provider projection, never a replacement object model.
+- GQL is the graph-read semantics projected from a POO-native AST, never a
+  replacement object model.
 
 Do not mirror the same facts into separate Object, Entity and Element stores.
 Do not put raw GQL text, query alists or anonymous lambdas in =query= or
@@ -93,10 +94,17 @@ Do not put raw GQL text, query alists or anonymous lambdas in =query= or
 an identified projection whose receipt binds Query, Contract, source and
 result identities.
 
-Publish language support through the Query Module's =languages= POO slot.
-Language-specific =.program?= slots perform single dispatch over named Scheme
-program objects or parser-admitted GQL program receipts.  Do not copy the GQL
-grammar, parser or ParseArtifact alist into POO Flow.
+Publish graph Query support through the Query Module's =languages= POO slot.
+It currently contains one =gql= language Contract with a =scheme-poo=
+authoring surface and =gql= source surface.  Do not register Scheme as a peer
+Query language: it is the host notation for the GQL-aligned POO AST.  Do not
+copy the GQL grammar, parser or ParseArtifact alist into POO Flow.
+
+If GQL returns a candidate set that still needs domain rules, apply a named,
+typed and bounded native refinement before result admission.  Do not extend
+GQL merely to encode a vertical Schema predicate.  Add a versioned GQL
+extension or another Provider only after a real Case proves that candidate
+selection itself cannot be expressed by standard GQL.
 
 The executable owner is
 =src/module-system/authoring/contracts.ss=.  It rejects mechanically certain

@@ -7,9 +7,10 @@
 (import (only-in :clan/poo/object .o)
         (only-in "objects.ss"
                  PooFlowQuery. PooFlowQueryElementSpace.
-                 PooFlowSchemeQueryLanguage. PooFlowGqlQueryLanguage.
+                 PooFlowGqlQueryLanguage.
                  PooFlowQueryResultContract.)
-        (only-in "funs.ss" poo-flow-query-admit))
+        (only-in "funs.ss" poo-flow-query-admit)
+        (only-in "gql.ss" poo-flow-query->gql))
 
 (export PooFlowQueryModule.)
 
@@ -18,8 +19,8 @@
       identity: 'poo-flow/modules/query
       query: PooFlowQuery.
       languages:
-      (.o scheme: PooFlowSchemeQueryLanguage.
-          gql: PooFlowGqlQueryLanguage.)
+      (.o gql: PooFlowGqlQueryLanguage.)
       element-space: PooFlowQueryElementSpace.
       result-contract: PooFlowQueryResultContract.
-      .admit-query: poo-flow-query-admit))
+      .admit-query: poo-flow-query-admit
+      .project-gql: poo-flow-query->gql))

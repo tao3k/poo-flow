@@ -11,9 +11,11 @@
 POO Flow has one semantic model across Scheme, Lean and TLA+.  Native POO
 Objects carry slots and inheritance.  Entity and Element are roles of those
 Objects, not alternate representations.  Relations reference their stable
-identities.  Queries are bounded read-only POO values.  GQL, Python and other
-runtimes are Providers or adapters around that model and never become a second
-semantic authority.
+identities.  Queries are bounded read-only POO values.  The current graph-read
+model has one GQL semantics with two surfaces: Scheme authors its native POO
+AST, while a pure projector emits standard GQL source.  Python and runtimes are
+Providers or adapters around that model and never become a second semantic
+authority.
 
 The repository-wide programming rules are routed by
 [[file:44-current-project-programming-style.org][Current Project Programming Style]].
@@ -32,7 +34,8 @@ formal correspondence is owned by
 | Relation | Typed identity edge between admitted Elements | Embedded copies of endpoints |
 | Contract | Shape, invariant, scope, visibility and admission boundary | Runtime executor |
 | Query | Immutable bounded read projection | Mutation, proposal, authority or raw query string |
-| GQL Provider | Projection and execution of an admitted graph Query | Owner of Contract or causal truth |
+| GQL Provider | Execution of an admitted projected graph Query | Owner of Contract or causal truth |
+| Native refinement | Typed bounded filtering of a GQL candidate set | A second Query language or unbounded evaluator |
 | Receipt | Identity/provenance evidence returned across a boundary | Authority grant |
 
 * Native POO surface
@@ -56,18 +59,40 @@ The ordinary surface contains noun-valued slots and native slot algebra:
     (.o impact: PrescriptionImpactQuery)))
 #+end_src
 
-The Query object declares identity, domains, traversal and result bounds,
+The Query object declares identity, a GQL-aligned POO program, result bounds,
 completeness, evidence requirements, visibility request and result Contract.
 Raw GQL strings, query alists and anonymous evaluator lambdas are not Query
-objects.  A named Provider may project an admitted Query to GQL source.
+objects.  The core pure projector deterministically renders the admitted AST;
+a named Provider may execute the resulting GQL source.
 
-The canonical Query Module publishes a =languages= noun slot.  Its values are
-POO language Contracts, not parser implementations or a second Query model.
-The default Scheme language accepts a named POO expression program.  The GQL
-language accepts only a POO =parser-artifact-receipt= program bound to
-=gerbil-parser=, its syntax Contract, grammar digest and source digest.  Raw
-source exists only at the Source boundary; the live parser gate must reproduce
-the receipt and byte-exact roundtrip before the program is admitted.
+The canonical Query Module publishes a =languages= noun slot containing one
+=gql= semantic language.  Its =authoring-surface= is =scheme-poo= and its
+=source-surface= is =gql=: these are two representations of one Query, not two
+peer languages.  =gerbil-parser= remains the parser owner.  The live gate must
+prove that the pure projection is byte-equal to the maintained Case source and
+that this source parses and roundtrips exactly.
+
+* Capability and escalation boundary
+
+GQL is selected because the current Healthcare queries are graph pattern
+reads: typed path traversal, property equality and bounded projection.  It is
+not the owner of causal truth, temporal proof, authorization or governance.
+
+When a vertical needs more than GQL selection, the default pipeline is:
+
+#+begin_src text
+POO Query -> GQL candidate selection -> typed native refinement -> result admission
+#+end_src
+
+The refinement is a named, bounded POO/functional Contract over a typed domain
+Schema.  It binds the original Query identity, semantic revision and candidate
+receipt; it is not an anonymous predicate or a second language registry.  This
+keeps domain filtering out of GQL while preserving one admission chain.
+
+Only evidence from a real Case may justify either a versioned GQL extension or
+another Provider.  Higher-order systems such as ASCENT consume admitted facts
+above this pipeline and may be implemented in Scheme/POO; they delegate graph
+candidate retrieval to GQL rather than redefining GQL semantics.
 
 * Single authority flow
 
@@ -81,9 +106,10 @@ flowchart LR
   E --> A
   R --> A
   Q --> A
-  A --> G["GQL Provider projection"]
+  A --> G["Pure GQL projection"]
   G --> X["MRR/runtime execution"]
-  X --> SR["SourceQueryReceipt"]
+  X --> NR["Optional typed native refinement"]
+  NR --> SR["SourceQueryReceipt"]
   SR --> ER["POO evidence result"]
   ER -. "never grants" .-> AU["Action authority"]
 #+end_export
@@ -170,4 +196,4 @@ just check-native-semantic-query-model
 - [X] A runtime Query module publishes canonical Query, language, program,
   ElementSpace, result Contract and admission receipt prototypes.
 - [ ] A GQL Provider binds execution receipts from MRR to those prototypes.
-- [ ] A vertical Case demonstrates complete POO Query to GQL receipt admission.
+- [X] A vertical Case demonstrates byte-exact POO Query to GQL projection and parser admission.

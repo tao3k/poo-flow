@@ -95,12 +95,14 @@
 
 (def (query-language-shape? value)
   (and (query-has-slots?
-        value '(kind identity representation execution-boundary runtime-owner
-                     parser-owner syntax-contract .program?
+        value '(kind identity representation authoring-surface source-surface
+                     execution-boundary runtime-owner parser-owner syntax-contract .program?
                      raw-source-allowed? action-authority? runtime-executed?))
        (eq? (.ref value 'kind) poo-flow-query-language-kind)
        (symbol? (.ref value 'identity))
        (symbol? (.ref value 'representation))
+       (symbol? (.ref value 'authoring-surface))
+       (symbol? (.ref value 'source-surface))
        (memq (.ref value 'execution-boundary)
              '(pure-control-plane external-provider))
        (symbol? (.ref value 'runtime-owner))
@@ -133,7 +135,7 @@
         value '(kind identity version semantic-revision
                      element-space-identity selected-element-identities
                      language program
-                     domains traversal result-bound completeness-requirement
+                     result-bound completeness-requirement
                      evidence-requirements visibility-request result-contract
                      mutation-authority? action-authority? runtime-executed?))
        (eq? (.ref value 'kind) poo-flow-query-kind)
@@ -148,9 +150,6 @@
        (eq? (.ref (.ref value 'program) 'language-identity)
             (.ref (.ref value 'language) 'identity))
        ((.ref (.ref value 'language) '.program?) (.ref value 'program))
-       (query-symbol-list? (.ref value 'domains))
-       (pair? (.ref value 'domains))
-       (query-symbol-list? (.ref value 'traversal))
        (exact-integer? (.ref value 'result-bound))
        (> (.ref value 'result-bound) 0)
        (memq (.ref value 'completeness-requirement)
