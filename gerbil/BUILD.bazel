@@ -58,18 +58,6 @@ filegroup(
     ]
 ]
 
-[
-    filegroup(
-        name = name,
-        srcs = [project],
-        output_group = "project_root",
-    )
-    for name, project in [
-        ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
-        ("asp_gerbil_scheme_package_project_root", ":asp_gerbil_scheme_package"),
-    ]
-]
-
 gerbil_project_compile(
     name = "compile",
     srcs = ["//:gerbil_package_sources"],
@@ -96,18 +84,6 @@ gerbil_project_dev(
         "manual",
     ],
     deps = [":asp_gerbil_scheme_package"],
-)
-
-filegroup(
-    name = "project_root",
-    srcs = [":compile"],
-    output_group = "project_root",
-)
-
-filegroup(
-    name = "compile_log",
-    srcs = [":compile"],
-    output_group = "log",
 )
 
 gerbil_project_projection(
