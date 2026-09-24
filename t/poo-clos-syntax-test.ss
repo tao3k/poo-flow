@@ -12,7 +12,7 @@
         (only-in :gerbil/runtime/gambit
                  call-with-output-string display-exception
                  with-exception-catcher)
-        (only-in "../src/module-system/poo-clos/declaration-ir.ss"
+        (only-in :poo-flow/src/module-system/poo-clos/declaration-ir
                  parse-poo-clos-class-declaration-ir
                  parse-poo-clos-generic-declaration-ir)
         :poo-flow/src/module-system/poo-clos/interface)

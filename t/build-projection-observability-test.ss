@@ -6,9 +6,9 @@
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .o)
-        (only-in "../src/module-system/observability/config.ss"
+        (only-in :poo-flow/src/module-system/observability/config
                  poo-flow-default-build-observability-policy)
-        (only-in "../src/module-system/observability/build-projection.ss"
+        (only-in :poo-flow/src/module-system/observability/build-projection
                  poo-flow-make-observed-package-spec-projector
                  poo-flow-observe-build-projection
                  poo-flow-write-observation-line!

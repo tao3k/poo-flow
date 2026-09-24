@@ -10,7 +10,7 @@
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :clan/poo/object .o .ref .call .all-slots compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type.)
-        "../src/module-system/semantic-module/objects.ss")
+        :poo-flow/src/module-system/semantic-module/objects)
 (export gerbil-poo-debug-admission-test)
 
 (define-type (DebugSymbol @ Type.)

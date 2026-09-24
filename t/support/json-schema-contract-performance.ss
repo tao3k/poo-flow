@@ -12,13 +12,13 @@
                  list->hash-table)
         (only-in "./performance.ss"
                  poo-flow-performance-build-list)
-        (only-in "../../src/contract/json-schema-ir.ss"
+        (only-in :poo-flow/src/contract/json-schema-ir
                  poo-flow-json-schema-normalization-schema)
-        (only-in "../../src/contract/json-schema-receipt.ss"
+        (only-in :poo-flow/src/contract/json-schema-receipt
                  poo-flow-json-schema-contract-artifact-normalization)
-        (only-in "../../src/contract/json-schema-valid.ss"
+        (only-in :poo-flow/src/contract/json-schema-valid
                  poo-flow-json-schema-node-valid?)
-        (only-in "../../src/modules/funflow/github-ci-contract.ss"
+        (only-in :poo-flow/src/modules/funflow/github-ci-contract
                  poo-flow-funflow-github-ci-contract-artifact
                  poo-flow-funflow-github-ci-validate-workflow->alist))
 

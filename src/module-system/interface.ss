@@ -7,7 +7,9 @@
 ;;; Invariant: interface values are schemas and metadata, not loaders.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
+        (only-in :clan/poo/mop validate)
         (only-in :poo-flow/src/module-system/semantic-module/objects
+                 ModuleAuthoringProfileContract
                  poo-flow-default-module-authoring-profile))
 
 (export poo-flow-modules-kind
@@ -161,11 +163,13 @@
 (def (poo-flow-module-interface interface-id-value schema-object metadata-value
                                 authoring: (authoring-value
                                             (poo-flow-default-module-authoring-profile)))
-  (.o (:: @ (list poo-flow-module-interface-prototype))
-      id: interface-id-value
-      schemas: schema-object
-      authoring: authoring-value
-      metadata: metadata-value))
+  (let (admitted-authoring
+        (validate ModuleAuthoringProfileContract authoring-value))
+    (.o (:: @ (list poo-flow-module-interface-prototype))
+        id: interface-id-value
+        schemas: schema-object
+        authoring: admitted-authoring
+        metadata: metadata-value)))
 
 ;;; Boundary: interface detection uses kind slots, not constructor identity.
 ;; : (-> PooModuleInterfaceCandidate Boolean)

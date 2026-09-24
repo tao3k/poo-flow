@@ -8,9 +8,9 @@
 (export observability-feedback-test)
 
 (import :std/test
-        "../src/module-system/observability/objects.ss"
-        "../src/module-system/observability/types.ss"
-        (only-in "../src/module-system/types.ss"
+        :poo-flow/src/module-system/observability/objects
+        :poo-flow/src/module-system/observability/types
+        (only-in :poo-flow/src/module-system/types
                  poo-flow-validation-evidence-accepted?))
 
 (def (observability-test-ref row key)

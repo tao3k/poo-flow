@@ -7,7 +7,7 @@
 
 (import (only-in :std/test test-suite test-case check-equal? check)
         (only-in :clan/poo/object .o .ref)
-        (only-in "../../../src/module-system/observability/module-presentation.ss"
+        (only-in :poo-flow/src/module-system/observability/module-presentation
                  poo-flow-poo-slot-authoring-datum-observations
                  poo-flow-poo-slot-authoring-file-observations
                  poo-flow-poo-slot-authoring-diagnostics)

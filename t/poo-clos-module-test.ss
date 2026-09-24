@@ -24,11 +24,11 @@
         (only-in :poo-flow/src/module-system/loader/source
                  poo-flow-module-source-ref-kind
                  poo-flow-module-source-ref-value)
-        "../src/module-system/load.ss"
-        (only-in "../src/module-system/poo-clos/config.ss"
+        :poo-flow/src/module-system/load
+        (only-in :poo-flow/src/module-system/poo-clos/config
                  poo-clos-module
                  poo-clos-module-default-selection)
-        (only-in "../src/modules/funflow/method-combination.ss"
+        (only-in :poo-flow/src/modules/funflow/method-combination
                  poo-flow-funflow-method-combination-module-ref))
 
 (export poo-clos-module-test)

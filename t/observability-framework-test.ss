@@ -7,13 +7,15 @@
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .slot?)
         (only-in :clan/poo/mop element? validate TypeError?)
-        "../src/module-system/observability/interface.ss"
-        "../src/module-system/observability/debug.ss"
-        (only-in "../src/module-system/observability/types.ss" PooFlowObservabilityDiagnosticContract)
-        (only-in "../src/module-system/observability/objects.ss" poo-flow-observability-diagnostic-record)
-        (only-in "../src/module-system/types.ss"
+        :poo-flow/src/module-system/observability/interface
+        :poo-flow/src/module-system/observability/debug
+        (only-in :poo-flow/src/module-system/observability/types
+                 PooFlowObservabilityDiagnosticContract)
+        (only-in :poo-flow/src/module-system/observability/objects
+                 poo-flow-observability-diagnostic-record)
+        (only-in :poo-flow/src/module-system/types
                  poo-flow-contract-admit poo-flow-predicate-contract)
-        "../src/module-system/semantic-module/objects.ss")
+        :poo-flow/src/module-system/semantic-module/objects)
 (export observability-framework-test)
 
 (def (framework-id name) (poo-flow-observation-identity 'test name 'v1))

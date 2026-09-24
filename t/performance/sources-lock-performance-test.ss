@@ -13,7 +13,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        "../../src/feature-system/source-lock-feature")
+        :poo-flow/src/feature-system/source-lock-feature)
 
 (export sources-lock-performance-test)
 

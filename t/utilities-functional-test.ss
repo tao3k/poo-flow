@@ -9,7 +9,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in "../src/utilities/functional.ss"
+        (only-in :poo-flow/src/utilities/functional
                  poo-flow-fold-right
                  poo-flow-map
                  poo-flow-find

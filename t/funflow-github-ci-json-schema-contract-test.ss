@@ -14,16 +14,16 @@
         (only-in :std/encoding/json
                  JSONReadOptions
                  string->json)
-        (only-in "../src/module-system/descriptor/contracts.ss"
+        (only-in :poo-flow/src/module-system/descriptor/contracts
                  poo-flow-contract-slot-name
                  poo-flow-native-contract-slots)
-        (only-in "../src/contract/json-schema-source.ss"
+        (only-in :poo-flow/src/contract/json-schema-source
                  poo-flow-json-schema-read-file)
-        (only-in "../src/contract/json-schema-receipt.ss"
+        (only-in :poo-flow/src/contract/json-schema-receipt
                  poo-flow-json-schema->contract-artifact
                  poo-flow-json-schema-contract-artifact-object-contract
                  poo-flow-json-schema-contract-artifact->alist)
-        (only-in "../src/modules/funflow/github-ci-contract.ss"
+        (only-in :poo-flow/src/modules/funflow/github-ci-contract
                  +poo-flow-funflow-github-ci-schema-audit+
                  poo-flow-funflow-github-ci-contract-receipt
                  poo-flow-funflow-github-ci-validate-workflow->alist))

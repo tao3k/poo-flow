@@ -5,7 +5,7 @@
 
 ;;; Boundary: declarative fixture generator for composition expansion gates.
 
-(import "../../../../src/module-system/profile-composition/interface"
+(import :poo-flow/src/module-system/profile-composition/interface
         (for-syntax
          (only-in :gerbil/core/expander stx-identifier)))
 
