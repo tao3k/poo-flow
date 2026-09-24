@@ -39,6 +39,17 @@ gerbil_project_compile(
 )
 
 gerbil_project_compile(
+    name = "orgize_package",
+    srcs = ["@orgize_sources//:sources"],
+    build_script = "@orgize_sources//:build_script",
+    require_library_output = True,
+    source_resolution_receipts = [
+        "@orgize_sources//:source_resolution_receipt",
+    ],
+    deps = [":gerbil_poo_package"],
+)
+
+gerbil_project_compile(
     name = "poo_flow_parser_foundation_package",
     srcs = ["@poo_flow_parser_foundation_sources//:sources"],
     build_script = "@poo_flow_parser_foundation_sources//:build_script",
@@ -66,6 +77,7 @@ filegroup(
         ":asp_gerbil_scheme_package",
         ":gerbil_parser_package",
         ":gerbil_poo_package",
+        ":orgize_package",
         ":poo_flow_parser_foundation_package",
     ],
 )
@@ -79,8 +91,22 @@ filegroup(
     for name, project in [
         ("gerbil_poo_package_receipt", ":gerbil_poo_package"),
         ("asp_gerbil_scheme_package_receipt", ":asp_gerbil_scheme_package"),
+        ("orgize_package_receipt", ":orgize_package"),
         ("poo_flow_parser_foundation_package_receipt", ":poo_flow_parser_foundation_package"),
         ("gerbil_parser_package_receipt", ":gerbil_parser_package"),
+    ]
+]
+
+[
+    filegroup(
+        name = name,
+        srcs = [project],
+        output_group = "project_root",
+    )
+    for name, project in [
+        ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
+        ("asp_gerbil_scheme_package_project_root", ":asp_gerbil_scheme_package"),
+        ("orgize_package_project_root", ":orgize_package"),
     ]
 ]
 
@@ -92,7 +118,7 @@ gerbil_project_compile(
     env = {
         "GERBIL_BUILD_VERBOSE": "1",
     },
-    deps = [":gerbil_parser_package"],
+    deps = [":gerbil_parser_package", ":orgize_package"],
 )
 
 gerbil_project_environment(
@@ -109,7 +135,19 @@ gerbil_project_dev(
         "local",
         "manual",
     ],
-    deps = [":gerbil_parser_package"],
+    deps = [":gerbil_parser_package", ":orgize_package"],
+)
+
+filegroup(
+    name = "project_root",
+    srcs = [":compile"],
+    output_group = "project_root",
+)
+
+filegroup(
+    name = "compile_log",
+    srcs = [":compile"],
+    output_group = "log",
 )
 
 gerbil_project_projection(

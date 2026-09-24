@@ -53,10 +53,22 @@ gerbil_dependency_sources.source_package(
         "https://github.com/tao3k/gerbil-parser/archive/f302ea0d3042824064ba7dc640a0ca11fa8e17ef.tar.gz",
     ],
 )
+gerbil_dependency_sources.source_package(
+    name = "orgize_sources",
+    canonical_uri = "https://github.com/tao3k/orgize",
+    package = "orgize",
+    revision = "bbbc37bb4b6d8a5721b9343657bc58fa9ae714df",
+    sha256 = "df596c593fdef65da5aa1bb9f637cee632476d6030a9a302d2f005fc51595e41",
+    strip_prefix = "orgize-bbbc37bb4b6d8a5721b9343657bc58fa9ae714df",
+    urls = [
+        "https://github.com/tao3k/orgize/archive/bbbc37bb4b6d8a5721b9343657bc58fa9ae714df.tar.gz",
+    ],
+)
 use_repo(
     gerbil_dependency_sources,
     "asp_gerbil_scheme_sources",
     "gerbil_parser_sources",
     "gerbil_poo_sources",
+    "orgize_sources",
     "poo_flow_parser_foundation_sources",
 )

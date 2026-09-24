@@ -13,10 +13,12 @@ py_test(
         "$(rlocationpath @local_gerbil//:toolchain.receipt.json)",
         "$(rlocationpath //gerbil:gerbil_poo_package_receipt)",
         "$(rlocationpath //gerbil:asp_gerbil_scheme_package_receipt)",
+        "$(rlocationpath //gerbil:orgize_package_receipt)",
     ],
     data = [
         "//gerbil:asp_gerbil_scheme_package_receipt",
         "//gerbil:gerbil_poo_package_receipt",
+        "//gerbil:orgize_package_receipt",
         "@local_gerbil//:toolchain.receipt.json",
     ],
     main = "shared_gerbil_capability_test.py",
