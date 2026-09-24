@@ -471,6 +471,11 @@ check-license-contract:
 check-version-contract:
     python3 scripts/check_version_contract.py
 
+# Validate that gerbil.pkg direct pins and every Bazel projection agree.
+[group('check')]
+check-gerbil-dependency-contract:
+    python3 scripts/gerbil_dependency_pin.py check
+
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]
 lock-check:
@@ -480,6 +485,15 @@ lock-check:
 [group('dependency')]
 bazel-update:
     {{ bazel }} mod deps --lockfile_mode=update
+
+# Change a direct Gerbil dependency once. gerbil.pkg is authoritative; the
+# source archive digest and both platform lock projections are derived.
+[group('dependency')]
+pin-gerbil-dependency package revision:
+    python3 scripts/gerbil_dependency_pin.py pin "{{ package }}" "{{ revision }}"
+    {{ bazel }} mod deps --lockfile_mode=update
+    python3 scripts/gerbil_dependency_pin.py sync-lock
+    python3 scripts/gerbil_dependency_pin.py check
 
 # Normalize MODULE.bazel declarations while explicitly updating the lock.
 [group('dependency')]

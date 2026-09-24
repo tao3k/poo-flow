@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+# Direct dependency revisions are generated from gerbil.pkg by
+# `just pin-gerbil-dependency`; do not edit their source blocks independently.
+
 gerbil_dependency_sources = use_extension(
     "@gerbil_bazel//gerbil:extensions.bzl",
     "gerbil",
