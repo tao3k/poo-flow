@@ -46,11 +46,15 @@ the source and installed artifact identities.
 | name collision | =methods.table .join= merges map entries | this is *table union*, not the relational join in an Ascent rule body |
 | remaining proof obligation | no general semi-naive relation-rule evaluator appears in the inspected POO dependency | establish closure and incremental-delta behavior against Ascent before claiming kernel parity |
 
-The corresponding upstream sources are
+The inspected source files are
 [[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/object.ss][POO object]],
 [[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/table.ss][POO table]],
 [[https://github.com/tao3k/gerbil-poo/blob/307b035cd5e078dcaad5ba7d69ad52a028b2bca0/trie.ss][POO trie]], and
 [[https://github.com/mighty-gerbils/gerbil/blob/d801e7a1c7f77df421f638e62aaebe370f193c97/src/gerbil/runtime/c3.ss][Gerbil C4]].
+The executable library-capability fixture is
+=t/qualification/ascent-poo-primitives-test.ss=.  It verifies late-bound
+slot input, shared-ancestor precedence, and persistent set union.  It does
+not claim recursive relation closure.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
