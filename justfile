@@ -47,11 +47,15 @@ gerbil_darwin_env := if os() == "macos" { if gerbil_homebrew_runtime == "true" {
 poo_flow_gerbil_path := env_var_or_default("GERBIL_PATH", justfile_directory() + "/.gerbil")
 poo_flow_library_path := env_var_or_default("GERBIL_LOADPATH", poo_flow_gerbil_path + "/lib")
 gerbil_parser_dir := env_var_or_default("GERBIL_PARSER_DIR", justfile_directory() + "/../gerbil-parser")
-gerbil_parser_library_path := justfile_directory() + ":" + gerbil_parser_dir + ":" + gerbil_parser_dir + "/.gerbil/lib"
+gerbil_parser_path := poo_flow_gerbil_path
+gerbil_parser_library_path := gerbil_parser_dir + ":" + justfile_directory() + ":" + poo_flow_library_path
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
 governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
 governance_tlc_config := justfile_directory() + "/packages/proof/tla/GovernanceCore.cfg"
 governance_tlc_receipt := justfile_directory() + "/.ci/governance/tlc-receipt.ss"
+semantic_query_tla := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.tla"
+semantic_query_tlc_config := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.cfg"
+semantic_query_tlc_receipt := justfile_directory() + "/.ci/native-semantic-query/tlc-receipt.ss"
 healthcare_temporal_tla := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.tla"
 healthcare_temporal_tlc_config := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.cfg"
 healthcare_migration_tla := justfile_directory() + "/packages/proof/tla/HealthcareStandardMigration.tla"
@@ -306,30 +310,29 @@ test-runtime-c-leaks:
 [group('check')]
 check: build test
 
-# Establish gerbil-parser's isolated package environment once. Its POO Flow
-# dependency is a local development link, never a reverse production edge.
+# Admit gerbil-parser through POO Flow's current V19 dependency environment.
+# The sibling remains the parser source owner; qualification imports only the
+# demanded modules and never builds a second stale package cache.
 _prepare-gerbil-parser:
     test -f "{{ gerbil_parser_dir }}/gerbil.pkg"
-    if test ! -e "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow"; then cd "{{ gerbil_parser_dir }}" && gerbil pkg link github.com/tao3k/poo-flow "{{ justfile_directory() }}"; fi
-    test "$(cd "{{ gerbil_parser_dir }}/.gerbil/pkg/github.com/tao3k/poo-flow" && pwd -P)" = "$(cd "{{ justfile_directory() }}" && pwd -P)"
-    cd "{{ gerbil_parser_dir }}" && GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 120s gerbil build
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil interactive -e '(begin (import :gerbil-parser/src/runtime/artifact) (displayln "gerbil-parser-v19-ready"))'
 
 # Qualify Case-owned GQL Sources from the parser owner's package environment.
 # Lambda stays independent of gerbil-parser; parser acceptance is not execution.
 [group('check')]
 check-healthcare-gql: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance healthcare-case-qualification-gql-paths) (only-in :gerbil-parser/languages/gql/iso-39075-2024/parser parse-gql-iso-39075-2024) (only-in :gerbil-parser/src/runtime/artifact parse-artifact-success? parse-artifact-valid? parse-artifact-roundtrip)) (let loop ((paths (healthcare-case-qualification-gql-paths)) (receipts (quote ()))) (if (null? paths) (begin (for-each displayln (reverse receipts)) (exit 0)) (let* ((path (car paths)) (source (call-with-input-file path read-all-as-string)) (artifact (parse-gql-iso-39075-2024 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact) (equal? source (parse-artifact-roundtrip artifact))))) (unless accepted? (displayln (list (cons (quote source) path) (cons (quote accepted) #f))) (exit 1)) (loop (cdr paths) (cons (list (cons (quote source) path) (cons (quote accepted) #t) (cons (quote roundtrip) #t)) receipts))))))'
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ gerbil_parser_library_path }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance healthcare-case-qualification-gql-paths) (only-in :gerbil-parser/languages/gql/iso-39075-2024/parser parse-gql-iso-39075-2024) (only-in :gerbil-parser/src/runtime/artifact parse-artifact-success? parse-artifact-valid? parse-artifact-roundtrip)) (let loop ((paths (healthcare-case-qualification-gql-paths)) (receipts (quote ()))) (if (null? paths) (begin (for-each displayln (reverse receipts)) (exit 0)) (let* ((path (car paths)) (source (call-with-input-file path read-all-as-string)) (artifact (parse-gql-iso-39075-2024 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact) (equal? source (parse-artifact-roundtrip artifact))))) (unless accepted? (displayln (list (cons (quote source) path) (cons (quote accepted) #f))) (exit 1)) (loop (cdr paths) (cons (list (cons (quote source) path) (cons (quote accepted) #t) (cons (quote roundtrip) #t)) receipts))))))'
 
-# Parse the domain-owned legacy message in gerbil-parser's isolated package
-# environment, then require exact equality with Lambda's retained projection.
+# Parse the domain-owned legacy message through the parser source owner, then
+# require exact equality with Lambda's retained projection.
 [group('check')]
 check-healthcare-hl7v2-migration: _prepare-gerbil-parser
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/healthcare-hl7v2-migration/parser-receipt-test.ss
+    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-episteme:{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/healthcare-hl7v2-migration/parser-receipt-test.ss
 
 # Qualify parser-owned FHIRPath syntax without claiming evaluator semantics.
 [group('check')]
 check-healthcare-fhirpath-syntax: _prepare-gerbil-parser
-    GERBIL_PARSER_DIR="{{ gerbil_parser_dir }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ gerbil_parser_dir }}:{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
+    GERBIL_PARSER_DIR="{{ gerbil_parser_dir }}" GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-episteme:{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/healthcare-fhirpath-syntax/parser-receipt-test.ss
 
 # Replay the pinned external Validator from its local JAR/package cache. The
 # test verifies the binary digest and compares decoded OperationOutcome JSON.
@@ -356,6 +359,28 @@ check-healthcare-lean:
 check-governance-lean:
     cd "{{ lean_proof_dir }}" && lake build PooFlowModuleGovernanceProof
 
+# Prove the shared Object/Entity/Element/Relation/Query ownership laws without
+# traversing the repository-wide Lean aggregate.
+[group('check')]
+check-native-semantic-query-lean:
+    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC3.NativeSemanticQueryModel
+
+# Parser admission and TLC remain separate evidence over the same model.
+[group('check')]
+check-native-semantic-query-tla: _prepare-gerbil-parser
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA="{{ semantic_query_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+
+# Run TLC directly as an independent state-space gate.  Parser admission is a
+# different part of the three-part TLA+ closure and cannot substitute for this.
+[group('check')]
+check-native-semantic-query-tlc:
+    cd "$(dirname "{{ semantic_query_tla }}")" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" tlc -config "{{ semantic_query_tlc_config }}" "{{ semantic_query_tla }}"
+
+[group('check')]
+check-native-semantic-query-model: check-native-semantic-query-lean check-native-semantic-query-tla
+    mkdir -p "$(dirname "{{ semantic_query_tlc_receipt }}")"
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA="{{ semantic_query_tla }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_CONFIG="{{ semantic_query_tlc_config }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_RECEIPT="{{ semantic_query_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA") (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+
 # Full aggregation is an explicit integration qualification, never the default
 # local or pull-request proof gate.
 [group('check')]
@@ -365,14 +390,14 @@ check-lean-all:
 # Preserve the focused syntax-only gate for parser development.
 [group('check')]
 check-governance-tla: _prepare-gerbil-parser
-    cd "{{ gerbil_parser_dir }}" && POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" gerbil env gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
 
 # One parser-owned API performs native parsing, byte-exact roundtrip and
 # official TLC model checking, then publishes one typed Gerbil receipt.
 [group('check')]
 check-governance-model: _prepare-gerbil-parser
     mkdir -p "$(dirname "{{ governance_tlc_receipt }}")"
-    cd "{{ gerbil_parser_dir }}" && POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" POO_FLOW_GOVERNANCE_TLC_CONFIG="{{ governance_tlc_config }}" POO_FLOW_GOVERNANCE_TLC_RECEIPT="{{ governance_tlc_receipt }}" gerbil env gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_GOVERNANCE_TLA") (getenv "POO_FLOW_GOVERNANCE_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_GOVERNANCE_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" POO_FLOW_GOVERNANCE_TLC_CONFIG="{{ governance_tlc_config }}" POO_FLOW_GOVERNANCE_TLC_RECEIPT="{{ governance_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_GOVERNANCE_TLA") (getenv "POO_FLOW_GOVERNANCE_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_GOVERNANCE_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
 
 # Explicit semantic alias; both names route to the same parser-owned API.
 [group('check')]
@@ -382,27 +407,27 @@ check-governance-tlc: check-governance-model
 # This gate owns parsing, contract validation and byte-exact roundtrip only.
 [group('check')]
 check-healthcare-temporal-tla: _prepare-gerbil-parser
-    cd "{{ gerbil_parser_dir }}" && GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" gerbil env gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/v1/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") read-all-as-string)) (artifact (parse-tla-plus-v1 source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) +tla-plus-syntax-contract+) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
 
 # TLC is a later assurance gate, not a prerequisite for ordinary Scheme builds
 # or unit tests.  The devenv-owned binary makes this explicit gate reproducible.
 [group('check')]
 check-healthcare-temporal-model: check-healthcare-temporal-tla
     mkdir -p "$(dirname "{{ healthcare_temporal_tlc_receipt }}")"
-    cd "{{ gerbil_parser_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG="{{ healthcare_temporal_tlc_config }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT="{{ healthcare_temporal_tlc_receipt }}" gerbil env gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG="{{ healthcare_temporal_tlc_config }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT="{{ healthcare_temporal_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
 
 # Exact bounded model for the AI-assisted prescription Case.  The parser owner
 # performs parse, byte-roundtrip and TLC execution and emits the typed receipt.
 [group('check')]
 check-healthcare-ai-temporal-model: _prepare-gerbil-parser
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_dir }}/.gerbil" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" gerbil interactive -e '(begin (import (only-in :clan/poo/object .ref) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance HealthcareCaseQualificationMetadata healthcare-case-qualification-path) (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (healthcare-case-qualification-path (quote tla-source)) (healthcare-case-qualification-path (quote tla-config)) workers: (.ref HealthcareCaseQualificationMetadata (quote tlc-workers)))) (datum (tla-plus-model-receipt->alist receipt)) (path (healthcare-case-qualification-path (quote tlc-receipt)))) (display (tla-plus-model-receipt-output receipt)) (create-directory* (path-directory path)) (call-with-output-file path (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ gerbil_parser_library_path }}" gerbil interactive -e '(begin (import (only-in :clan/poo/object .ref) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance HealthcareCaseQualificationMetadata healthcare-case-qualification-path) (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (healthcare-case-qualification-path (quote tla-source)) (healthcare-case-qualification-path (quote tla-config)) workers: (.ref HealthcareCaseQualificationMetadata (quote tlc-workers)))) (datum (tla-plus-model-receipt->alist receipt)) (path (healthcare-case-qualification-path (quote tlc-receipt)))) (display (tla-plus-model-receipt-output receipt)) (create-directory* (path-directory path)) (call-with-output-file path (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
 
 # The migration Feature owns a bounded temporal model; parser/TLC produce the
 # formal-model governance evidence without entering an ordinary Scheme build.
 [group('check')]
 check-healthcare-standard-migration-model: _prepare-gerbil-parser
     mkdir -p "$(dirname "{{ healthcare_migration_tlc_receipt }}")"
-    cd "{{ gerbil_parser_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" POO_FLOW_HEALTHCARE_MIGRATION_TLA="{{ healthcare_migration_tla }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG="{{ healthcare_migration_tlc_config }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT="{{ healthcare_migration_tlc_receipt }}" gerbil env gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLA") (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_MIGRATION_TLA="{{ healthcare_migration_tla }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG="{{ healthcare_migration_tlc_config }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT="{{ healthcare_migration_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/v1/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLA") (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
 
 # Lean refines the exact TLA+ digest and publishes named migration theorems.
 [group('check')]

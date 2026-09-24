@@ -44,7 +44,8 @@ The current authority order is:
 
 1. this RFC for the default expression surface and capability disclosure;
 2. RFC 29 for native =gerbil-poo= operators and prototype discipline;
-3. RFC 44 for repository roles, dispatch ownership and macro admission;
+3. RFC 44 as the modular router for repository roles, dispatch, Query,
+   formal-assurance, build and testing style;
 4. RFC 45-92 for the thin =user-composition= binding boundary;
 5. RFC 45-93 for =use-module= selection and ProfileBundle algebra; and
 6. RFC 45-95 for aggregate Profile responsibility reachability.
@@ -215,6 +216,35 @@ dedicated owner, positive and negative semantic evidence, and a demonstrated
 need that native POO values, functions and the extension surface cannot meet.
 
 * Single semantic model law
+
+Object, Entity and Element are not three competing storage models.  A native
+POO Object is the carrier; an Entity is an identity-bearing domain role of that
+Object; an Element is an Entity, Relation or inert Value admitted into one
+Contract/Scenario observation space.  Implementations MUST preserve one object
+identity and project roles from it.  They MUST NOT copy the same facts into
+parallel =objects=, =entities= and =elements= registries with independent
+merge or authority rules.
+
+A Query is an immutable, identity-bearing, bounded, read-only POO object.  Its
+facets, predicates, traversal policy, completeness, evidence requirements,
+redaction request and result Contract remain native slots.  Raw GQL strings,
+alist query rows, anonymous query lambdas and provider-specific ASTs MUST NOT
+be the public Query value.  GQL is an optional Provider projection/execution
+surface: parser and runtime receipts bind its source and result back to the
+same POO Query and Contract identities.
+
+Query results are Evidence and never acquire authority merely because they
+were returned by a Provider.  Query admission intersects requested scope,
+budget and visibility with the owning Contract.  Empty results over an
+incomplete Element space remain unknown rather than evidence of absence.
+
+The executable Module Interface authoring Contract enforces the mechanically
+decidable part of this law.  Query-named public slots reject raw strings,
+lists, vectors and anonymous lambdas and report
+=poo-query-must-be-native-object= with the repair
+=bind-named-poo-query-or-provider-projection=.  Pure algorithms in =funs.ss=
+and named Provider source projections remain open.  The Contract deliberately
+does not infer semantic duplication merely from domain vocabulary.
 
 Every accepted declaration follows one authority flow:
 

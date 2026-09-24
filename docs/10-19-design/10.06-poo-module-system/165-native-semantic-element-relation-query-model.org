@@ -1,0 +1,160 @@
+#+title: Native Semantic Element, Relation, and Query Model
+#+date: 2026-09-24
+#+startup: showall
+
+* Decision
+
+POO Flow has one semantic model across Scheme, Lean and TLA+.  Native POO
+Objects carry slots and inheritance.  Entity and Element are roles of those
+Objects, not alternate representations.  Relations reference their stable
+identities.  Queries are bounded read-only POO values.  GQL, Python and other
+runtimes are Providers or adapters around that model and never become a second
+semantic authority.
+
+The repository-wide programming rules are routed by
+[[file:44-current-project-programming-style.org][Current Project Programming Style]].
+Query/Relation authoring is owned by
+[[file:44-current-project-programming-style/04-semantic-query-and-relation.org][Style 04]];
+formal correspondence is owned by
+[[file:44-current-project-programming-style/07-formal-assurance-correspondence.org][Style 07]].
+
+* Vocabulary
+
+| Concept | Semantic responsibility | Forbidden interpretation |
+|---------+-------------------------+--------------------------|
+| Object | Native POO carrier of identity, slots and behavior | Generic JSON/alist authority |
+| Entity | Identity-bearing domain role of one Object | Copied domain record |
+| Element | Entity, Relation or inert Value admitted into one observation space | Independent object store |
+| Relation | Typed identity edge between admitted Elements | Embedded copies of endpoints |
+| Contract | Shape, invariant, scope, visibility and admission boundary | Runtime executor |
+| Query | Immutable bounded read projection | Mutation, proposal, authority or raw query string |
+| GQL Provider | Projection and execution of an admitted graph Query | Owner of Contract or causal truth |
+| Receipt | Identity/provenance evidence returned across a boundary | Authority grant |
+
+* Native POO surface
+
+The ordinary surface contains noun-valued slots and native slot algebra:
+
+#+begin_src scheme
+(.def SemanticCase
+  (contract ? BaseContract)
+  (elements ? (.o))
+  (relations ? (.o))
+  (queries ? (.o)))
+
+(.def (PrescriptionCase @ SemanticCase)
+  (elements =>.+
+    (.o prescription: Prescription
+        patient: Patient))
+  (relations =>.+
+    (.o prescribed-for: PrescriptionPatientRelation))
+  (queries =>.+
+    (.o impact: PrescriptionImpactQuery)))
+#+end_src
+
+The Query object declares identity, domains, traversal and result bounds,
+completeness, evidence requirements, visibility request and result Contract.
+Raw GQL strings, query alists and anonymous evaluator lambdas are not Query
+objects.  A named Provider may project an admitted Query to GQL source.
+
+* Single authority flow
+
+#+begin_export mermaid
+flowchart LR
+  P["POO Scenario/Profile"] --> C["Contract"]
+  P --> E["Element space"]
+  P --> R["Typed relations"]
+  P --> Q["Bounded POO Query"]
+  C --> A["Query admission"]
+  E --> A
+  R --> A
+  Q --> A
+  A --> G["GQL Provider projection"]
+  G --> X["MRR/runtime execution"]
+  X --> SR["SourceQueryReceipt"]
+  SR --> ER["POO evidence result"]
+  ER -. "never grants" .-> AU["Action authority"]
+#+end_export
+
+Gerbil-parser proves source parsing, syntax contract and byte-exact roundtrip.
+The GQL runtime proves only its execution receipt.  POO Flow admits that
+receipt against the original Query and Contract identities.  Graph witnesses
+do not by themselves prove causality, temporal safety, authorization or
+completeness.
+
+* Executable Scheme authoring Contract
+
+=src/module-system/authoring/contracts.ss= is the source-admission owner.  A
+public =query=, =queries=, =*-query= or =*-queries= slot initialized by a raw
+string, list, vector or lambda is rejected as
+=poo-query-must-be-native-object=.  The repair is
+=bind-named-poo-query-or-provider-projection=.
+
+This gate is intentionally syntax-bounded.  It does not infer duplicate
+authority from names, execute a Query, parse GQL or prohibit pure functions in
+=funs.ss=.  Runtime and semantic Contracts own those stronger claims.
+
+* Lean correspondence
+
+=PooFlowProof.PooC3.NativeSemanticQueryModel= uses one
+=ObjectIdentity=.  =EntityRole= and =ElementSpace= reference that identity;
+they do not copy an Object.  Its theorems establish:
+
+1. Entity role projection preserves native Object identity;
+2. closed Relations reference one Element space;
+3. admitted Queries select only declared Elements;
+4. evaluation binds the original Query identity and semantic revision;
+5. Query results never carry action authority.
+
+The focused gate is:
+
+#+begin_src sh
+just check-native-semantic-query-lean
+#+end_src
+
+* TLA+ correspondence
+
+=NativeSemanticQuery.tla= owns the bounded transition model.  Contract binding,
+Query admission, Provider execution and terminal quiescence are separate
+transitions.  Terminal quiescence is explicit so deadlock checking remains
+enabled rather than being suppressed in configuration.  TLC checks:
+
+1. Query execution never changes =semanticRevision=;
+2. Query execution never grants =actionAuthority=;
+3. Provider execution requires an admitted, Contract-bound Query;
+4. every result binds both the Provider and source semantic revision.
+
+TLA+ closure has three independently visible parts: native source/config,
+parser syntax plus byte-roundtrip receipt, and TLC state-space receipt.  Parser
+and model-checker gates remain distinct; the aggregate gate joins them with the
+Lean correspondence check:
+
+#+begin_src sh
+just check-native-semantic-query-tla
+just check-native-semantic-query-tlc
+just check-native-semantic-query-model
+#+end_src
+
+* Cross-language obligations
+
+- Scheme Object identity, Lean =ObjectIdentity= and runtime receipt identity
+  must refer to the same semantic subject.
+- Provider output includes Query identity, Query version, source content
+  identity, parser identity, provenance root and result digest.
+- Python consumes the versioned receipt contract; it does not define Query
+  semantics independently.
+- Empty results over incomplete Element spaces are =unknown=, never proof of
+  absence.
+- A Query cannot apply a Proposal, mutate a Scenario, widen visibility or
+  publish authority.
+
+* Acceptance
+
+- [X] Normative Surface Contract defines the single semantic model.
+- [X] Programming Style and POO Guidelines use the same vocabulary.
+- [X] Module authoring admission blocks mechanically certain raw Query forms.
+- [X] Lean defines and proves the identity and non-authority core.
+- [X] TLA+ defines the bounded read-only transition model.
+- [ ] A runtime Query module publishes canonical Query prototypes.
+- [ ] A GQL Provider binds execution receipts from MRR to those prototypes.
+- [ ] A vertical Case demonstrates complete POO Query to GQL receipt admission.

@@ -34,9 +34,9 @@ baseline:
   readiness rows, receipt rows, runtime command manifest maps, compact manifest
   summaries, sandbox runtime summaries, sandbox handoff summaries, unresolved
   profile refs, and presentation trace stages.
-- =pooFlowUserProfilePresentation= and
-  =pooFlowUserProfileDoctorPresentation= forward the same workflow CI/CD
-  projection surface.
+- =pooFlowUserProfilePresentation= forwards the workflow CI/CD projection
+  surface.  The Testing Policy separately admits profile declarations through
+  =+poo-flow-testing-interface+=.
 - =src/user-interface/declaration-case.ss= treats the expanded workflow CI/CD
   trace stages as part of the maintained downstream declaration case.
 - Focused tests now cover Funflow pipeline lowering, workflow check maps,
@@ -142,8 +142,8 @@ Scope:
 - Keep full manifest maps available for runtime handoff inspection.
 
 Exit criteria:
-- User config, profile presentation, profile doctor presentation, and
-  declaration case all expose the same trace-stage sequence.
+- User config, profile presentation and declaration case all expose the same
+  trace-stage sequence; Testing Policy admission remains independent.
 - Tests assert both compact summary rows and trace counts.
 - No runtime execution is introduced.
 
@@ -159,12 +159,14 @@ Scope:
 Exit criteria:
 - Invalid manifest/summary pairs produce typed control-plane failures or
   diagnostic rows.
-- Validation is callable from tests and presentation/doctor tooling without
-  executing adapters.
+- Validation is callable from tests and presentation tooling without executing
+  adapters, and from Testing Policy slots without rebuilding presentation.
 
 Status 2026-06-20:
 - Implemented =workflow-cicd-runtime-command-manifest-agreement= as a report-only agreement receipt.
-- =pooFlowUserConfigPresentation=, =pooFlowUserProfilePresentation=, and =pooFlowUserProfileDoctorPresentation= now expose agreement validity and diagnostics.
+- =pooFlowUserConfigPresentation= and =pooFlowUserProfilePresentation= expose
+  agreement validity and diagnostics; the Testing Policy owns declaration
+  admission rather than reproducing presentation data.
 - The presentation trace includes =workflow-cicd-runtime-command-manifest-agreement= between compact summaries and receipts.
 - Negative tests mutate a compact summary =argv= and verify the agreement report emits =argv-mismatch= without executing adapters.
 
@@ -280,7 +282,8 @@ Status 2026-06-20:
 
 - Do not add GitHub/GitLab/Nix provider semantics in Scheme.
 - Do not make =nono-sandbox= live cases the CI/CD pipeline DSL.
-- Do not execute commands from presentation, doctor, trace, or validation code.
+- Do not execute commands from presentation, Testing Policy, trace, or
+  validation code.
 - Do not introduce a second registry type parallel to core task/flow
   registries.
 - Do not add compatibility aliases for old brand names or old module paths.
@@ -290,7 +293,8 @@ Scope:
 - Add a bounded =workflow-cicd-marlin-handoff-receipt-bundle= to the user config presentation.
 - Keep the bundle receipt-sized: schema, gate id, proof command, presentation fields, runtime flags, counts, manifest agreement status, diagnostics, and compact ABI summaries.
 - Do not duplicate full runtime handoff ABI rows or full receipt rows inside the bundle; those remain separate presentation fields.
-- Forward the same bundle through profile presentation and profile doctor presentation.
+- Forward the same bundle through profile presentation; Testing Policy owns
+  admission rather than a second presentation.
 - Bind the tutorial alignment stage-23 gate to the bundle field and expected bundle kind.
 Exit criteria:
 - =pooFlowUserConfigPresentation= exposes the bundle without realizing descriptors or executing runtime adapters.

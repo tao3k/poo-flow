@@ -9,7 +9,6 @@
 
 (import (only-in :clan/poo/object .cc .o .ref .slot? object?)
         (only-in :asp-gerbil-scheme/testing-api
-                 +asp-testing-interface+
                  testing-import-footprint-profile
                  testing-interface-add-profile
                  testing-interface-call-with-operation)
@@ -31,8 +30,7 @@
         poo-flow-default-testing-observability-profile
         poo-flow-current-testing-observability-profile
         poo-flow-observe-testing-operation
-        poo-flow-testing-observability-extension
-        +poo-flow-testing-interface+)
+        poo-flow-testing-observability-extension)
 
 (def +poo-flow-testing-observation-policy+
   (poo-flow-debug-call-policy 'native-gerbil-testing 8))
@@ -183,10 +181,3 @@
            (parameterize
                ((poo-flow-current-testing-observability-profile profile))
              (poo-flow-observe-testing-operation operation thunk))))))
-
-;;; Public package default.  POO Flow owns this single extension of ASP's
-;;; generic Testing Interface; downstream packages refine the resulting POO
-;;; value with their own discovery, resource, and selector slots.  They must
-;;; not rebuild the ASP -> POO Flow policy chain in every unit-tests.ss.
-(def +poo-flow-testing-interface+
-  (poo-flow-testing-observability-extension +asp-testing-interface+))

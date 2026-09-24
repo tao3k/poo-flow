@@ -50,7 +50,9 @@ A session-core intent row contains:
 - =runtime-owner=: =marlin-agent-core=
 - =descriptor-realized?=: =#f=
 - =runtime-executed=: =#f=
-This row is part of =pooFlowUserConfigPresentation=, =pooFlowUserProfilePresentation=, and =pooFlowUserProfileDoctorPresentation=.
+This row is part of =pooFlowUserConfigPresentation= and
+=pooFlowUserProfilePresentation=.  Testing Policy admission is a separate POO
+slot and does not own another presentation.
 ** 10.06.37.50 POO Boundary
 =session-core= does not introduce a second session model. It enables the existing POO session value layer in =src/modules/session/config.ss= and keeps extension on prototype/mixin paths:
 - session chunks remain cheap receipt rows;

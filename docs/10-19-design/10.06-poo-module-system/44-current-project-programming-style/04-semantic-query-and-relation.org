@@ -1,0 +1,27 @@
+#+title: Programming Style 04 - Semantic Query And Relation
+
+* One model
+
+=Object= is the native POO carrier.  =Entity= is an identity-bearing domain
+role of that Object.  =Element= is membership in a Contract or Scenario
+observation space.  These are not parallel registries.  Relations reference
+stable Element identities and do not embed mutable copies of endpoints.
+
+* Query law
+
+A Query is an immutable, bounded, read-only POO object.  Its predicate is a
+named pure function with declared dependencies.  Public Query slots do not
+contain raw strings, lists, vectors or anonymous lambdas.
+
+GQL is an optional Provider projection/execution surface.  It returns a receipt
+bound to Query identity, provider identity and semantic revision.  The result
+is evidence, never action authority.  Python adapters and MRR/Rust consumers
+consume the same receipt boundary and do not define another Query model.
+
+* Executable rule
+
+The Module authoring Contract rejects raw initializers in =query=, =queries=,
+=query-predicate=, =query-predicates=, =*-query= and =*-queries= slots with
+=poo-query-must-be-native-object=.  Named pure functions and named Provider
+projections remain open.  Full correspondence is specified by
+[[file:../165-native-semantic-element-relation-query-model.org][RFC 165]].

@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: user profile and doctor presentation receipts.
+;;; Boundary: user profile presentation receipts.
 ;;; Invariant: presentation is shallow inspection data and does not activate modules.
 
 (import (only-in :clan/poo/object .ref object<-alist)
@@ -14,13 +14,10 @@
         (only-in :poo-flow/src/user-interface/presentation
                  pooFlowUserConfigPresentation)
         :poo-flow/src/module-system/projection/syntax
-        :poo-flow/src/user-interface/profile-core
-        :poo-flow/src/user-interface/profile-doctor)
+        :poo-flow/src/user-interface/profile-core)
 
 (export pooFlowUserProfilePresentation
-        pooFlowUserProfileSetPresentation
-        pooFlowUserProfileDoctorPresentation
-        pooFlowUserProfileSetDoctorPresentation)
+        pooFlowUserProfileSetPresentation)
 
 ;; : (-> [PooUserModuleSelection] [Symbol])
 (def (poo-flow-user-profile-module-keys modules)
@@ -184,132 +181,6 @@
       (cons 'profiles
             (poo-flow-user-profile-summaries
              (poo-flow-user-profile-set-profiles profile-set)))
-      (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
-      (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
-      (cons 'boundary poo-flow-user-config-boundary)
-      (cons 'brand-name poo-flow-brand-name)
-      (cons 'brand-group poo-flow-brand-group)
-      (cons 'scheme-owner poo-flow-scheme-owner)
-      (cons 'module-system-owner poo-flow-module-system-owner)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'package-management? #f)
-      (cons 'dependency-installation? #f)
-      (cons 'descriptor-realized? #f)
-      (cons 'runtime-executed #f)
-      (cons 'replayable #t)))))
-
-;;; Doctor presentation reuses the ordinary profile presentation for every
-;;; profile whose public settings can be projected.  This keeps one owner for
-;;; the large workflow/loop-engine receipt instead of compiling and executing a
-;;; second copy of the same projection.
-(def +poo-flow-user-profile-doctor-overlay-keys+
-  '(kind
-    doctor-status
-    doctor-ok
-    diagnostic-count
-    profile-diagnostics
-    profile-presentation-kind))
-
-;; : (-> Symbol Alist MaybeValue)
-(def (poo-flow-user-profile-presentation-alist-ref key rows)
-  (let ((entry (assq key rows)))
-    (and entry (cdr entry))))
-
-;; : (-> Symbol [PooUserProfileDiagnostic] Boolean)
-(def (poo-flow-user-profile-diagnostic-code? code diagnostics)
-  (ormap
-   (lambda (diagnostic)
-     (eq? code
-          (poo-flow-user-profile-presentation-alist-ref
-           'code
-           diagnostic)))
-   diagnostics))
-
-;; : (-> Alist Boolean)
-(def (poo-flow-user-profile-doctor-overlay-key? row)
-  (memq (car row) +poo-flow-user-profile-doctor-overlay-keys+))
-
-;; : (-> POOObject [Pair])
-(def (poo-flow-user-profile-doctor-projected-rows presentation)
-  (filter
-   (lambda (row)
-     (not (poo-flow-user-profile-doctor-overlay-key? row)))
-   (poo-flow-module-object->alist presentation)))
-
-;; : (-> POOObject [Pair])
-(def (poo-flow-user-profile-doctor-overlay-rows doctor-report)
-  (list
-   (cons 'kind poo-flow-user-profile-doctor-presentation-kind)
-   (cons 'doctor-status (.ref doctor-report 'doctor-status))
-   (cons 'doctor-ok (.ref doctor-report 'doctor-ok))
-   (cons 'diagnostic-count (.ref doctor-report 'diagnostic-count))
-   (cons 'profile-diagnostics (.ref doctor-report 'profile-diagnostics))
-   (cons 'profile-presentation-kind
-         poo-flow-user-profile-presentation-kind)))
-
-;;; A missing public setting makes the ordinary presentation intentionally
-;;; partial.  Doctor output remains available as a small declaration receipt;
-;;; all other profiles reuse the canonical presentation projection above.
-;; : (-> PooUserProfile POOObject)
-(def (pooFlowUserProfileDoctorPresentation profile)
-  (let* ((doctor-report (pooFlowUserProfileDoctor profile))
-         (diagnostics (.ref doctor-report 'profile-diagnostics))
-         (overlay
-          (poo-flow-user-profile-doctor-overlay-rows doctor-report)))
-    (object<-alist
-     (append
-      overlay
-      (if (poo-flow-user-profile-diagnostic-code?
-           'missing-setting-key
-           diagnostics)
-        (list
-         (cons 'profile-name (.ref doctor-report 'profile-name))
-         (cons 'module-count
-               (length (poo-flow-user-profile-modules profile)))
-         (cons 'module-keys (.ref doctor-report 'module-keys))
-         (cons 'module-bundle-count
-               (length (poo-flow-user-profile-module-bundles profile)))
-         (cons 'setting-keys (.ref doctor-report 'setting-keys))
-         (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
-         (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
-         (cons 'boundary poo-flow-user-config-boundary)
-         (cons 'brand-name poo-flow-brand-name)
-         (cons 'brand-group poo-flow-brand-group)
-         (cons 'scheme-owner poo-flow-scheme-owner)
-         (cons 'module-system-owner poo-flow-module-system-owner)
-         (cons 'runtime-owner "marlin-agent-core")
-         (cons 'package-management? #f)
-         (cons 'dependency-installation? #f)
-         (cons 'descriptor-realized? #f)
-         (cons 'runtime-executed #f)
-         (cons 'replayable #t))
-        (poo-flow-user-profile-doctor-projected-rows
-         (pooFlowUserProfilePresentation profile)))))))
-
-;;; Profile set doctor presentation exposes registry health and selected
-;;; profile state in one shallow receipt.
-;; : (-> PooUserProfileSet POOObject)
-(def (pooFlowUserProfileSetDoctorPresentation profile-set)
-  (let* ((doctor-report (pooFlowUserProfileSetDoctor profile-set))
-         (selected-profile
-          (poo-flow-user-profile-set-default-profile profile-set)))
-    (object<-alist
-     (list
-      (cons 'kind poo-flow-user-profile-set-doctor-presentation-kind)
-      (cons 'profile-set-name (.ref doctor-report 'profile-set-name))
-      (cons 'default-profile-name (.ref doctor-report 'default-profile-name))
-      (cons 'selected-profile-name
-            (if selected-profile
-              (poo-flow-user-profile-name selected-profile)
-              #f))
-      (cons 'selected-profile? (not (not selected-profile)))
-      (cons 'doctor-status (.ref doctor-report 'doctor-status))
-      (cons 'doctor-ok (.ref doctor-report 'doctor-ok))
-      (cons 'diagnostic-count (.ref doctor-report 'diagnostic-count))
-      (cons 'profile-diagnostics (.ref doctor-report 'profile-diagnostics))
-      (cons 'profile-count
-            (length (poo-flow-user-profile-set-profiles profile-set)))
-      (cons 'profile-names (.ref doctor-report 'profile-names))
       (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
       (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
       (cons 'boundary poo-flow-user-config-boundary)

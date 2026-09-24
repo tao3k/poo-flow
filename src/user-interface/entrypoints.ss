@@ -69,17 +69,13 @@
     "poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle"
     "poo-flow-user-config-workflow-cicd-marlin-handoff-receipt-bundle"
     "pooFlowUserProfilePresentation"
-    "pooFlowUserProfileSetPresentation"
-    "pooFlowUserProfileDoctor"
-    "pooFlowUserProfileDoctorPresentation"
-    "pooFlowUserProfileSetDoctor"
-    "pooFlowUserProfileSetDoctorPresentation"))
+    "pooFlowUserProfileSetPresentation"))
 
-;;; Boundary: user files own declarations; upstream owns realization and diagnostics.
+;;; Boundary: user files own declarations; testing policy owns admission.
 ;; : (-> Unit Alist)
 (def poo-flow-user-config-boundary
   '((user-owned . (module-selection settings presentation))
-    (module-system-owned . (descriptor-realization validation doctor))
+    (module-system-owned . (descriptor-realization validation policy))
     (package-management . #f)
     (dependency-installation . #f)
     (declarative-module-selection-only . #t)

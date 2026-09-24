@@ -14,9 +14,10 @@
                  poo-flow-user-profile?
                  poo-flow-user-profile-name
                  poo-flow-user-profile-module-bundles)
-        (only-in :poo-flow/src/user-interface/profile-doctor
-                 pooFlowUserProfileDoctor
-                 poo-flow-user-profile-doctor-ok?)
+        (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/testing-api
+                 +poo-flow-testing-interface+
+                 poo-flow-testing-admit-user-profile!)
         (only-in :poo-flow/src/user-interface/root-profile
                  pooFlowRootProfile)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -65,9 +66,12 @@
                                                    '(custom . my-module))))
         (check-equal? (poo-flow-user-profile? root-config-profile) #t)
         (check-equal? (poo-flow-user-profile-name root-config-profile) 'users)
-        (check-equal? (poo-flow-user-profile-doctor-ok?
-                       (pooFlowUserProfileDoctor root-config-profile))
-                      #t)
+        (check-equal?
+         (.ref (poo-flow-testing-admit-user-profile!
+                +poo-flow-testing-interface+
+                root-config-profile)
+               'admitted?)
+         #t)
         (check-equal? (length (poo-flow-user-profile-module-bundles
                                root-config-profile))
                       9)
