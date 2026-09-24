@@ -33,10 +33,11 @@ For reproducibility, the local POO reference checkout inspected here is
 =d801e7a1c7f77df421f638e62aaebe370f193c97=.  The original POO Flow
 workspace's =manifest.ss= names POO revision =1b38411=, while its installed
 package checkout is =e8c57dd44f610c634cf738b130907e0e29fe8ccf=.
-The capability test below ran against that local installed environment; it
-does not establish exact-manifest qualification.  Before kernel parity claims,
-run it in an isolated environment resolving the declared revision and record
-the source and installed artifact identities.
+The first capability test ran against that local installed environment.  It
+was then rerun after an isolated build of exact declared revision
+=1b384119f25552c7ed2868c961d10b0bc1ead442=, with
+=GERBIL_PATH= and =GERBIL_LOADPATH= directed only to the isolated artifacts.
+The focused test completed with =MODULE-OK=, =HARNESS-OK=, and =OK=.
 
 | Facility | Verified implementation | Reuse and limit for ASCENT |
 |----------+-------------------------+----------------------------|
@@ -53,8 +54,14 @@ The inspected source files are
 [[https://github.com/mighty-gerbils/gerbil/blob/d801e7a1c7f77df421f638e62aaebe370f193c97/src/gerbil/runtime/c3.ss][Gerbil C4]].
 The executable library-capability fixture is
 =t/qualification/ascent-poo-primitives-test.ss=.  It verifies late-bound
-slot input, shared-ancestor precedence, and persistent set union.  It does
-not claim recursive relation closure.
+slot input, shared-ancestor precedence, and persistent set union.  Its
+recursive case composes a =reachable?= function slot through native =self=,
+uses =UIntTrieSet= to guard a graph cycle, and projects the five reachable
+pairs in MRR's Ascent fixture.  The matching MRR test
+=derives_deterministic_shortest_lineage_candidates_from_a_validated_bundle=
+passed independently.  This establishes set-level parity for that finite
+fixture.  It does not establish semi-naive evaluation, shortest-distance
+lattice behavior, support selection, or an MRR-admissible receipt.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing

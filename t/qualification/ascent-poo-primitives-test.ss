@@ -36,4 +36,47 @@
              (joined (.call UIntTrieSet .union left right)))
         (check-equal? (.call UIntTrieSet .list<- left) '(1 3 5))
         (check-equal? (.call UIntTrieSet .list<- joined) '(1 3 4 5))
-        (check-equal? (.call UIntTrieSet .count joined) 4)))))
+        (check-equal? (.call UIntTrieSet .count joined) 4)))
+    (test-case "native recursive query matches the MRR Ascent closure fixture"
+      ;; Node encoding: Ada=1, Bob=2, Cy=3, Dan=4. The edge set and
+      ;; five reachable pairs are from mrr-ascent/tests/unit/contracts.rs.
+      ;; POO's self slot closes a recursive *query function*; UIntTrieSet
+      ;; guards cycles. This does not establish semi-naive rule evaluation.
+      (let* ((reachability
+              (.o (:: self [] edges nodes)
+                  (reachable?
+                   (lambda (source target visited)
+                     (and (not (.call UIntTrieSet .elt? visited source))
+                          (let (visited*
+                                (.call UIntTrieSet .cons source visited))
+                            (ormap
+                             (lambda (edge)
+                               (and (= (car edge) source)
+                                    (or (= (cadr edge) target)
+                                        ((.ref self 'reachable?)
+                                         (cadr edge) target visited*))))
+                             edges)))))
+                  (closure
+                   (apply append
+                          (map (lambda (source)
+                                 (filter-map
+                                  (lambda (target)
+                                    (and ((.ref self 'reachable?)
+                                          source target
+                                          (.ref UIntTrieSet '.empty))
+                                         (list source target)))
+                                  nodes))
+                               nodes)))))
+             (inputs
+              (.o (nodes '(1 2 3 4))
+                  (edges '((1 2) (2 3) (1 4) (4 3)))))
+             (program (.mix reachability inputs)))
+        (check-equal? (.ref program 'closure)
+                      '((1 2) (1 3) (1 4) (2 3) (4 3)))
+        (let (cyclic
+              (.mix (.o (nodes '(1 2 3))
+                        (edges '((1 2) (2 3) (3 1) (1 2))))
+                    reachability inputs))
+          (check-equal? (.ref cyclic 'closure)
+                        '((1 1) (1 2) (1 3) (2 1) (2 2) (2 3)
+                          (3 1) (3 2) (3 3))))))))
