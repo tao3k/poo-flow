@@ -306,8 +306,13 @@ gerbil env gerbil interactive t/fixtures/cli-run-smoke.ss 3
 =unit-tests.ss= is the only package test interface. It applies ASP Scheme's
 default POO Testing profile to the current Gambit runtime, initializes
 =clan/testing=, and leaves recursive =*-test.ss= discovery to that upstream
-framework. Users do not pass heap options on the command line; a larger test derives the memory
-profile with =.cc= and maps it with =.map=. Every package test uses clan's
+framework. =just test= and =just test-performance= fail closed before Scheme
+imports with a 1 GiB launch heap and non-interactive =debug=q=.  The maintained
+debug controls remain declarative Just inputs, for example
+=GERBIL_TEST_MAX_HEAP=1536M GERBIL_TEST_DEBUG=aq9b9h2 just test=.  A larger
+individual test still derives ASP's memory Profile with =.cc= and maps it with
+=.map=, so changing the launch boundary does not silently weaken each worker's
+Profile. Every package test uses clan's
 single convention: a =*-test.ss= file defines the same-named =test-suite=.
 There is no downstream aggregate export list, compatibility runner, or
 duplicate source collector.

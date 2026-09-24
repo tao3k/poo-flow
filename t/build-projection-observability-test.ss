@@ -99,7 +99,16 @@
          (contains? source
                     "gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss")
          #t)
-        (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)))
+        (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)
+        (check-equal? (contains? source "rm -rf") #f)))
+
+    (test-case "unit tests inherit the ASP per-worker memory profile"
+      (let (source (call-with-input-file "unit-tests.ss" read-all-as-string))
+        (check-equal?
+         (contains? source
+                    "(poo-flow-testing-observability-extension\n       +asp-testing-interface+)")
+         #t)
+        (check-equal? (contains? source "maxHeapMiB: 1024") #f)))
 
     (test-case "default policy measures catalog size without an invented limit"
       (let (port (open-output-string))

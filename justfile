@@ -94,7 +94,7 @@ test-contribute contribution="lambda-aitia" module="sdlc":
     set -euo pipefail
     case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test_root="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-{{ contribution }}-module-test.XXXXXX")"
-    trap 'rm -rf -- "$test_root"' EXIT
+    trap 'find "$test_root" -depth -delete' EXIT
     if test "{{ contribution }}" = "lambda-aitia"; then
         cd "{{ contribution_source_root }}/lambda-aitia"
         runner="./run-test.ss"
@@ -122,7 +122,7 @@ test-contribute-atomic contribution="lambda-aitia" module="sdlc" test_file="unit
     set -euo pipefail
     case "{{ contribution }}" in lambda-episteme|lambda-aitia) ;; *) echo "unsupported contribution: {{ contribution }}" >&2; exit 64 ;; esac
     test_root="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-{{ contribution }}-atomic-test.XXXXXX")"
-    trap 'rm -rf -- "$test_root"' EXIT
+    trap 'find "$test_root" -depth -delete' EXIT
     if test "{{ contribution }}" = "lambda-aitia"; then
         cd "{{ contribution_source_root }}/lambda-aitia"
         runner="./run-test.ss"
