@@ -116,6 +116,9 @@
       forbidden-slot-verbs: SemanticSymbolList
       forbidden-root-forms: SemanticSymbolList
       recursive-root-forms?: SemanticBoolean
+      forbidden-imports: SemanticSymbolList
+      forbidden-forms: SemanticSymbolList
+      forbid-raw-behavior-hooks?: SemanticBoolean
       repair-operators: SemanticSymbolList
       freedom: SemanticSymbol))
 
