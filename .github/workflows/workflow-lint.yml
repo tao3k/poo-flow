@@ -6,8 +6,6 @@ name: workflow lint
 
 on:
   push:
-    branches:
-      - main
     paths:
       - .github/workflows/**
   pull_request:
@@ -15,7 +13,7 @@ on:
       - .github/workflows/**
 
 concurrency:
-  group: workflow-lint-${{ github.event.pull_request.number || github.ref }}
+  group: workflow-lint-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 jobs:

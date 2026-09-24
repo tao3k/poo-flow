@@ -6,7 +6,6 @@ name: Runtime WASM package
 
 on:
   push:
-    branches: [main]
     paths:
       - bindings/runtime-wasm/**
       - bindings/runtime-c/bundle-v1/**
@@ -38,7 +37,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: runtime-wasm-package-${{ github.ref }}
+  group: runtime-wasm-package-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 jobs:

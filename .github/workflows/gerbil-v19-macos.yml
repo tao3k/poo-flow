@@ -6,6 +6,16 @@ name: Gerbil v19 macOS qualification
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/gerbil-v19-macos.yml
+      - tools/ci/install-gerbil-v19-release.sh
+      - build.ss
+      - gerbil.pkg
+      - src/**
+      - t/qualification/darwin-gerbil-build-scenario.ss
+      - t/qualification/darwin-native-std-make/**
+      - t/funflow-github-ci-json-schema-contract-test.ss
   pull_request:
     paths:
       - .github/workflows/gerbil-v19-macos.yml
@@ -21,7 +31,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: gerbil-v19-macos-${{ github.event.pull_request.number || github.ref }}
+  group: gerbil-v19-macos-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 jobs:
