@@ -29,7 +29,7 @@ runtime_contract(
     clan_poo_sources = "@gerbil_poo_sources//:sources",
     generator = "tools/generate-runtime-v0-contract.ss",
     schema = "//:runtime_v0_schema",
-    scheme_sources = "//:scheme_runtime_sources",
+    scheme_sources = "//:gerbil_package_sources",
 )
 
 runtime_contract_parity_test(
@@ -170,7 +170,7 @@ runtime_gerbil_script_test(
         "@gerbil_poo_sources//:gerbil.pkg",
     ],
     data = [
-        "//:scheme_runtime_sources",
+        "//:gerbil_package_sources",
         "@gerbil_poo_sources//:sources",
     ],
     script = "tests/runtime_v0_symbol_surface_test.sh",

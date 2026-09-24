@@ -85,7 +85,7 @@ runtime_gerbil_script_test(
         "@gerbil_poo_sources//:gerbil.pkg",
     ],
     data = [
-        "//:scheme_runtime_sources",
+        "//:gerbil_package_sources",
         "@gerbil_poo_sources//:sources",
     ],
     script = "tests/bundle_v1_scheme_image_test.sh",

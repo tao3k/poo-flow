@@ -71,8 +71,8 @@
     (error "promotion intent and validation receipt identities differ"
            intent validation-receipt))
   (.o (kind +poo-flow-runtime-language-promotion-request-schema+)
-      (abi-major 0)
-      (abi-minor 3)
+      (abi-major (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-major))
+      (abi-minor (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor))
       (required-capabilities
        +poo-flow-runtime-language-promotion-required-capabilities+)
       (idempotency-key

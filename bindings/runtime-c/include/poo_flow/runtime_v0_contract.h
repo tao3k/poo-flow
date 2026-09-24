@@ -8,13 +8,14 @@
 #include <stdint.h>
 
 #define POO_FLOW_RUNTIME_V0_ABI_MAJOR 0u
-#define POO_FLOW_RUNTIME_V0_ABI_MINOR 3u
+#define POO_FLOW_RUNTIME_V0_ABI_MINOR 4u
 #define POO_FLOW_RUNTIME_V0_BUNDLE_SCHEMA "poo-flow.organization-bundle.draft.3"
 #define POO_FLOW_RUNTIME_V0_CONTROL_PACKET_SCHEMA "poo-flow.runtime-v0.control-packet.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_REQUEST_SCHEMA "poo-flow.runtime-language.promotion-request.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_RECEIPT_SCHEMA "poo-flow.runtime-language.promotion-receipt.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_IDEMPOTENCY_KEY_SCHEMA "poo-flow.runtime-language.promotion-idempotency-key.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_SOURCE_QUERY_RECEIPT_SCHEMA "poo-flow.runtime-language.source-query-receipt.1"
+#define POO_FLOW_QUERY_EXECUTION_CANDIDATE_SCHEMA "poo-flow.query.execution-candidate.1"
 #define POO_FLOW_RUNTIME_LANGUAGE_ADMISSION_RECEIPT_SCHEMA "poo-flow.runtime-language.admission-receipt.1"
 #define POO_FLOW_CONTRACT_ARTIFACT_PROJECTION_RECEIPT_SCHEMA "poo-flow.contract.artifact-projection-receipt.1"
 #define POO_FLOW_RUNTIME_V0_LAYOUT_VERSION 1u
@@ -35,5 +36,6 @@
 #define POO_FLOW_RUNTIME_V0_CAP_SOURCE_QUERY_DATA (UINT64_C(1) << 12)
 #define POO_FLOW_RUNTIME_V0_CAP_CONTRACT_ADMISSION_RECEIPT (UINT64_C(1) << 13)
 #define POO_FLOW_RUNTIME_V0_CAP_CONTRACT_ARTIFACT_PROJECTION (UINT64_C(1) << 14)
+#define POO_FLOW_RUNTIME_V0_CAP_QUERY_EXECUTION_CANDIDATE (UINT64_C(1) << 15)
 
 #endif

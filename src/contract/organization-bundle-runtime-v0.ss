@@ -8,7 +8,9 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/src/semantic/organization-bundle
-        :poo-flow/src/semantic/organization-bundle-kernel)
+        :poo-flow/src/semantic/organization-bundle-kernel
+        (only-in ./runtime-v0-abi-schema
+                 +poo-flow-runtime-v0-abi-schema+))
 
 (def +poo-flow-runtime-v0-control-packet-schema+
   'poo-flow.runtime-v0.control-packet.1)
@@ -23,8 +25,8 @@
      (let ((identity (.ref state 'identity))
            (bundle (.ref state 'bundle)))
        (.o (kind +poo-flow-runtime-v0-control-packet-schema+)
-           (abi-major 0)
-           (abi-minor 3)
+           (abi-major (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-major))
+           (abi-minor (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor))
            (bundle-schema +poo-flow-organization-bundle-schema+)
            (digest-algorithm (.ref identity 'algorithm))
            (bundle-digest (.ref identity 'digest))

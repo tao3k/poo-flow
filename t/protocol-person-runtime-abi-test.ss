@@ -66,7 +66,7 @@
      (let (key (.ref request 'idempotency-key))
        (check (.ref request 'kind)
               => 'poo-flow.runtime-language.promotion-request.1)
-       (check (.ref request 'abi-minor) => 3)
+       (check (.ref request 'abi-minor) => 4)
        (check (.ref request 'runtime-executed) => #f)
        (check (.ref key 'promotion-id) => 'promotion-1)
        (check (.ref key 'materialization-id) => 'materialization-1)
@@ -94,7 +94,7 @@
        (check vector
               => (read-text-file
                   "t/fixtures/runtime-language-abi/promotion-request-v1.vector"))
-       (check (and (string-contains vector "abi-minor=3") #t) => #t)
+       (check (and (string-contains vector "abi-minor=4") #t) => #t)
        (check (and (string-contains vector "promotion-id=promotion-1") #t)
               => #t)
        (check (and (string-contains vector "materialization-id=materialization-1")
@@ -114,10 +114,17 @@
                                     "CONTRACT_ARTIFACT_PROJECTION")
                    #t)
               => #t)
-       (check (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor) => 3)
+       (check (and (string-contains header
+                                    "QUERY_EXECUTION_CANDIDATE")
+                   #t)
+              => #t)
+       (check (.ref +poo-flow-runtime-v0-abi-schema+ 'abi-minor) => 4)
        (check (.ref +poo-flow-runtime-v0-abi-schema+
                     'source-query-receipt-schema)
               => "poo-flow.runtime-language.source-query-receipt.1")
+       (check (.ref +poo-flow-runtime-v0-abi-schema+
+                    'query-execution-candidate-schema)
+              => "poo-flow.query.execution-candidate.1")
        (check (.ref +poo-flow-runtime-v0-abi-schema+
                     'runtime-admission-receipt-schema)
               => "poo-flow.runtime-language.admission-receipt.1")
