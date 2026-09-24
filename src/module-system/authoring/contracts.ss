@@ -8,14 +8,15 @@
 
 (import (only-in :clan/poo/object .def .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
-        (only-in :std/list/list filter-map find)
+        (only-in :std/list/list any filter-map find)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface-prototype
                  poo-flow-module-interface?
                  poo-flow-module-interface-id
                  poo-flow-module-interface-authoring)
         (only-in :poo-flow/src/module-system/observability/module-presentation
-                 poo-flow-poo-slot-authoring-datum-bindings)
+                 poo-flow-poo-slot-authoring-datum-bindings
+                 poo-flow-scheme-datum-find)
         :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor. ModuleSourceRole.
@@ -132,21 +133,15 @@
 ;;; leaf symbols as calls.  This catches a hidden (.o ...) under a root
 ;;; composition without turning the Contract into a Scheme parser/evaluator.
 (def (poo-flow-module-authoring-forbidden-root-form datum forbidden recursive?)
-  (cond
-   ((not (pair? datum)) #f)
-   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) #f)
-   ((and (symbol? (car datum)) (memq (car datum) forbidden)) (car datum))
-   ((not recursive?) #f)
-   (else
-    (let loop ((children (cdr datum)))
-      (cond
-       ((null? children) #f)
-       ((not (pair? children)) #f)
-       ((and (pair? (car children))
-             (poo-flow-module-authoring-forbidden-root-form
-              (car children) forbidden recursive?))
-        => values)
-       (else (loop (cdr children))))))))
+  (let (forbidden-form
+        (lambda (candidate)
+          (and (pair? candidate)
+               (symbol? (car candidate))
+               (memq (car candidate) forbidden)
+               (car candidate))))
+    (if recursive?
+      (poo-flow-scheme-datum-find forbidden-form datum)
+      (forbidden-form datum))))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
 (def (poo-flow-module-authoring-root-diagnostics interface source-role datum)
@@ -169,6 +164,97 @@
              freedom: (.ref source-role 'freedom))))
       '())))
 
+;; : (-> SchemeDatum (Maybe Symbol))
+;;; Import wrappers keep the imported module in their second position.  This
+;;; reads only the native Scheme import datum; it does not expand or evaluate
+;;; an alternate module language.
+(def (poo-flow-module-authoring-import-module import-spec)
+  (cond
+   ((symbol? import-spec) import-spec)
+   ((and (pair? import-spec)
+         (memq (car import-spec)
+               '(only-in except-in rename-in prefix-in)))
+    (poo-flow-module-authoring-import-module (cadr import-spec)))
+   (else #f)))
+
+;; : (-> SchemeDatum [Symbol] (Maybe Symbol))
+(def (poo-flow-module-authoring-forbidden-import datum forbidden)
+  (and (pair? datum)
+       (eq? (car datum) 'import)
+       (any (lambda (import-spec)
+              (let (module-name
+                    (poo-flow-module-authoring-import-module import-spec))
+                (and module-name
+                     (memq module-name forbidden)
+                     module-name)))
+            (cdr datum))))
+
+;; : (-> SchemeDatum [Symbol] (Maybe Symbol))
+(def (poo-flow-module-authoring-forbidden-form datum forbidden)
+  (poo-flow-scheme-datum-find
+   (lambda (candidate)
+     (and (pair? candidate)
+          (symbol? (car candidate))
+          (memq (car candidate) forbidden)
+          (car candidate)))
+   datum))
+
+;; : (-> SchemeDatum Boolean)
+(def (poo-flow-module-authoring-raw-behavior-hook? datum)
+  (if (poo-flow-scheme-datum-find
+       (lambda (candidate)
+         (and (pair? candidate)
+              (eq? (car candidate) 'lambda)
+              (pair? (cdr candidate))
+              (equal? (cadr candidate) '(self super))))
+       datum)
+    #t
+    #f))
+
+(def (poo-flow-module-authoring-surface-diagnostic
+      interface source-role code-value subject-value rule-value
+      recommendation-value)
+  (validate PooFlowModuleAuthoringDiagnostic
+    (.o (:: @ ModuleAuthoringDiagnostic)
+        module: (poo-flow-module-interface-id interface)
+        role: (.ref source-role 'identity)
+        code: code-value
+        subject: subject-value
+        rule: rule-value
+        recommendation: recommendation-value
+        repair-operators: (.ref source-role 'repair-operators)
+        freedom: (.ref source-role 'freedom))))
+
+;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
+(def (poo-flow-module-authoring-default-surface-diagnostics interface role datum)
+  (let* ((forbidden-import
+          (poo-flow-module-authoring-forbidden-import
+           datum (.ref role 'forbidden-imports)))
+         (forbidden-form
+          (poo-flow-module-authoring-forbidden-form
+           datum (.ref role 'forbidden-forms)))
+         (raw-hook?
+          (and (.ref role 'forbid-raw-behavior-hooks?)
+               (poo-flow-module-authoring-raw-behavior-hook? datum))))
+    (filter-map
+     (lambda (rule-row)
+       (and (car rule-row)
+            (apply poo-flow-module-authoring-surface-diagnostic
+                   interface role (cdr rule-row))))
+     (list
+      (list forbidden-import
+            'poo-user-surface-forbids-meta-import forbidden-import
+            'default-surface-meta-last
+            'move-meta-extension-to-maintained-module-owner)
+      (list forbidden-form
+            'poo-user-surface-forbids-direct-clos forbidden-form
+            'default-surface-value-first
+            'select-maintained-profile-or-extension-owner)
+      (list raw-hook?
+            'poo-user-surface-forbids-raw-behavior-hook 'lambda
+            'default-surface-behavior-on-demand
+            'move-behavior-to-named-maintained-operation)))))
+
 ;; : (-> PooModuleInterface PooModuleSourceRole [PooModuleAuthoringDiagnostic] PooModuleAuthoringAdmission)
 (def (poo-flow-module-authoring-admission interface source-role diagnostic-values)
   (validate PooFlowModuleAuthoringAdmission
@@ -188,7 +274,9 @@
    interface role
    (append
     (poo-flow-module-authoring-slot-diagnostics interface role datum)
-    (poo-flow-module-authoring-root-diagnostics interface role datum))))
+    (poo-flow-module-authoring-root-diagnostics interface role datum)
+    (poo-flow-module-authoring-default-surface-diagnostics
+     interface role datum))))
 
 ;;; Executor strategy and SourceRole are independently extensible. Module
 ;;; packages can contribute a method bundle for a refined executor/role pair

@@ -223,6 +223,63 @@
        (check-equal? (.ref diagnostic 'freedom)
                      'maintained-value-composition-only)))
 
+   (test-case "user-root rejects raw MOP imports with an owned repair"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              user-root-module-interface
+              'config
+              '(import (only-in :clan/poo/mop validate))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'code)
+                     'poo-user-surface-forbids-meta-import)
+       (check-equal? (.ref diagnostic 'subject) ':clan/poo/mop)
+       (check-equal? (.ref diagnostic 'recommendation)
+                     'move-meta-extension-to-maintained-module-owner)))
+
+   (test-case "user-root rejects direct CLOS declarations"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              user-root-module-interface
+              'config
+              '(def UserGeneric
+                 (poo-clos-generic-function 'user-generic 1))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'code)
+                     'poo-user-surface-forbids-direct-clos)
+       (check-equal? (.ref diagnostic 'subject)
+                     'poo-clos-generic-function)))
+
+   (test-case "user-root rejects raw self/super behavior hooks"
+     (let* ((admission
+             (poo-flow-module-authoring-admit-datum
+              user-root-module-interface
+              'config
+              '(user-composition broken
+                 (compose profiles
+                   (lambda (self super) (super self))))))
+            (diagnostic (first-diagnostic admission)))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission) #f)
+       (check-equal? (.ref diagnostic 'code)
+                     'poo-user-surface-forbids-raw-behavior-hook)
+       (check-equal? (.ref diagnostic 'subject) 'lambda)
+       (check-equal? (.ref diagnostic 'recommendation)
+                     'move-behavior-to-named-maintained-operation)))
+
+   (test-case "maintained roles retain advanced extension freedom"
+     (check-equal?
+      (poo-flow-module-authoring-admission-accepted?
+       (poo-flow-module-authoring-admit-datum
+        test-module-interface
+        'objects
+        '(def MaintainedGeneric
+           (poo-clos-generic-function 'maintained-generic 1))))
+      #t))
+
    (test-case "unknown roles fail at the Interface Profile boundary"
      (check-equal?
       (with-catch

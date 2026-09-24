@@ -53,6 +53,9 @@
         forbidden-slot-verbs: forbidden-slot-verbs-value
         forbidden-root-forms: forbidden-root-forms-value
         recursive-root-forms?: #f
+        forbidden-imports: '()
+        forbidden-forms: '()
+        forbid-raw-behavior-hooks?: #f
         repair-operators: '(? => =>.+ override)
         freedom: freedom-value)))
 
@@ -89,6 +92,16 @@
         forbidden-root-forms:
         '(.def .o stage graph loop prove handoff provider runtime)
         recursive-root-forms?: #t
+        forbidden-imports:
+        '(:clan/poo/mop
+          :poo-flow/src/module-system/poo-clos/interface)
+        forbidden-forms:
+        '(poo-clos-class
+          poo-clos-generic-function
+          poo-clos-method
+          poo-clos-method-bundle
+          .defmethod-bundle)
+        forbid-raw-behavior-hooks?: #t
         freedom: 'maintained-value-composition-only)))
 (def InterfaceSourceRole.
   (poo-flow-module-source-role

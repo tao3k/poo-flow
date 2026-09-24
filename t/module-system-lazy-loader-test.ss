@@ -367,15 +367,29 @@
 
 ;; : TestCase
 (def (module-system-user-root-authoring-contract-case)
-  (test-case "admits thin root composition and rejects maintainer object syntax"
+  (test-case "admits value composition and rejects advanced root mechanisms"
     (check-equal?
      (begin
        (poo-flow-user-tree-config-authoring-validate! "user-interface")
+       (poo-flow-user-tree-config-authoring-validate!
+        "t/fixtures/user-surface-positive")
        #t)
      #t)
     (check-exception
      (poo-flow-user-tree-config-authoring-validate!
       "t/fixtures/user-root-authoring-invalid")
+     true)
+    (check-exception
+     (poo-flow-user-tree-config-authoring-validate!
+      "t/fixtures/user-surface-raw-mop")
+     true)
+    (check-exception
+     (poo-flow-user-tree-config-authoring-validate!
+      "t/fixtures/user-surface-direct-clos")
+     true)
+    (check-exception
+     (poo-flow-user-tree-config-authoring-validate!
+      "t/fixtures/user-surface-raw-hook")
      true)))
 
 ;; : TestCase

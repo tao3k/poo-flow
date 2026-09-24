@@ -471,7 +471,12 @@ Migration MUST retain semantic and performance evidence:
 - [X] Reclassify POO CLOS declarations as an opt-in extension surface.
 - [X] Define the native noun-slot algebra for default declarations.
 - [X] Add a native inheritance fixture for default/refinement semantics.
-- [ ] Add syntax-aware positive and negative surface fixtures.
+- [X] Add syntax-aware positive and negative surface fixtures.  The executable
+  owners are =t/module-authoring-contract-test.ss= and
+  =t/module-system-lazy-loader-test.ss=.  The shared datum traversal uses
+  =std/list/list:any=, skips quoted syntax, and proves that the default root
+  rejects raw MOP imports, direct CLOS construction and raw =self/super=
+  behavior hooks while maintained extension roles remain open.
 - [ ] Audit maintained README and =user-interface= examples.
 - [ ] Migrate one Healthcare Profile and Case without semantic regression.
 - [ ] Add Effective Object and provenance-first presentation evidence.
