@@ -72,7 +72,7 @@ filegroup(
 
 gerbil_project_compile(
     name = "compile",
-    srcs = ["//:scheme_build_sources"],
+    srcs = ["//:gerbil_package_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
     env = {
