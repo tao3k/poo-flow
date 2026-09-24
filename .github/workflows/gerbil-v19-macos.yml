@@ -31,7 +31,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: gerbil-v19-macos-${{ github.event.pull_request.head.sha || github.sha }}
+  group: gerbil-v19-macos-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
