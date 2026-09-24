@@ -135,6 +135,16 @@ required evidence before producing =PooFlowSourceQueryReceipt=.  Neither the
 candidate nor the admitted receipt carries mutation or action authority, and
 the binding path never starts MRR or another runtime.
 
+The native transport is
+=poo_flow_scheme_query_execution_candidate_v1= from
+=bindings/runtime-c/include/poo_flow/scheme_native_v1.h=.  It projects directly
+into the canonical POO candidate and deliberately avoids a Rust-owned JSON
+schema.  MRR's =QueryResultAdmissionReceipt= supplies the admitted row count,
+result digest and bound-query identity evidence.  The adapter must pair that
+receipt with the original POO execution binding to obtain query version,
+semantic revision, parser, source-content and provenance identities.  It must
+not infer those identities from a digest or create a second Query authority.
+
 * Executable Scheme authoring Contract
 
 =src/module-system/authoring/contracts.ss= is the source-admission owner.  A
@@ -212,4 +222,7 @@ just check-native-semantic-query-model
   ElementSpace, result Contract and admission receipt prototypes.
 - [X] A GQL Provider CLOS method bundle admits typed execution candidates
   against those prototypes; the MRR-owned Rust producer remains RFC 161 work.
+- [X] A typed C11 candidate transport reaches the canonical Scheme POO object,
+  rejects malformed and null candidates, and carries no independent Query
+  semantics.
 - [X] A vertical Case demonstrates byte-exact POO Query to GQL projection and parser admission.
