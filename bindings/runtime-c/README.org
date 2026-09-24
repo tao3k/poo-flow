@@ -73,8 +73,10 @@ result pointer, and =poo_flow_scheme_result_v1_release= is the sole owner-side
 release operation for copied payload bytes.  It currently exposes a descriptor
 and bounded validation for source-query receipts, Query execution candidates,
 language-admission receipts, and artifact-projection receipts.  Query execution
-candidates are projected from the canonical POO object by the Scheme boundary;
-the literal C vector remains only an independent language-neutral ABI probe.
+candidates have a typed C11 input structure so MRR and other native producers
+do not reproduce Scheme-owned JSON field names.  The Scheme boundary projects
+that structure into the canonical POO object and remains the sole semantic
+validator; the structure is transport, not a second Query model.
 Unsupported contract names and malformed payloads fail closed with
 =poo-flow.scheme-native-error.v1= bytes.
 

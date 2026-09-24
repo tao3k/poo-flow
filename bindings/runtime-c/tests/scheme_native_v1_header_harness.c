@@ -16,5 +16,17 @@ _Static_assert(offsetof(poo_flow_scheme_result_v1, payload) >
 _Static_assert(offsetof(poo_flow_scheme_result_v1, length) >
                    offsetof(poo_flow_scheme_result_v1, payload),
                "result length layout drift");
+_Static_assert(
+    offsetof(poo_flow_scheme_query_execution_candidate_v1, provider_identity) ==
+        0u,
+    "candidate provider identity must be the leading field");
+_Static_assert(
+    offsetof(poo_flow_scheme_query_execution_candidate_v1, result_count) >
+        offsetof(poo_flow_scheme_query_execution_candidate_v1, result_digest),
+    "candidate result count layout drift");
+_Static_assert(
+    offsetof(poo_flow_scheme_query_execution_candidate_v1, complete) >
+        offsetof(poo_flow_scheme_query_execution_candidate_v1, result_count),
+    "candidate completion layout drift");
 
 int main(void) { return 0; }
