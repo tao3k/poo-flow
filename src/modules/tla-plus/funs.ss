@@ -6,12 +6,14 @@
 ;;; its exact qualification identities and a named escape hatch to the
 ;;; parser-owned tree; it never copies the tree into a second object family.
 (import (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/mop validate)
         (only-in :gerbil-parser/languages/tla-plus/v1/parser parse-tla-plus-v1)
         (only-in :gerbil-parser/src/runtime/artifact
                  parse-artifact-ref parse-artifact-success?
                  parse-artifact-roundtrip)
         (only-in :gerbil-parser/src/runtime/cst parse-artifact->cst)
-        (only-in "objects.ss" PooFlowTlaDocument. poo-flow-tla-document?))
+        (only-in "types.ss" PooFlowTlaDocument poo-flow-tla-document?)
+        (only-in "objects.ss" PooFlowTlaDocument.))
 (export poo-flow-tla-parse-source poo-flow-tla-parser-cst)
 
 ;;; Accepted syntax is not a proof of TLA+ semantics or TLC admission.
@@ -30,12 +32,14 @@
     ;; Most qualification consumers need only the source/grammar identities.
     ;; Keep the parser-owned tree demand-driven and cache it per document.
     (let (parser-cst (delay (parse-artifact->cst artifact)))
-      (.o (:: @ PooFlowTlaDocument.)
-          source-digest: (parse-artifact-ref artifact 'sourceDigest)
-          grammar-digest: (parse-artifact-ref artifact 'grammarDigest)
-          source-byte-length: (parse-artifact-ref artifact 'sourceByteLength)
-          .parser-cst: (lambda () (force parser-cst))
-          exact-roundtrip?: #t))))
+      (validate
+       PooFlowTlaDocument
+       (.o (:: @ PooFlowTlaDocument.)
+           source-digest: (parse-artifact-ref artifact 'sourceDigest)
+           grammar-digest: (parse-artifact-ref artifact 'grammarDigest)
+           source-byte-length: (parse-artifact-ref artifact 'sourceByteLength)
+           .parser-cst: (lambda () (force parser-cst))
+           exact-roundtrip?: #t)))))
 
 ;;; Explicit advanced access to the *same* parser-owned CST. Normal consumers
 ;;; use the POO document's identities and qualification status.

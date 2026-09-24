@@ -11,7 +11,8 @@
                  syntax-node? syntax-node-kind syntax-node-start syntax-node-end
                  syntax-node-children syntax-field? syntax-field-children)
         (only-in :poo-flow/src/modules/tla-plus/interface
-                 PooFlowTlaLanguage. poo-flow-tla-document?
+                 PooFlowTlaLanguage. PooFlowTlaPlusModule.
+                 poo-flow-tla-language? poo-flow-tla-document?
                  poo-flow-tla-parse-source poo-flow-tla-parser-cst))
 (export tla-plus-interface-test)
 
@@ -35,6 +36,9 @@
       (let* ((document (poo-flow-tla-parse-source sample-source))
              (root (poo-flow-tla-parser-cst document)))
         (check-equal? (poo-flow-tla-document? document) #t)
+        (check-equal? (poo-flow-tla-language? (.ref document 'language)) #t)
+        (check-equal? (.ref PooFlowTlaPlusModule. 'language)
+                      PooFlowTlaLanguage.)
         (check-equal? (.ref (.ref document 'language) 'parser-owner)
                       'gerbil-parser)
         (check-equal? (.ref PooFlowTlaLanguage. 'syntax-contract)
