@@ -7,7 +7,11 @@
 ;;; owned by the public POO Module Interface. The baseline is evidence only;
 ;;; it is not an alternate runtime or public compatibility path.
 
-(import (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-us)
+(import (only-in :asp-gerbil-scheme/benchmark-api
+                 benchmark-fixture-contract-pass?
+                 benchmark-fixture-ref
+                 benchmark-receipt-pass?
+                 benchmark-run/result)
         (only-in :clan/poo/object .o .ref object<-alist)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface
@@ -20,8 +24,11 @@
                  poo-flow-module-option-schema-value
                  poo-flow-module-find-schema))
 
-(def +sample-count+ 20)
 (def +schema-count+ 1000)
+(def fixture
+  (call-with-input-file
+   "t/scenarios/performance/module-interface-schema-indexed/benchmark.ss"
+   read))
 
 (def schema-rows
   (let loop ((index 0) (rows-rev '()))
@@ -59,37 +66,25 @@
                'constant))
        option-ids))
 
-(def baseline-value (baseline-values))
-(def candidate-value (candidate-values))
+(unless (benchmark-fixture-contract-pass? fixture)
+  (error "invalid ASP benchmark fixture" fixture))
 
-(unless (equal? baseline-value candidate-value)
-  (error "Interface schema index changed lookup semantics"))
-
-(displayln "[module-interface-schema-indexed] phase=warmup")
-(force-output)
-(baseline-values)
-(candidate-values)
-
-(displayln "[module-interface-schema-indexed] phase=baseline-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def baseline-p95-us
-  (benchmark-p95-elapsed-us +sample-count+ baseline-values))
-
-(displayln "[module-interface-schema-indexed] phase=candidate-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def candidate-p95-us
-  (benchmark-p95-elapsed-us +sample-count+ candidate-values))
-
-(unless (< candidate-p95-us baseline-p95-us)
-  (error "Interface schema index did not improve repeated lookup"
-         baseline-p95-us candidate-p95-us))
-
-(displayln "schema=poo-flow.module-interface-schema-indexed.v1")
-(displayln "sample-count=" +sample-count+)
-(displayln "schema-count=" +schema-count+)
-(displayln "baseline-p95-us=" baseline-p95-us)
-(displayln "candidate-p95-us=" candidate-p95-us)
-(displayln "lookup-values-equivalent=#t")
-(displayln "accepted=#t")
+(let-values (((baseline-receipt baseline-value)
+              (benchmark-run/result fixture baseline-values)))
+  (let-values (((candidate-receipt candidate-value)
+                (benchmark-run/result fixture candidate-values)))
+    (unless (equal? baseline-value candidate-value)
+      (error "Interface schema index changed lookup semantics"))
+    (unless (benchmark-receipt-pass? candidate-receipt)
+      (error "Interface schema index exceeded ASP benchmark budget"
+             candidate-receipt))
+    (unless (< (benchmark-fixture-ref candidate-receipt 'elapsedNs)
+               (benchmark-fixture-ref baseline-receipt 'elapsedNs))
+      (error "Interface schema index did not improve repeated lookup"
+             baseline-receipt candidate-receipt))
+    (display "[poo-flow-benchmark] module-interface-schema-indexed baseline=")
+    (write baseline-receipt)
+    (display " candidate=")
+    (write candidate-receipt)
+    (displayln " semanticEquivalent=#t")
+    (force-output)))

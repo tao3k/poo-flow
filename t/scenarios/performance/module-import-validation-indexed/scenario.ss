@@ -7,7 +7,11 @@
 ;;; shared native hash index. The baseline is evidence only; it is not an
 ;;; alternate runtime or public compatibility path.
 
-(import (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-us)
+(import (only-in :asp-gerbil-scheme/benchmark-api
+                 benchmark-fixture-contract-pass?
+                 benchmark-fixture-ref
+                 benchmark-receipt-pass?
+                 benchmark-run/result)
         (only-in :poo-flow/src/module-system/descriptor/interface
                  make-empty-poo-flow-module-descriptor
                  poo-flow-module-name
@@ -15,9 +19,12 @@
                  poo-flow-module-import-profile
                  poo-flow-module-missing-imports))
 
-(def +sample-count+ 20)
 (def +module-count+ 1000)
 (def +shared-import+ 'module-999)
+(def fixture
+  (call-with-input-file
+   "t/scenarios/performance/module-import-validation-indexed/benchmark.ss"
+   read))
 
 (def modules
   (let loop ((index 0) (values-rev '()))
@@ -69,42 +76,29 @@
                  (poo-flow-module-imports module)))
               modules)))
 
-(def baseline-value (baseline-missing modules))
-(def candidate-value (poo-flow-module-missing-imports modules))
+(unless (benchmark-fixture-contract-pass? fixture)
+  (error "invalid ASP benchmark fixture" fixture))
 
-(unless (equal? baseline-value candidate-value)
-  (error "indexed import validation changed diagnostic semantics"
-         baseline-value candidate-value))
-
-(displayln "[module-import-validation-indexed] phase=warmup")
-(force-output)
-(baseline-missing modules)
-(poo-flow-module-missing-imports modules)
-
-(displayln "[module-import-validation-indexed] phase=baseline-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def baseline-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda () (baseline-missing modules))))
-
-(displayln "[module-import-validation-indexed] phase=candidate-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def candidate-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda () (poo-flow-module-missing-imports modules))))
-
-(unless (< candidate-p95-us baseline-p95-us)
-  (error "shared import name index did not improve dense validation"
-         baseline-p95-us candidate-p95-us))
-
-(displayln "schema=poo-flow.module-import-validation-indexed.v1")
-(displayln "sample-count=" +sample-count+)
-(displayln "module-count=" +module-count+)
-(displayln "baseline-p95-us=" baseline-p95-us)
-(displayln "candidate-p95-us=" candidate-p95-us)
-(displayln "diagnostics-equivalent=#t")
-(displayln "accepted=#t")
+(let-values (((baseline-receipt baseline-value)
+              (benchmark-run/result
+               fixture
+               (lambda () (baseline-missing modules)))))
+  (let-values (((candidate-receipt candidate-value)
+                (benchmark-run/result
+                 fixture
+                 (lambda () (poo-flow-module-missing-imports modules)))))
+    (unless (equal? baseline-value candidate-value)
+      (error "indexed import validation changed diagnostic semantics"))
+    (unless (benchmark-receipt-pass? candidate-receipt)
+      (error "indexed import validation exceeded ASP benchmark budget"
+             candidate-receipt))
+    (unless (< (benchmark-fixture-ref candidate-receipt 'elapsedNs)
+               (benchmark-fixture-ref baseline-receipt 'elapsedNs))
+      (error "shared import name index did not improve dense validation"
+             baseline-receipt candidate-receipt))
+    (display "[poo-flow-benchmark] module-import-validation-indexed baseline=")
+    (write baseline-receipt)
+    (display " candidate=")
+    (write candidate-receipt)
+    (displayln " semanticEquivalent=#t")
+    (force-output)))

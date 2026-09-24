@@ -115,11 +115,11 @@ model must be built.
 The following are current project adapters, not upstream primitives:
 
 - =poo-flow-module-interface-prototype=;
-- =poo-flow-module-object-has-slot?=;
 - =poo-flow-module-object-ref/default=;
 - =poo-flow-module-object->alist=.
 
 They may help bridge current code, but they do not define a second object model.
+Generic slot presence is not adapted: callers use upstream =.slot?= directly.
 
 ** Legacy composition helpers
 

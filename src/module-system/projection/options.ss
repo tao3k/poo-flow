@@ -9,7 +9,7 @@
 ;; | PooModuleOptionSchemaCandidate = Value
 ;; | PooModuleOptionValidationReceiptCandidate = Value
 
-(import (only-in :clan/poo/object .all-slots .ref)
+(import (only-in :clan/poo/object .all-slots .ref .slot?)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
         (only-in :poo-flow/src/module-system/object-family/syntax
@@ -130,7 +130,7 @@
   (let ((value-type (poo-flow-module-schema-spec-type schema-spec))
         (metadata-value (poo-flow-module-schema-spec-metadata schema-spec)))
     (cond
-     ((poo-flow-module-object-has-slot? schema-spec 'policy)
+     ((.slot? schema-spec 'policy)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value
@@ -138,7 +138,7 @@
        (.ref schema-spec 'policy)
        (poo-flow-module-object-ref/default schema-spec 'default #f)
        metadata-value))
-     ((poo-flow-module-object-has-slot? schema-spec 'constant)
+     ((.slot? schema-spec 'constant)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value
@@ -146,7 +146,7 @@
        'constant
        (.ref schema-spec 'constant)
        metadata-value))
-     ((poo-flow-module-object-has-slot? schema-spec 'default)
+     ((.slot? schema-spec 'default)
       (make-poo-flow-module-option-schema
        option-id-value
        module-id-value

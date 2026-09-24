@@ -6,7 +6,7 @@
 ;;; Boundary: Marlin-style module interface and config helpers.
 ;;; Invariant: interface values are schemas and metadata, not loaders.
 
-(import (only-in :clan/poo/object .all-slots .o .ref object?)
+(import (only-in :clan/poo/object .all-slots .o .ref .slot? object?)
         (only-in :clan/poo/mop validate)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringProfileContract
@@ -42,7 +42,6 @@
         poo-flow-option-override
         poo-flow-option-conflict
         poo-flow-module-kind=?
-        poo-flow-module-object-has-slot?
         poo-flow-module-object-ref/default
         poo-flow-module-object->alist)
 
@@ -126,18 +125,12 @@
    (else
     (equal? value expected))))
 
-;;; Boundary: config lookup stays POO slot-based and avoids list-shape parsing.
-;; : (-> POOConfigRecord Symbol Boolean)
-(def (poo-flow-module-object-has-slot? object slot-name)
-  (and (object? object)
-       (member slot-name (.all-slots object))))
-
 ;;; Boundary: module object ref default is the policy-visible edge for module-
 ;;; system behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> POOConfigRecord Symbol ConfigSlotValue ConfigSlotValue)
 (def (poo-flow-module-object-ref/default object slot-name default-value)
-  (if (poo-flow-module-object-has-slot? object slot-name)
+  (if (and (object? object) (.slot? object slot-name))
     (.ref object slot-name)
     default-value))
 
@@ -197,7 +190,7 @@
 ;; : (-> PooModuleInterfaceCandidate Boolean)
 (def (poo-flow-module-interface? value)
   (and (object? value)
-       (poo-flow-module-object-has-slot? value 'kind)
+       (.slot? value 'kind)
        (poo-flow-module-kind=? (.ref value 'kind) poo-flow-module-interface-kind)))
 
 ;; : (-> PooModuleInterface InterfaceId)

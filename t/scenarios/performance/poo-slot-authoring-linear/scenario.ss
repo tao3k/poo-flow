@@ -7,12 +7,19 @@
 ;;; the production tail-passing implementation. The baseline is evidence only;
 ;;; it is not a second runtime or a public compatibility path.
 
-(import (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-us)
+(import (only-in :asp-gerbil-scheme/benchmark-api
+                 benchmark-fixture-contract-pass?
+                 benchmark-fixture-ref
+                 benchmark-receipt-pass?
+                 benchmark-run/result)
         (only-in :poo-flow/src/module-system/observability/module-presentation
                  poo-flow-poo-slot-authoring-datum-bindings))
 
-(def +sample-count+ 20)
 (def +nesting-depth+ 300)
+(def fixture
+  (call-with-input-file
+   "t/scenarios/performance/poo-slot-authoring-linear/benchmark.ss"
+   read))
 
 (def (nested-object depth)
   (if (zero? depth)
@@ -60,46 +67,30 @@
               (baseline-bindings (car datum))
               (baseline-bindings (cdr datum)))))))
 
-(def baseline-value (baseline-bindings source-datum))
-(def candidate-value
-  (poo-flow-poo-slot-authoring-datum-bindings source-datum))
+(unless (benchmark-fixture-contract-pass? fixture)
+  (error "invalid ASP benchmark fixture" fixture))
 
-(unless (equal? baseline-value candidate-value)
-  (error "tail-passing POO slot walk changed source-order semantics"
-         (length baseline-value)
-         (length candidate-value)))
-
-(displayln "[poo-slot-authoring] phase=warmup")
-(force-output)
-(baseline-bindings source-datum)
-(poo-flow-poo-slot-authoring-datum-bindings source-datum)
-
-(displayln "[poo-slot-authoring] phase=baseline-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def baseline-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda () (baseline-bindings source-datum))))
-
-(displayln "[poo-slot-authoring] phase=candidate-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def candidate-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda ()
-     (poo-flow-poo-slot-authoring-datum-bindings source-datum))))
-
-(unless (< candidate-p95-us baseline-p95-us)
-  (error "tail-passing POO slot walk did not improve deep traversal"
-         baseline-p95-us candidate-p95-us))
-
-(displayln "schema=poo-flow.poo-slot-authoring-linear.v1")
-(displayln "sample-count=" +sample-count+)
-(displayln "nesting-depth=" +nesting-depth+)
-(displayln "binding-count=" (length candidate-value))
-(displayln "baseline-p95-us=" baseline-p95-us)
-(displayln "candidate-p95-us=" candidate-p95-us)
-(displayln "source-order-equivalent=#t")
-(displayln "accepted=#t")
+(let-values (((baseline-receipt baseline-value)
+              (benchmark-run/result
+               fixture
+               (lambda () (baseline-bindings source-datum)))))
+  (let-values (((candidate-receipt candidate-value)
+                (benchmark-run/result
+                 fixture
+                 (lambda ()
+                   (poo-flow-poo-slot-authoring-datum-bindings source-datum)))))
+    (unless (equal? baseline-value candidate-value)
+      (error "tail-passing POO slot walk changed source-order semantics"))
+    (unless (benchmark-receipt-pass? candidate-receipt)
+      (error "tail-passing POO slot walk exceeded ASP benchmark budget"
+             candidate-receipt))
+    (unless (< (benchmark-fixture-ref candidate-receipt 'elapsedNs)
+               (benchmark-fixture-ref baseline-receipt 'elapsedNs))
+      (error "tail-passing POO slot walk did not improve deep traversal"
+             baseline-receipt candidate-receipt))
+    (display "[poo-flow-benchmark] poo-slot-authoring-linear baseline=")
+    (write baseline-receipt)
+    (display " candidate=")
+    (write candidate-receipt)
+    (displayln " semanticEquivalent=#t")
+    (force-output)))

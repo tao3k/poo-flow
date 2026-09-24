@@ -17,7 +17,7 @@
                  test-case
                  test-error
                  test-suite)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .ref .slot?)
         :poo-flow/src/module-system/api
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/loader/context
@@ -309,9 +309,7 @@
     (test-case "uses Gerbil-hosted higher-order macros for POO blocks"
       (check-equal? (not
                      (not
-                      (poo-flow-module-object-has-slot?
-                       user-generated-poo-block
-                       'generated)))
+                      (.slot? user-generated-poo-block 'generated)))
                     #t)
       (check-equal? (.ref user-generated-poo-block 'generated)
                     "poo-flow")
@@ -319,9 +317,7 @@
                     'slot-based)
       (check-equal? (not
                      (not
-                      (poo-flow-module-object-has-slot?
-                       user-generated-hook-block
-                       'before-init)))
+                      (.slot? user-generated-hook-block 'before-init)))
                     #t)
       (check-equal? (.ref user-generated-hook-block 'before-init)
                     '(prepare-state))

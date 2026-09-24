@@ -72,7 +72,6 @@ The exact public identifiers are recorded in
 The current POO Flow interface exports:
 
 - =poo-flow-module-interface-prototype=;
-- =poo-flow-module-object-has-slot?=;
 - =poo-flow-module-object-ref/default=;
 - =poo-flow-module-object->alist=.
 
@@ -81,9 +80,10 @@ they belong in the future public architecture.
 
 ** Exact owner evidence
 
-The exact owner for =poo-flow-module-object-has-slot?= shows a generic
+The removed =poo-flow-module-object-has-slot?= owner showed a generic
 combination of native object recognition, slot enumeration, and membership
-testing. No Module-specific invariant is present.
+testing. It had no Module-specific invariant; callers now use upstream
+=.slot?= directly.
 
 The exact owner for =poo-flow-module-object-ref/default= shows a generic
 slot-presence check followed by native projection or a caller-supplied default.
@@ -192,8 +192,8 @@ A project adapter is rejected from the public API when it:
 - converts a POO object into another authoritative representation;
 - exists only to support a rejected clause parser.
 
-=poo-flow-module-object-has-slot?= is REJECT-PUBLIC because its exact owner
-shows generic slot mechanics rather than Module semantics.
+=poo-flow-module-object-has-slot?= was removed because its exact owner showed
+generic slot mechanics rather than Module semantics.
 
 The current public export does not create a compatibility obligation. This is a
 new architecture.
@@ -337,12 +337,12 @@ Every decision edge records why the adapter has or lacks semantic ownership.
 |------------+---------------+--------------+--------|
 | =object-ref= and native object operations | =gerbil-poo= | KEEP-NATIVE | Upstream owns generic object mechanics. |
 | =poo-flow-module-interface-prototype= | POO Flow | KEEP-DOMAIN candidate | Module semantics are domain-owned; current body still requires exact proof. |
-| =poo-flow-module-object-has-slot?= | POO Flow | REJECT-PUBLIC | Exact body adds no Module invariant. |
+| =poo-flow-module-object-has-slot?= | removed | REMOVED | Upstream =.slot?= owns generic slot presence. |
 | =poo-flow-module-object-ref/default= | POO Flow | INTERNAL | Exact body is generic defaulting convenience. |
 | =poo-flow-module-object->alist= | POO Flow | INTERNAL diagnostic | Representation conversion cannot own semantics. |
 | profile-composition stage and clause helpers | POO Flow | legacy INTERNAL | They support the rejected parallel clause architecture. |
 
-This table classifies the target architecture. It does not perform source
+This table records the target architecture and completed native-operation
 removal.
 
 * Ownership and representation laws

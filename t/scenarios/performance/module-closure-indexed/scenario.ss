@@ -7,7 +7,11 @@
 ;;; native hash admission index. The baseline is evidence only; it is not an
 ;;; alternate runtime or a public compatibility path.
 
-(import (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-us)
+(import (only-in :asp-gerbil-scheme/benchmark-api
+                 benchmark-fixture-contract-pass?
+                 benchmark-fixture-ref
+                 benchmark-receipt-pass?
+                 benchmark-run/result)
         (only-in :poo-flow/src/module-system/descriptor/interface
                  make-empty-poo-flow-module-descriptor
                  poo-flow-module-name
@@ -16,8 +20,11 @@
                  poo-flow-module-closure
                  poo-flow-module-names))
 
-(def +sample-count+ 20)
 (def +module-count+ 1000)
+(def fixture
+  (call-with-input-file
+   "t/scenarios/performance/module-closure-indexed/benchmark.ss"
+   read))
 
 (def modules
   (let loop ((index 0) (values-rev '()))
@@ -55,42 +62,30 @@
 (def (baseline-closure values)
   (baseline-closure/add values '()))
 
-(def baseline-value (baseline-closure modules))
-(def candidate-value (poo-flow-module-closure modules))
+(unless (benchmark-fixture-contract-pass? fixture)
+  (error "invalid ASP benchmark fixture" fixture))
 
-(unless (equal? (poo-flow-module-names baseline-value)
-                (poo-flow-module-names candidate-value))
-  (error "indexed module closure changed distinct-module order"))
-
-(displayln "[module-closure-indexed] phase=warmup")
-(force-output)
-(baseline-closure modules)
-(poo-flow-module-closure modules)
-
-(displayln "[module-closure-indexed] phase=baseline-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def baseline-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda () (baseline-closure modules))))
-
-(displayln "[module-closure-indexed] phase=candidate-p95 sample-count="
-           +sample-count+)
-(force-output)
-(def candidate-p95-us
-  (benchmark-p95-elapsed-us
-   +sample-count+
-   (lambda () (poo-flow-module-closure modules))))
-
-(unless (< candidate-p95-us baseline-p95-us)
-  (error "shared module closure index did not improve broad traversal"
-         baseline-p95-us candidate-p95-us))
-
-(displayln "schema=poo-flow.module-closure-indexed.v1")
-(displayln "sample-count=" +sample-count+)
-(displayln "module-count=" +module-count+)
-(displayln "baseline-p95-us=" baseline-p95-us)
-(displayln "candidate-p95-us=" candidate-p95-us)
-(displayln "module-order-equivalent=#t")
-(displayln "accepted=#t")
+(let-values (((baseline-receipt baseline-value)
+              (benchmark-run/result
+               fixture
+               (lambda () (baseline-closure modules)))))
+  (let-values (((candidate-receipt candidate-value)
+                (benchmark-run/result
+                 fixture
+                 (lambda () (poo-flow-module-closure modules)))))
+    (unless (equal? (poo-flow-module-names baseline-value)
+                    (poo-flow-module-names candidate-value))
+      (error "indexed module closure changed distinct-module order"))
+    (unless (benchmark-receipt-pass? candidate-receipt)
+      (error "indexed module closure exceeded ASP benchmark budget"
+             candidate-receipt))
+    (unless (< (benchmark-fixture-ref candidate-receipt 'elapsedNs)
+               (benchmark-fixture-ref baseline-receipt 'elapsedNs))
+      (error "shared module closure index did not improve broad traversal"
+             baseline-receipt candidate-receipt))
+    (display "[poo-flow-benchmark] module-closure-indexed baseline=")
+    (write baseline-receipt)
+    (display " candidate=")
+    (write candidate-receipt)
+    (displayln " semanticEquivalent=#t")
+    (force-output)))
