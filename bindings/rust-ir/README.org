@@ -15,5 +15,11 @@ owning Scheme function and determinism test are:
 - =src/modules/query/rust-ir.ss=
 - =t/query-rust-ir-test.ss=
 
+Native Rust consumers depend on the small =poo-flow-rust-ir= crate in this
+directory.  The crate only embeds the checked-in IR as bytes; it contains no
+contract implementation.  Consumer build scripts lower those bytes through
+=gerbil-scheme-rust-ir=, so no checkout path or runtime Scheme process is
+required.
+
 The Query candidate projection performs transport pre-admission only.  It does
 not execute a Query, manufacture an MRR receipt, or grant action authority.
