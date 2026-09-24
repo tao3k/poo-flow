@@ -13,13 +13,19 @@ on:
       - "docs/**"
       - "ORG_ZHIXING_REV"
       - "org-zhixing.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/github-page.yml"
+      - "docs/**"
+      - "ORG_ZHIXING_REV"
+      - "org-zhixing.toml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: pages-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -84,6 +90,7 @@ jobs:
           path: ${{ env.PAGES_OUTPUT }}
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
