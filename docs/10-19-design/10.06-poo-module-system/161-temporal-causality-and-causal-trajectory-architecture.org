@@ -337,7 +337,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
    candidate paths plus explicit unknown-frontier queries.
 - [ ] Bind those GQL queries to an MRR Rust execution receipt through the
    gerbil-parser native FFI; parser qualification alone is not query execution
-   and Lambda must not add a subprocess or a second graph runtime.
+   and Lambda must not add a subprocess or a second graph runtime.  POO Flow's
+   typed candidate, CLOS admission, and Runtime v0 wire are ready; the remaining
+   owner is the MRR Rust adapter from its admitted physical result receipt.
 - [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
    native parser qualification and byte-exact roundtrip are closed.
 - [X] Run official TLC model exhaustion through the explicit devenv-backed
