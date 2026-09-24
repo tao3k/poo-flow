@@ -82,8 +82,24 @@
         (check-equal?
          (contains?
           performance-source
-          "(poo-flow-testing-observability-extension +asp-testing-interface+)")
+         "(poo-flow-testing-observability-extension +asp-testing-interface+)")
          #t)))
+
+    (test-case "Just test launch is fail-closed before Profile loading"
+      (let (source (call-with-input-file "justfile" read-all-as-string))
+        (check-equal?
+         (contains? source
+                    "env_var_or_default(\"GERBIL_TEST_MAX_HEAP\", \"1G\")")
+         #t)
+        (check-equal?
+         (contains? source
+                    "env_var_or_default(\"GERBIL_TEST_DEBUG\", \"q\")")
+         #t)
+        (check-equal?
+         (contains? source
+                    "gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss")
+         #t)
+        (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)))
 
     (test-case "default policy measures catalog size without an invented limit"
       (let (port (open-output-string))

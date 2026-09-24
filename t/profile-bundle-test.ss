@@ -24,6 +24,12 @@
       stages: (.o)
       runtime-executed?: #f))
 
+(def string-identity-profile
+  (.o identity: "example/profile"
+      name: 'example-profile
+      stages: (.o)
+      runtime-executed?: #f))
+
 (def module-profiles
   (poo-flow-module-profiles
    (poo-flow-profile-export
@@ -101,4 +107,8 @@
        (check-equal? (.ref root 'profiles)
                      (list audit-profile governed-profile))
        (check-equal? (eq? (.ref root 'profile-bundle) bundle) #t)
-       (check-equal? (.ref root 'runtime-executed?) #f)))))
+       (check-equal? (.ref root 'runtime-executed?) #f)))
+   (test-case "domain string identities remain valid direct Profile keys"
+     (let (bundle (compose profiles string-identity-profile))
+       (check-equal? (.ref bundle 'profile-identities)
+                     '(example/profile))))))

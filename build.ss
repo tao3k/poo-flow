@@ -59,6 +59,8 @@
     "src/user-interface/init-declaration-syntax.ss"
     "src/modules/funflow/interface.ss"
     "src/modules/funflow/runtime-load-projection.ss"
+    "src/profiles/human-ai-capability.ss"
+    "src/profiles/agentic-research.ss"
     "src/modules/authorization/interface.ss"
     "src/modules/authorization/providers/cedar/interface.ss"
     "src/modules/governance/interface.ss"

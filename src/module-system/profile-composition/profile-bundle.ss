@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .all-slots .mix .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
-        (only-in :std/list/list append-map delete-duplicates/hash every fold)
+        (only-in :std/list/list append-map delete-duplicates/hash every filter-map)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract
                  poo-flow-empty-profiles)
@@ -219,15 +219,21 @@
 
 ;;; Stage spaces are POO objects whose slot names are Scenario stage names.
 ;;; Earlier operands retain normal composition precedence; a derived Profile
-;;; refines a stage explicitly with native `=>.+` before entering this fold.
+;;; refines a stage explicitly with native `=>.+` before entering this merge.
+;;; Empty Stage spaces carry no semantics, so discard them before asking the
+;;; native POO engine for one flat precedence list.  This avoids manufacturing
+;;; one empty object and one prototype layer per selected Profile.
 (def (poo-flow-compose-stage-spaces stage-spaces)
-  (fold
-   (lambda (stage-space accumulated)
-     (unless (object? stage-space)
-       (error "Profile stages must be a POO slot space" stage-space))
-     (.mix accumulated stage-space))
-   (.o)
-   stage-spaces))
+  (let (effective-stage-spaces
+        (filter-map
+         (lambda (stage-space)
+           (unless (object? stage-space)
+             (error "Profile stages must be a POO slot space" stage-space))
+           (and (pair? (.all-slots stage-space)) stage-space))
+         stage-spaces))
+    (if (null? effective-stage-spaces)
+      (.o)
+      (apply .mix effective-stage-spaces))))
 
 (def (poo-flow-profile-export-ref profiles-value profile-identity)
   (unless (and (object? profiles-value)
@@ -268,9 +274,10 @@
                exports))
          (stage-values
           (poo-flow-compose-stage-spaces
-           (map (lambda (profile)
-                  (poo-flow-profile-ref/default profile 'stages (.o)))
-                profile-values))))
+           (filter-map
+            (lambda (profile)
+              (and (.slot? profile 'stages) (.ref profile 'stages)))
+            profile-values))))
     (poo-flow-profile-bundle
      (list (poo-flow-scenario-module-binding instance-name module-value))
      profile-values
@@ -284,14 +291,18 @@
      (map (cut .ref <> 'provenance) exports))))
 
 (def (poo-flow-profile-identity profile)
-  (let (profile-identity-value
-        (cond
-         ((.slot? profile 'identity) (.ref profile 'identity))
-         ((.slot? profile 'name) (.ref profile 'name))
-         (else (error "Profile operand requires identity or name" profile))))
-    (unless (symbol? profile-identity-value)
-      (error "Profile identity must be a symbol" profile-identity-value))
-    profile-identity-value))
+  (let* ((identity-value
+          (and (.slot? profile 'identity) (.ref profile 'identity)))
+         (name-value
+          (and (.slot? profile 'name) (.ref profile 'name))))
+    (cond
+     ((symbol? identity-value) identity-value)
+     ((and (string? identity-value) (> (string-length identity-value) 0))
+      (string->symbol identity-value))
+     ((symbol? name-value) name-value)
+     (else
+      (error "Profile operand requires a symbolic or string identity"
+             identity-value name-value)))))
 
 (def (poo-flow-direct-profile-bundle profile)
   (unless (object? profile)

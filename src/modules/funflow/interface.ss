@@ -9,9 +9,11 @@
         "objects.ss"
         "funs.ss"
         "config.ss"
-        "github-ci-contract.ss")
+        "github-ci-contract.ss"
+        "profile-library.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "funs.ss")
         (import: "config.ss")
-        (import: "github-ci-contract.ss"))
+        (import: "github-ci-contract.ss")
+        (import: "profile-library.ss"))
