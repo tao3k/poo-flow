@@ -6,6 +6,8 @@ name: Runtime WASM package
 
 on:
   push:
+    branches:
+      - main
     paths:
       - bindings/runtime-wasm/**
       - bindings/runtime-c/bundle-v1/**

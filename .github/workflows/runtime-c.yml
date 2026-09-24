@@ -6,6 +6,8 @@ name: Runtime C ABI
 
 on:
   push:
+    branches:
+      - main
     paths:
       - bindings/runtime-c/**
       - src/contract/runtime-v0-abi-schema.ss
