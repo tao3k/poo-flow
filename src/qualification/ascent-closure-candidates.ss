@@ -91,7 +91,8 @@
            (expression
             (.mix poo-flow-ascent-table-expression-prototype
                   (.o (source-pairs edges) (radix width))))
-           (pairs (.ref expression 'closure-pairs))
+           (pairs (.ref expression 'shortest-distance-pairs))
+           (distance-of (.ref expression 'shortest-distance-of))
            (all
             (let loop ((remaining pairs) (origin #f) (supports #f) (result []))
               (if (null? remaining)
@@ -104,6 +105,9 @@
                        (path (vector-ref paths to)))
                   (unless path
                     (error "ASCENT closure pair has no source support" encoded))
+                  (unless (= (length path) (distance-of encoded))
+                    (error "ASCENT shortest support and lattice distance disagree"
+                           encoded))
                   (loop (cdr remaining) from paths
                         (cons (.o (pair encoded)
                                   (distance (length path))

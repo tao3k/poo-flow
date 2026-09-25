@@ -128,6 +128,52 @@
                 (if dense? (= (u8vector-ref bits pair) 1)
                     (hash-get sparse pair))))))))
 
+;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
+;;; paths by minimum distance. The frontier contains only newly discovered or
+;;; improved pairs, and private storage is published through read-only slots.
+(def (relation-shortest-distance-projection source neighbors-of radix)
+  (let* ((dense? (<= radix 512))
+         (distances (and dense? (make-vector (* radix radix) #f)))
+         (sparse (and (not dense?) (make-hash-table)))
+         (frontier [])
+         (discovered []))
+    (def (lookup-distance pair)
+      (if dense? (vector-ref distances pair) (hash-get sparse pair)))
+    (def (improve! pair depth)
+      (let (previous (lookup-distance pair))
+        (if (and previous (<= previous depth))
+          #f
+          (begin
+            (unless previous (set! discovered (cons pair discovered)))
+            (if dense? (vector-set! distances pair depth)
+                (hash-put! sparse pair depth))
+            #t))))
+    (.call UIntTrieSet .foldl
+           (lambda (pair _)
+             (when (improve! pair 1)
+               (set! frontier (cons pair frontier))))
+           (void) source)
+    (until (null? frontier)
+      (let (next [])
+        (for-each
+         (lambda (pair)
+           (let ((from (quotient pair radix))
+                 (via (modulo pair radix))
+                 (depth (lookup-distance pair)))
+             (neighbors-of
+              via
+              (lambda (to)
+                (let (candidate (+ (* from radix) to))
+                  (when (improve! candidate (+ depth 1))
+                    (set! next (cons candidate next))))))))
+         frontier)
+        (set! frontier next)))
+    (.o (pairs (list-sort < discovered))
+        (distance-of
+         (lambda (pair)
+           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
+                (lookup-distance pair)))))))
+
 (def poo-flow-ascent-table-expression-prototype
   (.o (:: self [] source-pairs radix)
       (right-index (relation-index source-pairs radix))
@@ -146,6 +192,13 @@
        (.ref (.ref self 'closure-projection) 'contains?))
       (closure-set
        (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
+      (shortest-distance-projection
+       (relation-shortest-distance-projection
+        source-pairs (.ref self 'right-index) radix))
+      (shortest-distance-pairs
+       (.ref (.ref self 'shortest-distance-projection) 'pairs))
+      (shortest-distance-of
+       (.ref (.ref self 'shortest-distance-projection) 'distance-of))
       (two-hop-pairs
        ((.ref self 'compose-left) source-pairs))
       (at-most-two-hop-projection

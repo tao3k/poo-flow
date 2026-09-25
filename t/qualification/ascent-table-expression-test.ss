@@ -86,6 +86,40 @@
                   (.o (source-pairs (.ref UIntTrieSet '.empty))
                       (radix 8))))
         (check-equal? (.ref expression 'closure-pairs) '())))
+    (test-case "Dual shortest-distance lattice keeps the minimum path"
+      (let* ((edges (.call UIntTrieSet .<-list '(10 19 12 35)))
+             (expression
+              (.mix poo-flow-ascent-table-expression-prototype
+                    (.o (source-pairs edges) (radix 8)))))
+        (check-equal? (.ref expression 'shortest-distance-pairs)
+                      (.ref expression 'closure-pairs))
+        (check-equal? ((.ref expression 'shortest-distance-of) 11) 2)
+        (check-equal? ((.ref expression 'shortest-distance-of) 10) 1)
+        (check-equal? ((.ref expression 'shortest-distance-of) 13) #f)
+        (let (direct
+              (.mix poo-flow-ascent-table-expression-prototype
+                    (.o (source-pairs
+                         (.call UIntTrieSet .<-list '(10 11 12 19 35)))
+                        (radix 8))))
+          (check-equal? ((.ref direct 'shortest-distance-of) 11) 1)
+          (check-equal? (.ref direct 'shortest-distance-pairs)
+                        (.ref expression 'closure-pairs)))))
+    (test-case "Dual lattice stabilizes on a cycle and a sparse radix"
+      (let ((cycle
+             (.mix poo-flow-ascent-table-expression-prototype
+                   (.o (source-pairs
+                        (.call UIntTrieSet .<-list '(10 19 28 34 11)))
+                       (radix 8))))
+            (sparse
+             (.mix poo-flow-ascent-table-expression-prototype
+                   (.o (source-pairs
+                        (.call UIntTrieSet .<-list '(515 1029)))
+                       (radix 513)))))
+        (check-equal? (.ref cycle 'shortest-distance-pairs)
+                      (.ref cycle 'closure-pairs))
+        (check-equal? ((.ref cycle 'shortest-distance-of) 18) 3)
+        (check-equal? ((.ref sparse 'shortest-distance-of) 516) 2)
+        (check-equal? ((.ref sparse 'shortest-distance-of) 517) #f)))
     (test-case "larger radix retains sparse snapshot and membership behavior"
       (let* ((source (.o (source-pairs
                           (.call UIntTrieSet .<-list '(515 1029)))

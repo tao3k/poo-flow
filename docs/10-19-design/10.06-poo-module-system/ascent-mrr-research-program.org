@@ -122,6 +122,20 @@ semantic FactId, generation, RulePackId, receipt digest, and admission.  The
 remaining ASCENT work is generic rule evaluation and validated relation
 declarations in Scheme, beyond this selected binary transitive rule.
 
+The selected Ascent =Dual<usize>= path lattice is now also a demanded Scheme
+projection on the same POO relation expression.  A frontier extends each
+known path by one source edge and updates a pair only when the distance gets
+smaller.  It publishes canonical pairs and a read-only distance lookup;
+the support candidate evaluator reads this projection and checks that its
+selected source path has the lattice distance.  The diamond, direct shorter
+path, cycle, and sparse-radix cases are covered in the existing expression
+tests.  The project-standard 20-sample benchmark under
+=t/performance/ascent-shortest-candidates-performance-test.ss= measures all
+190 candidates for a 20-node chain, including lattice evaluation and support
+selection; the local optimized p95 was 306us against a 1000us target and
+2000us ceiling.  This matches the current MRR/Ascent unit-weight path rule;
+generic lattice values and general rules remain open.
+
 The project-standard
 =t/scenarios/performance/ascent-reachability-closure/benchmark.ss= measures
 the whole demanded closure over a 20-node chain: 19 input pairs and 190
