@@ -96,15 +96,18 @@ performance lane.  The earlier unoptimized hash-based module measured 4868us
 p95 on the same machine, so this result requires optimized native compilation.
 The preceding hash-based candidate measured 1290us p95 in Linux CI.  The
 byte-vector candidate measured 1099us p95 there with a redundant input-count
-traversal still inside its timed thunk; its same-workload A/B candidate
-measured 1036us.  The projection-only CI receipt is pending.
+traversal still inside its timed thunk.  With that traversal moved out, exact
+head =6be3fca4= measured 993.866us p95 in Linux CI: below one millisecond,
+but still above the fixture's 950us target.  Its 2000us admission ceiling
+passed.
 An A/B scenario follows PR #31's equivalent-output method.  It compiles both
 the preceding persistent-trie implementation and the current expression with
 =gxc -O=, uses the same 512-pair fixture, and checks exact sorted-pair equality.
 The preceding hash-based candidate measured roughly 20x faster than the
 persistent baseline locally.  The byte-vector candidate passed the same
 exact-output A/B check, with latest local baseline 16.303ms and candidate
-650us.  CI runs this scenario after the
+650us.  On Linux, exact head =6be3fca4= measured 25.877ms baseline and
+1.013ms candidate.  CI runs this scenario after the
 native performance lane.  Larger cardinalities and cross-platform CI
 qualification remain open.
 
@@ -114,7 +117,8 @@ baseline uses Scheme =memq= on the canonical pair list; the candidate uses the
 POO projection's retained byte-vector lookup.  It checks each ordered Boolean
 result for equality.  Two local 20-sample receipts measured baseline p95 of
 865us and 880us versus candidate p95 of 19us and 18us, respectively (about
-46x).  CI runs this scenario separately from cold projection, so
+46x).  Exact-head Linux CI measured 1.328ms baseline versus 42.394us
+candidate.  CI runs this scenario separately from cold projection, so
 the warm lookup number is never presented as full index-construction cost.
 Its fixture targets 100us and has a 500us ceiling for all 1,280 decisions.
 
