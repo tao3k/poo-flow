@@ -21,5 +21,7 @@
  (inputShape . "256 vertices with two outgoing edges each, encoded as 512 bounded binary pairs")
  (expectedOutcome . "one- and two-hop relation projection has 1024 distinct pairs")
  (expectedRepair . "preserve the indexed bounded join and POO slot demand; keep source encoding and MRR admission separate")
- (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (baseline . "prior optimized persistent SimpleTrie and UIntTrieSet index/compose/union implementation")
+ (candidate . "POO expression with private vector index, local hash deduplication, and canonical list output")
+ (measurementPhases baseline-projection candidate-projection assert-semantic-gate assert-time-gate observe-runtime-memory)
  (tags poo ascent relation stdlib performance big-o))

@@ -150,8 +150,9 @@ jobs:
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'
         run: |
-          gerbil env gxc -O src/qualification/ascent-table-expression.ss
+          gerbil env gxc -O src/qualification/ascent-table-expression.ss t/scenarios/performance/ascent-table-expression/baseline.ss
           gerbil env ./performance-tests.ss
+          gerbil env gxi t/scenarios/performance/ascent-table-expression/scenario.ss
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

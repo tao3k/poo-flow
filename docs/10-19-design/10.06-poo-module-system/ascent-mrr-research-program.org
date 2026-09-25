@@ -87,7 +87,14 @@ and has a 2000us noise ceiling;
 CI explicitly compiles this qualification module with =gxc -O= before the
 performance lane.  The unoptimized module measured 4868us p95 on the same
 machine, so the sub-millisecond result requires optimized native compilation.
-Larger cardinalities and cross-platform CI qualification remain open.
+An A/B scenario follows PR #31's equivalent-output method.  It compiles both
+the preceding persistent-trie implementation and the current expression with
+=gxc -O=, uses the same 512-pair fixture, and checks exact sorted-pair equality.
+Three local pairs of standard receipts measured baseline p95 of 17.313ms,
+15.616ms, and 15.540ms versus candidate p95 of 846us, 769us, and 757us,
+respectively: about 20x on this workload.  CI runs this scenario after the
+native performance lane.  Larger cardinalities and cross-platform CI
+qualification remain open.
 
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation
