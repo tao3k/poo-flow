@@ -66,6 +66,7 @@
     "src/modules/authorization/providers/cedar/interface.ss"
     "src/modules/governance/interface.ss"
     "src/modules/proof/interface.ss"
+    "src/semantic/orgize-interface.ss"
     "src/modules/query/interface.ss"
     "src/modules/query/rust-ir.ss"
     "src/modules/tla-plus/interface.ss"
