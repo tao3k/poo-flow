@@ -33,7 +33,7 @@ implementation ownership of the referenced modules.
 The formal surface distinguishes a completed native outcome from an
 operational state that has not produced semantic meaning.
 
-#+begin_src typst
+#+begin_src text
 #let NativeOutcome = (
   value: value => ("Value", value),
   failure: error => ("NativeFailure", error),
@@ -65,7 +65,7 @@ Only =Completed= has a semantic erasure.  Suspension, denial, and cancellation
 are control outcomes, so none can be reclassified as a native value or native
 failure.
 
-#+begin_src typst
+#+begin_src text
 #let conservative = (
   native-result-preserved
   and native-failure-preserved

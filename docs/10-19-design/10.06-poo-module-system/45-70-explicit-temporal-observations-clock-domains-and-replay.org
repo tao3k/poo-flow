@@ -21,7 +21,7 @@ clock domain, provenance identity, and observation identity.  Missing time
 suspends a time-dependent decision; it never authorizes an implicit live clock
 read.
 
-#+begin_src typst
+#+begin_src text
 #let time-observation(domain, instant, provenance, identity) = (
   domain: domain,
   instant: instant,
@@ -45,7 +45,7 @@ logical/version time is ordering evidence; authoritative service time requires
 trusted provenance.  Cross-domain comparison requires explicit conversion
 evidence.
 
-#+begin_src typst
+#+begin_src text
 #let comparable(a, b, evidence) = (
   a.domain == b.domain
   or valid-clock-conversion(evidence, a.domain, b.domain)

@@ -32,7 +32,7 @@ public API names.
 The formal surface distinguishes process-local execution authority from a
 portable semantic description.
 
-#+begin_src typst
+#+begin_src text
 #let CapabilityState = (
   fresh: "Fresh",
   consumed: "Consumed",
@@ -57,7 +57,7 @@ $ "Profile-operand"("live-continuation") = false $
 One-shot authority is a control invariant even when an underlying Scheme
 continuation could technically be invoked more than once.
 
-#+begin_src typst
+#+begin_src text
 #let portable-safe-point = (
   demand-known
   and immutable-root-known

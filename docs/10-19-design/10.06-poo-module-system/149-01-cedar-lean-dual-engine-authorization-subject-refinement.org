@@ -88,7 +88,7 @@ The compiled theorems establish:
 
 * Mathematical model
 
-#+begin_src typst
+#+begin_src text
 $ "AuthSubject" = (
   "request-digest",
   "policy-set-digest",

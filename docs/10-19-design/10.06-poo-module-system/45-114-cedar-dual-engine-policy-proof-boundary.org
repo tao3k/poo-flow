@@ -106,7 +106,7 @@ duplicates are non-semantic because the upstream authorization theorem already
 proves their invariance.  Conflicting reuse of one policy identifier is an
 admission error and is not normalized.
 
-#+begin_src typst
+#+begin_src text
 #let policy-input(
   cedar-version,
   policies,
@@ -157,7 +157,7 @@ grant.  External authority fails closed while the receipt preserves the exact
 runtime cause.  Cedar =erroringPolicies= remain inside the Cedar response and
 must not be replaced by an invented generic error class.
 
-#+begin_src typst
+#+begin_src text
 $ O_L = "LeanEngine"(I_p) $
 $ O_R = "RustEngine"(I_p) $
 
@@ -264,7 +264,7 @@ the authority risk:
 - an explicitly admitted lower-authority action may be =ordinary=;
 - absent or ambiguous classification is =elevated=.
 
-#+begin_src typst
+#+begin_src text
 $ mode("elevated") = "strict-lockstep" $
 $ mode("ordinary") = "rust-with-lean-shadow" $
 $ mode("unknown") = "strict-lockstep" $
@@ -404,7 +404,7 @@ The owner =PooFlowProof.PooC3.CedarCapabilityRiskProjection= makes authority
 risk a projection of an effective capability contract.  A caller-provided
 risk claim is ignored.
 
-#+begin_src typst
+#+begin_src text
 $ risk(C) =
   cases(
     "ordinary", if C.operation = "ordinary" and C.ordinary_admitted,
@@ -438,7 +438,7 @@ into external =Allow= or =Deny= authority.
 The Cedar owner is
 =PooFlowProof.PooC3.CedarResponseArbitrationBridge=.  Its comparable value is:
 
-#+begin_src typst
+#+begin_src text
 #let comparable-cedar-outcome(
   semantic-version,
   input-identity,
@@ -530,7 +530,7 @@ executable adapter has already been implemented.
 
 An admitted projection must satisfy:
 
-#+begin_src typst
+#+begin_src text
 $ project(raw_production_response) = expected_cedar_outcome $
 
 $ receipt_comparable(receipt) = expected_cedar_outcome $
@@ -610,7 +610,7 @@ Verification:
 The single POO Flow owner is a native =gerbil-poo= adapter object.  Its
 physical representation has exactly three object slots:
 
-#+begin_src typst
+#+begin_src text
 $ "PhysicalCedarAdapter" =
   (
     "definitionalEngine",

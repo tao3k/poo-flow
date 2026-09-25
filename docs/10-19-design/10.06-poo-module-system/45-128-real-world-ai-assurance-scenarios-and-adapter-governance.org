@@ -108,7 +108,7 @@ This produces a deliberate two-level responsibility split:
 2. =poo-flow-core= safely composes and executes those objects under explicit
    capability and policy evidence.
 
-#+begin_src typst
+#+begin_src text
 #let qualified(a, c) = $Q(a, c)$
 #let selected(a, u) = $S(a, u)$
 #let admitted(u) = $A(u)$
@@ -180,7 +180,7 @@ between contribution/qualification and composition/execution explicit.
 
 * Assurance equation
 
-#+begin_src typst
+#+begin_src text
 #let semantic_projection(s) = $P_s$
 #let adapter_refinement(s) = $R_s$
 #let dual_engine_conformance(s) = $C_s$
@@ -669,7 +669,7 @@ A scenario is not “safe”, “reliable”, “trusted”, or “assured” me
 The assurance claim is admitted only when the scenario’s complete conjunction
 is evidenced.
 
-#+begin_src typst
+#+begin_src text
 $ "AdmitAssuranceClaim"(s)
   iff "ProjectionProof"(s)
   and "RiskProof"(s)

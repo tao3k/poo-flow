@@ -157,7 +157,7 @@ The syntax contract is:
 (_ composition-name composition-expression)
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 $ "current-use-composition-shape" =
   ("name", "module-form", "clause"_1, dots, "clause"_n) $
 
@@ -258,7 +258,7 @@ The macro must not:
 - install runtime handlers; or
 - evaluate Profiles at macro-expansion time.
 
-#+begin_src typst
+#+begin_src text
 $ "expand"("user-composition"("name", e)) =
   "hygienic-bind"("name", "identity-project"("name", e)) $
 

@@ -62,7 +62,7 @@ The compiled theorems establish:
 Let =P= be resolved packages, =D= declaration identities, and =u= the package
 owner assignment.
 
-#+begin_src typst
+#+begin_src text
 $ u: D arrow P $
 
 $ "erase-owner"(d, u(d)) = d $

@@ -30,7 +30,7 @@ named by the barrier satisfies its declared readiness predicate, but it does
 not grant a shared commit boundary.  Atomicity is a separate live capability
 owned by the runtime adapter.
 
-#+begin_src typst
+#+begin_src text
 #let barrier(id, scopes, ready) = (
   id: id,
   scopes: scopes,
@@ -54,7 +54,7 @@ Coupled scopes require an adapter witness for one transactional comparison and
 transition of the complete head set.  If that witness is unavailable, an
 atomicity-requiring policy has no admitted fallback.
 
-#+begin_src typst
+#+begin_src text
 $ W = (witness-id, adapter-protocol-id, H_before, H_after, atomic-relation) $
 $ RuntimeAtomicityWitness(W)
   := W.atomic-relation(H_before, H_after) $

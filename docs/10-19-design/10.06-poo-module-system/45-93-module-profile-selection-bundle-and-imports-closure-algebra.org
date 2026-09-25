@@ -785,7 +785,7 @@ It binds one stable composition identity and performs one root instantiation.
 Any earlier binding name in this RFC is invalid and does not define an
 alternative, legacy, compatibility, migration, or deprecation surface.
 
-#+begin_src typst
+#+begin_src text
 $ E := { op("user-composition") } $
 
 $ AdmittedEntry(e) iff e = op("user-composition") $

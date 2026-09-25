@@ -37,7 +37,7 @@ consistency contract is validated.  Coincident timestamps, equal content
 identities, or numerically similar versions do not synthesize a cross-resource
 snapshot.
 
-#+begin_src typst
+#+begin_src text
 #let observation(resource-id, version, digest, observation-id, generation, observed-at) = (
   resource-id: resource-id,
   version: version,
@@ -69,7 +69,7 @@ actual observations satisfy it.  Freshness is evaluated against the semantic
 generation reference time; declaring a bound without validating observations
 against that bound does not establish freshness.
 
-#+begin_src typst
+#+begin_src text
 $ ValidatedObservationSet(O, C, t_ref) := $
 $ quad O != emptyset $
 $ and forall o_i, o_j in O: C.related(o_i, o_j) $

@@ -338,7 +338,7 @@ observability projection, or replayed configuration.
 
 The relation is:
 
-#+begin_src typst
+#+begin_src text
 #let RetryCapability(receipt, token) = (
   receipt.outcome == committed
   and receipt.selected_decision.permits_retry

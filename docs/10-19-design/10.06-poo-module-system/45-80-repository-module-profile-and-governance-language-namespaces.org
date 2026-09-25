@@ -20,7 +20,7 @@ Repository/source identity, projection module namespace, exported profile
 binding, and governance-language namespace answer different questions.  They
 are not aliases and cannot substitute for one another.
 
-#+begin_src typst
+#+begin_src text
 #let namespace-roles = (
   "repository-source",
   "projection-module",
@@ -48,7 +48,7 @@ module is implemented and verified.  Its exported binding names a first-class
 semantic profile value; =compose= performs no repository, module-path,
 package-manager, or global-registry lookup.
 
-#+begin_src typst
+#+begin_src text
 $ projection.status = "proposed-contract"
   ==> not claim-importable-module(projection) $
 

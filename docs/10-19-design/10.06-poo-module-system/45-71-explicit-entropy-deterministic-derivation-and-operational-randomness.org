@@ -20,7 +20,7 @@ variation source that changes semantic output must enter the cut as an
 immutable entropy identity with provenance; hidden live randomness is not
 admitted during pure derivation.
 
-#+begin_src typst
+#+begin_src text
 #let derivation-id(cut, entropy, purpose) = (
   cut,
   entropy,
@@ -45,7 +45,7 @@ Purpose identity provides domain separation.  Operational randomness may
 influence non-semantic choices such as retry jitter or worker selection, but it
 cannot change semantic results or their cache keys.
 
-#+begin_src typst
+#+begin_src text
 $ cut-a != cut-b
   ==> derivation-id(cut-a, entropy, purpose)
   != derivation-id(cut-b, entropy, purpose) $

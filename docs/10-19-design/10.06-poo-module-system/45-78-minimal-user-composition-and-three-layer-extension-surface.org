@@ -20,7 +20,7 @@ expression is evaluated exactly once.  The expression uses the pure
 =compose= function with one first-class strategy and zero or more ordinary POO
 profile values.
 
-#+begin_src typst
+#+begin_src text
 #let user-composition(binding, expression) = (
   binding: hygienic(binding),
   value: evaluate-once(expression),
@@ -46,7 +46,7 @@ The macro and the function stay deliberately small.  They do not evaluate the
 fixed point, execute effects, register providers, select adapters, parse policy
 clauses, read a hidden registry, or create another object system.
 
-#+begin_src typst
+#+begin_src text
 $ user-composition-boundary(macro)
   ==> not evaluates-fixed-point(macro)
   and not registers-providers(macro)

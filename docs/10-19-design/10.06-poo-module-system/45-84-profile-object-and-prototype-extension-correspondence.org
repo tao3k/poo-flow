@@ -35,7 +35,7 @@ object-to-prototype formula.  It proves only the POO Flow correspondence
 obligations that surround the construction adopted from POOF through the pinned
 =gerbil-poo= dependency.
 
-#+begin_src typst
+#+begin_src text
 #let NativeObject = "native-object"
 #let NativePrototype = "native-prototype"
 #let InvalidShape = "invalid-shape"
@@ -65,7 +65,7 @@ the single instantiated result to satisfy the Profile-object contract.  Thus a
 callable shape alone is not semantic admission, and in-place lifting preserves
 the complete declared operand sequence.
 
-#+begin_src typst
+#+begin_src text
 #let PinnedGerbilPoo = "github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead"
 
 $ "Profile" := "immutable native POO object" $

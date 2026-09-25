@@ -98,7 +98,7 @@ generic proofs; generic owners MUST NOT import Enterprise modules.
 
 * Mathematical interface
 
-#+begin_src typst
+#+begin_src text
 $ "EnterpriseAdmission"(c)
   =>
   "GovernedBaseAdmission"(c)

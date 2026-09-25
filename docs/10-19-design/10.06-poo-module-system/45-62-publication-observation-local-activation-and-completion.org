@@ -62,7 +62,7 @@ Publication changes the authoritative active head.  It does not establish that
 any consumer has observed, prepared, activated, or served the selected
 generation.  Each phase therefore carries a distinct receipt.
 
-#+begin_src typst
+#+begin_src text
 $ P = HeadTransitionReceipt(scope, generation, version, receipt-id) $
 $ O = HeadObservation(consumer, P, observed-generation, observation-receipt) $
 $ G = GenerationPreparationReceipt(O, artifact-id, preparation-receipt) $
@@ -83,7 +83,7 @@ the observation and preparation chain for the same generation.  Completion
 requires activation evidence covering every consumer required by the rollout
 completion policy.
 
-#+begin_src typst
+#+begin_src text
 $ LocallyActivated(A)
   => exists G, O: A.preparation = G and G.observation = O $
 

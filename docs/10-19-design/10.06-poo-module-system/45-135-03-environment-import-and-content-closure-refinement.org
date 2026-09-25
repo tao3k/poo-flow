@@ -62,7 +62,7 @@ The compiled theorems establish:
 
 * Mathematical model
 
-#+begin_src typst
+#+begin_src text
 $ "ToolchainMatches"(l, e) =
   "toolchain"(l) = "toolchain"(e) $
 

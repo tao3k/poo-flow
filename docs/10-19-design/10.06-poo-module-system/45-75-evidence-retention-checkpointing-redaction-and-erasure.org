@@ -19,7 +19,7 @@ Logical evidence history remains immutable, but this does not require permanent
 retention of every raw payload, index, encryption key, or physical replica.
 Erasure admission requires the complete retention and governance boundary.
 
-#+begin_src typst
+#+begin_src text
 #let erasure-checks(evidence, current) = (
   retention-window-expired(evidence, current.time-observation)
   and not legal-hold-active(evidence)
@@ -45,7 +45,7 @@ Checkpoint compaction preserves replay coverage.  Physical or cryptographic
 erasure requires receipts covering key destruction, every required replica,
 payload unavailability, and preservation of the canonical header.
 
-#+begin_src typst
+#+begin_src text
 $ redact(evidence, projection)
   ==> commitment(projection) = commitment(evidence)
   and not claims-physical-erasure(projection) $

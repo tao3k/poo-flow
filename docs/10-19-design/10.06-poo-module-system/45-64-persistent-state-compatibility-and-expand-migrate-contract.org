@@ -46,7 +46,7 @@ symmetric predicate cannot stand in for reader, writer, effect, continuation,
 and reversion obligations.  Pure compatibility contracts contain no hidden
 live resource reads.
 
-#+begin_src typst
+#+begin_src text
 $ Roles = {
   read-old,
   read-new,
@@ -71,7 +71,7 @@ creates backward-compatible capabilities before activation.  Migration carries
 reversion compatibility.  Contract requires all old access to drain and the
 reversion window to close.
 
-#+begin_src typst
+#+begin_src text
 $ Expand(E) prec Activation(A) prec Migrate(M) prec Contract(C) $
 
 $ Activation(A) => exists E: ExpandReceipt(E) $

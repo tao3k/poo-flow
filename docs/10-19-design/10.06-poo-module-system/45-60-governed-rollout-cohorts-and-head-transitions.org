@@ -35,7 +35,7 @@ explicit scopes.  It is not a mutable percentage and it is not a special kind
 of semantic generation.  Cohort assignment is a deterministic projection from
 admitted identities, rule, revision, and evidence.
 
-#+begin_src typst
+#+begin_src text
 #let rollout(id, source, target, rule, revision, policy, transitions) = (
   id: id,
   source: source,
@@ -67,7 +67,7 @@ Replay and restart re-evaluate the same pure assignment function over the same
 admitted input.  A rule or revision change does not reinterpret an existing
 receipt; it constructs a different semantic assignment identity.
 
-#+begin_src typst
+#+begin_src text
 $ I_1 = I_2 => Cohort(I_1) = Cohort(I_2) $
 $ I_1 = I_2 => AssignmentIdentity(I_1) = AssignmentIdentity(I_2) $
 

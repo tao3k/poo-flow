@@ -227,7 +227,7 @@ identity field and yields a non-empty source snapshot digest.
 Let \(D\) be the declared dependency identity, \(C(D)\) the matching source
 candidates, and \(R(D)\) the resolution operation.
 
-#+begin_src typst
+#+begin_src text
 #let resolves(D, C) = $ abs(C(D)) = 1 $
 #let receipt(D, C) = $ R(D) = cases(
   "resolved", if abs(C(D)) = 1,
@@ -251,7 +251,7 @@ The materialization key is derived from canonical dependency identity,
 manifest digest, resolver version, and source snapshot digest. It excludes the
 local checkout path.
 
-#+begin_src typst
+#+begin_src text
 $ K_s = H(
   D.namespace,
   D.uri,

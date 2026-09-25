@@ -20,7 +20,7 @@ does not create a global root authority.  An agreement is admitted only when
 requirement, offer, trust, disclosure, evidence, capability constraints,
 responsibility, and temporal checks all hold.
 
-#+begin_src typst
+#+begin_src text
 #let federation-checks(requirement, offer, current) = (
   requirement.contracts == offer.contracts
   and accepted-trust-anchors(requirement, offer)
@@ -48,7 +48,7 @@ cannot extend, and delegation depth cannot increase.  Agreements expose only
 the admitted evidence projection; remote internal graphs and capabilities are
 not imported implicitly.
 
-#+begin_src typst
+#+begin_src text
 $ attenuate(source, delegated)
   ==> delegated.scope subset.eq source.scope
   and delegated.actions subset.eq source.actions
