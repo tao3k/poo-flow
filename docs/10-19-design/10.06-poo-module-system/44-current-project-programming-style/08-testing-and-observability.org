@@ -16,6 +16,17 @@ or leak fails locally.  Build memory and test-runtime memory are different
 concerns: parallel compilation may use available machine resources, while each
 test execution must retain its declared safety envelope.
 
+New POO Flow unit cases use =poo-flow-test-case= from =:poo-flow/testing-api=.
+This hygienic declaration expands to native =std/test=; it adds the inherited
+POO Case Profile without changing =gxtest= assertions or reporting.  A Case
+that needs a different budget uses =poo-flow-test-case/with= and a native POO
+object extending =poo-flow-testing-case-profile-prototype=.  Do not encode a
+second test runner or duplicate the Testing Interface's managed-heap default.
+The Case monitor may stop a non-returning Scheme thread and report its span;
+its heap counters are process-wide, not a thread-local heap quota.  Native
+=test-case= declarations that have not migrated still receive the worker-level
+managed-heap cap, but not Case-span observation.
+
 * Observability
 
 Observability reports first-event latency, active phase, elapsed time, memory
@@ -23,6 +34,11 @@ and final receipt without becoming execution authority.  A timeout must show
 which admitted owner or Provider is active.  Tests may refine the observability
 Profile for a module, but may not insert ad hoc =display= calls as the only
 diagnostic contract.
+
+Parallel batch heartbeats and per-batch debug-call dumps are off by default:
+they repeat across workers without identifying a Case.  A targeted debugging
+Profile may set =heartbeat-enabled?= or =trace-enabled?=; normal runs retain
+the native batch start, completion and failure phases.
 
 * Evidence order
 

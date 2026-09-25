@@ -50,6 +50,10 @@
   (.o (testing-observability-profile? #t)
       (identity 'testing/default)
       (enabled? #t)
+      (trace-enabled? #f)
+      ;; A batch heartbeat repeats once per concurrent worker and does not
+      ;; identify the active Case.  Keep it opt-in for targeted debugging.
+      (heartbeat-enabled? #f)
       (heartbeat-interval-seconds 5)
       ;; The profile contributes only its source owner.  Gerbil's active
       ;; library path remains runtime-owned and is projected separately.
@@ -63,6 +67,10 @@
        (symbol? (.ref value 'identity))
        (.slot? value 'enabled?)
        (boolean? (.ref value 'enabled?))
+       (.slot? value 'trace-enabled?)
+       (boolean? (.ref value 'trace-enabled?))
+       (.slot? value 'heartbeat-enabled?)
+       (boolean? (.ref value 'heartbeat-enabled?))
        (.slot? value 'heartbeat-interval-seconds)
        (real? (.ref value 'heartbeat-interval-seconds))
        (> (.ref value 'heartbeat-interval-seconds) 0)
@@ -77,6 +85,8 @@
   (let (profile
         (.o (:: @ poo-flow-testing-observability-profile-prototype)
             (identity identity-value)
+            (trace-enabled? #t)
+            (heartbeat-enabled? #t)
             (heartbeat-interval-seconds heartbeat-interval-value)))
     (unless (poo-flow-testing-observability-profile? profile)
       (error "invalid POO Flow testing observability profile" profile))
@@ -124,7 +134,9 @@
 
 ;; : (forall (a) (-> Symbol (-> a) a))
 (def (poo-flow-call-with-testing-heartbeat operation thunk)
-  (if (not (poo-flow-native-observability-enabled?))
+  (if (not (and (poo-flow-native-observability-enabled?)
+                (.ref (poo-flow-current-testing-observability-profile)
+                      'heartbeat-enabled?)))
     (thunk)
     (let* ((started-jiffy (current-jiffy))
            (port (current-error-port))
@@ -161,7 +173,9 @@
    (lambda ()
      (poo-flow-call-with-testing-heartbeat operation thunk))
    '()
-   emit?: (poo-flow-native-observability-enabled?)))
+   emit?: (and (poo-flow-native-observability-enabled?)
+               (.ref (poo-flow-current-testing-observability-profile)
+                     'trace-enabled?))))
 
 ;;; Extend the ASP POO value with behavior only. ASP calls the optional slot
 ;;; without owning its policy, receipt schema, presentation, or enablement.

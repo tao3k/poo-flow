@@ -15,11 +15,17 @@
                  +poo-flow-testing-interface+
                  +poo-flow-testing-import-footprint-profile+
                  poo-flow-native-observability-enabled?
+                 poo-flow-testing-observability-profile-prototype
                  make-poo-flow-testing-observability-profile
                  poo-flow-testing-observability-profile-source-load-paths
                  poo-flow-testing-observability-extension))
 
 (export testing-observability-extension-test)
+
+(def +testing-trace-profile+
+  (.o (:: @ poo-flow-testing-observability-profile-prototype)
+      identity: 'testing/trace-qualification
+      trace-enabled?: #t))
 
 (def testing-observability-extension-test
   (test-suite "POO Flow native testing observability extension"
@@ -38,6 +44,18 @@
          (poo-flow-testing-observability-profile-source-load-paths profile)
          '("."))))
 
+    (test-case "default testing profile does not spawn batch heartbeats"
+      (let (port (open-output-string))
+        (parameterize ((current-error-port port))
+          (testing-interface-call-with-operation
+           (poo-flow-testing-observability-extension
+            +asp-testing-interface+)
+           'native-test-batch
+           (lambda () (thread-sleep! 0.02))))
+        (check (and (string-contains
+                     (get-output-string port) "operation-heartbeat") #t)
+               => #f)))
+
     (test-case "registry footprint policy is declared only through POO slots"
       (check (.ref +poo-flow-testing-import-footprint-profile+
                    'heavyOwners)
@@ -54,7 +72,7 @@
                    'action)
              => 'reject))
 
-    (test-case "the default POO profile emits admission before the operation"
+    (test-case "the default POO profile avoids duplicate trace output"
       (let ((port (open-output-string))
             (admission-visible-inside? #f))
         (parameterize ((current-error-port port))
@@ -72,12 +90,12 @@
               'completed))
            => 'completed))
         (check (poo-flow-native-observability-enabled?) => #t)
-        (check admission-visible-inside? => #t)
+        (check admission-visible-inside? => #f)
         (check (and (string-contains
                      (get-output-string port)
                      "call-returned")
                     #t)
-               => #t)))
+               => #f)))
     (test-case "long operations emit bounded POO heartbeat and elapsed receipts"
       (let (port (open-output-string))
         (parameterize
@@ -118,7 +136,7 @@
           (check
            (testing-interface-run-test-batch!
             (poo-flow-testing-observability-extension
-             +asp-testing-interface+)
+             +asp-testing-interface+ +testing-trace-profile+)
             '("t/scenarios/testing-observability/native-batch-test.ss"))
            => (void)))
         (let (output (get-output-string port))
@@ -139,7 +157,7 @@
            (lambda ()
              (testing-interface-run-test-batch!
               (poo-flow-testing-observability-extension
-               +asp-testing-interface+)
+               +asp-testing-interface+ +testing-trace-profile+)
               '("t/scenarios/testing-observability/missing-test.ss")))))
         (let (output (get-output-string port))
           (check raised? => #t)

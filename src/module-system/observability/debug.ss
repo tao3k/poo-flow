@@ -67,6 +67,10 @@
   (quotient (* (- (current-jiffy) started-jiffy) 1000000000)
             (jiffies-per-second)))
 
+(def (poo-flow-debug-elapsed-milliseconds started-jiffy)
+  (quotient (* (- (current-jiffy) started-jiffy) 1000)
+            (jiffies-per-second)))
+
 ;; : (-> Value Symbol)
 (def (poo-flow-debug-operator-kind operator)
   (cond ((procedure? operator) 'procedure)
@@ -380,10 +384,18 @@
 ;;     %
 (def (call-with-poo-flow-debug-memory-monitor policy phase thunk
                                               port: (port (current-error-port))
-                                              emit?: (emit? #f))
+                                              emit?: (emit? #f)
+                                              max-duration-milliseconds:
+                                              (max-duration-milliseconds #f))
   (unless (procedure? thunk)
     (error "POO Flow debug memory monitor requires a thunk"))
+  (unless (or (not max-duration-milliseconds)
+              (and (exact-integer? max-duration-milliseconds)
+                   (> max-duration-milliseconds 0)))
+    (error "invalid POO Flow debug Case duration limit"
+           max-duration-milliseconds))
   (let* ((policy-label (.ref policy 'label))
+         (started-jiffy (current-jiffy))
          (collect-before-sample? (.ref policy 'collect-before-sample?))
          (fail-closed? (.ref policy 'fail-closed?))
          (sample-interval-milliseconds
@@ -449,7 +461,17 @@
                           (DDT 'debug-memory
                                poo-flow-debug-memory-receipt-sexp receipt)))
                       (poo-flow-debug-raise-memory-anomaly receipt)))
-                  (monitor)))
+                  (let (elapsed
+                        (poo-flow-debug-elapsed-milliseconds started-jiffy))
+                    (if (and max-duration-milliseconds
+                             (>= elapsed max-duration-milliseconds))
+                      (begin
+                        (thread-terminate! worker)
+                        (set! joined? #t)
+                        (error "POO Flow testing Case duration budget exceeded"
+                               phase policy-label
+                               max-duration-milliseconds elapsed))
+                      (monitor)))))
               (begin
                 (set! joined? #t)
                 (if (eq? (car outcome) 'failure)

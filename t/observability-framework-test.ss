@@ -5,10 +5,17 @@
 
 ;;; Real Module admission -> native observation -> explanation -> upstream debug.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
-        (only-in :clan/poo/object .o .cc .ref .slot?)
+        (only-in :std/test/base current-test-case)
+        (only-in :clan/poo/object .o .cc .ref .slot? .call)
         (only-in :clan/poo/mop element? validate TypeError?)
         :poo-flow/src/module-system/observability/interface
         :poo-flow/src/module-system/observability/debug
+        (only-in :poo-flow/testing-api
+                 poo-flow-test-case
+                 poo-flow-test-case/with
+                 poo-flow-testing-case-profile-prototype
+                 poo-flow-testing-case-profile?
+                 poo-flow-default-testing-case-profile)
         (only-in :poo-flow/src/module-system/observability/types
                  PooFlowObservabilityDiagnosticContract)
         (only-in :poo-flow/src/module-system/observability/objects
@@ -30,8 +37,69 @@
   (poo-flow-semantic-module (poo-flow-semantic-identity 'test 'module)))
 (def (framework-contains? text value) (if (string-contains text value) #t #f))
 
+(def +framework-case-profile+
+  (.o (:: @ poo-flow-testing-case-profile-prototype)
+      identity: 'testing/framework-case
+      max-duration-milliseconds: 2000))
+
+(def +framework-timeout-case-profile+
+  (.o (:: @ poo-flow-testing-case-profile-prototype)
+      identity: 'testing/framework-timeout
+      memory-policy:
+      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
+           sample-interval-milliseconds: 1)
+      max-duration-milliseconds: 20))
+
+(def +framework-memory-case-profile+
+  (.o (:: @ poo-flow-testing-case-profile-prototype)
+      identity: 'testing/framework-memory
+      memory-policy:
+      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
+           heap-limit-bytes: 0
+           sample-interval-milliseconds: 1)))
+
 (def observability-framework-test
   (test-suite "upstream-based POO observability framework"
+    (poo-flow-test-case "default POO Case preserves native assertions"
+      (check-equal? (not (current-test-case)) #f)
+      (check-equal? (poo-flow-testing-case-profile?
+                     poo-flow-default-testing-case-profile) #t)
+      (check-equal? (+ 1 2) 3))
+
+    (poo-flow-test-case/with +framework-case-profile+
+                             "POO Case may override its duration slot"
+      (check-equal? (.ref +framework-case-profile+
+                         'max-duration-milliseconds) 2000)
+      (check-equal? (+ 2 3) 5))
+
+    (test-case "POO Case stops a non-returning worker at its duration slot"
+      (let (captured #f)
+        (with-catch
+         (lambda (failure) (set! captured failure))
+         (lambda ()
+           (.call +framework-timeout-case-profile+ .run
+                  +framework-timeout-case-profile+
+                  "duration override"
+                  (lambda ()
+                    (let loop ()
+                      (thread-sleep! 0.01)
+                      (loop))))))
+        (check-equal? (not captured) #f)))
+
+    (test-case "POO Case stops a worker at its memory policy override"
+      (let (captured #f)
+        (with-catch
+         (lambda (failure) (set! captured failure))
+         (lambda ()
+           (.call +framework-memory-case-profile+ .run
+                  +framework-memory-case-profile+
+                  "memory override"
+                  (lambda ()
+                    (let loop ()
+                      (thread-sleep! 0.01)
+                      (loop))))))
+        (check-equal? (PooFlowDebugMemoryAnomaly? captured) #t)))
+
     (test-case "real successful Module admission preserves correlation without raw subject"
       (let* ((context (framework-context)) (module (framework-module))
              (event (poo-flow-observe-contract-admission context SemanticModuleContract module))

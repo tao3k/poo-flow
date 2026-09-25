@@ -121,11 +121,18 @@ inert-source slot observation and reports the slot, rule and repair hint;
 runtime memory sampling is not a substitute for this pre-execution check.
 The Testing Interface owns test-worker memory Profiles and batching; the
 build script does not create a process for each test or claim to observe each
-child worker's heap from the parent process.
-Per-case heap and CPU attribution inside a shared worker is still an ASP
-Testing interface gap: native =gxtest= exposes no public around-case callback.
-Until that owner supplies one, process heap limits and opt-in isolated files
-are containment, not precise per-case diagnostics.
+child worker's heap from the parent process.  Every worker gets the inherited
+managed-heap limit.  POO Flow's =poo-flow-test-case= projects to native
+=std/test= and adds a default Case execution-span Profile; the corresponding
+=poo-flow-test-case/with= form inherits the POO prototype and overrides Case
+slots such as memory policy and maximum duration.  It does not replace
+=gxtest=, its assertions, or its reporting.  Existing native =test-case=
+declarations retain worker-level protection but are not silently instrumented
+per Case; they must migrate to the POO declaration for Case-span evidence.
+Gambit heap counters are process-wide, even when one Case runs in a dedicated
+Scheme thread.  Therefore a Case receipt is execution-span evidence, not a
+thread-local hard heap quota or CPU attribution.  Automatic instrumentation
+of unmodified =std/test= declarations still requires an upstream callback.
 
 * Capability height is not expression height
 
@@ -566,10 +573,14 @@ Migration MUST retain semantic and performance evidence:
   source admission.  =t/module-authoring-contract-test.ss= rejects the
   =identity: identity= counterexample and checks the Profile conflict receipt
   owner for regression without evaluating either object.
-- [ ] Add an ASP-owned native around-case observation hook before claiming
-  per-case time, memory or infinite-loop diagnosis within a shared worker.
-  Preserve one =gxtest= worker per compatible batch and keep the hook optional
-  for downstream POO Profiles.
+- [X] Add a POO-native Case Profile around native =std/test= declarations.
+  The default and inherited override paths have native assertion, timeout,
+  and memory-rejection tests.  The monitor runs inside the existing =gxtest=
+  worker; it creates no additional OS process per Case.
+- [ ] Migrate maintained native =test-case= declarations to the POO declaration
+  before claiming universal Case-span diagnostics.  Automatic instrumentation
+  of unmodified upstream cases remains dependent on a native around-case hook;
+  worker-level managed-heap containment already covers those cases.
 - [X] Migrate the Healthcare AI-assisted prescription Case's maintained
   defaults into an inherited native POO Case prototype.  The ordinary
   =case.ss= now selects Profiles and records observations; positive and
