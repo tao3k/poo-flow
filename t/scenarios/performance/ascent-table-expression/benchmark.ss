@@ -1,0 +1,25 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;;
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 200ms)
+ (target_total . 50ms)
+ (regression_budget . 150ms)
+ (expected_over_input_budget . 5ms)
+ (sampleCount . 20)
+ (targetRationale . "Measure index construction and demanded two-hop relation composition together over 512 source pairs.")
+ (maxRssMb . 256)
+ (memoryMetric . resident-set-size)
+ (memoryUnit . "MB")
+ (iterations . 3)
+ (unit . "ms")
+ (sourcePath . "t/scenarios/performance/ascent-table-expression/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-table-expression)
+ (optimizationFocus . "official SimpleTrie right index and UIntTrieSet foldl/cons/union operations")
+ (inputShape . "256 vertices with two outgoing edges each, encoded as 512 bounded binary pairs")
+ (expectedOutcome . "one- and two-hop relation projection has 1024 distinct pairs")
+ (expectedRepair . "preserve reusable native trie indexing and POO slot demand; keep source encoding and MRR admission separate")
+ (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
+ (tags poo ascent relation trie stdlib performance big-o))

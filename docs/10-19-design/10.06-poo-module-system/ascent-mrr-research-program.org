@@ -75,12 +75,13 @@ without mutating the earlier one.  A cycle yields its bounded self-pairs.
 This is a bounded relation-algebra experiment with a local pair encoding, not
 a least-fixed-point closure or MRR FactId representation.  Index construction
 avoids scanning every right-hand edge for each left pair.  The reproducible
-=t/performance/ascent-table-expression-benchmark.ss= compares three repeated
-joins over 512 input pairs with the right index already built: both return 768
-pairs; one local interpreted run took 0.033 CPU seconds with the reused index
-and 0.609 CPU seconds with pairwise scanning.  This measures the repeated-join
-case only, excluding index construction; larger cardinalities and native AOT
-performance remain separate qualification work.
+=t/scenarios/performance/ascent-table-expression/benchmark.ss= fixture runs
+through the existing =benchmark-run= gate.  It measures index construction and
+demanded relation composition together over 512 input pairs, checking the
+1,024-pair one/two-hop output.  The earlier ad hoc =time= comparison was
+withdrawn.  One local standard receipt over 20 samples reported 31.409ms p95
+against the fixture's 50ms target and 200ms ceiling.  Larger cardinalities and
+native AOT qualification remain open.
 
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation
