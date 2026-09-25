@@ -154,6 +154,7 @@ jobs:
           gerbil env ./performance-tests.ss
           gerbil env gxi t/scenarios/performance/ascent-table-expression/scenario.ss
           gerbil env gxi t/scenarios/performance/ascent-table-expression-membership/scenario.ss
+          gerbil env gxi t/scenarios/performance/ascent-reachability-closure/scenario.ss
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

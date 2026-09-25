@@ -96,6 +96,29 @@ fixture.  This proves set-level parity for that case; it does not introduce a
 general fixed-point driver, bound admission, or MRR lineage semantics.  A
 caller must still own those responsibilities.
 
+The expression now also exposes a demanded =closure-projection= for this
+specific positive binary transitive rule.  It uses the library's =until=
+control combinator, one source adjacency index, and private byte-vector (or
+hash-table above radix 512) deduplication.  The POO object publishes canonical
+=closure-pairs=, a read-only =closure-contains?= function, and a lazily
+materialized =closure-set=.  The five-edge cyclic fixture produces the same
+12 reachable pairs as MRR/Ascent; removing its cycle edge produces six pairs
+in a fresh POO snapshot, while the earlier snapshot remains unchanged.  Empty
+input yields empty closure.  This is a full least relation closure for the
+selected finite binary rule, not a general Ascent replacement: it does not
+compute shortest =FactId= support, bind an MRR generation, or admit a receipt.
+
+The project-standard
+=t/scenarios/performance/ascent-reachability-closure/benchmark.ss= measures
+the whole demanded closure over a 20-node chain: 19 input pairs and 190
+output pairs.  It uses 20 samples with microsecond display, a 700us target,
+and a 1000us ceiling.  A local optimized run measured 119us p95.  The first
+persistent-set-per-frontier implementation measured 7.978ms on the same
+fixture; a direct standard set membership/insertion route measured 1.968ms.
+The private bounded membership index avoids repeated persistent set updates
+inside the frontier and materializes the persistent set only if demanded.
+These are local receipts; Linux CI now runs the standard fixture independently.
+
 The reproducible
 =t/scenarios/performance/ascent-table-expression/benchmark.ss= fixture runs
 through the existing =benchmark-run= gate.  It measures index construction and

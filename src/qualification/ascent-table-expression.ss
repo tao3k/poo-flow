@@ -8,7 +8,8 @@
 ;;; publishes a canonical, distinct list of encoded pairs.
 
 (import (only-in :clan/poo/object .o .ref .call)
-        (only-in :clan/poo/trie UIntTrieSet))
+        (only-in :clan/poo/trie UIntTrieSet)
+        (only-in :clan/poo/support/base until))
 
 (export poo-flow-ascent-table-expression-prototype)
 
@@ -78,6 +79,55 @@
          (combined (.call UIntTrieSet .union accumulated delta)))
     (.o (new-pairs delta) (all-pairs combined))))
 
+;;; The finite-domain transitive closure for this binary relation, using the
+;;; library's until combinator and set operations. This is a specific rule
+;;; evaluation, not a second generic prototype fixed-point implementation.
+(def (relation-closure source neighbors-of radix)
+  (let* ((dense? (<= radix 512))
+         (bits (and dense? (make-u8vector (* radix radix) 0)))
+         (sparse (and (not dense?) (make-hash-table)))
+         (frontier [])
+         (all []))
+    (def (add-pair! pair)
+      (if dense?
+        (if (= (u8vector-ref bits pair) 1)
+          #f
+          (begin
+            (u8vector-set! bits pair 1)
+            (set! all (cons pair all))
+            #t))
+        (if (hash-get sparse pair)
+          #f
+          (begin
+            (hash-put! sparse pair #t)
+            (set! all (cons pair all))
+            #t))))
+    (.call UIntTrieSet .foldl
+           (lambda (pair _)
+             (when (add-pair! pair)
+               (set! frontier (cons pair frontier))))
+           (void) source)
+    (until (null? frontier)
+      (let (next [])
+        (for-each
+         (lambda (pair)
+           (let ((origin (quotient pair radix))
+                 (middle (modulo pair radix)))
+             (neighbors-of
+              middle
+              (lambda (target)
+                (let (candidate (+ (* origin radix) target))
+                  (when (add-pair! candidate)
+                    (set! next (cons candidate next))))))))
+         frontier)
+        (set! frontier next)))
+    (.o (pairs (list-sort < all))
+        (contains?
+         (lambda (pair)
+           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
+                (if dense? (= (u8vector-ref bits pair) 1)
+                    (hash-get sparse pair))))))))
+
 (def poo-flow-ascent-table-expression-prototype
   (.o (:: self [] source-pairs radix)
       (right-index (relation-index source-pairs radix))
@@ -88,6 +138,14 @@
        (lambda (frontier accumulated)
          (relation-delta-step frontier accumulated
                               (.ref self 'right-index) radix)))
+      (closure-projection
+       (relation-closure source-pairs (.ref self 'right-index) radix))
+      (closure-pairs
+       (.ref (.ref self 'closure-projection) 'pairs))
+      (closure-contains?
+       (.ref (.ref self 'closure-projection) 'contains?))
+      (closure-set
+       (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
       (two-hop-pairs
        ((.ref self 'compose-left) source-pairs))
       (at-most-two-hop-projection

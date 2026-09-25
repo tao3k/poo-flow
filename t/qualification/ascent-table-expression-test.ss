@@ -68,7 +68,24 @@
         (check-equal? (.call UIntTrieSet .list<- (.ref third 'new-pairs))
                       '())
         (check-equal? (.call UIntTrieSet .list<- (.ref third 'all-pairs))
-                      '(10 11 12 18 19 20 26 27 28 34 35 36))))
+                      '(10 11 12 18 19 20 26 27 28 34 35 36))
+        (check-equal? (.ref expression 'closure-pairs)
+                      '(10 11 12 18 19 20 26 27 28 34 35 36))
+        (let* ((without-cycle-edge
+                (.call UIntTrieSet .remove edges 34))
+               (withdrawn
+                (.mix poo-flow-ascent-table-expression-prototype
+                      (.o (source-pairs without-cycle-edge) (radix 8)))))
+          (check-equal? (.ref withdrawn 'closure-pairs)
+                        '(10 11 12 19 20 28))
+          (check-equal? (.ref expression 'closure-pairs)
+                        '(10 11 12 18 19 20 26 27 28 34 35 36)))))
+    (test-case "empty source has an empty closure"
+      (let (expression
+            (.mix poo-flow-ascent-table-expression-prototype
+                  (.o (source-pairs (.ref UIntTrieSet '.empty))
+                      (radix 8))))
+        (check-equal? (.ref expression 'closure-pairs) '())))
     (test-case "larger radix retains sparse snapshot and membership behavior"
       (let* ((source (.o (source-pairs
                           (.call UIntTrieSet .<-list '(515 1029)))
@@ -77,6 +94,11 @@
                                source)))
         (check-equal? (.ref expression 'at-most-two-hop-pairs)
                       '(515 516 1029))
+        (check-equal? (.ref expression 'closure-pairs)
+                      '(515 516 1029))
+        (check-equal? (.call UIntTrieSet .count (.ref expression 'closure-set)) 3)
+        (check-equal? ((.ref expression 'closure-contains?) 516) #t)
+        (check-equal? ((.ref expression 'closure-contains?) 517) #f)
         (check-equal? ((.ref expression 'at-most-two-hop-contains?) 516) #t)
         (check-equal? ((.ref expression 'at-most-two-hop-contains?) 517) #f)))
     (test-case "rejects a radix that would alias pair identities"
