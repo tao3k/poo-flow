@@ -516,5 +516,11 @@ Migration MUST retain semantic and performance evidence:
   rejects raw MOP imports, direct CLOS construction and raw =self/super=
   behavior hooks while maintained extension roles remain open.
 - [ ] Audit maintained README and =user-interface= examples.
-- [ ] Migrate one Healthcare Profile and Case without semantic regression.
+- [X] Migrate the Healthcare AI-assisted prescription Case's maintained
+  defaults into an inherited native POO Case prototype.  The ordinary
+  =case.ss= now selects Profiles and records observations; positive and
+  negative Governance behavior remains in
+  =t/ontology/unit/prescription-governance-test.ss=, and the 15-file native
+  Scheme suite passes at Lambda Episteme revision =4d2993e=.
+- [ ] Migrate and qualify a Healthcare Profile without semantic regression.
 - [ ] Add Effective Object and provenance-first presentation evidence.
