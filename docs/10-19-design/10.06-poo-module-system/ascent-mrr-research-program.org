@@ -169,6 +169,11 @@ the evaluator, or authorize an effect.  The MRR facade now binds its in-process
 evaluation to the exact admitted Bundle while retaining the V1 closure and
 materialized receipt formats.  A transport and cross-process admission contract
 is still required before POO can consume MRR results.
+MRR now has an in-process, read-only pair comparison against its exact
+Bundle-bound Ascent result and requested generation.  The cyclic and withdrawn
+POO fixtures have matching string-valued candidates in the MRR facade tests;
+the comparison does not admit a POO receipt or bind the external source owner's
+snapshot to that generation.
 
 The public =mrr-closure-tool= was also run on corresponding string-valued
 snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
