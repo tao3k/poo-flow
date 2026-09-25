@@ -81,10 +81,11 @@ through the existing =benchmark-run= gate.  It measures index construction and
 demanded relation composition together over 512 input pairs, checking the
 1,024-pair one/two-hop output.  The earlier ad hoc =time= comparison was
 withdrawn.  With =gxc -O= on the expression module, repeated local standard
-receipts over 20 samples and three executions per sample measured 0.786ms,
-0.826ms, and 0.847ms p95.  The fixture targets 1ms with a 2ms noise ceiling;
+receipts over 20 samples and three executions per sample measured 786us,
+826us, and 847us p95.  The fixture records microseconds, targets 950us,
+and has a 2000us noise ceiling;
 CI explicitly compiles this qualification module with =gxc -O= before the
-performance lane.  The unoptimized module measured 4.868ms p95 on the same
+performance lane.  The unoptimized module measured 4868us p95 on the same
 machine, so the sub-millisecond result requires optimized native compilation.
 Larger cardinalities and cross-platform CI qualification remain open.
 
