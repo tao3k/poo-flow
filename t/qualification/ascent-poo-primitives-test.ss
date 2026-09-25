@@ -89,8 +89,71 @@
                         '((1 2) (1 3) (1 4) (4 3)))
           (check-equal? (.ref program 'closure)
                         '((1 2) (1 3) (1 4) (2 3) (4 3))))
+        (let (other-support
+              (.mix (.o (edges '((1 2) (2 3) (1 4))))
+                    reachability inputs))
+          (check-equal? (.ref other-support 'closure)
+                        '((1 2) (1 3) (1 4) (2 3))))
         (let (disconnected
               (.mix (.o (edges '((1 2) (1 4))))
                     reachability inputs))
           (check-equal? (.ref disconnected 'closure)
-                        '((1 2) (1 4))))))))
+                        '((1 2) (1 4))))))
+    (test-case "native recursive witness follows the surviving source path"
+      ;; Fact labels mirror the MRR diamond fixture. This computes one
+      ;; candidate path; MRR owns FactId ordering and admission.
+      (let* ((witness-prototype
+              (.o (:: self [] fact-edges)
+                  (witness
+                   (lambda (source target visited)
+                     (and (not (.call UIntTrieSet .elt? visited source))
+                          (let (visited*
+                                (.call UIntTrieSet .cons source visited))
+                            (let loop ((remaining fact-edges) (best #f))
+                              (if (null? remaining)
+                                  best
+                                  (let* ((edge (car remaining))
+                                         (candidate
+                                          (and (= (car edge) source)
+                                               (let (suffix
+                                                     (if (= (cadr edge) target)
+                                                         '()
+                                                         ((.ref self 'witness)
+                                                          (cadr edge) target visited*)))
+                                                 (and suffix
+                                                      (cons (caddr edge) suffix))))))
+                                    (loop (cdr remaining)
+                                          (if (and candidate
+                                                   (or (not best)
+                                                       (< (length candidate)
+                                                          (length best))))
+                                              candidate
+                                              best)))))))))))
+             (inputs
+              (.o (fact-edges '((1 2 100) (2 3 101)
+                                (1 4 99) (4 3 103)))))
+             (program (.mix witness-prototype inputs))
+             (witness (.ref program 'witness))
+             (empty (.ref UIntTrieSet '.empty)))
+        (check-equal? (witness 1 3 empty) '(100 101))
+        (let (without-bob
+              (.mix (.o (fact-edges '((1 2 100) (1 4 99) (4 3 103))))
+                    witness-prototype inputs))
+          (check-equal? ((.ref without-bob 'witness) 1 3 empty)
+                        '(99 103)))
+        (let (without-dan
+              (.mix (.o (fact-edges '((1 2 100) (2 3 101) (1 4 99))))
+                    witness-prototype inputs))
+          (check-equal? ((.ref without-dan 'witness) 1 3 empty)
+                        '(100 101)))
+        (let (without-both
+              (.mix (.o (fact-edges '((1 2 100) (1 4 99))))
+                    witness-prototype inputs))
+          (check-equal? ((.ref without-both 'witness) 1 3 empty)
+                        #f))
+        (let (cycle
+              (.mix (.o (fact-edges '((1 2 100) (2 3 101)
+                                      (3 1 104) (1 2 100))))
+                    witness-prototype inputs))
+          (check-equal? ((.ref cycle 'witness) 1 1 empty)
+                        '(100 101 104)))))))

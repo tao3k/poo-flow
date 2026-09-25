@@ -66,6 +66,14 @@ The same fixture also verifies a withdrawn edge against a fresh POO instance:
 the removed path disappears while the earlier demanded instance remains
 unchanged.  That is snapshot isolation for this experiment, not incremental
 deletion maintenance or generation-bound MRR admission.
+It now withdraws each branch of the diamond separately.  Ada still reaches
+Cy through the other branch in both cases, and disappears only after both
+supports are removed.  A separate native =self= witness slot returns the
+remaining source-edge labels after either single-branch withdrawal and a
+finite three-edge cycle despite a duplicate edge.  MRR
+separately checks that withdrawing the selected shortest witness selects the
+surviving one.  The POO fixture does not implement MRR =FactId= ordering,
+lineage admission, or a generation-bound receipt.
 
 The public =mrr-closure-tool= was also run on corresponding string-valued
 snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
@@ -83,7 +91,7 @@ do not test MRR transition-based retraction or prove that a POO candidate
 receipt can be admitted.  MRR's
 =source_snapshots_match_the_poo_reachability_fixture= test now checks all
 three full candidate sets.  The =mrr-ascent=, facade, and conformance package
-tests passed locally with 38 tests across eight suites.
+tests passed locally with 39 tests across eight suites.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
