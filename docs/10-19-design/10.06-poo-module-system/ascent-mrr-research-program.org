@@ -75,6 +75,15 @@ separately checks that withdrawing the selected shortest witness selects the
 surviving one.  The POO fixture does not implement MRR =FactId= ordering,
 lineage admission, or a generation-bound receipt.
 
+The experimental =poo-flow-ascent-project-request= projects a POO declaration
+into an inert object carrying the MRR-owned Bundle, RulePack, and generation
+identities, organization epoch, an opaque capability identity, and three finite bounds.
+It does not parse those identities, choose an MRR receipt schema version, run
+the evaluator, or authorize an effect.  The MRR facade now binds its in-process
+evaluation to the exact admitted Bundle while retaining the V1 closure and
+materialized receipt formats.  A transport and cross-process admission contract
+is still required before POO can consume MRR results.
+
 The public =mrr-closure-tool= was also run on corresponding string-valued
 snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
 each run; the POO fixture produced the same candidate-pair counts after the
