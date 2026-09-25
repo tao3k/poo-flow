@@ -368,4 +368,12 @@
        (poo-flow-poo-slot-authoring-file-observations
         'module-authoring-contract
         "src/module-system/authoring/contracts.ss"))
+      '()))
+
+   (test-case "effective-object presentation blocks lazy self-reference regression"
+     (check-equal?
+      (poo-flow-poo-slot-authoring-diagnostics
+       (poo-flow-poo-slot-authoring-file-observations
+        'effective-object-presentation
+        "src/module-system/observability/effective-object.ss"))
       '()))))
