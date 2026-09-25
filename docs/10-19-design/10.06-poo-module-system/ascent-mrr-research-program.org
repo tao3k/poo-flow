@@ -54,26 +54,15 @@ The inspected source files are
 [[https://github.com/mighty-gerbils/gerbil/blob/d801e7a1c7f77df421f638e62aaebe370f193c97/src/gerbil/runtime/c3.ss][Gerbil C4]].
 The executable library-capability fixture is
 =t/qualification/ascent-poo-primitives-test.ss=.  It verifies late-bound
-slot input, shared-ancestor precedence, and persistent set union.  Its
-recursive case composes a =reachable?= function slot through native =self=,
-uses =UIntTrieSet= to guard a graph cycle, and projects the five reachable
-pairs in MRR's Ascent fixture.  The matching MRR test
+slot input, shared-ancestor precedence, and persistent =UIntTrieSet= union,
+removal, and independent snapshot composition.  The earlier hand-written
+recursive graph walk and witness search were removed: they duplicated MRR's
+Ascent work and obscured the actual standard-library boundary.  The inspected
+POO library supplies set/table operations but no general relational join,
+least-closure evaluator, or shortest-support operator.  The MRR test
 =derives_deterministic_shortest_lineage_candidates_from_a_validated_bundle=
-passed independently.  This establishes set-level parity for that finite
-fixture.  It does not establish semi-naive evaluation, shortest-distance
-lattice behavior, support selection, or an MRR-admissible receipt.
-The same fixture also verifies a withdrawn edge against a fresh POO instance:
-the removed path disappears while the earlier demanded instance remains
-unchanged.  That is snapshot isolation for this experiment, not incremental
-deletion maintenance or generation-bound MRR admission.
-It now withdraws each branch of the diamond separately.  Ada still reaches
-Cy through the other branch in both cases, and disappears only after both
-supports are removed.  A separate native =self= witness slot returns the
-remaining source-edge labels after either single-branch withdrawal and a
-finite three-edge cycle despite a duplicate edge.  MRR
-separately checks that withdrawing the selected shortest witness selects the
-surviving one.  The POO fixture does not implement MRR =FactId= ordering,
-lineage admission, or a generation-bound receipt.
+continues to verify those relation semantics independently.  POO has not yet
+produced an MRR-admissible candidate receipt.
 
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation
@@ -86,21 +75,20 @@ is still required before POO can consume MRR results.
 
 The public =mrr-closure-tool= was also run on corresponding string-valued
 snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
-each run; the POO fixture produced the same candidate-pair counts after the
-documented integer encoding.
+each run.  These counts are MRR results; the POO fixture now checks only
+snapshot storage and composition.
 
-| Source snapshot | POO reachable pairs | MRR admitted candidates | MRR Ada-to-Cy decision |
-|-----------------+---------------------+-------------------------+------------------------|
-| Ada/Bob, Bob/Cy, Ada/Dan, Dan/Cy | 5 | 5 | true |
-| remove Bob/Cy | 4 | 4 | true |
-| also remove Dan/Cy | 2 | 2 | false |
+| Source snapshot | MRR admitted candidates | MRR Ada-to-Cy decision |
+|-----------------+-------------------------+------------------------|
+| Ada/Bob, Bob/Cy, Ada/Dan, Dan/Cy | 5 | true |
+| remove Bob/Cy | 4 | true |
+| also remove Dan/Cy | 2 | false |
 
 Each CLI invocation admitted a separately constructed snapshot; these calls
 do not test MRR transition-based retraction or prove that a POO candidate
 receipt can be admitted.  MRR's
-=source_snapshots_match_the_poo_reachability_fixture= test now checks all
-three full candidate sets.  The =mrr-ascent=, facade, and conformance package
-tests passed locally with 39 tests across eight suites.
+=source_snapshots_match_expected_ascent_closure= test checks all three full
+candidate sets independently of POO Flow.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
