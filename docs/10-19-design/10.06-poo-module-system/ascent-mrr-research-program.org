@@ -84,16 +84,20 @@ avoids scanning every right-hand edge for each left pair.  The reproducible
 =t/scenarios/performance/ascent-table-expression/benchmark.ss= fixture runs
 through the existing =benchmark-run= gate.  It measures index construction and
 demanded relation composition together over 512 input pairs, checking the
-1,024-pair one/two-hop output.  The earlier ad hoc =time= comparison was
+1,024-pair one/two-hop output.  Source and output cardinalities are checked
+outside the timed thunk; each sample performs one full POO projection.  The
+earlier ad hoc =time= comparison was
 withdrawn.  With =gxc -O= on the expression module, repeated local standard
-receipts over 20 samples, one complete projection per sample, measured 689us,
-695us, and 704us p95 with the bounded byte-vector.  The fixture records
+receipts over 20 samples measured 621us, 674us, and 643us p95 with the
+bounded byte-vector and projection-only timed thunk.  The fixture records
 microseconds, targets 950us, and has a 2000us noise ceiling;
 CI explicitly compiles this qualification module with =gxc -O= before the
 performance lane.  The earlier unoptimized hash-based module measured 4868us
 p95 on the same machine, so this result requires optimized native compilation.
-The preceding hash-based candidate measured 1290us p95 in Linux CI; the
-byte-vector update still needs its exact-head Linux receipt.
+The preceding hash-based candidate measured 1290us p95 in Linux CI.  The
+byte-vector candidate measured 1099us p95 there with a redundant input-count
+traversal still inside its timed thunk; its same-workload A/B candidate
+measured 1036us.  The projection-only CI receipt is pending.
 An A/B scenario follows PR #31's equivalent-output method.  It compiles both
 the preceding persistent-trie implementation and the current expression with
 =gxc -O=, uses the same 512-pair fixture, and checks exact sorted-pair equality.
