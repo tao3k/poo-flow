@@ -108,6 +108,20 @@ input yields empty closure.  This is a full least relation closure for the
 selected finite binary rule, not a general Ascent replacement: it does not
 compute shortest =FactId= support, bind an MRR generation, or admit a receipt.
 
+The next Scheme slice reuses those =closure-pairs= and computes shortest source
+support from caller-labelled edges in
+=src/qualification/ascent-closure-candidates.ss=.  It selects the shortest
+path, then the lexicographically smallest source-label sequence among equal
+length paths.  Its POO result carries each encoded pair, distance, support,
+and base/transitive rule kind; input and theoretical pair bounds reject before
+evaluation, while the result limit truncates only the sorted published list.
+=t/qualification/ascent-closure-candidates-test.ss= repeats the existing Rust
+Ascent fixtures for the diamond, support withdrawal, cycle reflexivity, and
+bounded output.  These are Scheme algorithm results.  MRR still owns the
+semantic FactId, generation, RulePackId, receipt digest, and admission.  The
+remaining ASCENT work is generic rule evaluation and validated relation
+declarations in Scheme, beyond this selected binary transitive rule.
+
 The project-standard
 =t/scenarios/performance/ascent-reachability-closure/benchmark.ss= measures
 the whole demanded closure over a 20-node chain: 19 input pairs and 190
