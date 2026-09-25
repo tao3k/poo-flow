@@ -29,7 +29,7 @@
     (lambda (source visit)
       (for-each visit (vector-ref index source)))))
 
-(def (relation-compose left neighbors-of radix include-source?)
+(def (relation-join-index left neighbors-of radix include-source?)
   (let (joined (make-hash-table))
     (.call UIntTrieSet .foldl
            (lambda (pair _)
@@ -43,7 +43,15 @@
                 (lambda (target)
                   (hash-put! joined (+ (* source radix) target) #t)))))
            (void) left)
-    (list-sort < (map car (hash->list joined)))))
+    joined))
+
+(def (relation-projection left neighbors-of radix include-source?)
+  (let (joined (relation-join-index left neighbors-of radix include-source?))
+    (.o (contains? (lambda (pair) (hash-get joined pair)))
+        (pairs (list-sort < (map car (hash->list joined)))))))
+
+(def (relation-compose left neighbors-of radix include-source?)
+  (.ref (relation-projection left neighbors-of radix include-source?) 'pairs))
 
 (def poo-flow-ascent-table-expression-prototype
   (.o (:: self [] source-pairs radix)
@@ -53,5 +61,9 @@
          (relation-compose left-pairs (.ref self 'right-index) radix #f)))
       (two-hop-pairs
        ((.ref self 'compose-left) source-pairs))
+      (at-most-two-hop-projection
+       (relation-projection source-pairs (.ref self 'right-index) radix #t))
+      (at-most-two-hop-contains?
+       (.ref (.ref self 'at-most-two-hop-projection) 'contains?))
       (at-most-two-hop-pairs
-       (relation-compose source-pairs (.ref self 'right-index) radix #t))))
+       (.ref (.ref self 'at-most-two-hop-projection) 'pairs))))

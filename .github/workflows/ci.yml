@@ -153,6 +153,7 @@ jobs:
           gerbil env gxc -O src/qualification/ascent-table-expression.ss t/scenarios/performance/ascent-table-expression/baseline.ss
           gerbil env ./performance-tests.ss
           gerbil env gxi t/scenarios/performance/ascent-table-expression/scenario.ss
+          gerbil env gxi t/scenarios/performance/ascent-table-expression-membership/scenario.ss
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

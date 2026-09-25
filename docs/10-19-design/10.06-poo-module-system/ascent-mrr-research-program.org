@@ -69,7 +69,10 @@ The next qualification adds a POO-native table expression over the standard
 The POO snapshot retains the persistent source set; the bounded join builds a
 private vector index and a local hash set, then publishes a sorted, distinct
 list of encoded pairs.  POO slots expose a neighbor visitor, reusable
-left composition function, two-hop pairs, and one/two-hop pairs.  The diamond's
+left composition function, two-hop pairs, and one/two-hop pairs.  A lazy
+=at-most-two-hop-projection= slot also retains the derived membership index
+behind a read-only =contains?= closure, so repeated Agent pair decisions need
+not rescan or rematerialize the sorted pair list.  The diamond's
 two paths to Ada-to-Cy collapse to one pair; a source withdrawal produces a
 separate expression without mutating the earlier one.  A cycle yields its
 bounded self-pairs.
@@ -95,6 +98,16 @@ Three local pairs of standard receipts measured baseline p95 of 17.313ms,
 respectively: about 20x on this workload.  CI runs this scenario after the
 native performance lane.  Larger cardinalities and cross-platform CI
 qualification remain open.
+
+A second PR #31-style scenario compares 1,280 repeated membership decisions
+over the same snapshot: 1,024 projected hits and 256 in-domain misses.  The
+baseline uses Scheme =memq= on the canonical pair list; the candidate uses the
+POO projection's retained hash lookup.  It checks each ordered Boolean result
+for equality.  Three local 20-sample receipts measured baseline p95 of 871us,
+864us, and 862us versus candidate p95 of 57us, 56us, and 53us, respectively
+(about 15–16x).  CI runs this scenario separately from cold projection, so
+the warm lookup number is never presented as full index-construction cost.
+Its fixture targets 100us and has a 500us ceiling for all 1,280 decisions.
 
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation

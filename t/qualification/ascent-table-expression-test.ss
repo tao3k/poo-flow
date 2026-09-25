@@ -28,6 +28,8 @@
          '(11))
         (check-equal? (.ref expression 'at-most-two-hop-pairs)
                       '(10 11 12 19 35))
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) 11) #t)
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) 13) #f)
         (let* ((withdrawn
                 (.mix (.o (source-pairs
                            (.call UIntTrieSet .remove
@@ -35,6 +37,8 @@
                       poo-flow-ascent-table-expression-prototype source)))
           (check-equal? (.ref withdrawn 'two-hop-pairs)
                         '(11))
+          (check-equal? ((.ref withdrawn 'at-most-two-hop-contains?) 19) #f)
+          (check-equal? ((.ref expression 'at-most-two-hop-contains?) 19) #t)
           (check-equal? (.ref expression 'at-most-two-hop-pairs)
                         '(10 11 12 19 35)))))
     (test-case "a cycle produces only its bounded two-hop self pairs"
