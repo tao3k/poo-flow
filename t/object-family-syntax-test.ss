@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/module-system/object-family/syntax)
 
@@ -61,7 +62,7 @@
 
 (def object-family-syntax-test
   (test-suite "object family syntax"
-    (test-case "generates POO-native predicates, accessors, and projections"
+    (poo-flow-test-case "generates POO-native predicates, accessors, and projections"
       (check-equal? (poo-object-family-syntax-test?
                      poo-object-family-syntax-test-object)
                     #t)
@@ -85,7 +86,7 @@
                       (provider . runtime-local)
                       (capabilities chat text json)
                       (runtime-executed . #f))))
-    (test-case "generates prototype constructor and fixed family surface once"
+    (poo-flow-test-case "generates prototype constructor and fixed family surface once"
       (let (declaration
             (make-poo-object-family-declaration
              'scenario-model '(chat text json)))
@@ -98,7 +99,7 @@
         (check-equal? (poo-object-family-declaration->alist declaration)
                       '((ref . scenario-model)
                         (capabilities chat text json)))))
-    (test-case "preserves fixed prototype slots for every instance"
+    (poo-flow-test-case "preserves fixed prototype slots for every instance"
       (let (instance (make-poo-object-family-fixed 42))
         (check-equal? (poo-object-family-fixed? instance) #t)
         (check-equal? (.ref instance 'kind) 'fixed-object)

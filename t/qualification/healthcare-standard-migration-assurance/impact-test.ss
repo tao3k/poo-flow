@@ -6,7 +6,8 @@
 ;;; Exact change-impact qualification between the migration TLA+ model and its
 ;;; Lean refinement.  A changed upstream digest must invalidate the retained
 ;;; downstream Binding before an Agent can write it into the governance slot.
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .all-slots .cc .ref)
         (only-in :std/crypto/digest sha256)
         (only-in :std/misc/ports read-all-as-string)
@@ -30,7 +31,7 @@
 (def healthcare-standard-migration-proof-impact-test
   (test-suite
    "Healthcare Standard migration TLA+ to Lean impact"
-   (test-case "retained governance evidence matches exact source bytes"
+   (poo-flow-test-case "retained governance evidence matches exact source bytes"
      (let* ((tla-path
              (.ref AUHealthcareMigrationFormalModelEvidence 'source-path))
             (cfg-path
@@ -63,7 +64,7 @@
         '(AINeverGrantsAuthority ReviewRequiresConformance
           CedarPermitRequiresHumanReview CutoverRequiresCedarPermit
           CutoverRequiresCompleteEvidence))))
-   (test-case "an Agent cannot write a stale TLA impact Binding"
+   (poo-flow-test-case "an Agent cannot write a stale TLA impact Binding"
      (let* ((binding
              (.ref
               (.ref HealthcareStandardMigrationGovernanceInterface 'bindings)

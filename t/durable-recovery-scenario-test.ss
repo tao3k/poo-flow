@@ -6,9 +6,9 @@
 ;;; Boundary: crash/replay/repair scenario receipts for durable policy.
 ;;; Invariant: tests validate scenario projection only; no runtime recovery runs.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object object?)
         :poo-flow/src/modules/memory-core/durable/policy
@@ -97,7 +97,7 @@
 ;; : TestSuite
 (def durable-recovery-scenario-test
   (test-suite "poo-flow durable recovery scenario"
-    (test-case "projects crash replay recovery with observability stages"
+    (poo-flow-test-case "projects crash replay recovery with observability stages"
       (let* ((receipt
               (poo-flow-durable-recovery-scenario
                'recovery-scenario/build-audit
@@ -142,7 +142,7 @@
                       '(#f #f #f #f #f #f))
         (check-equal? (test-ref row 'runtime-executed) #f)))
 
-    (test-case "rejects unsafe replay without memory durable jobs"
+    (poo-flow-test-case "rejects unsafe replay without memory durable jobs"
       (let* ((unsafe-task-rows
               '(((kind . poo-flow.workflow.cicd.check-receipt)
                  (check . release)
@@ -186,7 +186,7 @@
          (diagnostic-code-present? diagnostics 'unresolved-sandbox-ref)
          #t)))
 
-    (test-case "reports invalid durable memory job rows"
+    (poo-flow-test-case "reports invalid durable memory job rows"
       (let* ((invalid-memory-rows
               '(((kind . poo-flow.memory-core.durable-job-receipt)
                  (job-id . memory-job/fake)

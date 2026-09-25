@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier)
@@ -38,7 +39,7 @@
 
 (def release-assurance-claim-verifier-test
   (test-suite "AC-10 S2 claim and TCB verifier"
-    (test-case "claim-specific L1, L3, and L4 receipts verify"
+    (poo-flow-test-case "claim-specific L1, L3, and L4 receipts verify"
       (let* ((claims
               (list (claim 'bundle 'l1-conformant bundle-tcb
                            (list (evidence 'bundle 'scheme)))
@@ -53,7 +54,7 @@
         (check (map (lambda (value) (.ref value 'declared-level))
                     (.ref receipt 'claim-receipts))
                => '(l1-conformant l3-mediated l4-formally-linked))))
-    (test-case "Lean TCB cannot globally promote an actual-effect claim"
+    (poo-flow-test-case "Lean TCB cannot globally promote an actual-effect claim"
       (let (receipt
             (poo-flow-assurance-claim-verify
              (claim 'effect 'l3-mediated lean-tcb
@@ -62,7 +63,7 @@
         (check (map (lambda (entry) (cdr (assq 'code entry)))
                     (.ref receipt 'diagnostics))
                => '(claim-level-tcb-mismatch missing-mediation-evidence))))
-    (test-case "L3 requires mediation owner and isolation component"
+    (poo-flow-test-case "L3 requires mediation owner and isolation component"
       (let* ((cooperative
               (poo-flow-assurance-tcb
                'effect 'actual-effect '(c-abi-transition-engine runtime adapter)))
@@ -74,7 +75,7 @@
         (check (map (lambda (entry) (cdr (assq 'code entry)))
                     (.ref receipt 'diagnostics))
                => '(incomplete-claim-tcb missing-mediation-evidence))))
-    (test-case "L4 requires named Lean-owned immutable proof evidence"
+    (poo-flow-test-case "L4 requires named Lean-owned immutable proof evidence"
       (let* ((missing-digest
               (poo-flow-assurance-evidence-reference
                'proof 'lean "artifact" ""))
@@ -86,7 +87,7 @@
         (check (map (lambda (entry) (cdr (assq 'code entry)))
                     (.ref receipt 'diagnostics))
                => '(invalid-claim-evidence))))
-    (test-case "unknown level and incomplete manifest fail closed"
+    (poo-flow-test-case "unknown level and incomplete manifest fail closed"
       (let* ((unknown
               (poo-flow-assurance-claim-verify
                (claim 'unknown 'l9-marketing bundle-tcb

@@ -6,7 +6,8 @@
 ;;; Boundary: tests verify strict module-system observability traces.
 ;;; Invariant: trace construction never dereferences POO slots.
 
-(import :gerbil/runtime/gambit
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  check
@@ -15,7 +16,6 @@
                  check-false
                  check-not-equal?
                  check-output
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/module-system/observability/module-presentation
@@ -65,7 +65,7 @@
 ;;; and lazy-load decisions.
 (def module-system-observability-test
   (test-suite "poo-flow module-system observability"
-    (test-case "reports aggregate owner imports before module admission"
+    (poo-flow-test-case "reports aggregate owner imports before module admission"
       (let* ((observations
               (poo-flow-authoring-owner-import-port-observations
                'modules/example/funs.ss
@@ -101,7 +101,7 @@
            (.ref contribution-observation 'owner)
            ':poo-flow/src/module-system/contribution/interface)
           (check-equal? (.ref contribution-observation 'accepted?) #f))))
-    (test-case "all maintained module sources import precise owners"
+    (poo-flow-test-case "all maintained module sources import precise owners"
       (let* ((paths (module-observability-source-files "src/modules"))
              (observations
               (apply append
@@ -112,7 +112,7 @@
                           paths))))
         (check-equal? (> (length paths) 0) #t)
         (check-equal? observations '())))
-    (test-case "package build bootstrap imports no package-local owner"
+    (poo-flow-test-case "package build bootstrap imports no package-local owner"
       (check-equal?
        (poo-flow-authoring-build-bootstrap-file-observations
         'build.ss "build.ss")
@@ -129,7 +129,7 @@
         (check-equal? (.ref observation 'code) 'build-bootstrap-self-import)
         (check-equal? (.ref observation 'recommendation)
                       'declare-package-spec-only)))
-    (test-case "package build bootstrap rejects parallel source projection"
+    (poo-flow-test-case "package build bootstrap rejects parallel source projection"
       (for-each
        (lambda (form)
          (let* ((observations
@@ -156,7 +156,7 @@
        (poo-flow-authoring-build-bootstrap-datum-observations
         'build.ss '(quote (poo-flow-load-modules maintained-source)))
        '()))
-    (test-case "builds strict presentation trace rows"
+    (poo-flow-test-case "builds strict presentation trace rows"
       (let* ((native-observation
               (poo-flow-module-observation-stage/detail
                'test-presentation 'selected-modules 2 '() '()))
@@ -190,7 +190,7 @@
                       'settings)
         (check-equal? (module-observability-test-alist-value 'path second-step)
                       '(selected-modules settings))))
-    (test-case "marks repeated stages as recursive-stage"
+    (poo-flow-test-case "marks repeated stages as recursive-stage"
       (let* ((trace
               (poo-flow-module-presentation-trace
                'test-presentation
@@ -213,7 +213,7 @@
                        'path
                        repeat-step)
                       '(selected-modules selected-modules))))
-    (test-case "observes POO slot initializer self references"
+    (poo-flow-test-case "observes POO slot initializer self references"
       (let* ((native-observation
               (make-poo-flow-poo-slot-authoring-observation
                'poo-introspection-slot-receipt
@@ -290,7 +290,7 @@
         (check-equal? (poo-flow-poo-slot-authoring-diagnostics
                        (list good))
                       '())))
-    (test-case "reader-native source inspection catches both POO slot spellings"
+    (poo-flow-test-case "reader-native source inspection catches both POO slot spellings"
       (let* ((source
               "(.o values: values safe: safe-value (before before) (after after-value) diagnostics: (reverse diagnostics))\n(.def Prototype policy: policy (result result-value))")
              (observations
@@ -311,7 +311,7 @@
                 (module-observability-test-alist-value 'slot diagnostic))
               (poo-flow-poo-slot-authoring-diagnostics observations))
          '(values before diagnostics policy))))
-    (test-case "reader-native POO bindings preserve nested source order"
+    (poo-flow-test-case "reader-native POO bindings preserve nested source order"
       (check-equal?
        (poo-flow-poo-slot-authoring-datum-bindings
         '(begin
@@ -323,7 +323,7 @@
          (nested . (.o inner: inner-value))
          (inner . inner-value)
          (final . final-value))))
-    (test-case "reader-native source inspection catches lexical values calls"
+    (poo-flow-test-case "reader-native source inspection catches lexical values calls"
       (let* ((source
               (string-append
                "(def (poo-flow-tool-unique-symbols/accumulate remaining seen values)\n"
@@ -359,7 +359,7 @@
         (check-equal?
          (module-observability-test-alist-value 'runtime-executed observation)
          #f)))
-    (test-case "projects one inline prototype lookup as native authoring advice"
+    (poo-flow-test-case "projects one inline prototype lookup as native authoring advice"
       (let* ((source
               (string-append
                "(.o (:: @ (.ref Contract 'proto)) value: 1)\n"
@@ -375,7 +375,7 @@
         (check-equal? (.ref observation 'code)
                       'poo-prototype-lookup-inside-composition)
         (check-equal? (.ref observation 'runtime-executed?) #f)))
-    (test-case "observability owner exposes development quality and performance evidence"
+    (poo-flow-test-case "observability owner exposes development quality and performance evidence"
       (let* ((policy
               (poo-flow-debug-memory-policy
                'native-module-system-test
@@ -400,7 +400,7 @@
         (check-equal? (length observations) 1)
         (check-equal? (.ref (car observations) 'code)
                       'poo-prototype-lookup-inside-composition)))
-    (test-case "production and performance POO slots pass the authoring gate"
+    (poo-flow-test-case "production and performance POO slots pass the authoring gate"
       (let* ((paths
               (append
                (module-observability-source-files "src")
@@ -412,7 +412,7 @@
         (check-equal?
          (poo-flow-poo-slot-authoring-diagnostics observations)
          '())))
-    (test-case "all repository Scheme sources avoid lexical values calls"
+    (poo-flow-test-case "all repository Scheme sources avoid lexical values calls"
       (let* ((paths (module-observability-source-files "src"))
              (observations
               (apply append
@@ -420,7 +420,7 @@
                           paths))))
         (check-equal? (pair? paths) #t)
         (check-equal? observations '())))
-    (test-case "all repository constructors hoist stable prototype lookups"
+    (poo-flow-test-case "all repository constructors hoist stable prototype lookups"
       (let* ((paths (module-observability-source-files "src"))
              (observations
               (apply append

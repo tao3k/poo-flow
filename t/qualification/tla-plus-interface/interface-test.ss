@@ -2,10 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :clan/poo/object .ref)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref)
         (only-in :std/list/list any)
         (only-in :std/misc/ports read-all-as-string)
-        (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :std/test check-equal? check-exception test-suite)
         (only-in :gerbil-parser/src/runtime/artifact sha256-text)
         (only-in :gerbil-parser/src/runtime/cst
                  syntax-node? syntax-node-kind syntax-node-start syntax-node-end
@@ -32,7 +33,7 @@
 
 (def tla-plus-interface-test
   (test-suite "POO Flow TLA+ syntax interface"
-    (test-case "accepted source retains parser-owned tree without copying"
+    (poo-flow-test-case "accepted source retains parser-owned tree without copying"
       (let* ((document (poo-flow-tla-parse-source sample-source))
              (root (poo-flow-tla-parser-cst document)))
         (check-equal? (poo-flow-tla-document? document) #t)
@@ -56,7 +57,7 @@
         (check-equal? (syntax-node-end root)
                       (u8vector-length (string->utf8 sample-source)))
         (check-equal? (eq? root (poo-flow-tla-parser-cst document)) #t)))
-    (test-case "maintained governance model uses the same interface"
+    (poo-flow-test-case "maintained governance model uses the same interface"
       (let* ((source
               (call-with-input-file "packages/proof/tla/GovernanceCore.tla"
                                     read-all-as-string))
@@ -66,13 +67,13 @@
                       (sha256-text source))
         (check-equal? (syntax-node?
                        (poo-flow-tla-parser-cst document)) #t)))
-    (test-case "multiline modules preserve named instances and qualified names"
+    (poo-flow-test-case "multiline modules preserve named instances and qualified names"
       (let* ((document (poo-flow-tla-parse-source modular-source))
              (root (poo-flow-tla-parser-cst document)))
         (check-equal? (poo-flow-tla-document? document) #t)
         (check-equal? (contains-node-kind? root 'InstanceExpression) #t)
         (check-equal? (contains-node-kind? root 'QualifiedNameExpression) #t)))
-    (test-case "rejected syntax cannot become a POO document"
+    (poo-flow-test-case "rejected syntax cannot become a POO document"
       (check-exception
        (poo-flow-tla-parse-source
         "---- MODULE Broken ----\nWork == INSTANCE\n====\n")

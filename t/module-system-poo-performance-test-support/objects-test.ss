@@ -5,10 +5,10 @@
 
 ;;; Boundary: POO performance object and object-catalog test cases.
 
-(import (only-in :clan/poo/object .ref object?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -35,7 +35,7 @@
 ;; : (-> String Integer Symbol)
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-construction-case)
-  (test-case "constructs large module objects at one boundary"
+  (poo-flow-test-case "constructs large module objects at one boundary"
         (let* ((field-count 600)
                (object (poo-performance-module-object field-count))
                (receipt
@@ -51,7 +51,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-materialization-case)
-  (test-case "materializes default slots once before repeated work"
+  (poo-flow-test-case "materializes default slots once before repeated work"
         (let* ((object (poo-performance-module-object 400))
                (slots (poo-flow-module-object-default-slots object))
               (receipt
@@ -66,7 +66,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-validation-case)
-  (test-case "validates stable POO object shape once before scalar loop"
+  (poo-flow-test-case "validates stable POO object shape once before scalar loop"
         (let* ((object (poo-performance-module-object 300))
                (valid? (poo-flow-module-object? object))
                (slots (poo-flow-module-object-default-slots object))
@@ -83,7 +83,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-catalog-validation-case)
-  (test-case "validates inherited object catalogs with indexed field origins"
+  (poo-flow-test-case "validates inherited object catalogs with indexed field origins"
         (let* ((objects
                 (poo-performance-module-object-catalog 40 160))
                (validations
@@ -105,7 +105,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-object-iteration-case)
-  (test-case "iterates object graph nodes after one materialization boundary"
+  (poo-flow-test-case "iterates object graph nodes after one materialization boundary"
         (let* ((objects
                 (poo-performance-module-object-catalog 80 120))
                (objects-node (poo-flow-module-objects-node objects))
@@ -127,7 +127,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-clone-override-case)
-  (test-case "applies clone overrides after one default-slot materialization"
+  (poo-flow-test-case "applies clone overrides after one default-slot materialization"
         (let* ((object (poo-performance-module-object 320))
                (default-slots
                 (poo-flow-module-object-default-slots object))
@@ -156,7 +156,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-field-lookup-case)
-  (test-case "reuses field contract lookup through contribution loops"
+  (poo-flow-test-case "reuses field contract lookup through contribution loops"
         (let* ((field-count 600)
                (object (poo-performance-module-object field-count))
                (entries
@@ -175,7 +175,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-composition-case)
-  (test-case "composes object contributions through one merge boundary"
+  (poo-flow-test-case "composes object contributions through one merge boundary"
         (let* ((object-count 32)
                (field-count 80)
                (objects

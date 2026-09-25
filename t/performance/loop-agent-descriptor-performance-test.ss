@@ -6,9 +6,9 @@
 ;;; Boundary: loop descriptor performance gates cover POO slot projection.
 ;;; Invariant: descriptor contract projection stays data-only and bounded.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -111,13 +111,13 @@
 ;; : TestSuite
 (def loop-agent-descriptor-performance-test
   (test-suite "loop-agent descriptor performance"
-    (test-case "keeps loop descriptor performance fixture inside benchmark contract"
+    (poo-flow-test-case "keeps loop descriptor performance fixture inside benchmark contract"
       (check-equal?
        (benchmark-fixture-contract-pass?
         loop-descriptor-contract-projection-fixture)
        #t))
 
-    (test-case "projects many loop descriptor contracts with one slot sampling pass"
+    (poo-flow-test-case "projects many loop descriptor contracts with one slot sampling pass"
       (let* ((descriptor-count 1200)
              (descriptors
               (loop-descriptor-performance-descriptors descriptor-count))

@@ -2,12 +2,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite)
         :poo-flow/src/graph/control-plane-handoff-facts)
 
 (def control-plane-handoff-facts-test
   (test-suite "control-plane handoff facts"
-    (test-case "projects accepted and rejected handoff facts"
+    (poo-flow-test-case "projects accepted and rejected handoff facts"
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))

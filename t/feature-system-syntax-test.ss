@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/feature-system/interface)
 
@@ -57,7 +58,7 @@
 
 (def feature-system-syntax-test
   (test-suite "POO-native Feature declaration macros"
-    (test-case "defpoo-feature lowers to a module-owned descriptor"
+    (poo-flow-test-case "defpoo-feature lowers to a module-owned descriptor"
       (check-equal? (.ref syntax-session-feature 'kind)
                     'feature-descriptor)
       (check-equal? (.ref syntax-session-feature 'feature-id)
@@ -76,7 +77,7 @@
       (check-equal? (.ref syntax-session-mode-schema 'kind)
                     'feature-option-schema))
 
-    (test-case "Feature clauses preserve POO contribution values"
+    (poo-flow-test-case "Feature clauses preserve POO contribution values"
       (check-equal? (.ref syntax-session-feature 'policy-contributions)
                     '(session-policy))
       (check-equal? (.ref syntax-session-feature 'strategy-contributions)
@@ -86,7 +87,7 @@
       (check-equal? (.ref syntax-session-feature 'projections)
                     '(runtime-v1)))
 
-    (test-case "defpoo-feature-profile lowers selections to a pure plan"
+    (poo-flow-test-case "defpoo-feature-profile lowers selections to a pure plan"
       (check-equal? (.ref syntax-agent-profile 'kind) 'feature-profile)
       (check-equal? (.ref syntax-agent-profile 'contracts)
                     '(agent-profile-contract))

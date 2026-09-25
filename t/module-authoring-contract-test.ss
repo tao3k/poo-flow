@@ -3,9 +3,10 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :clan/poo/object .cc .o .ref)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .cc .o .ref)
         (only-in :clan/poo/mop TypeError?)
-        (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :std/test check-equal? check-exception test-suite)
         :poo-flow/src/module-system/authoring/interface
         (only-in :poo-flow/src/module-system/poo-clos/interface
                  poo-clos-call
@@ -132,7 +133,7 @@
   (test-suite
    "POO Module Interface role authoring Contract"
 
-   (test-case "native Interface, executor, and role axes are CLOS-applicable"
+   (poo-flow-test-case "native Interface, executor, and role axes are CLOS-applicable"
      (let* ((authoring (poo-flow-module-interface-authoring
                         test-module-interface))
             (arguments
@@ -147,7 +148,7 @@
                 ModuleAuthoringAdmissionGeneric arguments))
         1)))
 
-   (test-case "a vertical method bundle refines all three native POO axes"
+   (poo-flow-test-case "a vertical method bundle refines all three native POO axes"
      (let* ((authoring
              (.cc (poo-flow-default-module-authoring-profile)
                   'executor (.o (:: @ ClinicalAuthoringExecutor.))
@@ -175,13 +176,13 @@
           (poo-flow-module-authoring-admission-accepted? admission) #t)
          (check-equal? (.ref admission 'vertical-owner) 'clinical))))
 
-   (test-case "Interface rejects an invalid authoring Profile immediately"
+   (poo-flow-test-case "Interface rejects an invalid authoring Profile immediately"
      (check-exception
       (poo-flow-module-interface
        "invalid-authoring" (.o) '() authoring: (.o))
       TypeError?))
 
-   (test-case "admits native noun slots and leaves algorithms open"
+   (poo-flow-test-case "admits native noun slots and leaves algorithms open"
      (let (admission
            (poo-flow-module-authoring-admit-datum
             test-module-interface
@@ -193,7 +194,7 @@
        (check-equal?
         (poo-flow-module-authoring-admission-diagnostics admission) '())))
 
-   (test-case "admits named POO Query values and provider projections"
+   (poo-flow-test-case "admits named POO Query values and provider projections"
      (let (admission
            (poo-flow-module-authoring-admit-datum
             test-module-interface
@@ -207,7 +208,7 @@
        (check-equal?
         (poo-flow-module-authoring-admission-diagnostics admission) '())))
 
-   (test-case "rejects a raw Query language hidden in a POO slot"
+   (poo-flow-test-case "rejects a raw Query language hidden in a POO slot"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               test-module-interface
@@ -224,7 +225,7 @@
        (check-equal? (.ref diagnostic 'recommendation)
                      'bind-named-poo-query-or-provider-projection)))
 
-   (test-case "rejects an anonymous Query evaluator but leaves funs open"
+   (poo-flow-test-case "rejects an anonymous Query evaluator but leaves funs open"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               test-module-interface
@@ -246,7 +247,7 @@
            (filter selected? elements))))
       #t))
 
-   (test-case "rejects a command-shaped domain slot with an actionable repair"
+   (poo-flow-test-case "rejects a command-shaped domain slot with an actionable repair"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               test-module-interface
@@ -264,7 +265,7 @@
                      '(? => =>.+ override))
        (check-equal? (.ref diagnostic 'freedom) 'open-native-poo)))
 
-   (test-case "config role adds its own composition-only method"
+   (poo-flow-test-case "config role adds its own composition-only method"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               test-module-interface
@@ -278,7 +279,7 @@
        (check-equal? (.ref diagnostic 'subject) 'stage)
        (check-equal? (.ref diagnostic 'freedom) 'composition-only)))
 
-   (test-case "user-root refinement reports an agent-repairable nested object"
+   (poo-flow-test-case "user-root refinement reports an agent-repairable nested object"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               user-root-module-interface
@@ -300,7 +301,7 @@
        (check-equal? (.ref diagnostic 'freedom)
                      'maintained-value-composition-only)))
 
-   (test-case "user-root rejects raw MOP imports with an owned repair"
+   (poo-flow-test-case "user-root rejects raw MOP imports with an owned repair"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               user-root-module-interface
@@ -315,7 +316,7 @@
        (check-equal? (.ref diagnostic 'recommendation)
                      'move-meta-extension-to-maintained-module-owner)))
 
-   (test-case "user-root rejects direct CLOS declarations"
+   (poo-flow-test-case "user-root rejects direct CLOS declarations"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               user-root-module-interface
@@ -330,7 +331,7 @@
        (check-equal? (.ref diagnostic 'subject)
                      'poo-clos-generic-function)))
 
-   (test-case "user-root rejects raw self/super behavior hooks"
+   (poo-flow-test-case "user-root rejects raw self/super behavior hooks"
      (let* ((admission
              (poo-flow-module-authoring-admit-datum
               user-root-module-interface
@@ -347,7 +348,7 @@
        (check-equal? (.ref diagnostic 'recommendation)
                      'move-behavior-to-named-maintained-operation)))
 
-   (test-case "maintained roles retain advanced extension freedom"
+   (poo-flow-test-case "maintained roles retain advanced extension freedom"
      (check-equal?
       (poo-flow-module-authoring-admission-accepted?
        (poo-flow-module-authoring-admit-datum
@@ -357,7 +358,7 @@
            (poo-clos-generic-function 'maintained-generic 1))))
       #t))
 
-   (test-case "maintained user-interface Scheme sources satisfy their role Contracts"
+   (poo-flow-test-case "maintained user-interface Scheme sources satisfy their role Contracts"
      (let (failures '())
        (for-each
         (lambda (path)
@@ -381,7 +382,7 @@
              (reverse failures))
         '())))
 
-   (test-case "a lazy POO slot cannot refer to its own binding"
+   (poo-flow-test-case "a lazy POO slot cannot refer to its own binding"
      (let (admission
            (poo-flow-module-authoring-admit-datum
             test-module-interface 'objects
@@ -394,7 +395,7 @@
              (poo-flow-module-authoring-admission-diagnostics admission))
         '(poo-slot-initializer-shadows-slot))))
 
-   (test-case ".cc overrides evaluate their values before constructing slots"
+   (poo-flow-test-case ".cc overrides evaluate their values before constructing slots"
      (let ((base (.o identity: 'original))
            (identity 'lexical))
        (check-equal? (.ref (.cc base identity: identity) 'identity)
@@ -406,7 +407,7 @@
           '(def RefinedProfile (.cc base identity: identity))))
         #t)))
 
-   (test-case "unknown roles fail at the Interface Profile boundary"
+   (poo-flow-test-case "unknown roles fail at the Interface Profile boundary"
      (check-equal?
       (with-catch
        (lambda (_failure) #t)
@@ -416,7 +417,7 @@
          #f))
       #t))
 
-   (test-case "loader blocks a command-slot module before exposing its Interface"
+   (poo-flow-test-case "loader blocks a command-slot module before exposing its Interface"
      (let (collection
            (make-poo-flow-module-source-collection
             'invalid-authoring-fixture 'test
@@ -426,7 +427,7 @@
          collection 'interface)
         true)))
 
-   (test-case "contribution and Lambda sources inherit the same authoring Contract"
+   (poo-flow-test-case "contribution and Lambda sources inherit the same authoring Contract"
      (let (collection
            (make-poo-flow-contribution-module-source
             'invalid-lambda-fixture "t/fixtures/module-authoring-invalid"))
@@ -435,7 +436,7 @@
          collection 'interface)
         true)))
 
-   (test-case "the authoring Contract passes its own lazy-slot observation"
+   (poo-flow-test-case "the authoring Contract passes its own lazy-slot observation"
      (check-equal?
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations
@@ -443,7 +444,7 @@
         "src/module-system/authoring/contracts.ss"))
       '()))
 
-   (test-case "effective-object presentation blocks lazy self-reference regression"
+   (poo-flow-test-case "effective-object presentation blocks lazy self-reference regression"
      (check-equal?
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations
@@ -451,7 +452,7 @@
         "src/module-system/observability/effective-object.ss"))
       '()))
 
-   (test-case "profile composition conflict receipts have no lazy self-reference"
+   (poo-flow-test-case "profile composition conflict receipts have no lazy self-reference"
      (check-equal?
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations

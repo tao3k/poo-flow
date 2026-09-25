@@ -6,9 +6,9 @@
 ;;; Boundary: durable recovery scenario projection performance gate.
 ;;; Invariant: crash/replay/repair receipts stay bounded and report-only.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -166,7 +166,7 @@
 ;; : TestSuite
 (def durable-recovery-scenario-performance-test
   (test-suite "durable recovery scenario performance"
-    (test-case "keeps recovery scenario batch projection inside benchmark contract"
+    (poo-flow-test-case "keeps recovery scenario batch projection inside benchmark contract"
       (let* ((scenario-count 96))
         (let-values (((receipt summary)
                       (benchmark-run/result

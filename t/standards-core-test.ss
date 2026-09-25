@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/modules/standards/interface)
 
@@ -46,7 +47,7 @@
 
 (def standards-core-test
   (test-suite "POO Flow Standards core"
-    (test-case "resolution closes exact editions and artifact dependencies"
+    (poo-flow-test-case "resolution closes exact editions and artifact dependencies"
       (let* ((loads (vector 0))
              (base-artifact
               (test-artifact-ref "test/artifact/base" '(base) '() loads 0))
@@ -110,7 +111,7 @@
           (.ref bundle 'closure-digest))
          true)
         (check-equal? (vector-ref loads 0) 0)))
-    (test-case "edition roots must name declared artifacts"
+    (poo-flow-test-case "edition roots must name declared artifacts"
       (let* ((loads (vector 0))
              (artifact
               (test-artifact-ref
@@ -121,7 +122,7 @@
           "1" empty-digest '() (list artifact)
           '("test/artifact/missing"))
          true)))
-    (test-case "missing, cyclic, conflicting, and over-budget closures fail closed"
+    (poo-flow-test-case "missing, cyclic, conflicting, and over-budget closures fail closed"
       (let* ((a
               (test-edition
                "test/cycle/a" "https://example.test/cycle/a" "1"
@@ -170,7 +171,7 @@
            catalog '("test/budget/root")
            (poo-flow-standard-budget 1 8 8 4096 128) terminology-digest))
          'standard-budget-exceeded)))
-    (test-case "artifact, depth, byte, and computation budgets fail independently"
+    (poo-flow-test-case "artifact, depth, byte, and computation budgets fail independently"
       (let* ((loads (vector 0))
              (base-artifact
               (test-artifact-ref "test/budget/artifact/base" '(base) '() loads 0))
@@ -197,7 +198,7 @@
                (poo-flow-standard-budget 8 8 1 4096 128)
                (poo-flow-standard-budget 8 8 8 1 128)
                (poo-flow-standard-budget 8 8 8 4096 1)))))
-    (test-case "materialization is explicit, dependency-aware, cached, and evictable"
+    (poo-flow-test-case "materialization is explicit, dependency-aware, cached, and evictable"
       (let* ((loads (vector 0))
              (dependency
               (test-artifact-ref "test/load/base" '(base) '() loads 0))
@@ -242,7 +243,7 @@
                'cache-outcome)
          'materialized)
         (check-equal? (vector-ref loads 0) 3)))
-    (test-case "recursive materialization returns a typed re-entry diagnostic"
+    (poo-flow-test-case "recursive materialization returns a typed re-entry diagnostic"
       (let* ((payload '(recursive-value))
              (digest (poo-flow-standard-digest payload))
              (size-bytes
@@ -275,7 +276,7 @@
           (check-equal? (test-failure-code nested-receipt)
                         'standard-lazy-reentry)
           (check-equal? (.ref nested-receipt 'runtime-executed?) #f))))
-    (test-case "concurrent materialization is single-flight"
+    (poo-flow-test-case "concurrent materialization is single-flight"
       (let* ((loads (vector 0))
              (artifact
               (test-artifact-ref "test/load/concurrent" '(value) '() loads 0.05))
@@ -310,7 +311,7 @@
                                'wait-count)
                          0)
                       #t)))
-    (test-case "loader rejects a digest-mismatched artifact and caches failure"
+    (poo-flow-test-case "loader rejects a digest-mismatched artifact and caches failure"
       (let* ((expected (poo-flow-standard-digest 'expected))
              (actual (poo-flow-standard-digest 'actual))
              (materializations (vector 0))
@@ -341,7 +342,7 @@
         (check-equal? (.ref (.ref first 'load-receipt) 'valid?) #f)
         (check-equal? (vector-ref materializations 0) 0)
         (check-equal? (.ref second 'cache-outcome) 'failure-cache-hit)))
-    (test-case "materialization failure preserves the successful load receipt"
+    (poo-flow-test-case "materialization failure preserves the successful load receipt"
       (let* ((payload '(source-value))
              (digest (poo-flow-standard-digest payload))
              (size-bytes
@@ -381,7 +382,7 @@
         (check-equal? (.ref second 'cache-outcome) 'failure-cache-hit)
         (check-equal? (.ref second 'load-receipt)
                       (.ref first 'load-receipt))))
-    (test-case "content replacement creates a new immutable generation"
+    (poo-flow-test-case "content replacement creates a new immutable generation"
       (let* ((old-loads (vector 0))
              (new-loads (vector 0))
              (old-ref
@@ -413,12 +414,12 @@
         (check-equal? (.ref old-receipt 'generation) old-generation)
         (check-equal? (.ref (.ref old-receipt 'load-receipt) 'generation)
                       old-generation)))
-    (test-case "failure codes are a closed vocabulary"
+    (poo-flow-test-case "failure codes are a closed vocabulary"
       (check-exception
        (poo-flow-standard-failure
         'standard-unknown-failure "test/failure" 'detail '())
        true))
-    (test-case "constraint Profiles are exact POO refinement values"
+    (poo-flow-test-case "constraint Profiles are exact POO refinement values"
       (let (profile
             (poo-flow-standard-constraint-profile
              "test/profile" "revision-1" '("test/edition/base")
@@ -436,7 +437,7 @@
          (poo-flow-standard-constraint-profile
          "test/invalid" "revision-1" '() '() '() '() '() '() 'draft)
          true)))
-    (test-case "Cases compose exact Profiles and reject revision conflicts"
+    (poo-flow-test-case "Cases compose exact Profiles and reject revision conflicts"
       (let* ((edition-a
               (test-edition
                "test/profile-composition/a" "https://example.test/profile/a"
@@ -496,7 +497,7 @@
         (check-equal? (.ref conflict 'resolution-receipt) #f)
         (check-equal? (test-failure-code conflict)
                       'standard-profile-revision-conflict)))
-    (test-case "validation closures bind bundle, provider, subject, and constraints"
+    (poo-flow-test-case "validation closures bind bundle, provider, subject, and constraints"
       (let* ((edition
               (test-edition
                "test/validation-closure/edition" "https://example.test/validation-closure" "1"
@@ -539,7 +540,7 @@
                        case-admission)
                       #t)
         (check-equal? (.ref case-admission 'valid?) #t)))
-    (test-case "vertical modules compose the POO Standards module prototype"
+    (poo-flow-test-case "vertical modules compose the POO Standards module prototype"
       (let ((module
              (poo-flow-standards-module
               "test/modules/standards" poo-flow-standard-empty-catalog
@@ -554,7 +555,7 @@
          (.ref (.ref (.ref module 'features) 'migration) 'feature-kind)
          'migration)
         (check-equal? (procedure? (.ref module '.resolve)) #t)))
-    (test-case "governance slots are declared, staged, and Agent-writable"
+    (poo-flow-test-case "governance slots are declared, staged, and Agent-writable"
       (let (interface PooFlowStandardMigrationGovernanceInterface.)
         (check-equal? (poo-flow-standard-governance-interface? interface) #t)
         (let* ((declaration

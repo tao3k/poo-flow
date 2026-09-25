@@ -6,9 +6,9 @@
 ;;; Boundary: tests inspect Funflow CI/CD runtime projection from user config.
 ;;; Invariant: projection remains declarative; no runtime adapter is executed.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/user-interface/presentation-config
@@ -39,7 +39,7 @@
 ;; : TestSuite
 (def user-interface-cicd-runtime-projection-test
   (test-suite "poo-flow user interface cicd runtime projection"
-    (test-case "traces workflow CI/CD projection stages"
+    (poo-flow-test-case "traces workflow CI/CD projection stages"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))
@@ -89,7 +89,7 @@
         (check-equal?
          (user-interface-cicd-runtime-alist-ref summary-step 'runtime-executed)
          #f)))
-    (test-case "flags manifest summary mismatch before handoff"
+    (poo-flow-test-case "flags manifest summary mismatch before handoff"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))
@@ -121,7 +121,7 @@
         (check-equal?
          (not (not (member 'argv-mismatch row-diagnostics)))
          #t)))
-    (test-case "flags durable manifest summary mismatch before handoff"
+    (poo-flow-test-case "flags durable manifest summary mismatch before handoff"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))

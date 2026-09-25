@@ -6,7 +6,8 @@
 ;;; Boundary: profile candidate tests cover Scheme-side dynamic profile data.
 ;;; Invariant: tests do not execute nono promote/apply or native sandbox code.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/api
@@ -24,7 +24,7 @@
 
 (def agent-sandbox-profile-candidate-test
  (test-suite "agent sandbox profile candidates"
-   (test-case "builds nono candidates through POO descriptors and macros"
+   (poo-flow-test-case "builds nono candidates through POO descriptors and macros"
      (let* ((choice
              (agent-sandbox-profile-candidate-choice
               grant
@@ -65,7 +65,7 @@
                      'profile-candidate)
        (check-equal? (length (agent-sandbox-profile-candidate-choices candidate))
                      1)))
-   (test-case "projects candidate choices into patch sections"
+   (poo-flow-test-case "projects candidate choices into patch sections"
      (let* ((grant-choice
              (agent-sandbox-profile-candidate-choice
               grant
@@ -99,7 +99,7 @@
                      1)
        (check-equal? (agent-sandbox-alist-ref patch 'validation-errors #f)
                      '())))
-   (test-case "creates inert nono promotion requests and receipts"
+   (poo-flow-test-case "creates inert nono promotion requests and receipts"
      (let* ((choice
              (agent-sandbox-profile-candidate-choice
               grant
@@ -137,7 +137,7 @@
                      #f)
        (check-equal? (agent-sandbox-alist-ref receipt 'applied? #t)
                      #f)))
-   (test-case "reports structured contract validation errors"
+   (poo-flow-test-case "reports structured contract validation errors"
      (let* ((errors
              (agent-sandbox-profile-candidate-validation-errors
               (list (cons 'schema 'wrong-schema)

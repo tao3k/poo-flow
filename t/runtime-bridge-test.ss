@@ -6,7 +6,8 @@
 ;;; Boundary: runtime bridge tests cover schema envelopes, not real Rust IO.
 ;;; Invariant: Scheme emits deterministic request/response data for adapters.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -26,7 +26,7 @@
 ;;; Scheme control-plane code and external runtimes.
 (def runtime-bridge-test
   (test-suite "runtime bridge schema"
-    (test-case "rust submit envelope carries schema and correlation ids"
+    (poo-flow-test-case "rust submit envelope carries schema and correlation ids"
       (let* ((flow (external-flow 'compile
                                   'rust-build
                                   '((crate . "poo-flow"))
@@ -43,7 +43,7 @@
                       '(rust-request compile external))
         (check-equal? (cdr (assoc 'artifact-handle envelope))
                       '(rust-artifact compile (node compile 0 external compile)))))
-    (test-case "rust store put envelope preserves operation"
+    (poo-flow-test-case "rust store put envelope preserves operation"
       (let* ((flow (store-flow 'put-cache
                                'put
                                '((path . "target"))
@@ -58,7 +58,7 @@
         (check-equal? (cdr (assoc 'operation envelope)) 'store-put)
         (check-equal? (cdr (assoc 'request-id envelope))
                       '(rust-request put-cache store))))
-    (test-case "adapter results project to runtime response schema"
+    (poo-flow-test-case "adapter results project to runtime response schema"
       (let* ((adapter-result (make-adapter-result '(runtime-request 1)
                                                   'submitted
                                                   'payload
@@ -74,7 +74,7 @@
         (check-equal? (cdr (assoc 'artifact-handle shape)) '(artifact 1))
         (check-equal? (cdr (assoc 'runtime (cdr (assoc 'metadata shape))))
                       'rust)))
-    (test-case "configured rust command normalizes runtime response"
+    (poo-flow-test-case "configured rust command normalizes runtime response"
       (let (seen #f)
         (let* ((command
                 (lambda (envelope)
@@ -110,7 +110,7 @@
           (check-equal? (adapter-result-value adapter-result) 'runtime-output)
           (check-equal? (adapter-result-artifact-handle adapter-result)
                         '(artifact runtime-output)))))
-    (test-case "process runtime command captures stdout through response decoder"
+    (poo-flow-test-case "process runtime command captures stdout through response decoder"
       (let* ((runtime-command
               (make-process-runtime-command
                'echo-runtime-command
@@ -143,7 +143,7 @@
         (check-equal? (adapter-result-value adapter-result) "runtime-output\n")
         (check-equal? (adapter-result-artifact-handle adapter-result)
                       '(artifact process-runtime-output))))
-    (test-case "stdout runtime command reads runtime response s-expression"
+    (poo-flow-test-case "stdout runtime command reads runtime response s-expression"
       (let* ((runtime-command
               (make-stdout-runtime-command
                'stdout-runtime-command
@@ -172,7 +172,7 @@
         (check-equal? (adapter-result-value adapter-result) 'stdout-output)
         (check-equal? (adapter-result-artifact-handle adapter-result)
                       '(artifact stdout-runtime-output))))
-    (test-case "stdout runtime command descriptor materializes process command"
+    (poo-flow-test-case "stdout runtime command descriptor materializes process command"
       (let* ((descriptor
               (make-stdout-runtime-command-descriptor
                'descriptor-runtime-command
@@ -207,7 +207,7 @@
         (check-equal? (adapter-result-value adapter-result) 'descriptor-output)
         (check-equal? (adapter-result-artifact-handle adapter-result)
                       '(artifact descriptor-output))))
-    (test-case "invalid runtime command response fails through adapter result"
+    (poo-flow-test-case "invalid runtime command response fails through adapter result"
       (let* ((command (lambda (envelope) 'not-a-runtime-response))
              (config (make-rust-run-config
                       (list (cons 'runtime-command command))))
@@ -221,7 +221,7 @@
         (check-equal? (adapter-result-status adapter-result) 'failed)
         (check-equal? (cdr (assoc 'code (adapter-result-error adapter-result)))
                       'invalid-runtime-response)))
-    (test-case "invalid runtime command descriptor fails through adapter result"
+    (poo-flow-test-case "invalid runtime command descriptor fails through adapter result"
       (let* ((config (make-rust-run-config
                       (list (cons 'runtime-command '(not-a-runtime-command)))))
              (flow (external-flow 'compile

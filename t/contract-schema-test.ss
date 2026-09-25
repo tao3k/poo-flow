@@ -5,7 +5,8 @@
 
 ;;; Contract: shared slot schemas and Contracts are native POO Type values.
 
-(import :std/test)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 (def (contract-schema-eval expr)
   (eval expr))
@@ -17,7 +18,7 @@
 
 (def contract-schema-test
   (test-suite "contract-schema-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/module-system/descriptor/contracts.ss"))
       (eval '(import :clan/poo/object :clan/poo/mop))
       (contract-schema-eval

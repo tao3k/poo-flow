@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :clan/poo/object :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :clan/poo/object :std/test
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch)
 
 
@@ -11,7 +12,7 @@
 (def organization-bundle-runtime-v0-batch-test
   (test-suite
    "runtime v0 hot/bulk typed projection"
-   (test-case "event projects fixed 96-byte native fields"
+   (poo-flow-test-case "event projects fixed 96-byte native fields"
      (let* ((event (poo-flow-runtime-v0-event
                     1 0 7 (id 1 2) (id 3 4) (id 5 6)
                     64 128 9000 3))
@@ -22,13 +23,13 @@
        (check-equal? (cdr (assq 'payload-offset fields)) 64)
        (check-equal? (cdr (assq 'payload-length fields)) 128)
        (check-equal? (cdr (assq 'authorization-identity fields)) '(5 6))))
-   (test-case "identity table accepts unique compact identities"
+   (poo-flow-test-case "identity table accepts unique compact identities"
      (let (table
            (poo-flow-runtime-v0-identity-table
             (list (poo-flow-runtime-v0-identity-entry 'full-a (id 1 2))
                   (poo-flow-runtime-v0-identity-entry 'full-b (id 1 3)))))
        (check-equal? (.ref table 'collision-checked?) #t)))
-   (test-case "identity table rejects compact collision"
+   (poo-flow-test-case "identity table rejects compact collision"
      (check-equal?
       (with-catch
        (lambda (_failure) #t)

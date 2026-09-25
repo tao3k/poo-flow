@@ -6,10 +6,10 @@
 ;;; Boundary: real module object catalog validation stays out of the unit root.
 ;;; Invariant: catalog checks load backend object sets but never realize runtime.
 
-(import (only-in :clan/poo/object .ref object?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/interface
@@ -29,7 +29,7 @@
 ;; : TestSuite
 (def module-object-catalog-validation-test
   (test-suite "poo-flow module object catalog validation"
-    (test-case "validates real module object sets"
+    (poo-flow-test-case "validates real module object sets"
       (let* ((objects
               (append poo-flow-shared-module-objects
                       poo-flow-sandbox-core-module-objects
@@ -85,7 +85,7 @@
           (check-equal? (receipt-ref summary 'descriptor-realized?) #f)
           (check-equal? (receipt-ref summary 'runtime-executed) #f))))
 
-    (test-case "pins nono sandbox object binding to native FFI"
+    (poo-flow-test-case "pins nono sandbox object binding to native FFI"
       (let ((binding-field
              (poo-flow-module-object-field poo-flow-nono-sandbox-object
                                            'binding)))

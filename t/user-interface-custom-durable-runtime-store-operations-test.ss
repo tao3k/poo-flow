@@ -7,9 +7,9 @@
 ;;; Invariant: user config projects operation receipts and handoff data only;
 ;;; Marlin owns runtime store execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/modules/memory-core/durable/store-operation
                  +poo-flow-durable-runtime-store-operation-specs+)
@@ -26,7 +26,7 @@
 ;; : TestSuite
 (def user-interface-custom-durable-runtime-store-operations-test
   (test-suite "poo-flow custom durable runtime store operation case"
-    (test-case "projects operation receipts and Marlin handoff"
+    (poo-flow-test-case "projects operation receipts and Marlin handoff"
       (let* ((negotiation-row
               (car poo-flow-custom-my-module-durable-runtime-store-operations-case))
              (operation-rows

@@ -5,9 +5,9 @@
 
 ;;; Boundary: POO performance extension graph test cases.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -24,7 +24,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-extension-children-case)
-  (test-case "merges extension children through indexed override boundary"
+  (poo-flow-test-case "merges extension children through indexed override boundary"
         (let* ((base-count 500)
                (extra-count 1600)
                (key-span 700)
@@ -57,7 +57,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-cross-targeting-case)
-  (test-case "preserves same-pass targeting after cross contribution child creation"
+  (poo-flow-test-case "preserves same-pass targeting after cross contribution child creation"
         (let* ((child-count 900)
                (target
                 (poo-performance-cross-contribution-child-name 640))
@@ -99,7 +99,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-local-coalescing-case)
-  (test-case "coalesces adjacent local contributions before graph traversal"
+  (poo-flow-test-case "coalesces adjacent local contributions before graph traversal"
         (let* ((child-count 900)
                (contribution-count 900)
                (base (poo-performance-extension-merge-root child-count))

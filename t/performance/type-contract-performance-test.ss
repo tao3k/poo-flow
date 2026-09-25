@@ -7,9 +7,9 @@
 ;;; Invariant: benchmark thunks exclude gxi startup, package install, Lean
 ;;; execution, Marlin runtime work, and external IO.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-p95-elapsed-ms)
@@ -184,7 +184,7 @@
 ;; : TestSuite
 (def type-contract-performance-test
   (test-suite "type contract performance"
-    (test-case "keeps contract micro operations inside regression budgets"
+    (poo-flow-test-case "keeps contract micro operations inside regression budgets"
       (let (receipt (type-contract-performance-shared-receipt))
         (type-contract-performance-display-receipt receipt)
         (type-contract-performance-check-budget!
@@ -203,13 +203,13 @@
          'lean-facts-ms
          (type-contract-performance-ref receipt 'lean-facts-ms)
          (type-contract-performance-ref receipt 'lean-facts-ms-max-ms))))
-    (test-case "keeps real session contract scenario inside regression budgets"
+    (poo-flow-test-case "keeps real session contract scenario inside regression budgets"
       (let (receipt (type-contract-performance-shared-receipt))
         (type-contract-performance-check-budget!
          'session-policy-ms
          (type-contract-performance-ref receipt 'session-policy-ms)
          (type-contract-performance-ref receipt 'session-policy-ms-max-ms))))
-    (test-case "keeps scaled contract-backed objects bounded"
+    (poo-flow-test-case "keeps scaled contract-backed objects bounded"
       (let (receipt (type-contract-performance-shared-receipt))
         (check-equal?
          (<= (type-contract-performance-ref receipt 'scale-100-ms)
@@ -219,7 +219,7 @@
          'scale-10000-ms
          (type-contract-performance-ref receipt 'scale-10000-ms)
          (type-contract-performance-ref receipt 'scale-10000-ms-max-ms))))
-    (test-case "keeps cached projection reads out of the hot validation path"
+    (poo-flow-test-case "keeps cached projection reads out of the hot validation path"
       (let (receipt (type-contract-performance-shared-receipt))
         (type-contract-performance-check-budget!
          'cached-type-facts-ms

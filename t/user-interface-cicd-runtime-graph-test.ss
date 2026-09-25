@@ -6,9 +6,9 @@
 ;;; Boundary: tests inspect the user-facing Funflow CI/CD dependency graph.
 ;;; Invariant: graph projection stays declarative and runtime-free.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-config-workflow-cicd-runtime-readiness
@@ -421,7 +421,7 @@
 ;; : TestSuite
 (def user-interface-cicd-runtime-graph-test
   (test-suite "poo-flow user interface cicd runtime graph"
-    (test-case "keeps workflow CI/CD graph projection inspectable"
+    (poo-flow-test-case "keeps workflow CI/CD graph projection inspectable"
       (let (context (user-interface-cicd-runtime-graph-context))
         (check-cicd-runtime-readiness! context)
         (check-cicd-dependency-graph! context)

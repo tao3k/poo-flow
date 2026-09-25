@@ -6,7 +6,8 @@
 ;;; Boundary: native nono FFI tests call the C ABI through Gambit, not the CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by this test.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -51,7 +51,7 @@
 ;; : TestSuite
 (def nono-sandbox-native-ffi-test
   (test-suite "nono-sandbox native FFI"
-    (test-case "skips cleanly when an explicit native library path is absent"
+    (poo-flow-test-case "skips cleanly when an explicit native library path is absent"
       (let* ((runtime-manifest (make-native-ffi-test-runtime-manifest))
              (receipt
               (nono-c-binding-native-live-test
@@ -67,7 +67,7 @@
         (check-equal? (test-ref receipt 'native-executed) #f)
         (check-equal? (test-ref receipt 'cli-executed) #f)
         (check-equal? (test-maybe-ref receipt 'command) #f)))
-    (test-case "calls native nono C ABI when libnono_ffi is available"
+    (poo-flow-test-case "calls native nono C ABI when libnono_ffi is available"
       (let* ((runtime-manifest (make-native-ffi-test-runtime-manifest))
              (receipt
               (nono-c-binding-native-live-test runtime-manifest)))

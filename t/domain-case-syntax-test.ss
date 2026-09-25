@@ -5,10 +5,10 @@
 
 ;;; Boundary: expansion and runtime checks for DomainCase authoring macros.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
                  check-eq?
-                 test-case
                  test-suite)
         :clan/poo/object
         :poo-flow/src/core/object-syntax
@@ -78,7 +78,7 @@
 
 (def domain-case-syntax-test
   (test-suite "DomainCase hygienic authoring macros"
-    (test-case "binds POO-native component descriptors"
+    (poo-flow-test-case "binds POO-native component descriptors"
       (check-equal?
        (.ref syntax-parent-component 'component-id)
        'syntax-parent)
@@ -94,7 +94,7 @@
       (check-equal?
        (.ref syntax-parent-component 'projections)
        (list syntax-runtime-projection)))
-    (test-case "closes a DomainCase and preserves child precedence"
+    (poo-flow-test-case "closes a DomainCase and preserves child precedence"
       (let* ((instance-receipt
               (poo-flow-domain-case-instantiate
                syntax-domain-case syntax-instance-role))

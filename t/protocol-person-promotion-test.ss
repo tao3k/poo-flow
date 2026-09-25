@@ -4,7 +4,8 @@
 
 (export protocol-person-promotion-test)
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/policy/protocol-person-promotion)
 
@@ -40,7 +41,7 @@
 
 (def protocol-person-promotion-test
   (test-suite "RFC 149 protocol-person promotion"
-  (test-case "protocol subjects keep identity, provenance, and temporal role separate"
+  (poo-flow-test-case "protocol subjects keep identity, provenance, and temporal role separate"
     (check (.ref subject 'kind) => 'poo-flow-protocol-subject)
     (check (.ref subject 'content-digest) => "candidate-digest-1")
     (check (.ref subject 'temporal-role) => 'history)
@@ -49,7 +50,7 @@
     (check (.ref commitment 'subject-digest) => "candidate-digest-1")
     (check (.ref intent 'target-role) => 'active))
 
-    (test-case "dual-engine approval plus exactly-once injection activates"
+    (poo-flow-test-case "dual-engine approval plus exactly-once injection activates"
       (let (receipt
             (poo-flow-promotion-intent-validate
              intent current-world (facts #t #t #t #t 1 #t)))
@@ -63,7 +64,7 @@
         (check (poo-flow-promotion-validation-receipt-runtime-executed receipt)
                => #f)))
 
-    (test-case "Cedar deny and missing Lean proof fail closed"
+    (poo-flow-test-case "Cedar deny and missing Lean proof fail closed"
       (let ((cedar
              (poo-flow-promotion-intent-validate
               intent current-world (facts #f #t #t #t 1 #t)))
@@ -77,7 +78,7 @@
                => 'lean-unverified)
         (check (poo-flow-promotion-validation-receipt-active lean) => #f)))
 
-    (test-case "all four epochs are part of the approval boundary"
+    (poo-flow-test-case "all four epochs are part of the approval boundary"
       (let* ((stale-world (poo-flow-promotion-world 12 8 6 4))
              (receipt
               (poo-flow-promotion-intent-validate
@@ -91,7 +92,7 @@
         (check (member 'stale-proof-epoch failures) ? values)
         (check (member 'stale-evaluator-epoch failures) ? values)))
 
-    (test-case "evaluator applicability and evidence completeness are explicit"
+    (poo-flow-test-case "evaluator applicability and evidence completeness are explicit"
       (let (receipt
             (poo-flow-promotion-intent-validate
              intent current-world (facts #t #t #f #f 1 #t)))
@@ -99,7 +100,7 @@
                => '(evaluator-inapplicable evidence-incomplete))
         (check (poo-flow-promotion-validation-receipt-approved receipt) => #f)))
 
-    (test-case "approval does not imply materialization"
+    (poo-flow-test-case "approval does not imply materialization"
       (let (receipt
             (poo-flow-promotion-intent-validate
              intent current-world (facts #t #t #t #t 0 #f)))
@@ -108,7 +109,7 @@
         (check (poo-flow-promotion-validation-receipt-activation-code receipt)
                => 'materialization-missing)))
 
-    (test-case "duplicate materialization fails closed"
+    (poo-flow-test-case "duplicate materialization fails closed"
       (let (receipt
             (poo-flow-promotion-intent-validate
              intent current-world (facts #t #t #t #t 2 #t)))
@@ -117,7 +118,7 @@
         (check (poo-flow-promotion-validation-receipt-activation-code receipt)
                => 'materialization-duplicate)))
 
-    (test-case "materialization without an injection receipt stays inactive"
+    (poo-flow-test-case "materialization without an injection receipt stays inactive"
       (let* ((receipt
               (poo-flow-promotion-intent-validate
                intent current-world (facts #t #t #t #t 1 #f)))

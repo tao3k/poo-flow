@@ -6,9 +6,9 @@
 ;;; Boundary: focused user-interface loop-engine POO slot contract failures.
 ;;; Invariant: malformed slots fail before presentation emits intent rows.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
@@ -86,7 +86,7 @@
 ;;; POO object slot contracts fail before presentation can emit bad intent rows.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-poo-slot-case)
-  (test-case "rejects invalid loop-engine POO object slot types"
+  (poo-flow-test-case "rejects invalid loop-engine POO object slot types"
     (check-equal?
      (with-catch
       (lambda (_) #t)
@@ -99,7 +99,7 @@
 ;;; objects: malformed recall/commit declarations never become receipts.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-memory-slot-case)
-  (test-case "rejects invalid loop-engine memory-policy slot types"
+  (poo-flow-test-case "rejects invalid loop-engine memory-policy slot types"
     (check-equal?
      (with-catch
       (lambda (_) #t)
@@ -112,7 +112,7 @@
 ;;; Compression policy has the same fail-fast POO slot boundary as memory.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-compression-slot-case)
-  (test-case "rejects invalid loop-engine compression-policy slot types"
+  (poo-flow-test-case "rejects invalid loop-engine compression-policy slot types"
     (check-equal?
      (with-catch
       (lambda (_) #t)

@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test :std/error
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test :std/error
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/contribution/model)
 (export model-test)
@@ -20,12 +21,12 @@
     direct-slots: (list (poo-clos-direct-slot-definition 'value allocation: 'class))))
 (def model-test
   (test-suite "CLOS-governed pure model values"
-  (test-case "CLOS inheritance applies all effective slot predicates"
+  (poo-flow-test-case "CLOS inheritance applies all effective slot predicates"
     (check-equal? (poo-flow-model? Positive good) #t)
     (check-equal? (poo-flow-model? Base good) #t)
     (check-equal? (poo-flow-model? Positive (.o (:: @ good) value: -1)) #f)
     (check-equal? (poo-flow-model? Positive (.o (:: @ good) value: 1.5)) #f))
-  (test-case "shape and copied class markers cannot impersonate ancestry"
+  (poo-flow-test-case "shape and copied class markers cannot impersonate ancestry"
     (check-equal?
      (poo-flow-model-validation-failure
       Positive (.o (:: @ good) value: 'bad))
@@ -38,9 +39,9 @@
     (check-equal? (poo-flow-model? Positive (.o (:: @ (poo-flow-model-prototype Positive)))) #f)
     (check-equal? (poo-flow-model? Positive #f) #f)
     (check-exception (poo-flow-check-model Positive (.o (:: @ good) value: 'bad)) Error?))
-  (test-case "checking and extending preserve the input snapshot"
+  (poo-flow-test-case "checking and extending preserve the input snapshot"
     (check-eq? (poo-flow-check-model Positive good) good)
     (check-equal? (.ref good 'value) 2))
-  (test-case "shared lifecycle storage cannot masquerade as a pure snapshot"
+  (poo-flow-test-case "shared lifecycle storage cannot masquerade as a pure snapshot"
     (check-equal? (poo-flow-model? Shared
                    (.o (:: @ (poo-flow-model-prototype Shared)) value: 2)) #f))))

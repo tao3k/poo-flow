@@ -5,9 +5,9 @@
 
 ;;; Boundary: report-only POO-native authoring diagnostics for sandbox profiles.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/modules/sandbox-core/objects)
 
@@ -43,13 +43,13 @@
 ;; : TestSuite
 (def sandbox-core-profile-authoring-diagnostics-test
   (test-suite "sandbox-core profile authoring diagnostics"
-    (test-case "keeps POO-native rows diagnostic-free"
+    (poo-flow-test-case "keeps POO-native rows diagnostic-free"
       (let ((diagnostics
              (poo-flow-sandbox-profile-object-authoring-diagnostics
               poo-flow-sandbox-core-profile-object
               clean-profile-authoring-rows)))
         (check-equal? diagnostics '())))
-    (test-case "reports advanced and non-native authoring shapes"
+    (poo-flow-test-case "reports advanced and non-native authoring shapes"
       (let ((diagnostics
              (poo-flow-sandbox-profile-object-authoring-diagnostics
               poo-flow-sandbox-core-profile-object

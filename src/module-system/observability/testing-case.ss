@@ -7,14 +7,13 @@
 ;;; discovery, assertion semantics, or the gxtest runner.
 (import (only-in :std/test test-case)
         (only-in :clan/poo/object .call .o .ref .slot? object?)
-        (only-in :clan/poo/mop element?)
         (only-in :asp-gerbil-scheme/testing-api
                  +testing-memory-profile+
                  testing-memory-profile-max-heap-mib)
         (only-in "debug.ss"
-                 PooFlowDebugMemoryPolicyContract
                  poo-flow-debug-memory-policy
-                 call-with-poo-flow-debug-memory-monitor))
+                 poo-flow-debug-memory-policy?
+                 call-with-poo-flow-debug-memory-case-watchdog))
 
 (export poo-flow-testing-case-profile-prototype
         poo-flow-testing-case-profile?
@@ -25,28 +24,33 @@
 
 ;;; All declared POO Flow cases receive this default.  The heap counters are
 ;;; process-wide, so the memory policy is a guard on a Case execution span,
-;;; not a claim of independent thread-local heap accounting.  The native
+;;; not a claim of independent thread-local heap accounting.  Assertions stay
+;;; on the native harness thread; a separate sampler may interrupt it.  The native
 ;;; worker's hard managed-heap cap is set by the Testing Interface.
+(def +poo-flow-default-case-memory-policy+
+  (poo-flow-debug-memory-policy
+   'testing/default-case
+   heap-limit-bytes:
+   (* 1048576
+      (testing-memory-profile-max-heap-mib
+       +testing-memory-profile+))
+   live-growth-limit-bytes: 536870912
+   sample-interval-milliseconds: 10))
+
 (def poo-flow-testing-case-profile-prototype
   (.o (testing-case-profile? #t)
       (identity 'testing/default-case)
-      (memory-policy
-       (poo-flow-debug-memory-policy
-        'testing/default-case
-        heap-limit-bytes:
-        (* 1048576
-           (testing-memory-profile-max-heap-mib
-            +testing-memory-profile+))
-        live-growth-limit-bytes: 536870912
-        sample-interval-milliseconds: 100))
+      (memory-policy +poo-flow-default-case-memory-policy+)
       (max-duration-milliseconds 60000)
       (emit? #f)
       .run: (lambda (self description thunk)
-              (unless (poo-flow-testing-case-profile? self)
-                (error "invalid POO Flow testing Case profile" self))
+              (let (problem (poo-flow-testing-case-profile-problem self))
+                (when problem
+                  (error "invalid POO Flow testing Case profile"
+                         problem)))
               (unless (and (string? description) (procedure? thunk))
                 (error "invalid POO Flow testing Case" description thunk))
-              (call-with-poo-flow-debug-memory-monitor
+              (call-with-poo-flow-debug-memory-case-watchdog
                (.ref self 'memory-policy)
                (string->symbol description)
                thunk
@@ -54,22 +58,33 @@
                max-duration-milliseconds:
                (.ref self 'max-duration-milliseconds)))))
 
+(def (poo-flow-testing-case-profile-problem value)
+  (cond
+   ((not (object? value)) 'not-poo-object)
+   ((or (not (.slot? value 'testing-case-profile?))
+        (not (eq? (.ref value 'testing-case-profile?) #t)))
+    'missing-case-profile-marker)
+   ((or (not (.slot? value 'identity))
+        (not (symbol? (.ref value 'identity))))
+    'invalid-identity)
+   ((or (not (.slot? value 'memory-policy))
+        (not (poo-flow-debug-memory-policy?
+              (.ref value 'memory-policy))))
+    'invalid-memory-policy)
+   ((or (not (.slot? value 'max-duration-milliseconds))
+        (not (exact-integer? (.ref value 'max-duration-milliseconds)))
+        (<= (.ref value 'max-duration-milliseconds) 0))
+    'invalid-duration)
+   ((or (not (.slot? value 'emit?))
+        (not (boolean? (.ref value 'emit?))))
+    'invalid-emission)
+   ((or (not (.slot? value '.run))
+        (not (procedure? (.ref value '.run))))
+    'missing-run-slot)
+   (else #f)))
+
 (def (poo-flow-testing-case-profile? value)
-  (and (object? value)
-       (.slot? value 'testing-case-profile?)
-       (eq? (.ref value 'testing-case-profile?) #t)
-       (.slot? value 'identity)
-       (symbol? (.ref value 'identity))
-       (.slot? value 'memory-policy)
-       (element? PooFlowDebugMemoryPolicyContract
-                 (.ref value 'memory-policy))
-       (.slot? value 'max-duration-milliseconds)
-       (exact-integer? (.ref value 'max-duration-milliseconds))
-       (> (.ref value 'max-duration-milliseconds) 0)
-       (.slot? value 'emit?)
-       (boolean? (.ref value 'emit?))
-       (.slot? value '.run)
-       (procedure? (.ref value '.run))))
+  (not (poo-flow-testing-case-profile-problem value)))
 
 (def poo-flow-default-testing-case-profile
   (.o (:: @ poo-flow-testing-case-profile-prototype)))

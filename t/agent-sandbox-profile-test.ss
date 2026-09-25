@@ -6,7 +6,8 @@
 ;;; Boundary: agent-sandbox profile tests cover profile descriptors and defaults.
 ;;; Invariant: backend execution stays outside Scheme tests.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -61,7 +61,7 @@
 
 (def agent-sandbox-profile-test
  (test-suite "agent sandbox profile descriptors"
-   (test-case "builds backend profiles for nono and CubeSandbox"
+   (poo-flow-test-case "builds backend profiles for nono and CubeSandbox"
      (let ((nono (make-nono-agent-sandbox-profile 'always-further/opencode))
            (cube (make-cube-agent-sandbox-profile 'python-template)))
        (check-equal? (agent-sandbox-profile-ref nono 'schema #f)
@@ -93,7 +93,7 @@
                         (snapshot . clone))
                        (snapshot . clone)
                        (resume . supported)))))
-   (test-case "summarizes structured profiles for runtime handoff"
+   (poo-flow-test-case "summarizes structured profiles for runtime handoff"
      (let* ((profile
              (make-agent-sandbox-backend-profile
               'nono
@@ -144,7 +144,7 @@
        (check-equal? (alist-value 'schema handoff-summary)
                      +agent-sandbox-profile-runtime-summary-schema+)
        (check-equal? (alist-value 'runtime-executed handoff) #f)))
-   (test-case "uses POO profile descriptors for backend overrides"
+   (poo-flow-test-case "uses POO profile descriptors for backend overrides"
      (let* ((cube-descriptor
              (make-cube-agent-sandbox-profile-descriptor 'python-template))
             (override-descriptor
@@ -180,7 +180,7 @@
        (check-equal? (agent-sandbox-profile-metadata override-profile)
                      '((backend . override)
                        (reason . test)))))
-   (test-case "validates profile and request contracts before runtime"
+   (poo-flow-test-case "validates profile and request contracts before runtime"
      (let* ((invalid-profile
              (make-agent-sandbox-backend-profile 'nono #f '() '() '() '()))
             (profile-failure
@@ -306,7 +306,7 @@
        (check-equal? (execution-failure? request-failure) #t)
        (check-equal? (execution-failure-code request-failure)
                      'invalid-agent-sandbox-request)))
-   (test-case "builds requests with named-field macro contracts"
+   (poo-flow-test-case "builds requests with named-field macro contracts"
      (let* ((profile (make-nono-agent-sandbox-profile
                       'always-further/opencode))
             (request (agent-sandbox-request
@@ -339,7 +339,7 @@
        (check-equal? (execution-failure? field-failure) #t)
        (check-equal? (execution-failure-code field-failure)
                      'invalid-agent-sandbox-request-fields)))
-   (test-case "profiled flow normalizes defaults and task overrides"
+   (poo-flow-test-case "profiled flow normalizes defaults and task overrides"
      (let (seen-request #f)
        (let* ((profile (make-nono-agent-sandbox-profile
                         'always-further/opencode

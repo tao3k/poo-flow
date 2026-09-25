@@ -5,7 +5,8 @@
 
 ;;; Boundary: semantic equivalence checks for indexed DomainCase resolution.
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref)
         :poo-flow/src/feature-system/domain-case/contracts)
 
@@ -30,7 +31,7 @@
 
 (def domain-case-indexed-resolution-test
   (test-suite "DomainCase indexed resolution semantics"
-    (test-case "slot replacement keeps the reference source order"
+    (poo-flow-test-case "slot replacement keeps the reference source order"
       (let* ((first-a (slot-contract 'a 'owner-a))
              (slot-b (slot-contract 'b 'owner-b))
              (replacement-a
@@ -42,7 +43,7 @@
                  => '(owner-b owner-a2))
           (check diagnostics => '()))))
 
-    (test-case "method replacement retains interleaved state contracts"
+    (poo-flow-test-case "method replacement retains interleaved state contracts"
       (let* ((base (method-contract 'run-base 'run))
              (state (method-contract 'state-ready 'ready 'state))
              (refined

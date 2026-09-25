@@ -5,7 +5,8 @@
 
 ;;; Boundary: direct Funflow POO config lowers to CI/CD runtime facts.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
@@ -194,5 +195,5 @@
 
 (def funflow-config-pipeline-direct-test
   (test-suite "poo-flow Funflow direct config pipeline"
-    (test-case "lowers direct Funflow POO config to CI/CD runtime facts"
+    (poo-flow-test-case "lowers direct Funflow POO config to CI/CD runtime facts"
       (check-equal? (run-funflow-config-pipeline-direct-checks) 'ok))))

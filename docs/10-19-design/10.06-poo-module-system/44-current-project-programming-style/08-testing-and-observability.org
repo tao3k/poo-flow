@@ -22,7 +22,7 @@ POO Case Profile without changing =gxtest= assertions or reporting.  A Case
 that needs a different budget uses =poo-flow-test-case/with= and a native POO
 object extending =poo-flow-testing-case-profile-prototype=.  Do not encode a
 second test runner or duplicate the Testing Interface's managed-heap default.
-The Case monitor may stop a non-returning Scheme thread and report its span;
+The Case monitor may interrupt a non-returning native harness thread and report its span;
 its heap counters are process-wide, not a thread-local heap quota.  Native
 =test-case= declarations that have not migrated still receive the worker-level
 managed-heap cap, but not Case-span observation.

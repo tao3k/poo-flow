@@ -5,7 +5,8 @@
 
 ;;; Clause ledger completeness and profile-separation checks.
 
-(import (only-in :std/test test-suite test-case check-equal? check)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal? check)
         (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/module-system/observability/module-presentation
                  poo-flow-poo-slot-authoring-datum-observations
@@ -66,7 +67,8 @@
 
 (def (suite-test-case-forms suite-form)
   (filter (lambda (form)
-            (and (pair? form) (eq? (car form) 'test-case)
+            (and (pair? form)
+                 (memq (car form) '(poo-flow-test-case poo-flow-test-case))
                  (pair? (cdr form)) (string? (cadr form))))
           (cddr (caddr suite-form))))
 
@@ -102,14 +104,14 @@
 
 (def clause-ledger-test
   (test-suite "POO-native CLOS executable clause ledger"
-    (test-case "semantic clause rows remain explicit and structurally valid"
+    (poo-flow-test-case "semantic clause rows remain explicit and structurally valid"
       (let (required (poo-clos-required-rows))
         (check (> (length required) 30) => #t)
         (check-equal? (.ref (car required) 'id) 'C43-class-metaobjects)
         (check (andmap poo-clos-ledger-row-valid? required) => #t)
         (check (unique-symbols?
                 (map (lambda (row) (.ref row 'id)) required)) => #t)))
-    (test-case "the CLHS Objects Dictionary is exhaustive and fail-closed"
+    (poo-flow-test-case "the CLHS Objects Dictionary is exhaustive and fail-closed"
       (let* ((operators (poo-clos-required-operators))
              (names (map (lambda (row) (.ref row 'id)) operators))
              (open (poo-clos-open-required-rows)))
@@ -131,7 +133,7 @@
            class-name (setf class-name) class-of unbound-slot
            unbound-slot-instance))
         (check-equal? open '())))
-    (test-case "closed evidence resolves to executable source-owned suites"
+    (poo-flow-test-case "closed evidence resolves to executable source-owned suites"
       (check (unique-symbols?
               (map (lambda (suite) (.ref suite 'id))
                    poo-clos-evidence-suites))
@@ -144,7 +146,7 @@
                 (poo-clos-evidence-id-resolves? (.ref row 'evidence-id)))
               (poo-clos-required-rows))
              => #t))
-    (test-case "evidence binding fails closed on removed or emptied suites"
+    (poo-flow-test-case "evidence binding fails closed on removed or emptied suites"
       (check
        (poo-clos-evidence-suite-valid?
         (.o id: 'removed path: "t/poo-clos-removed-test.ss"
@@ -156,12 +158,12 @@
           (.o id: 'dispatch path: (.ref dispatch 'path)
               binding: (.ref dispatch 'binding) caseCount: 0))
          => #f)))
-    (test-case "all CLOS-owned POO slot initializers pass the source gate"
+    (poo-flow-test-case "all CLOS-owned POO slot initializers pass the source gate"
       (check-equal?
        (apply append (map poo-clos-authoring-diagnostics
                           (poo-clos-owned-sources)))
        '()))
-    (test-case "the source gate rejects the observed lazy self-slot leak shape"
+    (poo-flow-test-case "the source gate rejects the observed lazy self-slot leak shape"
       (let (diagnostics
             (poo-flow-poo-slot-authoring-diagnostics
              (poo-flow-poo-slot-authoring-datum-observations
@@ -172,7 +174,7 @@
         (check-equal? (cdr (assoc 'code (car diagnostics)))
                       'poo-slot-initializer-shadows-slot)
         (check-equal? (cdr (assoc 'slot (car diagnostics))) 'status)))
-    (test-case "MOP evidence remains outside the POO CLOS core denominator"
+    (poo-flow-test-case "MOP evidence remains outside the POO CLOS core denominator"
       (let (extended
             (filter (lambda (row) (eq? (.ref row 'profile) 'mop-extended))
                     poo-clos-clause-ledger))

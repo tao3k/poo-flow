@@ -7,9 +7,9 @@
 ;;; Invariant: authoring stays POO-native; runtime handoff sees struct receipts
 ;;; and bounded alist serialization.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -96,7 +96,7 @@
 ;; : TestSuite
 (def durable-policy-performance-test
   (test-suite "durable policy projection performance"
-    (test-case "keeps durable policy batch projection inside benchmark contract"
+    (poo-flow-test-case "keeps durable policy batch projection inside benchmark contract"
       (let* ((summary
               (durable-policy-performance-summary
                durable-policy-projection-count))

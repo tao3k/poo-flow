@@ -6,7 +6,8 @@
 ;;; Boundary: tests custom user config profile modules.
 ;;; Invariant: user fragments remain declarative module selections.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-        test-case
         test-error
         test-suite)
         :poo-flow/src/user-interface/facade
@@ -48,7 +48,7 @@
 ;;; remains owned by upstream modules.
 (def user-interface-config-modules-test
   (test-suite "poo-flow user interface config modules"
-    (test-case "imports custom profile modules through their owner"
+    (poo-flow-test-case "imports custom profile modules through their owner"
       (let* ((session-profiles
               (config-module-profiles
                (car poo-flow-custom-my-module-session-module)))

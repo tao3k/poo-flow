@@ -129,8 +129,9 @@ slots such as memory policy and maximum duration.  It does not replace
 =gxtest=, its assertions, or its reporting.  Existing native =test-case=
 declarations retain worker-level protection but are not silently instrumented
 per Case; they must migrate to the POO declaration for Case-span evidence.
-Gambit heap counters are process-wide, even when one Case runs in a dedicated
-Scheme thread.  Therefore a Case receipt is execution-span evidence, not a
+Gambit heap counters are process-wide.  A Case keeps its assertions on the
+native harness thread while a sampler thread monitors and may interrupt it.
+Therefore a Case receipt is execution-span evidence, not a
 thread-local hard heap quota or CPU attribution.  Automatic instrumentation
 of unmodified =std/test= declarations still requires an upstream callback.
 

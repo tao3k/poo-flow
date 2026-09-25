@@ -7,9 +7,9 @@
 ;;; Invariant: selectors are pending routing receipts; Marlin owns scoring,
 ;;; dispatch, and selected result materialization.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
@@ -34,7 +34,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-selector-test
   (test-suite "poo-flow custom user-interface session-selector case"
-    (test-case "projects custom selector receipt without dispatch"
+    (poo-flow-test-case "projects custom selector receipt without dispatch"
       (let* ((selection
               (car poo-flow-custom-my-module-session-selector-case))
              (rows

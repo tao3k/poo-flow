@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         "../scenarios/performance/static-poo-prototype-lowering/benchmark.ss")
 
 (export static-poo-prototype-lowering-performance-test)
@@ -14,7 +15,7 @@
 
 (def static-poo-prototype-lowering-performance-test
   (test-suite "static POO prototype lowering performance"
-    (test-case "avoids full .o normalization for bounded constant rows"
+    (poo-flow-test-case "avoids full .o normalization for bounded constant rows"
       (let (receipt (static-poo-prototype-lowering-benchmark))
         (display "[poo-flow-benchmark] static-poo-prototype-lowering ")
         (write receipt)

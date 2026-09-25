@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/feature-system/interface
         :poo-flow/src/utilities/functional)
@@ -53,14 +54,14 @@
 
 (def feature-system-test
   (test-suite "POO-native Feature system"
-    (test-case "descriptor is an immutable module-owned POO value"
+    (poo-flow-test-case "descriptor is an immutable module-owned POO value"
       (let ((descriptor (test-feature 'memory-core)))
         (check (.ref descriptor 'kind) => 'feature-descriptor)
         (check (.ref descriptor 'feature-id) => 'memory-core)
         (check (.ref descriptor 'owner-module-id)
                => 'poo-flow-test-feature-owner)))
 
-    (test-case "resolver orders required Features before dependents"
+    (poo-flow-test-case "resolver orders required Features before dependents"
       (let* ((memory (test-feature 'memory-core))
              (session (test-feature 'session-core '(memory-core)))
              (profile (test-profile 'default-agent (list session memory)))
@@ -68,7 +69,7 @@
         (check (.ref plan 'status) => 'ready)
         (check (.ref plan 'feature-ids) => '(memory-core session-core))))
 
-    (test-case "two profiles share one module-owned descriptor"
+    (poo-flow-test-case "two profiles share one module-owned descriptor"
       (let* ((memory (test-feature 'memory-core))
              (first (resolve-feature-profile
                      (test-profile 'first (list memory))))
@@ -85,14 +86,14 @@
                           'descriptor))
                => #t)))
 
-    (test-case "missing dependency rejects the plan"
+    (poo-flow-test-case "missing dependency rejects the plan"
       (let* ((session (test-feature 'session-core '(memory-core)))
              (plan (resolve-feature-profile
                     (test-profile 'missing-memory (list session)))))
         (check (.ref plan 'status) => 'rejected)
         (check (plan-has-diagnostic? plan 'missing-dependency) => #t)))
 
-    (test-case "unselected optional dependency is ignored"
+    (poo-flow-test-case "unselected optional dependency is ignored"
       (let* ((session
               (test-feature 'session-core '() '(telemetry-core)))
              (plan (resolve-feature-profile
@@ -100,7 +101,7 @@
         (check (.ref plan 'status) => 'ready)
         (check (.ref plan 'feature-ids) => '(session-core))))
 
-    (test-case "selected optional dependency is ordered first"
+    (poo-flow-test-case "selected optional dependency is ordered first"
       (let* ((telemetry (test-feature 'telemetry-core))
              (session
               (test-feature 'session-core '() '(telemetry-core)))
@@ -112,14 +113,14 @@
         (check (.ref plan 'feature-ids)
                => '(telemetry-core session-core))))
 
-    (test-case "duplicate selection rejects the plan"
+    (poo-flow-test-case "duplicate selection rejects the plan"
       (let* ((memory (test-feature 'memory-core))
              (plan (resolve-feature-profile
                     (test-profile 'duplicate (list memory memory)))))
         (check (.ref plan 'status) => 'rejected)
         (check (plan-has-diagnostic? plan 'duplicate-selection) => #t)))
 
-    (test-case "Feature conflict rejects the plan"
+    (poo-flow-test-case "Feature conflict rejects the plan"
       (let* ((local-memory
               (test-feature 'local-memory '() '() '(remote-memory)))
              (remote-memory (test-feature 'remote-memory))
@@ -130,7 +131,7 @@
         (check (.ref plan 'status) => 'rejected)
         (check (plan-has-diagnostic? plan 'feature-conflict) => #t)))
 
-    (test-case "dependency cycle rejects the plan"
+    (poo-flow-test-case "dependency cycle rejects the plan"
       (let* ((feature-a (test-feature 'feature-a '(feature-b)))
              (feature-b (test-feature 'feature-b '(feature-a)))
              (plan (resolve-feature-profile
@@ -138,7 +139,7 @@
         (check (.ref plan 'status) => 'rejected)
         (check (plan-has-diagnostic? plan 'dependency-cycle) => #t)))
 
-    (test-case "256-Feature graph reuses constant-slot construction"
+    (poo-flow-test-case "256-Feature graph reuses constant-slot construction"
       (let* ((features (linear-test-features 256))
              (plan (resolve-feature-profile
                     (test-profile 'linear-256 (reverse features))))

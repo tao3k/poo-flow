@@ -3,14 +3,15 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal? check-exception)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .all-slots)
         (only-in :clan/poo/mop element? validate TypeError?)
         :poo-flow/src/module-system/semantic-module/objects)
 (export semantic-module-test)
 (def semantic-module-test
   (test-suite "role-constrained native Module"
-    (test-case "construction has five semantic responsibilities and fresh profiles"
+    (poo-flow-test-case "construction has five semantic responsibilities and fresh profiles"
       (let* ((identity (poo-flow-semantic-identity 'test 'module))
              (a (poo-flow-semantic-module identity))
              (b (poo-flow-semantic-module identity)))
@@ -29,7 +30,7 @@
         (check-exception (validate SemanticModuleContract (.cc a 'identity 'raw-symbol)) TypeError?)
         (check-exception (validate SemanticModuleContract (.cc a 'imports '())) TypeError?)
         (check-exception (validate SemanticModuleContract (.cc a 'authoring '())) TypeError?)))
-    (test-case "construction does not force import targets or contributions"
+    (poo-flow-test-case "construction does not force import targets or contributions"
       (let* ((imports (poo-flow-empty-imports))
              (lazy-imports (.o (:: @ SemanticImports.)
                               (contributions (error "construction forced imports"))))

@@ -6,9 +6,9 @@
 ;;; Boundary: shared graph algorithms remain report-only POO projections.
 ;;; Invariant: graph tests must not schedule, run adapters, or write state.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .def .o .ref .slot?)
         :poo-flow/src/graph/types
@@ -76,7 +76,7 @@
 ;; : TestSuite
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
-    (test-case "Graph derives algorithm values from declarative POO slots"
+    (poo-flow-test-case "Graph derives algorithm values from declarative POO slots"
       (check-equal? (.slot? graph-declarative-slot-sample
                             'node-declarations)
                     #t)
@@ -89,7 +89,7 @@
         (poo-flow-graph 'declarative-slot-graph '() '()))
        '()))
 
-    (test-case "projects adjacency, frontiers, reachability, and topology"
+    (poo-flow-test-case "projects adjacency, frontiers, reachability, and topology"
       (let ((analysis (poo-flow-graph-analysis-receipt
                        graph-algorithm-sample)))
         (check-equal? (poo-flow-graph? graph-algorithm-sample) #t)
@@ -137,7 +137,7 @@
         (check-equal? (.ref analysis 'terminal-ids) '(package docs))
         (check-equal? (.ref analysis 'acyclic?) #t)
         (check-equal? (.ref analysis 'runtime-executed) #f)))
-    (test-case "detects cycle paths without producing a topological order"
+    (poo-flow-test-case "detects cycle paths without producing a topological order"
       (let ((analysis (poo-flow-graph-analysis-receipt
                        graph-algorithm-cycle-sample)))
         (check-equal? (poo-flow-graph-cycle-path
@@ -153,7 +153,7 @@
         (check-equal? (.ref analysis 'acyclic?) #f)
         (check-equal? (.ref analysis 'diagnostics)
                       '((cycle-path a b c a)))))
-    (test-case "keeps indexed cycle traversal state local and deterministic"
+    (poo-flow-test-case "keeps indexed cycle traversal state local and deterministic"
       (check-equal? (poo-flow-graph-cycle-path
                      graph-algorithm-cycle-sample)
                     '(a b c a))
@@ -163,7 +163,7 @@
       (check-equal? (poo-flow-graph-cycle-path
                      graph-algorithm-cycle-sample)
                     '(a b c a)))
-    (test-case "emits POO loop analysis receipts for DAGs"
+    (poo-flow-test-case "emits POO loop analysis receipts for DAGs"
       (let ((analysis (poo-flow-graph-loop-analysis-receipt
                        graph-algorithm-sample)))
         (check-equal? (poo-flow-graph-loop-analysis? analysis) #t)
@@ -173,7 +173,7 @@
         (check-equal? (.ref analysis 'condensation-edges)
                       '((0 1) (1 2) (0 3)))
         (check-equal? (.ref analysis 'diagnostics) '())))
-    (test-case "emits cyclic components before condensation"
+    (poo-flow-test-case "emits cyclic components before condensation"
       (let ((analysis (poo-flow-graph-loop-analysis-receipt
                        graph-algorithm-cycle-sample)))
         (check-equal? (.ref analysis 'component-count) 1)
@@ -183,13 +183,13 @@
         (check-equal? (.ref analysis 'condensation-edges) '())
         (check-equal? (.ref analysis 'diagnostics)
                       '((cyclic-components (a b c))))))
-    (test-case "treats self loops as cyclic singleton components"
+    (poo-flow-test-case "treats self loops as cyclic singleton components"
       (let ((analysis (poo-flow-graph-loop-analysis-receipt
                        graph-algorithm-self-loop-sample)))
         (check-equal? (.ref analysis 'components) '((a) (b)))
         (check-equal? (.ref analysis 'cyclic-components) '((a)))
         (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))
-    (test-case "deduplicates projected condensation edges"
+    (poo-flow-test-case "deduplicates projected condensation edges"
       (let ((analysis
              (poo-flow-graph-loop-analysis-receipt
               graph-algorithm-condensation-dedup-sample)))

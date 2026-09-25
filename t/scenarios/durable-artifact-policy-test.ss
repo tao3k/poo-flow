@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/modules/memory-core/durable/artifact-policy
         :poo-flow/src/module-system/semantic-module/objects
@@ -220,7 +221,7 @@
 
 (def durable-artifact-policy-test
   (test-suite "durable artifact policy"
-    (test-case "artifact profile macro creates reusable POO objects"
+    (poo-flow-test-case "artifact profile macro creates reusable POO objects"
       (check-equal? (poo-flow-artifact-profile? research-report) #t)
       (check-equal? (.ref research-report 'name) 'research-report)
       (check-equal? (.ref research-report 'kind) 'research-report)
@@ -235,7 +236,7 @@
                     #t)
       (check-equal? (poo-flow-artifact-publish-gated? research-report) #t))
 
-    (test-case "profile hook composes native POO object extension"
+    (poo-flow-test-case "profile hook composes native POO object extension"
       (check-equal? (poo-flow-artifact-profile? audited-report) #t)
       (check-equal? (.ref audited-report 'name) 'audited-report)
       (check-equal? (.ref audited-report 'storage)
@@ -245,7 +246,7 @@
       (check-equal? (.ref audited-report 'retention)
                     '(project-retained audit-log)))
 
-    (test-case "durable artifact object implements policy scope"
+    (poo-flow-test-case "durable artifact object implements policy scope"
       (check-equal? (poo-flow-durable-artifact? report-artifact) #t)
       (check-equal? (.ref report-artifact 'artifact-id) 'report/artifact-1)
       (check-equal? (.ref report-artifact 'artifact-kind) 'report)
@@ -268,7 +269,7 @@
                      granted-tool-actor)
                     #t))
 
-    (test-case "durable artifact validation emits policy receipts"
+    (poo-flow-test-case "durable artifact validation emits policy receipts"
       (check-equal? (poo-flow-durable-artifact-policy-receipt?
                      artifact-policy-receipt)
                     #t)
@@ -324,7 +325,7 @@
                       artifact-storage-not-supported-by-database
                       artifact-database-capability-not-satisfied)))
 
-    (test-case "durable artifact manifest projects Marlin handoff"
+    (poo-flow-test-case "durable artifact manifest projects Marlin handoff"
       (let ((manifest-row
              (poo-flow-durable-artifact-manifest-receipt->alist
               artifact-manifest-receipt)))
@@ -354,7 +355,7 @@
                                 'scheme-manufactures-runtime-handlers)
                       #f)))
 
-    (test-case "durable artifact lifecycle follows document edges"
+    (poo-flow-test-case "durable artifact lifecycle follows document edges"
       (let (stored (poo-flow-durable-artifact-transition
                     report-artifact
                     'stored))
@@ -369,7 +370,7 @@
                        'published)
                       #f)))
 
-    (test-case "artifact and database profiles feed inline composition syntax"
+    (poo-flow-test-case "artifact and database profiles feed inline composition syntax"
       (let* ((stages (poo-flow-scenario-case-stages artifact-composition))
              (stage (.ref stages 'production))
              (compose-payload (poo-flow-scenario-case-profiles
@@ -391,7 +392,7 @@
                         artifact-publish-gated
                         database-capability-satisfied))))
 
-    (test-case "inline use-module profiles expand to POO module objects"
+    (poo-flow-test-case "inline use-module profiles expand to POO module objects"
       (let* ((modules (poo-flow-scenario-case-modules inline-artifact-composition))
              (module-binding (car modules))
              (module-object (.ref module-binding 'module))

@@ -5,9 +5,9 @@
 
 ;;; Boundary: agent-scoped tool permission policy.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
 
@@ -16,7 +16,7 @@
 ;; : TestSuite
 (def session-agent-tool-policy-test
   (test-suite "poo-flow session agent tool policy"
-    (test-case "admits only explicitly granted agent tools"
+    (poo-flow-test-case "admits only explicitly granted agent tools"
       (let* ((read-grant
               (poo-flow-session-tool-grant
                'grant/read

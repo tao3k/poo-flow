@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :clan/poo/object
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :clan/poo/object
         :std/test
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/semantic/organization-bundle)
@@ -84,7 +85,7 @@
   (test-suite
    "canonical organization Bundle vertical slice"
 
-   (test-case "normalization and digest are construction-order invariant"
+   (poo-flow-test-case "normalization and digest are construction-order invariant"
      (let* ((left (canonical-bundle))
             (right (canonical-bundle #t))
             (left-canonical (poo-flow-organization-bundle-normalize left))
@@ -98,7 +99,7 @@
        (check-equal? (.ref left-id 'digest) (.ref right-id 'digest))
        (check-equal? (string-length (.ref left-id 'digest)) 64)))
 
-   (test-case "frozen parent child tool slice validates"
+   (poo-flow-test-case "frozen parent child tool slice validates"
      (let* ((bundle (canonical-bundle))
             (receipt (poo-flow-organization-bundle-validate bundle))
             (contract (poo-flow-organization-bundle->contract bundle)))
@@ -111,7 +112,7 @@
                            'digest)
                      (.ref (poo-flow-organization-bundle-identity bundle) 'digest))))
 
-   (test-case "semantic mutation changes digest"
+   (poo-flow-test-case "semantic mutation changes digest"
      (let* ((bundle (canonical-bundle))
             (mutated
              (flat-test-bundle
@@ -127,7 +128,7 @@
                       (.ref (poo-flow-organization-bundle-identity mutated) 'digest))
               => #f)))
 
-   (test-case "authority equality is rejected"
+   (poo-flow-test-case "authority equality is rejected"
      (let* ((base (canonical-bundle))
             (parent (car (bundle-agents base)))
             (child (cadr (bundle-agents base)))
@@ -146,7 +147,7 @@
                                 (diagnostic-codes receipt))))
               => #t)))
 
-   (test-case "context leakage and identity mismatch are rejected"
+   (poo-flow-test-case "context leakage and identity mismatch are rejected"
      (let* ((base (canonical-bundle))
             (leaked-context
              (poo-flow-organization-context-projection
@@ -166,7 +167,7 @@
        (check (not (not (member 'context-visibility-leak codes))) => #t)
        (check (not (not (member 'bundle-identity-mismatch codes))) => #t)))
 
-   (test-case "undeclared effect and invalid epoch are rejected"
+   (poo-flow-test-case "undeclared effect and invalid epoch are rejected"
      (let* ((base (canonical-bundle))
             (effect
              (poo-flow-organization-tool-effect
@@ -183,7 +184,7 @@
        (check (not (not (member 'invalid-epoch codes))) => #t)
        (check (not (not (member 'undeclared-tool-effect codes))) => #t)))
 
-   (test-case "duplicate and missing semantic identities are rejected"
+   (poo-flow-test-case "duplicate and missing semantic identities are rejected"
      (let* ((base (canonical-bundle))
             (principal (car (bundle-principals base)))
             (invalid
@@ -203,7 +204,7 @@
        (check (not (not (member 'missing-members codes))) => #t)
        (check (not (not (member 'missing-role codes))) => #t)))
 
-   (test-case "unstable semantic values fail closed"
+   (poo-flow-test-case "unstable semantic values fail closed"
      (let* ((base (canonical-bundle))
             (parent (car (bundle-agents base)))
             (child (cadr (bundle-agents base)))

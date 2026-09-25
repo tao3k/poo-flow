@@ -5,9 +5,9 @@
 
 ;;; Boundary: POO role descriptors are control-plane metadata, not runtime work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/core/api)
 
@@ -18,7 +18,7 @@
 ;; : TestSuite
 (def control-plane-role-test
   (test-suite "poo role descriptors"
-    (test-case "declares control-plane roles as Gerbil POO objects"
+    (poo-flow-test-case "declares control-plane roles as Gerbil POO objects"
       (check-equal? (role-object? flow-role) #t)
       (check-equal? (role-name flow-role) 'flow)
       (check-equal? (role-kind branch-role) 'composition)
@@ -36,7 +36,7 @@
       (check-equal? (role-responsibility replay-role) 'audit-validation)
       (check-equal? (role-responsibility receipt-role)
                     'execution-explanation))
-    (test-case "composes role prototypes with leftmost precedence"
+    (poo-flow-test-case "composes role prototypes with leftmost precedence"
       (let ((composed (role-compose runtime-adapter-role flow-role)))
         (check-equal? (role-object? composed) #t)
         (check-equal? (role-name composed) 'runtime-adapter)

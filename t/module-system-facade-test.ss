@@ -5,7 +5,8 @@
 
 ;;; Boundary: Marlin-style module facade tests stay separate from activation tests.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
@@ -50,7 +50,7 @@
 ;; : TestSuite
 (def module-system-facade-test
   (test-suite "poo-flow module system facade"
-    (test-case "keeps the user-interface facade independent of concrete modules"
+    (poo-flow-test-case "keeps the user-interface facade independent of concrete modules"
       (check-equal?
        (call-with-input-file
         "src/user-interface/facade.ss"
@@ -59,7 +59,7 @@
            port
            ":poo-flow/src/modules/")))
        #f))
-    (test-case "keeps the user-interface facade independent of the aggregate module facade"
+    (poo-flow-test-case "keeps the user-interface facade independent of the aggregate module facade"
       (check-equal?
        (call-with-input-file
         "src/user-interface/facade.ss"
@@ -68,7 +68,7 @@
            port
            ":poo-flow/src/module-system/facade")))
        #f))
-    (test-case "builds Marlin-style interface config descriptors"
+    (poo-flow-test-case "builds Marlin-style interface config descriptors"
       (let* ((interface
               (poo-flow-module-interface
                "WorkspaceProfile"
@@ -153,7 +153,7 @@
         (check-equal? (length configs) 2)
         (check-equal? (map poo-flow-module-option-validation-receipt-code receipts)
                       '(ok ok))))
-    (test-case "inline imports join activation closure and workflow receipts"
+    (poo-flow-test-case "inline imports join activation closure and workflow receipts"
       (let* ((child-task
               (make-task-family-descriptor 'inline-job
                                            'inline-job

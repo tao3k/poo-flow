@@ -5,7 +5,8 @@
 
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import :gerbil/runtime/gambit
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :gerbil/runtime/gambit
         (only-in :std/test
                  check
                  check-eq?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         "./support/performance"
@@ -59,7 +59,7 @@
 ;;; downstream module authors.
 ;; : TestCase
 (def (module-object-practice-projection-case)
-  (test-case "projects object-owned field contracts into the extension graph"
+  (poo-flow-test-case "projects object-owned field contracts into the extension graph"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
@@ -120,7 +120,7 @@
 
 ;; : TestCase
 (def (module-object-practice-contribution-performance-case)
-  (test-case "keeps large object contribution projection linear"
+  (poo-flow-test-case "keeps large object contribution projection linear"
         (let* ((field-count 1000)
                (fields
                 (poo-flow-performance-build-list field-count large-object-field))
@@ -162,7 +162,7 @@
 
 ;; : TestCase
 (def (module-object-practice-merge-performance-case)
-  (test-case "keeps large object slot config merge bounded"
+  (poo-flow-test-case "keeps large object slot config merge bounded"
         (let* ((field-count 1000)
                (fields
                 (poo-flow-performance-build-list
@@ -233,7 +233,7 @@
 
 ;; : TestCase
 (def (module-object-practice-transformer-case)
-  (test-case "wraps standard list and map transformers as object contracts"
+  (poo-flow-test-case "wraps standard list and map transformers as object contracts"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities

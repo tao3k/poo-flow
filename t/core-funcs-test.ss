@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :poo-flow/src/core/funcs
                  poo-flow-memoize poo-flow-read-datums/append-map
                  poo-flow-scheme-datum-find
@@ -17,7 +18,7 @@
 
 (def core-funcs-test
   (test-suite "POO Flow core algorithm functions"
-    (test-case "streaming datum projection preserves order and empty results"
+    (poo-flow-test-case "streaming datum projection preserves order and empty results"
       (check
        (call-with-input-string
         "(first second)\nskip\n(third)\n"
@@ -26,7 +27,7 @@
            (lambda (datum) (if (pair? datum) datum '()))
            port)))
        => '(first second third)))
-    (test-case "datum search shares quote and dotted-pair semantics"
+    (poo-flow-test-case "datum search shares quote and dotted-pair semantics"
       (let (find-target
             (lambda (datum)
               (poo-flow-scheme-datum-find
@@ -38,7 +39,7 @@
         (check (find-target '#(ignored (nested target))) => 'target)
         (check (find-target '(head . target)) => 'target)
         (check (find-target '(head '(target))) => #f)))
-    (test-case "memoization indexes keys and retains false values"
+    (poo-flow-test-case "memoization indexes keys and retains false values"
       (let* ((calls 0)
              (memoized
               (poo-flow-memoize
@@ -47,7 +48,7 @@
         (check (memoized '(same key)) => #f)
         (check (memoized '(same key)) => #f)
         (check calls => 1)))
-    (test-case "runner value indexes distinguish missing ids from false values"
+    (poo-flow-test-case "runner value indexes distinguish missing ids from false values"
       (let (index (poo-flow-make-value-index))
         (poo-flow-value-index-put! index '(node false) #f)
         (check
@@ -60,7 +61,7 @@
           (lambda () (poo-flow-value-index-ref index '(node missing)))
           cons)
          => '(#f . #f))))
-    (test-case "incremental frontiers retain canonical node order"
+    (poo-flow-test-case "incremental frontiers retain canonical node order"
       (let* ((nodes '((root-a 0 ())
                       (after-a 1 (root-a))
                       (root-b 2 ())

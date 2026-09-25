@@ -5,7 +5,8 @@
 
 ;;; Boundary: static module config declarations lower to native POO objects.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .all-slots .ref .slot? object?)
         :poo-flow/src/module-system/declaration/config-syntax)
 
@@ -27,7 +28,7 @@
 
 (def module-config-prototype-syntax-test
   (test-suite "module config prototype syntax"
-    (test-case "lowers bounded constant rows to one native POO object"
+    (poo-flow-test-case "lowers bounded constant rows to one native POO object"
       (check-equal? (object? module-config-prototype-syntax-fixture) #t)
       (check-equal? (.ref module-config-prototype-syntax-fixture 'kind)
                     'module-config-prototype-syntax-fixture)

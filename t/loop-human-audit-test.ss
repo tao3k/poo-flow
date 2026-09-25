@@ -6,7 +6,8 @@
 ;;; Boundary: human audit loop tests cover review decisions over loop facts.
 ;;; Invariant: audit contracts never mutate config, state, or runtime handles.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -79,7 +79,7 @@
 ;; : TestSuite
 (def loop-human-audit-test
   (test-suite "loop human audit review contracts"
-    (test-case "projects open and blocked loop facts into human review items"
+    (poo-flow-test-case "projects open and blocked loop facts into human review items"
       (let* ((audit
               (make-loop-human-audit
                'repo-review
@@ -164,7 +164,7 @@
         (check-equal? (test-ref contract 'decision-owner) 'human)
         (check-equal? (test-ref contract 'execution-owner)
                       'marlin-agent-core)))
-    (test-case "defaults missing decisions to pending"
+    (poo-flow-test-case "defaults missing decisions to pending"
       (let* ((audit
               (make-loop-human-audit
                'repo-review
@@ -181,7 +181,7 @@
                       '(pending pending pending))
         (check-equal? (test-ref runtime-snapshot 'status)
                       'waiting-human)))
-    (test-case "rejects unsupported human decisions"
+    (poo-flow-test-case "rejects unsupported human decisions"
       (let* ((audit
               (make-loop-human-audit
                'bad-review

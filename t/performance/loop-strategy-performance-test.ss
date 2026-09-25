@@ -6,9 +6,9 @@
 ;;; Boundary: loop strategy performance gates cover batched slot projection.
 ;;; Invariant: strategy projection stays local contract data, not runtime work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -100,7 +100,7 @@
 ;; : TestSuite
 (def loop-strategy-performance-test
   (test-suite "loop strategy performance"
-    (test-case "keeps large strategy projection inside benchmark contract"
+    (poo-flow-test-case "keeps large strategy projection inside benchmark contract"
       (let* ((pattern-count 600)
              (plan (loop-strategy-performance-plan pattern-count))
              (summary

@@ -6,9 +6,9 @@
 ;;; Boundary: tests verify profile-style loop-engine user declarations.
 ;;; Invariant: profile projection is report-only and never executes loops.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
@@ -63,7 +63,7 @@
 ;;; row, ordered use-cases, sandbox refs, and no runtime execution.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-profile-case)
-  (test-case "projects custom loop-engine profile use cases"
+  (poo-flow-test-case "projects custom loop-engine profile use cases"
     (let* ((presentation
             (custom-loop-presentation
              poo-flow-custom-my-module-loops-module))

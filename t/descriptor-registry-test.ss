@@ -5,7 +5,8 @@
 
 ;;; Boundary: descriptor registries are policy extension surfaces.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .@ .slot? .all-slots)
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def descriptor-registry-test
   (test-suite "descriptor registries"
-    (test-case "extends task family descriptors without editing defaults"
+    (poo-flow-test-case "extends task family descriptors without editing defaults"
       (let* ((custom (make-task-family-descriptor 'custom-runtime
                                                   'external
                                                   'adapter
@@ -54,7 +54,7 @@
         (check-equal? (and (memq 'extension-policy (.all-slots custom)) #t)
                       #t)
         (check-equal? (length task-family-descriptors) 3)))
-    (test-case "extends flow declarations without editing defaults"
+    (poo-flow-test-case "extends flow declarations without editing defaults"
       (let* ((remote (make-flow-declaration-descriptor 'remote-flow
                                                        'remote
                                                        'linear-dag

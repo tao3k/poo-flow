@@ -6,9 +6,9 @@
 ;;; Boundary: loop human-audit performance gates cover reused governor facts.
 ;;; Invariant: audit projection is review data and never mutates runtime state.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -123,7 +123,7 @@
 ;; : TestSuite
 (def loop-human-audit-performance-test
   (test-suite "loop human-audit performance"
-    (test-case "keeps human audit projection inside benchmark contract"
+    (poo-flow-test-case "keeps human audit projection inside benchmark contract"
       (let* ((pattern-count 600)
              (governor
               (loop-human-audit-performance-governor pattern-count))

@@ -5,7 +5,8 @@
 
 ;;; Boundary: profile-set cases validate selection through Testing Policy.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -32,7 +32,7 @@
 ;;; from upstream module contracts.
 (def user-interface-profile-set-case-test
   (test-suite "poo-flow user interface profile sets"
-    (test-case "manages Doom-style profile sets before realization"
+    (poo-flow-test-case "manages Doom-style profile sets before realization"
       (let* ((selected-profile
               (poo-flow-user-profile-set-default-profile
                test-poo-flow-user-profile-set))
@@ -71,7 +71,7 @@
         (check-equal? (.ref presentation 'package-management?) #f)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))
-    (test-case "admits profile sets through the POO testing policy"
+    (poo-flow-test-case "admits profile sets through the POO testing policy"
       (let* ((valid-report
               (poo-flow-testing-admit-user-profile-set!
                +poo-flow-testing-interface+

@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/feature-system/interface
         :poo-flow/src/utilities/functional)
@@ -127,7 +128,7 @@
 
 (def feature-system-manifest-test
   (test-suite "feature system immutable manifests"
-    (test-case "descriptor projects to an immutable POO manifest"
+    (poo-flow-test-case "descriptor projects to an immutable POO manifest"
       (let ((manifest (feature-manifest manifest-dependent-feature)))
         (check (.ref manifest 'kind) => 'feature-manifest)
         (check (.ref manifest 'schema-version) => 1)
@@ -136,7 +137,7 @@
                => 'feature-system-manifest-test)
         (check (.ref manifest 'requires) => '(manifest-base))))
 
-    (test-case "explicit bundle reuses the resolver activation plan"
+    (poo-flow-test-case "explicit bundle reuses the resolver activation plan"
       (let ((index (.ref manifest-valid-bundle 'manifest-index))
             (base-manifest (car (.ref manifest-valid-bundle 'manifests))))
         (check (.ref manifest-valid-bundle 'kind)
@@ -163,12 +164,12 @@
                     manifest-valid-bundle)
                => #t)))
 
-    (test-case "empty explicit bundle is a valid identity plan"
+    (poo-flow-test-case "empty explicit bundle is a valid identity plan"
       (check (.ref manifest-empty-bundle 'status) => 'ready)
       (check (.ref manifest-empty-bundle 'feature-ids) => '())
       (check (.ref manifest-empty-bundle 'diagnostics) => '()))
 
-    (test-case "missing requirements reject the explicit build bundle"
+    (poo-flow-test-case "missing requirements reject the explicit build bundle"
       (check (.ref manifest-missing-requirement-bundle 'status)
              => 'rejected)
       (check (.ref manifest-missing-requirement-bundle 'accepted?) => #f)
@@ -176,20 +177,20 @@
                    (diagnostic-codes manifest-missing-requirement-bundle))
              ? values))
 
-    (test-case "duplicate feature identities reject the bundle"
+    (poo-flow-test-case "duplicate feature identities reject the bundle"
       (check (.ref manifest-duplicate-id-bundle 'status) => 'rejected)
       (check (.ref manifest-duplicate-id-bundle 'manifest-index) => #f)
       (check (memq 'duplicate-selection
                    (diagnostic-codes manifest-duplicate-id-bundle))
              ? values))
 
-    (test-case "conflicting features reject the bundle"
+    (poo-flow-test-case "conflicting features reject the bundle"
       (check (.ref manifest-conflict-bundle 'status) => 'rejected)
       (check (memq 'feature-conflict
                    (diagnostic-codes manifest-conflict-bundle))
              ? values))
 
-    (test-case "duplicate option identities reject the bundle"
+    (poo-flow-test-case "duplicate option identities reject the bundle"
       (check (.ref manifest-duplicate-option-bundle 'status) => 'rejected)
       (check (diagnostic-codes manifest-duplicate-option-bundle)
              => '(duplicate-option-schema duplicate-option-schema))
@@ -197,7 +198,7 @@
              => '(manifest-duplicate-option
                   manifest-duplicate-option-second)))
 
-    (test-case "1024-Feature bundle keeps one linear manifest pass"
+    (poo-flow-test-case "1024-Feature bundle keeps one linear manifest pass"
       (let* ((descriptors (manifest-linear-feature-descriptors 1024))
              (bundle (feature-manifest-bundle
                       'manifest-linear-stress descriptors))

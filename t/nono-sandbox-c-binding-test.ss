@@ -6,7 +6,8 @@
 ;;; Boundary: nono-sandbox C binding tests cover ABI contracts and manifest projection.
 ;;; Invariant: tests do not load or execute the C library.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -34,7 +34,7 @@
 ;; : TestSuite
 (def nono-sandbox-c-binding-test
   (test-suite "nono-sandbox C binding contract"
-    (test-case "declares POO descriptor for the generated nono C ABI"
+    (poo-flow-test-case "declares POO descriptor for the generated nono C ABI"
       (let* ((descriptor (make-nono-c-binding-descriptor))
              (contract (nono-c-binding-descriptor->contract descriptor))
              (override (make-nono-c-binding-descriptor
@@ -75,7 +75,7 @@
                       #t)
         (check-equal? (nono-c-binding-descriptor-library override)
                       "nono_ffi_test")))
-    (test-case "declares POO build descriptor for the C compile probe"
+    (poo-flow-test-case "declares POO build descriptor for the C compile probe"
       (let* ((build (make-nono-c-binding-build))
              (contract (nono-c-binding-build->contract build))
              (binding (test-ref contract 'binding))
@@ -132,7 +132,7 @@
                       '("/opt/nono/include"))
         (check-equal? (test-ref (car missing-errors) 'code)
                       'path-not-found)))
-    (test-case "projects nono runtime manifests into C capability plans"
+    (poo-flow-test-case "projects nono runtime manifests into C capability plans"
       (let* ((profile (make-nono-agent-sandbox-profile
                        'always-further/opencode))
              (request (agent-sandbox-request
@@ -196,7 +196,7 @@
         (check-equal? (test-ref (test-ref manifest 'apply-plan)
                                 'apply)
                       'nono_sandbox_apply)))
-    (test-case "dry-runs and native-tests nono C binding manifests without applying sandbox"
+    (poo-flow-test-case "dry-runs and native-tests nono C binding manifests without applying sandbox"
       (let* ((request (agent-sandbox-request
                        (make-nono-agent-sandbox-profile
                         'always-further/opencode)
@@ -259,7 +259,7 @@
         (check-equal? (test-ref live-default 'runtime-executed) #f)
         (check-equal? (test-ref live-default 'would-apply?)
                       #f)))
-    (test-case "rejects non-nono, unsupported, and legacy mount policy"
+    (poo-flow-test-case "rejects non-nono, unsupported, and legacy mount policy"
       (let* ((cube-request
               (agent-sandbox-request
                (make-cube-agent-sandbox-profile 'python-template)

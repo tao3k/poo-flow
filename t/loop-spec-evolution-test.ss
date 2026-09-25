@@ -6,9 +6,9 @@
 ;;; Boundary: spec evolution proposals are Human Audit review inputs.
 ;;; Invariant: proposals never mutate config or execute runtime work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/core/failure
         :poo-flow/src/loops/spec-evolution)
@@ -46,7 +46,7 @@
 ;; : TestSuite
 (def loop-spec-evolution-test
   (test-suite "loop spec evolution review boundary"
-    (test-case "projects external feedback and proposal as report-only facts"
+    (poo-flow-test-case "projects external feedback and proposal as report-only facts"
       (let ((feedback-row (external-feedback-receipt->alist feedback-receipt))
             (proposal-row (spec-change-proposal->alist spec-proposal))
             (review-row
@@ -66,7 +66,7 @@
                       'sandbox-profile-switch-copy)
         (check-equal? (test-ref review-row 'decision) 'pending)
         (check-equal? (test-ref review-row 'direct-mutation) #f)))
-    (test-case "approved Human Audit review enables checked mutation only"
+    (poo-flow-test-case "approved Human Audit review enables checked mutation only"
       (let* ((review (make-spec-evolution-review-item spec-proposal 'approved))
              (review-row
               (spec-evolution-review-item->human-audit-review-item review))
@@ -83,7 +83,7 @@
                       #t)
         (check-equal? (test-ref manifest-row 'direct-mutation) #f)
         (check-equal? (test-ref manifest-row 'runtime-executed) #f)))
-    (test-case "unapproved reviews cannot reach checked mutation"
+    (poo-flow-test-case "unapproved reviews cannot reach checked mutation"
       (let* ((review (make-spec-evolution-review-item
                       spec-proposal
                       'changes-requested))
@@ -94,7 +94,7 @@
         (check-equal? (test-ref manifest-row 'eligible-for-checked-mutation)
                       #f)
         (check-equal? (test-ref manifest-row 'direct-mutation) #f)))
-    (test-case "rejects unsupported target kinds and decisions"
+    (poo-flow-test-case "rejects unsupported target kinds and decisions"
       (let* ((bad-proposal
               (make-spec-change-proposal
                'bad-target

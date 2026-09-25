@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
@@ -307,7 +308,7 @@
 
 (def feature-system-runtime-handoff-plan-test
   (test-suite "Feature runtime handoff planning"
-    (test-case "Bundle v1, Cedar and Evidence resolve as native POO references"
+    (poo-flow-test-case "Bundle v1, Cedar and Evidence resolve as native POO references"
       (let ((resolved (.ref runtime-handoff-ready-plan 'resolved-handoffs)))
         (check +feature-runtime-c-bundle-version+ => 1)
         (check (.ref runtime-handoff-adapter-binding 'accepted?) => #t)
@@ -342,7 +343,7 @@
                => #t)
         (check (vector-ref runtime-handoff-projector-calls 0) => 0)))
 
-    (test-case "manifest rejects raw and semantic duplicate declarations"
+    (poo-flow-test-case "manifest rejects raw and semantic duplicate declarations"
       (check (.ref invalid-runtime-handoff-manifest 'accepted?) => #f)
       (check (memq 'invalid-runtime-handoff
                    (runtime-handoff-diagnostic-codes
@@ -355,7 +356,7 @@
                     duplicate-runtime-handoff-manifest))
              ? values))
 
-    (test-case "missing bindings, contract mismatch and schema mismatch stay distinct"
+    (poo-flow-test-case "missing bindings, contract mismatch and schema mismatch stay distinct"
       (check (.ref missing-runtime-handoff-plan 'accepted?) => #f)
       (check (memq 'missing-handoff-adapter-requirement
                    (runtime-handoff-diagnostic-codes
@@ -375,7 +376,7 @@
              ? values)
       (check (vector-ref runtime-handoff-projector-calls 0) => 0))
 
-    (test-case "rejected upstream binding or manifest stops handoff planning"
+    (poo-flow-test-case "rejected upstream binding or manifest stops handoff planning"
       (check (.ref rejected-runtime-handoff-upstream-plan 'accepted?) => #f)
       (check (memq 'feature-adapter-projection-binding-rejected
                    (runtime-handoff-diagnostic-codes
@@ -387,7 +388,7 @@
                     rejected-runtime-handoff-manifest-plan))
              ? values))
 
-    (test-case "1024 handoffs resolve through indexed native bindings"
+    (poo-flow-test-case "1024 handoffs resolve through indexed native bindings"
       (let* ((handoffs (runtime-handoff-stress-values 1024))
              (manifest
               (feature-runtime-handoff-manifest

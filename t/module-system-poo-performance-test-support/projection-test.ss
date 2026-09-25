@@ -5,9 +5,9 @@
 
 ;;; Boundary: POO performance cases for fixed slot projection.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
@@ -68,7 +68,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-fixed-slot-projection-case)
-  (test-case "projects fixed POO slots once before scalar loops"
+  (poo-flow-test-case "projects fixed POO slots once before scalar loops"
     (let* ((rounds 4000)
            (expected (module-system-poo-performance-fixed-slot-sum
                       module-system-poo-performance-fixed-slot-profile

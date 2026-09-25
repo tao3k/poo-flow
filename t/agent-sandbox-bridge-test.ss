@@ -6,7 +6,8 @@
 ;;; Boundary: bridge tests cover request envelopes and runtime command handoff.
 ;;; Invariant: profile descriptor defaults are tested in the profile owner.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -41,7 +41,7 @@
 ;; : TestSuite
 (def agent-sandbox-bridge-test
   (test-suite "agent sandbox bridge request"
-    (test-case "treats non-alist optional metadata as absent"
+    (poo-flow-test-case "treats non-alist optional metadata as absent"
       (check-equal? (agent-sandbox-alist-ref 'profile-default 'timeout-ms 30000)
                     30000)
       (check-equal? (agent-sandbox-alist-ref '((timeout-ms . 10000))
@@ -51,7 +51,7 @@
       (check-equal? (agent-sandbox-merge-alists 'task-local
                                                 '((timeout-ms . 30000)))
                     '((timeout-ms . 30000))))
-    (test-case "captures backend-neutral request contract"
+    (poo-flow-test-case "captures backend-neutral request contract"
       (let (seen-request #f)
         (let* ((command (lambda (envelope)
                           (set! seen-request (cdr (assoc 'request envelope)))
@@ -98,7 +98,7 @@
           (check-equal? (cdr (assoc 'resource-policy sandbox))
                         '((timeout-ms . 30000)
                           (memory-mb . 512))))))
-    (test-case "projects execution requests into bridge envelopes"
+    (poo-flow-test-case "projects execution requests into bridge envelopes"
       (let ((seen-request #f)
             (seen-envelope #f))
         (let* ((command (lambda (envelope)
@@ -164,7 +164,7 @@
                         '((snapshot . clone)))
           (check-equal? (agent-sandbox-request? '()) #f)
           (check-equal? (agent-sandbox-execution-request? #f) #f))))
-    (test-case "rejects non sandbox execution requests before bridge projection"
+    (poo-flow-test-case "rejects non sandbox execution requests before bridge projection"
       (let* ((request
               (make-execution-request
                'compile

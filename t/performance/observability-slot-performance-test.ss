@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
                  benchmark-run/result
@@ -57,7 +58,7 @@
 
 (def observability-slot-performance-test
   (test-suite "observability slot phase performance"
-    (test-case "keeps prototype lookup in a native nanosecond envelope"
+    (poo-flow-test-case "keeps prototype lookup in a native nanosecond envelope"
       (let-values (((receipt result)
                     (micro-kernel-run/result
                      prototype-lookup-fixture
@@ -71,7 +72,7 @@
         (check-equal? (micro-kernel-receipt-pass? receipt) #t)
         (check-equal? (not (not result)) #t)))
 
-    (test-case "keeps one prototype composition below two microseconds"
+    (poo-flow-test-case "keeps one prototype composition below two microseconds"
       (let (prototype (.ref PooFlowDebugSlotPolicyContract 'proto))
         (let-values (((receipt result)
                       (micro-kernel-run/result
@@ -85,7 +86,7 @@
           (check-equal? (micro-kernel-receipt-pass? receipt) #t)
           (check-equal? (not (not result)) #t))))
 
-    (test-case "keeps authoring, cold demand, warm cache, and trace distinct"
+    (poo-flow-test-case "keeps authoring, cold demand, warm cache, and trace distinct"
       (let (fixture (poo-performance-observability-slot-guard-fixture))
         (let-values (((gate receipt)
                       (benchmark-run/result

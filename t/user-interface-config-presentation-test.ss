@@ -6,9 +6,9 @@
 ;;; Boundary: use-module config must be inspectable before runtime.
 ;;; Invariant: presentation is inert; no module descriptors or runtimes execute.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
@@ -43,7 +43,7 @@
 
 (def user-interface-config-presentation-test
  (test-suite "user-interface config presentation"
-   (test-case "shows an independent custom-module profile fragment as user config"
+   (poo-flow-test-case "shows an independent custom-module profile fragment as user config"
      (let* ((config (pooFlowUserConfig
                      poo-flow-custom-module-agent-sandbox-audit-module
                      (poo-flow-settings)))
@@ -180,7 +180,7 @@
        (check-equal? (alist-value 'scope-ref last-lineage-step)
                      "feature/agent-sandbox-audit")
        (check-equal? (alist-value ':binding internal-flags) 'native-ffi)))
-   (test-case "rejects user-layer derive parents that are not POO profiles"
+   (poo-flow-test-case "rejects user-layer derive parents that are not POO profiles"
      (let (not-profile 'not-a-poo-profile)
        (check-equal?
         (presentation-test-error?

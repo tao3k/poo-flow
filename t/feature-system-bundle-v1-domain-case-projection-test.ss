@@ -4,7 +4,8 @@
 
 (export feature-system-bundle-v1-domain-case-projection-test)
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/utilities/functional
         :poo-flow/src/feature-system/interface
@@ -23,7 +24,7 @@
   (test-suite
    "Bundle v1 projection from accepted Domain Case owners"
 
-   (test-case
+   (poo-flow-test-case
     "accepted runtime handoff projects components, inheritance and evidence"
     (let* ((projection
             (feature-bundle-v1-project-domain-case
@@ -82,7 +83,7 @@
       (check (.ref lowering 'accepted?) => #t)
       (check (.ref descriptor 'arena-bytes) => 576)))
 
-   (test-case
+   (poo-flow-test-case
     "duplicate Runtime Bundle handoffs for one component fail closed"
     (let ((projection
            (feature-bundle-v1-project-domain-case
@@ -95,7 +96,7 @@
       (check (projection-diagnostic-code projection)
              => 'duplicate-runtime-bundle-handoff-owner)))
 
-   (test-case
+   (poo-flow-test-case
     "rejected upstream and invalid epoch never reach a native receipt"
     (let ((upstream-rejected
            (feature-bundle-v1-project-domain-case 1 '()))

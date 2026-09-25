@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
@@ -358,7 +359,7 @@
 
 (def feature-system-adapter-projection-binding-test
   (test-suite "Feature adapter capability and projection binding"
-    (test-case "accepted chain binds adapters and closed Case projections"
+    (poo-flow-test-case "accepted chain binds adapters and closed Case projections"
       (let* ((adapter-bindings
               (.ref adapter-projection-ready 'adapter-bindings))
              (projection-bindings
@@ -396,7 +397,7 @@
                => #t)
         (check (vector-ref adapter-projection-projector-calls 0) => 0)))
 
-    (test-case "catalog rejects invalid and duplicate capabilities"
+    (poo-flow-test-case "catalog rejects invalid and duplicate capabilities"
       (check (.ref duplicate-capability-catalog 'accepted?) => #f)
       (check (.ref duplicate-capability-catalog 'capability-index) => #f)
       (check (memq 'duplicate-adapter-capability-id
@@ -404,7 +405,7 @@
                     duplicate-capability-catalog))
              ? values))
 
-    (test-case "adapter requirements reject raw, missing, mismatched and duplicate values"
+    (poo-flow-test-case "adapter requirements reject raw, missing, mismatched and duplicate values"
       (check (memq 'invalid-adapter-requirement
                    (adapter-projection-diagnostic-codes raw-adapter-rejected))
              ? values)
@@ -420,7 +421,7 @@
                     duplicate-adapter-rejected))
              ? values))
 
-    (test-case "projection requests bind only to the closed catalog"
+    (poo-flow-test-case "projection requests bind only to the closed catalog"
       (check (memq 'invalid-feature-projection-request
                    (adapter-projection-diagnostic-codes
                     raw-projection-rejected))
@@ -439,7 +440,7 @@
              ? values)
       (check (vector-ref adapter-projection-projector-calls 0) => 0))
 
-    (test-case "rejected upstream binding or catalog stops resolution"
+    (poo-flow-test-case "rejected upstream binding or catalog stops resolution"
       (check (.ref rejected-catalog-binding 'accepted?) => #f)
       (check (memq 'adapter-capability-catalog-rejected
                    (adapter-projection-diagnostic-codes
@@ -451,7 +452,7 @@
                     rejected-upstream-binding))
              ? values))
 
-    (test-case "256 requirements and projections resolve with indexed owners"
+    (poo-flow-test-case "256 requirements and projections resolve with indexed owners"
       (let* ((entries (adapter-projection-stress-entries 256))
              (projections (poo-flow-map cadddr entries))
              (capabilities (poo-flow-map car entries))

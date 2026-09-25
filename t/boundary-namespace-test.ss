@@ -5,7 +5,8 @@
 
 ;;; Contract: scenario test for P0 boundary namespace validation.
 
-(import :std/test)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 ;; : (-> PooFlowBoundaryNamespaceExpr PooFlowBoundaryNamespaceValue)
 (def (boundary-eval expr)
@@ -23,7 +24,7 @@
 
 (def boundary-namespace-test
   (test-suite "boundary-namespace-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/contract/boundary-namespace.ss"))
       (def author-namespace
   (boundary-eval

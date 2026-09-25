@@ -7,9 +7,9 @@
 ;;; Invariant: policies are declarative authorization objects; Scheme never
 ;;; runs tools or hooks.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/modules/session/config)
@@ -476,19 +476,19 @@
 ;; : TestSuite
 (def session-policy-contract-test
   (test-suite "poo-flow session policy contracts"
-    (test-case "declares POO-native tool permission policies"
+    (poo-flow-test-case "declares POO-native tool permission policies"
       (check-session-tool-permission-policy!))
-    (test-case "keeps hook-triggered tools separate from agent tools"
+    (poo-flow-test-case "keeps hook-triggered tools separate from agent tools"
       (check-session-hook-tool-separation!))
-    (test-case "uses native POO inheritance for policy refinement"
+    (poo-flow-test-case "uses native POO inheritance for policy refinement"
       (check-session-policy-poo-inheritance!))
-    (test-case "projects generated foundational policy families"
+    (poo-flow-test-case "projects generated foundational policy families"
       (check-generated-session-policy-families!))
-    (test-case "projects durable policy receipts from session policy composition"
+    (poo-flow-test-case "projects durable policy receipts from session policy composition"
       (check-session-durable-policy-receipt!))
-    (test-case "reports invalid durable policies through receipt diagnostics"
+    (poo-flow-test-case "reports invalid durable policies through receipt diagnostics"
       (check-invalid-session-durable-policy!))
-    (test-case "batch projects durable policies as struct receipts before alists"
+    (poo-flow-test-case "batch projects durable policies as struct receipts before alists"
       (check-session-durable-policy-batch!))
-    (test-case "exposes custom-shaped policy presentation"
+    (poo-flow-test-case "exposes custom-shaped policy presentation"
       (check-session-policy-presentation!))))

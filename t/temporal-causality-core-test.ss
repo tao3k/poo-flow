@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/graph/types
                  poo-flow-graph poo-flow-graph-edge poo-flow-graph-node)
@@ -14,7 +15,7 @@
   (test-suite
    "Temporal Causality core"
 
-   (test-case "structural Impact returns relation trajectory witnesses"
+   (poo-flow-test-case "structural Impact returns relation trajectory witnesses"
      (let* ((graph
              (poo-flow-graph
               'medication-change
@@ -50,7 +51,7 @@
        (check (.ref receipt 'temporal-impact-assessed?) => #f)
        (check (.ref receipt 'release-authorized?) => #f)))
 
-   (test-case "incomplete inventory cannot claim scoped completeness"
+   (poo-flow-test-case "incomplete inventory cannot claim scoped completeness"
      (let* ((graph
              (poo-flow-graph
               'partial
@@ -61,7 +62,7 @@
               graph '(changed) '(dependency) 'dependents #f)))
        (check (.ref receipt 'status) => 'partial-impact)))
 
-   (test-case "structural Impact terminates on relation cycles"
+   (poo-flow-test-case "structural Impact terminates on relation cycles"
      (let* ((graph
              (poo-flow-graph
               'cyclic-software-structure
@@ -80,7 +81,7 @@
               => '(requirement verification))
        (check (length (.ref receipt 'relation-trajectories)) => 2)))
 
-   (test-case "causal cut classifies bounded past present and future"
+   (poo-flow-test-case "causal cut classifies bounded past present and future"
      (let* ((subject "patient-1")
             (event
              (lambda (identity kind position parents modality committed?)
@@ -144,7 +145,7 @@
        (check (.ref receipt 'assurance-closed?) => #f)
        (check (.ref receipt 'release-authorized?) => #f)))
 
-   (test-case "trajectory contract separates intended error and Impact layers"
+   (poo-flow-test-case "trajectory contract separates intended error and Impact layers"
      (let* ((subject "patient-1")
             (event
              (lambda (identity position parents modality committed?)
@@ -187,7 +188,7 @@
        (check (.ref assessment 'error-impact-event-ids) => '("harm"))
        (check (.ref assessment 'release-authorized?) => #f)))
 
-   (test-case "observed error branch is rejected instead of becoming fact"
+   (poo-flow-test-case "observed error branch is rejected instead of becoming fact"
      (let* ((subject "patient-1")
             (event
              (lambda (identity position parents modality committed?)
@@ -218,7 +219,7 @@
               => '(invalid-error-modality))
        (check (.ref assessment 'release-authorized?) => #f)))
 
-   (test-case "missing parents keep temporal classification partial"
+   (poo-flow-test-case "missing parents keep temporal classification partial"
      (let* ((event
              (poo-flow-causal-event
               "observation-1" "patient-1" 'clinical-observation
@@ -238,7 +239,7 @@
        (check (.ref receipt 'unknown-frontier)
               => '("missing-administration"))))
 
-   (test-case "parent-after-child ordering invalidates the causal cut"
+   (poo-flow-test-case "parent-after-child ordering invalidates the causal cut"
      (let* ((parent
              (poo-flow-causal-event
               "late-parent" "patient-1" 'late-parent

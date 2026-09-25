@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Real Module admission -> native observation -> explanation -> upstream debug.
-(import (only-in :std/test test-suite test-case check-equal? check-exception)
+(import (only-in :std/test test-suite check-equal? check-exception)
         (only-in :std/test/base current-test-case)
         (only-in :clan/poo/object .o .cc .ref .slot? .call)
         (only-in :clan/poo/mop element? validate TypeError?)
@@ -17,7 +17,8 @@
                  poo-flow-testing-case-profile?
                  poo-flow-default-testing-case-profile)
         (only-in :poo-flow/src/module-system/observability/types
-                 PooFlowObservabilityDiagnosticContract)
+                 PooFlowObservabilityDiagnosticContract
+                 PooFlowDebugDurationReceiptContract)
         (only-in :poo-flow/src/module-system/observability/objects
                  poo-flow-observability-diagnostic-record)
         (only-in :poo-flow/src/module-system/types
@@ -60,11 +61,13 @@
 
 (def observability-framework-test
   (test-suite "upstream-based POO observability framework"
-    (poo-flow-test-case "default POO Case preserves native assertions"
-      (check-equal? (not (current-test-case)) #f)
-      (check-equal? (poo-flow-testing-case-profile?
-                     poo-flow-default-testing-case-profile) #t)
-      (check-equal? (+ 1 2) 3))
+    (let (harness-thread (current-thread))
+      (poo-flow-test-case "default POO Case preserves native assertions"
+        (check-equal? (eq? (current-thread) harness-thread) #t)
+        (check-equal? (not (current-test-case)) #f)
+        (check-equal? (poo-flow-testing-case-profile?
+                       poo-flow-default-testing-case-profile) #t)
+        (check-equal? (+ 1 2) 3)))
 
     (poo-flow-test-case/with +framework-case-profile+
                              "POO Case may override its duration slot"
@@ -72,7 +75,27 @@
                          'max-duration-milliseconds) 2000)
       (check-equal? (+ 2 3) 5))
 
-    (test-case "POO Case stops a non-returning worker at its duration slot"
+    (poo-flow-test-case "POO Case rejects an invalid memory policy slot"
+      (check-equal?
+       (poo-flow-testing-case-profile?
+        (.cc poo-flow-default-testing-case-profile
+             memory-policy: (.o label: 'invalid)))
+       #f))
+
+    (poo-flow-test-case "duration receipt has a native POO contract"
+      (let (proto (.ref PooFlowDebugDurationReceiptContract 'proto))
+        (check-equal?
+         (element? PooFlowDebugDurationReceiptContract
+                   (.o (:: @ proto)
+                       phase: 'test
+                       policy-label: 'test
+                       limit-milliseconds: 20
+                       elapsed-milliseconds: 20
+                       accepted?: #f
+                       reason: 'duration-exceeded))
+         #t)))
+
+    (poo-flow-test-case "POO Case stops a non-returning worker at its duration slot"
       (let (captured #f)
         (with-catch
          (lambda (failure) (set! captured failure))
@@ -84,9 +107,12 @@
                     (let loop ()
                       (thread-sleep! 0.01)
                       (loop))))))
-        (check-equal? (not captured) #f)))
+        (check-equal? (PooFlowDebugDurationAnomaly? captured) #t)
+        (check-equal?
+         (.ref (PooFlowDebugDurationAnomaly-receipt captured) 'reason)
+         'duration-exceeded)))
 
-    (test-case "POO Case stops a worker at its memory policy override"
+    (poo-flow-test-case "POO Case stops a worker at its memory policy override"
       (let (captured #f)
         (with-catch
          (lambda (failure) (set! captured failure))
@@ -100,7 +126,7 @@
                       (loop))))))
         (check-equal? (PooFlowDebugMemoryAnomaly? captured) #t)))
 
-    (test-case "real successful Module admission preserves correlation without raw subject"
+    (poo-flow-test-case "real successful Module admission preserves correlation without raw subject"
       (let* ((context (framework-context)) (module (framework-module))
              (event (poo-flow-observe-contract-admission context SemanticModuleContract module))
              (facts (.ref event 'evidence)) (summary (poo-flow-observation-summary event)))
@@ -121,7 +147,7 @@
         (check-equal? (.slot? facts 'context) #f)
         (check-equal? (.ref summary 'failure-count) 0)))
 
-    (test-case "missing and invalid responsibilities have native explanation paths"
+    (poo-flow-test-case "missing and invalid responsibilities have native explanation paths"
       (let* ((context (framework-context))
              (missing (.o (:: @ SemanticModule.)
                           imports: (poo-flow-empty-imports)
@@ -140,14 +166,14 @@
         (check-equal? (.ref failure 'path) '(imports))
         (check-equal? (.ref failure 'code) 'prototype-mismatch)))
 
-    (test-case "native ancestry rejection is not disguised as a field failure"
+    (poo-flow-test-case "native ancestry rejection is not disguised as a field failure"
       (let* ((event (poo-flow-observe-contract-admission
                      (framework-context) SemanticModuleContract (.o identity: 'lookalike)))
              (failure (car (.ref (poo-flow-observation-explain event) 'failures))))
         (check-equal? (.ref failure 'path) '())
         (check-equal? (.ref failure 'code) 'prototype-mismatch)))
 
-    (test-case "existing diagnostic API feeds the same observation framework"
+    (poo-flow-test-case "existing diagnostic API feeds the same observation framework"
       (let* ((diagnostic (poo-flow-observability-diagnostic-record
                           'error 'contract 'validator #f #f 'domain-denied
                           "synthetic diagnostic text" 'author))
@@ -163,7 +189,7 @@
         (check-equal? (.ref (car (.ref explanation 'failures)) 'code)
                       'poo-flow.contract.obligation-failure)))
 
-    (test-case "nested responsibility rejection retains the full path"
+    (poo-flow-test-case "nested responsibility rejection retains the full path"
       (let* ((module (framework-module))
              (bad (.cc module 'identity (.cc (.ref module 'identity) 'name 42)))
              (event (poo-flow-observe-contract-admission
@@ -173,7 +199,7 @@
         (check-equal? (.ref failure 'contract) 'semantic-symbol)
         (check-equal? (.ref failure 'code) 'expected-symbol)))
 
-    (test-case "source-owned obligation code survives without a central code registry"
+    (poo-flow-test-case "source-owned obligation code survives without a central code registry"
       (let* ((contract (poo-flow-predicate-contract
                         'domain-specific symbol? (lambda (_c _x) '(domain-policy-denied))))
              (event (poo-flow-observe-contract-admission (framework-context) contract 'value))
@@ -183,7 +209,7 @@
         (check-equal? (.ref explanation 'obligation-count) 1)
         (check-equal? (.ref explanation 'classification-accepted?) #t)))
 
-    (test-case "bounded detail inspection cannot change the semantic verdict"
+    (poo-flow-test-case "bounded detail inspection cannot change the semantic verdict"
       (let* ((bad (.cc (framework-module) 'imports 'invalid))
              (event (poo-flow-observe-contract-admission
                      (framework-context 0) SemanticModuleContract bad))
@@ -193,7 +219,7 @@
         (check-equal? (.ref summary 'inspected-count) 0)
         (check-equal? (.ref summary 'failure-count) 0)))
 
-    (test-case "observation and explanation never evaluate lazy imports"
+    (poo-flow-test-case "observation and explanation never evaluate lazy imports"
       (let* ((lazy-imports (.o (:: @ SemanticImports.)
                               (contributions (error "inspection forced imports"))))
              (module (poo-flow-semantic-module
@@ -204,7 +230,7 @@
         (check-equal? (.ref (poo-flow-observation-explain event) 'accepted?) #t)
         (check-equal? (.ref (poo-flow-observation-debug event port trace?: #t) 'accepted?) #t)))
 
-    (test-case "producer is evaluated once and native explanation can be refined"
+    (poo-flow-test-case "producer is evaluated once and native explanation can be refined"
       (let* ((count 0)
              (contract (poo-flow-predicate-contract
                         'counted symbol? (lambda (_candidate _context) (set! count (1+ count)) '())))
@@ -216,7 +242,7 @@
         (check-equal? (poo-flow-observation-explain specialized) 'domain-specific-explanation)
         (check-equal? (element? PooFlowObservationContract specialized) #t)))
 
-    (test-case "forged verdicts and incomplete producer metadata are rejected"
+    (poo-flow-test-case "forged verdicts and incomplete producer metadata are rejected"
       (let* ((receipt (poo-flow-contract-admit SemanticModuleContract 'invalid #f))
              (event (poo-flow-observe-admission-evidence (framework-context) receipt)))
         (check-exception
@@ -232,7 +258,7 @@
         (check-exception
          (poo-flow-observe-contract-admission (.o) SemanticModuleContract (framework-module)) TypeError?)))
 
-    (test-case "cyclic supplied evidence is incomplete inspection, not a Module cycle verdict"
+    (poo-flow-test-case "cyclic supplied evidence is incomplete inspection, not a Module cycle verdict"
       (let* ((contract (poo-flow-predicate-contract 'denied symbol? (lambda (_c _x) '(denied))))
              (receipt (poo-flow-contract-admit contract 'value #f))
              (cyclic (.o (:: self receipt) responsibility: 'cycle
@@ -243,7 +269,7 @@
         (check-equal? (.ref summary 'detail-complete?) #f)
         (check-equal? (.ref summary 'inspected-count) 1)))
 
-    (test-case "upstream debug receives aggregates, never private candidate or custom renderer"
+    (poo-flow-test-case "upstream debug receives aggregates, never private candidate or custom renderer"
       (let* ((canary "SYNTHETIC-FRAMEWORK-PRIVATE-CANARY")
              (event (poo-flow-observe-contract-admission
                      (framework-context) SemanticModuleContract canary evaluation-context: canary))
@@ -258,13 +284,13 @@
           (check-equal? (framework-contains? output canary) #f)
           (check-equal? (framework-contains? output "generation") #f))))
 
-    (test-case "invalid debug input fails closed before any output"
+    (poo-flow-test-case "invalid debug input fails closed before any output"
       (let ((port (open-output-string)))
         (check-exception (poo-flow-observation-debug "SYNTHETIC-PRIVATE" port)
                          PooFlowObservationProjectionError?)
         (check-equal? (get-output-string port) "")))
 
-    (test-case "bounded call tracing rejects a shadowed core procedure before invocation"
+    (poo-flow-test-case "bounded call tracing rejects a shadowed core procedure before invocation"
       (let* ((policy (poo-flow-debug-call-policy 'tool-policy 8))
              (shadowed-values '(not a procedure))
              (port (open-output-string))
@@ -287,7 +313,7 @@
         (check-equal? (framework-contains? (get-output-string port)
                                            "not a procedure") #f)))
 
-    (test-case "bounded call tracing preserves multiple values through upstream trace"
+    (poo-flow-test-case "bounded call tracing preserves multiple values through upstream trace"
       (let* ((policy (poo-flow-debug-call-policy 'multiple-values 8))
              (port (open-output-string))
              (result
@@ -304,7 +330,7 @@
           (check-equal? (framework-contains? output "poo-flow-debug-call") #t)
           (check-equal? (framework-contains? output "call-returned") #t))))
 
-    (test-case "bounded call tracing rejects a repeated call identity before recursion"
+    (poo-flow-test-case "bounded call tracing rejects a repeated call identity before recursion"
       (let* ((policy (poo-flow-debug-call-policy 'cycle 8))
              (port (open-output-string))
              (captured #f))
@@ -324,7 +350,7 @@
          (.ref (PooFlowDebugCallAnomaly-receipt captured) 'reason)
          'recursive-call-cycle)))
 
-    (test-case "bounded call tracing preserves exceptions and enforces depth"
+    (poo-flow-test-case "bounded call tracing preserves exceptions and enforces depth"
       (let* ((policy (poo-flow-debug-call-policy 'bounded 1))
              (private-marker (list 'synthetic-private-exception-canary))
              (exception-port (open-output-string))
@@ -360,7 +386,7 @@
          (.ref (PooFlowDebugCallAnomaly-receipt depth-failure) 'reason)
          'maximum-call-depth-exceeded)))
 
-    (test-case "slot policy receipts reject forged cycle verdicts"
+    (poo-flow-test-case "slot policy receipts reject forged cycle verdicts"
       (let* ((policy (poo-flow-debug-slot-policy 'slot-receipt 4))
              (admitted
               (poo-flow-debug-slot-receipt
@@ -383,7 +409,7 @@
                    (.cc admitted 'accepted? #f))
          TypeError?)))
 
-    (test-case "slot guard preserves lazy caching and redacts resolved values"
+    (poo-flow-test-case "slot guard preserves lazy caching and redacts resolved values"
       (let* ((evaluations 0)
              (private-value "SYNTHETIC-PRIVATE-SLOT-VALUE")
              (source
@@ -404,7 +430,7 @@
           (check-equal? (framework-contains? output "slot-resolved") #t)
           (check-equal? (framework-contains? output private-value) #f))))
 
-    (test-case "slot guard batch admits one policy over independent lazy caches"
+    (poo-flow-test-case "slot guard batch admits one policy over independent lazy caches"
       (let* ((policy (poo-flow-debug-slot-policy 'slot-batch 4))
              (guarded
               (poo-flow-debug-poos
@@ -414,7 +440,7 @@
         (check-equal? (map (lambda (object) (.ref object 'payload)) guarded)
                       '(1 2 3))))
 
-    (test-case "slot guard propagates exceptions without disclosing them"
+    (poo-flow-test-case "slot guard propagates exceptions without disclosing them"
       (let* ((canary "SYNTHETIC-PRIVATE-SLOT-FAILURE")
              (failure (list canary))
              (source (.o payload: (raise failure)))
@@ -432,7 +458,7 @@
         (check-equal? (framework-contains? output "slot-resolution-raised") #t)
         (check-equal? (framework-contains? output canary) #f)))
 
-    (test-case "slot guard rejects a lazy self reference before heap growth"
+    (poo-flow-test-case "slot guard rejects a lazy self reference before heap growth"
       (let* ((policy (poo-flow-debug-slot-policy 'slot-cycle 4))
              (port (open-output-string))
              (source (.o project-id: project-id))
@@ -456,7 +482,7 @@
                               "recursive-slot-resolution")
          #t)))
 
-    (test-case "equal slot names on distinct receivers are not cycles"
+    (poo-flow-test-case "equal slot names on distinct receivers are not cycles"
       (let* ((policy (poo-flow-debug-slot-policy 'receiver-identity 4))
              (inner-source (.o value: 'inner))
              (inner
@@ -468,7 +494,7 @@
                policy 'outer outer-source emit?: #f)))
         (check-equal? (.ref outer 'value) 'inner)))
 
-    (test-case "slot guard enforces depth across dependent slots"
+    (poo-flow-test-case "slot guard enforces depth across dependent slots"
       (let* ((policy (poo-flow-debug-slot-policy 'slot-depth 1))
              (source
               (.o (:: @ [] second)
@@ -489,7 +515,7 @@
         (check-equal? (.ref receipt 'reason)
                       'maximum-slot-depth-exceeded)))
 
-    (test-case "memory policy comparison is a pure native POO receipt"
+    (poo-flow-test-case "memory policy comparison is a pure native POO receipt"
       (let* ((policy
               (poo-flow-debug-memory-policy
                'unit heap-limit-bytes: 1000 live-growth-limit-bytes: 50))
@@ -505,7 +531,7 @@
         (check-equal? (.ref bad 'accepted?) #f)
         (check-equal? (.ref bad 'reason) 'live-growth-limit-exceeded)))
 
-    (test-case "effectful memory span emits only bounded scalar diagnostics"
+    (poo-flow-test-case "effectful memory span emits only bounded scalar diagnostics"
       (let* ((limit 1152921504606846976)
              (policy
               (poo-flow-debug-memory-policy
@@ -523,7 +549,7 @@
                            (get-output-string port) "debug-memory-observation")
                           #t)))))
 
-    (test-case "native memory monitor samples a running Scheme operation"
+    (poo-flow-test-case "native memory monitor samples a running Scheme operation"
       (let* ((limit 1152921504606846976)
              (policy
               (poo-flow-debug-memory-policy
@@ -547,7 +573,7 @@
                            (get-output-string port) "debug-memory-observation")
                           #t)))))
 
-    (test-case "native memory monitor stops a non-returning debug worker"
+    (poo-flow-test-case "native memory monitor stops a non-returning debug worker"
       (let* ((policy
               (poo-flow-debug-memory-policy
                'native-monitor-rejected
@@ -573,7 +599,7 @@
          (.ref (PooFlowDebugMemoryAnomaly-receipt captured) 'reason)
          'heap-limit-exceeded)))
 
-    (test-case "native memory monitor contains a lazy POO self-slot cycle"
+    (poo-flow-test-case "native memory monitor contains a lazy POO self-slot cycle"
       (let* ((initial (poo-flow-debug-memory-snapshot 'poo-self-slot-cycle))
              (policy
               (poo-flow-debug-memory-policy
@@ -599,7 +625,7 @@
          (.ref (PooFlowDebugMemoryAnomaly-receipt captured) 'phase)
          'poo-self-slot-cycle)))
 
-    (test-case "fail-closed checkpoint preserves its typed receipt"
+    (poo-flow-test-case "fail-closed checkpoint preserves its typed receipt"
       (let* ((policy
               (poo-flow-debug-memory-policy
                'rejected heap-limit-bytes: 0 live-growth-limit-bytes: 0))

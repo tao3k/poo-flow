@@ -6,7 +6,8 @@
 ;;; Boundary: loop-governor tests cover multi-loop policy projection only.
 ;;; Invariant: runtime state is passed as inert facts and is never mutated.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -111,7 +111,7 @@
 ;; : TestSuite
 (def loop-governor-test
   (test-suite "loop governor policy descriptors"
-    (test-case "projects open, conflicting, and denied loop patterns"
+    (poo-flow-test-case "projects open, conflicting, and denied loop patterns"
       (let* ((governor (make-governor-fixture))
              (states (governor-test-states))
              (contract (loop-governor->contract governor states)))
@@ -165,7 +165,7 @@
         (check-equal? (test-ref (test-ref contract 'runtime-boundary)
                                 'local-execution)
                       'validation-only)))
-    (test-case "uses descriptor metadata as the acting_on action key"
+    (poo-flow-test-case "uses descriptor metadata as the acting_on action key"
       (let* ((descriptor
               (governor-test-pattern 'repair-a 'l2 10 "src/a"))
              (governor (make-governor-fixture)))
@@ -176,7 +176,7 @@
                        (governor-test-states)
                        descriptor)
                       #t)))
-    (test-case "publishes Marlin ABI manifest for governor requests"
+    (poo-flow-test-case "publishes Marlin ABI manifest for governor requests"
       (let (manifest (loop-governor-marlin-abi-manifest))
         (check-equal? (test-ref manifest 'schema)
                       +loop-governor-marlin-abi-schema+)
@@ -193,7 +193,7 @@
         (check-equal? (test-ref (test-ref manifest 'runtime-boundary)
                                 'production-execution)
                       'marlin-agent-core)))
-    (test-case "projects Marlin request envelopes without execution"
+    (poo-flow-test-case "projects Marlin request envelopes without execution"
       (let* ((governor (make-governor-fixture))
              (states (governor-test-states))
              (envelope
@@ -241,7 +241,7 @@
         (check-equal? (test-ref (test-ref envelope 'runtime-boundary)
                                 'production-execution)
                       'marlin-agent-core)))
-    (test-case "projects L1 report-only handoff receipts without writes"
+    (poo-flow-test-case "projects L1 report-only handoff receipts without writes"
       (let* ((governor (make-governor-fixture))
              (states (governor-test-states))
              (receipt
@@ -268,7 +268,7 @@
                        'name)
                       '(repo-audit-agent repo-verifier-agent repo-governor))
         (check-equal? (test-ref envelope 'operation) 'govern-loop)))
-    (test-case "publishes runtime manifest discovery for Marlin governor requests"
+    (poo-flow-test-case "publishes runtime manifest discovery for Marlin governor requests"
       (let* ((governor (make-governor-fixture))
              (states (governor-test-states))
              (manifest
@@ -307,7 +307,7 @@
                       +loop-governor-marlin-abi-schema+)
         (check-equal? (test-ref abi 'loop-engine-discovery)
                       discovery)))
-    (test-case "rejects invalid Marlin request envelopes"
+    (poo-flow-test-case "rejects invalid Marlin request envelopes"
       (let (failure
             (capture-control-plane-failure
              (lambda ()
@@ -317,7 +317,7 @@
         (check-equal? (execution-failure-owner failure) 'loop-governor)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-governor-marlin-request-envelope)))
-    (test-case "rejects invalid governor state-key fields"
+    (poo-flow-test-case "rejects invalid governor state-key fields"
       (let* ((strategy
               (make-loop-strategy-plan
                'maintenance

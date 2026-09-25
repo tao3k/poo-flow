@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :poo-flow/src/module-system/poo-clos/funcs
                  poo-clos-initarg-list? poo-clos-initarg-ref
                  poo-clos-initarg-index poo-clos-initarg-index-first-of
@@ -16,33 +17,33 @@
 
 (def poo-clos-funcs-test
   (test-suite "POO CLOS linear algorithm functions"
-    (test-case "plist traversal preserves presence and leftmost values"
+    (poo-flow-test-case "plist traversal preserves presence and leftmost values"
       (check (poo-clos-initarg-list? '(alpha 1 beta #f alpha 2)) => #t)
       (check (poo-clos-initarg-list? '(alpha 1 beta)) => #f)
       (check (call-with-values
               (lambda () (poo-clos-initarg-ref '(alpha #f alpha 2) 'alpha))
               cons)
              => '(#t . #f)))
-    (test-case "ordered indexes select call order across aliases"
+    (poo-flow-test-case "ordered indexes select call order across aliases"
       (let (index (poo-clos-initarg-index '(second 2 first 1 second 9)))
         (check (call-with-values
                 (lambda ()
                   (poo-clos-initarg-index-first-of index '(first second)))
                 cons)
                => '(#t . 2))))
-    (test-case "identity indexes support one-pass invalid-key admission"
+    (poo-flow-test-case "identity indexes support one-pass invalid-key admission"
       (let (valid (poo-clos-identity-index '(alpha beta)))
         (check (poo-clos-first-invalid-initarg
                 '(alpha 1 allow-other-keys #t gamma 3)
                 valid (lambda (name) (eq? name 'allow-other-keys)))
                => 'gamma)))
-    (test-case "object indexes retain the first declaration"
+    (poo-flow-test-case "object indexes retain the first declaration"
       (let* ((first '(payload first))
              (second '(payload second))
              (index
               (poo-clos-leftmost-index-by car (list first second))))
         (check (hash-get index 'payload) => first)))
-    (test-case "positions and natural permutations use bounded native indexes"
+    (poo-flow-test-case "positions and natural permutations use bounded native indexes"
       (let* ((a (cons 'a '())) (b (cons 'b '()))
              (positions (poo-clos-position-index/identity (list a b))))
         (check (hash-get positions a) => 0)

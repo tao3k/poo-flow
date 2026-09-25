@@ -6,7 +6,8 @@
 ;;; Boundary: runtime manifest tests cover durable CLI handoff consumption.
 ;;; Invariant: manifests remain request-bound so Rust can run the same argv.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api)
@@ -26,7 +26,7 @@
 ;; : TestSuite
 (def runtime-manifest-test
   (test-suite "runtime command manifest"
-    (test-case "runtime command descriptor exports cli manifest"
+    (poo-flow-test-case "runtime command descriptor exports cli manifest"
       (let* ((descriptor
               (make-stdout-runtime-command-descriptor
                'manifest-runtime-command
@@ -57,7 +57,7 @@
                       '("/usr/bin/poo-flow-runtime"
                         "--request-id"
                         "manifest-request"))))
-    (test-case "runtime command manifest consumer executes stdout protocol"
+    (poo-flow-test-case "runtime command manifest consumer executes stdout protocol"
       (let* ((envelope
               (list (cons 'schema +runtime-request-schema+)
                     (cons 'operation 'submit)
@@ -99,7 +99,7 @@
         (check-equal? (adapter-result-artifact-handle adapter-result)
                       '(artifact manifest-consumer-output))
         (check-equal? (adapter-result-status command-result) 'completed)))
-    (test-case "runtime command manifest rejects unsupported protocol"
+    (poo-flow-test-case "runtime command manifest rejects unsupported protocol"
       (let* ((manifest
               (list (cons 'schema +runtime-command-descriptor-schema+)
                     (cons 'request-schema +runtime-request-schema+)

@@ -5,7 +5,8 @@
 
 ;;; Hygienic CLOS declaration lowering and lambda-list conformance.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil/expander datum->syntax)
@@ -110,7 +111,7 @@
 
 (def poo-clos-syntax-test
   (test-suite "hygienic POO-native CLOS declarations"
-    (test-case "defclass lowers slots, defaults, and accessor methods"
+    (poo-flow-test-case "defclass lowers slots, defaults, and accessor methods"
       (let (person (poo-clos-make-instance SyntaxPerson role: 'admin))
         (check (poo-clos-instance? person) => #t)
         (check-equal? (entity-name person) 'default-person)
@@ -121,7 +122,7 @@
         (check-equal? (set-entity-name 'renamed person) 'renamed)
         (check-equal? (entity-name person) 'renamed)))
 
-    (test-case "defmethod binds optional, key, supplied-p, aux, and lexical next"
+    (poo-flow-test-case "defmethod binds optional, key, supplied-p, aux, and lexical next"
       (let (person (poo-clos-make-instance SyntaxPerson name: 'Ada))
         (check-equal?
          (describe-syntax person)
@@ -130,11 +131,11 @@
          (describe-syntax person "Dr" punctuation: "?")
          '(person ("Dr" Ada "?" #t #t) "Dr" "?" #t #t #t))))
 
-    (test-case "defgeneric installs inline methods"
+    (poo-flow-test-case "defgeneric installs inline methods"
       (let (entity (poo-clos-make-instance SyntaxEntity name: 'inline-name))
         (check-equal? (inline-described entity) '(inline inline-name))))
 
-    (test-case "one-name accessors install ANSI reader and SETF writer"
+    (poo-flow-test-case "one-name accessors install ANSI reader and SETF writer"
       (let (entity (poo-clos-make-instance StandardAccessorEntity))
         (check-equal? (standard-value entity) 1)
         (check-equal? (poo-clos-setf 'standard-value 2 entity) 2)
@@ -148,12 +149,12 @@
               (list 'setf 'standard-value) error?: #f) #t #f)
          => #t)))
 
-    (test-case "SETF function names are valid generic declarations"
+    (poo-flow-test-case "SETF function names are valid generic declarations"
       (let (entity (poo-clos-make-instance SyntaxEntity name: 'before))
         (check-equal? (poo-clos-setf 'explicit-name 'after entity) 'after)
         (check-equal? (entity-name entity) 'after)))
 
-    (test-case "generic binding preserves identity across generations"
+    (poo-flow-test-case "generic binding preserves identity across generations"
       (check-equal?
        (.ref (poo-clos-generic-binding-current
               describe-syntax$poo-clos-generic)
@@ -175,7 +176,7 @@
                      describe-syntax$poo-clos-generic)
                     'standard-method))
 
-    (test-case "with-slots and with-accessors are live mutable places"
+    (poo-flow-test-case "with-slots and with-accessors are live mutable places"
       (let ((person (poo-clos-make-instance SyntaxPerson name: 'first))
             (standard (poo-clos-make-instance StandardAccessorEntity)))
         (check-equal?
@@ -199,7 +200,7 @@
          '(1 9))
         (check-equal? (standard-value standard) 9)))
 
-    (test-case "runtime congruence rejects a method before binding mutation"
+    (poo-flow-test-case "runtime congruence rejects a method before binding mutation"
       (let* ((binding
               (poo-clos-generic-binding
                'strict
@@ -219,7 +220,7 @@
          (.ref (poo-clos-generic-binding-current binding) 'generation)
          generation)))
 
-    (test-case "unknown keyword calls fail before method execution"
+    (poo-flow-test-case "unknown keyword calls fail before method execution"
       (let (person (poo-clos-make-instance SyntaxPerson name: 'Ada))
         (check-exception
          (describe-syntax person "Dr" unknown: 1)
@@ -231,7 +232,7 @@
          (describe-syntax person "Dr" unknown: 1 allow-other-keys: #t)
          '(person ("Dr" Ada "." #t #f) "Dr" "!" #t #f #t))))
 
-    (test-case "declaration IR rejects duplicates, unknown clauses, and bad order"
+    (poo-flow-test-case "declaration IR rejects duplicates, unknown clauses, and bad order"
       (check
        (integer?
         (string-contains

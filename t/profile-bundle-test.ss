@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal? check-exception)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .all-slots .o .ref .slot?)
         (only-in :poo-flow/src/module-system/observability/interface
                  poo-flow-native-slot-presentation)
@@ -57,7 +58,7 @@
 (def profile-bundle-test
   (test-suite
    "POO-native ProfileBundle algebra"
-   (test-case "Module selection uses an indexed export surface"
+   (poo-flow-test-case "Module selection uses an indexed export surface"
      (let (bundle
            (poo-flow-select-module-profiles
             test-module 'assurance '(audit governed)))
@@ -71,12 +72,12 @@
                      '(read-receipts evaluate-policy))
        (check-equal? (length (.ref bundle 'selection-proofs)) 2)
        (check-equal? (.ref bundle 'runtime-executed?) #f)))
-   (test-case "selection fails closed for an unexported Profile"
+   (poo-flow-test-case "selection fails closed for an unexported Profile"
      (check-exception
       (poo-flow-select-module-profiles
        test-module 'assurance '(missing))
       true))
-   (test-case "direct Profile conflict has ordinary and advanced explanations"
+   (poo-flow-test-case "direct Profile conflict has ordinary and advanced explanations"
      (let* ((first
              (.o identity: 'clinical-safety
                  provenance: (.o source-path: "t/profile-bundle-test.ss"
@@ -104,7 +105,7 @@
        (check-equal? (.slot? ordinary 'previous-value) #f)
        (check-equal? (eq? (.ref advanced 'previous-value) first) #t)
        (check-equal? (eq? (.ref advanced 'candidate-value) second) #t)))
-   (test-case "a domain profile-export slot is not a selection proof"
+   (poo-flow-test-case "a domain profile-export slot is not a selection proof"
      (let* ((first
              (.o identity: 'clinical-safety
                  profile-export: 'domain-value))
@@ -122,7 +123,7 @@
                      'undeclared)
        (check-equal? (.ref (.ref ordinary 'candidate-source) 'status)
                      'undeclared)))
-   (test-case "selected Profile revision conflict names both constraints"
+   (poo-flow-test-case "selected Profile revision conflict names both constraints"
      (let* ((other-module
              (poo-flow-semantic-module
               (poo-flow-semantic-identity 'test 'assurance)
@@ -150,7 +151,7 @@
        (check-equal? (.ref (.ref ordinary 'previous-source) 'status)
                      'undeclared)
        (check-equal? (.ref (.ref ordinary 'candidate-source) 'source-line) 104)))
-   (test-case "profiles composition is idempotent for one Module instance"
+   (poo-flow-test-case "profiles composition is idempotent for one Module instance"
      (let* ((selected
              (poo-flow-select-module-profiles
               test-module 'assurance '(audit governed)))
@@ -163,7 +164,7 @@
        (check-equal? (.ref composed 'capabilities)
                      '(read-receipts evaluate-policy))
        (check-equal? (.ref composed 'runtime-executed?) #f)))
-   (test-case "explicit Module instances remain distinct"
+   (poo-flow-test-case "explicit Module instances remain distinct"
      (let* ((primary
              (poo-flow-select-module-profiles
               test-module 'primary '(audit)))
@@ -176,7 +177,7 @@
         (map (lambda (proof) (.ref proof 'module-instance))
              (.ref composed 'selection-proofs))
         '(primary secondary))))
-   (test-case "root projection happens exactly after value composition"
+   (poo-flow-test-case "root projection happens exactly after value composition"
      (let* ((bundle (compose profiles audit-profile governed-profile))
             (root (poo-flow-profile-bundle-root 'assurance-root bundle)))
        (check-equal? (.ref root 'name) 'assurance-root)
@@ -184,11 +185,11 @@
                      (list audit-profile governed-profile))
        (check-equal? (eq? (.ref root 'profile-bundle) bundle) #t)
        (check-equal? (.ref root 'runtime-executed?) #f)))
-   (test-case "domain string identities remain valid direct Profile keys"
+   (poo-flow-test-case "domain string identities remain valid direct Profile keys"
      (let (bundle (compose profiles string-identity-profile))
        (check-equal? (.ref bundle 'profile-identities)
                      '(example/profile))))
-   (test-case "closed Scenario Case presents one effective Stage first"
+   (poo-flow-test-case "closed Scenario Case presents one effective Stage first"
      (let* ((base-stages (.o triage: 'human-review))
             (refined-stages (.o triage: 'clinician-review
                                 audit: 'retain-evidence))

@@ -7,9 +7,9 @@
 ;;; Invariant: user config bridges durable rows to operation receipts only;
 ;;; Marlin owns runtime store execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in "../user-interface/custom/my-module/cases/durable-operation-bridge"
                  poo-flow-custom-my-module-durable-operation-bridge-case))
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def user-interface-custom-durable-operation-bridge-test
   (test-suite "poo-flow custom durable operation bridge case"
-    (test-case "bridges downstream rows to runtime store operations"
+    (poo-flow-test-case "bridges downstream rows to runtime store operations"
       (let* ((negotiation-row
               (car poo-flow-custom-my-module-durable-operation-bridge-case))
              (operation-rows

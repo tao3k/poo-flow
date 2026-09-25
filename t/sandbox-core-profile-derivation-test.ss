@@ -6,9 +6,9 @@
 ;;; Boundary: sandbox-core profile derivation follows module-system POO merge.
 ;;; Invariant: derived profiles are inert recipes; no backend runtime executes.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/nono-sandbox/config
@@ -47,7 +47,7 @@
 
 (def sandbox-core-profile-derivation-test
  (test-suite "sandbox-core profile derivation"
-   (test-case "derives session and task profiles through POO row merges"
+   (poo-flow-test-case "derives session and task profiles through POO row merges"
      (let* ((project-profile
              (poo-flow-nono-sandbox-profile-config
               'project/dev
@@ -93,7 +93,7 @@
                      'build)
        (check-equal? (derivation-test-alist-ref metadata 'runtime-executed #t)
                      #f)))
-   (test-case "rejects backend rows during derivation"
+   (poo-flow-test-case "rejects backend rows during derivation"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -107,7 +107,7 @@
             'session/bad
             '((backend docker)))))
         #t)))
-   (test-case "rejects non-symbol names before profile resolution"
+   (poo-flow-test-case "rejects non-symbol names before profile resolution"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -128,7 +128,7 @@
             "project/bad"
             '((metadata (project . bad))))))
         #t)))
-   (test-case "rejects non-profile parents during derivation"
+   (poo-flow-test-case "rejects non-profile parents during derivation"
      (check-equal?
       (derivation-test-error?
        (lambda ()
@@ -138,7 +138,7 @@
           'session/bad-parent
           '((metadata (session . bad-parent))))))
       #t))
-   (test-case "rejects unknown rows through POO field validation"
+   (poo-flow-test-case "rejects unknown rows through POO field validation"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -152,7 +152,7 @@
             'session/unknown-row
             '((unknown-row value)))))
         #t)))
-   (test-case "rejects unsafe filesystem resources before runtime handoff"
+   (poo-flow-test-case "rejects unsafe filesystem resources before runtime handoff"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev

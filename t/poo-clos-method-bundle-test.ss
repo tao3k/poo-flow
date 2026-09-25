@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop element?)
         :poo-flow/src/module-system/poo-clos/interface)
@@ -31,16 +32,16 @@
 
 (def poo-clos-method-bundle-test
   (test-suite "POO CLOS generic protocol and method bundle composition"
-    (test-case "thin defrule produces a native checked bundle"
+    (poo-flow-test-case "thin defrule produces a native checked bundle"
       (check (element? ClosMethodBundle render-methods) => #t)
       (check (.ref render-methods 'protocol) => protocol)
       (check (.ref render-methods 'methods) => (list base-method)))
-    (test-case "one protocol composes a bundle into generic dispatch"
+    (poo-flow-test-case "one protocol composes a bundle into generic dispatch"
       (let ((generic (poo-clos-generic-function 'render 1 protocol: protocol))
             (bundle (fresh-bundle 'base protocol 'base 'base)))
         (check (poo-clos-compose-method-bundle generic bundle) => generic)
         (check (poo-clos-call generic 'payload) => '(base payload))))
-    (test-case "several bundles preserve ordinary replacement admission"
+    (poo-flow-test-case "several bundles preserve ordinary replacement admission"
       (let* ((generic (poo-clos-generic-function 'render 1 protocol: protocol))
              (base-bundle (fresh-bundle 'base protocol 'base 'base))
              (replacement-bundle
@@ -50,7 +51,7 @@
                 generic (list base-bundle replacement-bundle))
                => generic)
         (check (poo-clos-call generic 'payload) => '(replacement payload))))
-    (test-case "protocol identity mismatch fails before method ownership changes"
+    (poo-flow-test-case "protocol identity mismatch fails before method ownership changes"
       (let* ((generic (poo-clos-generic-function 'render 1 protocol: protocol))
              (bundle (fresh-bundle 'wrong other-protocol 'wrong 'wrong)))
         (check-exception

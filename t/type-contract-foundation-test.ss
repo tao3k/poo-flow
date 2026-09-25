@@ -4,7 +4,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: executable admission of project Type and Contract refinement.
-(import (only-in :std/test test-suite test-case check-equal? check-exception)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .mix)
         (only-in :clan/poo/mop element? validate TypeError? define-type)
         :poo-flow/src/module-system/types)
@@ -18,12 +19,12 @@
 
 (def type-contract-foundation-test
   (test-suite "project Type and Contract foundation"
-    (test-case "native ancestry rejects lookalike objects"
+    (poo-flow-test-case "native ancestry rejects lookalike objects"
       (let ((prototype (.ref NamedContract 'proto)) (contract NamedContract))
         (check-equal? (element? contract (.o (:: @ prototype) name: 'flow)) #t)
         (check-equal? (element? contract (.cc (.mix (.o) prototype) 'name 'flow)) #t)
         (check-equal? (element? contract (.o name: 'flow)) #f)))
-    (test-case "object contracts validate inherited POO responsibility maps"
+    (poo-flow-test-case "object contracts validate inherited POO responsibility maps"
       (let* ((contract NamedContract)
              (prototype (.ref contract 'proto))
              (good (poo-flow-contract-admit contract (.o (:: @ prototype) name: 'flow) 'context))
@@ -34,7 +35,7 @@
         (check-equal? (.ref (car (.ref missing 'responsibility-evidence)) 'responsibility) 'name)
         (check-exception (validate contract (.o (:: @ prototype) name: 42)) TypeError?)
         (check-exception (validate contract 'not-an-object) TypeError?)))
-    (test-case "object-level refinements cannot be skipped after field admission"
+    (poo-flow-test-case "object-level refinements cannot be skipped after field admission"
       (let* ((prototype (.ref NamedContract 'proto))
              (candidate (.o (:: @ prototype) name: 'flow))
              (refined (.cc NamedContract 'proto prototype '.obligations
@@ -43,7 +44,7 @@
         (check-equal? (.ref evidence 'accepted?) #f)
         (check-equal? (.ref evidence 'obligation-evidence) '(cross-field-denied))
         (check-exception (validate refined candidate) TypeError?)))
-    (test-case "object classifier must return bound complete evidence"
+    (poo-flow-test-case "object classifier must return bound complete evidence"
       (let* ((prototype (.ref NamedContract 'proto))
              (candidate (.o (:: @ prototype) name: 'flow))
              (wrong-source
@@ -56,7 +57,7 @@
                      (poo-flow-classification-evidence 'other value #t '() context)))))
         (check-exception (poo-flow-contract-admit wrong-source candidate 'context) TypeError?)
         (check-exception (poo-flow-contract-admit wrong-identity candidate 'context) TypeError?)))
-    (test-case "incomplete evidence cannot pass admission or serialization"
+    (poo-flow-test-case "incomplete evidence cannot pass admission or serialization"
       (let (partial (.o kind: 'poo-flow.type.classification-evidence
                         accepted?: #t diagnostics: '()))
         (check-equal? (poo-flow-classification-evidence? partial) #f)
@@ -65,13 +66,13 @@
                         accepted?: #t diagnostics: '()))
         (check-equal? (poo-flow-validation-evidence? partial) #f)
         (check-exception (poo-flow-validation-evidence->alist partial) TypeError?)))
-    (test-case "structured type identities remain valid evidence"
+    (poo-flow-test-case "structured type identities remain valid evidence"
       (let (evidence
             (poo-flow-classification-evidence
              '[Symbol] '(read) #t '() 'context))
         (check-equal? (poo-flow-classification-evidence? evidence) #t)
         (check-equal? (poo-flow-classification-evidence-accepted? evidence) #t)))
-    (test-case "native specialization has one classification decision"
+    (poo-flow-test-case "native specialization has one classification decision"
       (let* ((base (poo-flow-predicate-type 'symbol symbol?))
              (refined
               (.cc base '.classify
@@ -82,7 +83,7 @@
         (check-equal? (element? refined 'flow) #f)
         (check-exception (validate refined 'flow) TypeError?)
         (check-equal? (validate base 'flow) 'flow)))
-    (test-case "classification failure suppresses obligations"
+    (poo-flow-test-case "classification failure suppresses obligations"
       (let* ((contract
               (poo-flow-predicate-contract
                'symbol symbol? (lambda (_candidate _context) (error "unexpected obligation"))))
@@ -90,7 +91,7 @@
         (check-equal? (poo-flow-validation-evidence? evidence) #t)
         (check-equal? (.ref evidence 'accepted?) #f)
         (check-equal? (.ref evidence 'obligation-evidence) '())))
-    (test-case "obligation failure and forged success remain rejected"
+    (poo-flow-test-case "obligation failure and forged success remain rejected"
       (let* ((contract
               (poo-flow-predicate-contract
                'symbol symbol? (lambda (_candidate _context) '(obligation-denied))))
@@ -101,7 +102,7 @@
         (check-equal? (poo-flow-validation-evidence? (.cc evidence 'accepted? #t)) #f)
         (check-equal? (poo-flow-validation-evidence? (.cc evidence 'candidate 'other)) #f)
         (check-equal? (poo-flow-validation-evidence? (.cc evidence 'context 'other)) #f)))
-    (test-case "successful admission retains identity candidate and context"
+    (poo-flow-test-case "successful admission retains identity candidate and context"
       (let* ((contract (poo-flow-predicate-contract 'symbol symbol? (lambda (_c _x) '())))
              (evidence (poo-flow-contract-admit contract 'flow 'context)))
         (check-equal? (poo-flow-validation-evidence? evidence) #t)

@@ -6,7 +6,8 @@
 ;;; Boundary: Marlin interface tests cover backend dispatch envelopes.
 ;;; Invariant: tests do not execute nono, Cube, or Marlin runtime code.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -33,7 +33,7 @@
 ;;; Rust runtime to run in unit tests.
 (def agent-sandbox-marlin-interface-test
   (test-suite "agent sandbox Marlin interface"
-    (test-case "dispatches nono requests to C binding handoff manifests"
+    (poo-flow-test-case "dispatches nono requests to C binding handoff manifests"
       (let* ((request (agent-sandbox-request
                        (make-nono-agent-sandbox-profile
                         'always-further/opencode)
@@ -59,7 +59,7 @@
         (check-equal? (test-ref (car (test-ref handoff 'capability-plan))
                                 'function)
                       'nono_capability_set_new)))
-    (test-case "dispatches Cube requests to lifecycle handoff manifests"
+    (poo-flow-test-case "dispatches Cube requests to lifecycle handoff manifests"
       (let* ((request (agent-sandbox-request
                        (make-cube-agent-sandbox-profile 'python-template)
                        (command "python")
@@ -85,7 +85,7 @@
                       'cube.template.resolve)
         (check-equal? (test-ref (list-ref lifecycle 4) 'operation)
                       'cube.process.exec)))
-    (test-case "projects execution requests into Marlin admission envelopes"
+    (poo-flow-test-case "projects execution requests into Marlin admission envelopes"
       (let* ((task (make-profiled-agent-sandbox-task
                     'marlin-cube-admission
                     (make-cube-agent-sandbox-profile 'python-template)
@@ -141,7 +141,7 @@
                       +agent-sandbox-runtime-manifest-schema+)
         (check-equal? (test-ref marlin-interface 'handoff) handoff)
         (check-equal? (test-ref handoff 'schema) +cube-interface-schema+)))
-    (test-case "rejects invalid Marlin admission envelopes"
+    (poo-flow-test-case "rejects invalid Marlin admission envelopes"
       (let (failure
             (with-catch (lambda (failure) failure)
                         (lambda ()
@@ -150,7 +150,7 @@
         (check-equal? (execution-failure? failure) #t)
         (check-equal? (execution-failure-code failure)
                       'invalid-agent-sandbox-marlin-admission-envelope)))
-    (test-case "rejects unsupported Marlin backend dispatch"
+    (poo-flow-test-case "rejects unsupported Marlin backend dispatch"
       (let* ((runtime-manifest
               (list (cons 'schema +agent-sandbox-runtime-manifest-schema+)
                     (cons 'backend

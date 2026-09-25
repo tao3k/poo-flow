@@ -7,9 +7,9 @@
 ;;; Invariant: POO-native policy constructors project to bounded rows before
 ;;; effective validation, without runtime, tool, hook, provider, or sandbox work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -278,7 +278,7 @@
 ;; : TestSuite
 (def session-policy-family-performance-test
   (test-suite "session policy family performance"
-    (test-case "keeps foundational policy projection inside benchmark contract"
+    (poo-flow-test-case "keeps foundational policy projection inside benchmark contract"
       (let* ((families session-policy-family-performance-families)
              (family-count (length families))
              (summary

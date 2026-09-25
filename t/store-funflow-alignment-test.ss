@@ -5,7 +5,8 @@
 
 ;;; Boundary: Store tests align Scheme declarations with Funflow CAS concepts.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -39,7 +39,7 @@
 ;; : TestSuite
 (def store-funflow-alignment-test
   (test-suite "store funflow alignment"
-    (test-case "declares Funflow-style directory store arrows"
+    (poo-flow-test-case "declares Funflow-style directory store arrows"
       (let* ((put (put-dir-flow 'put-source-dir))
              (get (get-dir-flow 'get-source-dir))
              (put-task (car (flow-steps put)))
@@ -59,7 +59,7 @@
         (check-equal? (store-test-payload-ref 'content-kind
                                               (task-store-payload get-task))
                       'directory)))
-    (test-case "projects report-only content-address evidence"
+    (poo-flow-test-case "projects report-only content-address evidence"
       (let* ((flow (put-dir-flow 'snapshot-source))
              (receipt (store-flow->content-address-receipt
                        flow
@@ -82,7 +82,7 @@
                       'hash-abc123)
         (check-equal? (store-content-address-receipt-runtime-executed receipt)
                       #f)))
-    (test-case "aligns Funflow external config preflight and rendering"
+    (poo-flow-test-case "aligns Funflow external config preflight and rendering"
       (let* ((arguments
               (list (make-config-argument 'literal "echo" #f)
                     (make-config-argument 'file 'ourMessage #f)
@@ -114,7 +114,7 @@
                         "Hello from file"
                         "and env"
                         ((placeholder . par3))))))
-    (test-case "fails before runtime work when Funflow config keys are missing"
+    (poo-flow-test-case "fails before runtime work when Funflow config keys are missing"
       (let* ((arguments
               (list (make-config-argument 'file 'ourMessage #f)
                     (make-config-argument 'env 'SECOND_GREETING #f)))

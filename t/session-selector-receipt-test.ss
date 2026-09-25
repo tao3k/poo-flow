@@ -7,9 +7,9 @@
 ;;; Invariant: Scheme never scores candidates, calls a model, dispatches a
 ;;; workflow, or returns an EmptyWorkflow; it emits pending routing receipts.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object object?)
         :poo-flow/src/modules/session/config)
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def session-selector-receipt-test
   (test-suite "poo-flow session selector receipts"
-    (test-case "declares pending selector routing without runtime dispatch"
+    (poo-flow-test-case "declares pending selector routing without runtime dispatch"
       (let* ((build-candidate
               (poo-flow-session-selector-candidate
                'candidate/build
@@ -103,7 +103,7 @@
                                 'state)
                       'pending)
         (check-equal? (test-ref row 'runtime-executed) #f)))
-    (test-case "allows no-candidate selectors only through explicit fallback"
+    (poo-flow-test-case "allows no-candidate selectors only through explicit fallback"
       (let* ((receipt
               (poo-flow-session-selector-receipt
                'selector/no-candidate

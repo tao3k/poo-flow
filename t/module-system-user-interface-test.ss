@@ -6,7 +6,8 @@
 ;;; Boundary: this integration test imports Module System and User Interface
 ;;; from their respective public owners. Neither facade leaks the other domain.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
@@ -167,7 +167,7 @@
 ;;; internal loader or registry owners.
 (def module-system-user-interface-test
   (test-suite "poo-flow module system user interface"
-    (test-case "declares modules through explicit public owners"
+    (poo-flow-test-case "declares modules through explicit public owners"
       (check-equal? (poo-flow-module-descriptor? user-root-module) #t)
       (check-equal? (poo-flow-module-name user-root-module) 'user-root)
       (check-equal? (poo-flow-module-interface-id
@@ -191,7 +191,7 @@
       (check-equal? (poo-flow-module-metadata user-root-module)
                     '((audience . user)
                       (owner . public-interface))))
-    (test-case "exposes Doom-style user predicates as explicit data checks"
+    (poo-flow-test-case "exposes Doom-style user predicates as explicit data checks"
       (check-equal? (poo-flow-module-group user-child-module) 'tools)
       (check-equal? (poo-flow-module-flags user-child-module) '(+helper))
       (check-equal? (poo-flow-module-features user-child-module)
@@ -212,7 +212,7 @@
                     #f)
       (check-equal? (poo-flow-module-value-catalog-active? user-catalog 'invalid-user '+helper)
                     #f))
-    (test-case "projects catalog eval and presentation for users"
+    (poo-flow-test-case "projects catalog eval and presentation for users"
       (let* ((workflow (poo-flow-module-workflow user-root-module '("after-config")))
              (evaluation (poo-flow-module-evaluate user-root-module))
              (eval-result (pooFlowEvalModules user-catalog 'user-root '("after-config")))
@@ -234,7 +234,7 @@
         (check-equal? (has-member? "poo-flow-module-value-catalog-active?"
                                    (.ref presentation 'user-entrypoints))
       #t)))
-    (test-case "returns validation receipts for user config mistakes"
+    (poo-flow-test-case "returns validation receipts for user config mistakes"
       (let* ((receipts
               (poo-flow-module-option-validation-receipts invalid-user-module))
              (codes
@@ -242,7 +242,7 @@
         (check-equal? (length receipts) 2)
         (check-equal? (has-member? 'constant-mismatch codes) #t)
         (check-equal? (has-member? 'missing-schema codes) #t)))
-    (test-case "loads source refs into catalogs before resolver activation"
+    (poo-flow-test-case "loads source refs into catalogs before resolver activation"
       (let* ((sources (list loader-root-source loader-child-source))
              (backends (list user-static-loader))
              (receipts
@@ -269,7 +269,7 @@
         (check-equal? (poo-flow-module-names
                        (poo-flow-module-activation-modules activation))
                       '(loaded-root loaded-child))))
-    (test-case "presents doctor evidence without runtime execution"
+    (poo-flow-test-case "presents doctor evidence without runtime execution"
       (let* ((doctor-presentation
               (pooFlowModuleDoctorPresentation user-catalog 'user-root))
              (source-presentation
@@ -306,7 +306,7 @@
                       "marlin-agent-core")
         (check-equal? (.ref source-doctor 'root-module-id)
                       'loaded-root)))
-    (test-case "uses Gerbil-hosted higher-order macros for POO blocks"
+    (poo-flow-test-case "uses Gerbil-hosted higher-order macros for POO blocks"
       (check-equal? (not
                      (not
                       (.slot? user-generated-poo-block 'generated)))
@@ -323,7 +323,7 @@
                     '(prepare-state))
       (check-equal? (.ref user-generated-hook-block 'after-config)
                     '(child-ready)))
-    (test-case "builds module sets with Gerbil macro authoring"
+    (poo-flow-test-case "builds module sets with Gerbil macro authoring"
       (let* ((modules (.ref user-macro-catalog 'modules))
              (eval-result (pooFlowEvalModules user-macro-catalog 'user-root)))
         (check-equal? (length modules) 2)

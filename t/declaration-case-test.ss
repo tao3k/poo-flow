@@ -6,7 +6,8 @@
 ;;; Boundary: tests verify maintained root declaration cases.
 ;;; Invariant: cases are downstream declarations and report data, never runtime work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -64,7 +64,7 @@
 ;;; upstream module system owns validation.
 (def declaration-case-test
   (test-suite "poo-flow declaration cases"
-    (test-case "keeps developer case as an explicit root declaration contract"
+    (poo-flow-test-case "keeps developer case as an explicit root declaration contract"
       (let* ((case-object (root-developer-case))
              (presentation
               (poo-flow-declaration-case-presentation case-object)))
@@ -88,7 +88,7 @@
                       #t)
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-config-presentation-kind)))
-    (test-case "presents selected modules and custom entrypoint from the case"
+    (poo-flow-test-case "presents selected modules and custom entrypoint from the case"
       (let* ((case-object (root-developer-case))
              (presentation
               (poo-flow-declaration-case-presentation case-object))
@@ -167,7 +167,7 @@
                       #f)
         (check-equal? (.ref presentation 'loop-engine-intent-count) 0)
         (check-equal? (.ref presentation 'loop-engine-intents) '())))
-    (test-case "exposes trace observability for the maintained case"
+    (poo-flow-test-case "exposes trace observability for the maintained case"
       (let* ((case-object (root-developer-case))
              (presentation
               (poo-flow-declaration-case-presentation case-object))

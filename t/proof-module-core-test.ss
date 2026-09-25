@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .cc .o .ref)
         :poo-flow/src/modules/proof/interface)
 
@@ -12,7 +13,7 @@
 (def proof-module-core-test
   (test-suite
    "POO Proof Module core"
-   (test-case "admits exact artifact receipts and refinement bindings"
+   (poo-flow-test-case "admits exact artifact receipts and refinement bindings"
      (let* ((tla
              (poo-flow-proof-artifact
               "test/tla" 'tlc 'tla-plus "test/model.tla"
@@ -46,7 +47,7 @@
        (check (.ref assurance 'admitted?) => #t)
        (check (hash-get (.ref assurance 'artifact-index) "test/tla")
               => tla)))
-   (test-case "changed upstream digest invalidates the exact refinement"
+   (poo-flow-test-case "changed upstream digest invalidates the exact refinement"
      (let* ((tla
              (poo-flow-proof-artifact
               "test/tla" 'tlc 'tla-plus "test/model.tla"

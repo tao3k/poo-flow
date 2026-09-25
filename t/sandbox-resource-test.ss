@@ -6,7 +6,8 @@
 ;;; Boundary: shared sandbox resources are backend-neutral POO data objects.
 ;;; Invariant: tests assert composition and projection only, never runtime setup.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/resource)
@@ -26,7 +26,7 @@
 ;; : TestSuite
 (def sandbox-resource-test
   (test-suite "shared sandbox resources"
-    (test-case "projects volume, port, and env bindings as runtime request data"
+    (poo-flow-test-case "projects volume, port, and env bindings as runtime request data"
       (let* ((volume (make-sandbox-volume-binding 'source-item "/work" 'read))
              (port (make-sandbox-port-binding 'http 8080 18080 'tcp))
              (env (make-sandbox-env-binding 'TOKEN "secret-key" 'secret))
@@ -49,7 +49,7 @@
                       '(((name . TOKEN)
                          (value . "secret-key")
                          (source . secret))))))
-    (test-case "merges resource sets with left-biased sandbox keys"
+    (poo-flow-test-case "merges resource sets with left-biased sandbox keys"
       (let* ((left (make-sandbox-resource-set
                     (list (make-sandbox-volume-binding 'source-item "/work" 'read)
                           (make-sandbox-volume-binding 'config-item "/config" 'read))

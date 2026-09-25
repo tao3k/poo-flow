@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/policy/authorized-effect-token
         :poo-flow/src/proof/proof-case-projection)
@@ -30,11 +31,11 @@
 
 (def proof-case-projection-test
   (test-suite "AC-09 proof-case POO projection"
-    (test-case "single obligation is a POO object"
+    (poo-flow-test-case "single obligation is a POO object"
       (let (obligation
             (poo-flow-proof-obligation 'policy-revision-bound 0 #t))
         (check (.ref obligation 'bit) => 0)))
-    (test-case "canonical obligation family is order invariant"
+    (poo-flow-test-case "canonical obligation family is order invariant"
       (let* ((canonical (complete-obligations))
              (reversed
               (poo-flow-proof-obligation-family-build
@@ -46,7 +47,7 @@
                =>
                (map (lambda (item) (.ref item 'name))
                     (.ref reversed 'obligations)))))
-    (test-case "proof case binds token roots and canonical masks"
+    (poo-flow-test-case "proof case binds token roots and canonical masks"
       (let* ((roots (poo-flow-proof-evidence-roots
                      semantic-root "execution-root" #f))
              (proof-case
@@ -65,7 +66,7 @@
         (check (.ref proof-case 'required-obligation-mask) => 255)
         (check (.ref proof-case 'present-obligation-mask) => 255)
         (check (poo-flow-authorized-effect-proof-case-valid? proof-case) => #t)))
-    (test-case "unsatisfied obligation fails proof-case validity"
+    (poo-flow-test-case "unsatisfied obligation fails proof-case validity"
       (let* ((roots (poo-flow-proof-evidence-roots
                      semantic-root "execution-root" #f))
              (obligations
@@ -76,7 +77,7 @@
                token roots obligations 'committed 1 'strict 4 "previous-root")))
         (check (.ref obligations 'complete?) => #f)
         (check (poo-flow-authorized-effect-proof-case-valid? proof-case) => #f)))
-    (test-case "missing and duplicate obligations fail closed"
+    (poo-flow-test-case "missing and duplicate obligations fail closed"
       (let* ((canonical (complete-obligations))
              (items (.ref canonical 'obligations))
              (missing
@@ -94,7 +95,7 @@
                  'accepted))))
         (check missing => 'rejected)
         (check duplicate => 'rejected)))
-    (test-case "diagnostic proof case cannot become valid"
+    (poo-flow-test-case "diagnostic proof case cannot become valid"
       (let* ((roots (poo-flow-proof-evidence-roots
                      semantic-root "execution-root" #f))
              (proof-case

@@ -6,7 +6,8 @@
 ;;; Boundary: C language tests prove the nono-sandbox binding is compiler-visible.
 ;;; Invariant: the probe checks headers and signatures but never links or applies nono.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :std/misc/process run-process)
@@ -32,7 +32,7 @@
 
 (def nono-sandbox-c-language-test
   (test-suite "nono-sandbox C language binding"
-    (test-case "C compiler accepts POO Flow nono binding probe"
+    (poo-flow-test-case "C compiler accepts POO Flow nono binding probe"
       (let* ((descriptor (make-nono-c-binding-descriptor))
              (contract (nono-c-binding-descriptor->contract descriptor)))
         (check-equal? (cdr (assoc 'adapter-header contract))

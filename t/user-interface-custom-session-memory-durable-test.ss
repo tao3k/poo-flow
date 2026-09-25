@@ -7,9 +7,9 @@
 ;;; Invariant: durable memory rows are handoff receipts only; Scheme never
 ;;; recalls, commits, consolidates, persists, or repairs memory stores.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
@@ -41,7 +41,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-memory-durable-test
   (test-suite "poo-flow custom user-interface session-memory-durable case"
-    (test-case "projects durable memory job receipts without runtime work"
+    (poo-flow-test-case "projects durable memory job receipts without runtime work"
       (let* ((selection
               (car poo-flow-custom-my-module-session-memory-durable-case))
              (rows

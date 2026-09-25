@@ -6,9 +6,9 @@
 ;;; Boundary: Funflow functional DAG objects are POO-native reports.
 ;;; Invariant: DAG construction is pure and never schedules or runs checks.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -87,7 +87,7 @@
 ;; : TestSuite
 (def funflow-functional-dag-test
   (test-suite "funflow functional DAG object"
-    (test-case "projects a POO pipeline into a POO functional DAG"
+    (poo-flow-test-case "projects a POO pipeline into a POO functional DAG"
       (let* ((selection (car (funflow-functional-dag-selection)))
              (pipeline
               (funflow-functional-dag-alist-ref

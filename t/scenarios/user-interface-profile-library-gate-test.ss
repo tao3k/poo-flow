@@ -6,9 +6,9 @@
 ;;; Boundary: user-interface profile library gate tests.
 ;;; Invariant: public reusable profiles must carry test and Lean proof status.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/profile-core
@@ -133,7 +133,7 @@
 ;; : TestSuite
 (def user-interface-profile-library-gate-test
   (test-suite "poo-flow user-interface profile library gate"
-    (test-case "accepts only tested proof-backed public profiles"
+    (poo-flow-test-case "accepts only tested proof-backed public profiles"
       (let* ((gate accepted-profile-gate)
              (facts (poo-flow-user-interface-profile-gate->lean-facts gate)))
         (check-equal? (poo-flow-user-interface-profile-gate? gate) #t)
@@ -163,7 +163,7 @@
                        'ui.profile/counterexample-rejected
                        facts)
                       #t)))
-    (test-case "binds profile-set library surface to per-profile gates"
+    (poo-flow-test-case "binds profile-set library surface to per-profile gates"
       (let* ((profile-set gate-test-profile-set)
              (gates gate-test-profile-set-gates)
              (fact-sets (map poo-flow-user-interface-profile-gate->lean-facts
@@ -189,7 +189,7 @@
                               facts))
                            fact-sets)
                       '(#t #f))))
-    (test-case "rejects discharged public gates when scope proof fails"
+    (poo-flow-test-case "rejects discharged public gates when scope proof fails"
       (let* ((gate scope-leak-profile-gate)
              (facts (poo-flow-user-interface-profile-gate->lean-facts gate)))
         (check-equal? (poo-flow-user-interface-profile-gate-profile-name gate)
@@ -213,7 +213,7 @@
                        'ui.profile/reusable-library-surface
                        facts)
                       #f)))
-    (test-case "keeps experimental profiles out of public reusable surface"
+    (poo-flow-test-case "keeps experimental profiles out of public reusable surface"
       (let* ((gate experimental-profile-gate)
              (facts (poo-flow-user-interface-profile-gate->lean-facts gate)))
         (check-equal? (poo-flow-user-interface-profile-gate-profile-name gate)

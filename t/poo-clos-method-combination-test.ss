@@ -5,7 +5,8 @@
 
 ;;; ANSI short method combinations and generic protocol customization.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop element?)
@@ -195,24 +196,24 @@
 
 (def poo-clos-method-combination-test
   (test-suite "POO-native CLOS method combinations and protocol"
-    (test-case "short declaration lowers to a lexical POO descriptor"
+    (poo-flow-test-case "short declaration lowers to a lexical POO descriptor"
       (check (element? ClosMethodCombination declared-collect) => #t)
       (check-equal? (declared-values combination-dog) '(animal dog))
       (check-equal?
        (declared-values (poo-clos-make-instance CombinationSyntaxEntity))
        '(syntax-method)))
 
-    (test-case "long declaration binds groups and lexical call-method"
+    (poo-flow-test-case "long declaration binds groups and lexical call-method"
       (check (element? ClosMethodCombination declared-long) => #t)
       (check-equal? (declared-long-values combination-dog)
                     '(dog animal)))
 
-    (test-case "combination options configure short order without mutation"
+    (poo-flow-test-case "combination options configure short order without mutation"
       (check-equal? (declared-values combination-dog) '(animal dog))
       (check-equal? (declared-reordered-values combination-dog) '(dog animal))
       (check-equal? (.ref declared-collect 'order) 'most-specific-last))
 
-    (test-case "long configuration, argument bindings, and make-method compose"
+    (poo-flow-test-case "long configuration, argument bindings, and make-method compose"
       (check-equal?
        (configured-long-values combination-dog 'extra tag: 'tagged)
        '(around
@@ -243,7 +244,7 @@
          (poo-clos-call around-only 'object)
          (failure-code? 'required-method-group-empty))))
 
-    (test-case "numeric built-ins combine in admitted specificity order"
+    (poo-flow-test-case "numeric built-ins combine in admitted specificity order"
       (let* ((animal (poo-clos-prototype-specializer combination-animal-class))
              (dog (poo-clos-prototype-specializer combination-dog-class))
              (plus
@@ -267,7 +268,7 @@
         (check-equal? (poo-clos-call maximum combination-dog) 7)
         (check-equal? (poo-clos-call minimum combination-dog) 3)))
 
-    (test-case "list order and sequence built-ins preserve their operators"
+    (poo-flow-test-case "list order and sequence built-ins preserve their operators"
       (let* ((animal (poo-clos-prototype-specializer combination-animal-class))
              (dog (poo-clos-prototype-specializer combination-dog-class))
              (collect
@@ -298,7 +299,7 @@
         (check-equal? (poo-clos-call concatenated combination-dog)
                       '(dog animal))))
 
-    (test-case "and, or, and progn retain short-circuit evaluation"
+    (poo-flow-test-case "and, or, and progn retain short-circuit evaluation"
       (let ((trace '())
             (animal (poo-clos-prototype-specializer combination-animal-class))
             (dog (poo-clos-prototype-specializer combination-dog-class)))
@@ -336,7 +337,7 @@
           (check-equal? (poo-clos-call progn-generic combination-dog) 'last)
           (check-equal? trace '(dog animal)))))
 
-    (test-case "one-argument identity preserves multiple values"
+    (poo-flow-test-case "one-argument identity preserves multiple values"
       (let* ((identity-combination
               (poo-clos-short-method-combination
                'identity-max 'max identity-with-one-argument?: #t))
@@ -354,7 +355,7 @@
          (call-with-values (lambda () (poo-clos-call generic 'value)) list)
          '(3 4))))
 
-    (test-case "around methods cannot hide a missing primary"
+    (poo-flow-test-case "around methods cannot hide a missing primary"
       (let* ((standard-around
               (poo-clos-method
                'standard-around (list any-specializer)
@@ -379,7 +380,7 @@
         (check-exception (poo-clos-call short 'value)
                          (failure-code? 'no-primary-method))))
 
-    (test-case "generic protocol owns terminal and computation hooks"
+    (poo-flow-test-case "generic protocol owns terminal and computation hooks"
       (let* ((fallback-protocol
               (poo-clos-generic-protocol
                'fallback
@@ -429,7 +430,7 @@
                           generic combination-dog))
                => #t)))
 
-    (test-case "long combinations partition groups and drive explicit next chains"
+    (poo-flow-test-case "long combinations partition groups and drive explicit next chains"
       (let* ((around-group
               (poo-clos-method-group 'around '((around))))
              (primary-group
@@ -479,7 +480,7 @@
                 (poo-clos-effective-method-group effective-method 'primary))
            '(dog animal)))))
 
-    (test-case "long groups enforce required, claimed, and unambiguous methods"
+    (poo-flow-test-case "long groups enforce required, claimed, and unambiguous methods"
       (let* ((required-group
               (poo-clos-method-group
                'required '((needed)) required?: #t))
@@ -529,7 +530,7 @@
          (poo-clos-call generic 'argument)
          (failure-code? 'ambiguous-method-group-order))))
 
-    (test-case "invalid qualifiers and protocol results fail before invocation"
+    (poo-flow-test-case "invalid qualifiers and protocol results fail before invocation"
       (let* ((generic
               (poo-clos-generic-function 'bad-qualifier 1
                                          method-combination: '+))

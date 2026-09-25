@@ -6,9 +6,9 @@
 ;;; Boundary: tests verify concrete loop-engine runtime manifest projection.
 ;;; Invariant: manifest rows are inert Marlin handoff data, not execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
@@ -575,7 +575,7 @@
 ;;; guessing the loop-engine entrypoint or request shape.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-runtime-manifest-case)
-  (test-case "projects custom loop-engine runtime manifest"
+  (poo-flow-test-case "projects custom loop-engine runtime manifest"
     (let* ((presentation
             (custom-loop-presentation
              poo-flow-custom-my-module-loop-engine-case))

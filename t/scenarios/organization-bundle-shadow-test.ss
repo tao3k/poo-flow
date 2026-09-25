@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :clan/poo/object :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :clan/poo/object :std/test
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel
         :poo-flow/src/semantic/organization-bundle-shadow)
@@ -42,7 +43,7 @@
 (def organization-bundle-shadow-test
   (test-suite
    "read-only organization Bundle shadow projection"
-   (test-case "equivalent facts are deterministic draft evidence"
+   (poo-flow-test-case "equivalent facts are deterministic draft evidence"
      (let* ((state (validated-state))
             (facts (poo-flow-organization-bundle-shadow-facts state))
             (profile (poo-flow-organization-shadow-profile/all facts))
@@ -53,7 +54,7 @@
        (check-equal? (.ref receipt 'v1-conformant?) #f)
        (check-equal? (.ref state 'phase) 'validated)
        (check-equal? (.ref state 'epoch) 0)))
-   (test-case "three semantic difference classes stay distinct"
+   (poo-flow-test-case "three semantic difference classes stay distinct"
      (let* ((state (validated-state))
             (facts (poo-flow-organization-bundle-shadow-facts state))
             (first (car facts))
@@ -72,7 +73,7 @@
        (check-equal? (length (.ref receipt 'missing-current)) 1)
        (check-equal? (length (.ref receipt 'missing-bundle)) 1)
        (check-equal? (length (.ref receipt 'mismatched-values)) 1)))
-   (test-case "duplicate current fact fails closed"
+   (poo-flow-test-case "duplicate current fact fails closed"
      (let* ((state (validated-state))
             (facts (poo-flow-organization-bundle-shadow-facts state))
             (profile (poo-flow-organization-shadow-profile/all facts))
@@ -80,13 +81,13 @@
                       state (cons (car facts) facts) profile)))
        (check-equal? (.ref receipt 'accepted?) #f)
        (check-equal? (.ref receipt 'equivalent?) #f)))
-   (test-case "incomplete profile fails closed"
+   (poo-flow-test-case "incomplete profile fails closed"
      (let* ((state (validated-state))
             (facts (poo-flow-organization-bundle-shadow-facts state))
             (profile (poo-flow-organization-shadow-profile '()))
             (receipt (poo-flow-organization-bundle-shadow-compare state facts profile)))
        (check-equal? (.ref receipt 'accepted?) #f)))
-   (test-case "unknown facet and unstable value fail closed"
+   (poo-flow-test-case "unknown facet and unstable value fail closed"
      (let* ((state (validated-state))
             (facts (poo-flow-organization-bundle-shadow-facts state))
             (profile (poo-flow-organization-shadow-profile
@@ -100,7 +101,7 @@
        (check-equal? (.ref receipt 'accepted?) #f)
        (check-equal? (.ref receipt 'equivalent?) #f)
        (check-equal? (.ref receipt 'v1-conformant?) #f)))
-   (test-case "schema is explicitly draft.3"
+   (poo-flow-test-case "schema is explicitly draft.3"
      (check-equal? +poo-flow-organization-bundle-schema+
                    'poo-flow.organization-bundle.draft.3)
      (check-equal? +poo-flow-organization-facet-schema+
