@@ -4,7 +4,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .all-slots .o .ref)
+        (only-in :poo-flow/src/module-system/observability/interface
+                 poo-flow-native-slot-presentation)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-semantic-identity
                  poo-flow-semantic-module)
@@ -111,4 +113,44 @@
    (test-case "domain string identities remain valid direct Profile keys"
      (let (bundle (compose profiles string-identity-profile))
        (check-equal? (.ref bundle 'profile-identities)
-                     '(example/profile))))))
+                     '(example/profile))))
+   (test-case "closed Scenario Case presents one effective Stage first"
+     (let* ((base-stages (.o triage: 'human-review))
+            (refined-stages (.o triage: 'clinician-review
+                                audit: 'retain-evidence))
+            (base-profile
+             (.o identity: 'base-stage-profile stages: base-stages))
+            (refined-profile
+             (.o identity: 'refined-stage-profile stages: refined-stages))
+            (bundle (compose profiles base-profile refined-profile))
+            (case-value (poo-flow-profile-bundle-root 'clinical-case bundle))
+            (effective-stages (.ref case-value 'stages))
+            (sources
+             (.o effective: (.o prototype: effective-stages
+                                source-path: "src/module-system/profile-composition/profile-bundle.ss"
+                                source-line: 236)
+                 base: (.o prototype: base-stages
+                           source-path: "t/profile-bundle-test.ss"
+                           source-line: 119)
+                 refined: (.o prototype: refined-stages
+                              source-path: "t/profile-bundle-test.ss"
+                              source-line: 120)))
+            (ordinary
+             (poo-flow-native-slot-presentation effective-stages 'triage))
+            (detailed
+             (poo-flow-native-slot-presentation
+              effective-stages 'triage 'source sources)))
+       (check-equal? (.all-slots ordinary) '(effective-value))
+       (check-equal? (.ref ordinary 'effective-value) 'human-review)
+       (check-equal? (.ref detailed 'declaration-lineage)
+                     '(base refined))
+       (check-equal?
+        (map (lambda (step) (.ref step 'mode))
+             (.ref detailed 'composition-chain))
+        '(replacement replacement))
+       (check-equal? (map (lambda (entry) (.ref entry 'label))
+                          (.ref detailed 'native-precedence))
+                     '(effective base refined))
+       (check-equal? (.ref (car (.ref detailed 'source-declarations))
+                           'source-line)
+                     119)))))
