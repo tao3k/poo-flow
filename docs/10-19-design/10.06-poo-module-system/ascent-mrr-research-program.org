@@ -64,6 +64,24 @@ least-closure evaluator, or shortest-support operator.  The MRR test
 continues to verify those relation semantics independently.  POO has not yet
 produced an MRR-admissible candidate receipt.
 
+The next qualification adds a POO-native table expression over the standard
+=SimpleTrie= and =UIntTrieSet= APIs.  It uses the library's =foldl=, =ref=,
+=acons=, =cons=, and =union= operations to index a right-hand binary relation
+once, compose left pairs through that index, and deduplicate the result.  POO
+slots expose the index, reusable left composition function, two-hop pairs,
+and union of one- and two-hop pairs.  The diamond's two paths to Ada-to-Cy
+collapse to one pair; a source withdrawal produces a separate expression
+without mutating the earlier one.  A cycle yields its bounded self-pairs.
+This is a bounded relation-algebra experiment with a local pair encoding, not
+a least-fixed-point closure or MRR FactId representation.  Index construction
+avoids scanning every right-hand edge for each left pair.  The reproducible
+=t/performance/ascent-table-expression-benchmark.ss= compares three repeated
+joins over 512 input pairs with the right index already built: both return 768
+pairs; one local interpreted run took 0.033 CPU seconds with the reused index
+and 0.609 CPU seconds with pairwise scanning.  This measures the repeated-join
+case only, excluding index construction; larger cardinalities and native AOT
+performance remain separate qualification work.
+
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation
 identities, organization epoch, an opaque capability identity, and three finite bounds.
