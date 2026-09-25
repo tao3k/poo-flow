@@ -104,6 +104,24 @@
        (check-equal? (.slot? ordinary 'previous-value) #f)
        (check-equal? (eq? (.ref advanced 'previous-value) first) #t)
        (check-equal? (eq? (.ref advanced 'candidate-value) second) #t)))
+   (test-case "a domain profile-export slot is not a selection proof"
+     (let* ((first
+             (.o identity: 'clinical-safety
+                 profile-export: 'domain-value))
+            (second
+             (.o identity: 'clinical-safety
+                 profile-export: (.o domain-value: #t)))
+            (failure
+             (with-catch values
+               (lambda () (compose profiles first second) #f)))
+            (ordinary
+             (poo-flow-profile-composition-conflict-presentation failure)))
+       (check-equal? (PooFlowProfileCompositionConflict? failure) #t)
+       (check-equal? (.ref ordinary 'reason) 'distinct-direct-values)
+       (check-equal? (.ref (.ref ordinary 'previous-source) 'status)
+                     'undeclared)
+       (check-equal? (.ref (.ref ordinary 'candidate-source) 'status)
+                     'undeclared)))
    (test-case "selected Profile revision conflict names both constraints"
      (let* ((other-module
              (poo-flow-semantic-module

@@ -343,7 +343,9 @@
 ;;; never expands `.o`/`.def`, constructs a POO object, or evaluates an
 ;;; initializer.  In particular, a lexical spelling such as `values: values`
 ;;; is observable before POO can reinterpret the right hand identifier as a
-;;; lazy self-slot lookup.
+;;; lazy self-slot lookup. `.cc` is a procedure: override values are evaluated
+;;; before constant slots are installed, so that spelling is not a lazy
+;;; self-reference and must not be rejected here.
 ;; : (forall (a) (-> [a] [(Pair Symbol a)]))
 ;; : (-> List [Pair])
 (def (poo-flow-poo-slot-authoring-form-bindings elements)

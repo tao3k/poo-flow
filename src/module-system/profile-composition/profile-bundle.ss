@@ -46,7 +46,7 @@
 ;;; Provenance is a maintainer claim, never an inferred source location.
 (def (poo-flow-profile-conflict-source value)
   (let (claim
-        (if (and (object? value) (.slot? value 'profile-export))
+        (if (element? PooFlowProfileSelectionProof value)
           (.ref (.ref value 'profile-export) 'provenance)
           (if (and (object? value) (.slot? value 'provenance))
             (.ref value 'provenance)

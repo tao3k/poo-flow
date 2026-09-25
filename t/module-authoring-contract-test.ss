@@ -394,6 +394,18 @@
              (poo-flow-module-authoring-admission-diagnostics admission))
         '(poo-slot-initializer-shadows-slot))))
 
+   (test-case ".cc overrides evaluate their values before constructing slots"
+     (let ((base (.o identity: 'original))
+           (identity 'lexical))
+       (check-equal? (.ref (.cc base identity: identity) 'identity)
+                     'lexical)
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted?
+         (poo-flow-module-authoring-admit-datum
+          test-module-interface 'objects
+          '(def RefinedProfile (.cc base identity: identity))))
+        #t)))
+
    (test-case "unknown roles fail at the Interface Profile boundary"
      (check-equal?
       (with-catch
