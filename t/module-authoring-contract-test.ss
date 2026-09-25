@@ -20,6 +20,8 @@
         (only-in :poo-flow/src/module-system/observability/module-presentation
                  poo-flow-poo-slot-authoring-file-observations
                  poo-flow-poo-slot-authoring-diagnostics)
+        (only-in :poo-flow/src/core/funcs
+                 poo-flow-directory-files-recursive)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface
                  poo-flow-module-interface-authoring
@@ -52,6 +54,28 @@
 
 (def (first-diagnostic admission)
   (car (poo-flow-module-authoring-admission-diagnostics admission)))
+
+(def (user-interface-source-role path)
+  (cond
+   ((equal? path "user-interface/config.ss")
+    'user-config)
+   ((string-suffix? "/config.ss" path) 'config)
+   ((string-suffix? "/interface.ss" path) 'interface)
+   ((string-suffix? "/types.ss" path) 'types)
+   ((string-suffix? "/funs.ss" path) 'funs)
+   (else 'objects)))
+
+(def (user-interface-source-admission path)
+  (call-with-input-file path
+    (lambda (port)
+      (poo-flow-module-authoring-admit-port
+       (if (eq? (user-interface-source-role path) 'user-config)
+         user-root-module-interface
+         test-module-interface)
+       (if (eq? (user-interface-source-role path) 'user-config)
+         'config
+         (user-interface-source-role path))
+       port))))
 
 ;;; A vertical package refines native prototypes and contributes one CLOS
 ;;; method bundle.  It does not register a parallel role table or evaluator.
@@ -333,6 +357,43 @@
            (poo-clos-generic-function 'maintained-generic 1))))
       #t))
 
+   (test-case "maintained user-interface Scheme sources satisfy their role Contracts"
+     (let (failures '())
+       (for-each
+        (lambda (path)
+          ;; init.ss is a distinct poo-flow! declaration surface qualified by
+          ;; user-interface-root-config-test; Module config roles do not own it.
+          (when (and (string-suffix? ".ss" path)
+                     (not (equal? path "user-interface/init.ss")))
+            (let (admission (user-interface-source-admission path))
+              (unless (poo-flow-module-authoring-admission-accepted? admission)
+                (set! failures
+                      (cons (cons path
+                                  (poo-flow-module-authoring-admission-diagnostics
+                                   admission))
+                            failures))))))
+        (poo-flow-directory-files-recursive "user-interface"))
+       (check-equal?
+        (map (lambda (failure)
+               (cons (car failure)
+                     (map (lambda (diagnostic) (.ref diagnostic 'code))
+                          (cdr failure))))
+             (reverse failures))
+        '())))
+
+   (test-case "a lazy POO slot cannot refer to its own binding"
+     (let (admission
+           (poo-flow-module-authoring-admit-datum
+            test-module-interface 'objects
+            '(def BrokenProfile (.o identity: identity))))
+       (check-equal?
+        (poo-flow-module-authoring-admission-accepted? admission)
+        #f)
+       (check-equal?
+        (map (lambda (diagnostic) (.ref diagnostic 'code))
+             (poo-flow-module-authoring-admission-diagnostics admission))
+        '(poo-slot-initializer-shadows-slot))))
+
    (test-case "unknown roles fail at the Interface Profile boundary"
      (check-equal?
       (with-catch
@@ -376,4 +437,12 @@
        (poo-flow-poo-slot-authoring-file-observations
         'effective-object-presentation
         "src/module-system/observability/effective-object.ss"))
+      '()))
+
+   (test-case "profile composition conflict receipts have no lazy self-reference"
+     (check-equal?
+      (poo-flow-poo-slot-authoring-diagnostics
+       (poo-flow-poo-slot-authoring-file-observations
+        'profile-composition
+        "src/module-system/profile-composition/profile-bundle.ss"))
       '()))))

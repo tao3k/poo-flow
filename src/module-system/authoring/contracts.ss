@@ -18,7 +18,8 @@
                  poo-flow-module-interface-id
                  poo-flow-module-interface-authoring)
         (only-in :poo-flow/src/module-system/observability/module-presentation
-                 poo-flow-poo-slot-authoring-datum-bindings)
+                 poo-flow-poo-slot-authoring-datum-bindings
+                 poo-flow-poo-slot-authoring-self-reference?)
         :poo-flow/src/module-system/poo-clos/interface
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor. ModuleSourceRole.
@@ -120,7 +121,7 @@
         freedom: (.ref source-role 'freedom))))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
-(def (poo-flow-module-authoring-slot-diagnostics interface role datum)
+(def (poo-flow-module-authoring-slot-diagnostics interface role bindings)
   (filter-map
    (lambda (binding)
      (and (poo-flow-module-authoring-forbidden-slot-verb
@@ -128,7 +129,22 @@
            (.ref role 'forbidden-slot-verbs))
           (poo-flow-module-authoring-slot-diagnostic
            interface role (car binding))))
-   (poo-flow-poo-slot-authoring-datum-bindings datum)))
+   bindings))
+
+;; A lazy POO slot can recurse before runtime observability has a chance to
+;; report progress. Reuse the inert-source observation at the admission edge.
+(def (poo-flow-module-authoring-self-reference-diagnostics interface role bindings)
+  (filter-map
+   (lambda (binding)
+     (and (poo-flow-poo-slot-authoring-self-reference?
+           (car binding) (cdr binding))
+          (poo-flow-module-authoring-surface-diagnostic
+           interface role
+           'poo-slot-initializer-shadows-slot
+           (car binding)
+           'poo-slot-initializer-must-not-shadow-slot-name
+           'rename-local-or-wrap-in-helper)))
+   bindings))
 
 ;; : (-> SchemeDatum [Symbol] Boolean (Maybe Symbol))
 ;;; Walk executable child forms, but never reinterpret quoted values or import
@@ -238,7 +254,7 @@
    (else #f)))
 
 ;; : (-> PooModuleInterface PooModuleSourceRole SchemeDatum [PooModuleAuthoringDiagnostic])
-(def (poo-flow-module-authoring-query-diagnostics interface role datum)
+(def (poo-flow-module-authoring-query-diagnostics interface role bindings)
   (if (.ref role 'forbid-raw-query-initializers?)
     (filter-map
      (lambda (binding)
@@ -250,7 +266,7 @@
              (car binding)
              'single-poo-semantic-model
              'bind-named-poo-query-or-provider-projection)))
-     (poo-flow-poo-slot-authoring-datum-bindings datum))
+     bindings)
     '()))
 
 (def (poo-flow-module-authoring-surface-diagnostic
@@ -307,21 +323,27 @@
         diagnostics: diagnostic-values)))
 
 (def (poo-flow-module-authoring-admit/common interface role datum)
-  (poo-flow-module-authoring-admission
-   interface role
-   (append
-    (poo-flow-module-authoring-slot-diagnostics interface role datum)
-    (poo-flow-module-authoring-query-diagnostics interface role datum))))
+  (let (bindings (poo-flow-poo-slot-authoring-datum-bindings datum))
+    (poo-flow-module-authoring-admission
+     interface role
+     (append
+      (poo-flow-module-authoring-slot-diagnostics interface role bindings)
+      (poo-flow-module-authoring-self-reference-diagnostics
+       interface role bindings)
+      (poo-flow-module-authoring-query-diagnostics interface role bindings)))))
 
 (def (poo-flow-module-authoring-admit/config interface role datum)
-  (poo-flow-module-authoring-admission
-   interface role
-   (append
-    (poo-flow-module-authoring-slot-diagnostics interface role datum)
-    (poo-flow-module-authoring-query-diagnostics interface role datum)
-    (poo-flow-module-authoring-root-diagnostics interface role datum)
-    (poo-flow-module-authoring-default-surface-diagnostics
-     interface role datum))))
+  (let (bindings (poo-flow-poo-slot-authoring-datum-bindings datum))
+    (poo-flow-module-authoring-admission
+     interface role
+     (append
+      (poo-flow-module-authoring-slot-diagnostics interface role bindings)
+      (poo-flow-module-authoring-self-reference-diagnostics
+       interface role bindings)
+      (poo-flow-module-authoring-query-diagnostics interface role bindings)
+      (poo-flow-module-authoring-root-diagnostics interface role datum)
+      (poo-flow-module-authoring-default-surface-diagnostics
+       interface role datum)))))
 
 ;;; Executor strategy and SourceRole are independently extensible. Module
 ;;; packages can contribute a method bundle for a refined executor/role pair

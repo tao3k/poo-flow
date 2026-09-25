@@ -9,6 +9,7 @@
 
 (import (only-in :clan/poo/object .all-slots .mix .o .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element? validate)
+        (only-in :std/error deferror-class)
         (only-in :std/list/list append-map delete-duplicates/hash every filter-map)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract
@@ -35,7 +36,85 @@
         poo-flow-select-module-profiles
         poo-flow-profile-bundle
         poo-flow-profile-bundle?
-        poo-flow-profile-bundle-root)
+        poo-flow-profile-bundle-root
+        PooFlowProfileCompositionConflict?
+        PooFlowProfileCompositionConflict-receipt
+        poo-flow-profile-composition-conflict-presentation)
+
+(deferror-class PooFlowProfileCompositionConflict (receipt))
+
+;;; Provenance is a maintainer claim, never an inferred source location.
+(def (poo-flow-profile-conflict-source value)
+  (let (claim
+        (if (and (object? value) (.slot? value 'profile-export))
+          (.ref (.ref value 'profile-export) 'provenance)
+          (if (and (object? value) (.slot? value 'provenance))
+            (.ref value 'provenance)
+            #f)))
+    (if (and (object? claim)
+             (.slot? claim 'source-path)
+             (.slot? claim 'source-line)
+             (string? (.ref claim 'source-path))
+             (> (string-length (.ref claim 'source-path)) 0)
+             (integer? (.ref claim 'source-line))
+             (> (.ref claim 'source-line) 0))
+      (.o source-path: (.ref claim 'source-path)
+          source-line: (.ref claim 'source-line)
+          status: 'declared)
+      (.o source-path: #f source-line: #f status: 'undeclared))))
+
+(def (poo-flow-profile-conflict-source-label source)
+  (if (eq? (.ref source 'status) 'declared)
+    (string-append (.ref source 'source-path) ":"
+                   (number->string (.ref source 'source-line)))
+    "source undeclared"))
+
+(def (poo-flow-profile-composition-conflict-presentation failure (level 'default))
+  (unless (PooFlowProfileCompositionConflict? failure)
+    (error "not a Profile composition conflict" failure))
+  (unless (memq level '(default advanced))
+    (error "unknown Profile conflict presentation level" level))
+  (let* ((receipt (PooFlowProfileCompositionConflict-receipt failure))
+         (ordinary
+          (.o identity: (.ref receipt 'identity)
+              reason: (.ref receipt 'reason)
+              constraint: (.ref receipt 'constraint)
+              previous-source: (.ref receipt 'previous-source)
+              candidate-source: (.ref receipt 'candidate-source)
+              repair: 'select-one-profile-or-align-its-revision)))
+    (if (eq? level 'default)
+      ordinary
+      (.o (:: @ ordinary)
+          previous-value: (.ref receipt 'previous-value)
+          candidate-value: (.ref receipt 'candidate-value)))))
+
+(def (poo-flow-raise-profile-composition-conflict
+      identity-value reason-value constraint-value
+      prior-profile candidate-profile)
+  (let* ((previous-source-value
+          (poo-flow-profile-conflict-source prior-profile))
+         (candidate-source-value
+          (poo-flow-profile-conflict-source candidate-profile))
+         (receipt-value
+          (.o identity: identity-value
+              reason: reason-value
+              constraint: constraint-value
+              previous-source: previous-source-value
+              candidate-source: candidate-source-value
+              previous-value: prior-profile
+              candidate-value: candidate-profile))
+         (failure
+          (PooFlowProfileCompositionConflict
+           (string-append
+            "Profile " (symbol->string identity-value) " conflicts on "
+            (symbol->string reason-value) " ("
+            (poo-flow-profile-conflict-source-label previous-source-value)
+            " vs "
+            (poo-flow-profile-conflict-source-label candidate-source-value)
+            ")")
+           irritants: '())))
+    (set! (PooFlowProfileCompositionConflict-receipt failure) receipt-value)
+    (raise failure)))
 
 (def +poo-flow-profile-export-kind+ 'poo-flow.profile-export.v1)
 (def +poo-flow-profile-selection-proof-kind+
@@ -363,11 +442,18 @@
                                     (.ref proof 'revision))
                                (eq? (.ref previous 'generation)
                                     (.ref proof 'generation)))
-                    (error "incompatible Profile selection revisions"
-                           key previous proof))
+                    (poo-flow-raise-profile-composition-conflict
+                     identity 'selection-revision
+                     (.o previous-revision: (.ref previous 'revision)
+                         previous-generation: (.ref previous 'generation)
+                         candidate-revision: (.ref proof 'revision)
+                         candidate-generation: (.ref proof 'generation))
+                     previous proof))
                   (unless (eq? previous profile)
-                    (error "distinct direct Profiles share one identity"
-                           identity previous profile))))
+                    (poo-flow-raise-profile-composition-conflict
+                     identity 'distinct-direct-values
+                     'one-profile-value-per-identity
+                     previous profile))))
               (begin
               (hash-put! seen key (or proof profile))
               (set! profiles-rev (cons profile profiles-rev))

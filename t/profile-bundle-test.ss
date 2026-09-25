@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
-        (only-in :clan/poo/object .all-slots .o .ref)
+        (only-in :clan/poo/object .all-slots .o .ref .slot?)
         (only-in :poo-flow/src/module-system/observability/interface
                  poo-flow-native-slot-presentation)
         (only-in :poo-flow/src/module-system/semantic-module/objects
@@ -76,6 +76,62 @@
       (poo-flow-select-module-profiles
        test-module 'assurance '(missing))
       true))
+   (test-case "direct Profile conflict has ordinary and advanced explanations"
+     (let* ((first
+             (.o identity: 'clinical-safety
+                 provenance: (.o source-path: "t/profile-bundle-test.ss"
+                                 source-line: 81)))
+            (second
+             (.o identity: 'clinical-safety
+                 provenance: (.o source-path: "t/profile-bundle-test.ss"
+                                 source-line: 84)))
+            (failure
+             (with-catch values
+               (lambda () (compose profiles first second) #f)))
+            (ordinary
+             (poo-flow-profile-composition-conflict-presentation failure))
+            (advanced
+             (poo-flow-profile-composition-conflict-presentation
+              failure 'advanced)))
+       (check-equal? (PooFlowProfileCompositionConflict? failure) #t)
+       (check-equal? (.ref ordinary 'identity) 'clinical-safety)
+       (check-equal? (.ref ordinary 'reason) 'distinct-direct-values)
+       (check-equal? (.ref ordinary 'constraint)
+                     'one-profile-value-per-identity)
+       (check-equal? (.ref (.ref ordinary 'previous-source) 'source-path)
+                     "t/profile-bundle-test.ss")
+       (check-equal? (.ref (.ref ordinary 'candidate-source) 'source-line) 84)
+       (check-equal? (.slot? ordinary 'previous-value) #f)
+       (check-equal? (eq? (.ref advanced 'previous-value) first) #t)
+       (check-equal? (eq? (.ref advanced 'candidate-value) second) #t)))
+   (test-case "selected Profile revision conflict names both constraints"
+     (let* ((other-module
+             (poo-flow-semantic-module
+              (poo-flow-semantic-identity 'test 'assurance)
+              profiles:
+              (poo-flow-module-profiles
+               (poo-flow-profile-export
+                'audit audit-profile
+                revision: 'r2
+                generation: 'g1
+                provenance: (.o source-path: "t/profile-bundle-test.ss"
+                                source-line: 104)))))
+            (first (poo-flow-select-module-profiles
+                    test-module 'assurance '(audit)))
+            (second (poo-flow-select-module-profiles
+                     other-module 'assurance '(audit)))
+            (failure
+             (with-catch values
+               (lambda () (compose profiles first second) #f)))
+            (ordinary
+             (poo-flow-profile-composition-conflict-presentation failure)))
+       (check-equal? (.ref ordinary 'identity) 'audit)
+       (check-equal? (.ref ordinary 'reason) 'selection-revision)
+       (check-equal? (.ref (.ref ordinary 'constraint) 'previous-revision) 'r1)
+       (check-equal? (.ref (.ref ordinary 'constraint) 'candidate-revision) 'r2)
+       (check-equal? (.ref (.ref ordinary 'previous-source) 'status)
+                     'undeclared)
+       (check-equal? (.ref (.ref ordinary 'candidate-source) 'source-line) 104)))
    (test-case "profiles composition is idempotent for one Module instance"
      (let* ((selected
              (poo-flow-select-module-profiles

@@ -24,7 +24,10 @@
                  poo-flow-select-module-profiles
                  poo-flow-profile-bundle
                  poo-flow-profile-bundle?
-                 poo-flow-profile-bundle-root)
+                 poo-flow-profile-bundle-root
+                 PooFlowProfileCompositionConflict?
+                 PooFlowProfileCompositionConflict-receipt
+                 poo-flow-profile-composition-conflict-presentation)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
@@ -65,6 +68,9 @@
         PooFlowProfileBundle
         PooFlowStageSpace
         PooFlowProfileCompositionStrategy
+        PooFlowProfileCompositionConflict?
+        PooFlowProfileCompositionConflict-receipt
+        poo-flow-profile-composition-conflict-presentation
         profiles
         compose
         poo-flow-profile-export
