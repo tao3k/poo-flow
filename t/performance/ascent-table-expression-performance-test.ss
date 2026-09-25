@@ -39,7 +39,7 @@
                 (.o (source-pairs pairs) (radix pair-radix))))
          (projected (.ref expression 'at-most-two-hop-pairs)))
     (list (cons 'source-count (.call UIntTrieSet .count pairs))
-          (cons 'projected-count (.call UIntTrieSet .count projected)))))
+          (cons 'projected-count (length projected)))))
 
 (def ascent-table-expression-performance-test
   (test-suite "ASCENT table expression performance"

@@ -65,13 +65,14 @@ continues to verify those relation semantics independently.  POO has not yet
 produced an MRR-admissible candidate receipt.
 
 The next qualification adds a POO-native table expression over the standard
-=SimpleTrie= and =UIntTrieSet= APIs.  It uses the library's =foldl=, =ref=,
-=acons=, =cons=, and =union= operations to index a right-hand binary relation
-once, compose left pairs through that index, and deduplicate the result.  POO
-slots expose the index, reusable left composition function, two-hop pairs,
-and union of one- and two-hop pairs.  The diamond's two paths to Ada-to-Cy
-collapse to one pair; a source withdrawal produces a separate expression
-without mutating the earlier one.  A cycle yields its bounded self-pairs.
+=UIntTrieSet= input API and Scheme vector, hash-table, and =list-sort= functions.
+The POO snapshot retains the persistent source set; the bounded join builds a
+private vector index and a local hash set, then publishes a sorted, distinct
+list of encoded pairs.  POO slots expose a neighbor visitor, reusable
+left composition function, two-hop pairs, and one/two-hop pairs.  The diamond's
+two paths to Ada-to-Cy collapse to one pair; a source withdrawal produces a
+separate expression without mutating the earlier one.  A cycle yields its
+bounded self-pairs.
 This is a bounded relation-algebra experiment with a local pair encoding, not
 a least-fixed-point closure or MRR FactId representation.  Index construction
 avoids scanning every right-hand edge for each left pair.  The reproducible
@@ -79,9 +80,13 @@ avoids scanning every right-hand edge for each left pair.  The reproducible
 through the existing =benchmark-run= gate.  It measures index construction and
 demanded relation composition together over 512 input pairs, checking the
 1,024-pair one/two-hop output.  The earlier ad hoc =time= comparison was
-withdrawn.  One local standard receipt over 20 samples reported 31.409ms p95
-against the fixture's 50ms target and 200ms ceiling.  Larger cardinalities and
-native AOT qualification remain open.
+withdrawn.  With =gxc -O= on the expression module, repeated local standard
+receipts over 20 samples and three executions per sample measured 0.786ms,
+0.826ms, and 0.847ms p95.  The fixture targets 1ms with a 2ms noise ceiling;
+CI explicitly compiles this qualification module with =gxc -O= before the
+performance lane.  The unoptimized module measured 4.868ms p95 on the same
+machine, so the sub-millisecond result requires optimized native compilation.
+Larger cardinalities and cross-platform CI qualification remain open.
 
 The experimental =poo-flow-ascent-project-request= projects a POO declaration
 into an inert object carrying the MRR-owned Bundle, RulePack, and generation
