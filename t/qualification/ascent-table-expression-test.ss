@@ -51,6 +51,23 @@
                                source)))
         (check-equal? (.ref expression 'two-hop-pairs)
                       '(9 18))))
+    (test-case "frontier steps deduplicate alternate paths and terminate on a cycle"
+      (let* ((edges (.call UIntTrieSet .<-list '(10 19 28 34 11)))
+             (expression
+              (.mix poo-flow-ascent-table-expression-prototype
+                    (.o (source-pairs edges) (radix 8))))
+             (first ((.ref expression 'delta-step) edges edges))
+             (second ((.ref expression 'delta-step)
+                      (.ref first 'new-pairs) (.ref first 'all-pairs)))
+             (third ((.ref expression 'delta-step)
+                     (.ref second 'new-pairs) (.ref second 'all-pairs))))
+        (check-equal? (.call UIntTrieSet .list<- (.ref first 'new-pairs))
+                      '(12 20 26 35))
+        (check-equal? (.call UIntTrieSet .list<- (.ref second 'new-pairs))
+                      '(18 27 36))
+        (check-equal? (.call UIntTrieSet .list<- (.ref third 'new-pairs))
+                      '())
+        (check-equal? (.call UIntTrieSet .count (.ref third 'all-pairs)) 12)))
     (test-case "larger radix retains sparse snapshot and membership behavior"
       (let* ((source (.o (source-pairs
                           (.call UIntTrieSet .<-list '(515 1029)))

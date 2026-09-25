@@ -64,12 +64,30 @@
 (def (relation-compose left neighbors-of radix include-source?)
   (.ref (relation-projection left neighbors-of radix include-source?) 'pairs))
 
+;;; Compose one frontier and retain only pairs absent from the accumulated
+;;; relation. The caller owns repetition, bounds, and completion.
+(def (relation-delta-step frontier accumulated neighbors-of radix)
+  (let* ((candidates
+          (.call UIntTrieSet .<-list
+                 (relation-compose frontier neighbors-of radix #f)))
+         ;; V19 Set .diff omits operands in its Table .merge forwarding.
+         (delta
+          (.call (.ref UIntTrieSet 'Table) .merge
+                 (lambda (_ left right) (and (not right) left))
+                 candidates accumulated))
+         (combined (.call UIntTrieSet .union accumulated delta)))
+    (.o (new-pairs delta) (all-pairs combined))))
+
 (def poo-flow-ascent-table-expression-prototype
   (.o (:: self [] source-pairs radix)
       (right-index (relation-index source-pairs radix))
       (compose-left
        (lambda (left-pairs)
          (relation-compose left-pairs (.ref self 'right-index) radix #f)))
+      (delta-step
+       (lambda (frontier accumulated)
+         (relation-delta-step frontier accumulated
+                              (.ref self 'right-index) radix)))
       (two-hop-pairs
        ((.ref self 'compose-left) source-pairs))
       (at-most-two-hop-projection

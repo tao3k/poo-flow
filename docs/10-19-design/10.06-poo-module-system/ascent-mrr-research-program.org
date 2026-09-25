@@ -80,7 +80,22 @@ separate expression without mutating the earlier one.  A cycle yields its
 bounded self-pairs.
 This is a bounded relation-algebra experiment with a local pair encoding, not
 a least-fixed-point closure or MRR FactId representation.  Index construction
-avoids scanning every right-hand edge for each left pair.  The reproducible
+avoids scanning every right-hand edge for each left pair.
+
+The next relation-algebra operation is =delta-step=: given a POO expression's
+source index, a frontier =UIntTrieSet=, and an accumulated =UIntTrieSet=, it
+composes the frontier against the source and returns a POO object with
+=new-pairs= and =all-pairs= sets.  It delegates set construction, table merge,
+and union to the existing POO library.  The declared V19 =Set .diff= method
+currently omits its operands when forwarding to =Table .merge=, so this
+experiment calls =Table .merge= directly with the same difference selector.
+The qualification test advances a graph with a cycle and two derivations of
+the same pair through three explicit frontiers, then checks that the last
+frontier is empty.  This proves the one-step relation operation for that
+fixture; it does not introduce a general fixed-point driver, bound admission,
+or MRR lineage semantics.  A caller must still own those responsibilities.
+
+The reproducible
 =t/scenarios/performance/ascent-table-expression/benchmark.ss= fixture runs
 through the existing =benchmark-run= gate.  It measures index construction and
 demanded relation composition together over 512 input pairs, checking the
