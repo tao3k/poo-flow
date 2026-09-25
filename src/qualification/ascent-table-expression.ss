@@ -29,26 +29,37 @@
     (lambda (source visit)
       (for-each visit (vector-ref index source)))))
 
-(def (relation-join-index left neighbors-of radix include-source?)
-  (let (joined (make-hash-table))
+(def (relation-projection left neighbors-of radix include-source?)
+  (let* ((dense? (<= radix 512))
+         (bits (and dense? (make-u8vector (* radix radix) 0)))
+         (sparse (and (not dense?) (make-hash-table)))
+         (unique []))
+    (def (add-pair! pair)
+      (if dense?
+        (when (= (u8vector-ref bits pair) 0)
+          (u8vector-set! bits pair 1)
+          (set! unique (cons pair unique)))
+        (unless (hash-get sparse pair)
+          (hash-put! sparse pair #t)
+          (set! unique (cons pair unique)))))
     (.call UIntTrieSet .foldl
            (lambda (pair _)
              (let ((source (quotient pair radix))
                    (middle (modulo pair radix)))
                (when (>= source radix)
                  (error "Ascent table pair exceeds the declared radix" pair))
-               (when include-source? (hash-put! joined pair #t))
+               (when include-source? (add-pair! pair))
                (neighbors-of
                 middle
                 (lambda (target)
-                  (hash-put! joined (+ (* source radix) target) #t)))))
+                  (add-pair! (+ (* source radix) target))))))
            (void) left)
-    joined))
-
-(def (relation-projection left neighbors-of radix include-source?)
-  (let (joined (relation-join-index left neighbors-of radix include-source?))
-    (.o (contains? (lambda (pair) (hash-get joined pair)))
-        (pairs (list-sort < (map car (hash->list joined)))))))
+    (.o (contains?
+         (lambda (pair)
+           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
+                (if dense? (= (u8vector-ref bits pair) 1)
+                    (hash-get sparse pair)))))
+        (pairs (list-sort < unique)))))
 
 (def (relation-compose left neighbors-of radix include-source?)
   (.ref (relation-projection left neighbors-of radix include-source?) 'pairs))

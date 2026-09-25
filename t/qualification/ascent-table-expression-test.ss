@@ -30,6 +30,8 @@
                       '(10 11 12 19 35))
         (check-equal? ((.ref expression 'at-most-two-hop-contains?) 11) #t)
         (check-equal? ((.ref expression 'at-most-two-hop-contains?) 13) #f)
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) -1) #f)
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) 64) #f)
         (let* ((withdrawn
                 (.mix (.o (source-pairs
                            (.call UIntTrieSet .remove
@@ -49,6 +51,16 @@
                                source)))
         (check-equal? (.ref expression 'two-hop-pairs)
                       '(9 18))))
+    (test-case "larger radix retains sparse snapshot and membership behavior"
+      (let* ((source (.o (source-pairs
+                          (.call UIntTrieSet .<-list '(515 1029)))
+                         (radix 513)))
+             (expression (.mix poo-flow-ascent-table-expression-prototype
+                               source)))
+        (check-equal? (.ref expression 'at-most-two-hop-pairs)
+                      '(515 516 1029))
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) 516) #t)
+        (check-equal? ((.ref expression 'at-most-two-hop-contains?) 517) #f)))
     (test-case "rejects a radix that would alias pair identities"
       (let (invalid
             (.mix poo-flow-ascent-table-expression-prototype

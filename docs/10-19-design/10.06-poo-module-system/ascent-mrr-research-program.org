@@ -65,9 +65,11 @@ continues to verify those relation semantics independently.  POO has not yet
 produced an MRR-admissible candidate receipt.
 
 The next qualification adds a POO-native table expression over the standard
-=UIntTrieSet= input API and Scheme vector, hash-table, and =list-sort= functions.
-The POO snapshot retains the persistent source set; the bounded join builds a
-private vector index and a local hash set, then publishes a sorted, distinct
+=UIntTrieSet= input API and Scheme vector, byte-vector, hash-table, and
+=list-sort= functions.  The POO snapshot retains the persistent source set;
+the bounded join builds a private adjacency vector.  At radix at most 512,
+deduplication uses a local byte-vector; larger radix uses a local hash table.
+Both publish a sorted, distinct
 list of encoded pairs.  POO slots expose a neighbor visitor, reusable
 left composition function, two-hop pairs, and one/two-hop pairs.  A lazy
 =at-most-two-hop-projection= slot also retains the derived membership index
@@ -84,28 +86,31 @@ through the existing =benchmark-run= gate.  It measures index construction and
 demanded relation composition together over 512 input pairs, checking the
 1,024-pair one/two-hop output.  The earlier ad hoc =time= comparison was
 withdrawn.  With =gxc -O= on the expression module, repeated local standard
-receipts over 20 samples and three executions per sample measured 786us,
-826us, and 847us p95.  The fixture records microseconds, targets 950us,
-and has a 2000us noise ceiling;
+receipts over 20 samples, one complete projection per sample, measured 689us,
+695us, and 704us p95 with the bounded byte-vector.  The fixture records
+microseconds, targets 950us, and has a 2000us noise ceiling;
 CI explicitly compiles this qualification module with =gxc -O= before the
-performance lane.  The unoptimized module measured 4868us p95 on the same
-machine, so the sub-millisecond result requires optimized native compilation.
+performance lane.  The earlier unoptimized hash-based module measured 4868us
+p95 on the same machine, so this result requires optimized native compilation.
+The preceding hash-based candidate measured 1290us p95 in Linux CI; the
+byte-vector update still needs its exact-head Linux receipt.
 An A/B scenario follows PR #31's equivalent-output method.  It compiles both
 the preceding persistent-trie implementation and the current expression with
 =gxc -O=, uses the same 512-pair fixture, and checks exact sorted-pair equality.
-Three local pairs of standard receipts measured baseline p95 of 17.313ms,
-15.616ms, and 15.540ms versus candidate p95 of 846us, 769us, and 757us,
-respectively: about 20x on this workload.  CI runs this scenario after the
+The preceding hash-based candidate measured roughly 20x faster than the
+persistent baseline locally.  The byte-vector candidate passed the same
+exact-output A/B check, with latest local baseline 16.303ms and candidate
+650us.  CI runs this scenario after the
 native performance lane.  Larger cardinalities and cross-platform CI
 qualification remain open.
 
 A second PR #31-style scenario compares 1,280 repeated membership decisions
 over the same snapshot: 1,024 projected hits and 256 in-domain misses.  The
 baseline uses Scheme =memq= on the canonical pair list; the candidate uses the
-POO projection's retained hash lookup.  It checks each ordered Boolean result
-for equality.  Three local 20-sample receipts measured baseline p95 of 871us,
-864us, and 862us versus candidate p95 of 57us, 56us, and 53us, respectively
-(about 15–16x).  CI runs this scenario separately from cold projection, so
+POO projection's retained byte-vector lookup.  It checks each ordered Boolean
+result for equality.  Two local 20-sample receipts measured baseline p95 of
+865us and 880us versus candidate p95 of 19us and 18us, respectively (about
+46x).  CI runs this scenario separately from cold projection, so
 the warm lookup number is never presented as full index-construction cost.
 Its fixture targets 100us and has a 500us ceiling for all 1,280 decisions.
 

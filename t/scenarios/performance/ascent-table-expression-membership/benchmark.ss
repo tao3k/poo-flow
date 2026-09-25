@@ -18,6 +18,6 @@
  (inputShape . "512 source pairs, 1024 projected pairs, and 1280 in-domain queries with hits and misses")
  (expectedOutcome . "candidate returns exactly the same ordered booleans as list membership")
  (baseline . "scan the canonical 1024-pair list for each decision")
- (candidate . "reuse the POO projection's private hash membership closure")
+ (candidate . "reuse the POO projection's private bounded byte-vector membership closure")
  (measurementPhases baseline-membership candidate-membership assert-semantic-gate assert-time-gate observe-runtime-memory)
  (tags poo ascent relation decision index stdlib performance big-o))
