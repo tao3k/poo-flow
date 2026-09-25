@@ -245,6 +245,11 @@ test:
     @echo "[poo-flow-test-runtime] maxHeap={{ gerbil_test_max_heap }} debug={{ gerbil_test_debug }} scope=worker-process"
     gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss
 
+# Run one Scheme test with the same pre-import heap limit as `just test`.
+[group('test')]
+test-file file:
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gerbil_test_runtime_options }} test -v 3 "{{ file }}"
+
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
 [group('test')]
