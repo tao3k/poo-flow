@@ -7,8 +7,10 @@
 ;;; Invariant: refinements retain inherited declarations and never mutate their
 ;;; parent objects.
 
-(import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :clan/poo/object .all-slots .def .get .o))
+(import (only-in :std/test check-exception check-equal? test-case test-suite)
+        (only-in :clan/poo/object .all-slots .def .get .o)
+        (only-in :poo-flow/src/module-system/observability/effective-object
+                 poo-flow-native-slot-view))
 
 (export poo-native-slot-algebra-test)
 
@@ -34,6 +36,11 @@
   (events =>.+
     (.o prescription: 'reviewed-prescription-event
         review: 'clinical-review-event)))
+
+(def fixture-prototype-labels
+  (.o reviewed: ReviewedPrescriptionCase
+      prescription: PrescriptionCase
+      ontology: OntologyCase))
 
 (def poo-native-slot-algebra-test
   (test-suite
@@ -75,4 +82,41 @@
    (test-case "unmentioned noun slots remain inherited"
      (check-equal?
       (.get ReviewedPrescriptionCase trajectories safety)
-      'prescription-safety-trajectory))))
+      'prescription-safety-trajectory))
+
+   (test-case "effective value precedes its native slot declaration lineage"
+     (let* ((events-view
+             (poo-flow-native-slot-view
+              ReviewedPrescriptionCase 'events fixture-prototype-labels))
+            (trajectory-view
+             (poo-flow-native-slot-view
+              ReviewedPrescriptionCase 'trajectories fixture-prototype-labels)))
+       (check-equal? (.get (.get events-view effective-value) prescription)
+                     'reviewed-prescription-event)
+       (check-equal? (.get events-view provenance)
+                     '(reviewed prescription ontology))
+       (check-equal? (.get trajectory-view provenance)
+                     '(prescription ontology))))
+
+   (test-case "incomplete provenance labels fail closed"
+     (check-exception
+      (poo-flow-native-slot-view
+       ReviewedPrescriptionCase 'events
+       (.o reviewed: ReviewedPrescriptionCase))
+      true))
+
+   (test-case "duplicate prototype labels fail closed"
+     (check-exception
+      (poo-flow-native-slot-view
+       ReviewedPrescriptionCase 'events
+       (.o reviewed: ReviewedPrescriptionCase
+           duplicate: ReviewedPrescriptionCase
+           prescription: PrescriptionCase
+           ontology: OntologyCase))
+      true))
+
+   (test-case "missing native slot cannot be presented"
+     (check-exception
+      (poo-flow-native-slot-view
+       ReviewedPrescriptionCase 'nonexistent fixture-prototype-labels)
+      true))))

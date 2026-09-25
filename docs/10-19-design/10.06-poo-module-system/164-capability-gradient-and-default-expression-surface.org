@@ -531,4 +531,11 @@ Migration MUST retain semantic and performance evidence:
   including prescription Governance and the 10k-node performance gate.
   Profiles with captured =self= governance methods still require an explicit
   rebinding contract before this split is applied to them.
-- [ ] Add Effective Object and provenance-first presentation evidence.
+- [ ] Add Effective Object and provenance-first presentation evidence.  The
+  report-only =poo-flow-native-slot-view= projects one effective value using
+  upstream POO evaluation and pairs it with identity-checked source labels
+  from native direct-slot lineage.  The native
+  =t/poo-native-slot-algebra-test.ss= covers overrides, unchanged inherited
+  slots, and invalid label maps.  A user-facing presentation wired to admitted
+  module metadata and the full disclosure order above remains; this internal
+  view does not introduce a second evaluator or close that boundary.
