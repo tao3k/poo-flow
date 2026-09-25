@@ -91,9 +91,10 @@ currently omits its operands when forwarding to =Table .merge=, so this
 experiment calls =Table .merge= directly with the same difference selector.
 The qualification test advances a graph with a cycle and two derivations of
 the same pair through three explicit frontiers, then checks that the last
-frontier is empty.  This proves the one-step relation operation for that
-fixture; it does not introduce a general fixed-point driver, bound admission,
-or MRR lineage semantics.  A caller must still own those responsibilities.
+frontier is empty and the complete 12-pair set matches the paired MRR/Ascent
+fixture.  This proves set-level parity for that case; it does not introduce a
+general fixed-point driver, bound admission, or MRR lineage semantics.  A
+caller must still own those responsibilities.
 
 The reproducible
 =t/scenarios/performance/ascent-table-expression/benchmark.ss= fixture runs

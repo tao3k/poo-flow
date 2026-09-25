@@ -67,7 +67,8 @@
                       '(18 27 36))
         (check-equal? (.call UIntTrieSet .list<- (.ref third 'new-pairs))
                       '())
-        (check-equal? (.call UIntTrieSet .count (.ref third 'all-pairs)) 12)))
+        (check-equal? (.call UIntTrieSet .list<- (.ref third 'all-pairs))
+                      '(10 11 12 18 19 20 26 27 28 34 35 36))))
     (test-case "larger radix retains sparse snapshot and membership behavior"
       (let* ((source (.o (source-pairs
                           (.call UIntTrieSet .<-list '(515 1029)))
