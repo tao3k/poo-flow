@@ -126,9 +126,8 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # gerbil-parser currently consumes POO Flow's public module contracts.
-          # Its pinned package may leave older same-namespace artifacts behind;
-          # clean the root package through gxpkg before compiling this checkout.
+          # Foundation owns the parser-facing POO contracts. Clean only this
+          # checkout's outputs before compiling the full POO Flow package.
           gerbil clean
 
       - name: Save native Gerbil package cache

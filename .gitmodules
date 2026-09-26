@@ -8,3 +8,6 @@
 [submodule "lambda-aitia"]
 	path = packages/lambda-aitia
 	url = https://github.com/tao3k/lambda-aitia.git
+[submodule "packages/poo-flow-foundation"]
+	path = packages/poo-flow-foundation
+	url = https://github.com/tao3k/poo-flow-foundation.git

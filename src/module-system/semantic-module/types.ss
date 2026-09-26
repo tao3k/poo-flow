@@ -6,7 +6,7 @@
 ;;; Boundary: explicit native type declarations for Module responsibilities.
 (import (only-in :clan/poo/object .o object?)
         (only-in :clan/poo/mop define-type)
-        (only-in "../types.ss"
+        (only-in :poo-flow/src/module-system/types
                  PooFlowContract. PooFlowNativeObjectContract.
                  poo-flow-classification-evidence))
 (export ModuleIdentityContract ModuleImportsContract ModuleProfilesContract

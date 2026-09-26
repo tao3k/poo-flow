@@ -12,7 +12,7 @@
                  poo-flow-contract-value-type
                  poo-flow-native-contract
                  poo-flow-native-contract->alist)
-        (only-in "../../module-system/types.ss"
+        (only-in :poo-flow/src/module-system/types
                  poo-flow-contract-admit
                  poo-flow-validation-evidence-accepted?))
 

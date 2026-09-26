@@ -19,7 +19,7 @@
         (only-in :clan/poo/mop
                  .defgeneric Any Bool Object Type element? raise-type-error)
         (only-in :clan/poo/type List String Symbol)
-        (only-in "../../types.ss" poo-flow-predicate-type)
+        (only-in :poo-flow/src/module-system/types poo-flow-predicate-type)
         :poo-flow/src/module-system/extension/interface)
 
 (export poo-flow-module-object-kind

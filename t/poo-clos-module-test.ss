@@ -42,7 +42,7 @@
     "src/module-system/extension/interface.ss"
     "src/module-system/loader/interface.ss"
     "src/module-system/object-core/interface.ss"
-    "src/module-system/object-family/interface.ss"
+    "packages/poo-flow-foundation/src/module-system/object-family/interface.ss"
     "src/module-system/object-validation/interface.ss"
     "src/module-system/observability/interface.ss"
     "src/module-system/poo-clos/interface.ss"
