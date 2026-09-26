@@ -235,6 +235,18 @@ snapshots.  It returned ~status=admitted~ and ~closure_status=Complete~ in
 each run.  These counts are MRR results; the POO fixture now checks only
 snapshot storage and composition.
 
+The Scheme =ascent-hypothesis-program= scenario tests a distinct Agent path.
+A POO prediction demands membership from the native closure, and a failed
+prediction derives a bounded successor organization with an additional review
+Agent.  =poo-flow-ascent-hypothesis-specialize-source= creates a pure candidate
+for a changed source snapshot: its new demand rejects the predecessor demand,
+and revision recomputes the prediction before deriving the society.  The
+scenario is exercised by =t/scenarios/ascent-hypothesis-program-test.ss=.
+The specialization is a counterfactual; it does not change the source owner,
+admit MRR evidence, or authorize the derived society for execution.  A real
+intervention still needs a source-owned observation and MRR generation-bound
+admission before POO Flow can consider an authorized runtime handoff.
+
 | Source snapshot | MRR admitted candidates | MRR Ada-to-Cy decision |
 |-----------------+-------------------------+------------------------|
 | Ada/Bob, Bob/Cy, Ada/Dan, Dan/Cy | 5 | true |

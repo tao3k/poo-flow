@@ -124,6 +124,42 @@
           program demand expression organization)
          true))))
 
+   (test-case "source specialization demands a new snapshot before revision"
+     (let* ((base (research-organization))
+            (cycle (expression-from-pairs '(10 19 28 34 11)))
+            (withdrawn (expression-from-pairs '(10 19 28 11)))
+            (program
+             (poo-flow-ascent-hypothesis-program
+              'counterfactual "source/cycle" cycle
+              (list (poo-flow-ascent-prediction 36 #t)) base 1))
+            (old-demand (poo-flow-ascent-hypothesis-demand program))
+            (specialized
+             (poo-flow-ascent-hypothesis-specialize-source
+              program "source/withdrawn" withdrawn base))
+            (new-demand (poo-flow-ascent-hypothesis-demand specialized)))
+       (check (equal? (.ref old-demand 'identity)
+                      (.ref new-demand 'identity)) => #f)
+       (check (.ref specialized 'predecessor-identity)
+              => (.ref program 'identity))
+       (check (.ref specialized 'runtime-executed?) => #f)
+       (check (.ref specialized 'activation-authority?) => #f)
+       (check-exception
+        (poo-flow-ascent-hypothesis-revise
+         specialized old-demand withdrawn base)
+        true)
+       (check-exception
+        (poo-flow-ascent-hypothesis-specialize-source
+         program "source/cycle" cycle base)
+        true)
+       (let-values
+        (((successor society)
+          (poo-flow-ascent-hypothesis-revise
+           specialized new-demand withdrawn base)))
+        (check (.ref successor 'prediction-verdict) => 'falsified)
+        (check (.ref successor 'failed-pairs) => '(36))
+        (check (agent-count society) => 3)
+        (check (.ref successor 'mrr-admitted?) => #f))))
+
    (test-case "duplicate pair predictions cannot define a program"
      (let ((base (research-organization))
            (expression (expression-from-pairs '(10 19))))

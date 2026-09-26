@@ -24,6 +24,7 @@
 
 (export poo-flow-ascent-prediction
         poo-flow-ascent-hypothesis-program
+        poo-flow-ascent-hypothesis-specialize-source
         poo-flow-ascent-hypothesis-demand
         poo-flow-ascent-hypothesis-revise)
 
@@ -97,6 +98,45 @@
         max-derived-agents: limit-value
         activation-authority?: #f
         mrr-admitted?: #f)))
+
+;;; A source intervention here is a pure counterfactual program specialization.
+;;; It neither changes the source owner nor admits a semantic result.
+(def (poo-flow-ascent-hypothesis-specialize-source program source-id-value
+                                                    expression organization)
+  (unless (and (object? program)
+               (eq? (.ref program 'kind)
+                    'poo-flow.ascent-hypothesis-candidate.v1)
+               (string? source-id-value)
+               (> (string-length source-id-value) 0)
+               (object? expression)
+               (valid-organization? organization)
+               (equal? (.ref (poo-flow-organization-bundle-identity organization)
+                             'digest)
+                       (.ref program 'organization-digest))
+               (equal? (.ref expression 'radix) (.ref program 'radix)))
+    (error "Ascent source specialization requires the exact candidate society"))
+  (let ((pairs (source-pairs expression)))
+    (when (and (equal? source-id-value (.ref program 'source-identity))
+               (equal? pairs (.ref program 'source-pair-values)))
+      (error "Ascent source specialization requires a new source snapshot"))
+    (let* ((generation-value (+ 1 (.ref program 'generation)))
+           (predecessor (.ref program 'identity)))
+      (.o kind: 'poo-flow.ascent-hypothesis-candidate.v1
+          identity: (list predecessor 'source-specialization
+                          generation-value source-id-value pairs)
+          generation: generation-value
+          predecessor-identity: predecessor
+          source-identity: source-id-value
+          source-pair-values: pairs
+          radix: (.ref program 'radix)
+          predictions: (.ref program 'predictions)
+          prediction-projection: (.ref program 'prediction-projection)
+          organization-digest: (.ref program 'organization-digest)
+          max-derived-agents: (.ref program 'max-derived-agents)
+          source-specialization?: #t
+          runtime-executed?: #f
+          activation-authority?: #f
+          mrr-admitted?: #f))))
 
 (def (poo-flow-ascent-hypothesis-demand program)
   (unless (and (object? program)
