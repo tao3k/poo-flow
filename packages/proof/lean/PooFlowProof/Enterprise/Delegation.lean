@@ -2,11 +2,11 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.CrossDomainFederation
+import PooFlowProof.PooC4.CrossDomainFederation
 
 namespace PooFlowProof.Enterprise.Delegation
 
-open PooFlowProof.PooC3
+open PooFlowProof.PooC4
 
 structure Admitted
     (CapabilityIdentity Scope ActionRole Expiry DelegationDepth

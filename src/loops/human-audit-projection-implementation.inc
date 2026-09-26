@@ -290,7 +290,7 @@
           (cons 'runtime-boundary
                 '((local-execution . validation-only)
                   (config-mutation . checked-interface-only)
-                  (governor-inheritance . poo-c3)
+                  (governor-inheritance . poo-c4)
                   (human-decision-state . review-loop)))
           (cons 'control-owner (loop-human-audit-control-owner valid-audit))
           (cons 'decision-owner (loop-human-audit-decision-owner valid-audit))

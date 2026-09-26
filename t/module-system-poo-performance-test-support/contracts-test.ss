@@ -15,7 +15,7 @@
                  benchmark-receipt-pass?)
         "../support/poo-performance-fixtures"
         "../support/poo-performance"
-        :poo-flow-foundation/module-system/object-family/indexed
+        :core/object-family/indexed
         :poo-flow/src/core/runtime-protocol
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/extension/interface

@@ -95,12 +95,14 @@ gerbil_project_compile(
 )
 
 gerbil_project_compile(
-    name = "poo_flow_foundation_package",
-    srcs = ["@poo_flow_foundation_sources//:sources"],
-    build_script = "@poo_flow_foundation_sources//:build_script",
+    name = "poo_flow_core_package",
+    srcs = ["core/gerbil.pkg"] + glob(
+        ["core/*.ss", "core/**/*.ss"],
+        exclude = ["core/t/**"],
+    ),
+    build_script = "core/build.ss",
     require_library_output = True,
-    source_resolution_receipts = ["@poo_flow_foundation_sources//:source_resolution_receipt"],
-    deps = [":asp_gerbil_scheme_package"],
+    deps = [":gerbil_poo_package"],
 )
 
 gerbil_project_compile(
@@ -109,7 +111,10 @@ gerbil_project_compile(
     build_script = "@gerbil_parser_sources//:build_script",
     require_library_output = True,
     source_resolution_receipts = ["@gerbil_parser_sources//:source_resolution_receipt"],
-    deps = [":poo_flow_foundation_package"],
+    deps = [
+        ":asp_gerbil_scheme_package",
+        ":poo_flow_core_package",
+    ],
 )
 
 filegroup(
@@ -119,7 +124,7 @@ filegroup(
         ":gerbil_parser_package",
         ":gerbil_poo_package",
         ":orgize_package",
-        ":poo_flow_foundation_package",
+        ":poo_flow_core_package",
     ],
 )
 
@@ -129,7 +134,7 @@ filegroup(
         ("gerbil_poo_package_receipt", ":gerbil_poo_package"),
         ("asp_gerbil_scheme_package_receipt", ":asp_gerbil_scheme_package"),
         ("orgize_package_receipt", ":orgize_package"),
-        ("poo_flow_foundation_package_receipt", ":poo_flow_foundation_package"),
+        ("poo_flow_core_package_receipt", ":poo_flow_core_package"),
         ("gerbil_parser_package_receipt", ":gerbil_parser_package"),
     ]
 ]

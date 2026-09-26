@@ -2,9 +2,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.ProofGateBundle
+import PooFlowProof.PooC4.ProofGateBundle
 
-namespace PooFlowProof.PooC3
+namespace PooFlowProof.PooC4
 
 def GeneratedLangGraphProofGateBundleFacts : ProofGateBundleFacts where
   compositionAccepted := true
@@ -45,4 +45,4 @@ theorem GeneratedLangGraphMissingCapabilityBundleRejected :
     GeneratedLangGraphMissingCapabilityBundleFacts
     rfl
 
-end PooFlowProof.PooC3
+end PooFlowProof.PooC4

@@ -73,7 +73,7 @@ The new architecture extends and qualifies these owners. It does not pretend the
 - =src/module-system/profile-composition/interface.ss= and related accessors own profile composition.
 - =modules/session/policy-syntax.ss= and policy-validation modules own session-policy declarations and checks.
 - =src/core/receipt.ss=, =modules/session/policy-validation-receipt.ss=, and =src/proof/proof-gate-receipts.ss= own existing receipt families.
-- =modules/session/lifecycle-gate.ss= and the Lean PooC3 lifecycle/policy modules own existing proof gates.
+- =modules/session/lifecycle-gate.ss= and the Lean PooC4 lifecycle/policy modules own existing proof gates.
 
 These are migration inputs and validation anchors, not licenses to overload one existing module with the complete new architecture.
 
@@ -90,7 +90,7 @@ These are migration inputs and validation anchors, not licenses to overload one 
 * Operating Principles
 1. Public authoring remains 100% POO-native and functional.
 2. The Bundle is compiler output, not a new user-written record or alist DSL.
-3. C3 resolves definitions; facet-specific algebra decides semantics.
+3. C4 resolves definitions; facet-specific algebra decides semantics.
 4. The implementation begins with a read-only shadow Bundle and one vertical slice.
 5. No external effect is executed twice for comparison.
 6. Existing ABI and Python surfaces are classified before they are changed.
@@ -267,7 +267,7 @@ Implement Organization, Authority, Context, Protocol, and Evidence as typed face
 - Implement lifecycle/refinement, effect intent, cancel, recovery, checkpoint, and restore for Protocol.
 - Implement monotonic obligation accumulation and typed discharge for Evidence.
 - Implement every RFC 91 cross-facet invariant.
-- Prove through tests that C3 cannot authorize, declassify, delete evidence, or hide incompatible transitions.
+- Prove through tests that C4 cannot authorize, declassify, delete evidence, or hide incompatible transitions.
 
 ** Exit Criteria
 - Positive and negative facet fixtures pass.

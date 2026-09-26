@@ -204,7 +204,7 @@ The first P0-P2 pass added a general =src= intent surface:
 - =t/scenarios/langgraph-scenario-gap-intent-test.ss= proves these primitives
   can be collected into one ordinary scenario gap plan without adding
   LangGraph-specific runtime code to =user-interface=.
-- =packages/proof/lean/PooFlowProof/PooC3/ScenarioGap.lean= gives the Lean-side
+- =packages/proof/lean/PooFlowProof/PooC4/ScenarioGap.lean= gives the Lean-side
   fact shape and boundary theorems:
   - P0 belongs to Scheme =src= platform capabilities.
   - P1 is runtime-owned but Scheme-declared.

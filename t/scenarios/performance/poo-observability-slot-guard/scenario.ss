@@ -6,7 +6,7 @@
 ;;; One semantic sample for ASP's native P95 benchmark runner.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  PooFlowDebugSlotPolicyContract
                  poo-flow-debug-poo
                  poo-flow-debug-poos

@@ -60,8 +60,8 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Check out Foundation source owner
-        run: git submodule update --init foundation
+      - name: Check out Core source owner
+        run: git submodule update --init core
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -129,9 +129,9 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # The Foundation gitlink owns this checkout's shared POO modules.
-          (cd foundation && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/foundation:$GITHUB_WORKSPACE/.gerbil/lib" GERBIL_BUILD_VERBOSE=1 gerbil build)
-          # Clean only POO Flow outputs; its build spec excludes Foundation.
+          # The Core gitlink owns this checkout's shared POO modules.
+          (cd core && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/core:$GITHUB_WORKSPACE/.gerbil/lib" GERBIL_BUILD_VERBOSE=1 gerbil build)
+          # Clean only POO Flow outputs; its build spec excludes Core.
           gerbil clean
 
       - name: Save native Gerbil package cache
@@ -310,6 +310,9 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Check out Core source owner
+        run: git submodule update --init core
+
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
@@ -378,6 +381,9 @@ jobs:
     steps: &native-steps
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Check out Core source owner
+        run: git submodule update --init core
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'

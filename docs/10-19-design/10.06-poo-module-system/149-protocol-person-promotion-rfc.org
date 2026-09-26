@@ -66,7 +66,7 @@ Implemented in this slice:
 - stable mathematical obligation identifiers =PP-M01= through =PP-M07=;
 - Typst presentation of the promotion equations;
 - the initial Lean definitions and safety theorems in
-  =packages/proof/lean/PooFlowProof/PooC3/ProtocolPersonPromotion.lean=;
+  =packages/proof/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean=;
 - root-module import through =PooFlowProof.lean=.
 
 Scheme/POO candidate implemented in the current working tree:
@@ -172,7 +172,7 @@ Canonical Organization Bundle.
 | Human Audit / quorum | Legitimacy for constitutional changes according to the old/current Authority epoch. |
 | Marlin/runtime kernel | Atomic claim, lease, materialization, injection, receipt persistence, rollback, and indeterminate-outcome containment. |
 
-POO/C3 composition determines inherited definition precedence.  It does not
+POO/C4 composition determines inherited definition precedence.  It does not
 grant authority and it does not prove promotion safety.
 
 * Canonical Promotion Model
@@ -292,7 +292,7 @@ definition/theorem and the proof receipt binds the RFC and theorem-set identitie
 The initial theorem owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC3/ProtocolPersonPromotion.lean
+packages/proof/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean
 #+end_src
 
 The root proof package imports that owner through:
@@ -420,6 +420,6 @@ This RFC's first slice is accepted only when:
 - proving that a model is conscious or legally a human person;
 - proving scientific truth from authorization and type-level facts;
 - treating a Markdown, JSON, Org, or vector-store write as promotion;
-- allowing C3 precedence to grant authority;
+- allowing C4 precedence to grant authority;
 - allowing a new evaluator, Cedar policy, or Lean specification to self-approve;
 - freezing Bundle v1 or the public ABI in this slice.

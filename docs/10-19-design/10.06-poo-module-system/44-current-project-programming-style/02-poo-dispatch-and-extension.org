@@ -35,5 +35,5 @@ for one owner is forbidden.
 
 Extract a capability prototype only for a stable orthogonal behavior axis with
 a disjoint slot set, a named operation, at least two real consumers and valid
-C3 composition semantics.  Shared field names alone do not justify
+C4 composition semantics.  Shared field names alone do not justify
 inheritance.  Prototype metadata never leaks into JSON, ABI or receipt rows.

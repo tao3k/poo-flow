@@ -26,13 +26,13 @@ These guidelines are based on =.data/gerbil-poo=:
   slot definitions and prototype construction.
 - =doc/poo.md:2-80= distinguishes prototypes from instances: prototypes are
   open recursive specifications; instances are fixed-point slot values.
-- =doc/poo.md:130-224= describes multiple inheritance and C3 linearization as
+- =doc/poo.md:130-224= describes multiple inheritance and C4 linearization as
   the scalable way to compose mixins.
 - =t/object-test.ss:1-220= demonstrates the idioms this project should follow:
   ={(:: @ super) ...}=, ={(:: @ [a b]) ...}=, ==>= slot extension, ==>.+=
   nested prototype extension, =?= defaults, and =.mix=.
 
-=doc/poo.md:150-177= explains multiple inheritance as a DAG that must be linearized into a precedence list with C3.
+=doc/poo.md:150-177= explains multiple inheritance as a DAG that must be linearized into a precedence list with C4.
 =doc/prototypes.md= frames Prototype Object Orientation as incremental composition of code and data fragments with late binding, implemented as fixed-points of higher-order functions.
 =fun.ss:1-80= models =Category.=, =Functor.=, =ParametricFunctor.=, and =Identity= as POO type objects. This is the source-level reason POO Flow treats functional programming and POO as one design strand.
 =doc/TODO.md= places compositional MOP, method-combination, and storage strategies in future-work territory. POO Flow should not expose those as user-level requirements before the upstream model stabilizes.
@@ -68,7 +68,7 @@ The bad form may appear inside a small, named helper when there is no better POO
 Think in this order:
 
 1. Prototype: an open recursive specification of slots.
-2. Composition: combine prototypes with =.mix=, supers, and C3 precedence.
+2. Composition: combine prototypes with =.mix=, supers, and C4 precedence.
 3. Slot contract: expose stable names that downstream code can extend.
 4. Instance: read slots only after the object has been composed.
 5. Projection: convert to plain data only at ABI, receipt, or runtime handoff boundaries.
@@ -118,7 +118,7 @@ Use the highest-level POO operator that expresses the intent:
 | Extend inherited value | =(slot => function extra ...)= | Always invokes the inherited computation. |
 | Override nested prototype | =(slot =>.+ prototype)= | Preferred for sandbox/resource/profile fragments. |
 | Default base | =(slot ? default)= | Defines the fallback without forcing the user to repeat inherited values. |
-| Multiple supers | ={(:: @ [a b c]) ...}= | Lets C3 own precedence. |
+| Multiple supers | ={(:: @ [a b c]) ...}= | Lets C4 own precedence. |
 | Raw computed slot | =$computed-slot-spec= | Internal escape hatch only. |
 
 The public user interface should prefer ==>=, ==>.+=, =?=, =.mix=, and named constructors. Raw =$computed-slot-spec= and direct =(lambda (self superfun) ...)= code should stay inside implementation helpers with tests.
@@ -146,7 +146,7 @@ non-conforming.
 | Capability | Native surface | Meaning | Normal POO Flow owner |
 |------------+----------------+---------+-----------------------|
 | Prototype declaration | =.o=, =.def=, =object<-alist=, =object<-fun= | Define an open recursive specification | Module and Profile objects; named boundary adapters only for =object<-= forms |
-| C3 composition | =.mix=, supers in =.o=, =.extend=, =.+= | Compose traits and precedence at runtime | Module composition, Profile refinement, Scenario assembly |
+| C4 composition | =.mix=, supers in =.o=, =.extend=, =.+= | Compose traits and precedence at runtime | Module composition, Profile refinement, Scenario assembly |
 | Slot algebra | direct slot, =?=, ==>=, ==>.+=, conditional inherited computation | Override, default, refine, or recursively refine one slot | Profile and Case declarations |
 | Lazy instance demand | =.ref=, =.get=, =.@=, =.ref/cached= | Instantiate on demand and memoize a reached slot | Any composed semantic object; reads must occur after composition |
 | Behavior slot | function-valued slot plus =.call= | One receiver supplies replaceable behavior | Scenario planning, admission, projection, receipt presentation |
@@ -240,7 +240,7 @@ the Profile to return an actionable repair diagnostic before loading.
 
 When CLOS crosses an executor, source role and Module Interface, specialize a
 native prototype with =poo-clos-prototype-specializer=.  Reserve
-=poo-clos-class-specializer= for a true CLOS class.  This keeps native POO C3
+=poo-clos-class-specializer= for a true CLOS class.  This keeps native POO C4
 ancestry authoritative and avoids a duplicate marker-class hierarchy.
 
 The corresponding Session is a different object.  A Session is created for
@@ -255,7 +255,7 @@ The complete expression path is:
 
 #+begin_export mermaid
 flowchart LR
-    M["Module prototypes"] -->|"C3 composition"| P["Profile composition"]
+    M["Module prototypes"] -->|"C4 composition"| P["Profile composition"]
     P -->|"selected by declaration"| C["Scenario Case prototype"]
     C -->|"lazy .ref and behavioral .call"| A["Admitted control-plane plan"]
     A -->|"fresh .mix"| S["Run-local Session instance"]
@@ -489,7 +489,7 @@ Presentations should show:
 7. projection boundary: POO object, plain receipt, runtime manifest, or ABI payload;
 8. =runtime-executed = #f= unless the test explicitly runs a local validation runner.
 
-Doctor output should prefer these facts over dumping nested objects. The goal is to make C3 and slot resolution inspectable without forcing users to learn the implementation layout.
+Doctor output should prefer these facts over dumping nested objects. The goal is to make C4 and slot resolution inspectable without forcing users to learn the implementation layout.
 
 ** 10.06.29.142 Observability Contract Policy
 Object observability is a validation contract, not a POO slot. Do not add debug
@@ -504,7 +504,7 @@ The normal path is:
    inheritance chains, validation phases, runtime flags, and diagnostics.
 4. Doctor and presentation code consume the plain receipt projection.
 
-This keeps observability outside POO lazy slot resolution while still making C3
+This keeps observability outside POO lazy slot resolution while still making C4
 composition inspectable. If a debug feature needs to dereference objects, place
 it behind a validation or doctor contract and return plain receipt data.
 ** 10.06.29.145 Executable Guard Landing
@@ -584,7 +584,7 @@ Preferred patterns:
 
 ** 10.06.29.190 Rule: Use Multiple Inheritance Explicitly
 
-When a value combines independent policy surfaces, use C3 composition rather
+When a value combines independent policy surfaces, use C4 composition rather
 than copying fields:
 
 #+begin_src scheme

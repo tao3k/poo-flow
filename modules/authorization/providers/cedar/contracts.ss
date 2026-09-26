@@ -11,7 +11,7 @@
         (only-in :poo-flow/modules/governance/types
                  poo-flow-governance-profile?
                  poo-flow-governance-assessment?)
-        :poo-flow/src/module-system/poo-clos/interface
+        :core/poo-clos/interface
         (only-in :poo-flow/modules/authorization/contracts
                  AuthorizationCapabilityContractProtocol
                  AuthorizationCapabilityContractGeneric

@@ -4,12 +4,12 @@
 
 import PooFlowProof.Enterprise.TenantOrganization.Core
 import PooFlowProof.Enterprise.TenantOrganization.Identity
-import PooFlowProof.PooC3.CedarAuthorizationSemantics
-import PooFlowProof.PooC3.CedarResponseArbitrationBridge
+import PooFlowProof.PooC4.CedarAuthorizationSemantics
+import PooFlowProof.PooC4.CedarResponseArbitrationBridge
 
 namespace PooFlowProof.Enterprise.TenantOrganization.CedarEntityClosure
 
-open PooFlowProof.PooC3
+open PooFlowProof.PooC4
 
 structure Checks where
   organizationEntityPresent : Prop
@@ -284,7 +284,7 @@ theorem cedarInputIdentityDisagreementFailsClosed
             semanticVersion rightInput response)) =
       CedarDualEngineArbitration.failClosed
         .engineDisagreement :=
-  PooFlowProof.PooC3.CedarResponseArbitrationBridge.input_identity_disagreement_fails_closed
+  PooFlowProof.PooC4.CedarResponseArbitrationBridge.input_identity_disagreement_fails_closed
     semanticVersion leftInput rightInput response different
 
 end PooFlowProof.Enterprise.TenantOrganization.CedarEntityClosure

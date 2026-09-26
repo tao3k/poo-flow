@@ -41,6 +41,7 @@
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"
+                                "core"
                                 "t/performance"
                                 ;; This external qualification requires the
                                 ;; explicitly pinned FHIR Validator JAR and is

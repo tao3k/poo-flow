@@ -107,7 +107,7 @@ flowchart LR
 - [ ] Project key and trust policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.PrincipalKeyLifecycle=.  It imports RFC
+The Lean anchor is =PooFlowProof.PooC4.PrincipalKeyLifecycle=.  It imports RFC
 45-75, so long-term verification material follows explicit retention and
 erasure policy instead of relying on a mutable global key registry.
 

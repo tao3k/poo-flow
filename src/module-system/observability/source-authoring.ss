@@ -22,7 +22,7 @@
                  poo-flow-build-bootstrap-datum-observations
                  poo-flow-build-bootstrap-port-observations
                  poo-flow-build-bootstrap-file-observations)
-        (only-in :poo-flow-foundation/module-system/observability/types PooFlowAuthoringObservationContract))
+        (only-in :core/observability/types PooFlowAuthoringObservationContract))
 
 (export PooFlowAuthoringObservationContract
         poo-flow-authoring-inline-prototype-datum-observations

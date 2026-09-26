@@ -394,7 +394,7 @@ Unbounded graph dumping is not the default.
 
 * Dispatch, =super=, and resumption boundary
 
-Dispatch =super= advances inside one responsibility's upstream C3 path.
+Dispatch =super= advances inside one responsibility's upstream C4 path.
 
 Fixed-point refinement advances one strongly connected dependency group.
 

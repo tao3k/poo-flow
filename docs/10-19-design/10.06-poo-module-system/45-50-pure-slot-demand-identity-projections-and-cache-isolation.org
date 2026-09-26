@@ -90,7 +90,7 @@ flowchart LR
 - [X] Changing execution-policy identity cannot split the business-result
   cache.
 - [X] Changing live evaluation context cannot split the business-result cache.
-- [X] Lean witness: =PooFlowProof.PooC3.SlotDemandIdentity=.
+- [X] Lean witness: =PooFlowProof.PooC4.SlotDemandIdentity=.
 - [ ] A later implementation-refinement proof must connect the abstract
   semantic-target projection to the canonical native POO slot identity.
 

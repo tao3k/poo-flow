@@ -25,10 +25,10 @@ The execution programme is maintained separately in
 
 | Source RFC | Formalized concern | Lean owner |
 |---+---+---|
-| =45-03-runtime-context-and-recovery.org= | realization identity, admission, portable payload, context separation | =PooC3/RealizationAdmission.lean= |
-| =45-04-observability-and-debugging.org= | observable disposition and barrier distinctions | =PooC3/RealizationAdmission.lean= |
-| =45-07-user-composition-and-mix-module-interface.org= | lexical/runtime/content identity separation and derived receipts | =PooC3/CompositionIdentity.lean= |
-| =45-08-effect-boundary-commit-reconciliation.org= | commit proof, indeterminate barrier, reconciliation, continuation re-entry | =PooC3/EffectBoundary.lean= |
+| =45-03-runtime-context-and-recovery.org= | realization identity, admission, portable payload, context separation | =PooC4/RealizationAdmission.lean= |
+| =45-04-observability-and-debugging.org= | observable disposition and barrier distinctions | =PooC4/RealizationAdmission.lean= |
+| =45-07-user-composition-and-mix-module-interface.org= | lexical/runtime/content identity separation and derived receipts | =PooC4/CompositionIdentity.lean= |
+| =45-08-effect-boundary-commit-reconciliation.org= | commit proof, indeterminate barrier, reconciliation, continuation re-entry | =PooC4/EffectBoundary.lean= |
 
 The existing =AuthorizedEffectEvidence.lean= proves Boolean qualification
 levels.  The new modules add algebraic data types and impossible-transition
@@ -77,7 +77,7 @@ AXLE:
 
 | Owner | Result | Receipt |
 |-
-| =PooFlowProof/PooC3/EffectBoundary.lean= | 0 failed declarations, 0 errors, 0 warnings | =f7dd396f-d644-4fcc-a39d-07f130f8a4f1= |
+| =PooFlowProof/PooC4/EffectBoundary.lean= | 0 failed declarations, 0 errors, 0 warnings | =f7dd396f-d644-4fcc-a39d-07f130f8a4f1= |
 
 The receipt proves the model and the refinement consequence. It does not prove
 that the concrete Marlin runtime has emitted a receipt satisfying the premise.
@@ -451,7 +451,7 @@ The synchronization rule is bidirectional:
   these exact names rather than to an informal analogue.
 
 The Lean owner is
-=PooFlowProof/PooC3/RecoveryPolicyAuthorization.lean=.
+=PooFlowProof/PooC4/RecoveryPolicyAuthorization.lean=.
 
 | Lean declaration | Result |
 |-

@@ -142,14 +142,14 @@ op("SubagentOf")(a,c)
 $
 #+end_src
 
-The Lean module =PooFlowProof.PooC3.AgentLifecycleTopology= owns these
+The Lean module =PooFlowProof.PooC4.AgentLifecycleTopology= owns these
 relations. The Scheme gate projects compact topology facts so bad cases remain
 observable in tests, while Lean owns the deeper relation laws.
 * 10.06.59.50 Implementation Boundary
 The Scheme owner is =modules/session/lifecycle-gate.ss=. It creates POO
 receipt and gate objects, then projects final Lean facts at the boundary.
 
-The Lean owner is =PooFlowProof.PooC3.AgentLifecycle=. It treats the Scheme
+The Lean owner is =PooFlowProof.PooC4.AgentLifecycle=. It treats the Scheme
 facts as propositions and proves that accepted public lifecycle gates imply the
 session/sandbox/loop/subagent safety conditions.
 

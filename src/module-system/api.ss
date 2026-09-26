@@ -17,11 +17,11 @@
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/loader/interface
         :poo-flow/src/module-system/object-core/interface
-        :poo-flow-foundation/module-system/object-family/interface
+        :core/object-family/interface
         :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/observability/interface
         :poo-flow/src/module-system/profile-composition/interface
-        :poo-flow/src/module-system/poo-clos/interface
+        :core/poo-clos/interface
         :poo-flow/src/module-system/projection/interface
         :poo-flow/src/module-system/semantic-module/interface)
 
@@ -35,10 +35,10 @@
         (import: :poo-flow/src/module-system/extension/interface)
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :poo-flow/src/module-system/object-core/interface)
-        (import: :poo-flow-foundation/module-system/object-family/interface)
+        (import: :core/object-family/interface)
         (import: :poo-flow/src/module-system/object-validation/interface)
         (import: :poo-flow/src/module-system/observability/interface)
         (import: :poo-flow/src/module-system/profile-composition/interface)
-        (import: :poo-flow/src/module-system/poo-clos/interface)
+        (import: :core/poo-clos/interface)
         (import: :poo-flow/src/module-system/projection/interface)
         (import: :poo-flow/src/module-system/semantic-module/interface))

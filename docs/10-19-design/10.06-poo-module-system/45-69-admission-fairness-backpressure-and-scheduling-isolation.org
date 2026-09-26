@@ -105,7 +105,7 @@ flowchart LR
 - [ ] Project admission and scheduling policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.AdmissionFairnessIsolation=.  Its
+The Lean anchor is =PooFlowProof.PooC4.AdmissionFairnessIsolation=.  Its
 suspension handoff imports RFC 45-68 directly; resource exhaustion therefore
 cannot smuggle live action authority into a worker or an unbounded queue.
 

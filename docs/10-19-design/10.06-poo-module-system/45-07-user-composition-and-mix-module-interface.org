@@ -571,8 +571,8 @@ flowchart TD
     B3 -->|"normalize once"| BP["State 3P: ordered Profile lineage"]
     C -->|"append root"| C1["wendao root"]
     C1 -->|"case order: research first"| C2["+research Mix refinement"]
-    C2 -->|"case order: observability second"| C3["+observability Mix refinement"]
-    C3 -->|"normalize once"| CP["State 3M: ordered wendao Mix lineage"]
+    C2 -->|"case order: observability second"| C4["+observability Mix refinement"]
+    C4 -->|"normalize once"| CP["State 3M: ordered wendao Mix lineage"]
     D -->|"append scoped refinement"| D1["+observability capability refinement"]
     D1 -->|"normalize once"| DP["State 3C: ordered capability lineage"]
 #+end_export

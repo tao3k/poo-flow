@@ -123,7 +123,7 @@
    (poo-flow-module-object-resolved-fields object)))
 
 ;;; This is the declared ancestry closure. The field order in
-;;; `resolved-field-identities` is the observed C3 result from gerbil-poo.
+;;; `resolved-field-identities` is the observed C4 result from gerbil-poo.
 ;; : (-> PooModuleObject [Symbol])
 (def (poo-flow-module-object-inheritance-chain object)
   (let (cache (poo-flow-module-object-inheritance-chain-cache object))

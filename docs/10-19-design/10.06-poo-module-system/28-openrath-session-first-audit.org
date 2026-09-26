@@ -154,7 +154,7 @@ POO Flow already has the right foundation for OpenRath-like composition. The
 
 This should stay below user-level workflow syntax. OpenRath's =Workflow= maps
 well to our category object, but our advantage is that the category itself can
-be extended with POO mixins and C3 inheritance instead of being locked to one
+be extended with POO mixins and C4 inheritance instead of being locked to one
 class hierarchy.
 
 *** 10.06.28.05.02 Sandbox Placement
@@ -190,7 +190,7 @@ The current user-interface case is now compact declaration syntax:
 
 The important design constraint is that placement is not a nested POO child
 inside session. Lineage and placement are mixins composed into the session value
-through C3 inheritance. Chunks and diagnostics are plain receipt rows because
+through C4 inheritance. Chunks and diagnostics are plain receipt rows because
 they are hot presentation data, not extension surfaces.
 *** 10.06.28.05.03 Verification Snapshot
 The landed slice was verified with package-context commands:
@@ -372,7 +372,7 @@ object mixins:
 - =workflow/compressor=: session summarization intent;
 - =workflow/tool=: model-visible schema plus runtime owner.
 
-C3 multiple inheritance is an advantage here. A selector can inherit governance,
+C4 multiple inheritance is an advantage here. A selector can inherit governance,
 sandbox, memory, and provider policy objects without a deep class tower.
 
 *** 10.06.28.06.04 Memory Is Not Yet a First-Class Module

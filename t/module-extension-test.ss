@@ -152,7 +152,7 @@
         (check-equal? (slot-value resolved-root 'run)
                       "gxi build.ss --optimized")))))
 
-;;; This suite keeps object inheritance and C3 precedence separate from the
+;;; This suite keeps object inheritance and C4 precedence separate from the
 ;;; slot-level resolution tests above.
 ;; : TestSuite
 (def module-extension-object-inheritance-test
@@ -237,7 +237,7 @@
                       '("--trace-cube"))
         (check-equal? (slot-value resolved-cube 'profile) 'strict)))
 
-    (poo-flow-test-case "resolves module object fields through gerbil-poo C3 precedence"
+    (poo-flow-test-case "resolves module object fields through gerbil-poo C4 precedence"
       (let* ((root-object
               (poo-flow-module-object
                'object/root
@@ -298,7 +298,7 @@
 ;; : TestSuite
 (def module-extension-object-merge-test
   (test-suite "poo-flow module object merge"
-    (poo-flow-test-case "rejects inconsistent gerbil-poo C3 module object graphs"
+    (poo-flow-test-case "rejects inconsistent gerbil-poo C4 module object graphs"
       (let* ((root-object
               (poo-flow-module-object
                'object/root

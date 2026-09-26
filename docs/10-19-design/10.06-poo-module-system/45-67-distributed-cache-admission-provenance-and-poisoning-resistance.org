@@ -102,7 +102,7 @@ flowchart LR
 - [ ] Project admission receipts through the native =gerbil-poo= runtime.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.DistributedCacheAdmission=.  It imports
+The Lean anchor is =PooFlowProof.PooC4.DistributedCacheAdmission=.  It imports
 RFC 45-66 so distributed transport cannot bypass incremental cache identity,
 freshness, SCC reevaluation, or graph-closure evidence.
 

@@ -58,7 +58,7 @@ The default ordinary user vocabulary is not:
 - contract receipts;
 - ABI rows;
 - manifest internals;
-- C3 linearization internals.
+- C4 linearization internals.
 
 Those concepts are still important. They belong to agent repair, validation, proof, and runtime integration surfaces, and they remain available to advanced users who deliberately work below the graph layer.
 ** 10.06.57.30 Layer Map
@@ -68,7 +68,7 @@ flowchart LR
   Graph["Agentic Workflow Graph\nloop, step, model, module, gate"]
   Guide["Guide System\nagent-readable graph rules"]
   Agent["Agent Authoring Surface\nScheme/POO generation and repair"]
-  Semantic["Semantic Policy Graph\nScheme + POO + C3"]
+  Semantic["Semantic Policy Graph\nScheme + POO + C4"]
   Validation["Immediate Validation\npass/fail, rejection reason, repair hint"]
   Explanation["Graph Explanation\nwhy valid or invalid"]
   Projection["Projection Surface\nmanifest, receipts, proof facts"]
@@ -138,7 +138,7 @@ This matters because the agent feedback loop needs more than string errors. Afte
 
 The observability framework should be implemented on the Scheme side as POO-native object families:
 - =observability/event=: the atomic fact that something was built, changed, validated, rejected, projected, or handed off;
-- =observability/span=: a bounded operation such as graph rebuild, C3 composition, contract validation, manifest projection, or doctor preview;
+- =observability/span=: a bounded operation such as graph rebuild, C4 composition, contract validation, manifest projection, or doctor preview;
 - =observability/diagnostic=: a validator-owned explanation of invalid or risky evidence;
 - =observability/receipt=: the agent-facing packet that summarizes delta, diagnostics, repair plan, readiness, and drill-down artifacts;
 - =observability/projection=: a stable view emitted to graph preview, doctor reports, Lean facts, or runtime manifests.
@@ -167,13 +167,13 @@ The exact macro names can change during implementation, but the shape is importa
 - validators emit objects, not text-only failures;
 - graph explanation and agent repair receipts consume the shared object protocol.
 
-This is where POO is stronger than a flat DSL. A sandbox diagnostic can inherit from generic diagnostic behavior, graph-positioned behavior, safety-policy behavior, and agent-repair behavior at the same time. C3 gives deterministic method order, while validators still enforce safety legality.
+This is where POO is stronger than a flat DSL. A sandbox diagnostic can inherit from generic diagnostic behavior, graph-positioned behavior, safety-policy behavior, and agent-repair behavior at the same time. C4 gives deterministic method order, while validators still enforce safety legality.
 ** 10.06.57.60 Agent Observability Flow
 #+begin_src mermaid
 flowchart LR
   Edit["Agent edit\nScheme/POO or graph intent"]
   Span["Observability span\ncapture edit + source provenance"]
-  Build["Semantic graph rebuild\nPOO + C3 + functional builders"]
+  Build["Semantic graph rebuild\nPOO + C4 + functional builders"]
   Events["Observability events\nnodes, edges, policies, projections"]
   Validate["Validators\nslot contracts, hard gates, graph rules"]
   Diag["Diagnostics\nvalidator-owned rejected evidence"]
@@ -316,7 +316,7 @@ Do not describe =poo-flow= as weaker than BAML in type capability.
 
 BAML has a strong productized type path for LLM function output. =poo-flow= has a stronger theoretical substrate for whole-system agent policy:
 - Scheme is a real host language.
-- POO and C3 can compose multiple policy owners.
+- POO and C4 can compose multiple policy owners.
 - Structured validation can check object graphs.
 - Graph algorithms can explain system behavior.
 - Lean-facing facts can support proof obligations.

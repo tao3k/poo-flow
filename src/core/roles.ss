@@ -152,7 +152,7 @@
 (def (role-runtime-owner role)
   (.@ role runtime-owner))
 
-;;; Slot probing is the safe boundary for C3-composed role objects: descriptor
+;;; Slot probing is the safe boundary for C4-composed role objects: descriptor
 ;;; callers can inspect inherited capabilities without assuming every role
 ;;; contributes the same slot set.
 ;; : (-> Role Symbol Value Value)

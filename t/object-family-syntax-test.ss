@@ -5,7 +5,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
         (only-in :clan/poo/object .ref object? object<-alist)
-        :poo-flow-foundation/module-system/object-family/syntax)
+        :core/object-family/syntax)
 
 (def +poo-object-family-syntax-test-kind+
   'poo-object-family-syntax-test)

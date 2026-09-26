@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", "12")
+export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", `getconf _NPROCESSORS_ONLN`)
 
 # Test processes are bounded before any Scheme profile module can load. The
 # ASP POO Testing profile remains the policy and receipt owner inside the
@@ -80,7 +80,13 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
+    just build-core
     GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
+
+# Compile the shared Core from the pinned submodule, not a second archive.
+[group('build')]
+build-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
 
 # Build one packaged contribution inside POO Flow's package environment.
 [group('build')]
@@ -242,8 +248,24 @@ toolchain:
 # Run the package's single native Scheme test entrypoint.
 [group('test')]
 test:
+    just test-core
     @echo "[poo-flow-test-runtime] maxHeap={{ gerbil_test_max_heap }} debug={{ gerbil_test_debug }} scope=worker-process"
     gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss
+
+# Keep ASP's per-phase test receipts and add process wall/user/system timing.
+[group('test')]
+test-profile:
+    time just test
+
+# Run the existing C4 identity/performance witness under the test heap fence.
+[group('test')]
+benchmark-poo-clos-native-c4:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c4/scenario.ss
+
+# Keep the Core submodule's qualification under its own Justfile.
+[group('test')]
+test-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" just test
 
 # Run one root-owned Scheme test with the same pre-import heap fence.
 [group('test')]
@@ -251,12 +273,13 @@ test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
     test -f "{{ path }}"
-    output="$(GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1)" || { status=$?; printf '%s\n' "$output"; exit "$status"; }
-    printf '%s\n' "$output"
-    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' <<< "$output" >/dev/null; then exit 1; fi
-    grep -F 'MODULE-OK {{ path }}' <<< "$output" >/dev/null
-    grep -F 'HARNESS-OK' <<< "$output" >/dev/null
-    grep -x 'OK' <<< "$output" >/dev/null
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -F 'MODULE-OK {{ path }}' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null
 
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
@@ -386,7 +409,7 @@ check-governance-lean:
 # traversing the repository-wide Lean aggregate.
 [group('check')]
 check-native-semantic-query-lean:
-    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC3.NativeSemanticQueryModel
+    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC4.NativeSemanticQueryModel
 
 # Parser admission and TLC remain separate evidence over the same model.
 [group('check')]

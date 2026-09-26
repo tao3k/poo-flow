@@ -40,7 +40,7 @@ The ordinary user should be able to reason about:
 
 The agent, advanced user, and control plane may reason about:
 - Scheme and POO objects;
-- C3 composition;
+- C4 composition;
 - slot contracts;
 - harness validation;
 - graph diagnostics;
@@ -60,7 +60,7 @@ repair, proof, and runtime integration, not as required first concepts.
 #+begin_src mermaid
 flowchart LR
   UserGraph["User graph\nworkflow, loop, step, model, module, gate"]
-  POO["POO object graph\nslots, prototypes, C3 order"]
+  POO["POO object graph\nslots, prototypes, C4 order"]
   Facts["Type facts\ndefstruct records"]
   Harness["Harness validation\nstructured POO object checks"]
   Validators["Local validators\nhard gates and monotonic rules"]
@@ -93,7 +93,7 @@ The sandbox resource contract now returns a =poo-flow-type-validation-receipt= f
 
 Use POO when:
 - users or modules extend the object;
-- C3 composition matters;
+- C4 composition matters;
 - profiles inherit or override slots;
 - the value participates in semantic policy composition.
 
@@ -150,7 +150,7 @@ Phase 4: Lean extraction.
 ** 10.06.56.70 Acceptance Rules
 - Type validation receipts are structured Scheme records before final projection.
 - POO object graphs remain the source of policy semantics.
-- C3 order is never treated as proof of safety.
+- C4 order is never treated as proof of safety.
 - Validators own legality.
 - Final alists are projection products only.
 - Lean facts are declared through contracts before they are emitted.

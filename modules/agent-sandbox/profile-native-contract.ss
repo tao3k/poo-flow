@@ -12,7 +12,7 @@
                  poo-flow-contract-value-type
                  poo-flow-native-contract
                  poo-flow-native-contract->alist)
-        (only-in :poo-flow-foundation/module-system/types
+        (only-in :core/types
                  poo-flow-contract-admit
                  poo-flow-validation-evidence-accepted?))
 

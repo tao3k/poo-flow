@@ -247,8 +247,8 @@ packages/proof/lean/PooFlowProof/Enterprise/
 #+end_src
 
 The top-level =PooFlowProof.Enterprise= namespace owns enterprise
-semantics.  It may import generic =PooFlowProof.PooC3= theorems without
-making the enterprise model a child of =PooC3=.
+semantics.  It may import generic =PooFlowProof.PooC4= theorems without
+making the enterprise model a child of =PooC4=.
 
 * Mathematical model
 

@@ -386,7 +386,7 @@ amplify it.
 - [X] Unverified ~gerbil-poo~ calls block implementation.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ModuleProfileBundleImports=.  They establish the selection
+=PooFlowProof.PooC4.ModuleProfileBundleImports=.  They establish the selection
 union algebra, capability restriction, object-family boundaries, recursive
 imports ownership, and fail-closed implementation admission.  They do not mark
 the original executable Module, ProfileBundle, macro, closure, or backend
@@ -395,7 +395,7 @@ projection checklists as implemented.
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ModuleProfileBundleImports=: 35/35 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ModuleProfileBundleImports=: 35/35 jobs |
 | Local Lean closure | =accepted= | =lake build=: 108/108 jobs |
 | AXLE independent declaration check | =accepted= | Request =c738e2fa-88b0-47c1-9d13-27373ce4eec2=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =24ec2383-397e-4ff0-935c-9fadc471be09= cannot resolve local module prefix =PooFlowProof= |
@@ -792,6 +792,6 @@ $ AdmittedEntry(e) iff e = op("user-composition") $
 #+end_src
 
 The synchronized Lean owners are
-~PooFlowProof.PooC3.ProfilePrototypeCorrespondence~,
-~PooFlowProof.PooC3.MinimalUseCompositionSurface~, and
-~PooFlowProof.PooC3.UseCompositionMacroContract~.
+~PooFlowProof.PooC4.ProfilePrototypeCorrespondence~,
+~PooFlowProof.PooC4.MinimalUseCompositionSurface~, and
+~PooFlowProof.PooC4.UseCompositionMacroContract~.

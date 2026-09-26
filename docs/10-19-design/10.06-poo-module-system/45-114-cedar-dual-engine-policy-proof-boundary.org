@@ -323,7 +323,7 @@ flowchart TD
 * Local Lean proof owner
 
 The initial arbitration proof owner is
-=PooFlowProof.PooC3.CedarDualEngineArbitration=.  It defines full
+=PooFlowProof.PooC4.CedarDualEngineArbitration=.  It defines full
 =AuthorizationOutcome= comparison, strict and conformance-backed evidence,
 truthful receipt kinds, external authority, activation state, and shadow
 evidence.
@@ -348,7 +348,7 @@ Verification:
 - [X] =lake update Cedar=
 - [X] manifest resolves =Cedar= with =subDir = cedar-lean=
 - [X] =lake build Cedar=
-- [X] =lake build PooFlowProof.PooC3.CedarDualEngineArbitration=
+- [X] =lake build PooFlowProof.PooC4.CedarDualEngineArbitration=
 - [X] aggregate =lake build=
 - [ ] AXLE verification of the final source identity
 - [ ] refinement against the pinned upstream Cedar Lean definitions
@@ -362,12 +362,12 @@ types.  Therefore it is not yet a Cedar semantic-refinement proof.
 
 The arbitration proof consumes an admitted =AuthorityRisk=.  Its abstract
 projection from an effective capability contract is now owned by
-=PooFlowProof.PooC3.CedarCapabilityRiskProjection=.  A concrete refinement
+=PooFlowProof.PooC4.CedarCapabilityRiskProjection=.  A concrete refinement
 from the runtime =gerbil-poo= capability object remains required before
 executable admission.
 * Exact Cedar semantic refinement
 
-The owner =PooFlowProof.PooC3.CedarAuthorizationSemantics= uses the pinned
+The owner =PooFlowProof.PooC4.CedarAuthorizationSemantics= uses the pinned
 upstream types directly:
 
 #+begin_src typst
@@ -392,7 +392,7 @@ It proves, without a locally redefined Cedar response:
 
 Verification:
 
-- [X] =lake build PooFlowProof.PooC3.CedarAuthorizationSemantics=
+- [X] =lake build PooFlowProof.PooC4.CedarAuthorizationSemantics=
 - [X] aggregate =lake build=
 - [X] Connect exact Cedar =Response= to the runtime engine-evidence envelope
   without losing determining or erroring policies.
@@ -400,7 +400,7 @@ Verification:
 
 * Capability-to-risk projection
 
-The owner =PooFlowProof.PooC3.CedarCapabilityRiskProjection= makes authority
+The owner =PooFlowProof.PooC4.CedarCapabilityRiskProjection= makes authority
 risk a projection of an effective capability contract.  A caller-provided
 risk claim is ignored.
 
@@ -423,7 +423,7 @@ authority selects Rust plus bounded Lean shadow.
 
 Verification:
 
-- [X] =lake build PooFlowProof.PooC3.CedarCapabilityRiskProjection=
+- [X] =lake build PooFlowProof.PooC4.CedarCapabilityRiskProjection=
 - [X] aggregate =lake build=
 - [ ] Refine =EffectiveCapabilityContract= to the actual =gerbil-poo=
   capability object.
@@ -436,7 +436,7 @@ complete value; the projection is used only to turn an already agreed outcome
 into external =Allow= or =Deny= authority.
 
 The Cedar owner is
-=PooFlowProof.PooC3.CedarResponseArbitrationBridge=.  Its comparable value is:
+=PooFlowProof.PooC4.CedarResponseArbitrationBridge=.  Its comparable value is:
 
 #+begin_src text
 #let comparable-cedar-outcome(
@@ -512,7 +512,7 @@ The proof owner establishes:
 Verification:
 
 - [X] generalized arbitration core retains its existing focused proof build;
-- [X] =lake build PooFlowProof.PooC3.CedarResponseArbitrationBridge=;
+- [X] =lake build PooFlowProof.PooC4.CedarResponseArbitrationBridge=;
 - [X] aggregate =lake build=;
 - [ ] refine the Cedar adapter's returned value to
   =CedarComparableOutcome=;
@@ -524,7 +524,7 @@ POO Flow owns one Cedar adapter boundary.  Cedar's Lean definitional engine,
 production engine, DRT, and =cedar-spec= checkout are upstream evidence
 providers behind that adapter; none is a separate POO Flow owner.
 
-The Lean owner =PooFlowProof.PooC3.CedarAdapterContract= defines the evidence
+The Lean owner =PooFlowProof.PooC4.CedarAdapterContract= defines the evidence
 required to admit the Cedar adapter.  The contract is not evidence that the
 executable adapter has already been implemented.
 
@@ -599,7 +599,7 @@ The proof owner establishes:
 
 Verification:
 
-- [X] =lake build PooFlowProof.PooC3.CedarAdapterContract=;
+- [X] =lake build PooFlowProof.PooC4.CedarAdapterContract=;
 - [X] aggregate =lake build=;
 - [ ] implement the Cedar adapter behind its existing POO Flow owner;
 - [ ] produce a real =CedarAdapterReceipt= from the configured Cedar engines;
@@ -685,7 +685,7 @@ Cedar-specific public macro.  Internal construction may use native
 the public macro surface.
 
 The Lean owner is
-=PooFlowProof.PooC3.CedarPooAdapterRefinement=.  It proves:
+=PooFlowProof.PooC4.CedarPooAdapterRefinement=.  It proves:
 
 - all three physical object slots are retained;
 - adapter identity is derived rather than stored independently;
@@ -698,7 +698,7 @@ The Lean owner is
 
 Verification:
 
-- [X] =lake build PooFlowProof.PooC3.CedarPooAdapterRefinement=;
+- [X] =lake build PooFlowProof.PooC4.CedarPooAdapterRefinement=;
 - [X] aggregate =lake build=;
 - [X] no Cedar-specific public macro;
 - [X] invocation state excluded from physical adapter slots;

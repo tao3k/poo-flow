@@ -107,7 +107,7 @@ flowchart LR
 - [ ] Project federation relations and policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.CrossDomainFederation=.  It imports RFC
+The Lean anchor is =PooFlowProof.PooC4.CrossDomainFederation=.  It imports RFC
 45-76 so cross-domain trust binds explicit principal, key, algorithm, and trust
 evidence rather than relying on transitive ambient trust.
 

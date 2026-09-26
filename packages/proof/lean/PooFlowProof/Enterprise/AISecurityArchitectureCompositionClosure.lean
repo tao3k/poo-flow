@@ -2,14 +2,14 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.CompositionIdentity
-import PooFlowProof.PooC3.AuthorizedEffectEvidence
+import PooFlowProof.PooC4.CompositionIdentity
+import PooFlowProof.PooC4.AuthorizedEffectEvidence
 import PooFlowProof.Enterprise.BundleEvidenceBinding
 import PooFlowProof.Enterprise.BundleOwnership
 
 namespace PooFlowProof.Enterprise.AISecurityArchitectureCompositionClosure
 
-open PooFlowProof.PooC3.CompositionIdentity
+open PooFlowProof.PooC4.CompositionIdentity
 open PooFlowProof.Enterprise.BundleEvidenceBinding
 
 abbrev ArchitectureSemanticId := String
@@ -132,14 +132,14 @@ structure AISecurityArchitectureRuntimeProjectionClosed
     (profile : AISecurityArchitectureProfile)
     (subject : BundleSubject)
     (receipt : BoundVerificationReceipt)
-    (effectEvidence : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts) :
+    (effectEvidence : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts) :
     Prop where
   compositionClosed :
     AISecurityArchitectureCompositionClosed left right composed profile
   bundleEvidenceBound :
     acceptsBound subject receipt
   authorizedEffectEvidenceBound :
-    PooFlowProof.PooC3.authorizedEffectL1 effectEvidence
+    PooFlowProof.PooC4.authorizedEffectL1 effectEvidence
 
 theorem composeArchitecturePackagesDeterministic
     (identity : Identity)
@@ -238,7 +238,7 @@ theorem closedCompositionRequiresBoundBundleEvidence
     {profile : AISecurityArchitectureProfile}
     {subject : BundleSubject}
     {receipt : BoundVerificationReceipt}
-    {effectEvidence : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts}
+    {effectEvidence : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts}
     (closed :
       AISecurityArchitectureRuntimeProjectionClosed
         left
@@ -256,7 +256,7 @@ theorem closedCompositionRequiresAuthorizedEffectEvidence
     {profile : AISecurityArchitectureProfile}
     {subject : BundleSubject}
     {receipt : BoundVerificationReceipt}
-    {effectEvidence : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts}
+    {effectEvidence : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts}
     (closed :
       AISecurityArchitectureRuntimeProjectionClosed
         left
@@ -266,7 +266,7 @@ theorem closedCompositionRequiresAuthorizedEffectEvidence
         subject
         receipt
         effectEvidence) :
-    PooFlowProof.PooC3.authorizedEffectL1 effectEvidence :=
+    PooFlowProof.PooC4.authorizedEffectL1 effectEvidence :=
   closed.authorizedEffectEvidenceBound
 
 theorem mismatchedBundleEvidenceRejectsRuntimeProjectionClosure
@@ -274,7 +274,7 @@ theorem mismatchedBundleEvidenceRejectsRuntimeProjectionClosure
     {profile : AISecurityArchitectureProfile}
     {subject : BundleSubject}
     {receipt : BoundVerificationReceipt}
-    {effectEvidence : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts}
+    {effectEvidence : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts}
     (mismatch : ¬ acceptsBound subject receipt) :
     ¬ AISecurityArchitectureRuntimeProjectionClosed
       left

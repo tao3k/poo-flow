@@ -14,7 +14,7 @@ on its default expression surface.  The ordinary interface is the native
 =gerbil-poo= object, prototype and slot algebra: users declare values, extend
 maintained prototypes, compose named values, and inspect the resulting
 effective object.  It is not a Jsonnet-inspired language, a JSON-like model,
-or a second functional-object DSL.  Generic dispatch, CLOS, C3/C4, macros and
+or a second functional-object DSL.  Generic dispatch, CLOS, C4, macros and
 the MOP remain available at progressively deeper extension boundaries, but
 they are not ordinary configuration concepts.
 
@@ -200,7 +200,7 @@ Default examples and ordinary UI MUST NOT require the author to understand:
 - class versus instance;
 - constructor, factory or builder patterns;
 - specializers, applicable methods or method combination;
-- MRO, C3/C4 or linearization algorithms;
+- MRO, C4 or linearization algorithms;
 - slot metaobjects, class metaobjects or MOP lifecycle;
 - raw =(lambda (self super) ...)= behavior hooks.
 
@@ -429,7 +429,7 @@ Effective result
 
 For example, a user first sees that =retries= is =5=.  The next view explains
 that =ProductionProfile= overrides =BaseProfile=.  Only an explicit advanced
-view exposes the C3/C4 precedence or the source-level POO form.
+view exposes the C4 precedence or the source-level POO form.
 
 The public =poo-flow-native-slot-presentation= follows that order with
 =default=, =provenance=, =composition=, =advanced= and =source= levels.  The
@@ -449,7 +449,7 @@ presented as an effect trace or exact causal provenance.  No second POO
 evaluator is permitted to manufacture such a claim.
 
 Composition diagnostics MUST identify the conflicting named values,
-constraints and source locations.  They MAY attach advanced C3/C4 or method
+constraints and source locations.  They MAY attach advanced C4 or method
 selection evidence, but the ordinary message MUST remain understandable
 without those concepts.
 
@@ -513,7 +513,7 @@ policy MUST be syntax-aware; a regex ban on names is insufficient.
 - Runtime fixtures prove that an ABI or proof projection cannot become an
   alternate semantic owner.
 - A real vertical Case is readable and safely editable without knowledge of
-  CLOS, C3/C4, MOP or runtime projection details.
+  CLOS, C4, MOP or runtime projection details.
 
 The first real vertical acceptance owner is the Healthcare AI-assisted
 prescription Case.  Its user-facing declaration is not accepted merely because
@@ -541,7 +541,7 @@ Migration MUST retain semantic and performance evidence:
 - advertising the complete POO/CLOS/MOP capability map as the default UI;
 - creating separate simple, advanced and meta DSLs;
 - requiring a class for every Profile or Case;
-- exposing C3/C4 or method combination as routine configuration;
+- exposing C4 or method combination as routine configuration;
 - replacing native POO values with raw alists, records or JSON rows;
 - hiding runtime effects, authority changes or merge policy behind a friendly
   declaration macro;

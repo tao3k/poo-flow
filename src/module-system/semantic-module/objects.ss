@@ -95,7 +95,7 @@
         recursive-root-forms?: #t
         forbidden-imports:
         '(:clan/poo/mop
-          :poo-flow/src/module-system/poo-clos/interface)
+          :core/poo-clos/interface)
         forbidden-forms:
         '(poo-clos-class
           poo-clos-generic-function

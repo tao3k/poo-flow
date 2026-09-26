@@ -59,6 +59,10 @@ def _export_tracked_tree(repo_root: Path, destination: Path) -> None:
         target = destination / relative
         if source.is_dir() and not source.is_symlink():
             target.mkdir(parents=True, exist_ok=True)
+            if relative == Path("core"):
+                if not (source / ".git").exists():
+                    raise ExternalModuleError("Core submodule is not initialized")
+                _export_tracked_tree(source, target)
             continue
         if not source.exists() and not source.is_symlink():
             # A local qualification run projects the current working tree, so

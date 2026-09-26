@@ -124,14 +124,14 @@ does not copy the specialized implementation suites.
   criterion.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ConservativeExtension=.  They establish the shared
+=PooFlowProof.PooC4.ConservativeExtension=.  They establish the shared
 criterion; the implementation admission checklist continues to own concrete
 cross-module witnesses.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ConservativeExtension=: 28/28 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ConservativeExtension=: 28/28 jobs |
 | Local Lean closure | =accepted= | =lake build=: 101/101 jobs |
 | AXLE independent declaration check | =accepted= | Request =ef4314ff-87b3-4a8e-92b8-2a9427d5f3f3=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =0898139d-62e0-4757-9994-5555f732aa4c= cannot resolve local module prefix =PooFlowProof= |

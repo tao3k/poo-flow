@@ -93,7 +93,7 @@
                    metadata: '((layer . "base"))
                    group: 'tools
                    flags: '(+fast +gerbil)
-                   features: '(poo c3)
+                   features: '(poo c4)
                    depth: (cons -10 10)
                    phase-files:
                    '((init . "init.ss")
@@ -136,7 +136,7 @@
         (check-equal? (poo-flow-module-metadata module) '((layer . "base")))
         (check-equal? (poo-flow-module-group module) 'tools)
         (check-equal? (poo-flow-module-flags module) '(+fast +gerbil))
-        (check-equal? (poo-flow-module-features module) '(poo c3))
+        (check-equal? (poo-flow-module-features module) '(poo c4))
         (check-equal? (poo-flow-module-depth-value module 'init) -10)
         (check-equal? (poo-flow-module-depth-value module 'config) 10)
         (check-equal? (poo-flow-module-phase-file module 'config) "config.ss")

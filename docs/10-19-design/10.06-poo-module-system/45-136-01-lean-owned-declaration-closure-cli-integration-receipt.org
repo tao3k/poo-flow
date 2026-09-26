@@ -32,9 +32,9 @@ uv run --project packages/proof/python \
   poo-flow-axle-verify \
   --environment lean-4.31.0 \
   --lean-root packages/proof/lean \
-  --root-module PooFlowProof.PooC3.Enterprise.Core \
+  --root-module PooFlowProof.PooC4.Enterprise.Core \
   --root-declaration \
-    PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence \
+    PooFlowProof.PooC4.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence \
   --closure-output /private/tmp/poo-flow-enterprise-core-exact-closure.json
 #+end_src
 
@@ -340,13 +340,13 @@ flowchart LR
 
 #+begin_src text
 root-module:
-  PooFlowProof.PooC3.Enterprise.Core
+  PooFlowProof.PooC4.Enterprise.Core
 root-declaration:
-  PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence
+  PooFlowProof.PooC4.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence
 owner-modules:
-  PooFlowProof.PooC3.ScaleParametricModuleGraph
-  PooFlowProof.PooC3.ContributorRepositoryQualification
-  PooFlowProof.PooC3.Enterprise.Core
+  PooFlowProof.PooC4.ScaleParametricModuleGraph
+  PooFlowProof.PooC4.ContributorRepositoryQualification
+  PooFlowProof.PooC4.Enterprise.Core
 lean-constant-count: 22
 axle-source-declaration-count: 10
 lean-closure-digest:

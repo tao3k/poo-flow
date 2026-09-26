@@ -49,7 +49,7 @@ The interface principles document fixes the macro contract:
 - macros must not become a separate alist or record DSL;
 - macros must not resolve catalogs, activate modules, run tasks, or execute
   flows;
-- Gerbil POO and C3 stay the core object composition mechanism.
+- Gerbil POO and C4 stay the core object composition mechanism.
 
 * 10.06.26.30 Rejected Route
 
@@ -156,7 +156,7 @@ profile refs:
 
 The workflow check-map should preserve the declared supers as object/reference
 data. It should not materialize sandbox descriptors in the macro. Later object
-resolution can use C3 composition and existing sandbox-core validation to merge
+resolution can use C4 composition and existing sandbox-core validation to merge
 or reject the final profile shape.
 
 Slot operations should stay object-local. If a check needs object extension, the

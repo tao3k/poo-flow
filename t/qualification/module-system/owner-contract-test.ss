@@ -18,7 +18,7 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/qualification/module-system/g0
         :poo-flow/modules/session/runtime-context-recovery
-        :poo-flow-foundation/module-system/composition/lineage
+        :core/composition/lineage
         :poo-flow/src/qualification/module-system/gerbil-poo-consumption)
 
 (export owner-contract-test)

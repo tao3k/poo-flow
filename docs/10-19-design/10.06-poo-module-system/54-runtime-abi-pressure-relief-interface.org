@@ -10,7 +10,7 @@ This document turns the LoopX pressure test and Marlin ABI evidence into a
 runtime-facing interface plan for =poo-flow=.
 
 The goal is not to make every runtime language understand Gerbil, POO objects,
-C3 slot precedence, functional strategy combinators, or downstream UI concepts.
+C4 slot precedence, functional strategy combinators, or downstream UI concepts.
 The goal is to make =poo-flow= a pressure-relief layer:
 
 #+begin_src text

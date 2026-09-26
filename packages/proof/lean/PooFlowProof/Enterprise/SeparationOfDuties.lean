@@ -2,11 +2,11 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.GovernanceDecisionAuthority
+import PooFlowProof.PooC4.GovernanceDecisionAuthority
 
 namespace PooFlowProof.Enterprise.SeparationOfDuties
 
-open PooFlowProof.PooC3
+open PooFlowProof.PooC4
 
 structure ApprovalDiscipline (Principal : Type) where
   quorum : GovernanceDecisionAuthority.QuorumEvidence Principal

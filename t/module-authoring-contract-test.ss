@@ -8,7 +8,7 @@
         (only-in :clan/poo/mop TypeError?)
         (only-in :std/test check-equal? check-exception test-suite)
         :poo-flow/src/module-system/authoring/interface
-        (only-in :poo-flow/src/module-system/poo-clos/interface
+        (only-in :core/poo-clos/interface
                  poo-clos-call
                  poo-clos-call-next-method
                  poo-clos-compose-method-bundle

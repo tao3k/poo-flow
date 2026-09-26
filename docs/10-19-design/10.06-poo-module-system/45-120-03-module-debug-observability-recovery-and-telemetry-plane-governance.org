@@ -26,7 +26,7 @@ This RFC owns:
 
 It does not own:
 
-- upstream POO dispatch, slot, prototype, or C3 implementation;
+- upstream POO dispatch, slot, prototype, or C4 implementation;
 - the four-slot Module semantic contract;
 - Type and Contract prototype construction;
 - Module-local pure domain transformations;
@@ -107,7 +107,7 @@ Dispatch observation may derive:
 
 - receiver and responsibility identities;
 - instance, type, and prototype candidate sources;
-- candidate enumeration and C3 precedence;
+- candidate enumeration and C4 precedence;
 - the selected candidate and inherited =next= relation;
 - dispatch budget consumption;
 - cycle and cache identity;
@@ -140,7 +140,7 @@ Capability closure observation may derive:
 - requirement and provision identities;
 - attenuation paths;
 - withdrawal, denial, incompatibility, conflict, or absence evidence;
-- contribution-admission priority distinct from C3 dispatch precedence;
+- contribution-admission priority distinct from C4 dispatch precedence;
 - reachable closure provenance; and
 - closure outcome and explanation.
 
@@ -215,7 +215,7 @@ Three continuation concepts remain distinct:
 
 | Concept | Owner | Meaning |
 |---------+-------+---------|
-| POO inherited continuation | Upstream POO dispatch | Continue through C3 ancestry with =next= or =super=. |
+| POO inherited continuation | Upstream POO dispatch | Continue through C4 ancestry with =next= or =super=. |
 | Fixed-point resumption | Evaluation coordinator | Continue refinement from an immutable generation. |
 | Recovery continuation | Debug coordinator | Resume control suspended by a continuable condition. |
 
@@ -391,7 +391,7 @@ already admitted POO responsibility.  It cannot receive:
 
 * Ownership
 
-- Upstream =gerbil-poo= owns prototype, dispatch, C3, and inherited continuation
+- Upstream =gerbil-poo= owns prototype, dispatch, C4, and inherited continuation
   mechanics.
 - =poo-flow-core= owns ObservationEvent, condition, RecoveryDecision, semantic
   budgets, and coordinator contracts.

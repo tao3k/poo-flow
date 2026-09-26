@@ -115,7 +115,7 @@ mutated by any framework operation.
 * Development output boundary
 
 #+begin_src scheme
-(import :poo-flow-foundation/module-system/observability/debug)
+(import :poo-flow-core/observability/debug)
 (poo-flow-observation-debug observation (current-error-port) trace?: #t)
 #+end_src
 

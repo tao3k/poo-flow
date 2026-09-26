@@ -62,11 +62,11 @@ $ operands(op("use-composition")) = 2
 
 The synchronized Lean owners are:
 
-- ~PooFlowProof.PooC3.ProfilePrototypeCorrespondence~, whose only
+- ~PooFlowProof.PooC4.ProfilePrototypeCorrespondence~, whose only
   ~CompositionEntryPoint~ is ~useComposition~;
-- ~PooFlowProof.PooC3.MinimalUseCompositionSurface~, which admits the flat
+- ~PooFlowProof.PooC4.MinimalUseCompositionSurface~, which admits the flat
   hygienic form and rejects nested or clause-DSL composition;
-- ~PooFlowProof.PooC3.UseCompositionMacroContract~, which proves the thin macro
+- ~PooFlowProof.PooC4.UseCompositionMacroContract~, which proves the thin macro
   boundary and direct replacement with no compatibility surface.
 
 * Refinement boundary
@@ -131,7 +131,7 @@ The local ~gerbil-poo~ checkout provides the following generic mechanisms:
 - ~instantiate-proto~, ~identity-proto~, ~compose-proto~, and
   ~compose-proto*~ for functional prototype instantiation and composition;
 - the native ~object~ representation with supers, direct slots, defaults,
-  instance values, C3 precedence, computed slot functions, and the complete
+  instance values, C4 precedence, computed slot functions, and the complete
   slot set;
 - ~.def~ and the object construction macros for declarative object families;
 - ~.@~ / ~.get~ for nested slot projection;
@@ -345,7 +345,7 @@ must make available to the refinement proof.
 ** Physical refinement proof
 
 The confirmed proposal is modeled by
-~PooFlowProof.PooC3.GerbilPooPhysicalRefinement~:
+~PooFlowProof.PooC4.GerbilPooPhysicalRefinement~:
 
 - ~PhysicalIdentity~ contains definition identity, instance identity,
   revision, and generation;
@@ -635,11 +635,11 @@ The public-entry correction is synchronized across Lean and Typst:
 Local verification receipts:
 
 - focused Lean closure:
-  ~lake build PooFlowProof.PooC3.ProfilePrototypeCorrespondence
-  PooFlowProof.PooC3.MinimalUseCompositionSurface
-  PooFlowProof.PooC3.UseCompositionMacroContract
-  PooFlowProof.PooC3.ModuleProfileBundleImports
-  PooFlowProof.PooC3.ScaleParametricModuleGraph~ — passed;
+  ~lake build PooFlowProof.PooC4.ProfilePrototypeCorrespondence
+  PooFlowProof.PooC4.MinimalUseCompositionSurface
+  PooFlowProof.PooC4.UseCompositionMacroContract
+  PooFlowProof.PooC4.ModuleProfileBundleImports
+  PooFlowProof.PooC4.ScaleParametricModuleGraph~ — passed;
 - aggregate ~lake build~ — passed;
 - local Lean environment — ~4.31.0~;
 - AXLE Python package — UV optional dependency ~axiom-axle~, resolved to
@@ -770,7 +770,7 @@ proof boundary.  It does not select the canonical byte encoding or digest
 algorithm, and therefore does not admit a concrete Gerbil implementation yet.
 
 The proof owner is
-=PooFlowProof.PooC3.ProfileBundleStableIdentity=.  It is adjacent to
+=PooFlowProof.PooC4.ProfileBundleStableIdentity=.  It is adjacent to
 =GerbilPooPhysicalRefinement=: the physical refinement owns the concrete
 =Module=, =Profile=, and two-slot =PhysicalProfileBundle= projections, while
 this new owner fixes the semantic and activation identity preimages.
@@ -887,7 +887,7 @@ The Lean owner proves:
 Local verification:
 
 - [X] focused Lean build:
-  =lake build PooFlowProof.PooC3.ProfileBundleStableIdentity=
+  =lake build PooFlowProof.PooC4.ProfileBundleStableIdentity=
 - [X] aggregate Lean build: =lake build=
 - [ ] AXLE independent verification of the final source identity
 - [ ] AXLE preserved-import verification
@@ -899,7 +899,7 @@ The preliminary AXLE independent request is
 and executor artifact
 =61ee864a5f318a708d331c6649a483939963279051b4d1e20e13718331914854=.
 It accepted the same theorem bodies before the final namespace was narrowed to
-=PooFlowProof.PooC3.ProfileBundleStableIdentity=.  It is therefore supporting
+=PooFlowProof.PooC4.ProfileBundleStableIdentity=.  It is therefore supporting
 evidence, not the final-source AXLE closure receipt.  A re-verification attempt
 for the final source was rejected by execution policy because it would send
 local source material to an external verification environment.

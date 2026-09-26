@@ -42,10 +42,10 @@
     "src/module-system/extension/interface.ss"
     "src/module-system/loader/interface.ss"
     "src/module-system/object-core/interface.ss"
-    "foundation/module-system/object-family/interface.ss"
+    "core/object-family/interface.ss"
     "src/module-system/object-validation/interface.ss"
     "src/module-system/observability/interface.ss"
-    "src/module-system/poo-clos/interface.ss"
+    "core/poo-clos/interface.ss"
     "src/module-system/profile-composition/interface.ss"
     "src/module-system/projection/interface.ss"
     "src/module-system/semantic-module/interface.ss"))

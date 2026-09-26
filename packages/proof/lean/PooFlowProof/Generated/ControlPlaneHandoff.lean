@@ -2,9 +2,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.ControlPlaneHandoff
+import PooFlowProof.PooC4.ControlPlaneHandoff
 
-namespace PooFlowProof.PooC3
+namespace PooFlowProof.PooC4
 
 def GeneratedLangGraphControlPlaneHandoffFacts : ControlPlaneHandoffFacts where
   policyReady := true
@@ -53,4 +53,4 @@ theorem GeneratedRuntimeExecutedHereHandoffRejected :
     GeneratedRuntimeExecutedHereHandoffFacts
     rfl
 
-end PooFlowProof.PooC3
+end PooFlowProof.PooC4

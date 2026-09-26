@@ -99,7 +99,7 @@
 ;; : (POOObject Symbol PooFlowBoundaryOwnership [Symbol] Boolean)
 (.def poo-flow-semantic-boundary-prototype
   id: 'semantic
-  owns: '(poo-object-graph prototypes c3 functional-builders)
+  owns: '(poo-object-graph prototypes c4 functional-builders)
   denies: '(external-execution)
   repairable-by-agent?: #t)
 

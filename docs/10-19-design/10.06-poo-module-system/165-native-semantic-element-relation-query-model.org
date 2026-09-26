@@ -160,7 +160,7 @@ authority from names, execute a Query, parse GQL or prohibit pure functions in
 
 * Lean correspondence
 
-=PooFlowProof.PooC3.NativeSemanticQueryModel= uses one
+=PooFlowProof.PooC4.NativeSemanticQueryModel= uses one
 =ObjectIdentity=.  =EntityRole= and =ElementSpace= reference that identity;
 they do not copy an Object.  Its theorems establish:
 

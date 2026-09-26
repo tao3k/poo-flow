@@ -188,14 +188,14 @@ flowchart LR
 - [X] A missing cycle-recovery receipt blocks executable admission.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ScaleParametricModuleGraph=.  The generic Lean model is
+=PooFlowProof.PooC4.ScaleParametricModuleGraph=.  The generic Lean model is
 indexed by ~Fin(n)~ for arbitrary natural ~n~; it does not prove the concrete
 Gerbil implementation, runtime termination, or performance measurements.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ScaleParametricModuleGraph=: 36/36 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ScaleParametricModuleGraph=: 36/36 jobs |
 | Local Lean closure | =accepted= | =lake build=: 109/109 jobs |
 | AXLE independent declaration check | =accepted= | Request =957a32be-0f40-4d4a-ba91-1e570fe36130=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =cfa33796-a221-4dd8-b54e-84eda6571a79= cannot resolve local module prefix =PooFlowProof= |
@@ -286,7 +286,7 @@ The canonical-entry correction was revalidated together by local Lean and
 AXLE:
 
 - local focused closure including
-  ~PooFlowProof.PooC3.ScaleParametricModuleGraph~ — passed;
+  ~PooFlowProof.PooC4.ScaleParametricModuleGraph~ — passed;
 - aggregate local ~lake build~ under Lean ~4.31.0~ — passed;
 - independent AXLE verification under ~lean-4.31.0~ — accepted, with no failed
   declarations, errors, or warnings:

@@ -2,8 +2,8 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.GovernanceCore
-import PooFlowProof.PooC3.GovernanceDecisionAuthority
+import PooFlowProof.PooC4.GovernanceCore
+import PooFlowProof.PooC4.GovernanceDecisionAuthority
 import PooFlowProof.Enterprise.AISecurityEmbodiedTypedRelationGraphClosure
 
 /-!
@@ -16,8 +16,8 @@ duties.  It does not redefine Cedar policy semantics or authorization results.
 
 namespace PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure
 
-open PooFlowProof.PooC3.GovernanceCore
-open PooFlowProof.PooC3.GovernanceDecisionAuthority
+open PooFlowProof.PooC4.GovernanceCore
+open PooFlowProof.PooC4.GovernanceDecisionAuthority
 open PooFlowProof.Enterprise.AISecurityEmbodiedTypedRelationGraphClosure
 
 structure EnterpriseGovernanceAssurance (PrincipalIdentity : Type) where

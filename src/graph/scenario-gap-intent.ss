@@ -341,7 +341,7 @@
 (def (poo-flow-scenario-gap-plan->lean-facts plan module-name)
   (let ((facts (poo-flow-scenario-gap-plan-facts plan)))
     (string-append
-     "import PooFlowProof.PooC3.LangChainLangGraph\n\n"
+     "import PooFlowProof.PooC4.LangChainLangGraph\n\n"
      "namespace PooFlowProof\n\n"
      "def " module-name "P0Count : Nat := "
      (number->string (.ref facts 'phase0-count)) "\n"
@@ -373,7 +373,7 @@
         (row-ok
          (poo-flow-scenario-gap-runtime-row-ok? plan row)))
     (string-append
-     "import PooFlowProof.PooC3.ScenarioGap\n\n"
+     "import PooFlowProof.PooC4.ScenarioGap\n\n"
      "namespace PooFlowProof\n\n"
      "def " module-name "RuntimeRowFacts : ScenarioRuntimeRowFacts :=\n"
      "  { planOk := " (poo-flow-lean-bool plan-ok) "\n"

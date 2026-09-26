@@ -52,6 +52,9 @@ jobs:
       - name: Checkout POO Flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Check out Core source owner
+        run: git submodule update --init core
+
       - name: Install shared Darwin dependencies
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
@@ -135,6 +138,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          (cd core && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/.gerbil/lib" gerbil build)
           gerbil clean
           gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
             cold "$TOOLCHAIN" "$RUNNER_TEMP/cold-build.ss"

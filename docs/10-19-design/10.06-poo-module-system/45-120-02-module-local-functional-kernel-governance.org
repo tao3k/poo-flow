@@ -27,7 +27,7 @@ This RFC owns:
 It does not own:
 
 - the Type and Contract prototype algebra;
-- upstream object, prototype, dispatch, or C3 mechanics;
+- upstream object, prototype, dispatch, or C4 mechanics;
 - the four-slot Module semantic contract;
 - runtime implementation or adapter effects; or
 - a macro language for declaring functions.
@@ -108,7 +108,7 @@ functions before its local objects bind those functions to responsibilities.
 - Type, Contract, or object prototype declarations;
 - public hygienic macros or internal declaration macros;
 - raw package, manifest, registry, or build behavior;
-- POO dispatch or C3 precedence algorithms;
+- POO dispatch or C4 precedence algorithms;
 - environment reads, clocks, randomness, secrets, I/O, mutation, handles, or
   adapter calls; or
 - compatibility shims for an older architecture.

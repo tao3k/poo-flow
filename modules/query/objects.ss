@@ -33,7 +33,7 @@
                  PooFlowQueryProvider
                  PooFlowQueryExecutionCandidate
                  PooFlowSourceQueryReceipt)
-        :poo-flow/src/module-system/poo-clos/interface)
+        :core/poo-clos/interface)
 
 (export PooFlowQuery.
         PooFlowQueryLanguage.

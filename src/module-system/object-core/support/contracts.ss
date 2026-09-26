@@ -19,7 +19,7 @@
         (only-in :clan/poo/mop
                  .defgeneric Any Bool Object Type element? raise-type-error)
         (only-in :clan/poo/type List String Symbol)
-        (only-in :poo-flow-foundation/module-system/types poo-flow-predicate-type)
+        (only-in :core/types poo-flow-predicate-type)
         :poo-flow/src/module-system/extension/interface)
 
 (export poo-flow-module-object-kind
@@ -165,7 +165,7 @@
   (and (poo-flow-module-value-type? value-type)
        (element? value-type value)))
 
-;;; Field contracts translate object-level C3 inheritance into merge operations
+;;; Field contracts translate object-level C4 inheritance into merge operations
 ;;; without hardcoding backend-specific fields in the module system.
 ;; : (-> Symbol Symbol Symbol PooModuleFieldDefault PooModuleFieldMetadata PooModuleFieldContract)
 (def (poo-flow-module-field-contract identity value-type merge default metadata)

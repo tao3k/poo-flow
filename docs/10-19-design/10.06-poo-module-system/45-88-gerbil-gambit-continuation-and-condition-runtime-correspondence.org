@@ -107,14 +107,14 @@ identity, control trace, dynamic-extent trace, or capability-fence probe.
 - [X] Missing conservative-extension evidence blocks implementation admission.
 
 These obligations are checked by
-=PooFlowProof.PooC3.GerbilGambitRuntimeCorrespondence=.  They formalize the
+=PooFlowProof.PooC4.GerbilGambitRuntimeCorrespondence=.  They formalize the
 expected correspondence and its admission gate; all executable probe
 checklists below remain pending until real Gerbil/Gambit receipts exist.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.GerbilGambitRuntimeCorrespondence=: 30/30 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.GerbilGambitRuntimeCorrespondence=: 30/30 jobs |
 | Local Lean closure | =accepted= | =lake build=: 103/103 jobs |
 | AXLE independent declaration check | =accepted= | Request =df7b4138-e57f-4b07-81a2-19bd9520a8de=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =c7ea28b0-eed4-4870-af9c-1181461fccc0= cannot resolve local module prefix =PooFlowProof= |

@@ -21,8 +21,8 @@ packages/proof/lean/PooFlowProof/Enterprise/
   SourceBoundCycleObservationClosure.lean
 #+end_src
 
-=Enterprise= is not a child of =PooC3=.  Enterprise proofs may import
-generic POO-C3 composition, policy, and authorization theorems, but the
+=Enterprise= is not a child of =PooC4=.  Enterprise proofs may import
+generic POO-C4 composition, policy, and authorization theorems, but the
 enterprise model is owned by =PooFlowProof.Enterprise=.
 
 This refinement defines evidence obligations.  It does not introduce a
@@ -270,7 +270,7 @@ The current CLI receipt does not publish an exact rendered-byte field, so this
 RFC does not invent one.
 
 An initial preflight used the obsolete
-=PooFlowProof.PooC3.Enterprise.SourceBoundProgressEvidenceClosure= path and
+=PooFlowProof.PooC4.Enterprise.SourceBoundProgressEvidenceClosure= path and
 correctly failed at =lake-build-failed=.  The successful receipts use the
 top-level owner
 =PooFlowProof.Enterprise.SourceBoundProgressEvidenceClosure=.

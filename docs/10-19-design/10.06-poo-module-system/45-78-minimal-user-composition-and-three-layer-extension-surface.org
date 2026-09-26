@@ -105,7 +105,7 @@ flowchart TB
 - [ ] Project the accepted surface through native =gerbil-poo= implementation.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.MinimalUserCompositionSurface=.  The
+The Lean anchor is =PooFlowProof.PooC4.MinimalUserCompositionSurface=.  The
 preceding RFCs remain ordinary profile values behind this surface; their
 governance and runtime complexity does not become new public syntax.
 

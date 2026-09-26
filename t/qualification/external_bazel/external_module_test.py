@@ -17,6 +17,7 @@ from unittest.mock import patch
 from external_module import (
     ExternalModuleConfig,
     ExternalModuleError,
+    _export_tracked_tree,
     run_external_module,
 )
 
@@ -67,6 +68,16 @@ raise SystemExit(1 if any('bazel-no-root-override' in arg for arg in sys.argv[1:
                 REPO_ROOT, self.config("analysis", Path("relative/path"))
             )
         self.assertFalse(self.log.exists())
+
+    def test_export_contains_pinned_core_submodule_sources(self) -> None:
+        exported = Path(self.temporary.name) / "exported"
+        exported.mkdir()
+        _export_tracked_tree(REPO_ROOT, exported)
+        self.assertEqual(
+            (exported / "core" / "gerbil.pkg").read_bytes(),
+            (REPO_ROOT / "core" / "gerbil.pkg").read_bytes(),
+        )
+        self.assertTrue((exported / "core" / "build.ss").is_file())
 
     def test_default_output_root_and_analysis_build(self) -> None:
         receipt = run_external_module(REPO_ROOT, self.config("analysis"))

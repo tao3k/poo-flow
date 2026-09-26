@@ -2539,7 +2539,7 @@ behaviors:
 
 These are =gerbil-poo= responsibilities.  POO Flow MUST NOT copy its object
 instance cache, replace =.ref=, mutate private =object-%instance= state, or
-reimplement C3/precedence computation.
+reimplement C4/precedence computation.
 
 The pinned =debug.ss= provides =trace-inherited-slot= and =trace-poo=.  Their
 scope is tracing inherited procedure-valued methods by wrapping slots.  They

@@ -33,7 +33,7 @@ This expands to the existing POO object layer:
 - =poo-flow-session-chunk= for receipt rows;
 - =poo-flow-session-lineage= as a mixin prototype;
 - =poo-flow-session-default-placement= for report-only sandbox catalog resolution;
-- =poo-flow-session-value= for C3 composition of lineage and placement;
+- =poo-flow-session-value= for C4 composition of lineage and placement;
 - =pooFlowSessionGraphPresentation= for graph receipts.
 ** 10.06.36.30 Boundary
 The new syntax is intentionally small:

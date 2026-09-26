@@ -382,7 +382,7 @@ identity mechanism; this family adds no separate =identity= responsibility.
 
 Dispatch candidate selection follows native prototype precedence.  Numeric
 profile priority is an input to control-policy merge only; it never orders
-methods, changes C3 precedence, or selects a dispatch provider.  Native
+methods, changes C4 precedence, or selects a dispatch provider.  Native
 precedence separation remains owned by
 [[file:45-102-native-prototype-precedence-and-typed-relation-conflict-resolution-bridge.org][Native
 Prototype Precedence and Typed Relation Conflict Resolution Bridge]].
@@ -669,7 +669,7 @@ flowchart LR
 - [ ] Prove no raw representation accessor or separate =identity=
       responsibility is exported.
 - [ ] Prove numeric priority does not change provider selection, native
-      prototype precedence, or C3 order.
+      prototype precedence, or C4 order.
 - [ ] Prove dispatch explanation uses the existing observability projection.
 
 ** Hygienic contextual syntax
@@ -725,7 +725,7 @@ flowchart LR
       dependencies outside semantic ownership.
 - [ ] Reuse the upstream [[https://github.com/metareflection/poof][POOF]]
       proofs and pinned =gerbil-poo= behavior instead of reproving general POO
-      or C3 laws.
+      or C4 laws.
 - [ ] Run Org lint and =git diff --check= on the final admitted change.
 
 * Implementation checklist
@@ -768,7 +768,7 @@ flowchart LR
       without copying function bodies per variant.
 - [ ] Keep raw representation accessors and a separate =identity=
       responsibility out of the interface.
-- [ ] Prove numeric priority cannot affect native dispatch or C3 precedence.
+- [ ] Prove numeric priority cannot affect native dispatch or C4 precedence.
 - [ ] Project dispatch evidence through the existing explanation and
       observation boundaries.
 - [ ] Keep endpoint values immutable and keep them out of the public macro
@@ -811,7 +811,7 @@ flowchart LR
 - A new globally exported =priority= macro.
 - A raw numeric slot without Type and Contract evidence.
 - Extensible arbitrary priority variants.
-- Reusing priority as C3 or native prototype precedence.
+- Reusing priority as C4 or native prototype precedence.
 - Encoding source order as a semantic tie breaker.
 
 * Design reference

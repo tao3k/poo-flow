@@ -13,7 +13,7 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/interface
-        (only-in :poo-flow-foundation/module-system/object-family/syntax
+        (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/loader/source)
 
@@ -60,7 +60,7 @@
         poo-flow-module-missing-imports
         validate-poo-flow-module-imports)
 
-;;; Boundary: role data anchors module descriptors in the control-plane C3 set.
+;;; Boundary: role data anchors module descriptors in the control-plane C4 set.
 ;; : (-> Unit Role)
 (def poo-flow-module-role
   (.o (:: @ control-plane-role)
@@ -373,7 +373,7 @@
     (make-flow-declaration-registry 'module-name (list flow-descriptor ...))
     (list option ...))))
 
-;;; Boundary: descriptor predicate is slot-based to allow future C3 variants.
+;;; Boundary: descriptor predicate is slot-based to allow future C4 variants.
 ;; : (-> PooModuleDescriptorCandidate Boolean)
 (def (poo-flow-module-descriptor? descriptor)
   (and (object? descriptor)

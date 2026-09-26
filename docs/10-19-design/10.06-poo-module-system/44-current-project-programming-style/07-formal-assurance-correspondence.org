@@ -41,4 +41,4 @@ the downstream proof-impact gate stale until that binding is refreshed.
 - Provider results bind Query, Provider and revision identities.
 
 The focused owners are =packages/proof/tla/NativeSemanticQuery.tla= and
-=PooFlowProof.PooC3.NativeSemanticQueryModel=.
+=PooFlowProof.PooC4.NativeSemanticQueryModel=.

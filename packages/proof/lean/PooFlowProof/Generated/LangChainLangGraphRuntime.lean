@@ -2,11 +2,11 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.LangChainLangGraph
+import PooFlowProof.PooC4.LangChainLangGraph
 
 namespace PooFlowProof.Generated.LangChainLangGraphRuntime
 
-open PooFlowProof.PooC3.LangChainLangGraph
+open PooFlowProof.PooC4.LangChainLangGraph
 
 def generatedRuntimeFactRows : List (String × Bool) :=
   [ ("graph.runtime/executed", true)

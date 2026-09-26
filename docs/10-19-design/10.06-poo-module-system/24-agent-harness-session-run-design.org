@@ -265,7 +265,7 @@ Add one live presentation case and one non-executing runtime handoff case:
 ** 10.06.24.80 Testing Strategy
 Tests should start at the public projection boundary:
 
-- object constructors preserve POO slots and C3 inheritance intent;
+- object constructors preserve POO slots and C4 inheritance intent;
 - alist projections are stable and shallow;
 - user root config does not execute runtime code;
 - workflow run and agent session ids do not collide semantically;

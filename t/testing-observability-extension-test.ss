@@ -7,7 +7,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
         (only-in :clan/poo/object .call .cc .o .ref .slot?)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  PooFlowDebugMemoryAnomaly?
                  PooFlowDebugMemoryAnomaly-receipt)
         (only-in :asp-gerbil-scheme/testing-api

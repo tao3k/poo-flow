@@ -401,7 +401,7 @@ flowchart LR
 #+end_src
 
 The Lean owner
-=PooFlowProof/PooC3/RecoveryPolicyAuthorization.lean= proves a negative and a
+=PooFlowProof/PooC4/RecoveryPolicyAuthorization.lean= proves a negative and a
 positive boundary:
 
 - two receipts may carry the same bare =policyEvidence= while naming different

@@ -25,21 +25,21 @@ the explicit repository-wide integration aggregate.
 @[default_target]
 lean_lib PooFlowModuleSystemProof where
   roots := #[
-    `PooFlowProof.PooC3.ModuleProfileBundleImports,
-    `PooFlowProof.PooC3.GerbilPooPhysicalRefinement,
-    `PooFlowProof.PooC3.NativeProjectionPipeline,
-    `PooFlowProof.PooC3.NativeSemanticQueryModel
+    `PooFlowProof.PooC4.ModuleProfileBundleImports,
+    `PooFlowProof.PooC4.GerbilPooPhysicalRefinement,
+    `PooFlowProof.PooC4.NativeProjectionPipeline,
+    `PooFlowProof.PooC4.NativeSemanticQueryModel
   ]
 
 lean_lib PooFlowModuleGovernanceProof where
   roots := #[
-    `PooFlowProof.PooC3.GovernanceCore,
-    `PooFlowProof.PooC3.GovernanceDecisionAuthority,
+    `PooFlowProof.PooC4.GovernanceCore,
+    `PooFlowProof.PooC4.GovernanceDecisionAuthority,
     `PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure
   ]
 
 lean_lib PooFlowModuleTemporalCausalityProof where
-  roots := #[`PooFlowProof.PooC3.TemporalCausality]
+  roots := #[`PooFlowProof.PooC4.TemporalCausality]
 
 /-! Scenario refinements compose module libraries without becoming a second
 module graph.  This target owns the exact Healthcare Case declarations. -/
@@ -51,41 +51,41 @@ lean_lib PooFlowScenarioHealthcareProof where
 
 lean_lib PooFlowModuleAuthorizationProof where
   roots := #[
-    `PooFlowProof.PooC3.CedarPooAdapterRefinement,
+    `PooFlowProof.PooC4.CedarPooAdapterRefinement,
     `PooFlowProof.Enterprise.CedarDualEngineAuthorization
   ]
 
 lean_lib PooFlowModuleLoopEngineProof where
   roots := #[
-    `PooFlowProof.PooC3.LoopEngineGraph,
-    `PooFlowProof.PooC3.IncrementalTruthMaintenance
+    `PooFlowProof.PooC4.LoopEngineGraph,
+    `PooFlowProof.PooC4.IncrementalTruthMaintenance
   ]
 
 lean_lib PooFlowModuleSessionProof where
   roots := #[
-    `PooFlowProof.PooC3.SessionControlLink,
-    `PooFlowProof.PooC3.AgentLifecycleTopology
+    `PooFlowProof.PooC4.SessionControlLink,
+    `PooFlowProof.PooC4.AgentLifecycleTopology
   ]
 
 lean_lib PooFlowModuleSandboxCoreProof where
   roots := #[
-    `PooFlowProof.PooC3.Sandbox,
-    `PooFlowProof.PooC3.CapabilityRoleIsolation
+    `PooFlowProof.PooC4.Sandbox,
+    `PooFlowProof.PooC4.CapabilityRoleIsolation
   ]
 
 lean_lib PooFlowModuleFunflowProof where
-  roots := #[`PooFlowProof.PooC3.FunctionalFlow]
+  roots := #[`PooFlowProof.PooC4.FunctionalFlow]
 
 lean_lib PooFlowModuleWorkflowProof where
   roots := #[
-    `PooFlowProof.PooC3.PolicyTrace,
-    `PooFlowProof.PooC3.EffectDagAtomicity
+    `PooFlowProof.PooC4.PolicyTrace,
+    `PooFlowProof.PooC4.EffectDagAtomicity
   ]
 
 lean_lib PooFlowModuleMemoryCoreProof where
   roots := #[
-    `PooFlowProof.PooC3.PersistentStateMigrationContract,
-    `PooFlowProof.PooC3.RecoveryPolicyAuthorization
+    `PooFlowProof.PooC4.PersistentStateMigrationContract,
+    `PooFlowProof.PooC4.RecoveryPolicyAuthorization
   ]
 
 target proof_native.o (pkg : NPackage __name__) : FilePath := do

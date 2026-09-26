@@ -2,9 +2,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.CompositionReceipt
+import PooFlowProof.PooC4.CompositionReceipt
 
-namespace PooFlowProof.PooC3
+namespace PooFlowProof.PooC4
 
 def GeneratedLangGraphCompositionReceiptFacts : CompositionReceiptFacts where
   profileRefsOk := true
@@ -88,4 +88,4 @@ theorem GeneratedCompositionRuntimeExecutionReceiptRejected :
     GeneratedCompositionRuntimeExecutionReceiptFacts
     rfl
 
-end PooFlowProof.PooC3
+end PooFlowProof.PooC4

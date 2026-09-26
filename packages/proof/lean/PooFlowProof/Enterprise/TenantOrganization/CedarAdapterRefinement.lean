@@ -3,14 +3,14 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 import PooFlowProof.Enterprise.TenantOrganization.CedarEntityClosure
-import PooFlowProof.PooC3.CedarAdapterContract
+import PooFlowProof.PooC4.CedarAdapterContract
 
 namespace PooFlowProof.Enterprise.TenantOrganization.CedarAdapterRefinement
 
-open PooFlowProof.PooC3
-open PooFlowProof.PooC3.CedarAdapterContract
-open PooFlowProof.PooC3.CedarResponseArbitrationBridge
-open PooFlowProof.PooC3.CedarDualEngineArbitration
+open PooFlowProof.PooC4
+open PooFlowProof.PooC4.CedarAdapterContract
+open PooFlowProof.PooC4.CedarResponseArbitrationBridge
+open PooFlowProof.PooC4.CedarDualEngineArbitration
 
 structure Admission
     {RawResponse ExecutableDigest SemanticVersion InputIdentity

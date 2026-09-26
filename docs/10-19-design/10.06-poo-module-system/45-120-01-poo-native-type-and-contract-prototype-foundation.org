@@ -40,7 +40,7 @@ The project foundation is ordered as follows:
 
 #+begin_src mermaid
 flowchart LR
-  U["upstream gerbil-poo"] -->|"provides object, prototype, slot, dispatch, and C3 mechanics"| O["poo-flow-core objects.ss"]
+  U["upstream gerbil-poo"] -->|"provides object, prototype, slot, dispatch, and C4 mechanics"| O["poo-flow-core objects.ss"]
   O -->|"provides native project object construction"| T["poo-flow-core types.ss"]
   T -->|"specializes Type with responsibility contracts"| OT["ObjectType"]
   OT -->|"requires identity, imports, capabilities, and profiles"| M["Module"]
@@ -107,12 +107,12 @@ ObjectType derives:
 
 - responsibility presence evidence;
 - responsibility contract evidence;
-- prototype and C3 provenance;
+- prototype and C4 provenance;
 - missing-responsibility diagnostics; and
 - an explanation of the selected contract implementation.
 
 ObjectType never duplicates upstream object identity, prototype ancestry,
-dispatch, or C3 linearization.
+dispatch, or C4 linearization.
 
 * ModuleType specialization
 
@@ -176,7 +176,7 @@ commitment to those representations.
 
 * Ownership
 
-- Upstream =gerbil-poo= owns object, prototype, slot, dispatch, and C3 mechanics.
+- Upstream =gerbil-poo= owns object, prototype, slot, dispatch, and C4 mechanics.
 - =poo-flow-core= owns Type, Contract, ObjectType, and ModuleType semantic
   contracts.
 - =wendao-episteme= owns downstream domain Type, Contract, and Module
@@ -214,7 +214,7 @@ commitment to those representations.
 - Boolean-only predicates with no evidence or explanation.
 - A Contract wrapper that contains a separate Type object model.
 - Module-specific validators that bypass the shared foundation.
-- Reimplementation of upstream prototype composition or C3 precedence.
+- Reimplementation of upstream prototype composition or C4 precedence.
 - Runtime authorization or handle checks inside semantic contracts.
 
 * Successor contract

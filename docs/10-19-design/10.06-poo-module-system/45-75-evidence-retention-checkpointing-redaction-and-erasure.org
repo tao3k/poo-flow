@@ -104,7 +104,7 @@ flowchart LR
 - [ ] Project retention and erasure policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.EvidenceRetentionErasure=.  It imports
+The Lean anchor is =PooFlowProof.PooC4.EvidenceRetentionErasure=.  It imports
 RFC 45-74 directly, so destructive storage actions require an exact,
 one-shot, scoped governance capability rather than a pure policy proposal.
 

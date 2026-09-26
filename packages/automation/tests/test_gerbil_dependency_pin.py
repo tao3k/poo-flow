@@ -26,6 +26,14 @@ def pin_module():
 
 
 class GerbilDependencyPinTest(unittest.TestCase):
+    def test_source_lock_names_do_not_include_local_toolchains(self) -> None:
+        module = pin_module()
+        generated = {
+            "core_archive": {"repoRuleId": module.SOURCE_PACKAGE_RULE},
+            "local_gerbil": {"repoRuleId": "local_toolchain_repository"},
+        }
+        self.assertEqual(module.locked_source_package_names(generated), {"core_archive"})
+
     def test_gerbil_package_is_the_direct_revision_authority(self) -> None:
         module = pin_module()
         pins = module.parse_package_pins((ROOT / "gerbil.pkg").read_text(encoding="utf-8"))

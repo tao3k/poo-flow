@@ -313,7 +313,7 @@ activation, and source-ref drift when filesystem or package loading is added.
 The implementation is now split under =src/module-system/= instead of being held in core or mixed with concrete modules:
 - =interface.ss= owns Marlin-style interfaces, schema helpers, and object helpers;
 - =source.ss= owns source refs and structured imports;
-- =descriptor.ss= owns C3 role data, descriptors, imports, metadata slots, and closed-world import validation;
+- =descriptor.ss= owns C4 role data, descriptors, imports, metadata slots, and closed-world import validation;
 - =context.ss= owns Doom-style flags, hook lookup, active checks, and phase-order projections;
 - =diagnostics.ss= owns doctor reports;
 - =resolver.ss= owns source catalog lookup, activation, and run-config lowering;
@@ -323,7 +323,7 @@ The implementation is now split under =src/module-system/= instead of being held
 - =descriptor-syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
 - =src/module-system.ss= remains a thin facade that re-exports the leaf owners.
 
-The Doom/C3 interface additions are data-only:
+The Doom/C4 interface additions are data-only:
 - descriptor slots now include =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
 - =poo-module-active?= and =poo-flow-module-value-catalog-active?= provide explicit flag checks;
 - =poo-module-option-merge-receipts= keeps append, override, conflict, constant, required, and missing-schema findings inspectable before runtime;
@@ -361,6 +361,6 @@ The detailed design principles are in [[file:06-doom-nix-interface-principles.or
 The short version:
 - learn Doom's authoring experience, not its hidden runtime effects;
 - learn Nix's option and merge semantics, not its syntax;
-- keep Gerbil POO and C3 as the implementation substrate;
+- keep Gerbil POO and C4 as the implementation substrate;
 - add macro sugar only after the data API and user-interface tests exist;
 - require user-facing tests to import =:poo-flow/src/module-system= only.

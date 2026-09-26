@@ -28,7 +28,7 @@ Session -> Agent/Workflow -> Session
 
 This aligns with our functional + POO direction. A flow can be Arrow/Kleisli-
 like at the composition level while each session, policy, and profile remains a
-POO object with C3 inheritance and native extension.
+POO object with C4 inheritance and native extension.
 
 OpenRath's weak point is that it does not go far enough on policy. A child
 agent can be session-addressable, but the authorization surface needs to be
@@ -116,7 +116,7 @@ Objects are the configurable units:
 - =checkpoint-policy-object=: bounded durable-point policy used by the durable
   policy. It says what is captured, when, and under what resume modes.
 
-The important constraint: these are POO objects. They can use C3 multiple
+The important constraint: these are POO objects. They can use C4 multiple
 inheritance, local override, and extension. They should not become a Nix-style
 option tree because Scheme + POO already gives us a stronger object kernel.
 
@@ -151,7 +151,7 @@ The exact syntax is not decided, but the inheritance direction is important:
 
 This is the POO-native advantage over a Nix-style option tree. A profile can
 define =durable/default= once, then specialize session and memory policies with
-C3 inheritance, local overrides, and extension.
+C4 inheritance, local overrides, and extension.
 
 ** 10.06.43.50 Identity Model
 Session ids are routing and policy identities, not display labels.

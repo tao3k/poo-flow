@@ -305,7 +305,7 @@ Boundary:
 - Store and Docker remain adapter/runtime-owned.
 - Function composition stays in =src/core/flow.ss= through Category/Arrow
   operations; extension ownership is represented through POO object slots and
-  C3-compatible descriptor supers.
+  C4-compatible descriptor supers.
 
 Proof:
 - =t/functional-flow-kernel-test.ss= checks the default strand registry,

@@ -2,9 +2,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.AuthorizedEffectEvidence
+import PooFlowProof.PooC4.AuthorizedEffectEvidence
 
-namespace PooFlowProof.PooC3
+namespace PooFlowProof.PooC4
 
 def GeneratedAuthorizedEffectVerified : AuthorizedEffectEvidenceFacts where
   tokenBindingOk := true
@@ -64,4 +64,4 @@ theorem GeneratedMissingInclusionRejectedAtL3 :
     GeneratedAuthorizedEffectMissingInclusion
     rfl
 
-end PooFlowProof.PooC3
+end PooFlowProof.PooC4

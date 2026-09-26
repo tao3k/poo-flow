@@ -2,11 +2,11 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.TemporalCausality
+import PooFlowProof.PooC4.TemporalCausality
 
 namespace PooFlowProof.Vertical.Healthcare.PrescriptionCausalityRefinement
 
-open PooFlowProof.PooC3.TemporalCausality
+open PooFlowProof.PooC4.TemporalCausality
 
 abbrev ClinicalEvent := CausalEvent String String String
 

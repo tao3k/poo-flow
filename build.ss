@@ -17,7 +17,7 @@
 
 (def +poo-flow-build-exclude-dirs+
   (append '("packages/lambda-episteme"
-            "foundation"
+            "core"
             "bindings"
             "packages"
             "target"

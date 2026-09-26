@@ -2,12 +2,12 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.AuthorizedEffectProofCase
+import PooFlowProof.PooC4.AuthorizedEffectProofCase
 
 namespace PooFlowProof.Generated.AuthorizedEffectProofCase
 
 open PooFlowProof.Generated.ProofCaseVector
-open PooFlowProof.PooC3.AuthorizedEffectProofCase
+open PooFlowProof.PooC4.AuthorizedEffectProofCase
 
 def digest (value : UInt8) : Digest32 :=
   { bytes := List.replicate 32 value, size_eq := by simp }
