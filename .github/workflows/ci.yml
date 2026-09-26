@@ -161,6 +161,10 @@ jobs:
         if: runner.os == 'Linux'
         run: gerbil env ./performance-tests.ss
 
+      - name: Run pinned ASCENT BYODS performance against the 1 ms budget
+        if: runner.os == 'Linux'
+        run: gerbil env just test-ascent-performance
+
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Lean module / ${{ matrix.owner }}
