@@ -257,6 +257,11 @@ test:
 test-profile:
     time just test
 
+# Run the existing C3 identity/performance witness under the test heap fence.
+[group('test')]
+benchmark-poo-clos-native-c3:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c3/scenario.ss
+
 # Keep the Core submodule's qualification under its own Justfile.
 [group('test')]
 test-core:
