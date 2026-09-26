@@ -433,41 +433,52 @@
            (children (filter (lambda (agent) (.ref agent 'parent-id)) agents)))
       (unless (= (length roots) 1)
         (reject! 'invalid-root-count '(agents) 1 (length roots)))
-      (unless (= (length children) 1)
-        (reject! 'invalid-child-count '(agents) 1 (length children)))
-      (when (and (= (length roots) 1) (= (length children) 1))
+      (unless (pair? children)
+        (reject! 'invalid-child-count '(agents) 'at-least-one 0))
+      (when (= (length roots) 1)
         (let* ((parent (car roots))
-               (child (car children))
                (parent-id (.ref parent 'id))
-               (child-id (.ref child 'id))
-               (parent-authority (.ref parent 'authorities))
-               (child-authority (.ref child 'authorities))
-               (context (hash-get context-index child-id)))
-          (unless (equal? (.ref child 'parent-id) parent-id)
-            (reject! 'invalid-parent-binding (list 'agents child-id 'parent)
-                     parent-id (.ref child 'parent-id)))
-          (unless (semantic-proper-subset? child-authority parent-authority)
-            (reject! 'authority-not-strict-subset
-                     (list 'agents child-id 'authorities)
-                     'strict-subset child-authority))
-          (unless context
-            (reject! 'missing-context-projection
-                     (list 'context-projections child-id) 'declared 'missing))
-          (when (and context
-                     (not (semantic-subset? (.ref context 'visible)
-                                            (.ref parent 'context-visible))))
-            (reject! 'context-visibility-leak
-                     (list 'context-projections child-id 'visible)
-                     'parent-visible-subset (.ref context 'visible)))
+               (parent-authority (.ref parent 'authorities)))
           (for-each
-           (lambda (authority)
-             (let (delegation (hash-get delegation-index
-                                        (list parent-id child-id authority)))
-               (unless delegation
-                 (reject! 'undelegated-authority
-                          (list 'agents child-id 'authorities authority)
-                          'explicit-delegation 'missing))))
-           child-authority))))
+           (lambda (child)
+             (let* ((child-id (.ref child 'id))
+                    (child-authority (.ref child 'authorities))
+                    (context (hash-get context-index child-id)))
+               (unless (equal? (.ref child 'parent-id) parent-id)
+                 (reject! 'invalid-parent-binding
+                          (list 'agents child-id 'parent)
+                          parent-id (.ref child 'parent-id)))
+               (unless (semantic-proper-subset?
+                        child-authority parent-authority)
+                 (reject! 'authority-not-strict-subset
+                          (list 'agents child-id 'authorities)
+                          'strict-subset child-authority))
+               (unless context
+                 (reject! 'missing-context-projection
+                          (list 'context-projections child-id)
+                          'declared 'missing))
+               (when (and context
+                          (not (semantic-subset?
+                                (.ref context 'visible)
+                                (.ref parent 'context-visible))))
+                 (reject! 'context-visibility-leak
+                          (list 'context-projections child-id 'visible)
+                          'parent-visible-subset (.ref context 'visible)))
+               (for-each
+                (lambda (authority)
+                  (let (capability (hash-get capability-index authority))
+                    (when (and capability
+                               (not (.ref capability 'delegable?)))
+                      (reject! 'nondelegable-capability
+                               (list 'agents child-id 'authorities authority)
+                               'delegable authority)))
+                  (unless (hash-get delegation-index
+                                    (list parent-id child-id authority))
+                    (reject! 'undelegated-authority
+                             (list 'agents child-id 'authorities authority)
+                             'explicit-delegation 'missing)))
+                child-authority)))
+           children))))
     (for-each
      (lambda (effect)
        (let* ((effect-id (.ref effect 'id))
