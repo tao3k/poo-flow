@@ -50,6 +50,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Check out Core source owner
+        run: git submodule update --init core
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -117,7 +120,7 @@ jobs:
           test -n "$(bazelisk query 'somepath(//:compile, //:asp_gerbil_scheme_package)')"
           test -n "$(bazelisk query 'somepath(//:compile, //:gerbil_poo_package)')"
           test -n "$(bazelisk query 'somepath(//:compile, //:gerbil_parser_package)')"
-          test -n "$(bazelisk query 'somepath(//:gerbil_parser_package, //:poo_flow_foundation_package)')"
+          test -n "$(bazelisk query 'somepath(//:gerbil_parser_package, //:poo_flow_core_package)')"
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: 12

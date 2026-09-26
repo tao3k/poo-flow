@@ -12,7 +12,7 @@
 (import (only-in :clan/poo/object .all-slots .ref .slot?)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
-        (only-in :poo-flow-foundation/module-system/object-family/syntax
+        (only-in :core/object-family/syntax
                  defpoo-object-family))
 
 (export poo-flow-module-option-config-prototype

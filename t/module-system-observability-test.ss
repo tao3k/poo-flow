@@ -21,7 +21,7 @@
         :poo-flow/src/module-system/observability/module-presentation
         :poo-flow/src/module-system/observability/module-source-observation
         :poo-flow/src/module-system/observability/source-authoring
-        (only-in :poo-flow-foundation/module-system/observability/funcs
+        (only-in :core/observability/funcs
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-sample
                  poo-flow-debug-memory-receipt))

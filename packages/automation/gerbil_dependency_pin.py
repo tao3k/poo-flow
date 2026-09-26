@@ -28,6 +28,17 @@ BAZEL_SOURCES = ROOT / "gerbil-dependencies.MODULE.bazel"
 BAZEL_LOCK = ROOT / "MODULE.bazel.lock"
 REVISION = re.compile(r"[0-9a-f]{40}")
 EXTENSION_ID = "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil"
+SOURCE_PACKAGE_RULE = (
+    "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository"
+)
+
+
+def locked_source_package_names(generated: dict[str, object]) -> set[str]:
+    return {
+        name
+        for name, specification in generated.items()
+        if specification.get("repoRuleId") == SOURCE_PACKAGE_RULE
+    }
 
 
 def parse_package_pins(text: str) -> dict[str, tuple[str, str]]:
@@ -114,7 +125,14 @@ def collect_errors(root: Path = ROOT) -> list[str]:
     lock = json.loads((root / "MODULE.bazel.lock").read_text(encoding="utf-8"))
     pins = parse_package_pins(package_text)
     repositories = direct_source_repositories(sources_text)
+    declared_repository_names = set(repositories.values())
     extension = lock.get("moduleExtensions", {}).get(EXTENSION_ID, {})
+
+    for platform_key, platform_lock in extension.items():
+        generated = platform_lock.get("generatedRepoSpecs", {})
+        stale = locked_source_package_names(generated) - declared_repository_names
+        for repository_name in sorted(stale):
+            errors.append(f"{platform_key}: undeclared lock source {repository_name!r}")
 
     for package, (repository, revision) in pins.items():
         repository_name = repositories.get(package)
@@ -245,14 +263,15 @@ def sync_lock(root: Path = ROOT) -> None:
         raise ValueError("Gerbil Bazel extension lock is absent")
     native = extension[host_lock_key(extension)]
     native_repositories = native["generatedRepoSpecs"]
-    pins = parse_package_pins((root / "gerbil.pkg").read_text(encoding="utf-8"))
     repositories_by_package = direct_source_repositories(
         (root / "gerbil-dependencies.MODULE.bazel").read_text(encoding="utf-8")
     )
-    repository_names = [repositories_by_package[package] for package in pins]
+    repository_names = set(repositories_by_package.values())
     for platform_lock in extension.values():
         platform_lock["usagesDigest"] = native["usagesDigest"]
         repositories = platform_lock["generatedRepoSpecs"]
+        for repository_name in locked_source_package_names(repositories) - repository_names:
+            del repositories[repository_name]
         for repository_name in repository_names:
             repositories[repository_name] = native_repositories[repository_name]
     lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")

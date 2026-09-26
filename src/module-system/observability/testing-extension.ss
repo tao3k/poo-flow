@@ -15,7 +15,7 @@
         (only-in :std/string/path path-expand)
         (only-in "build-projection.ss"
                  poo-flow-write-observation-line!)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  poo-flow-debug-call-policy
                  call-with-poo-flow-debug-trace))
 

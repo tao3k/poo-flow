@@ -10,8 +10,8 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
         :poo-flow/src/module-system/observability/objects
-        :poo-flow-foundation/module-system/observability/types
-        (only-in :poo-flow-foundation/module-system/types
+        :core/observability/types
+        (only-in :core/types
                  poo-flow-validation-evidence-accepted?))
 
 (def (observability-test-ref row key)

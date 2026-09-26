@@ -80,7 +80,13 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
+    just build-core
     GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
+
+# Compile the shared Core from the pinned submodule, not a second archive.
+[group('build')]
+build-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
 
 # Build one packaged contribution inside POO Flow's package environment.
 [group('build')]
@@ -242,8 +248,14 @@ toolchain:
 # Run the package's single native Scheme test entrypoint.
 [group('test')]
 test:
+    just test-core
     @echo "[poo-flow-test-runtime] maxHeap={{ gerbil_test_max_heap }} debug={{ gerbil_test_debug }} scope=worker-process"
     gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss
+
+# Keep the Core submodule's qualification under its own Justfile.
+[group('test')]
+test-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" just test
 
 # Run one root-owned Scheme test with the same pre-import heap fence.
 [group('test')]

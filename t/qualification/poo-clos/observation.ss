@@ -7,7 +7,7 @@
 
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-snapshot
                  call-with-poo-flow-debug-memory-monitor
