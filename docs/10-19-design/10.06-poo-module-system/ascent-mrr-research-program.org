@@ -138,18 +138,27 @@ generic lattice values remain open.
 The first multi-relation Scheme rule evaluator is now
 =src/qualification/ascent-binary-program.ss=.  It accepts POO relation and
 rule objects for positive binary =copy= and =join= rules, validates names and
-encoded pairs, and computes a simultaneous semi-naive fixed point.  A private
-indexed frontier processes only changed inputs; dense and sparse radix paths
-both publish persistent =UIntTrieSet= results through a POO lookup.  The
-existing cyclic closure and withdrawal fixture, two simultaneously changing
-join inputs, multiple rule heads, sparse radix, and invalid declarations are
+encoded pairs, and computes a simultaneous semi-naive fixed point.  Input,
+newly derived, and complete published pair budgets are separate positive
+bounds; each new candidate is deduplicated and checked before joining the
+round's pending frontier.  A private indexed frontier processes only changed
+inputs; only relations used on the right of a join receive an adjacency index.
+Dense and sparse radix paths both publish persistent =UIntTrieSet= results
+through a POO lookup.  The exact three diamond snapshots from the Rust Ascent
+fixture, cyclic closure and withdrawal, two simultaneously changing join
+inputs, rule-order independence, sparse radix, and invalid declarations are
 covered by =t/qualification/ascent-binary-program-test.ss=.  This is the
 first composable rule fragment, not full Ascent syntax or arbitrary arity,
 negation, aggregates, generic lattice values, or BYODS.  The standard 20-node
-chain fixture currently measures about 1.6ms p95 locally for all 190 output
-pairs against a 1ms target and 2ms ceiling.  Further indexed evaluation work
-is needed before this general rule path meets the desired submillisecond
-target; the specialized closure path remains at 119us p95 locally.
+chain fixture checks all 190 exact output pairs, and its baseline head measured
+1.889ms p95 on Ubuntu against a 1ms target and 2ms ceiling.  The exact
+=reach <- edge; reach <- reach join edge= shape calls the existing Scheme
+bounded closure algorithm directly; other rule sets use the generic evaluator.
+There is no positional compiled-rule tuple.  A local diagnostic measured about
+1.3ms p95 both for the complete evaluator and for construction of its 190-pair
+official =UIntTrieSet= output.  Thus the full persistent-result path is still
+above the submillisecond target; the separate closure algorithm measured 119us
+p95 locally and does not include persistent-set publication.
 
 The project-standard
 =t/scenarios/performance/ascent-reachability-closure/benchmark.ss= measures

@@ -36,10 +36,20 @@
       (rules
        (list (poo-flow-ascent-binary-copy-rule 'reach 'edge)
              (poo-flow-ascent-binary-join-rule 'reach 'reach 'edge)))
-      (max-derived-pairs 400)))
+      (max-input-facts 19) (max-derived-pairs 400)
+      (max-output-pairs 400)))
 
 (def (candidate-evaluation)
   (poo-flow-ascent-evaluate-binary-program program))
+
+(def (expected-chain-pairs)
+  (let from-loop ((from 0) (acc []))
+    (if (= from 19)
+      (reverse acc)
+      (let to-loop ((to (+ from 1)) (acc acc))
+        (if (= to 20)
+          (from-loop (+ from 1) acc)
+          (to-loop (+ to 1) (cons (+ (* from width) to) acc)))))))
 
 (def ascent-binary-program-performance-test
   (test-suite "ASCENT Scheme binary program performance"
@@ -49,7 +59,8 @@
                     (benchmark-run/result fixture candidate-evaluation)))
         (let (reach ((.ref actual 'pairs-of) 'reach))
           (check-equal? (.call UIntTrieSet .count reach) 190)
-          (check-equal? (list-ref (.call UIntTrieSet .list<- reach) 18) 19))
+          (check-equal? (.call UIntTrieSet .list<- reach)
+                        (expected-chain-pairs)))
         (display "[poo-flow-benchmark] ascent-binary-program p95=")
         (displayln (benchmark-fixture-ref receipt 'elapsed))
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

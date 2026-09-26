@@ -71,6 +71,10 @@
                       '(10 11 12 18 19 20 26 27 28 34 35 36))
         (check-equal? (.ref expression 'closure-pairs)
                       '(10 11 12 18 19 20 26 27 28 34 35 36))
+        (check-equal? (.ref ((.ref expression 'closure-bounded) 12) 'pairs)
+                      (.ref expression 'closure-pairs))
+        (check-exception
+         ((.ref expression 'closure-bounded) 11) true)
         (let* ((without-cycle-edge
                 (.call UIntTrieSet .remove edges 34))
                (withdrawn

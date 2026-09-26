@@ -11,7 +11,8 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export poo-flow-ascent-table-expression-prototype)
+(export poo-flow-ascent-table-expression-prototype
+        poo-flow-ascent-relation-closure-bounded)
 
 (def (relation-index pairs radix)
   (unless (and (exact-integer? radix) (> radix 1))
@@ -82,24 +83,34 @@
 ;;; The finite-domain transitive closure for this binary relation, using the
 ;;; library's until combinator and set operations. This is a specific rule
 ;;; evaluation, not a second generic prototype fixed-point implementation.
-(def (relation-closure source neighbors-of radix)
+(def (relation-closure source neighbors-of radix (max-pairs #f))
+  (when (and max-pairs
+             (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
+    (error "invalid ASCENT closure pair budget" max-pairs))
   (let* ((dense? (<= radix 512))
          (bits (and dense? (make-u8vector (* radix radix) 0)))
          (sparse (and (not dense?) (make-hash-table)))
          (frontier [])
-         (all []))
+         (all [])
+         (count 0))
     (def (add-pair! pair)
       (if dense?
         (if (= (u8vector-ref bits pair) 1)
           #f
           (begin
+            (when (and max-pairs (>= count max-pairs))
+              (error "ASCENT derived pair budget exceeded" max-pairs))
             (u8vector-set! bits pair 1)
+            (set! count (+ count 1))
             (set! all (cons pair all))
             #t))
         (if (hash-get sparse pair)
           #f
           (begin
+            (when (and max-pairs (>= count max-pairs))
+              (error "ASCENT derived pair budget exceeded" max-pairs))
             (hash-put! sparse pair #t)
+            (set! count (+ count 1))
             (set! all (cons pair all))
             #t))))
     (.call UIntTrieSet .foldl
@@ -127,6 +138,9 @@
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
                 (if dense? (= (u8vector-ref bits pair) 1)
                     (hash-get sparse pair))))))))
+
+(def (poo-flow-ascent-relation-closure-bounded source radix max-pairs)
+  (relation-closure source (relation-index source radix) radix max-pairs))
 
 ;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
 ;;; paths by minimum distance. The frontier contains only newly discovered or
@@ -186,6 +200,10 @@
                               (.ref self 'right-index) radix)))
       (closure-projection
        (relation-closure source-pairs (.ref self 'right-index) radix))
+      (closure-bounded
+       (lambda (max-pairs)
+         (relation-closure source-pairs
+                           (.ref self 'right-index) radix max-pairs)))
       (closure-pairs
        (.ref (.ref self 'closure-projection) 'pairs))
       (closure-contains?

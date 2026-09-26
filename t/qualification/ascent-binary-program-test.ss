@@ -17,10 +17,12 @@
 (def (relation name encoded)
   (poo-flow-ascent-binary-relation name (.call UIntTrieSet .<-list encoded)))
 
-(def (evaluate declarations clauses (limit 64))
+(def (evaluate declarations clauses (limit 64) (input-limit 64)
+               (output-limit 128))
   (poo-flow-ascent-evaluate-binary-program
    (.o (radix 8) (relations declarations) (rules clauses)
-       (max-derived-pairs limit))))
+       (max-input-facts input-limit) (max-derived-pairs limit)
+       (max-output-pairs output-limit))))
 
 (def (pairs result name)
   (.call UIntTrieSet .list<- ((.ref result 'pairs-of) name)))
@@ -36,12 +38,34 @@
              (result (evaluate declarations rules)))
         (check-equal? (pairs result 'reach)
                       '(10 11 12 18 19 20 26 27 28 34 35 36))
+        (check-equal? (.ref result 'evaluation-path) 'transitive-closure)
         (check-equal? (pairs result 'edge) '(10 11 19 28 34))
+        (check-equal? (pairs (evaluate declarations (reverse rules)) 'reach)
+                      (pairs result 'reach))
         (check-equal? (pairs (evaluate
                              (list (relation 'edge '(10 19 28 11))
                                    (relation 'reach '())) rules)
                             'reach)
-                      '(10 11 12 19 20 28))))
+                      '(10 11 12 19 20 28))
+        (check-equal? (pairs result 'reach)
+                      '(10 11 12 18 19 20 26 27 28 34 35 36))))
+    (test-case "diamond and support withdrawal match the Rust pair fixtures"
+      (let* ((rules (list (poo-flow-ascent-binary-copy-rule 'reach 'edge)
+                          (poo-flow-ascent-binary-join-rule
+                           'reach 'reach 'edge)))
+             (first (evaluate
+                     (list (relation 'edge '(10 19 12 35))
+                           (relation 'reach '())) rules))
+             (withdrawn (evaluate
+                         (list (relation 'edge '(10 12 35))
+                               (relation 'reach '())) rules))
+             (fully-withdrawn (evaluate
+                               (list (relation 'edge '(10 12))
+                                     (relation 'reach '())) rules)))
+        (check-equal? (pairs first 'reach) '(10 11 12 19 35))
+        (check-equal? (pairs withdrawn 'reach) '(10 11 12 35))
+        (check-equal? (pairs fully-withdrawn 'reach) '(10 12))
+        (check-equal? (pairs first 'reach) '(10 11 12 19 35))))
     (test-case "two changing join inputs and multiple heads"
       (let* ((result
               (evaluate
@@ -54,6 +78,7 @@
                       'joined 'left 'right)
                      (poo-flow-ascent-binary-copy-rule 'output 'joined)))))
         (check-equal? (pairs result 'joined) '(11 20))
+        (check-equal? (.ref result 'evaluation-path) 'semi-naive)
         (check-equal? (pairs result 'output) '(11 20))))
     (test-case "sparse radix retains the same binary join semantics"
       (let* ((edges (.call UIntTrieSet .<-list '(515 1029)))
@@ -67,7 +92,8 @@
                     (list (poo-flow-ascent-binary-copy-rule 'reach 'edge)
                           (poo-flow-ascent-binary-join-rule
                            'reach 'reach 'edge)))
-                   (max-derived-pairs 8)))))
+                   (max-input-facts 8) (max-derived-pairs 8)
+                   (max-output-pairs 8)))))
         (check-equal? (pairs result 'reach) '(515 516 1029))))
     (test-case "invalid declarations and pair budget fail"
       (check-exception
@@ -82,4 +108,15 @@
                        (relation 'reach '()))
                  (list (poo-flow-ascent-binary-copy-rule 'reach 'edge)
                        (poo-flow-ascent-binary-join-rule
-                        'reach 'reach 'edge)) 5) true))))
+                        'reach 'reach 'edge)) 5) true)
+      (check-exception
+       (evaluate (list (relation 'edge '(10 19 28))) '() 64 2) true)
+      (check-exception
+       (evaluate (list (relation 'edge '(10 19 28))) '() 64 64 2)
+       true)
+      (check-exception
+       (evaluate (list (relation 'edge '(10 19 28))
+                       (relation 'reach '()))
+                 (list (poo-flow-ascent-binary-copy-rule 'reach 'edge))
+                 64 64 5)
+       true))))
