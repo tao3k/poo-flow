@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", "12")
+export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", `getconf _NPROCESSORS_ONLN`)
 
 # Test processes are bounded before any Scheme profile module can load. The
 # ASP POO Testing profile remains the policy and receipt owner inside the
