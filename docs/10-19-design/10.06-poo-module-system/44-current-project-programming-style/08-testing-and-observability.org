@@ -26,6 +26,12 @@ The Case monitor may interrupt a non-returning native harness thread and report 
 its heap counters are process-wide, not a thread-local heap quota.  Native
 =test-case= declarations that have not migrated still receive the worker-level
 managed-heap cap, but not Case-span observation.
+For a retained-allocation risk, a Case may opt into
+=collect-before-sample?= on its memory-policy slot.  This collects before
+each periodic sample so live-growth limits can stop a real allocation before
+the worker's hard heap cap; it is intentionally not the default because each
+collection has a cost.  The isolated observability suite verifies a bounded
+retained-allocation rejection and a subsequent successful Case.
 
 * Observability
 

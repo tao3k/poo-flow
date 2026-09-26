@@ -540,6 +540,7 @@
            (.ref policy 'collect-before-sample?)))
          (heap-limit (.ref policy 'heap-limit-bytes))
          (live-growth-limit (.ref policy 'live-growth-limit-bytes))
+         (collect-before-sample? (.ref policy 'collect-before-sample?))
          (fail-closed? (.ref policy 'fail-closed?)))
     (def (claim-stop!)
       (mutex-lock! gate)
@@ -554,7 +555,8 @@
     (def (watch)
       (thread-sleep! interval-seconds)
       (unless done?
-        (let (counters (poo-flow-debug-memory-counters #f))
+        (let (counters
+              (poo-flow-debug-memory-counters collect-before-sample?))
           (cond
            ((and fail-closed?
                  (poo-flow-debug-memory-counters-rejected?

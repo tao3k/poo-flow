@@ -25,9 +25,9 @@
          "module-system-lazy-loader-test.ss"
          "module-system-observability-test.ss")))
 
-;; This suite deliberately drives a non-returning lazy POO slot. Its heap
-;; budget must be independent of earlier files, while ordinary tests still
-;; share their native worker processes.
+;; This suite deliberately drives a non-returning lazy POO slot and a bounded
+;; retained-allocation Case. Its heap budget must be independent of earlier
+;; files, while ordinary tests still share their native worker processes.
 (def +poo-flow-isolated-test-selectors+
   (list (testing-test-selector 'contains "observability-framework-test.ss")))
 
