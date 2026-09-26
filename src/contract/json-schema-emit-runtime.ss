@@ -16,7 +16,7 @@
         (only-in :std/text/pregexp
                  pregexp
                  pregexp-match)
-        (only-in "../module-system/descriptor/contracts.ss"
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
                  poo-flow-native-contract)

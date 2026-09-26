@@ -233,12 +233,6 @@
               (length (poo-flow-module-system-source-refs))))
           (check-equal? (car source-values)
                         "modules/agent-sandbox/interface.ss")
-          (check-equal?
-           (if (member "src/module-system/poo-clos/config.ss"
-                       source-values)
-             #t
-             #f)
-           #t)
           (check-equal? (if (member "modules/sandbox-core/interface.ss"
                                     source-values)
                           #t

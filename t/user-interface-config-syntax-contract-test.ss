@@ -33,8 +33,8 @@
              (poo-flow-modules-system-use-module
               'nono-sandbox
               '(+nono +doctor)))
-            (core-selection
-             (poo-flow-user-module-selection 'core 'poo-clos '(+native))))
+            (flow-selection
+             (poo-flow-user-module-selection 'flow 'funflow '(+dag))))
         (check-equal? (poo-flow-user-module-selection-key
                        (car nono-selections))
                       '(sandbox . nono-sandbox))
@@ -44,13 +44,13 @@
         (check-equal? (poo-flow-user-module-when #f
                        (sandbox cubeSandbox +doctor))
                       '())
-        (check-equal? (poo-flow-user-module-selection->alist core-selection)
-                      '((group . core)
-                        (module . poo-clos)
-                        (key core . poo-clos)
+        (check-equal? (poo-flow-user-module-selection->alist flow-selection)
+                      '((group . flow)
+                        (module . funflow)
+                        (key flow . funflow)
                         (source-ref . #f)
                         (entrypoint . #f)
-                        (flags +native)
+                        (flags +dag)
                         (enabled? . #t)))))
     (poo-flow-test-case "validates use-module declarations before projection"
       (let* ((valid-selections

@@ -37,8 +37,7 @@
 
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
-  '((core . poo-clos)
-    (flow . funflow)
+  '((flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
@@ -75,7 +74,7 @@
                     'developer)
       (check-equal? (length (poo-flow-user-profile-module-bundles
                              test-poo-flow-user-profile))
-                    8)
+                    7)
       (check-equal? (poo-flow-user-config? test-poo-flow-user-config) #t)
       (check-equal? (poo-flow-user-config-module-keys test-poo-flow-user-config)
                     expected-poo-flow-core-module-keys))
@@ -94,7 +93,7 @@
                                    '(custom . my-module)))
              (custom-source
               (poo-flow-user-module-selection-source-ref custom-module)))
-        (check-equal? (length custom-modules) 8)
+        (check-equal? (length custom-modules) 7)
         (check-equal? (poo-flow-user-module-selection-key custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-flags custom-module)
@@ -107,7 +106,7 @@
         (check-equal? (alist-value 'entrypoint custom-fact)
                       "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'declaration-index custom-fact)
-                      7)
+                      6)
         (check-equal? (alist-value 'declaration-phase custom-fact)
                       'init-selection)
         (check-equal? (alist-value 'package-management? custom-fact)

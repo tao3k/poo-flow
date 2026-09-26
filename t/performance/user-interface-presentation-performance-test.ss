@@ -39,7 +39,7 @@
   (call-with-input-file user-interface-presentation-fixture-path read))
 
 ;; : Integer
-(def user-interface-presentation-module-count 8)
+(def user-interface-presentation-module-count 7)
 
 ;; : (-> UserInterfacePresentationRow UserInterfacePresentationKey UserInterfacePresentationValue)
 (def (user-interface-presentation-ref value key)

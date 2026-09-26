@@ -79,9 +79,6 @@
 (def (poo-flow-module-system-source-refs)
   (list
    (poo-flow-module-system-source
-    'method-combination
-    "src/module-system/poo-clos/config.ss")
-   (poo-flow-module-system-source
     'profile-config "src/user-interface/profile-config.ss")
    (poo-flow-module-system-source
     'init-syntax "src/user-interface/init-syntax.ss")
