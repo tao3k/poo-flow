@@ -19,7 +19,7 @@
         "../support/poo-performance"
         :core/module-schema/interface
         :core/extension-graph/interface
-        :poo-flow/src/module-system/object-validation/interface)
+        :core/module-schema/validation)
 
 (export objects-test)
 
@@ -98,7 +98,7 @@
           (check-equal? (length validations) 40)
           (check-equal? (object? summary) #t)
           (check-equal? (.ref summary 'valid) #t)
-          (check-equal? (car (.ref summary 'resolved-field-counts))
+          (check-equal? (.ref (car validations) 'resolved-field-count)
                         160)
           (module-system-poo-performance-display-receipt receipt)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))

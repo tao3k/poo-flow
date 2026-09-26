@@ -574,20 +574,11 @@ Phase 4: broaden runtime projection generation carefully.
   internal non-=->alist= helper names, keeping the =->alist= convention focused
   on single final projection boundaries while collection mapping stays ordinary
   functional code.
-- Completed module object-validation projection slice:
-  =poo-flow-module-object-validation->alist= now routes through
-  =defpoo-module-final-projection= with every hash-backed row named at the call
-  site, and the old dynamic field-list append helper was removed.
-- Completed module validation harness projection slice:
-  =poo-flow-module-type-validation->alist= and
-  =poo-flow-module-field-contract-validation->alist= now route through
-  =defpoo-module-final-projection=. The macro has a guarded form for legacy-safe
-  projection defaults, while field-list projection helpers were removed in favor
-  of explicit row declarations.
-- Completed module object-validation collection naming slice:
-  =poo-flow-module-objects-validation->alists= is now the exported collection
-  projection name; the old singular =->alist= route was removed because this is
-  a batch serializer, not one fixed final row.
+- Superseded module validation projection slices: the old ASP Harness/TypeSpec
+  adapter and its =->alist= receipts have been removed. Core now owns native
+  POO Type/C4 validation in =core/module-schema/validation.ss=, with static
+  receipt shapes constructed using =.o=. No duplicate final-projection macro
+  is needed at this boundary.
 - Completed final projection batch helper slice:
   =src/module-system/projection/syntax.ss= exports
   =defpoo-module-final-projection-batch= for the shared list guard plus map

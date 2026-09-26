@@ -18,7 +18,7 @@
         :poo-flow/src/module-system/loader/interface
         :core/module-schema/interface
         :core/object-family/interface
-        :poo-flow/src/module-system/object-validation/interface
+        :core/module-schema/validation
         :poo-flow/src/module-system/observability/interface
         :poo-flow/src/module-system/profile-composition/interface
         :core/poo-clos/interface
@@ -36,7 +36,7 @@
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :core/module-schema/interface)
         (import: :core/object-family/interface)
-        (import: :poo-flow/src/module-system/object-validation/interface)
+        (import: :core/module-schema/validation)
         (import: :poo-flow/src/module-system/observability/interface)
         (import: :poo-flow/src/module-system/profile-composition/interface)
         (import: :core/poo-clos/interface)

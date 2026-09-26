@@ -69,8 +69,8 @@ The part to avoid is making Python-style classes or attribute assignment the
   collection.
 - =src/core/policy.ss= owns the current =execution-policy= shape: strategy,
   cache policy, failure policy, capabilities, and frontier.
-- =src/module-system/object-validation/interface.ss= owns object/field contract
-  validation and summary projection.
+- =core/module-schema/validation.ss= owns native POO object/field contract
+  validation and summary projection; it does not invoke the ASP Harness.
 
 The current gap is not a missing row operator. The gap is a first-class
 profile-policy layer that explains why a profile is legal for a backend, which
@@ -485,8 +485,8 @@ The likely owners are:
 - =modules/sandbox-core/profile-support/resolve.ss=: composed object
   resolution and projection-only handoff construction.
 - =modules/*/objects.ss=: backend capability objects for concrete modules.
-- =src/module-system/object-validation/interface.ss=: shared structured diagnostic
-  projection and summary formatting.
+- =core/module-schema/validation.ss=: shared native structured diagnostics
+  and catalog summary.
 - =user-interface/custom/*=: real user-facing profile examples and policy
   fixtures.
 

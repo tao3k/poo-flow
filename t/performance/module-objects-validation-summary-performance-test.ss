@@ -17,7 +17,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/object-validation/interface
+        (only-in :core/module-schema/validation
                  poo-flow-module-objects-validation-summary))
 
 (export module-objects-validation-summary-performance-test)
