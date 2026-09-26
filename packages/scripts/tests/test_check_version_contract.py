@@ -12,8 +12,8 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "check_version_contract.py"
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "packages" / "scripts" / "check_version_contract.py"
 
 
 def version_contract_module():

@@ -8,9 +8,9 @@ load(
     "gerbil_project_dev",
 )
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("//tools/bazel:gerbil_project_environment.bzl", "gerbil_project_environment")
+load("//packages/tools/bazel:gerbil_project_environment.bzl", "gerbil_project_environment")
 load(
-    "//tools/bazel:gerbil_projection.bzl",
+    "//packages/tools/bazel:gerbil_projection.bzl",
     "gerbil_project_projection",
 )
 

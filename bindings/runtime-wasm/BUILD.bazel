@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-load("//tools/bazel:bundle_v1.bzl", "poo_flow_bundle_v1")
+load("//packages/tools/bazel:bundle_v1.bzl", "poo_flow_bundle_v1")
 
 package(default_visibility = ["//visibility:public"])
 

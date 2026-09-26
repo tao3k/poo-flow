@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source_root="$(dirname "$workspace")"
 build_library="$workspace/.gerbil/lib"
 local_loadpath="$build_library:$source_root"

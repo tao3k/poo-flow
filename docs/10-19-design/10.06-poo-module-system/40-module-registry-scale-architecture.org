@@ -188,7 +188,7 @@ in fresh serialized processes so that memory containment is per-test rather
 than amortized across a reused batch heap.
 
 The Runtime-WASM workflow separately materializes
-=//gerbil:dependency_packages= before the package action.  This exposes and
+=//packages/gerbil:dependency_packages= before the package action.  This exposes and
 caches =gerbil-utils=, =gerbil-poo=, and ASP compilation instead of charging
 their cold build to POO Flow.  Existing 30-minute job and 25-minute package
 timeouts remain unchanged.  A local verbose probe that changed Bazel

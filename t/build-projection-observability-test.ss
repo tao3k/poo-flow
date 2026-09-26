@@ -81,7 +81,7 @@
       (let ((root-build
              (call-with-input-file "BUILD.bazel" read-all-as-string))
             (gerbil-build
-             (call-with-input-file "gerbil/BUILD.bazel" read-all-as-string)))
+             (call-with-input-file "packages/gerbil/BUILD.bazel" read-all-as-string)))
         (check-equal? (contains? root-build
                                  "name = \"gerbil_package_sources\"")
                       #t)

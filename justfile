@@ -14,8 +14,8 @@ gerbil_test_debug := env_var_or_default("GERBIL_TEST_DEBUG", "q")
 gerbil_test_runtime_options := "-:max-heap=" + gerbil_test_max_heap + ",debug=" + gerbil_test_debug
 
 bazel := env_var_or_default("BAZEL", "bazelisk")
-gerbil_compile := "//gerbil:compile"
-gerbil_dev_compile := "//gerbil:dev_compile"
+gerbil_compile := "//packages/gerbil:compile"
+gerbil_dev_compile := "//packages/gerbil:dev_compile"
 gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"
 module_system_owner_tests := "//t/qualification/module-system:owner_map_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
@@ -28,7 +28,7 @@ gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
 aitia_native_library := justfile_directory() + "/.gerbil/native/libpoo_flow_aitia.dylib"
 aitia_python_dir := contribution_source_root + "/lambda-aitia/bindings/python"
-python_runtime_test_environment := "//gerbil:python_runtime_test_environment"
+python_runtime_test_environment := "//packages/gerbil:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
 cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/module-test"
@@ -232,7 +232,7 @@ build-bundle-v1:
 # Build the single Lean-linked Cedar Runtime Host at an explicit output path (Nix: $out/bin/cedarRuntimeHost).
 [group('build')]
 build-cedar-runtime-host out:
-    tools/ci/build-cedar-runtime-host "{{ out }}"
+    packages/tools/ci/build-cedar-runtime-host "{{ out }}"
 
 # Show the registered Gerbil implementation selected for the host platform.
 [group('build')]
@@ -476,18 +476,18 @@ check-healthcare-case-assurance: build-contribute check-healthcare-gql check-hea
 # Validate the repository and published-package license contract.
 [group('check')]
 check-license-contract:
-    python3 scripts/check_license_contract.py
-    python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+    python3 packages/scripts/check_license_contract.py
+    python3 -m unittest discover -s packages/scripts/tests -p 'test_*.py'
 
 # Validate every first-party manifest and Runtime ABI projection against VERSION.
 [group('check')]
 check-version-contract:
-    python3 scripts/check_version_contract.py
+    python3 packages/scripts/check_version_contract.py
 
 # Validate that gerbil.pkg direct pins and every Bazel projection agree.
 [group('check')]
 check-gerbil-dependency-contract:
-    python3 scripts/gerbil_dependency_pin.py check
+    python3 packages/scripts/gerbil_dependency_pin.py check
 
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]
@@ -503,10 +503,10 @@ bazel-update:
 # source archive digest and both platform lock projections are derived.
 [group('dependency')]
 pin-gerbil-dependency package revision:
-    python3 scripts/gerbil_dependency_pin.py pin "{{ package }}" "{{ revision }}"
+    python3 packages/scripts/gerbil_dependency_pin.py pin "{{ package }}" "{{ revision }}"
     {{ bazel }} mod deps --lockfile_mode=update
-    python3 scripts/gerbil_dependency_pin.py sync-lock
-    python3 scripts/gerbil_dependency_pin.py check
+    python3 packages/scripts/gerbil_dependency_pin.py sync-lock
+    python3 packages/scripts/gerbil_dependency_pin.py check
 
 # Normalize MODULE.bazel declarations while explicitly updating the lock.
 [group('dependency')]

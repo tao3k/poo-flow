@@ -10,7 +10,7 @@ if [[ $# -ne 1 || -z "$1" ]]; then
   exit 2
 fi
 
-repo_root="$(cd "$(dirname "$0")/../.." && pwd -P)"
+repo_root="$(cd "$(dirname "$0")/../../.." && pwd -P)"
 workspace="$repo_root/bindings/cedar-gerbil"
 proof="$repo_root/packages/proof/lean"
 output="$1"

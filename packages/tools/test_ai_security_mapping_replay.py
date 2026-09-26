@@ -16,7 +16,7 @@ from ai_security_mapping_replay import (
 )
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 BUNDLE_PATH = (
     REPOSITORY_ROOT
     / "docs/20-29-ai-security/receipts"

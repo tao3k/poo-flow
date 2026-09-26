@@ -342,8 +342,8 @@ ASR-005 reports independent assurance stages rather than one synthetic
 
 The prototype verifier is:
 
-- =tools/ai_security_mapping_replay.py=
-- =tools/test_ai_security_mapping_replay.py=
+- =packages/tools/ai_security_mapping_replay.py=
+- =packages/tools/test_ai_security_mapping_replay.py=
 
 Both Python owners are visible to parser-owned ASP search.  Runtime verification
 is still blocked by =deny-unbounded-structured-projection= /

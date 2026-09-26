@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 EXPRESSION = "Apache-2.0 AND LGPL-2.1-or-later"
 COPYRIGHT = "2026 tao3k team and Contributors"
 SPDX_LICENSE_LABEL = "SPDX-" + "License-Identifier"
