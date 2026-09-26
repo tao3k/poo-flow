@@ -94,7 +94,8 @@
                            'reach 'reach 'edge)))
                    (max-input-facts 8) (max-derived-pairs 8)
                    (max-output-pairs 8)))))
-        (check-equal? (pairs result 'reach) '(515 516 1029))))
+        (check-equal? (pairs result 'reach) '(515 516 1029))
+        (check-equal? (.ref result 'evaluation-path) 'semi-naive)))
     (test-case "invalid declarations and pair budget fail"
       (check-exception
        (evaluate (list (relation 'edge '(10)) (relation 'edge '())) '()) true)

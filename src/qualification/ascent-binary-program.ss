@@ -171,7 +171,7 @@
             (pairs-of
              (lambda (name)
                (vector-ref results (position-of name))))))
-      (let (pattern (transitive-pattern rules all position-of))
+      (let (pattern (and dense? (transitive-pattern rules all position-of)))
         (if pattern
           (let* ((source-position (.ref pattern 'source-index))
                  (head-position (.ref pattern 'head-index))
