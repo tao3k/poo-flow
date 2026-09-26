@@ -43,6 +43,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | object family | =object-family/interface.ss= | hygienic POO object-family declarations |
 | extension graph | =extension-graph/interface.ss= | ordered contributions and fixed-point resolution |
 | module schema | =module-schema/interface.ss= | inherited field contracts and merge |
+| native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =observability/debug.ss= | reusable POO/debug observation contracts |

@@ -18,7 +18,7 @@
     (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/contract/json-schema-receipt.ss"))
       (eval '(import "./src/contract/json-schema-validate.ss"))
-      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import :core/module-schema/slot-contracts))
       (eval '(import "./src/type-facts/objects.ss"))
       (eval '(import :clan/poo/mop))
       (json-schema-native-eval

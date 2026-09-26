@@ -10,7 +10,7 @@
 (import (only-in :clan/poo/object
                  object?)
         (only-in :clan/poo/mop element?)
-        (only-in "../module-system/descriptor/contracts.ss"
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-required?
                  poo-flow-contract-slot-type

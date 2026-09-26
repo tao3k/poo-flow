@@ -7,7 +7,7 @@
 ;;; Invariant: graph objects describe topology; they never schedule or run it.
 
 (import (only-in :clan/poo/object .ref .slot?)
-        (only-in "../module-system/descriptor/contracts.ss"
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
                  poo-flow-native-contract

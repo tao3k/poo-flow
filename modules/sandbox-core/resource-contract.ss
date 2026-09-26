@@ -9,7 +9,7 @@
 (import :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         (only-in :clan/poo/mop element?)
-        (only-in :poo-flow/src/module-system/descriptor/contracts
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-slot
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-type

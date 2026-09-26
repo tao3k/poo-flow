@@ -10,7 +10,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/mop element?)
-        (only-in :poo-flow/src/module-system/descriptor/contracts
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-predicate-key
                  poo-flow-contract-slot-report-kind

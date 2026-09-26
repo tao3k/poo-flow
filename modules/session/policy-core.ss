@@ -9,7 +9,7 @@
         :poo-flow/modules/memory-core/durable/policy
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/policy-syntax
-        (only-in :poo-flow/src/module-system/descriptor/contracts
+        (only-in :core/module-schema/slot-contracts
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
