@@ -97,6 +97,7 @@
         prediction-projection: projection
         organization-digest: organization-digest-value
         max-derived-agents: limit-value
+        external-effect-executed?: #f
         activation-authority?: #f
         mrr-admitted?: #f)))
 
@@ -135,7 +136,7 @@
           organization-digest: (.ref program 'organization-digest)
           max-derived-agents: (.ref program 'max-derived-agents)
           source-specialization?: #t
-          runtime-executed?: #f
+          external-effect-executed?: #f
           activation-authority?: #f
           mrr-admitted?: #f))))
 
@@ -269,7 +270,7 @@
         organization-digest: (.ref program 'organization-digest)
         prediction-verdict: verdict-value
         failed-pairs: failed-pair-values
-        runtime-executed?: #f
+        external-effect-executed?: #f
         activation-authority?: #f
         mrr-admitted?: #f)))
 
@@ -299,6 +300,7 @@
                (= (.ref observation 'radix) (.ref program 'radix))
                (equal? (.ref observation 'prediction-projection)
                        (.ref program 'prediction-projection))
+               (eq? (.ref observation 'external-effect-executed?) #f)
                (eq? (.ref observation 'activation-authority?) #f)
                (eq? (.ref observation 'mrr-admitted?) #f)
                (valid-organization? organization)
@@ -350,6 +352,7 @@
            failed-pairs: failed-pair-values
            organization-digest: selected-digest
            max-derived-agents: limit-value
+           external-effect-executed?: #f
            activation-authority?: #f
            mrr-admitted?: #f)
        selected-organization))))

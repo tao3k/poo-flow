@@ -93,7 +93,7 @@
                  withdrawn-organization)) => #t)
         (check (.ref withdrawn-successor 'activation-authority?) => #f)
         (check (.ref withdrawn-successor 'mrr-admitted?) => #f)
-        (check (.ref withdrawn-observation 'runtime-executed?) => #f)
+        (check (.ref withdrawn-observation 'external-effect-executed?) => #f)
         (check (.ref cycle 'closure-pairs)
                => '(10 11 12 18 19 20 26 27 28 34 35 36))
         (check (.ref withdrawn 'closure-pairs)
@@ -156,7 +156,7 @@
                       (.ref new-demand 'identity)) => #f)
        (check (.ref specialized 'predecessor-identity)
               => (.ref program 'identity))
-       (check (.ref specialized 'runtime-executed?) => #f)
+       (check (.ref specialized 'external-effect-executed?) => #f)
        (check (.ref specialized 'activation-authority?) => #f)
        (check-exception
         (poo-flow-ascent-hypothesis-revise
@@ -182,6 +182,7 @@
         (check (.ref successor 'prediction-verdict) => 'falsified)
         (check (.ref successor 'failed-pairs) => '(36))
         (check (agent-count society) => 3)
+        (check (.ref successor 'external-effect-executed?) => #f)
         (check (.ref successor 'mrr-admitted?) => #f))))
 
    (test-case "duplicate pair predictions cannot define a program"
