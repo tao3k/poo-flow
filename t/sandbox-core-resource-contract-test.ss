@@ -150,6 +150,10 @@
          (poo-flow-sandbox-resources-prototype-contract-validation?
           validation)
          #t)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          poo-flow-runtime-volume-resources-prototype)
+         #f)
         (check-equal? (not (not (member 'native-poo-slot-types
                                         (alist-ref/default summary
                                                            'checked-signals '()))))

@@ -8,7 +8,7 @@
 
 (import :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        (only-in :clan/poo/mop element? raise-type-error)
+        (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/module-system/descriptor/contracts
                  poo-flow-contract-slot
                  poo-flow-contract-slot-name
@@ -292,7 +292,7 @@
       "sandbox resources prototype slot exists but cannot be read through POO slot resolution"
       resources))))
 
-;; : (-> PooSandboxResourcesPrototype PooFlowSlotContract [Alist])
+;; : (-> PooSandboxResourcesPrototype PooFlowSlotContract [POOObject])
 (def (poo-flow-sandbox-resources-prototype-slot-contract-diagnostics
       resources
       contract)
@@ -306,16 +306,17 @@
           (poo-flow-sandbox-resources-prototype-diagnostic
            'slot-contract-failed
            "sandbox resources prototype slot failed structured contract"
-           (list
-            (cons 'slot slot)
-            (cons 'value (.ref resources slot))))))
+           (list (cons 'slot slot)))))
        (lambda ()
-         (let (value (.ref resources slot))
-           (if (element? (poo-flow-contract-slot-type contract) value)
+         (let (slot-value (.ref resources slot))
+           (if (element? (poo-flow-contract-slot-type contract) slot-value)
              '()
-             (raise-type-error
-              (poo-flow-contract-slot-type contract)
-              value)))))
+             (list
+              (poo-flow-sandbox-resources-prototype-diagnostic
+               'slot-contract-failed
+               "sandbox resources prototype slot failed structured contract"
+               (list (cons 'slot slot)
+                     (cons 'value slot-value))))))))
       '())))
 
 ;; : (-> PooSandboxResourcesPrototype [Alist])
@@ -477,8 +478,10 @@
 
 (def (poo-flow-sandbox-resources-prototype-contract-validation? validation)
   (and (object? validation)
+       (.slot? validation 'kind)
        (equal? (.ref validation 'kind)
                poo-flow-sandbox-resources-prototype-contract-validation-kind)
+       (.slot? validation 'schema)
        (equal? (.ref validation 'schema)
                poo-flow-sandbox-resources-prototype-contract-validation-schema)))
 
