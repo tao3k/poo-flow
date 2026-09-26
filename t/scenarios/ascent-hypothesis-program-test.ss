@@ -66,17 +66,23 @@
             (withdrawn-program
              (poo-flow-ascent-hypothesis-program
               'research-withdrawn "source/withdrawn" withdrawn
-              predictions base 3)))
+              predictions base 3))
+            (cycle-demand (poo-flow-ascent-hypothesis-demand cycle-program))
+            (withdrawn-demand
+             (poo-flow-ascent-hypothesis-demand withdrawn-program))
+            (cycle-observation
+             (poo-flow-ascent-hypothesis-observe
+              cycle-program cycle-demand cycle base))
+            (withdrawn-observation
+             (poo-flow-ascent-hypothesis-observe
+              withdrawn-program withdrawn-demand withdrawn base)))
        (let-values
         (((cycle-successor cycle-organization)
           (poo-flow-ascent-hypothesis-revise
-           cycle-program (poo-flow-ascent-hypothesis-demand cycle-program)
-           cycle base))
+           cycle-program cycle-demand cycle-observation base))
          ((withdrawn-successor withdrawn-organization)
           (poo-flow-ascent-hypothesis-revise
-           withdrawn-program
-           (poo-flow-ascent-hypothesis-demand withdrawn-program)
-           withdrawn base)))
+           withdrawn-program withdrawn-demand withdrawn-observation base)))
         (check (.ref cycle-successor 'prediction-verdict) => 'matched)
         (check (eq? cycle-organization base) => #t)
         (check (.ref withdrawn-successor 'prediction-verdict) => 'falsified)
@@ -87,14 +93,14 @@
                  withdrawn-organization)) => #t)
         (check (.ref withdrawn-successor 'activation-authority?) => #f)
         (check (.ref withdrawn-successor 'mrr-admitted?) => #f)
+        (check (.ref withdrawn-observation 'runtime-executed?) => #f)
         (check (.ref cycle 'closure-pairs)
                => '(10 11 12 18 19 20 26 27 28 34 35 36))
         (check (.ref withdrawn 'closure-pairs)
                => '(10 11 12 19 20 28))
         (check-exception
-         (poo-flow-ascent-hypothesis-revise
-          cycle-program (poo-flow-ascent-hypothesis-demand cycle-program)
-          withdrawn base)
+         (poo-flow-ascent-hypothesis-observe
+          cycle-program cycle-demand withdrawn base)
          true))))
 
    (test-case "prediction count is bounded and demand is generation-bound"
@@ -107,21 +113,24 @@
              (poo-flow-ascent-hypothesis-program
               'bounded-research "source/withdrawn" expression
               predictions base 1))
-            (demand (poo-flow-ascent-hypothesis-demand program)))
+            (demand (poo-flow-ascent-hypothesis-demand program))
+            (observation
+             (poo-flow-ascent-hypothesis-observe
+              program demand expression base)))
        (let-values
         (((successor organization)
           (poo-flow-ascent-hypothesis-revise
-           program demand expression base)))
+           program demand observation base)))
         (check (.ref successor 'failed-pairs) => '(36 35))
         (check (agent-count organization) => 3)
         (check (.ref organization 'epoch) => 2)
         (check-exception
          (poo-flow-ascent-hypothesis-revise
-          successor demand expression organization)
+          successor demand observation organization)
          true)
         (check-exception
          (poo-flow-ascent-hypothesis-revise
-          program demand expression organization)
+          program demand observation organization)
          true))))
 
    (test-case "source specialization demands a new snapshot before revision"
@@ -136,7 +145,13 @@
             (specialized
              (poo-flow-ascent-hypothesis-specialize-source
               program "source/withdrawn" withdrawn base))
-            (new-demand (poo-flow-ascent-hypothesis-demand specialized)))
+            (new-demand (poo-flow-ascent-hypothesis-demand specialized))
+            (old-observation
+             (poo-flow-ascent-hypothesis-observe
+              program old-demand cycle base))
+            (new-observation
+             (poo-flow-ascent-hypothesis-observe
+              specialized new-demand withdrawn base)))
        (check (equal? (.ref old-demand 'identity)
                       (.ref new-demand 'identity)) => #f)
        (check (.ref specialized 'predecessor-identity)
@@ -145,7 +160,16 @@
        (check (.ref specialized 'activation-authority?) => #f)
        (check-exception
         (poo-flow-ascent-hypothesis-revise
-         specialized old-demand withdrawn base)
+         specialized old-demand new-observation base)
+        true)
+       (check-exception
+        (poo-flow-ascent-hypothesis-revise
+         specialized new-demand old-observation base)
+        true)
+       (check-exception
+        (poo-flow-ascent-hypothesis-revise
+         specialized new-demand
+         (.mix new-observation (.o failed-pairs: '(63))) base)
         true)
        (check-exception
         (poo-flow-ascent-hypothesis-specialize-source
@@ -154,7 +178,7 @@
        (let-values
         (((successor society)
           (poo-flow-ascent-hypothesis-revise
-           specialized new-demand withdrawn base)))
+           specialized new-demand new-observation base)))
         (check (.ref successor 'prediction-verdict) => 'falsified)
         (check (.ref successor 'failed-pairs) => '(36))
         (check (agent-count society) => 3)

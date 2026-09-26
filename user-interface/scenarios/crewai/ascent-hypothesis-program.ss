@@ -26,6 +26,7 @@
         poo-flow-ascent-hypothesis-program
         poo-flow-ascent-hypothesis-specialize-source
         poo-flow-ascent-hypothesis-demand
+        poo-flow-ascent-hypothesis-observe
         poo-flow-ascent-hypothesis-revise)
 
 (def (valid-organization? value)
@@ -229,11 +230,13 @@
         (error "derived Ascent society failed Bundle validation"))
       derived)))
 
-(def (poo-flow-ascent-hypothesis-revise program demand expression organization)
+(def (poo-flow-ascent-hypothesis-observe program demand expression organization)
   (unless (and (object? program)
                (eq? (.ref program 'kind)
                     'poo-flow.ascent-hypothesis-candidate.v1)
                (object? demand)
+               (eq? (.ref demand 'kind)
+                    'poo-flow.ascent-hypothesis-demand.v1)
                (equal? (.ref demand 'identity)
                        (.ref (poo-flow-ascent-hypothesis-demand program)
                              'identity))
@@ -245,7 +248,7 @@
                (equal? (source-pairs expression)
                        (.ref program 'source-pair-values))
                (equal? (.ref expression 'radix) (.ref program 'radix)))
-    (error "Ascent revision requires exact candidate source and society"))
+    (error "Ascent observation requires exact candidate source and society"))
   (let* ((contains? (.ref expression 'closure-contains?))
          (failures
           (filter (lambda (prediction)
@@ -254,7 +257,68 @@
                   (.ref program 'predictions)))
          (failed-pair-values
           (map (lambda (value) (.ref value 'pair)) failures))
-         (next-generation (+ 1 (.ref program 'generation)))
+         (verdict-value (if (null? failures) 'matched 'falsified)))
+    (.o kind: 'poo-flow.ascent-hypothesis-observation.v1
+        program-identity: (.ref program 'identity)
+        demand-identity: (.ref demand 'identity)
+        generation: (.ref program 'generation)
+        source-identity: (.ref program 'source-identity)
+        source-pair-values: (.ref program 'source-pair-values)
+        radix: (.ref program 'radix)
+        prediction-projection: (.ref program 'prediction-projection)
+        organization-digest: (.ref program 'organization-digest)
+        prediction-verdict: verdict-value
+        failed-pairs: failed-pair-values
+        runtime-executed?: #f
+        activation-authority?: #f
+        mrr-admitted?: #f)))
+
+(def (poo-flow-ascent-hypothesis-revise program demand observation organization)
+  (unless (and (object? program)
+               (eq? (.ref program 'kind)
+                    'poo-flow.ascent-hypothesis-candidate.v1)
+               (object? demand)
+               (eq? (.ref demand 'kind)
+                    'poo-flow.ascent-hypothesis-demand.v1)
+               (equal? (.ref demand 'identity)
+                       (.ref (poo-flow-ascent-hypothesis-demand program)
+                             'identity))
+               (object? observation)
+               (eq? (.ref observation 'kind)
+                    'poo-flow.ascent-hypothesis-observation.v1)
+               (equal? (.ref observation 'program-identity)
+                       (.ref program 'identity))
+               (equal? (.ref observation 'demand-identity)
+                       (.ref demand 'identity))
+               (= (.ref observation 'generation)
+                  (.ref program 'generation))
+               (equal? (.ref observation 'source-identity)
+                       (.ref program 'source-identity))
+               (equal? (.ref observation 'source-pair-values)
+                       (.ref program 'source-pair-values))
+               (= (.ref observation 'radix) (.ref program 'radix))
+               (equal? (.ref observation 'prediction-projection)
+                       (.ref program 'prediction-projection))
+               (eq? (.ref observation 'activation-authority?) #f)
+               (eq? (.ref observation 'mrr-admitted?) #f)
+               (valid-organization? organization)
+               (equal? (.ref (poo-flow-organization-bundle-identity organization)
+                             'digest)
+                       (.ref observation 'organization-digest))
+               (equal? (.ref observation 'organization-digest)
+                       (.ref program 'organization-digest)))
+    (error "Ascent revision requires an exact candidate observation"))
+  (let* ((failed-pair-values (.ref observation 'failed-pairs))
+         (predicted-pairs (map car (.ref program 'prediction-projection)))
+         (ordered-failures
+          (filter (lambda (pair-value) (member pair-value failed-pair-values))
+                  predicted-pairs)))
+    (unless (and (list? failed-pair-values)
+                 (equal? failed-pair-values ordered-failures)
+                 (eq? (.ref observation 'prediction-verdict)
+                      (if (null? failed-pair-values) 'matched 'falsified)))
+      (error "Ascent observation failures must match predicted pairs"))
+    (let* ((next-generation (+ 1 (.ref program 'generation)))
          (source-id (.ref program 'source-identity))
          (selected-organization
           (if (null? failed-pair-values)
@@ -271,21 +335,21 @@
          (prediction-values (.ref program 'predictions))
          (prediction-rows (.ref program 'prediction-projection))
          (limit-value (.ref program 'max-derived-agents))
-         (verdict-value (if (null? failures) 'matched 'falsified)))
-    (values
-     (.o kind: 'poo-flow.ascent-hypothesis-candidate.v1
-         identity: (list predecessor next-generation source-id failed-pair-values)
-         generation: next-generation
-         predecessor-identity: predecessor
-         source-identity: source-id
-         source-pair-values: source-values
-         radix: radix-value
-         predictions: prediction-values
-         prediction-projection: prediction-rows
-         prediction-verdict: verdict-value
-         failed-pairs: failed-pair-values
-         organization-digest: selected-digest
-         max-derived-agents: limit-value
-         activation-authority?: #f
-         mrr-admitted?: #f)
-     selected-organization)))
+         (verdict-value (.ref observation 'prediction-verdict)))
+      (values
+       (.o kind: 'poo-flow.ascent-hypothesis-candidate.v1
+           identity: (list predecessor next-generation source-id failed-pair-values)
+           generation: next-generation
+           predecessor-identity: predecessor
+           source-identity: source-id
+           source-pair-values: source-values
+           radix: radix-value
+           predictions: prediction-values
+           prediction-projection: prediction-rows
+           prediction-verdict: verdict-value
+           failed-pairs: failed-pair-values
+           organization-digest: selected-digest
+           max-derived-agents: limit-value
+           activation-authority?: #f
+           mrr-admitted?: #f)
+       selected-organization))))
