@@ -17,7 +17,7 @@
         "../support/performance"
         (only-in :core/module-schema/interface
                  poo-flow-module-object)
-        (only-in :poo-flow/src/module-system/object-validation/interface
+        (only-in :core/module-schema/validation
                  poo-flow-module-object-inheritance-chain))
 
 (export module-object-inheritance-chain-performance-test)

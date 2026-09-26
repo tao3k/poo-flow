@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .ref)
         :core/module-schema/interface
         :core/extension-graph/interface
-        :poo-flow/src/module-system/object-validation/interface)
+        :core/module-schema/validation)
 
 (export poo-performance-slot-ref/default
         poo-performance-build-list

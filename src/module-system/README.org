@@ -27,7 +27,7 @@ extension-graph operations, and module-schema contracts belong to Core.
 | loader | =loader/interface.ss= | discovery, resolution, lazy loading |
 | projection | =projection/interface.ss= | option and receipt projection |
 | profile composition | =profile-composition/interface.ss= | functional composition values |
-| object validation | =object-validation/interface.ss= | object contract evidence |
+| object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
 | composition | =composition/interface.ss= | public re-export of Core lineage and local proof facts |
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | semantic module | =semantic-module/interface.ss= | semantic module objects and types |

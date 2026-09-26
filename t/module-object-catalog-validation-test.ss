@@ -12,7 +12,7 @@
                  test-suite
                  check-equal?)
         :core/module-schema/interface
-        :poo-flow/src/module-system/object-validation/interface
+        :core/module-schema/validation
         :poo-flow/src/module-system/objects
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/user-interface/root-objects
@@ -70,18 +70,8 @@
                         '(objects.shared.sandbox))
           (check-equal? (length (receipt-ref summary 'field-origins)) 9)
           (check-equal? (length (receipt-ref summary 'validation-phases)) 9)
-          (check-equal? (not (not (member
-                                   'object-catalog-debug-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-field-origin-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-phase-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
+          (check-equal? (receipt-ref summary 'checkedSignals)
+                        '(native-poo-catalog-validation))
           (check-equal? (receipt-ref summary 'descriptor-realized?) #f)
           (check-equal? (receipt-ref summary 'runtime-executed) #f))))
 

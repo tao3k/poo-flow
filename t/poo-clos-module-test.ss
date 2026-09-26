@@ -43,7 +43,7 @@
     "src/module-system/loader/interface.ss"
     "core/module-schema/interface.ss"
     "core/object-family/interface.ss"
-    "src/module-system/object-validation/interface.ss"
+    "core/module-schema/validation.ss"
     "src/module-system/observability/interface.ss"
     "core/poo-clos/interface.ss"
     "src/module-system/profile-composition/interface.ss"

@@ -19,7 +19,7 @@
         "../support/poo-performance"
         :core/module-schema/interface
         :core/extension-graph/interface
-        :poo-flow/src/module-system/object-validation/interface)
+        :core/module-schema/validation)
 
 (export objects-test)
 

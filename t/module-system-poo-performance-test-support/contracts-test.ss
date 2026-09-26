@@ -19,7 +19,7 @@
         :poo-flow/src/core/runtime-protocol
         :core/module-schema/interface
         :core/extension-graph/interface
-        :poo-flow/src/module-system/object-validation/interface)
+        :core/module-schema/validation)
 
 (export contracts-test)
 

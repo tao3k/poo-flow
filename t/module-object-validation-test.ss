@@ -3,34 +3,18 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: module object validation receipts bridge POO Flow objects to the
-;;; Gerbil harness structural validation vocabulary.
+;;; Boundary: POO Flow integration with Core's native module-schema admission.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
-         (only-in :clan/poo/object .ref object?)
-        (only-in :std/test
-                 test-suite
-                 check-equal?
-                 check-exception
-                 )
+(import :gerbil/core
+        (only-in :clan/poo/object .ref object?)
+        (only-in :std/test test-suite check-equal? check-exception)
+        (only-in :poo-flow/src/module-system/observability/testing-case
+                 poo-flow-test-case)
         :core/module-schema/interface
-        :poo-flow/src/module-system/object-validation/interface
-        :poo-flow/src/module-system/objects)
+        :core/module-schema/validation)
 
 (export module-object-validation-test)
 
-;; : (-> POOObject Symbol Value)
-(def (receipt-ref receipt key)
-  (.ref receipt key))
-
-;;; Receipt projection boundary: keep the field list assertion independent from
-;;; harness-private receipt nesting.
-;; : (-> [POOObject] [Symbol])
-(def (field-contract-validation-fields validations)
-  (map (lambda (validation) (receipt-ref validation 'field))
-       validations))
-
-;; : PooModuleObject
 (def validation-shared-sandbox-object
   (poo-flow-module-object
    'objects.validation.shared
@@ -42,7 +26,6 @@
      'runtime-args PooFlowModuleListType 'override '() '((scope . validation))))
    '((domain . validation))))
 
-;; : PooModuleObject
 (def validation-nono-sandbox-object
   (poo-flow-module-object
    'objects.validation.nono
@@ -51,144 +34,47 @@
     (poo-flow-module-field-contract
      'backend PooFlowModuleSymbolType 'override 'nono '((scope . validation)))
     (poo-flow-module-field-contract
-     'binding PooFlowModuleSymbolType 'override 'native-ffi '((scope . validation))))
+     'binding PooFlowModuleSymbolType 'override 'native-ffi
+     '((scope . validation))))
    '((domain . validation))))
 
-;;; Suite boundary: these tests pin the downstream adapter contract while
-;;; leaving upstream harness internals free to evolve behind receipt fields.
-;; : TestSuite
 (def module-object-validation-test
-  (test-suite "poo-flow module object validation"
-    (poo-flow-test-case "projects module objects into harness validation receipts"
-      ;; This case locks the downstream receipt shape to the upstream facade
-      ;; contract without asserting harness-private implementation details.
+  (test-suite "poo-flow native module object validation"
+    (poo-flow-test-case "admits inherited module objects through native Type and C4"
       (let* ((validation
-              (poo-flow-module-object-validation
-               validation-nono-sandbox-object))
-             (cached-validation
-              (poo-flow-module-object-validation
-               validation-nono-sandbox-object))
-             (harness-validation
-              (receipt-ref validation 'harnessValidation))
-             (source-ref
-              (receipt-ref validation 'sourceRef))
-             (field-contract-validations
-              (receipt-ref validation 'fieldContractValidations))
-             (first-field-validation
-              (car field-contract-validations))
-             (structural-validation
-              (receipt-ref harness-validation 'structuralValidation))
-             (field-contracts-validation
-              (receipt-ref harness-validation 'fieldContractsValidation))
-             (first-field-structural-validation
-              (receipt-ref first-field-validation 'structuralValidation))
-             (first-field-type-validation
-              (receipt-ref first-field-validation 'typeValidation))
-             (field-origins
-              (receipt-ref validation 'field-origins))
-             (validation-phases
-              (receipt-ref validation 'validationPhases))
-             (harness-checked-signals
-              (receipt-ref harness-validation 'checkedSignals))
-             (checked-signals
-              (receipt-ref validation 'checkedSignals))
-             (harness-dependency
-              (receipt-ref source-ref 'dependency)))
+              (poo-flow-module-object-validation validation-nono-sandbox-object))
+             (field-validations (.ref validation 'fieldContractValidations))
+             (field-origins (.ref validation 'field-origins)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
-        (check-equal? (eq? validation cached-validation) #t)
-        (check-equal?
-         (and (object? validation)
-              (object? harness-validation)
-              (object? source-ref)
-              (andmap object? field-contract-validations)
-              (andmap object? field-origins)
-              (andmap object? validation-phases))
-         #t)
-        (check-equal? (receipt-ref validation 'kind)
-                      poo-flow-module-object-validation-kind)
-        (check-equal? (receipt-ref validation 'schema)
-                      poo-flow-module-object-validation-schema)
-        (check-equal? (receipt-ref validation 'object)
-                      'objects.validation.nono)
-        (check-equal? (receipt-ref validation 'inheritance-chain)
-                      '(objects.validation.nono
-                        objects.validation.shared))
-        (check-equal? (receipt-ref validation 'direct-field-identities)
+        (check-equal? (eq? validation
+                          (poo-flow-module-object-validation
+                           validation-nono-sandbox-object))
+                      #t)
+        (check-equal? (and (object? validation)
+                           (andmap object? field-validations)
+                           (andmap object? field-origins))
+                      #t)
+        (check-equal? (poo-flow-module-object-validation-valid? validation) #t)
+        (check-equal? (.ref validation 'inheritance-chain)
+                      '(objects.validation.nono objects.validation.shared))
+        (check-equal? (.ref validation 'direct-field-identities)
                       '(backend binding))
-        (check-equal? (receipt-ref validation 'resolved-field-identities)
+        (check-equal? (.ref validation 'resolved-field-identities)
                       '(flags runtime-args backend binding))
         (check-equal? (map (lambda (origin)
-                             (cons (receipt-ref origin 'field)
-                                   (receipt-ref origin 'origin)))
-                           field-origins)
-                      '((flags . inherited)
-                        (runtime-args . inherited)
-                        (backend . direct)
-                        (binding . direct)))
-        (check-equal? (map (lambda (origin)
-                             (cons (receipt-ref origin 'field)
-                                   (receipt-ref origin 'provider)))
+                             (cons (.ref origin 'field) (.ref origin 'provider)))
                            field-origins)
                       '((flags . objects.validation.shared)
                         (runtime-args . objects.validation.shared)
                         (backend . objects.validation.nono)
                         (binding . objects.validation.nono)))
-        (check-equal? (map (lambda (phase)
-                             (receipt-ref phase 'phase))
-                           validation-phases)
-                      '(source-reference
-                        harness-object-contract
-                        field-contracts
-                        local-object-diagnostics))
-        (check-equal? (receipt-ref harness-validation 'kind)
-                      "poo-object-contract-validation")
-        (check-equal? (receipt-ref harness-validation 'schema)
-                      "poo-object-contract-validation/v1")
-        (check-equal? (receipt-ref structural-validation 'kind)
-                      "poo-pattern-structural-validation")
-        (check-equal? (receipt-ref structural-validation 'patternKind)
-                      "type-validation")
-        (check-equal? (receipt-ref harness-validation 'valid) #t)
-        (check-equal? (receipt-ref harness-validation 'diagnostics) '())
-        (check-equal? (receipt-ref field-contracts-validation 'kind)
-                      "poo-object-field-contracts-validation")
-        (check-equal? (receipt-ref field-contracts-validation 'valid) #t)
-        (check-equal? (not (not (member
-                                 "field-contracts-validation"
-                                 harness-checked-signals)))
+        (check-equal? (map (lambda (entry) (.ref entry 'valueKind))
+                           field-validations)
+                      '(List List Symbol Symbol))
+        (check-equal? (andmap poo-flow-module-field-contract-validation-valid?
+                              field-validations)
                       #t)
-        (check-equal? (receipt-ref first-field-validation 'kind)
-                      poo-flow-module-field-contract-validation-kind)
-        (check-equal? (receipt-ref first-field-type-validation 'kind)
-                      "poo-object-type-spec-validation")
-        (check-equal? (receipt-ref first-field-type-validation 'valid)
-                      #t)
-        (check-equal? (receipt-ref first-field-structural-validation
-                                   'patternKind)
-                      "type-validation")
-        (check-equal? (andmap
-                       poo-flow-module-field-contract-validation-valid?
-                       field-contract-validations)
-                      #t)
-        (check-equal? (not (not (member
-                                 'backend
-                                 (field-contract-validation-fields
-                                  field-contract-validations))))
-                      #t)
-        (check-equal? (not (not (member
-                                 'object-field-origin-contract
-                                 checked-signals)))
-                      #t)
-        (check-equal? (not (not (member
-                                 'object-validation-phase-contract
-                                 checked-signals)))
-                      #t)
-        (check-equal? harness-dependency
-                      "github.com/tao3k/asp-gerbil-scheme")
-        (check-equal? (poo-flow-module-object-validation-valid? validation)
-                      #t)
-        (check-equal? (poo-flow-module-object-validation-diagnostics
-                       validation)
+        (check-equal? (poo-flow-module-object-validation-diagnostics validation)
                       '())))
 
     (poo-flow-test-case "rejects symbolic field kinds at the native Type boundary"
@@ -197,65 +83,39 @@
         'broken 'Unknown 'override #f '((scope . validation)))
        true))
 
-    (poo-flow-test-case "reports upstream contract diagnostics without dropping harness evidence"
-      ;; Broken field metadata, defaults, and merge strategy should all be
-      ;; reported by the harness facade rather than reimplemented in poo-flow.
-      (let* ((broken-field
-              (poo-flow-module-field-contract
-               'broken PooFlowModuleStringType 'merge-strategy 42 'not-an-alist))
-             (broken-object
+    (poo-flow-test-case "reports native field contract diagnostics"
+      (let* ((broken-object
               (poo-flow-module-object
                'objects.validation.broken
                '()
-               (list broken-field)
+               (list (poo-flow-module-field-contract
+                      'broken PooFlowModuleStringType 'merge-strategy 42
+                      'not-an-alist))
                '((domain . validation))))
-             (validation
-              (poo-flow-module-object-validation broken-object))
-             (harness-validation
-              (receipt-ref validation 'harnessValidation))
-             (structural-validation
-              (receipt-ref harness-validation 'structuralValidation))
-             (field-contract-validations
-              (receipt-ref validation 'fieldContractValidations))
+             (validation (poo-flow-module-object-validation broken-object))
              (field-validation
-              (car field-contract-validations))
-             (diagnostics
-              (poo-flow-module-object-validation-diagnostics validation)))
-        (check-equal? (poo-flow-module-object-validation-valid? validation)
+              (car (.ref validation 'fieldContractValidations))))
+        (check-equal? (poo-flow-module-object-validation-valid? validation) #f)
+        (check-equal? (map (lambda (diagnostic) (.ref diagnostic 'code))
+                           (poo-flow-module-object-validation-diagnostics
+                            validation))
+                      '(unsupported-merge metadata-not-association-list
+                        default-not-in-native-type))
+        (check-equal? (poo-flow-module-field-contract-validation-valid?
+                       field-validation)
                       #f)
-        (check-equal? (receipt-ref harness-validation 'kind)
-                      "poo-object-contract-validation")
-        (check-equal? (receipt-ref structural-validation 'patternKind)
-                      "type-validation")
-        (check-equal? (receipt-ref structural-validation 'valid) #t)
-        (check-equal? (receipt-ref harness-validation 'valid) #f)
-        (check-equal? (map poo-flow-module-field-contract-validation-valid?
-                           field-contract-validations)
-                      '(#f))
-        (check-equal? diagnostics
-                      '("field:broken:unsupported-merge:merge-strategy"
-                        "field:broken:metadata-not-association-list"
-                        "field:broken:default-not-compatible-with-type:String"))
-        (check-equal? (receipt-ref field-validation 'diagnostics)
-                      diagnostics)))
-
-    (poo-flow-test-case "requires catalog objects to pass upstream harness validation"
-      (let* ((broken-field
-              (poo-flow-module-field-contract
-               'broken PooFlowModuleStringType 'merge-strategy 42 'not-an-alist))
-             (broken-object
-              (poo-flow-module-object
-               'objects.validation.broken
-               '()
-               (list broken-field)
-               '((domain . validation)))))
-        (check-equal? (poo-flow-require-module-objects-validation!
-                       (list validation-nono-sandbox-object))
-                      (list validation-nono-sandbox-object))
         (check-equal?
          (with-catch
           (lambda (_) #t)
           (lambda ()
             (poo-flow-require-module-object-validation! broken-object)
             #f))
-         #t)))))
+         #t)))
+
+    (poo-flow-test-case "requires every catalog object to pass native admission"
+      (check-equal?
+       (poo-flow-require-module-objects-validation!
+        (list validation-shared-sandbox-object
+              validation-nono-sandbox-object))
+       (list validation-shared-sandbox-object
+             validation-nono-sandbox-object)))))
