@@ -129,8 +129,9 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # Foundation owns the parser-facing POO contracts. Clean only this
-          # checkout's outputs before compiling the full POO Flow package.
+          # The Foundation gitlink owns this checkout's shared POO modules.
+          (cd foundation && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/foundation:$GITHUB_WORKSPACE/.gerbil/lib" GERBIL_BUILD_VERBOSE=1 gerbil build)
+          # Clean only POO Flow outputs; its build spec excludes Foundation.
           gerbil clean
 
       - name: Save native Gerbil package cache

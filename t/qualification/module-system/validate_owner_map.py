@@ -20,7 +20,6 @@ ROW_IDS = tuple(
         (2, "g0-decision"),
         (3, "runtime-context-recovery"),
         (4, "observability-snapshot"),
-        (5, "lineage-cycle"),
         (6, "gerbil-poo-consumption"),
         (7, "public-composition"),
     )

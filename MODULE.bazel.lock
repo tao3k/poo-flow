@@ -140,7 +140,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "Vj/sAtgOrRAnW3axfLGLHTHrg8OYlgrEHnaARKXbD/Q=",
+        "usagesDigest": "zk13M+1vzocynnU2wnQGqnti+eoe++IThx7yaVo9CkM=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -195,17 +195,17 @@
               ]
             }
           },
-          "poo_flow_parser_foundation_sources": {
+          "poo_flow_foundation_sources": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
               "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/poo-flow",
-              "package": "poo-flow",
-              "revision": "2ce55a9810f8559cc0f40a6c877a52ab7893c166",
-              "sha256": "a8ca33a6880f04da0ef2c1f62788f49687199125d9b59f4d5e38636bc59555f6",
-              "strip_prefix": "poo-flow-2ce55a9810f8559cc0f40a6c877a52ab7893c166",
+              "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
+              "package": "poo-flow-foundation",
+              "revision": "a33137f204b044d671ed7fe255853b36f40ad702",
+              "sha256": "dfc41d4e9cf0e4142f7017e15dd40a85170e8133b31f58f55bc5b3d3ed6a7517",
+              "strip_prefix": "poo-flow-foundation-a33137f204b044d671ed7fe255853b36f40ad702",
               "urls": [
-                "https://github.com/tao3k/poo-flow/archive/2ce55a9810f8559cc0f40a6c877a52ab7893c166.tar.gz"
+                "https://github.com/tao3k/poo-flow-foundation/archive/a33137f204b044d671ed7fe255853b36f40ad702.tar.gz"
               ]
             }
           },
@@ -236,26 +236,12 @@
                 "https://github.com/tao3k/orgize/archive/32f22822dec1fad8c72a4d1cacbe193f809e60f5.tar.gz"
               ]
             }
-          },
-          "poo_flow_foundation_sources": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
-            "attributes": {
-              "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
-              "package": "poo-flow-foundation",
-              "revision": "29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
-              "sha256": "9efaa72168a5218cfa226562f07db706688c2ab6debf4324366c1b72f7fdfb5a",
-              "strip_prefix": "poo-flow-foundation-29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
-              "urls": [
-                "https://github.com/tao3k/poo-flow-foundation/archive/29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49.tar.gz"
-              ]
-            }
           }
         }
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "Vj/sAtgOrRAnW3axfLGLHTHrg8OYlgrEHnaARKXbD/Q=",
+        "usagesDigest": "zk13M+1vzocynnU2wnQGqnti+eoe++IThx7yaVo9CkM=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -310,11 +296,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
               "package": "poo-flow-foundation",
-              "revision": "29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
-              "sha256": "9efaa72168a5218cfa226562f07db706688c2ab6debf4324366c1b72f7fdfb5a",
-              "strip_prefix": "poo-flow-foundation-29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
+              "revision": "a33137f204b044d671ed7fe255853b36f40ad702",
+              "sha256": "dfc41d4e9cf0e4142f7017e15dd40a85170e8133b31f58f55bc5b3d3ed6a7517",
+              "strip_prefix": "poo-flow-foundation-a33137f204b044d671ed7fe255853b36f40ad702",
               "urls": [
-                "https://github.com/tao3k/poo-flow-foundation/archive/29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49.tar.gz"
+                "https://github.com/tao3k/poo-flow-foundation/archive/a33137f204b044d671ed7fe255853b36f40ad702.tar.gz"
               ]
             }
           },

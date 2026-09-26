@@ -7,6 +7,5 @@
 depend:
  ("github.com/tao3k/gerbil-poo@099b381588360a8a49fd772f666a1a00351366f5"
   "github.com/tao3k/asp-gerbil-scheme@19bf659450f619a410cef46b093ccaa6bb203c03"
-  "github.com/tao3k/poo-flow-foundation@29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49"
   "github.com/tao3k/gerbil-parser@5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7"
   "github.com/tao3k/orgize@32f22822dec1fad8c72a4d1cacbe193f809e60f5"))
