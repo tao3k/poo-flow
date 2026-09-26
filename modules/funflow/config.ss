@@ -16,7 +16,7 @@
         (only-in :poo-flow/src/modules/workflow/objects
                  poo-flow-cicd-check-map-name
                  poo-flow-cicd-check-map?)
-        :poo-flow/src/modules/funflow/config-prototypes
+        :poo-flow/modules/funflow/config-prototypes
         :poo-flow/src/modules/workflow/funs)
 
 (export poo-flow-funflow-cicd-default-payload

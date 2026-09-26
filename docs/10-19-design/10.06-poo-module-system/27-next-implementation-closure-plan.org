@@ -27,7 +27,7 @@ baseline:
 
 - =src/modules/workflow/objects.ss= owns inert workflow CI/CD check and check-map
   objects.
-- =src/modules/funflow/config.ss= lowers compact
+- =modules/funflow/config.ss= lowers compact
   =(use-module funflow :config (pipeline ...))= declarations into workflow
   check maps.
 - =pooFlowUserConfigPresentation= exposes workflow CI/CD pipeline count,

@@ -87,7 +87,7 @@ src/contract/json-schema-normalize.ss
 src/contract/json-schema-emit.ss
 src/contract/json-schema-receipt.ss
 src/contract/json-schema-validate.ss
-src/modules/funflow/github-ci-contract.ss
+modules/funflow/github-ci-contract.ss
 t/support/json-schema-contract-performance.ss
 t/performance/json-schema-contract-performance-test.ss
 packages/python-runtime/src/poo_flow_runtime/json_schema_contract.py

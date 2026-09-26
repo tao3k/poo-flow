@@ -15,7 +15,7 @@
                  poo-flow-user-module-selection-flags)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        (only-in :poo-flow/src/modules/funflow/config
+        (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-check-map->functional-dag
                  poo-flow-funflow-composition-step?
                  poo-flow-funflow-composition-step->alist

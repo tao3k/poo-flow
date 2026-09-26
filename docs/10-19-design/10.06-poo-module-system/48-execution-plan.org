@@ -33,7 +33,7 @@ Before starting a package:
 | P2 | Session policy family generation | =src/modules/session/*= | P0, P1 pattern | Macro-backed policy families |
 | P3 | Runtime receipt projection generation | =src/modules/loop-engine/runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
 | P4 | Loop intent functional pipeline | =loop-engine-*=, session selector/materialization owners | P2, P3 | Value-in/value-out loop governance core |
-| P5 | Funflow functional kernel alignment | =src/core/flow*=, =src/modules/funflow=, workflow owners | P3, P4 | Functional DAG and arrow/Kleisli flow surface |
+| P5 | Funflow functional kernel alignment | =src/core/flow*=, =modules/funflow=, workflow owners | P3, P4 | Functional DAG and arrow/Kleisli flow surface |
 | P6 | Public =use-module= branch generation | =init-syntax.ss=, profile/config owners | P1-P5 | Generated syntax branches with unchanged public form |
 | P7 | Marlin boundary and consumer handoff | runtime manifest owners, =marlin-agent-core= Gerbil consumer | P3-P5 | Request/receipt contract and downstream adapter plan |
 | P8 | Closure and release readiness | docs, tests, scenarios, package build | P1-P7 | Clean package gate and public docs |
@@ -206,7 +206,7 @@ Tasks:
 - Connect Funflow CI/CD cases to sandbox and loop profiles without introducing raw alist authoring.
 - Keep runtime execution in this repo minimal and test-oriented: enough to validate lowering, dependency projection, and report-only receipts.
 Current implementation slice:
-- =src/modules/funflow/config.ss= now exposes Funflow functional DAG POO objects and edge POO objects. Users still author =funflow-check= and =funflow-pipeline= values; =poo-flow-funflow-check-map->functional-dag= and =poo-flow-funflow-poo-pipeline->functional-dag= return POO-native DAG values.
+- =modules/funflow/config.ss= now exposes Funflow functional DAG POO objects and edge POO objects. Users still author =funflow-check= and =funflow-pipeline= values; =poo-flow-funflow-check-map->functional-dag= and =poo-flow-funflow-poo-pipeline->functional-dag= return POO-native DAG values.
 - Boundary alists remain explicit projections through =poo-flow-funflow-functional-dag->alist= and =poo-flow-funflow-dag-edge->alist=.
 - The current DAG object records =composition-style: arrow-kleisli=, POO =composition-steps=, =composition-step-count=, node order, POO edge objects, entry nodes, terminal nodes, ready order, diagnostics, runtime owner, and =runtime-executed: #f=.
 
@@ -363,7 +363,7 @@ Actions:
 4. Keep runtime execution report-only in this repo: produce DAG/run receipts and handoff-ready values, but do not schedule external work.
 
 Primary owners:
-- =src/modules/funflow/config.ss=
+- =modules/funflow/config.ss=
 - =src/modules/workflow/cicd-config.ss=
 - =user-interface/custom/my-module/cases/funflow-cicd.ss=
 

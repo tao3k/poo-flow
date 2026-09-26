@@ -22,7 +22,7 @@ The Bass audit already made the boundary decision:
 - Milestone 4 is runtime-command manifest handoff.
 
 Current source state:
-- =src/modules/funflow/config.ss= already exports
+- =modules/funflow/config.ss= already exports
   =poo-flow-funflow-cicd-default-payload= with =checks=, =artifacts=,
   =release=, =webhook=, and =runtime= rows.
 - =user-interface/custom/my-module/profiles/cicd.ss= already declares concrete
@@ -87,7 +87,7 @@ until the runtime handoff layer consumes them.
 Recommended ownership:
 - =src/modules/workflow/objects.ss= should own the check-map object and
   =src/modules/workflow/funs.ss= its receipt projection.
-- =src/modules/funflow/config.ss= should continue to own only default feature
+- =modules/funflow/config.ss= should continue to own only default feature
   payload rows.
 - =src/modules/sandbox-core/profile.ss= and backend sandbox modules should keep
   profile validation.
@@ -119,7 +119,7 @@ through =src/modules/workflow/interface.ss=:
 - checks and check maps remain inert POO control-plane objects;
 - receipts and runtime-manifest readiness carry =profile-refs=, =sandbox-runtime-summaries=, =sandbox-handoff-summaries=, and =sandbox-unresolved-profile-refs=;
 - sandbox summaries are projected by =src/modules/agent-sandbox/config.ss= from a provided profile catalog, so CI/CD code does not parse filesystem/resource policy rows;
-- =src/modules/funflow/config.ss= lowers compact Funflow pipeline rows into the workflow-owned check-map object;
+- =modules/funflow/config.ss= lowers compact Funflow pipeline rows into the workflow-owned check-map object;
 - focused tests cover both unresolved refs and catalog-resolved summaries.
 
 The next implementation contract should connect this readiness data to the broader runtime-command manifest handoff and configured registry path, without adding provider-specific CI adapters.

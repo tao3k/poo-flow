@@ -26,7 +26,7 @@ The current module syntax boundary is thin and upstream-owned:
 The current CI/CD implementation is split into intent and concrete control-plane
 objects:
 
-- =src/modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
+- =modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
 - =src/modules/workflow/objects.ss= owns inert POO check and check-map objects.
 - =t/workflow-cicd-check-map-test.ss= proves receipt and runtime-manifest
   readiness projection without execution.
@@ -118,13 +118,13 @@ The macro expansion should construct a =poo-flow-cicd-check-map= through a new
 Funflow config helper. The helper should live beside the module owner, not in
 =module-system/declaration/interface.ss=:
 
-- =src/modules/funflow/config.ss= owns the public POO prototypes:
+- =modules/funflow/config.ss= owns the public POO prototypes:
   =funflow-check= and =funflow-pipeline=.
 - =src/modules/workflow/{objects,funs}.ss= keep the shared workflow-domain POO
   check-map object and projections until or unless it becomes Funflow-specific.
 - =src/user-interface/init-syntax.ss= only recognizes the syntax and calls the
   Funflow config helper.
-- =src/modules/funflow/config.ss= keeps the default =+cicd= feature payload.
+- =modules/funflow/config.ss= keeps the default =+cicd= feature payload.
 
 The branch should produce a normal =(flow . funflow)= module selection whose
 flags carry the POO check-map object, for example under =:config= or
@@ -182,7 +182,7 @@ Superseded note: the row-style Funflow config branch described below has been
 removed. Current implementation uses native POO =.def= declarations with
 =funflow-check= and =funflow-pipeline= prototypes.
 
-1. Extend =src/modules/funflow/config.ss= with helpers that turn pipeline/check
+1. Extend =modules/funflow/config.ss= with helpers that turn pipeline/check
    clauses into =poo-flow-cicd-check-map= objects.
 2. Import that helper from =src/user-interface/init-syntax.ss= and add only the
    =funflow :config (pipeline ...)= syntax branch.

@@ -18,7 +18,7 @@
         :poo-flow/src/modules/cubeSandbox/profile-interface
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/docker-sandbox/profile-interface
-        :poo-flow/src/modules/funflow/config
+        :poo-flow/modules/funflow/config
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/session/syntax
         :poo-flow/src/modules/tool-core/config
@@ -74,7 +74,7 @@
         poo-flow-user-module-selection->alist
         (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
         (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
-        (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/modules/funflow/config)
         (import: :poo-flow/src/modules/memory-core/interface)
         (import: :poo-flow/src/modules/session/config)
         (import: :poo-flow/src/modules/session/syntax)

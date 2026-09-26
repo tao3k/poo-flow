@@ -4,7 +4,7 @@
 
 ;;; Boundary: projects user loop-engine configuration into runtime-owned inputs.
 ;;; Invariant: projection is pure and leaves execution to the runtime handoff boundary.
-(import (only-in "../funflow/config.ss"
+(import (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-workflow-agreement)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/sandbox-core/profile-catalog

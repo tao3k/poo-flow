@@ -18,7 +18,7 @@ _SCHEME_LOAD_CACHE_LOCK = threading.RLock()
 _SCHEME_LOAD_CACHE: dict[tuple[Any, ...], SchemeRows] = {}
 _SCHEME_LOAD_DEPENDENCIES = (
     Path("src/user-interface/init-syntax.ss"),
-    Path("src/modules/funflow/runtime-load-projection.ss"),
+    Path("modules/funflow/runtime-load-projection.ss"),
     Path("src/module-system/profile-composition/interface.ss"),
     Path("src/module-system/profile-composition/accessors.ss"),
     Path("src/module-system/profile-composition/builders.ss"),
@@ -26,8 +26,8 @@ _SCHEME_LOAD_DEPENDENCIES = (
     Path("src/module-system/profile-composition/core.ss"),
     Path("src/module-system/profile-composition/inline-runtime.ss"),
     Path("src/module-system/profile-composition/use-syntax.ss"),
-    Path("src/modules/funflow/config.ss"),
-    Path("src/modules/funflow/config-prototypes.ss"),
+    Path("modules/funflow/config.ss"),
+    Path("modules/funflow/config-prototypes.ss"),
 )
 
 
