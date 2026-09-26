@@ -128,7 +128,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-index
                        custom-fact)
-                      8)
+                      7)
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-phase
                        custom-fact)

@@ -37,8 +37,7 @@
   (pooFlowUserConfigFromProfile root-config-profile))
 
 (def root-config-expected-module-keys
-  '((core . poo-clos)
-    (flow . funflow)
+  '((flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
@@ -75,9 +74,9 @@
          #t)
         (check-equal? (length (poo-flow-user-profile-module-bundles
                                root-config-profile))
-                      9)
+                      8)
         (check-equal? (length poo-flow-user-module-bundles) 5)
-        (check-equal? (length root-modules) 9)
+        (check-equal? (length root-modules) 8)
         (check-equal? (poo-flow-user-config-module-keys root-config)
                       root-config-expected-module-keys)
         (check-equal? (poo-flow-user-module-selection-flags root-flow-module)

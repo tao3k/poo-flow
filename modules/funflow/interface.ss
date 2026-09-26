@@ -5,11 +5,9 @@
 
 ;;; Public funflow module interface; all internal roles close through this file.
 
-(import "funs.ss"
-        "config.ss"
+(import "config.ss"
         "github-ci-contract.ss"
         "profile-library.ss")
-(export (import: "funs.ss")
-        (import: "config.ss")
+(export (import: "config.ss")
         (import: "github-ci-contract.ss")
         (import: "profile-library.ss"))

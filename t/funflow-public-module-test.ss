@@ -8,10 +8,8 @@
                  poo-flow-test-case)
         (only-in :poo-flow/modules/funflow/interface
                  poo-flow-funflow-workflow-agreement)
-        (only-in :poo-flow/modules/funflow/funs
-                 poo-flow-funflow-method-combination-module-ref)
-        (only-in :poo-flow/src/module-system/loader/source
-                 poo-flow-module-source-ref-kind))
+        (only-in :core/poo-clos/interface
+                 poo-clos-generic-function))
 
 (export funflow-public-module-test)
 
@@ -19,8 +17,5 @@
   (test-suite "Funflow top-level module ownership"
     (poo-flow-test-case "functional interface remains callable"
       (check-equal? (procedure? poo-flow-funflow-workflow-agreement) #t))
-    (poo-flow-test-case "functional role remains directly importable"
-      (check-equal?
-       (poo-flow-module-source-ref-kind
-        poo-flow-funflow-method-combination-module-ref)
-       'standard-library))))
+    (poo-flow-test-case "POO CLOS remains directly importable from Core"
+      (check-equal? (procedure? poo-clos-generic-function) #t))))

@@ -43,8 +43,8 @@
                     #t)
       (check-equal? (> (length poo-flow-kernel-profile-modules) 0)
                     #t)
-      (check-equal? (length poo-flow-kernel-module-bundles) 7)
-      (check-equal? (length poo-flow-kernel-profile-module-bundles) 7))
+      (check-equal? (length poo-flow-kernel-module-bundles) 6)
+      (check-equal? (length poo-flow-kernel-profile-module-bundles) 6))
     (poo-flow-test-case "user interface fixtures compile against explicit kernel imports"
       (check-equal? (poo-flow-user-profile-name test-poo-flow-user-profile)
                     'developer)

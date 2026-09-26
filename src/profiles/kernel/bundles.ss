@@ -7,9 +7,7 @@
 ;;; Invariant: every module owns its default flags and bundle in config.ss;
 ;;; this profile only composes those module-owned values.
 
-(import (only-in :poo-flow/src/module-system/poo-clos/config
-                 poo-clos-module-bundles)
-        (only-in :poo-flow/modules/funflow/config
+(import (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-cicd-default-payload
                  poo-flow-funflow-module-bundles
                  poo-upstream-flow-funflow-module-bundles)
@@ -26,7 +24,6 @@
                  poo-flow-docker-sandbox-module-bundles))
 
 (export poo-flow-funflow-cicd-default-payload
-        poo-clos-module-bundles
         poo-flow-kernel-module-bundles
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles
@@ -38,8 +35,7 @@
         poo-flow-docker-sandbox-module-bundles)
 
 (def poo-flow-kernel-module-bundles
-  (append poo-clos-module-bundles
-          poo-flow-funflow-module-bundles
+  (append poo-flow-funflow-module-bundles
           poo-flow-session-core-module-bundles
           poo-flow-loop-governor-module-bundles
           poo-flow-nono-sandbox-module-bundles
