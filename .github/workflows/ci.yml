@@ -150,9 +150,20 @@ jobs:
       - name: Run the single native unit-test entrypoint
         run: gerbil env ./unit-tests.ss
 
+      - name: Run pinned ASCENT submodule integration
+        if: runner.os == 'Linux'
+        run: |
+          git submodule update --init packages/gerbil-ascent
+          cargo install just --version 1.56.0 --locked
+          gerbil env just test-ascent-integration
+
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'
         run: gerbil env ./performance-tests.ss
+
+      - name: Run pinned ASCENT BYODS performance against the 1 ms budget
+        if: runner.os == 'Linux'
+        run: gerbil env just test-ascent-performance
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
