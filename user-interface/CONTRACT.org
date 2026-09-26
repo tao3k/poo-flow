@@ -7,12 +7,12 @@
 ** Upstream Kernel Profile
 
 The maintained kernel module implementations are upstream-owned under
-=src/modules=:
+=modules=:
 
 - =modules/funflow/config.ss= owns =(flow funflow +functional +dag +typed-receipts +runtime-manifest)=.
-- =src/modules/governor/config.ss= owns =(loop governor +strategy +policy)=.
-- =src/modules/nono-sandbox/config.ss= owns =(sandbox nono-sandbox +nono +doctor)=.
-- =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
+- =modules/governor/config.ss= owns =(loop governor +strategy +policy)=.
+- =modules/nono-sandbox/config.ss= owns =(sandbox nono-sandbox +nono +doctor)=.
+- =modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 
 =user-interface/init.ss= exports enabled category/module/feature rows.
 =user-interface/config.ss= imports the canonical composition constructor and
@@ -46,7 +46,7 @@ The implementation stays upstream:
 - =src/user-interface/root-objects.ss= owns user-interface object contracts.
 - =src/user-interface/root-profile.ss= owns profile/config projection helpers.
 - =src/user-interface/declaration-case.ss= owns declaration case contracts for tools and tests.
-- module descriptors, loaders, merge rules, and runtime adapters remain in =src/module-system=, =src/modules=, and other implementation owners according to domain.
+- module descriptors, loaders, merge rules, and runtime adapters remain in =src/module-system=, =modules=, and other implementation owners according to domain.
 
 * Public Entry Points
 

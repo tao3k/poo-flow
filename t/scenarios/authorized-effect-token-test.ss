@@ -6,10 +6,10 @@
          :std/test
         :clan/poo/object
         :poo-flow/src/policy/authorized-effect-token
-        :poo-flow/src/modules/authorization/providers/cedar/decision
+        :poo-flow/modules/authorization/providers/cedar/decision
         :poo-flow/src/policy/strict-mediation
         :poo-flow/src/proof/authorized-effect-evidence
-        :poo-flow/src/modules/tool-core/calling-control)
+        :poo-flow/modules/tool-core/calling-control)
 
 
 (def binding

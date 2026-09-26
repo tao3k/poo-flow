@@ -11,11 +11,11 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/recovery-scenario
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/recovery-scenario
+        :poo-flow/modules/session/config
+        :poo-flow/modules/memory-core/config)
 
 (export durable-recovery-scenario-test)
 

@@ -6,7 +6,7 @@
 ;;; Boundary: downstream session dataflow case.
 ;;; Invariant: this standalone module declares report-only objects.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-case)
 

@@ -31,21 +31,21 @@ objects directly rather than calling a chain API or writing row/alist DSLs.
 The current =poo-flow= rule is:
 
 #+begin_src text
-extension graph primitives live in src/modules/extension.ss.
-object contracts and object-aware wrappers live in src/modules/object-core.ss.
-shared object catalogs live in src/modules/objects.ss.
-sandbox profile authoring prototypes live in src/modules/*/profile-interface.ss.
+extension graph primitives live in modules/extension.ss.
+object contracts and object-aware wrappers live in modules/object-core.ss.
+shared object catalogs live in modules/objects.ss.
+sandbox profile authoring prototypes live in modules/*/profile-interface.ss.
 user-interface files declare data only.
 #+end_src
 
-=src/modules/extension.ss= owns generic graph facts only:
+=modules/extension.ss= owns generic graph facts only:
 - extension nodes;
 - extension operations;
 - extension contributions;
 - fixed-point convergence;
 - structural snapshots.
 
-=src/modules/object-core.ss= owns object semantics:
+=modules/object-core.ss= owns object semantics:
 - module object kind ids;
 - field contracts;
 - field contributions;
@@ -67,7 +67,7 @@ structured POO evidence APIs such as:
 poo-pattern-structural-validation
 #+end_src
 
-=src/modules/object-validation.ss= may build source references and local
+=modules/object-validation.ss= may build source references and local
 diagnostics, but it should call the upstream API for structural harness
 validation. =load!= follows the same rule for object entrypoints.
 
@@ -127,7 +127,7 @@ field contract + transformer args
 This is intentionally not a second extension graph operation set. Transformer
 contracts validate agent/user repair payloads and then produce ordinary field
 contributions. The fixed-point engine still only sees extension primitives from
-=src/modules/extension.ss=.
+=modules/extension.ss=.
 
 ** 10.06.17.60 User Interface Rule
 The downstream user interface should stay declarative, but declarative now
@@ -220,10 +220,10 @@ Do not:
 
 ** 10.06.17.100 Landed Implementation Slice
 The POO-native profile interface slice is now implemented through:
-- =src/modules/sandbox-core/profile-interface.ss=
-- =src/modules/nono-sandbox/profile-interface.ss=
-- =src/modules/cubeSandbox/profile-interface.ss=
-- =src/modules/docker-sandbox/profile-interface.ss=
+- =modules/sandbox-core/profile-interface.ss=
+- =modules/nono-sandbox/profile-interface.ss=
+- =modules/cubeSandbox/profile-interface.ss=
+- =modules/docker-sandbox/profile-interface.ss=
 - =src/user-interface/init-syntax.ss=
 
 The important design rule remains fixed:

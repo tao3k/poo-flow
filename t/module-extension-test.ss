@@ -21,8 +21,8 @@
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects)
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects)
 
 (export module-extension-test)
 

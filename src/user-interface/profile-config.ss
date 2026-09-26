@@ -7,9 +7,9 @@
 ;;; Invariant: profile objects, diagnostics, and presentations live in leaf owners.
 
 (import :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/modules/sandbox-core/profile-catalog
-        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
-        :poo-flow/src/modules/workflow/cicd-config
+        :poo-flow/modules/sandbox-core/profile-catalog
+        :poo-flow/modules/sandbox-core/backend-capability-catalog
+        :poo-flow/modules/workflow/cicd-config
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/user-interface/profile-gate
@@ -17,9 +17,9 @@
         :poo-flow/src/user-interface/profile-presentation)
 
 (export (import: :poo-flow/src/module-system/declaration/interface)
-        (import: :poo-flow/src/modules/sandbox-core/profile-catalog)
-        (import: :poo-flow/src/modules/sandbox-core/backend-capability-catalog)
-        (import: :poo-flow/src/modules/workflow/cicd-config)
+        (import: :poo-flow/modules/sandbox-core/profile-catalog)
+        (import: :poo-flow/modules/sandbox-core/backend-capability-catalog)
+        (import: :poo-flow/modules/workflow/cicd-config)
         (import: :poo-flow/src/user-interface/presentation)
         poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind

@@ -16,7 +16,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-policy-family-performance-test)
 

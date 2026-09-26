@@ -18,7 +18,7 @@
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection?
                  poo-flow-user-module-selection-flag-entry)
-        :poo-flow/src/modules/session/config
+        :poo-flow/modules/session/config
         (only-in "../../user-interface/custom/my-module/cases/cicd"
                  poo-flow-custom-my-module-cicd-case)
         (only-in "../../user-interface/custom/my-module/cases/loop-engine-owner"

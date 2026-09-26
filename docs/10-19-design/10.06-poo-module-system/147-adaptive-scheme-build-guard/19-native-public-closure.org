@@ -98,7 +98,7 @@ They are not deleted and they are not silently omitted from release assurance.
 
 The current 387-entry profile contains 379 =src/= entries and eight
 =user-interface/= entries.  The dominant source owners are
-=src/modules/= (132), =src/module-system/= (129), =src/core/= (27),
+=modules/= (132), =src/module-system/= (129), =src/core/= (27),
 =src/contract/= (21), and =src/feature-system/= (15).  This distribution makes
 the next split concrete: capability modules and broad module-system surfaces
 must move behind explicit feature ownership.  Directory membership alone is

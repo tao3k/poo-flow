@@ -10,7 +10,7 @@
         :poo-flow/src/module-system/declaration/interface
         (only-in :poo-flow/src/module-system/load
                  poo-flow-modules!)
-        :poo-flow/src/modules/loop-engine/config
+        :poo-flow/modules/loop-engine/config
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/profiles/kernel/interface)
 

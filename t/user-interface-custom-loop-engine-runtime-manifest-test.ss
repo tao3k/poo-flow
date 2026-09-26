@@ -17,9 +17,9 @@
         (only-in :poo-flow/src/loops/governor-marlin
                  +loop-governor-marlin-loop-engine-discovery-schema+
                  loop-governor-marlin-loop-engine-discovery)
-        (only-in :poo-flow/src/modules/cubeSandbox/config
+        (only-in :poo-flow/modules/cubeSandbox/config
                  poo-flow-cubeSandbox-module-bundles)
-        (only-in :poo-flow/src/modules/nono-sandbox/config
+        (only-in :poo-flow/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
         (only-in "./support/loop-engine-runtime-manifest-receipts"
                  check-custom-loop-runtime-manifest-request-receipts)

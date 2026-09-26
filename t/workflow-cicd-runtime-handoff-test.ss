@@ -14,8 +14,8 @@
         (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-command-descriptor-schema+
                  +runtime-request-schema+)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-runtime-handoff-test)
 

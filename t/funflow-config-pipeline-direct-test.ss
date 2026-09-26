@@ -10,11 +10,11 @@
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/workflow/cicd-config
-        :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/cicd-config
+        :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-pipeline-runtime-command-manifests)
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/workflow/interface)
 
 (export funflow-config-pipeline-direct-test)
 

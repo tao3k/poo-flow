@@ -161,7 +161,7 @@ requests and backend-specific adapters. That work belongs in
 ** 10.05.90 Native Binding Build Audit
 The current =nono= surface contains a real Gerbil FFI module.  It follows the
 upstream =:std/foreign= path:
-- =src/modules/nono-sandbox/_nono.ss= declares its exported native procedures
+- =modules/nono-sandbox/_nono.ss= declares its exported native procedures
   with =begin-ffi=;
 - the ASP package declaration adds one ordinary =gxc:= target carrying the
   required host include and linker options;
@@ -192,11 +192,11 @@ additional typed receipt.  Merely reproducing =defbuild-script= or =std/make=
 is not a gain.
 
 The remaining boundaries are unchanged:
-- =src/modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory;
-- =src/modules/nono-sandbox/c-binding-build.ss= owns the POO build/probe object
+- =modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory;
+- =modules/nono-sandbox/c-binding-build.ss= owns the POO build/probe object
   for syntax-only host checks;
-- =src/modules/nono-sandbox/c-binding-runtime.ss= owns runtime handoff data;
-- =src/modules/nono-sandbox/native.ss= alone owns the gated =dlopen= probes.
+- =modules/nono-sandbox/c-binding-runtime.ss= owns runtime handoff data;
+- =modules/nono-sandbox/native.ss= alone owns the gated =dlopen= probes.
 ** 10.05.91 Nono C Probe Input Contract
 The =nono= C probe remains a syntax-only host check, but its input contract is
 now explicit:

@@ -13,22 +13,22 @@
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
         :poo-flow/src/module-system/observability/module-presentation
-        :poo-flow/src/modules/memory-core/interface
-        :poo-flow/src/modules/cubeSandbox/config
-        :poo-flow/src/modules/cubeSandbox/profile-interface
-        :poo-flow/src/modules/docker-sandbox/config
-        :poo-flow/src/modules/docker-sandbox/profile-interface
+        :poo-flow/modules/memory-core/interface
+        :poo-flow/modules/cubeSandbox/config
+        :poo-flow/modules/cubeSandbox/profile-interface
+        :poo-flow/modules/docker-sandbox/config
+        :poo-flow/modules/docker-sandbox/profile-interface
         :poo-flow/modules/funflow/config
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/session/syntax
-        :poo-flow/src/modules/tool-core/config
-        :poo-flow/src/modules/nono-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/profile-interface
+        :poo-flow/modules/session/config
+        :poo-flow/modules/session/syntax
+        :poo-flow/modules/tool-core/config
+        :poo-flow/modules/nono-sandbox/config
+        :poo-flow/modules/nono-sandbox/profile-interface
         :poo-flow/src/loops/spec-evolution
-        (only-in :poo-flow/src/modules/loop-engine/config
+        (only-in :poo-flow/modules/loop-engine/config
                  poo-flow-loop-engine-configs
                  poo-flow-user-loop-engine-poo-config-flags)
-        (only-in :poo-flow/src/modules/loop-engine/prototypes
+        (only-in :poo-flow/modules/loop-engine/prototypes
                  loop-engine-use-case
                  loop-engine-governor
                  loop-engine-agent-judges
@@ -47,13 +47,13 @@
                  loop-engine-memory-policy
                  loop-engine-compression-policy
                  loop-engine-profile)
-        (only-in :poo-flow/src/modules/loop-engine/policy-extension
+        (only-in :poo-flow/modules/loop-engine/policy-extension
                  loop-engine-policy-extension
                  loop-engine-coordination-policy-extension
                  loop-engine-observability-policy-extension
                  loop-engine-safety-policy-extension)
-        :poo-flow/src/modules/sandbox-core/profile
-        :poo-flow/src/modules/sandbox-core/profile-interface
+        :poo-flow/modules/sandbox-core/profile
+        :poo-flow/modules/sandbox-core/profile-interface
         :poo-flow/src/user-interface/init-declaration-syntax
         :poo-flow/src/user-interface/profile-config
         :poo-flow/src/module-system/load
@@ -72,13 +72,13 @@
         poo-flow-profile
         poo-flow-user-module-selection-flag-entry
         poo-flow-user-module-selection->alist
-        (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
-        (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
+        (import: :poo-flow/modules/cubeSandbox/profile-interface)
+        (import: :poo-flow/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/modules/funflow/config)
-        (import: :poo-flow/src/modules/memory-core/interface)
-        (import: :poo-flow/src/modules/session/config)
-        (import: :poo-flow/src/modules/session/syntax)
-        (import: :poo-flow/src/modules/tool-core/config)
+        (import: :poo-flow/modules/memory-core/interface)
+        (import: :poo-flow/modules/session/config)
+        (import: :poo-flow/modules/session/syntax)
+        (import: :poo-flow/modules/tool-core/config)
         (import: :poo-flow/src/loops/spec-evolution)
         loop-engine-use-case
         loop-engine-governor
@@ -102,9 +102,9 @@
         loop-engine-coordination-policy-extension
         loop-engine-observability-policy-extension
         loop-engine-safety-policy-extension
-        (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
+        (import: :poo-flow/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability/module-presentation)
-        (import: :poo-flow/src/modules/sandbox-core/profile-interface))
+        (import: :poo-flow/modules/sandbox-core/profile-interface))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives

@@ -142,7 +142,7 @@
 ;;; Each direct modules/<module-name>/ directory contributes one conventional
 ;;; entrypoint; no contributor-owned init list or registry is involved.
 (def poo-flow-module-required-role-files
-  '("types.ss" "objects.ss" "funs.ss" "config.ss" "interface.ss"))
+  '("interface.ss"))
 
 ;;; The loader constrains stable module roles while leaving domain authors free
 ;;; to add focused implementation files. syntax.ss is optional and may expose
@@ -188,10 +188,12 @@
   (let* ((interface-path (path-expand "interface.ss" module-root))
          (datums (poo-flow-module-read-datums interface-path))
          (public-roles
-          (append '(types objects funs config)
-                  (if (file-exists? (path-expand "syntax.ss" module-root))
-                    '(syntax)
-                    '()))))
+          (filter
+           (lambda (role)
+             (file-exists?
+              (path-expand
+               (string-append (symbol->string role) ".ss") module-root)))
+           '(types objects funs config syntax))))
     (for-each
      (lambda (role)
        (unless (and (poo-flow-module-top-form-references-role?
@@ -267,7 +269,12 @@
                   module-name role path
                   (car (poo-flow-module-authoring-admission-diagnostics
                         admission))))))
-     '(types objects funs config interface))))
+     (filter
+      (lambda (role)
+        (file-exists?
+         (path-expand
+          (string-append (symbol->string role) ".ss") module-root)))
+      '(types objects funs config interface)))))
 
 (def (poo-flow-module-default-style-validate! collection module-name module-root)
   (when (file-exists? (path-expand "init.ss" module-root))
@@ -456,7 +463,7 @@
 
 (def poo-flow-maintained-module-source
   (make-poo-flow-module-source-collection
-   'poo-flow-maintained 'poo-flow "." "src/modules"))
+   'poo-flow-maintained 'poo-flow "." "modules"))
 
 ;;; Repository-specific source paths are inputs to this core-owned loader
 ;;; policy; contributor repositories do not publish their own source objects.

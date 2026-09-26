@@ -509,7 +509,7 @@ composition inspectable. If a debug feature needs to dereference objects, place
 it behind a validation or doctor contract and return plain receipt data.
 ** 10.06.29.145 Executable Guard Landing
 
-The first executable guard for these rules is now in =src/modules/sandbox-core/profile.ss=:
+The first executable guard for these rules is now in =modules/sandbox-core/profile.ss=:
 
 1. =poo-flow-sandbox-profile-object-row-authoring-diagnostics= reports row-level authoring facts.
 2. =poo-flow-sandbox-profile-object-authoring-diagnostics= batches those facts for profile forms.

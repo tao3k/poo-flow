@@ -18,7 +18,7 @@
                  test-error
                  test-suite)
         (only-in :std/misc/process run-process)
-        :poo-flow/src/modules/nono-sandbox/c-binding)
+        :poo-flow/modules/nono-sandbox/c-binding)
 
 (export nono-sandbox-c-language-test)
 

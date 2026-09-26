@@ -21,7 +21,7 @@
 (def sandbox-profile-native-type-contract-test
   (test-suite "sandbox-profile-native-type-contract-test"
     (poo-flow-test-case "validates the native contract"
-      (eval '(import "./src/modules/agent-sandbox/config.ss"))
+      (eval '(import "./modules/agent-sandbox/config.ss"))
       (eval '(import :clan/poo/mop :clan/poo/object))
       (let (contract-row
       (sandbox-profile-contract-eval

@@ -11,11 +11,11 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/modules/tool-core/objects-policy-refs
+        (only-in :poo-flow/modules/tool-core/objects-policy-refs
                  poo-flow-tool-merge-policy-tool-refs
                  poo-flow-tool-unique-symbols)
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/tool-core/config)
+        :poo-flow/modules/session/config
+        :poo-flow/modules/tool-core/config)
 
 (export tool-core-test)
 

@@ -14,9 +14,9 @@ by Lambda Episteme and it is not synonymous with the Cedar evaluator.
 
 POO Flow owns the engine-neutral Governance Profile, Source, pre-threat,
 Threat Model, Assessment and Contribution contracts under
-=src/modules/governance/=.  POO Flow's engine-neutral authorization protocol
-lives under =src/modules/authorization/=, while Cedar is its explicitly selected
-Provider under =src/modules/authorization/providers/cedar/=.  Lambda Episteme consumes those
+=modules/governance/=.  POO Flow's engine-neutral authorization protocol
+lives under =modules/authorization/=, while Cedar is its explicitly selected
+Provider under =modules/authorization/providers/cedar/=.  Lambda Episteme consumes those
 contracts to publish vertical-industry Profiles, Scenarios, Cases, policies and
 Sources.  Cedar is one explicitly selected authorization Provider.  The final
 application binds an admitted domain composition to that Provider.
@@ -154,7 +154,7 @@ action authority.
 
 Syntax qualification uses =gerbil-parser='s native
 =tla-plus.native-core.v1= parser, pinned in =gerbil.pkg=.  POO Flow's
-=src/modules/tla-plus/interface.ss= retains POO-native qualification
+=modules/tla-plus/interface.ss= retains POO-native qualification
 identities and exposes a named advanced accessor to the *same* parser-owned
 CST.  It neither copies that tree into a second object family, implements
 another TLA+ grammar, nor interprets temporal semantics.  =just

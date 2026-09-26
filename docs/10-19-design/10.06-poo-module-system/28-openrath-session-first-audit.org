@@ -26,8 +26,8 @@ Evidence snapshot:
 - Current POO Flow evidence:
   - =src/user-interface/presentation.ss:80-304=
   - =src/core/flow.ss:429-516=
-  - =src/modules/sandbox-core/profile.ss:135-212=
-  - =src/modules/workflow/cicd-config.ss:573-649=
+  - =modules/sandbox-core/profile.ss:135-212=
+  - =modules/workflow/cicd-config.ss:573-649=
 
 This is a design audit, not a dependency proposal. OpenRath is Python
 runtime-oriented; POO Flow remains Scheme control-plane and object-system
@@ -159,10 +159,10 @@ class hierarchy.
 
 *** 10.06.28.05.02 Sandbox Placement
 The first landed slice is a report-only session placement bridge:
-- =src/modules/session/objects.ss= owns =poo-flow-session-placement-resolve=.
+- =modules/session/objects.ss= owns =poo-flow-session-placement-resolve=.
 - The function resolves a placement ref against the existing sandbox profile
   catalog, for example =poo-flow-default-sandbox-profiles= from
-  =src/modules/agent-sandbox/config.ss=.
+  =modules/agent-sandbox/config.ss=.
 - A resolved placement remains a POO mixin prototype. It adds direct slots such
   as =placement-resolved?=, =placement-diagnostics=,
   =placement-runtime-summary=, and =placement-handoff-summary=.
@@ -384,8 +384,8 @@ but not a dedicated memory object module.
 
 Recommended future module:
 
-- =src/modules/memory/objects.ss=
-- =src/modules/memory/config.ss=
+- =modules/memory/objects.ss=
+- =modules/memory/config.ss=
 - object contracts for store spec, memory op, ranking strategy, commit receipt;
 - runtime owner set to Marlin or an external memory runtime.
 
@@ -396,7 +396,7 @@ to session and agent objects.
 
 *** 10.06.28.07.01 Milestone A: Report-Only Session Objects
 
-Implement =src/modules/session/objects.ss= and =src/modules/session/config.ss=
+Implement =modules/session/objects.ss= and =modules/session/config.ss=
 as POO object modules. The first milestone should not execute runtime work.
 
 Acceptance tests:

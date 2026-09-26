@@ -7,7 +7,7 @@
 ;;; Invariant: selector declarations stay pending receipts; Marlin owns model
 ;;; scoring, workflow dispatch, and selected-result materialization.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-selector-case)
 

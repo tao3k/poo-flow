@@ -6,7 +6,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/modules/standards/interface)
+        :poo-flow/modules/standards/interface)
 
 (export standards-core-test)
 

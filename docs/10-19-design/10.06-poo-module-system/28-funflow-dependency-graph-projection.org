@@ -16,7 +16,7 @@ Funflow =:needs= lowers into workflow-owned CI/CD dependency facts:
 - =modules/funflow/config.ss= accepts a single symbol or a list of symbols
   for =:needs=.
 - Non-symbol dependency refs are rejected at the Funflow config boundary.
-- =src/modules/workflow/interface.ss= exposes
+- =modules/workflow/interface.ss= exposes
   =poo-flow-cicd-check-dependency-refs= and
   =poo-flow-cicd-check-map->dependency-graph=.
 - The dependency graph projects =nodes=, =duplicate-nodes=, =edges=,

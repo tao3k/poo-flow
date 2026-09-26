@@ -19,7 +19,7 @@
         (only-in :poo-flow/src/type-facts/objects
                  poo-flow-native-contract->type-facts
                  poo-flow-native-contract->lean-fact-contracts)
-        (only-in :poo-flow/src/modules/session/policy
+        (only-in :poo-flow/modules/session/policy
                  PooFlowSessionPolicyContract
                  PooFlowSessionToolGrantContract
                  poo-flow-session-policy-require-slots!

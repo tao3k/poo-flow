@@ -18,7 +18,7 @@
         (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/presentation-config
-        (only-in :poo-flow/src/modules/loop-engine/runtime
+        (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
         :poo-flow/src/user-interface/init-syntax)

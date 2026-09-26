@@ -16,7 +16,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/modules/session/objects
+        (only-in :poo-flow/modules/session/objects
                  poo-flow-session-chunk
                  poo-flow-session-lineage
                  poo-flow-session-placement

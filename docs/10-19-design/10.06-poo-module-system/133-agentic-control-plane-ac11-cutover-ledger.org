@@ -72,7 +72,7 @@ flowchart LR
 | Capability being retired | Retirement owner or candidate | Replacement | Required deletion evidence | Status |
 |--------------------------+-------------------------------+-------------+----------------------------+--------|
 | AC-04 semantic shadow comparison | =src/semantic/organization-bundle-shadow.ss=, its contract facade, and =t/scenarios/organization-bundle-shadow-test.ss= | Canonical Bundle plus AC-10 cross-boundary fixture | No public export or consumer; shadow owner/test absent; qualification still passes | =remove-after-approval= |
-| Agent-sandbox alist authoring helpers | Four exports in =src/modules/agent-sandbox/alist.ss=; zero parser-visible consumers or facade re-exports | Named POO-native helpers in =src/modules/sandbox-core/profile-support/authoring.ss= | Fresh consumer audit; remove module/exports; old-symbol absence gate; sandbox profile suites | =remove-after-approval= |
+| Agent-sandbox alist authoring helpers | Four exports in =modules/agent-sandbox/alist.ss=; zero parser-visible consumers or facade re-exports | Named POO-native helpers in =modules/sandbox-core/profile-support/authoring.ss= | Fresh consumer audit; remove module/exports; old-symbol absence gate; sandbox profile suites | =remove-after-approval= |
 | Other raw-record, alist serialization, and =.def= occurrences | No competing public authoring owner proven | Retain internal representations and POO implementation syntax | A future candidate requires exact public export and consumer evidence | =retain= |
 | Python =ctypes= production hot path | No parser-visible import/call/test owner under =packages/python-runtime= | Out-of-line CFFI API mode | AST import/dynamic-import guard over =src/= and =tests/=; README absence; isolated wheel and full Python gates | =absence-guarded= |
 | Runtime graph or ABI compatibility aliases | No parser-visible owner, consumer, wrapper, or installed graph symbol | Installed =runtime_v0.h= and ProofCaseVector v1 routes | Shared-library exported-symbol allowlist plus graph/compat/legacy denylist and installed consumers | =absence-guarded= |
@@ -87,7 +87,7 @@ is eligible for removal.  The exact-owner audit must distinguish those cases.
 ** Authoring audit receipt
 
 The parser-owned audit resolves exactly four competitive public alist exports,
-all owned by =src/modules/agent-sandbox/alist.ss= and currently reporting zero
+all owned by =modules/agent-sandbox/alist.ss= and currently reporting zero
 parser-visible consumers and zero facade re-exports:
 
 | Retired export candidate | Canonical POO-native replacement |

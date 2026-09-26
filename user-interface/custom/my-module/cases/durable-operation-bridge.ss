@@ -7,14 +7,14 @@
 ;;; Invariant: this bridges user-visible durable rows to Marlin operation
 ;;; receipts only; Scheme does not execute runtime store side effects.
 
-(import :poo-flow/src/modules/memory-core/config
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/store-backend
-        :poo-flow/src/modules/memory-core/durable/store-operation
-        :poo-flow/src/modules/memory-core/durable/store-operation-bridge
-        :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/config)
+(import :poo-flow/modules/memory-core/config
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/store-backend
+        :poo-flow/modules/memory-core/durable/store-operation
+        :poo-flow/modules/memory-core/durable/store-operation-bridge
+        :poo-flow/modules/session/objects
+        :poo-flow/modules/session/config)
 
 (export poo-flow-custom-my-module-durable-operation-bridge-case)
 

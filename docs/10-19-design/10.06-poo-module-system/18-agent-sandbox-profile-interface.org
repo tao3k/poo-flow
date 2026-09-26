@@ -14,7 +14,7 @@ Bass keeps user work visible as small, inspectable recipes before a runtime exec
 For =poo-flow=, agent sandbox profiles should follow the same rule. A profile is an inert POO recipe that names the backend, network policy, capabilities, resource policy, and metadata. Projection to backend descriptors is a later step. Runtime execution remains owned by =marlin-agent-core= or the selected backend adapter.
 
 ** 10.06.18.20 User Surface
-Root =init.ss= keeps module selection separate from sandbox profile recipes. The public user surface is concrete module loading; the facade builds the canonical =users= profile from those rows. Built-in sandbox profile recipes live upstream in =src/modules/agent-sandbox/config.ss=, and downstream user files load those defaults instead of spelling out backend policy rows.
+Root =init.ss= keeps module selection separate from sandbox profile recipes. The public user surface is concrete module loading; the facade builds the canonical =users= profile from those rows. Built-in sandbox profile recipes live upstream in =modules/agent-sandbox/config.ss=, and downstream user files load those defaults instead of spelling out backend policy rows.
 
 #+begin_src scheme
 (use-module nono-sandbox +nono +doctor)
@@ -34,7 +34,7 @@ The boundary is:
 - downstream user config may select or override profile names, but it should not own built-in backend policy rows;
 - =pooFlowSandboxProfilesPresentation= gives tools a shallow receipt with names, backend refs, runtime handoff intent, runtime summaries, and handoff summaries;
 - =poo-flow-sandbox-profile->profile= projects one recipe into the existing validated sandbox profile contract;
-- =agent-sandbox-profile-runtime-summary= and =agent-sandbox-profile-handoff-summary= live under =src/modules/agent-sandbox/profile.ss= so workflow and loop code consume sandbox-owned projection data instead of reparsing resource policy rows;
+- =agent-sandbox-profile-runtime-summary= and =agent-sandbox-profile-handoff-summary= live under =modules/agent-sandbox/profile.ss= so workflow and loop code consume sandbox-owned projection data instead of reparsing resource policy rows;
 - no package installation, descriptor realization, or runtime command execution happens in the user interface layer.
 
 ** 10.06.18.32 Recipe Path Portability
@@ -654,9 +654,9 @@ publish its identity, generation, checkpoint lineage, and watermark evidence.
 
 ** 10.06.18.35 Runtime Summary Ownership
 Sandbox profile projection is owned by the sandbox modules, not by =loop-engine= or the module-system base presentation layer. The concrete split is:
-- =src/modules/sandbox-core/profile.ss= owns generic POO profile row resolution, inheritance, and merge operators;
-- =src/modules/agent-sandbox/config.ss= owns user-facing POO profile recipes and projects those recipes into validated agent sandbox profiles;
-- =src/modules/agent-sandbox/profile.ss= owns the contract-level runtime summary and handoff summary, including filesystem structure, diagnostics, validation status, and =runtime-executed #f= evidence.
+- =modules/sandbox-core/profile.ss= owns generic POO profile row resolution, inheritance, and merge operators;
+- =modules/agent-sandbox/config.ss= owns user-facing POO profile recipes and projects those recipes into validated agent sandbox profiles;
+- =modules/agent-sandbox/profile.ss= owns the contract-level runtime summary and handoff summary, including filesystem structure, diagnostics, validation status, and =runtime-executed #f= evidence.
 
 Workflow, CI, and loop-engine features should depend on these summaries as data. They should not infer filesystem mounts, backend refs, or validation state from raw user rows.
 =loop-engine= consumes sandbox summaries through a config-level catalog. If a loop declares =(profile . ci/build)= and the same config contributes a matching POO sandbox profile, the runtime manifest request carries =sandbox-runtime-summaries= and =sandbox-handoff-summaries=. If the profile ref is not visible in the config catalog, the manifest keeps =sandbox-unresolved-profile-refs= so an agent or doctor can report the missing profile without inventing a runtime policy.
@@ -667,8 +667,8 @@ The public profile value stays a POO object. Alists are presentation products on
 ** 10.06.18.50 Delivery State
 Delivered in this slice:
 
-- =src/modules/agent-sandbox/config.ss= owns the profile DSL and presentation;
-- =src/modules/agent-sandbox/config.ss= owns the built-in =agent/nono= and =agent/cube= defaults;
+- =modules/agent-sandbox/config.ss= owns the profile DSL and presentation;
+- =modules/agent-sandbox/config.ss= owns the built-in =agent/nono= and =agent/cube= defaults;
 - =src/user-interface/profile-config.ss= exposes the upstream DSL and defaults to downstream init files;
 - =user-interface/init.ss= remains a module-loading surface only;
 - =src/user-interface/profile-config.ss= builds the canonical =users= profile projection from root declarations;

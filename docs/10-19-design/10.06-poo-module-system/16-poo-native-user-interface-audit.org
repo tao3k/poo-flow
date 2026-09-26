@@ -25,9 +25,9 @@ the object model that =poo-flow= should use directly:
 second profile DSL to users.
 
 ** 10.06.16.30 Current Good Landing
-=src/modules/sandbox-core/profile-interface.ss= owns public sandbox profile
+=modules/sandbox-core/profile-interface.ss= owns public sandbox profile
 prototypes and reusable resource prototypes. Backend files such as
-=src/modules/nono-sandbox/profile-interface.ss= extend those prototypes with
+=modules/nono-sandbox/profile-interface.ss= extend those prototypes with
 ordinary Gerbil POO supers.
 
 Downstream files now write this shape:
@@ -79,7 +79,7 @@ another recursive merge DSL.
 ** 10.06.16.60 Implementation Implications
 The current implementation should preserve these constraints:
 1. Keep the upstream profile-prototype object layer under
-   =src/modules/sandbox-core=.
+   =modules/sandbox-core=.
 2. Keep backend sandbox config modules on native =.def= profile objects.
 3. Keep doctor output showing prototype chain, direct slots, resolved fields,
    and non-primary authoring diagnostics.

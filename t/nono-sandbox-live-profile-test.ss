@@ -18,9 +18,9 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/modules/agent-sandbox/api
-        :poo-flow/src/modules/agent-sandbox/nono
-        :poo-flow/src/modules/nono-sandbox/c-binding)
+        :poo-flow/modules/agent-sandbox/api
+        :poo-flow/modules/agent-sandbox/nono
+        :poo-flow/modules/nono-sandbox/c-binding)
 
 (export nono-sandbox-live-profile-test
         make-custom-cicd-ci-check-profile

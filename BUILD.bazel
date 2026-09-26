@@ -33,7 +33,7 @@ filegroup(
     srcs = ["gerbil.pkg"] + glob([
         "*.ss",
         "bindings/nono-c/**/*.h",
-        "modules/funflow/**/*.ss",
+        "modules/**/*.ss",
         "src/**/*.inc",
         "src/**/*.ss",
         "user-interface/**/*.ss",

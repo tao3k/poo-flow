@@ -18,7 +18,7 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/workflow/flows)
+        :poo-flow/modules/workflow/flows)
 
 (export tutorial-makefile-runtime-test)
 

@@ -18,7 +18,7 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/api)
+        :poo-flow/modules/agent-sandbox/api)
 
 (export agent-sandbox-bridge-test)
 

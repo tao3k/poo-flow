@@ -26,11 +26,11 @@ Local OpenRath evidence:
   =src/rath/memory/*=, and backend/sandbox files.
 
 Current POO Flow evidence:
-- =src/modules/session-core/config.ss= enables the upstream session module row.
-- =src/modules/session-core/presentation.ss= projects =session-core-intents=.
-- =src/modules/session/config.ss= owns POO session values, chunks, lineage,
+- =modules/session-core/config.ss= enables the upstream session module row.
+- =modules/session-core/presentation.ss= projects =session-core-intents=.
+- =modules/session/config.ss= owns POO session values, chunks, lineage,
   placement, and graph presentation.
-- =src/modules/sandbox-core/profile.ss= owns POO resource/profile projection.
+- =modules/sandbox-core/profile.ss= owns POO resource/profile projection.
 ** 10.06.38.30 What We Should Learn From OpenRath
 OpenRath's strongest contribution is conceptual ordering:
 - =Session= is the flowing value, not a side effect hidden inside an agent loop.
@@ -128,8 +128,8 @@ POO Flow target:
 - Expose a compact user case that declares a transform over a session value.
 
 Candidate files:
-- =src/modules/session/transform.ss=
-- =src/modules/session/objects.ss=, if shared object contracts need splitting
+- =modules/session/transform.ss=
+- =modules/session/objects.ss=, if shared object contracts need splitting
 - =user-interface/custom/my-module/cases/session-transform.ss=
 - =t/session-transform-test.ss=
 
@@ -161,7 +161,7 @@ POO Flow target:
 - Keep lineage as POO composition data, not a graph runtime.
 
 Candidate files:
-- =src/modules/session/graph.ss=
+- =modules/session/graph.ss=
 - =user-interface/custom/my-module/cases/session-lineage.ss=
 - =t/session-lineage-case-test.ss=
 
@@ -179,9 +179,9 @@ POO Flow target:
 - Cover nono, docker, and cube through existing sandbox profile objects.
 
 Candidate files:
-- =src/modules/session/placement.ss=
-- =src/modules/sandbox-core/profile.ss=
-- =src/modules/session-core/presentation.ss=
+- =modules/session/placement.ss=
+- =modules/sandbox-core/profile.ss=
+- =modules/session-core/presentation.ss=
 - =t/session-placement-handoff-test.ss=
 
 Acceptance:
@@ -199,9 +199,9 @@ POO Flow target:
   Marlin, nono, MCP, or another backend.
 
 Candidate files:
-- =src/modules/tool-core/config.ss=
-- =src/modules/tool-core/objects.ss=
-- =src/modules/tool-core/spec.ss=
+- =modules/tool-core/config.ss=
+- =modules/tool-core/objects.ss=
+- =modules/tool-core/spec.ss=
 - =user-interface/custom/my-module/cases/tool-core.ss=
 - =t/tool-core-test.ss=
 
@@ -211,9 +211,9 @@ Acceptance:
 - Built-in filesystem/shell tool specs require a sandbox placement profile.
 - MCP tool rows can be represented without starting an MCP server.
 Implemented checkpoint:
-- =src/modules/tool-core/objects.ss= and =src/modules/tool-core/config.ss= now own report-only tool specs, catalog projection, handoff manifests, and session-policy grant validation.
-- =src/modules/session/policy-validation.ss= now consumes an optional tool-core catalog-validation row from effective policy metadata and projects catalog id/ref, catalog validity, resolved/unresolved tool refs, sandbox-required refs, action mismatch rows, and tool-core diagnostics inside the session policy validation receipt.
-- =src/modules/session/policy-validation.ss= also consumes an optional memory-core catalog-validation row and projects catalog id/ref, catalog validity, catalog store refs, intent store refs, resolved/unresolved store refs, and memory-core diagnostics into the same effective policy receipt.
+- =modules/tool-core/objects.ss= and =modules/tool-core/config.ss= now own report-only tool specs, catalog projection, handoff manifests, and session-policy grant validation.
+- =modules/session/policy-validation.ss= now consumes an optional tool-core catalog-validation row from effective policy metadata and projects catalog id/ref, catalog validity, resolved/unresolved tool refs, sandbox-required refs, action mismatch rows, and tool-core diagnostics inside the session policy validation receipt.
+- =modules/session/policy-validation.ss= also consumes an optional memory-core catalog-validation row and projects catalog id/ref, catalog validity, catalog store refs, intent store refs, resolved/unresolved store refs, and memory-core diagnostics into the same effective policy receipt.
 - =user-interface/custom/my-module/cases/tool-core.ss= proves the public surface with =use-module tool-core :config= and POO =tool-spec= / =tool-catalog= objects.
 - =t/tool-core-test.ss= covers direct object semantics, built-in sandbox requirements, MCP row declaration, and policy diagnostics.
 - =t/user-interface-custom-tool-core-test.ss= and the =scenario-tool-core= testing-project root cover the user-facing scenario path.
@@ -229,9 +229,9 @@ POO Flow target:
   storage engines.
 
 Candidate files:
-- =src/modules/memory-core/config.ss=
-- =src/modules/memory-core/objects.ss=
-- =src/modules/memory-core/spec.ss=
+- =modules/memory-core/config.ss=
+- =modules/memory-core/objects.ss=
+- =modules/memory-core/spec.ss=
 - =user-interface/custom/my-module/cases/memory-core.ss=
 - =t/memory-core-test.ss=
 
@@ -240,7 +240,7 @@ Acceptance:
 - Presentation exposes recall/commit intent and refuses missing namespace/store
   fields through structured validation.
 Implemented checkpoint:
-- =src/modules/memory-core/objects.ss= and =src/modules/memory-core/config.ss= now own report-only memory store specs, catalogs, handoff manifests, catalog validation receipts, and durable memory job receipts.
+- =modules/memory-core/objects.ss= and =modules/memory-core/config.ss= now own report-only memory store specs, catalogs, handoff manifests, catalog validation receipts, and durable memory job receipts.
 - =user-interface/custom/my-module/cases/memory-core.ss= proves the public surface with =use-module memory-core :config= and POO =memory-store-spec= / =memory-catalog= objects.
 - =t/memory-core-test.ss= covers direct object semantics, default stores, custom stores, handoff manifests, and catalog validation diagnostics.
 - =t/user-interface-custom-memory-core-test.ss= and the =scenario-memory-core= testing-project root cover the user-facing scenario path.
@@ -255,9 +255,9 @@ POO Flow target:
 - Keep dynamic routing as a receipt until Marlin owns execution.
 
 Candidate files:
-- =src/modules/selector-core/config.ss=
-- =src/modules/selector-core/objects.ss=
-- =src/modules/selector-core/spec.ss=
+- =modules/selector-core/config.ss=
+- =modules/selector-core/objects.ss=
+- =modules/selector-core/spec.ss=
 - =t/selector-core-test.ss=
 
 Acceptance:
@@ -295,9 +295,9 @@ asp org lint docs/10-19-design/10.06-poo-module-system/00-index.org <changed-doc
 #+end_src
 ** 10.06.38.160 Current Implementation Status
 Milestone 1 is now delivered as a report-only control-plane slice:
-- =src/modules/session/transform.ss= defines the POO transform and receipt object family.
-- =src/modules/session/config.ss= exposes =session-transform= and =transform-session= for compact user syntax.
-- =src/modules/session-core/config.ss= and =src/modules/session-core/presentation.ss= surface =+transform= as a default session-core feature.
+- =modules/session/transform.ss= defines the POO transform and receipt object family.
+- =modules/session/config.ss= exposes =session-transform= and =transform-session= for compact user syntax.
+- =modules/session-core/config.ss= and =modules/session-core/presentation.ss= surface =+transform= as a default session-core feature.
 - =user-interface/custom/my-module/cases/session-transform.ss= loads a downstream transform/root/receipt object list through the existing =load!= expression contract.
 - =t/session-transform-test.ss= covers transform declaration, derived session lineage, placement inheritance, handoff intent, and =runtime-executed: #f=.
 - Object catalog debug is contract-owned: =src/module-system/object-validation/interface.ss= now projects object identities, direct/resolved field identities, field origins, inheritance chains, validation phases, field counts, inheritance counts, and runtime flags through validation receipts instead of adding debug slots or per-file debug variables to =objects.ss=.

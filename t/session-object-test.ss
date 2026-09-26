@@ -11,9 +11,9 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
+        (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles)
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-object-test)
 

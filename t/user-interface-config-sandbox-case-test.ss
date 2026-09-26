@@ -18,9 +18,9 @@
         "user-interface-fixtures.ss"
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/profile-config
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
-        (only-in :poo-flow/src/modules/sandbox-core/profile-support/policy
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/sandbox-core/backend-capability-catalog
+        (only-in :poo-flow/modules/sandbox-core/profile-support/policy
                  poo-flow-sandbox-backend-capability/backend-kind))
 
 (def (check-error thunk)

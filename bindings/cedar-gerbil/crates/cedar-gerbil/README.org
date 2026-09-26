@@ -6,7 +6,7 @@
 
 * Owners
 
-=src/modules/authorization/providers/cedar/objects.ss= owns the public POO objects and their explicit
+=modules/authorization/providers/cedar/objects.ss= owns the public POO objects and their explicit
 runtime projections. =gerbil-scheme-rust= owns AOT graph linking, the one-shot
 Gerbil runtime and GC-rooted native calls. =cedar-authority= owns Cedar input
 validation, two real engine witnesses, signing, revocation and single-use

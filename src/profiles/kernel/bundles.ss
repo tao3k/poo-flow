@@ -7,22 +7,22 @@
 ;;; Invariant: every module owns its default flags and bundle in config.ss;
 ;;; this profile only composes those module-owned values.
 
-(import (only-in "../../module-system/poo-clos/config.ss"
+(import (only-in :poo-flow/src/module-system/poo-clos/config
                  poo-clos-module-bundles)
         (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-cicd-default-payload
                  poo-flow-funflow-module-bundles
                  poo-upstream-flow-funflow-module-bundles)
-        (only-in "../../modules/session-core/config.ss"
+        (only-in :poo-flow/modules/session-core/config
                  +poo-flow-session-core-default-flags+
                  poo-flow-session-core-module-bundles)
-        (only-in "../../modules/governor/config.ss"
+        (only-in :poo-flow/modules/governor/config
                  poo-flow-loop-governor-module-bundles)
-        (only-in "../../modules/nono-sandbox/config.ss"
+        (only-in :poo-flow/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
-        (only-in "../../modules/cubeSandbox/config.ss"
+        (only-in :poo-flow/modules/cubeSandbox/config
                  poo-flow-cubeSandbox-module-bundles)
-        (only-in "../../modules/docker-sandbox/config.ss"
+        (only-in :poo-flow/modules/docker-sandbox/config
                  poo-flow-docker-sandbox-module-bundles))
 
 (export poo-flow-funflow-cicd-default-payload

@@ -18,9 +18,9 @@
                  native-query-execution-candidate<-json
                  native-validate-payload
                  native-c-round-trip)
-        (only-in :poo-flow/src/modules/query/objects
+        (only-in :poo-flow/modules/query/objects
                  poo-flow-query-execution-candidate)
-        (only-in :poo-flow/src/modules/query/types
+        (only-in :poo-flow/modules/query/types
                  poo-flow-query-execution-candidate?))
 
 (export runtime-v0-native-ffi-test)

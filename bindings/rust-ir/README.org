@@ -12,7 +12,7 @@ Rust during the consumer build.
 The checked-in JSON is not a second contract and is never edited by hand.  Its
 owning Scheme function and determinism test are:
 
-- =src/modules/query/rust-ir.ss=
+- =modules/query/rust-ir.ss=
 - =t/query-rust-ir-test.ss=
 
 Native Rust consumers depend on the small =poo-flow-rust-ir= crate in this

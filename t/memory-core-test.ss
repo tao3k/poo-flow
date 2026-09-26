@@ -10,9 +10,9 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config
-        (only-in :poo-flow/src/modules/memory-core/objects-core
+        :poo-flow/modules/session/config
+        :poo-flow/modules/memory-core/config
+        (only-in :poo-flow/modules/memory-core/objects-core
                  poo-flow-memory-field-rows))
 
 (export memory-core-test)

@@ -19,9 +19,9 @@ handoff objects into Lean lifecycle declarations.
 The current implementation evidence maps to these Scheme-side surfaces:
 
 | Surface | Proof Atom |
-| src/modules/session/objects.ss | public session object facade |
-| src/modules/session/objects-core.ss | chunk, lineage, placement, value |
-| src/modules/session/objects-handoff.ss | handoff receipt ABI |
+| modules/session/objects.ss | public session object facade |
+| modules/session/objects-core.ss | chunk, lineage, placement, value |
+| modules/session/objects-handoff.ss | handoff receipt ABI |
 
 The handoff boundary is intentionally report-only:
 
@@ -161,7 +161,7 @@ poo-flow-session-handoff->lean-facts
 It lives beside the existing handoff ABI projection:
 
 #+begin_src text
-src/modules/session/objects-handoff.ss
+modules/session/objects-handoff.ss
 #+end_src
 
 The Lean proof surface is now split by project model boundary instead of
@@ -180,9 +180,9 @@ The current Scheme owners for these boundaries are:
 
 | Boundary | Scheme owner selectors |
 | profile | src/profiles/kernel/bundles.ss; modules/funflow/config.ss |
-| sandbox | src/modules/agent-sandbox/api.ss; src/modules/agent-sandbox/profile-validation.ss; src/modules/agent-sandbox/profile-descriptor.ss |
-| session | src/modules/session/objects-core.ss; src/modules/session/objects-handoff.ss; src/modules/session/objects-graph.ss; src/modules/session/agent.ss; src/modules/session/config-session-runtime.ss |
-| loop | src/modules/loop-engine/core.ss; src/modules/loop-engine/object-rows.ss; src/modules/loop-engine/contract.ss |
+| sandbox | modules/agent-sandbox/api.ss; modules/agent-sandbox/profile-validation.ss; modules/agent-sandbox/profile-descriptor.ss |
+| session | modules/session/objects-core.ss; modules/session/objects-handoff.ss; modules/session/objects-graph.ss; modules/session/agent.ss; modules/session/config-session-runtime.ss |
+| loop | modules/loop-engine/core.ss; modules/loop-engine/object-rows.ss; modules/loop-engine/contract.ss |
 | functional flow | modules/funflow/config-prototypes.ss; modules/funflow/config.ss; src/core/flow-strand.ss; src/core/runner.ss |
 
 #+begin_src mermaid

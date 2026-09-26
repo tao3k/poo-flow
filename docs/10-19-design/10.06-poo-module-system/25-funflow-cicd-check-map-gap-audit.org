@@ -28,7 +28,7 @@ Current source state:
 - =user-interface/custom/my-module/profiles/cicd.ss= already declares concrete
   sandbox profiles for =ci/check=, =ci/build=, =cd/release=, and
   =cicd/artifact-promote=.
-- =src/modules/workflow/flows.ss= already owns the Funflow tutorial alignment
+- =modules/workflow/flows.ss= already owns the Funflow tutorial alignment
   report and tracks runtime-heavy tutorial gaps as deferred or runtime-owned.
 - =t/runtime-manifest-test.ss= proves generic runtime command descriptors can
   project CLI manifests and execute the stdout protocol through the runtime
@@ -85,11 +85,11 @@ until the runtime handoff layer consumes them.
 
 ** 10.06.25.50 Owner Boundary
 Recommended ownership:
-- =src/modules/workflow/objects.ss= should own the check-map object and
-  =src/modules/workflow/funs.ss= its receipt projection.
+- =modules/workflow/objects.ss= should own the check-map object and
+  =modules/workflow/funs.ss= its receipt projection.
 - =modules/funflow/config.ss= should continue to own only default feature
   payload rows.
-- =src/modules/sandbox-core/profile.ss= and backend sandbox modules should keep
+- =modules/sandbox-core/profile.ss= and backend sandbox modules should keep
   profile validation.
 - =src/core/runtime-adapter.ss= and runtime manifest helpers should remain
   generic. They should not learn GitHub, GitLab, Nix, or Docker semantics for
@@ -97,7 +97,7 @@ Recommended ownership:
 - =marlin-agent-core= remains the heavy runtime owner.
 
 The workflow module is the engine-independent owner.  Consumers enter through
-=src/modules/workflow/interface.ss=; Funflow only supplies its configuration
+=modules/workflow/interface.ss=; Funflow only supplies its configuration
 adapter.
 
 ** 10.06.25.60 Acceptance Criteria
@@ -115,10 +115,10 @@ The next code slice is complete when:
 
 ** 10.06.25.65 Implementation Update
 The check-map slice now exists under the Workflow role owners and is exported
-through =src/modules/workflow/interface.ss=:
+through =modules/workflow/interface.ss=:
 - checks and check maps remain inert POO control-plane objects;
 - receipts and runtime-manifest readiness carry =profile-refs=, =sandbox-runtime-summaries=, =sandbox-handoff-summaries=, and =sandbox-unresolved-profile-refs=;
-- sandbox summaries are projected by =src/modules/agent-sandbox/config.ss= from a provided profile catalog, so CI/CD code does not parse filesystem/resource policy rows;
+- sandbox summaries are projected by =modules/agent-sandbox/config.ss= from a provided profile catalog, so CI/CD code does not parse filesystem/resource policy rows;
 - =modules/funflow/config.ss= lowers compact Funflow pipeline rows into the workflow-owned check-map object;
 - focused tests cover both unresolved refs and catalog-resolved summaries.
 

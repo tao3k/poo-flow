@@ -30,8 +30,8 @@ Before starting a package:
 | Package | Theme | Primary owners | Depends on | Output |
 | P0 | Scenario and test owner matrix | =10.06.49= | none | Acceptance spine |
 | P1 | Sandbox POO object family hardening | =sandbox-core=, backend objects, backend syntax | P0 | Reusable sandbox/resource object pattern |
-| P2 | Session policy family generation | =src/modules/session/*= | P0, P1 pattern | Macro-backed policy families |
-| P3 | Runtime receipt projection generation | =src/modules/loop-engine/runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
+| P2 | Session policy family generation | =modules/session/*= | P0, P1 pattern | Macro-backed policy families |
+| P3 | Runtime receipt projection generation | =modules/loop-engine/runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
 | P4 | Loop intent functional pipeline | =loop-engine-*=, session selector/materialization owners | P2, P3 | Value-in/value-out loop governance core |
 | P5 | Funflow functional kernel alignment | =src/core/flow*=, =modules/funflow=, workflow owners | P3, P4 | Functional DAG and arrow/Kleisli flow surface |
 | P6 | Public =use-module= branch generation | =init-syntax.ss=, profile/config owners | P1-P5 | Generated syntax branches with unchanged public form |
@@ -41,7 +41,7 @@ Before starting a package:
 ** 10.06.48.40 Current Baseline
 - P0 exists as =10.06.49 Scenario Test Owner Matrix= and should be maintained as the acceptance spine.
 - P1 has an implementation slice: sandbox backend object-family coverage and shared POO-native resource fragments are the reference generated-family pattern.
-- P2 has an implementation slice: =src/modules/session/policy-syntax.ss= owns an internal policy-family macro, and current session policy constructors use it for foundational, model, prompt, tool-permission, hook-tool-permission, resource-sharing, and agent-execution policy families.
+- P2 has an implementation slice: =modules/session/policy-syntax.ss= owns an internal policy-family macro, and current session policy constructors use it for foundational, model, prompt, tool-permission, hook-tool-permission, resource-sharing, and agent-execution policy families.
 - P3 has an expanded implementation slice: =src/module-system/projection/runtime-syntax.ss= owns generated receipt projection for lineage, selector, resource-dispatch, memory, compression, capability =->alist=, and runtime handoff facts. Capability receipt construction remains an explicit hot path. Sandbox handoff agreement remains explicit validation logic for the P7 boundary.
 - P4 has a second user-facing slice: =user-interface/custom/my-module/cases/loop-engine.ss= now wires session selector and materialization receipts through the POO profile, loop intent, runtime manifest request, handoff facts, and presentation surface. Selector receipts remain report-only: =fallback-ref= can name the intended fallback, but =selected-candidate-ref= stays =#f= while =selection-state= is =pending=.
 - P4 validation evidence for this slice: =gxpkg clean=, =gxpkg build -R -O=, =gxtest t/user-interface-custom-loop-engine-test.ss=, =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=, =gxtest t/session-selector-receipt-test.ss=, and =gxtest t/session-materialization-receipt-test.ss=.
@@ -113,7 +113,7 @@ Exit criteria:
 Purpose: remove repeated constructor/accessor/projection structure from session policy code while preserving public function names and user scenarios.
 
 Tasks:
-- Keep =src/modules/session/policy-syntax.ss= as the internal syntax owner.
+- Keep =modules/session/policy-syntax.ss= as the internal syntax owner.
 - Maintain one internal policy family macro that describes schema, policy kind, required slots, defaults, validation predicates, and projection fields while delegating runtime owner and runtime-executed defaults to =poo-flow-session-policy-object=.
 - Use the generated family for foundational constructors: isolation, sandbox, context, history, communication, sharing, and resource.
 - Keep compatibility assertions for =poo-flow-session-policy->alist= and durable policy attachment.
@@ -364,7 +364,7 @@ Actions:
 
 Primary owners:
 - =modules/funflow/config.ss=
-- =src/modules/workflow/cicd-config.ss=
+- =modules/workflow/cicd-config.ss=
 - =user-interface/custom/my-module/cases/funflow-cicd.ss=
 
 Focused gates:
@@ -389,9 +389,9 @@ Actions:
 4. Keep observability POO-friendly by exposing inspectable receipts and presentation slots instead of long ad hoc debug paths.
 
 Primary owners:
-- =src/modules/loop-engine/runtime.ss=
-- =src/modules/loop-engine/runtime-agent.ss=
-- =src/modules/memory-core/*=
+- =modules/loop-engine/runtime.ss=
+- =modules/loop-engine/runtime-agent.ss=
+- =modules/memory-core/*=
 - =user-interface/custom/my-module/cases/loop-engine.ss=
 
 Focused gates:
@@ -419,7 +419,7 @@ Actions:
 4. Prefer procedural macros for static public syntax shape validation and declarative macros for fixed object/projection families.
 
 Primary owners:
-- =src/modules/session/policy-syntax.ss=
+- =modules/session/policy-syntax.ss=
 - =src/module-system/projection/runtime-syntax.ss=
 - =src/user-interface/init-syntax.ss=
 

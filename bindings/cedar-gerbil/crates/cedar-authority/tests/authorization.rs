@@ -26,7 +26,7 @@ fn bootstrap() -> Bootstrap {
     }}}}});
     serde_json::from_value(json!({
         "schema_id": "poo-flow.cedar-authority-snapshot.v1", "producer": "poo-flow.scheme-control",
-        "source": "src/modules/authorization/providers/cedar/objects.ss", "object_kind": "cedar-authority-snapshot",
+        "source": "modules/authorization/providers/cedar/objects.ss", "object_kind": "cedar-authority-snapshot",
         "provenance": {"composition_identity": "example.composition",
             "profile_identities": ["example.profile"], "profile_origin_digest": digest(1),
             "governance_assessment_digest": digest(10), "subject_snapshot_digest": digest(11),
@@ -82,7 +82,7 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
     serde_json::from_value(json!({
         "schema_id": "poo-flow.cedar-authority-snapshot.v1",
         "producer": "poo-flow.scheme-control",
-        "source": "src/modules/authorization/providers/cedar/objects.ss",
+        "source": "modules/authorization/providers/cedar/objects.ss",
         "object_kind": "cedar-authority-snapshot",
         "provenance": {
             "composition_identity": "post-operative-healing",

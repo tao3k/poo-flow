@@ -25,17 +25,17 @@
         poo-flow-user-config-presentation-loop-engine-slots
         +poo-flow-user-config-presentation-loop-engine-fields+)
 
-(import :poo-flow/src/modules/sandbox-core/profile-support/policy
-        (only-in :poo-flow/src/modules/agent-sandbox/config
+(import :poo-flow/modules/sandbox-core/profile-support/policy
+        (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile?
                  poo-flow-sandbox-profile-name
                  poo-flow-sandbox-profile-backend-kind
                  poo-flow-sandbox-profile-backend-ref
                  poo-flow-sandbox-profile-metadata)
-        :poo-flow/src/modules/workflow/interface
+        :poo-flow/modules/workflow/interface
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
-        (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
+        (only-in :poo-flow/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-alist-ref)
         :poo-flow/src/module-system/observability/module-presentation)
 

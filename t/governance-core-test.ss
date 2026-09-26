@@ -14,9 +14,9 @@
         (only-in :poo-flow/src/module-system/poo-clos/interface
                  poo-clos-generic-methods
                  poo-clos-make-instance)
-        :poo-flow/src/modules/governance/interface
-        :poo-flow/src/modules/authorization/interface
-        :poo-flow/src/modules/authorization/providers/cedar/interface)
+        :poo-flow/modules/governance/interface
+        :poo-flow/modules/authorization/interface
+        :poo-flow/modules/authorization/providers/cedar/interface)
 
 (export governance-core-test)
 

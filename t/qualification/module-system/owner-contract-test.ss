@@ -17,7 +17,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/qualification/module-system/g0
-        :poo-flow/src/modules/session/runtime-context-recovery
+        :poo-flow/modules/session/runtime-context-recovery
         :poo-flow/src/module-system/composition/lineage
         :poo-flow/src/qualification/module-system/gerbil-poo-consumption)
 

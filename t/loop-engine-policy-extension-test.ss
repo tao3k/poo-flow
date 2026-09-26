@@ -11,7 +11,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/modules/loop-engine/policy-extension)
+        :poo-flow/modules/loop-engine/policy-extension)
 
 (export loop-engine-policy-extension-test)
 

@@ -18,9 +18,9 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/api
-        :poo-flow/src/modules/agent-sandbox/cube
-        :poo-flow/src/modules/agent-sandbox/nono)
+        :poo-flow/modules/agent-sandbox/api
+        :poo-flow/modules/agent-sandbox/cube
+        :poo-flow/modules/agent-sandbox/nono)
 
 (export agent-sandbox-cube-interface-test)
 

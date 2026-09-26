@@ -24,15 +24,15 @@
                  poo-flow-kernel-profile)
         (only-in :poo-flow/src/module-system/projection/syntax
                  poo-flow-product-field-rows/tail)
-        (only-in :poo-flow/src/modules/memory-core/durable/artifact-policy
+        (only-in :poo-flow/modules/memory-core/durable/artifact-policy
                  artifact-module
                  database-module
                  poo-flow-artifact-profile?
                  poo-flow-artifact-database-profile?)
-        :poo-flow/src/modules/cubeSandbox/config
-        :poo-flow/src/modules/docker-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/config
-        (only-in :poo-flow/src/modules/sandbox-core/profile
+        :poo-flow/modules/cubeSandbox/config
+        :poo-flow/modules/docker-sandbox/config
+        :poo-flow/modules/nono-sandbox/config
+        (only-in :poo-flow/modules/sandbox-core/profile
                  poo-flow-sandbox-profile-backend-kind
                  poo-flow-sandbox-profile-name))
 

@@ -12,11 +12,11 @@
                  check-equal?
                  test-suite)
         :poo-flow/src/module-system/object-core/interface
-        :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects
-        :poo-flow/src/modules/docker-sandbox/objects)
+        :poo-flow/modules/sandbox-core/objects
+        :poo-flow/modules/sandbox-core/profile-support/policy
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects
+        :poo-flow/modules/docker-sandbox/objects)
 
 ;; : (-> Symbol Alist MaybeValue)
 (def (alist-ref/default key entries default)

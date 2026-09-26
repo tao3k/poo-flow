@@ -14,7 +14,7 @@
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/modules/agent-sandbox/config
         (only-in "../user-interface/custom/my-module/profiles/agent-sandbox-audit"
                  poo-flow-custom-module-agent-sandbox-audit-module))
 

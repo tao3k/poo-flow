@@ -125,7 +125,7 @@ receipt against the original Query and Contract identities.  Graph witnesses
 do not by themselves prove causality, temporal safety, authorization or
 completeness.
 
-The executable boundary is =src/modules/query/contracts.ss=.  Runtime output
+The executable boundary is =modules/query/contracts.ss=.  Runtime output
 first enters Scheme as a typed =PooFlowQueryExecutionCandidate=; it is not yet
 admitted evidence.  The =QueryReceiptBindingExecutor x Provider x Query=
 crossing uses the POO CLOS generic and an MRR-owned method bundle.  Binding
@@ -136,7 +136,7 @@ candidate nor the admitted receipt carries mutation or action authority, and
 the binding path never starts MRR or another runtime.
 
 The native transport pre-admission is an executable Scheme function in
-=src/modules/query/rust-ir.ss=.  =gerbil-parser= projects it into the versioned,
+=modules/query/rust-ir.ss=.  =gerbil-parser= projects it into the versioned,
 byte-stable IR under =bindings/rust-ir=, and =gerbil-scheme-rust-ir= typechecks
 and lowers that source-owned function during the Rust consumer build.  It
 deliberately avoids both a Query-specific C structure and a Rust-owned JSON

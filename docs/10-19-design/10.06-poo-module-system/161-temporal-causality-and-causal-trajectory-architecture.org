@@ -233,7 +233,7 @@ correct handling of whatever evidence and modality the receipt actually binds.
 ** Lean module ownership mirrors POO Module ownership
 
 Lean's native module, root and library-target model is the proof equivalent of
-the Scheme PackageSpec boundary.  A proof-bearing =src/modules/<owner>= has one
+the Scheme PackageSpec boundary.  A proof-bearing =modules/<owner>= has one
 Lake library named =PooFlowModule<Owner>Proof=.  Its =roots= are the public
 proof roots for that owner, and Lake alone derives their import closure.
 
@@ -325,7 +325,7 @@ requires a fresh, exact Cedar decision at the effect boundary.
 
 * Delivery sequence
 
-- [X] Establish =src/modules/temporal-causality/= as the POO Flow core owner of
+- [X] Establish =modules/temporal-causality/= as the POO Flow core owner of
    causal event graphs, causal trajectories and deterministic witness-path
    analysis.  SDLC adaptation remains a separate compatibility-preserving task.
 - [X] Standardize intended paths, error paths, intended Impact and error Impact

@@ -18,9 +18,9 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/docker/interface
-        :poo-flow/src/modules/workflow/store
-        :poo-flow/src/modules/workflow/flows)
+        :poo-flow/modules/docker/interface
+        :poo-flow/modules/workflow/store
+        :poo-flow/modules/workflow/flows)
 
 (export tutorial-runtime-result-test)
 

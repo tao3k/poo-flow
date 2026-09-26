@@ -17,7 +17,7 @@
         test-error
         test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/workflow/store)
+        :poo-flow/modules/workflow/store)
 
 ;;; Failure capture keeps configured-runner checks on structured values instead
 ;;; of rendered exception text.

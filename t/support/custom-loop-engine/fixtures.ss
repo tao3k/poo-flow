@@ -8,12 +8,12 @@
 (import (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
-        (only-in :poo-flow/src/modules/loop-engine/runtime
+        (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
-        (only-in :poo-flow/src/modules/cubeSandbox/config
+        (only-in :poo-flow/modules/cubeSandbox/config
                  poo-flow-cubeSandbox-module-bundles)
-        (only-in :poo-flow/src/modules/nono-sandbox/config
+        (only-in :poo-flow/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
         (only-in "../../../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))

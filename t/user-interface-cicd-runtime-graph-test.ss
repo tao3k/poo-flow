@@ -10,12 +10,12 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
+        (only-in :poo-flow/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-config-workflow-cicd-runtime-readiness
                  poo-flow-user-config-workflow-cicd-runtime-command-manifests
                  poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
                  poo-flow-user-workflow-cicd-runtime-command-manifest-agreement)
-        (only-in :poo-flow/src/modules/workflow/funs
+        (only-in :poo-flow/modules/workflow/funs
                  poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi)
         (only-in "./support/user-interface-cicd-runtime-fixture"
                  user-interface-cicd-runtime-fixture-config))

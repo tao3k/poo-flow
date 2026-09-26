@@ -68,10 +68,10 @@ dependencies express ordering, while profiles independently select defaults.
 The ownership split is explicit: =src/module-system/= is the source-neutral
 loader mechanism, while maintained, contributor and user collections all enter
 through =poo-flow-load-modules=.  It discovers direct module directories and
-projects only =src/modules/<module>/interface.ss=; no maintained init file or
+projects only =modules/<module>/interface.ss=; no maintained init file or
 parallel list repeats module roots or role filenames.
 
-No Scheme file is permitted directly under =src/modules/=. Every concrete
+No Scheme file is permitted directly under =modules/=. Every concrete
 maintained module owns a directory and supplies =types.ss=, =objects.ss=,
 =funs.ss=, =config.ss= and =interface.ss=. Optional =syntax.ss= and focused
 implementation files may extend that shell.  =interface.ss= imports and
@@ -354,7 +354,7 @@ The directory models the thin handoff that downstream users see:
 - =init.ss= chooses hot-plug module groups, module ids, flags, and custom module entrypoints;
 - =custom/*/config.ss= is the downstream-owned custom module authoring space;
 - =src/module-system/user-profile.ss= projects those root declarations into the canonical profile/config objects.
-This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/module-system= or concrete =src/modules/<domain>= owners. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
+This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/module-system= or concrete =modules/<domain>= owners. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
 ** 10.06.04.90 Doom And Nix Design Boundary
 The detailed design principles are in [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]].
 

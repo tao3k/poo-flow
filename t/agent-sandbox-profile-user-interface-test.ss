@@ -20,7 +20,7 @@
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/agent-sandbox/config)
+        :poo-flow/modules/agent-sandbox/config)
 
 (export agent-sandbox-profile-user-interface-test)
 

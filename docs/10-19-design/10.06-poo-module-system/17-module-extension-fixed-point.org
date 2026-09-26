@@ -108,19 +108,19 @@ domains should extend objects instead of duplicating option maps.
 Module files use a Doom/NixOS-like shape, but the meaning is POO-native:
 - =config.ss= declares module activation and user-facing module rows;
 - =objects.ss= declares reusable POO module objects for that namespace;
-- top-level =src/modules/objects.ss= owns =objects.shared.*=;
+- top-level =modules/objects.ss= owns =objects.shared.*=;
 - module-local object files own =objects.<module>.*=;
 - all object files contribute to the final =objects= attribute graph.
 
 Concrete sandbox shape:
 #+begin_src text
-src/modules/objects.ss
+modules/objects.ss
   objects.shared.sandbox
 
-src/modules/nono-sandbox/objects.ss
+modules/nono-sandbox/objects.ss
   objects.nono-sandbox.sandbox inherits objects.shared.sandbox
 
-src/modules/cubeSandbox/objects.ss
+modules/cubeSandbox/objects.ss
   objects.cubeSandbox.sandbox inherits objects.shared.sandbox
 #+end_src
 

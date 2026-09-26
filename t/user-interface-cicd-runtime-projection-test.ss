@@ -13,7 +13,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/src/modules/workflow/cicd-runtime-command-config
+        (only-in :poo-flow/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-workflow-cicd-runtime-command-manifest-agreement)
         (only-in "./support/user-interface-cicd-runtime-fixture"
                  user-interface-cicd-runtime-fixture-config))

@@ -11,9 +11,9 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :poo-flow/src/modules/memory-core/durable/policy
+        (only-in :poo-flow/modules/memory-core/durable/policy
                  poo-flow-durable-policy)
-        :poo-flow/src/modules/sandbox-core/profile-support/policy)
+        :poo-flow/modules/sandbox-core/profile-support/policy)
 
 (export sandbox-profile-policy-test)
 
