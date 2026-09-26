@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-# Direct dependency revisions are generated from gerbil.pkg by
-# `just pin-gerbil-dependency`; do not edit their source blocks independently.
+# Gerbil package dependency revisions are generated from gerbil.pkg by
+# `just pin-gerbil-dependency`. Foundation is owned by the Git submodule;
+# its Bazel source projection must match the foundation gitlink instead.
 
 gerbil_dependency_sources = use_extension(
     "@gerbil_bazel//gerbil:extensions.bzl",
@@ -35,22 +36,22 @@ gerbil_dependency_sources.source_package(
     name = "poo_flow_foundation_sources",
     canonical_uri = "https://github.com/tao3k/poo-flow-foundation",
     package = "poo-flow-foundation",
-    revision = "93b0f1a1a4c17c79eccd6863029fe85949e94aec",
-    sha256 = "04499ef74d63096b80e37f7249a77898671dd14a70501ff429d23a537347bb42",
-    strip_prefix = "poo-flow-foundation-93b0f1a1a4c17c79eccd6863029fe85949e94aec",
+    revision = "3101247a81a65b3a584d86bb95c4d7436df692f7",
+    sha256 = "e2b6359b609aafee8d00290622992377d9d665b9ccdae67cc480743c8ddd24be",
+    strip_prefix = "poo-flow-foundation-3101247a81a65b3a584d86bb95c4d7436df692f7",
     urls = [
-        "https://github.com/tao3k/poo-flow-foundation/archive/93b0f1a1a4c17c79eccd6863029fe85949e94aec.tar.gz",
+        "https://github.com/tao3k/poo-flow-foundation/archive/3101247a81a65b3a584d86bb95c4d7436df692f7.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(
     name = "gerbil_parser_sources",
     canonical_uri = "https://github.com/tao3k/gerbil-parser",
     package = "gerbil-parser",
-    revision = "5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
-    sha256 = "e8557a8a8134a270a0e6ef354dd4355bc50aed6ad3523985e3dc704877b91965",
-    strip_prefix = "gerbil-parser-5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
+    revision = "70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
+    sha256 = "ad4c33b4ad7ee223999811e827f72a2ecaa4496f1c0b6692674d957678afe367",
+    strip_prefix = "gerbil-parser-70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
     urls = [
-        "https://github.com/tao3k/gerbil-parser/archive/5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7.tar.gz",
+        "https://github.com/tao3k/gerbil-parser/archive/70adc63aae349f55981fa0a3e3f7f26775c0ef9c.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(

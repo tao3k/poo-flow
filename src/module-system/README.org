@@ -46,6 +46,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | object family | =module-system/object-family/interface.ss= | hygienic POO object-family declarations |
 | composition lineage | =module-system/composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =module-system/observability/debug.ss= | reusable POO/debug observation contracts |
+| testing Case profile | =module-system/observability/testing-case.ss= | POO-native Case policy around the native test runner |
 
 Further extraction requires a real downstream consumer and a single source owner.
 A source file is not eligible merely because it has no =:poo-flow/= import:
