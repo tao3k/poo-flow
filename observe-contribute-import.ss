@@ -7,7 +7,7 @@
 ;;; Boundary: bounded, phase-attributed import observation for one contribution test.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/observability/debug
+        (only-in :poo-flow-foundation/module-system/observability/debug
                  PooFlowDebugMemoryAnomaly?
                  PooFlowDebugMemoryAnomaly-receipt
                  poo-flow-debug-memory-policy

@@ -18,7 +18,7 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/module-system/interface
-        (only-in :poo-flow/src/module-system/object-family/syntax
+        (only-in :poo-flow-foundation/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 

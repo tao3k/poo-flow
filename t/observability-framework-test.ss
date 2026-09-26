@@ -9,19 +9,19 @@
         (only-in :clan/poo/object .o .cc .ref .slot? .call)
         (only-in :clan/poo/mop element? validate TypeError?)
         :poo-flow/src/module-system/observability/interface
-        :poo-flow/src/module-system/observability/debug
+        :poo-flow-foundation/module-system/observability/debug
         (only-in :poo-flow/testing-api
                  poo-flow-test-case
                  poo-flow-test-case/with
                  poo-flow-testing-case-profile-prototype
                  poo-flow-testing-case-profile?
                  poo-flow-default-testing-case-profile)
-        (only-in :poo-flow/src/module-system/observability/types
+        (only-in :poo-flow-foundation/module-system/observability/types
                  PooFlowObservabilityDiagnosticContract
                  PooFlowDebugDurationReceiptContract)
         (only-in :poo-flow/src/module-system/observability/objects
                  poo-flow-observability-diagnostic-record)
-        (only-in :poo-flow/src/module-system/types
+        (only-in :poo-flow-foundation/module-system/types
                  poo-flow-contract-admit poo-flow-predicate-contract)
         :poo-flow/src/module-system/semantic-module/objects)
 (export observability-framework-test)

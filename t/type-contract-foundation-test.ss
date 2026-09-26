@@ -8,7 +8,7 @@
          (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .mix)
         (only-in :clan/poo/mop element? validate TypeError? define-type)
-        :poo-flow/src/module-system/types)
+        :poo-flow-foundation/module-system/types)
 (export type-contract-foundation-test)
 
 (define-type (NamedContract @ PooFlowNativeObjectContract.)

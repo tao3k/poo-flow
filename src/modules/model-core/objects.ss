@@ -39,7 +39,7 @@
         poo-flow-model-selection-receipt->alist)
 
 (import (only-in :clan/poo/object .ref object<-alist)
-        :poo-flow/src/module-system/object-family/syntax
+        :poo-flow-foundation/module-system/object-family/syntax
         :poo-flow/src/modules/model-core/types
         :poo-flow/src/modules/session/policy
         (only-in :poo-flow/src/modules/session/objects-core

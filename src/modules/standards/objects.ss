@@ -11,7 +11,7 @@
         (only-in :std/hash/misc hash-key? hash-put!)
         (only-in :std/list/list filter)
         (only-in :std/encoding/hex hex-encode)
-        (only-in :poo-flow/src/module-system/object-family/syntax
+        (only-in :poo-flow-foundation/module-system/object-family/syntax
                  defpoo-object-family)
         (only-in :poo-flow/src/utilities/functional poo-flow-all?)
         "types.ss")

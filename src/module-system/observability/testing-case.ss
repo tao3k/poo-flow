@@ -10,7 +10,7 @@
         (only-in :asp-gerbil-scheme/testing-api
                  +testing-memory-profile+
                  testing-memory-profile-max-heap-mib)
-        (only-in "debug.ss"
+        (only-in :poo-flow-foundation/module-system/observability/debug
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-policy?
                  call-with-poo-flow-debug-memory-case-watchdog))

@@ -11,7 +11,7 @@
         (only-in :poo-flow/src/core/funcs
                  poo-flow-read-datums/append-map
                  poo-flow-scheme-datum-find)
-        (only-in :poo-flow/src/module-system/object-family/syntax
+        (only-in :poo-flow-foundation/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 

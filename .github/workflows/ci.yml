@@ -60,6 +60,9 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Check out Foundation source owner
+        run: git submodule update --init foundation
+
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -126,9 +129,8 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # gerbil-parser currently consumes POO Flow's public module contracts.
-          # Its pinned package may leave older same-namespace artifacts behind;
-          # clean the root package through gxpkg before compiling this checkout.
+          # Foundation owns the parser-facing POO contracts. Clean only this
+          # checkout's outputs before compiling the full POO Flow package.
           gerbil clean
 
       - name: Save native Gerbil package cache

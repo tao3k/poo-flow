@@ -22,7 +22,7 @@
                  .ref
                  .setslot!
                  $constant-slot-spec)
-        :poo-flow/src/module-system/object-family/indexed)
+        :poo-flow-foundation/module-system/object-family/indexed)
 
 (export poo-performance-fixture-policy-contract-pass?
         poo-performance-display-receipt
