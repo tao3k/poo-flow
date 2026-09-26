@@ -140,7 +140,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "Vj/sAtgOrRAnW3axfLGLHTHrg8OYlgrEHnaARKXbD/Q=",
+        "usagesDigest": "cE+oBaaRs9MYXH3ez/Kb0C9PnXw6sNPnuTugicOi2EI=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -241,7 +241,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "Vj/sAtgOrRAnW3axfLGLHTHrg8OYlgrEHnaARKXbD/Q=",
+        "usagesDigest": "cE+oBaaRs9MYXH3ez/Kb0C9PnXw6sNPnuTugicOi2EI=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
