@@ -137,21 +137,21 @@
 
 (def poo-clos-evidence-suites
   (list
-   (evidence-suite 'dispatch "t/poo-clos-dispatch-test.ss"
+   (evidence-suite 'dispatch "core/t/poo-clos-dispatch-test.ss"
                    'poo-clos-dispatch-test 12)
-   (evidence-suite 'lifecycle "t/poo-clos-lifecycle-test.ss"
+   (evidence-suite 'lifecycle "core/t/poo-clos-lifecycle-test.ss"
                    'poo-clos-lifecycle-test 14)
-   (evidence-suite 'syntax "t/poo-clos-syntax-test.ss"
+   (evidence-suite 'syntax "core/t/poo-clos-syntax-test.ss"
                    'poo-clos-syntax-test 10)
    (evidence-suite 'method-combination
-                   "t/poo-clos-method-combination-test.ss"
+                   "core/t/poo-clos-method-combination-test.ss"
                    'poo-clos-method-combination-test 13)
-   (evidence-suite 'evolution "t/poo-clos-evolution-test.ss"
+   (evidence-suite 'evolution "core/t/poo-clos-evolution-test.ss"
                    'poo-clos-evolution-test 7)
    (evidence-suite 'generic-evolution
-                   "t/poo-clos-generic-evolution-test.ss"
+                   "core/t/poo-clos-generic-evolution-test.ss"
                    'poo-clos-generic-evolution-test 3)
-   (evidence-suite 'load-form "t/poo-clos-load-form-test.ss"
+   (evidence-suite 'load-form "core/t/poo-clos-load-form-test.ss"
                    'poo-clos-load-form-test 5)))
 
 (def (poo-clos-evidence-suite id)

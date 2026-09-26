@@ -11,7 +11,7 @@
                  admit-contributions)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection)
-        (only-in :poo-flow/src/module-system/poo-clos/interface
+        (only-in :core/poo-clos/interface
                  poo-clos-generic-methods
                  poo-clos-make-instance)
         :poo-flow/modules/governance/interface

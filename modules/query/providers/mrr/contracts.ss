@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; MRR-owned method bundle for Provider x Query receipt binding.
-(import :poo-flow/src/module-system/poo-clos/interface
+(import :core/poo-clos/interface
         (only-in :poo-flow/modules/query/objects PooFlowQuery.)
         (only-in :poo-flow/modules/query/contracts
                  QueryReceiptBindingProtocol

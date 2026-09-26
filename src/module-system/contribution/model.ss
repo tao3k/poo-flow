@@ -6,7 +6,7 @@
 ;;; These are snapshots, not mutable CLOS lifecycle instances.
 (import (only-in :clan/poo/object .o .ref .slot? object? compute-precedence-list!)
         (only-in :std/list/list every)
-        (only-in :poo-flow/src/module-system/poo-clos/classes
+        (only-in :core/poo-clos/classes
                  poo-clos-class poo-clos-direct-slot-definition
                  poo-clos-class-effective-slots))
 (export poo-clos-class poo-clos-direct-slot-definition

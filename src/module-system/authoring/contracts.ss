@@ -20,7 +20,7 @@
         (only-in :poo-flow/src/module-system/observability/module-presentation
                  poo-flow-poo-slot-authoring-datum-bindings
                  poo-flow-poo-slot-authoring-self-reference?)
-        :poo-flow/src/module-system/poo-clos/interface
+        :core/poo-clos/interface
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  ModuleAuthoringExecutor. ModuleSourceRole.
                  ConfigSourceRole.))

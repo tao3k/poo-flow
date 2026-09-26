@@ -8,7 +8,7 @@
         (only-in :std/crypto/digest sha256)
         (only-in :std/list/list delete-duplicates/hash every find)
         (only-in :std/encoding/hex hex-encode)
-        :poo-flow/src/module-system/poo-clos/interface
+        :core/poo-clos/interface
         (only-in :poo-flow/modules/authorization/objects
                  AuthorizationCapabilityContractExecutor)
         (only-in :poo-flow/modules/authorization/types

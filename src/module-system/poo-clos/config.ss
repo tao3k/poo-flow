@@ -47,7 +47,7 @@
        depth: (cons -110 -110)
        phase-files:
        '((config . "src/module-system/poo-clos/config.ss")
-         (interface . "src/module-system/poo-clos/interface.ss"))
+         (interface . "core/poo-clos/interface.ss"))
        metadata:
        '((owner . poo-clos)
          (precedence-owner . clan/poo)
