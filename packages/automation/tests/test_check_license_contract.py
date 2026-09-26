@@ -12,8 +12,8 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "check_license_contract.py"
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "packages" / "automation" / "check_license_contract.py"
 
 
 def license_contract_module():

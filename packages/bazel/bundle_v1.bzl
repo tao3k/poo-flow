@@ -105,7 +105,7 @@ poo_flow_bundle_v1 = rule(
         "bundle_id": attr.string(mandatory = True),
         "descriptor_out": attr.output(mandatory = True),
         "project": attr.label(
-            default = Label("//gerbil:compile"),
+            default = Label("//:compile"),
             providers = [GerbilProjectInfo],
         ),
         "src": attr.label(

@@ -93,7 +93,7 @@ gerbil_project_projection = rule(
         ),
         "_exporter": attr.label(
             cfg = "exec",
-            default = Label("//tools/bazel:scheme_projection_artifact_tool"),
+            default = Label("//packages/bazel:scheme_projection_artifact_tool"),
             executable = True,
         ),
     },

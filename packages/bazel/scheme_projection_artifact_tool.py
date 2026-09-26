@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from _scheme_datum import parse_scheme_datum, write_scheme_datum
-from tools.bazel.gerbil_environment import build_gerbil_environment
+from packages.bazel.gerbil_environment import build_gerbil_environment
 
 
 SCHEMA = "poo-flow.scheme-load-projection-artifact.v1"
