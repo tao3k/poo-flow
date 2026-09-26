@@ -287,6 +287,12 @@ test-ascent-integration:
     test -f packages/gerbil-ascent/core/binary-program.ss
     GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
 
+# Keep the pinned ASCENT BYODS latency target under the native Linux gate.
+[group('test')]
+test-ascent-performance:
+    test -f packages/gerbil-ascent/t/scenarios/performance/ascent-byods-trrel/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
+
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
 [group('test')]
