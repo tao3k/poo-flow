@@ -6,9 +6,9 @@
 ;;; Boundary: tests verify user-interface presentation receipts.
 ;;; Invariant: presentations stay report-only and never realize descriptors.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/interface
@@ -63,7 +63,7 @@
 ;;; switches, CI/CD handoff rows, loop-engine rows, and ownership boundaries.
 ;; : (-> Unit TestSuite)
 (def (user-interface-config-presentation-test)
-  (test-case "presents downstream config without descriptor realization"
+  (poo-flow-test-case "presents downstream config without descriptor realization"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                test-poo-flow-user-config
@@ -255,7 +255,7 @@
 ;;; higher-level Doom-style profile fields users inspect.
 ;; : (-> Unit TestSuite)
 (def (user-interface-profile-presentation-case-test)
-  (test-case "presents profile without descriptor realization"
+  (poo-flow-test-case "presents profile without descriptor realization"
       (let* ((presentation
               (pooFlowUserProfilePresentation test-poo-flow-user-profile)))
         (check-equal? (.ref presentation 'kind)

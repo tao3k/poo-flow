@@ -7,9 +7,9 @@
 ;;; Invariant: benchmark payloads live under t/; user-interface declarations
 ;;; stay POO-native and never realize sandbox descriptors.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -98,7 +98,7 @@
 ;; : TestSuite
 (def user-interface-sandbox-config-performance-test
   (test-suite "user-interface sandbox config performance"
-    (test-case "keeps sandbox config projection inside benchmark contract"
+    (poo-flow-test-case "keeps sandbox config projection inside benchmark contract"
       (let-values (((receipt summary)
                     (benchmark-run/result
                      user-interface-sandbox-config-fixture

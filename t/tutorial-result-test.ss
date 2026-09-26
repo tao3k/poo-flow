@@ -6,7 +6,8 @@
 ;;; Boundary: tutorial result tests mirror Funflow's local/config outputs.
 ;;; Invariant: each stage proves a user-visible result, not only an API shape.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api)
@@ -138,10 +138,10 @@
 ;;; This suite keeps tutorial result contracts executable as examples evolve.
 (def tutorial-result-test
   (test-suite "funflow tutorial result ladder"
-    (test-case "stage 1 tutorial1 minimal pure flow returns 2"
+    (poo-flow-test-case "stage 1 tutorial1 minimal pure flow returns 2"
       (let (flow (pure-flow 'plus-one plus-one-value 'number 'number))
         (check-equal? (tutorial-run flow 1) 2)))
-    (test-case "stage 2 quick reference hello and composition results"
+    (poo-flow-test-case "stage 2 quick reference hello and composition results"
       (let* ((hello (pure-flow 'hello
                                hello-line
                                'string
@@ -157,14 +157,14 @@
              (pipeline (flow-then 'hello-world flow1 flow2)))
         (check-equal? (tutorial-run hello "Watson") "Hello Watson !")
         (check-equal? (tutorial-run pipeline #!void) "Hello world")))
-    (test-case "stage 3 tutorial2 extension behavior repeats custom text"
+    (poo-flow-test-case "stage 3 tutorial2 extension behavior repeats custom text"
       (let* ((custom (scheme-flow 'custom-repeat
                                   custom-repeat-line
                                   'string
                                   'string))
              (result (tutorial-run custom "Kangaroo goes ")))
         (check-equal? result "Kangaroo goes woop!woop!woop!woop!woop!woop!woop!")))
-    (test-case "stage 4 word count exposes deterministic counts"
+    (poo-flow-test-case "stage 4 word count exposes deterministic counts"
       (let* ((words '(a and it try words a and it try words a and it try words
                         lets this count give pipeline should lets this count
                         give pipeline should file))
@@ -177,7 +177,7 @@
         (check-equal? (count-ref counts 'and) 3)
         (check-equal? (count-ref counts 'lets) 2)
         (check-equal? (count-ref counts 'file) 1)))
-    (test-case "stage 5 external config fails before runtime submission"
+    (poo-flow-test-case "stage 5 external config fails before runtime submission"
       (let* ((requirement (make-config-requirement 'env 'SECOND_GREETING #t))
              (config (make-run-config
                       'tutorial-missing-config
@@ -194,7 +194,7 @@
                                     (run-flow-with-config config flow #!void)))))
         (check-equal? (execution-failure? failure) #t)
         (check-equal? (execution-failure-code failure) 'missing-config-keys)))
-    (test-case "stage 6 error handling try-flow routes thrown failures"
+    (poo-flow-test-case "stage 6 error handling try-flow routes thrown failures"
       (let* ((thrower (throw-string-flow 'throw-local
                                          "handled tutorial failure"
                                          'unit
@@ -216,7 +216,7 @@
                       "handled: handled tutorial failure")
         (check-equal? (try-right? success-result) #t)
         (check-equal? (try-result-value success-result) "ok")))
-    (test-case "stage 7 configured runtime command returns normalized result"
+    (poo-flow-test-case "stage 7 configured runtime command returns normalized result"
       (let* ((config (make-rust-run-config
                       (list (cons 'runtime-command runtime-tutorial-command))))
              (flow (external-flow 'runtime-demo

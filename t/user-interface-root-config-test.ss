@@ -6,7 +6,8 @@
 ;;; Boundary: top-level root profile and modules-directory facade.
 ;;; Invariant: root config stays declarative and does not load test fixtures.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)
         (only-in :poo-flow/src/user-interface/profile-core
@@ -56,7 +57,7 @@
 
 (def user-interface-root-config-test
   (test-suite "poo-flow user interface root config"
-    (test-case "loads modules directory facade through top-level config"
+    (poo-flow-test-case "loads modules directory facade through top-level config"
       (let* ((root-modules (poo-flow-user-config-modules root-config))
              (root-flow-module
               (root-config-module-selection-by-key root-modules

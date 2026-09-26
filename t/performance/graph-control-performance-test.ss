@@ -5,7 +5,8 @@
 
 ;;; Boundary: exclusive end-to-end complexity gate for graph control receipts.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -50,7 +51,7 @@
 
 (def graph-control-performance-test
   (test-suite "graph control performance"
-    (test-case "projects a 1000-node linear DAG control receipt"
+    (poo-flow-test-case "projects a 1000-node linear DAG control receipt"
       (let* ((node-count 1000)
              (graph-value
               (graph-control-performance-linear-dag node-count))

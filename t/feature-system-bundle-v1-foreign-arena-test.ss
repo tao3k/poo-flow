@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/utilities/functional
         :poo-flow/src/feature-system/bundle-v1-lowering
@@ -57,7 +58,7 @@
   (test-suite
    "feature system Bundle v1 foreign arena"
 
-   (test-case
+   (poo-flow-test-case
     "accepted lowering plan becomes a packed native arena image"
     (let* ((plan (sample-lowering-plan))
            (descriptor (.ref plan 'descriptor))
@@ -115,7 +116,7 @@
                       'high))
       (check (.ref image 'diagnostics) => '())))
 
-   (test-case
+   (poo-flow-test-case
     "empty lowering plan still creates one aligned arena quantum"
     (let* ((plan (feature-bundle-v1-lowering 'empty-bundle 0 '() '() '()))
            (image (feature-bundle-v1-write-foreign-arena plan)))
@@ -124,7 +125,7 @@
       (check (u8vector-length (.ref image 'arena-image)) => 64)
       (check (read-u64 (.ref image 'descriptor-image) 72) => 64)))
 
-   (test-case
+   (poo-flow-test-case
     "invalid lowering owner fails closed with a POO diagnostic"
     (let* ((image (feature-bundle-v1-write-foreign-arena 'not-a-plan))
            (diagnostic (car (.ref image 'diagnostics))))

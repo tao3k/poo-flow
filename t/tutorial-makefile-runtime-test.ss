@@ -6,7 +6,8 @@
 ;;; Boundary: makefile-tool runtime stages prove descriptor handoff behavior.
 ;;; Invariant: tests emulate runtime responses without executing Makefile work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -131,7 +131,7 @@
 ;; : TestSuite
 (def tutorial-makefile-runtime-test
   (test-suite "funflow makefile-tool runtime result ladder"
-    (test-case "stage 17 descriptor command drives makefile tool workflow"
+    (poo-flow-test-case "stage 17 descriptor command drives makefile tool workflow"
       (let ((seen-parse #f)
             (seen-run #f))
         (let* ((descriptor
@@ -167,7 +167,7 @@
           (check-equal? (adapter-result-artifact-handle
                          (execution-request-input seen-run))
                         '(artifact stage-17-makefile-plan)))))
-    (test-case "stage 18 makefile tool descriptor manifest exposes rust cli handoff"
+    (poo-flow-test-case "stage 18 makefile tool descriptor manifest exposes rust cli handoff"
       (let* ((descriptor
               (make-makefile-tool-runtime-command-descriptor
                'stage-18-makefile-tool-cli
@@ -240,7 +240,7 @@
                         "process-output"))
         (check-equal? (cdr (assoc 'argv run-manifest))
                       (cons "/usr/bin/poo-flow-runtime" run-args))))
-    (test-case "authors makefile runtime descriptor with Gerbil macros"
+    (poo-flow-test-case "authors makefile runtime descriptor with Gerbil macros"
       (let* ((parse-task (car (flow-steps macro-makefile-runtime-flow)))
              (parse-request
               (task-adapter-request parse-task

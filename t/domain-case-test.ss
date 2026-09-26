@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/object-syntax
         :poo-flow/src/feature-system/domain-case/interface
@@ -13,7 +14,7 @@
 
 (def domain-case-test
   (test-suite "POO CaseComponent and DomainCase closure"
-    (test-case "object, type, and contract close into one cached DomainCase"
+    (poo-flow-test-case "object, type, and contract close into one cached DomainCase"
       (let* ((cache (poo-flow-domain-case-cache))
              (cold (close-base cache))
              (warm (close-base cache))
@@ -56,7 +57,7 @@
         (check (.ref left 'qualification/versioned?) => #t)
         (check (.ref left 'qualification/revision-bound?) => #t)))
 
-    (test-case "instance overlay preserves marker, local, and shared precedence"
+    (poo-flow-test-case "instance overlay preserves marker, local, and shared precedence"
       (let* ((case-value
               (.ref (close-base (poo-flow-domain-case-cache)) 'domain-case))
              (local-role
@@ -80,7 +81,7 @@
         (check (poo-flow-domain-case-instance-mix-count case-value) => 0)
         (check (poo-flow-domain-case-instance-overlay-count case-value) => 1)))
 
-    (test-case "computed POO slots retain native mix semantics"
+    (poo-flow-test-case "computed POO slots retain native mix semantics"
       (let* ((case-value
               (.ref (close-base (poo-flow-domain-case-cache)) 'domain-case))
              (computed-local-role
@@ -103,7 +104,7 @@
         (check (poo-flow-domain-case-instance-mix-count case-value) => 1)
         (check (poo-flow-domain-case-instance-overlay-count case-value) => 0)))
 
-    (test-case "canonical key is deterministic and excludes procedures"
+    (poo-flow-test-case "canonical key is deterministic and excludes procedures"
       (let* ((left
               (poo-flow-domain-case-canonical-descriptor
                'agent.case.v1 1
@@ -135,7 +136,7 @@
                 "procedure")
                => #f)))
 
-    (test-case "same canonical identity cannot alias different component objects"
+    (poo-flow-test-case "same canonical identity cannot alias different component objects"
       (let* ((cache (poo-flow-domain-case-cache))
              (cold (close-base cache))
              (versioned-clone
@@ -153,7 +154,7 @@
         (check (diagnostic-codes alias) => '(module-owner-identity-alias))
         (check (poo-flow-domain-case-cache-closure-count cache) => 1)))
 
-    (test-case "duplicate, parent, and projection declarations fail closure"
+    (poo-flow-test-case "duplicate, parent, and projection declarations fail closure"
       (let* ((cache (poo-flow-domain-case-cache))
              (missing-parent
               (poo-flow-case-component
@@ -178,7 +179,7 @@
                => '(duplicate-projection-selection))
         (check (poo-flow-domain-case-cache-closure-count cache) => 0)))
 
-    (test-case "type identity and parent membership close before composition"
+    (poo-flow-test-case "type identity and parent membership close before composition"
       (let* ((cache (poo-flow-domain-case-cache))
              (parent-role
               (poo-core-role-object (slots ((mode 'parent))) (supers)))
@@ -233,7 +234,7 @@
         (check (diagnostic-codes conflicting-type)
                => '(type-identity-conflict))))
 
-    (test-case "slot conflict rejects and explicit witnessed override closes"
+    (poo-flow-test-case "slot conflict rejects and explicit witnessed override closes"
       (let* ((cache (poo-flow-domain-case-cache))
              (foreign-role
               (poo-core-role-object
@@ -268,7 +269,7 @@
         (check (diagnostic-codes rejected) => '(slot-contract-conflict))
         (check (.ref accepted 'accepted?) => #t)))
 
-    (test-case "method contract refinement requires an explicit witness"
+    (poo-flow-test-case "method contract refinement requires an explicit witness"
       (let* ((cache (poo-flow-domain-case-cache))
              (base-contract
               (poo-flow-case-method-contract
@@ -348,7 +349,7 @@
         (check (diagnostic-codes method-unknown)
                => '(unknown-method-contract))))
 
-    (test-case "projection and policy algebra conflicts fail before caching"
+    (poo-flow-test-case "projection and policy algebra conflicts fail before caching"
       (let* ((cache (poo-flow-domain-case-cache))
              (other-projection
               (poo-flow-case-projection
@@ -382,7 +383,7 @@
                => '(projection-name-conflict))
         (check (poo-flow-domain-case-cache-closure-count cache) => 0)))
 
-    (test-case "slot, type, and state contracts fail at instance boundary"
+    (poo-flow-test-case "slot, type, and state contracts fail at instance boundary"
       (let* ((cache (poo-flow-domain-case-cache))
              (case-value (.ref (close-base cache) 'domain-case))
              (invalid-type
@@ -410,7 +411,7 @@
         (check (diagnostic-codes missing-slot)
                => '(required-slot-missing type-contract-rejected))))
 
-    (test-case "only selected projections cross the DomainCase boundary"
+    (poo-flow-test-case "only selected projections cross the DomainCase boundary"
       (let* ((cache (poo-flow-domain-case-cache))
              (case-value (.ref (close-base cache) 'domain-case))
              (instance
@@ -429,7 +430,7 @@
         (check (.ref private 'accepted?) => #f)
         (check (diagnostic-codes private) => '(projection-not-selected))))
 
-    (test-case "1000 Agents share one closed case and remain isolated"
+    (poo-flow-test-case "1000 Agents share one closed case and remain isolated"
       (let* ((cache (poo-flow-domain-case-cache))
              (closure (close-base cache))
              (case-value (.ref closure 'domain-case))
@@ -465,7 +466,7 @@
         (check (poo-flow-domain-case-instance-overlay-count case-value) => 1000)
         (check (.ref closure 'cache-hit?) => #f)))
 
-    (test-case "1000 Agents use sparse U=8/32/64 role-policy-strategy cases"
+    (poo-flow-test-case "1000 Agents use sparse U=8/32/64 role-policy-strategy cases"
       (for-each
        (lambda (unique-count)
          (let (receipt (exercise-sparse-fleet unique-count))

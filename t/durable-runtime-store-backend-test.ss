@@ -7,9 +7,9 @@
 ;;; Invariant: tests validate backend selection and ABI projection only; no
 ;;; runtime store process is started.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
         :poo-flow/src/core/runtime-protocol
@@ -54,7 +54,7 @@
 ;; : TestSuite
 (def durable-runtime-store-backend-test
   (test-suite "poo-flow durable runtime store backend"
-    (test-case "selects a Marlin backend and emits runtime command handoff"
+    (poo-flow-test-case "selects a Marlin backend and emits runtime command handoff"
       (let* ((contract-receipt (test-runtime-store-contract-receipt))
              (backend-receipt
               (poo-flow-durable-runtime-store-backend->receipt
@@ -111,7 +111,7 @@
         (check-equal? (test-ref handoff 'scheme-manufactures-runtime-handlers)
                       #f)))
 
-    (test-case "declares Turso concurrency and AI backend capabilities"
+    (poo-flow-test-case "declares Turso concurrency and AI backend capabilities"
       (let* ((backend-receipt
               (poo-flow-durable-runtime-store-backend->receipt
                poo-flow-durable-runtime-store-backend/turso))
@@ -145,7 +145,7 @@
                       'libsql_vector_idx)
         (check-equal? (test-ref metadata 'vector-query) 'vector_top_k)))
 
-    (test-case "rejects a backend that cannot satisfy durable store contract"
+    (poo-flow-test-case "rejects a backend that cannot satisfy durable store contract"
       (let* ((backend
               (poo-flow-durable-runtime-store-backend
                'runtime-backend/weak
@@ -183,7 +183,7 @@
          (diagnostic-code-present? diagnostics 'unsupported-operation-kinds)
          #t)))
 
-    (test-case "keeps invalid store contracts out of backend selection"
+    (poo-flow-test-case "keeps invalid store contracts out of backend selection"
       (let* ((invalid-contract
               (.o durable-runtime-store-kind:
                   +poo-flow-durable-runtime-store-contract-kind+

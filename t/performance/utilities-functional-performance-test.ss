@@ -5,7 +5,8 @@
 
 ;;; Boundary: algorithmic performance gate for shared functional utilities.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -40,7 +41,7 @@
 
 (def utilities-functional-performance-test
   (test-suite "functional utility algorithms"
-    (test-case "stable duplicate projection remains hash-linear at 20k inputs"
+    (poo-flow-test-case "stable duplicate projection remains hash-linear at 20k inputs"
       (let* ((unique-count 10000)
              (values (append (iota unique-count) (iota unique-count)))
              (summary (functional-performance-summary values))

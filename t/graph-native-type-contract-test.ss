@@ -5,7 +5,8 @@
 
 ;;; Contract: graph objects expose native POO Type/Contract descriptors.
 
-(import :std/test)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 ;; : (-> PooFlowGraphExpr PooFlowGraphValue)
 (def (graph-eval expr)
@@ -26,7 +27,7 @@
 
 (def graph-native-type-contract-test
   (test-suite "graph-native-type-contract-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/graph/types.ss"))
       (eval '(import "./src/graph/algorithms.ss"))
       (eval '(import :clan/poo/mop :clan/poo/object))

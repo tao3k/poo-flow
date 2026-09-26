@@ -6,9 +6,9 @@
 ;;; Boundary: durable runtime store contract receipts for Rust/Marlin handoff.
 ;;; Invariant: tests validate receipt projection only; no runtime store runs.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
         :poo-flow/src/modules/memory-core/durable/policy
@@ -32,7 +32,7 @@
 ;; : TestSuite
 (def durable-runtime-store-contract-test
   (test-suite "poo-flow durable runtime store contract"
-    (test-case "projects runtime store contract as struct receipt then alist"
+    (poo-flow-test-case "projects runtime store contract as struct receipt then alist"
       (let* ((durable-policy
               (poo-flow-durable-policy
                'durable/runtime-store
@@ -83,7 +83,7 @@
         (check-equal? (test-ref row 'diagnostic-count) 0)
         (check-equal? (test-ref row 'runtime-executed) #f)))
 
-    (test-case "reports missing store owner and unsupported store vocabulary"
+    (poo-flow-test-case "reports missing store owner and unsupported store vocabulary"
       (let* ((invalid-policy
               (.o durable-kind: +poo-flow-durable-policy-kind+
                   durable-schema: +poo-flow-durable-policy-schema+
@@ -138,7 +138,7 @@
          (diagnostic-code-present? diagnostics 'unsupported-capability-flag)
          #t)))
 
-    (test-case "batch projection keeps runtime boundary bounded"
+    (poo-flow-test-case "batch projection keeps runtime boundary bounded"
       (let* ((contracts
               (list
                poo-flow-durable-runtime-store-contract/default

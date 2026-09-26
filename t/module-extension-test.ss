@@ -6,7 +6,8 @@
 ;;; Boundary: generic module extension tests keep POO resolution semantics out
 ;;; of feature-specific workflow code.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/user-interface/facade
@@ -36,7 +36,7 @@
 ;; : TestSuite
 (def module-extension-resolution-test
   (test-suite "poo-flow module extension resolution"
-    (test-case "applies slot and child-node operations to a stable object graph"
+    (poo-flow-test-case "applies slot and child-node operations to a stable object graph"
       (let* ((build-node
               (poo-flow-module-extension-node
                'workflow/pipeline/default/task/build
@@ -106,7 +106,7 @@
         (check-equal? (slot-value resolved-build 'env) '(CI))
         (check-equal? (slot-value resolved-build 'artifacts) '("dist"))))
 
-    (test-case "merges module config contributions through POO field contracts"
+    (poo-flow-test-case "merges module config contributions through POO field contracts"
       (let* ((needs-field
               (poo-flow-module-field-contract
                'needs PooFlowModuleListType 'append '() '((domain . workflow))))
@@ -157,7 +157,7 @@
 ;; : TestSuite
 (def module-extension-object-inheritance-test
   (test-suite "poo-flow module object inheritance"
-    (test-case "inherits shared sandbox module objects for nono and cube"
+    (poo-flow-test-case "inherits shared sandbox module objects for nono and cube"
       (let* ((shared-sandbox-object
               (poo-flow-module-object
                'sandbox/shared
@@ -237,7 +237,7 @@
                       '("--trace-cube"))
         (check-equal? (slot-value resolved-cube 'profile) 'strict)))
 
-    (test-case "resolves module object fields through gerbil-poo C3 precedence"
+    (poo-flow-test-case "resolves module object fields through gerbil-poo C3 precedence"
       (let* ((root-object
               (poo-flow-module-object
                'object/root
@@ -298,7 +298,7 @@
 ;; : TestSuite
 (def module-extension-object-merge-test
   (test-suite "poo-flow module object merge"
-    (test-case "rejects inconsistent gerbil-poo C3 module object graphs"
+    (poo-flow-test-case "rejects inconsistent gerbil-poo C3 module object graphs"
       (let* ((root-object
               (poo-flow-module-object
                'object/root
@@ -344,7 +344,7 @@
                              broken-object)))))
         (check-equal? (not (not failure)) #t)))
 
-    (test-case "merges real module objects under the objects namespace"
+    (poo-flow-test-case "merges real module objects under the objects namespace"
       (let* ((objects
               (append poo-flow-shared-module-objects
                       poo-flow-nono-sandbox-module-objects

@@ -34,6 +34,7 @@
         PooFlowDebugMemoryPolicyContract
         PooFlowDebugMemorySampleContract
         PooFlowDebugMemoryReceiptContract
+        PooFlowDebugDurationReceiptContract
         PooFlowObservabilityReceiptContract
         poo-flow-observability-alist?
         poo-flow-observability-list-of?
@@ -662,3 +663,16 @@
      (accepted? . ,ObservationBoolean)
      (reason . ,ObservationSymbol)))
   .obligations: poo-flow-debug-memory-receipt-obligations)
+
+;;; Busy loops can exceed a Case duration budget without heap growth.
+(define-type (PooFlowDebugDurationReceiptContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-duration-receipt
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((phase . ,ObservationSymbol)
+     (policy-label . ,ObservationSymbol)
+     (limit-milliseconds . ,ObservationNatural)
+     (elapsed-milliseconds . ,ObservationNatural)
+     (accepted? . ,ObservationBoolean)
+     (reason . ,ObservationSymbol))))

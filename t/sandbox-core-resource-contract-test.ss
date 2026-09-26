@@ -5,10 +5,10 @@
 
 ;;; Boundary: sandbox resource POO prototypes use harness-backed typed contracts.
 
-(import (only-in :clan/poo/object .def)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .def)
         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/type-facts/objects
                  poo-flow-type-validation-receipt-harness-validation)
@@ -96,7 +96,7 @@
 ;; : TestSuite
 (def sandbox-core-resource-contract-test
   (test-suite "sandbox-core resource prototype typed contracts"
-    (test-case "projects shared filesystem fragments to resource policies"
+    (poo-flow-test-case "projects shared filesystem fragments to resource policies"
       (check-equal?
        (poo-flow-sandbox-filesystem-prototype->resource-entry
         poo-flow-runtime-filesystem-prototype)
@@ -117,7 +117,7 @@
        '(filesystem
          (scope . snapshot)
          (snapshot . clone))))
-    (test-case "projects shared resources with ports, cpu, and memory"
+    (poo-flow-test-case "projects shared resources with ports, cpu, and memory"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               runtime-volume-ports-resources-prototype)))
@@ -137,7 +137,7 @@
             (published-by . runtime))
            (cpu . 2)
            (memory . "4Gi")))))
-    (test-case "validates runtime volume resources through harness facade"
+    (poo-flow-test-case "validates runtime volume resources through harness facade"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                poo-flow-runtime-volume-resources-prototype))
@@ -159,7 +159,7 @@
                       "poo-object-contract-validation")
         (check-equal? (alist-ref/default summary 'harness-valid #f) #t)
         (check-equal? (alist-ref/default summary 'diagnostic-count #f) 0)))
-    (test-case "reports typed cpu contract failures from harness diagnostics"
+    (poo-flow-test-case "reports typed cpu contract failures from harness diagnostics"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                invalid-cpu-resources-prototype))
@@ -181,7 +181,7 @@
             (poo-flow-require-sandbox-resources-prototype-contract!
              invalid-cpu-resources-prototype)))
          #t)))
-    (test-case "reports missing filesystem as sandbox-core structure failure"
+    (poo-flow-test-case "reports missing filesystem as sandbox-core structure failure"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               missing-filesystem-resources-prototype)))
@@ -194,7 +194,7 @@
           (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
            validation))
          '(missing-filesystem-slot))))
-    (test-case "reports root resource mixins without parent slot"
+    (poo-flow-test-case "reports root resource mixins without parent slot"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               unreadable-root-mixin-resources-prototype)))
@@ -207,7 +207,7 @@
           (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
            validation))
          '(unreadable-filesystem-slot))))
-    (test-case "reports unstructured filesystem projection"
+    (poo-flow-test-case "reports unstructured filesystem projection"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               unstructured-filesystem-resources-prototype)))

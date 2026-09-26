@@ -6,9 +6,9 @@
 ;;; Boundary: tests verify Funflow CI/CD user intent presentation.
 ;;; Invariant: CI/CD facts stay declarative and never execute adapters.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -44,7 +44,7 @@
 ;;; execution.
 (def user-interface-cicd-test
   (test-suite "poo-flow user interface cicd payload"
-    (test-case "presents Funflow CI/CD payload as user intent data"
+    (poo-flow-test-case "presents Funflow CI/CD payload as user intent data"
       (let* ((intents
               (poo-flow-user-config-cicd-intents
                (user-interface-cicd-runtime-fixture-config)))
@@ -63,7 +63,7 @@
         (check-equal? (alist-value 'runtime-owner intent)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed intent) #f)))
-    (test-case "imports downstream CI/CD case through its module owner"
+    (poo-flow-test-case "imports downstream CI/CD case through its module owner"
       (let* ((selection (car poo-flow-custom-my-module-cicd-case))
              (inherits
               (poo-flow-user-module-selection-flag-entry selection ':inherits))
@@ -82,7 +82,7 @@
                       '(:nono
                         (network . blocked)
                         (audit . disabled)))))
-    (test-case "traces CI/CD presentation projection without runtime work"
+    (poo-flow-test-case "traces CI/CD presentation projection without runtime work"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))
@@ -101,7 +101,7 @@
         (check-equal? (alist-value 'stage dag-step)
                       'workflow-cicd-functional-dags)
         (check-equal? (alist-value 'count dag-step) 1)))
-    (test-case "presents Funflow pipeline and functional DAG"
+    (poo-flow-test-case "presents Funflow pipeline and functional DAG"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))
@@ -140,7 +140,7 @@
         (check-equal? (alist-value 'runtime-executed dag) #f)
         (check-equal? (alist-value 'from edge) 'build)
         (check-equal? (alist-value 'to edge) 'test)))
-    (test-case "projects user config into Marlin runtime handoff ABI"
+    (poo-flow-test-case "projects user config into Marlin runtime handoff ABI"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (user-interface-cicd-runtime-fixture-config)))
@@ -216,7 +216,7 @@
         (check-equal? (alist-value 'runtime-owner bundle)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed bundle) #f)))
-    (test-case "projects empty Marlin handoff bundle entry count"
+    (poo-flow-test-case "projects empty Marlin handoff bundle entry count"
       (let ((bundle
              (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
               '()

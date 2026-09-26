@@ -5,9 +5,9 @@
 
 ;;; Boundary: POO performance contract and API-evidence test cases.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -25,7 +25,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-fixture-contract-case)
-  (test-case "keeps every POO performance fixture inside upstream benchmark contract"
+  (poo-flow-test-case "keeps every POO performance fixture inside upstream benchmark contract"
         (let (fixtures (poo-performance-fixtures))
         (check-equal? (length fixtures) 31)
         (check-equal?
@@ -47,7 +47,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-fixture-policy-reject-case)
-  (test-case "rejects fixtures that miss POO performance policy evidence"
+  (poo-flow-test-case "rejects fixtures that miss POO performance policy evidence"
         (let (fixture
               '((feature . missing-poo-policy)
                 (iterations . 1000)
@@ -58,7 +58,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-api-evidence-case)
-  (test-case "keeps POO benchmark evidence anchored to gerbil-poo APIs"
+  (poo-flow-test-case "keeps POO benchmark evidence anchored to gerbil-poo APIs"
         (let (receipt (poo-performance-api-usage-call-receipt))
           (check-equal? (cdr (assoc 'name receipt)) 'poo-api-evidence)
           (check-equal? (cdr (assoc 'color receipt)) 'blue)
@@ -72,7 +72,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-large-profile-projection-case)
-  (test-case "projects large POO profiles through stable descriptor vectors"
+  (poo-flow-test-case "projects large POO profiles through stable descriptor vectors"
         (let (descriptors
               (poo-performance-large-profile-projection-descriptors))
           (check-equal? (vector-length descriptors) 10)
@@ -99,7 +99,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-indexed-family-layout-case)
-  (test-case "reuses indexed POO family layout for large profile projection"
+  (poo-flow-test-case "reuses indexed POO family layout for large profile projection"
         (let* ((object (poo-performance-large-profile-indexed-object))
                (descriptors
                 (poo-performance-large-profile-indexed-descriptors)))
@@ -134,7 +134,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-indexed-family-core-case)
-  (test-case "projects stable POO family slots through indexed module API"
+  (poo-flow-test-case "projects stable POO family slots through indexed module API"
         (let* ((family
                 (poo-indexed-family
                  'module-indexed-family
@@ -173,7 +173,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-generated-receipt-boundary-case)
-  (test-case "projects generated receipt accessors only at runtime boundary"
+  (poo-flow-test-case "projects generated receipt accessors only at runtime boundary"
         (let (receipt-alist
               (poo-performance-generated-receipt-boundary-alist))
           (check-equal?
@@ -198,7 +198,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-runtime-response-family-case)
-  (test-case "reuses runtime response family descriptors at adapter boundary"
+  (poo-flow-test-case "reuses runtime response family descriptors at adapter boundary"
         (let* ((adapter-response
                 (make-adapter-result
                  'request-1

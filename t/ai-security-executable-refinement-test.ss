@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/policy/ai-security-executable-refinement)
 
@@ -29,7 +30,7 @@
 (def ai-security-executable-refinement-test
   (test-suite
    "ai-security executable refinement"
-   (test-case "POO engine accepts a confined action and replays it"
+   (poo-flow-test-case "POO engine accepts a confined action and replays it"
      (let* ((engine (poo-flow-ai-security-transition-engine))
             (receipt ((.ref engine 'execute) (valid-envelope) (valid-policy))))
        (check (.ref engine 'kind) => 'poo-flow-ai-security-transition-engine)
@@ -37,7 +38,7 @@
        (check (length (.ref receipt 'invariants)) => 4)
        (check ((.ref engine 'replay-valid?)
                (valid-envelope) (valid-policy) receipt) => #t)))
-   (test-case "capability amplification fails closed"
+   (poo-flow-test-case "capability amplification fails closed"
      (let* ((envelope
              (poo-flow-agent-action-evidence-envelope
               "action-2" "action-1" "observation-7" "decision-7"
@@ -50,7 +51,7 @@
 	       (check (.ref receipt 'decision) => 'fail-closed)
 	       (check (not (not (member 'capability-confinement
 	                                (.ref receipt 'escalation-reasons)))) => #t)))
-   (test-case "effect escape fails closed"
+   (poo-flow-test-case "effect escape fails closed"
      (let* ((envelope
              (poo-flow-agent-action-evidence-envelope
               "action-2" "action-1" "observation-7" "decision-7"

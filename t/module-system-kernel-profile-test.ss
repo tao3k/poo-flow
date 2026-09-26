@@ -6,9 +6,9 @@
 ;;; Boundary: kernel profile and user-interface fixture integration checks.
 ;;; Invariant: descriptor activation unit tests do not load kernel profile rows.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?)
         (only-in :poo-flow/src/user-interface/profile-core
                  poo-flow-user-profile-name
@@ -29,7 +29,7 @@
 ;; : TestSuite
 (def module-system-kernel-profile-test
   (test-suite "poo-flow module-system kernel profile"
-    (test-case "exports kernel profile runtime values from public facade"
+    (poo-flow-test-case "exports kernel profile runtime values from public facade"
       (check-equal? (poo-flow-user-profile-name poo-flow-kernel-profile)
                     'kernel)
       (check-equal? (poo-flow-user-profile-set-name poo-flow-kernel-profile-set)
@@ -45,7 +45,7 @@
                     #t)
       (check-equal? (length poo-flow-kernel-module-bundles) 7)
       (check-equal? (length poo-flow-kernel-profile-module-bundles) 7))
-    (test-case "user interface fixtures compile against explicit kernel imports"
+    (poo-flow-test-case "user interface fixtures compile against explicit kernel imports"
       (check-equal? (poo-flow-user-profile-name test-poo-flow-user-profile)
                     'developer)
       (check-equal? (poo-flow-user-profile-set-name

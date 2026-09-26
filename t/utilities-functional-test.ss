@@ -5,9 +5,9 @@
 
 ;;; Boundary: behavior checks for generic functional utilities.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-fold-right
@@ -33,7 +33,7 @@
 ;; : TestSuite
 (def utilities-functional-test
   (test-suite "utilities functional helpers"
-    (test-case "delegates core list operations to std functional algorithms"
+    (poo-flow-test-case "delegates core list operations to std functional algorithms"
       (check-equal?
        (poo-flow-fold-right cons [] '(a b c))
        '(a b c))
@@ -58,7 +58,7 @@
           (list value value))
         '(a b c))
        '(a a b b c c)))
-    (test-case "composes predicates without duplicating loop code"
+    (poo-flow-test-case "composes predicates without duplicating loop code"
       (let ((positive-even?
              (poo-flow-predicate-and (list integer? positive? even?)))
             (string-or-symbol?
@@ -77,14 +77,14 @@
         (check-equal? (exact-string-or-symbol? "agent") #t)
         (check-equal? (exact-string-or-symbol? 'agent) #t)
         (check-equal? (exact-string-or-symbol? 42) #f)))
-    (test-case "extracts stable duplicate values with hash-backed std algorithms"
+    (poo-flow-test-case "extracts stable duplicate values with hash-backed std algorithms"
       (check-equal?
        (poo-flow-stable-duplicates '(alpha beta alpha gamma beta alpha))
        '(alpha beta))
       (check-equal?
        (poo-flow-stable-duplicates '((a . 1) (b . 2) (a . 1)))
        '((a . 1))))
-    (test-case "checks list-shaped set inclusion through one hash index"
+    (poo-flow-test-case "checks list-shaped set inclusion through one hash index"
       (check-equal? (poo-flow-set-subset? '(alpha gamma)
                                           '(alpha beta gamma))
                     #t)
@@ -92,7 +92,7 @@
                                           '(alpha beta gamma))
                     #f)
       (check-equal? (poo-flow-set-subset? '() '(alpha)) #t))
-    (test-case "projects and merges association lists deterministically"
+    (poo-flow-test-case "projects and merges association lists deterministically"
       (let ((base '((owner . kernel)
                     (budget . 100)
                     (mode . strict)))

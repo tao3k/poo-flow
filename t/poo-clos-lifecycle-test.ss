@@ -5,7 +5,8 @@
 
 ;;; POO-native CLOS class, slot, and instance lifecycle conformance.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref object?)
         (only-in :clan/poo/mop Type element?)
@@ -28,7 +29,7 @@
 
 (def poo-clos-lifecycle-test
   (test-suite "POO-native CLOS class and instance lifecycle"
-    (test-case "class descriptors and identities stay on the native MOP spine"
+    (poo-flow-test-case "class descriptors and identities stay on the native MOP spine"
       (let (class-value (poo-clos-class 'native-mop-spine))
         (check (element? Type ClosClass) => #t)
         (check (eq? (.ref (.ref class-value 'instance-prototype)
@@ -39,7 +40,7 @@
                     class-value)
                => #t)))
 
-    (test-case "native POO C3 closes a diamond and effective slot options merge"
+    (poo-flow-test-case "native POO C3 closes a diamond and effective slot options merge"
       (let* ((root-slot
               (poo-clos-direct-slot-definition
                'payload initargs: (list root:)
@@ -71,7 +72,7 @@
         (check-equal? (poo-clos-slot-value instance-value 'payload) 'right)
         (check (poo-clos-class-subclass? leaf root) => #t)))
 
-    (test-case "native POO C3 preserves monotonic pedalo precedence"
+    (poo-flow-test-case "native POO C3 preserves monotonic pedalo precedence"
       ;; Barrett et al., figure 2, separates the historical ANSI topological
       ;; order from C3. POO CLOS intentionally follows upstream prototype
       ;; linearization, so day-boat remains before wheel-boat in pedalo.
@@ -110,7 +111,7 @@
          '(pedalo pedal-wheel-boat engineless small-catamaran
                   small-multihull day-boat wheel-boat boat standard-object))))
 
-    (test-case "explicit and default initargs precede initforms with leftmost wins"
+    (poo-flow-test-case "explicit and default initargs precede initforms with leftmost wins"
       (let ((default-count 0)
             (initform-count 0))
         (def slot
@@ -136,7 +137,7 @@
           (check-equal? default-count 1)
           (check-equal? initform-count 0))))
 
-    (test-case "class names are registered ANSI class designators"
+    (poo-flow-test-case "class names are registered ANSI class designators"
       (let* ((source (poo-clos-class 'registered-source))
              (target (poo-clos-class 'registered-target))
              (instance (poo-clos-make-instance 'registered-source)))
@@ -163,7 +164,7 @@
         (check-exception (poo-clos-make-instance 'missing-class)
                          (failure-code? 'class-not-found))))
 
-    (test-case "standard lifecycle entry points are extensible generic functions"
+    (poo-flow-test-case "standard lifecycle entry points are extensible generic functions"
       (let* ((slot
               (poo-clos-direct-slot-definition
                'initialized initform: (lambda () 'default)))
@@ -191,7 +192,7 @@
             (lambda () (poo-clos-function-keywords method)) list)
            (list (list custom:) #f)))))
 
-    (test-case "class-allocated cells are shared and a redefining subclass owns a new cell"
+    (poo-flow-test-case "class-allocated cells are shared and a redefining subclass owns a new cell"
       (let (class-init-count 0)
         (def shared-slot
           (poo-clos-direct-slot-definition
@@ -220,7 +221,7 @@
           (check-equal? (poo-clos-slot-value two 'counter) 11)
           (check-equal? (poo-clos-slot-value three 'counter) 30))))
 
-    (test-case "bound state and missing or unbound hooks have exact operations"
+    (poo-flow-test-case "bound state and missing or unbound hooks have exact operations"
       (let (events '())
         (def plain-slot (poo-clos-direct-slot-definition 'plain))
         (def hooked
@@ -250,7 +251,7 @@
              (missing setf (8))
              (missing slot-makunbound ()))))))
 
-    (test-case "default hooks raise typed failures and makunbound preserves identity"
+    (poo-flow-test-case "default hooks raise typed failures and makunbound preserves identity"
       (let* ((slot (poo-clos-direct-slot-definition 'state))
              (class-value (poo-clos-class 'plain direct-slots: (list slot)))
              (instance-value (poo-clos-allocate-instance class-value)))
@@ -268,7 +269,7 @@
                     instance-value) => #t)
         (check-equal? (poo-clos-slot-bound? instance-value 'state) #f)))
 
-    (test-case "unbound slot failures retain their condition subtype and instance"
+    (poo-flow-test-case "unbound slot failures retain their condition subtype and instance"
       (let* ((slot (poo-clos-direct-slot-definition 'state))
              (class-value
               (poo-clos-class 'typed-unbound-slot direct-slots: (list slot)))
@@ -283,7 +284,7 @@
                     instance-value) => #t)
         (check-equal? (.ref condition 'slot) 'state)))
 
-    (test-case "slot-missing and slot-unbound are ordinary mutable generics"
+    (poo-flow-test-case "slot-missing and slot-unbound are ordinary mutable generics"
       (let* ((slot (poo-clos-direct-slot-definition 'state))
              (class-value
               (poo-clos-class 'generic-slot-protocol
@@ -323,7 +324,7 @@
         (poo-clos-remove-method poo-clos-slot-unbound-generic
                                 slot-unbound-method)))
 
-    (test-case "reinitialize uses initargs only while shared-initialize can rerun initforms"
+    (poo-flow-test-case "reinitialize uses initargs only while shared-initialize can rerun initforms"
       (let (init-count 0)
         (def slot
           (poo-clos-direct-slot-definition
@@ -345,7 +346,7 @@
           (poo-clos-shared-initialize instance-value '(state))
           (check-equal? (poo-clos-slot-value instance-value 'state) 2))))
 
-    (test-case "reader and writer methods participate in ordinary multiple dispatch"
+    (poo-flow-test-case "reader and writer methods participate in ordinary multiple dispatch"
       (let* ((slot
               (poo-clos-direct-slot-definition
                'name initargs: (list name:)
@@ -366,7 +367,7 @@
         (check-equal? (poo-clos-call writer 'new instance-value) 'new)
         (check-equal? (poo-clos-call reader instance-value) 'new)))
 
-    (test-case "invalid declarations and initialization arguments fail before effects"
+    (poo-flow-test-case "invalid declarations and initialization arguments fail before effects"
       (let (slot (poo-clos-direct-slot-definition 'only initargs: (list only:)))
         (check-exception
          (poo-clos-direct-slot-definition 'bad allocation: 'dynamic)

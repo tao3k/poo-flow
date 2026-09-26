@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/qualification/runtime-symbol-manifest)
 
@@ -15,21 +16,21 @@
 
 (def runtime-symbol-manifest-test
   (test-suite "AC-11 runtime symbol JSON manifest"
-    (test-case "valid manifest and exact symbols pass"
+    (poo-flow-test-case "valid manifest and exact symbols pass"
       (let (receipt
             (poo-flow-runtime-symbol-manifest-verify
              (read-manifest valid-json)
              '("poo_flow_runtime_v0_open")))
         (check (.ref receipt 'accepted?) => #t)
         (check (.ref receipt 'diagnostics) => '())))
-    (test-case "symbol drift fails closed"
+    (poo-flow-test-case "symbol drift fails closed"
       (let (receipt
             (poo-flow-runtime-symbol-manifest-verify
              (read-manifest valid-json)
              '("poo_flow_runtime_v0_open" "poo_flow_runtime_v0_extra")))
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'diagnostics) => '(exported-symbol-drift))))
-    (test-case "unknown schema version fails closed"
+    (poo-flow-test-case "unknown schema version fails closed"
       (let (receipt
             (poo-flow-runtime-symbol-manifest-verify
              (read-manifest
@@ -38,7 +39,7 @@
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'diagnostics)
                => '(invalid-or-unknown-manifest))))
-    (test-case "malformed manifest shape fails closed"
+    (poo-flow-test-case "malformed manifest shape fails closed"
       (let (receipt
             (poo-flow-runtime-symbol-manifest-verify
              (read-manifest
@@ -47,7 +48,7 @@
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'diagnostics)
                => '(invalid-or-unknown-manifest))))
-    (test-case "malformed JSON fails closed"
+    (poo-flow-test-case "malformed JSON fails closed"
       (let (receipt
             (poo-flow-runtime-symbol-manifest-verify
              (read-manifest "{\"schema\":") '()))

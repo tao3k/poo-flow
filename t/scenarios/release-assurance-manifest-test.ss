@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/core/object-syntax
@@ -65,7 +66,7 @@
 
 (def release-assurance-manifest-test
   (test-suite "AC-10 S1 ReleaseAssuranceManifest v1"
-    (test-case "POO-native object family and complete manifest validate"
+    (poo-flow-test-case "POO-native object family and complete manifest validate"
       (let (value (manifest (list claim-a claim-b)
                             (list gate-a gate-b) (list tcb)))
         (let (receipt (poo-flow-release-assurance-manifest-validate value))
@@ -83,7 +84,7 @@
           (check (.ref value 'source-revision) => "revision-1")
           (check (.ref receipt 'accepted?) => #t)
           (check (.ref receipt 'diagnostics) => '()))))
-    (test-case "capability instances are isolated"
+    (poo-flow-test-case "capability instances are isolated"
       (let ((left (manifest (list claim-a) (list gate-a) (list tcb)))
             (right (poo-flow-release-assurance-manifest
                     'rc-2 "revision-2" 'macos-arm64
@@ -94,7 +95,7 @@
         (check (.ref right 'source-revision) => "revision-2")
         (check (.ref left 'schema-version) => 1)
         (check (.ref right 'schema-version) => 1)))
-    (test-case "missing and divergent capability bindings fail closed"
+    (poo-flow-test-case "missing and divergent capability bindings fail closed"
       (let* ((valid (manifest (list claim-a) (list gate-a) (list tcb)))
              (flat (object<-alist (manifest-local-shell valid)))
              (wrong-schema
@@ -119,7 +120,7 @@
                      (poo-flow-release-assurance-manifest-validate divergent)
                      'diagnostics))
                => '(capability-revision-mismatch))))
-    (test-case "construction order does not change canonical identity"
+    (poo-flow-test-case "construction order does not change canonical identity"
       (let* ((left (manifest (list claim-a claim-b)
                              (list gate-a gate-b) (list tcb)))
              (right (poo-flow-release-assurance-manifest
@@ -136,7 +137,7 @@
                         'digest))
         (check (.ref (poo-flow-release-assurance-manifest-identity left) 'digest)
                => "871e2303fcabbaffb4b3a95dfbafdef4fb65768ad9a5ae4c75e409b20bd73de5")))
-    (test-case "identity changes when bound release evidence changes"
+    (poo-flow-test-case "identity changes when bound release evidence changes"
       (let* ((left (manifest (list claim-a) (list gate-a) (list tcb)))
              (changed (poo-flow-release-assurance-manifest
                        'rc-1 "revision-2" 'macos-arm64
@@ -149,7 +150,7 @@
                        (.ref (poo-flow-release-assurance-manifest-identity changed)
                              'digest))
                => #f)))
-    (test-case "missing identities, claims, gates, and ABI review fail closed"
+    (poo-flow-test-case "missing identities, claims, gates, and ABI review fail closed"
       (let* ((invalid-abi (poo-flow-assurance-abi-decision 'runtime-v0.1 #f ""))
              (value (poo-flow-release-assurance-manifest
                      'rc-1 "revision-1" 'macos-arm64 '() '()
@@ -160,7 +161,7 @@
                     (.ref receipt 'diagnostics))
                => '(missing-identities invalid-claims invalid-gates
                     invalid-abi-decision))))
-    (test-case "duplicate semantic owners are rejected deterministically"
+    (poo-flow-test-case "duplicate semantic owners are rejected deterministically"
       (let* ((duplicate-tcb
               (poo-flow-assurance-tcb
                'bundle-semantic 'authorization '(cedar evaluator)))
@@ -179,7 +180,7 @@
         (check (map (lambda (entry) (cdr (assq 'code entry)))
                     (.ref receipt 'diagnostics))
                => '(duplicate-tcb-id duplicate-claim-id duplicate-gate-id))))
-    (test-case "incomplete claim and invalid evidence reference fail closed"
+    (poo-flow-test-case "incomplete claim and invalid evidence reference fail closed"
       (let* ((incomplete
               (poo-flow-assurance-claim
                'incomplete 'l2-evidenced "" tcb '() '() ""))

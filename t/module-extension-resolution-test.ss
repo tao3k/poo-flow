@@ -7,9 +7,9 @@
 ;;; Invariant: this owner imports only the extension facade, so native gxtest
 ;;; cannot pass through a stale aggregate user-interface build.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/module-system/extension/interface)
 
@@ -23,7 +23,7 @@
 ;; : TestSuite
 (def module-extension-resolution-test
   (test-suite "native POO module extension resolution"
-    (test-case "dispatches ordered operations through native prototypes"
+    (poo-flow-test-case "dispatches ordered operations through native prototypes"
       (let* ((child
               (poo-flow-module-extension-node
                'workflow/build
@@ -63,7 +63,7 @@
                       "gxi build.ss --optimized")
         (check-equal? (extension-slot-value resolved-child 'artifacts)
                       '(dist))))
-    (test-case "repeated idempotent append demand reports no change"
+    (poo-flow-test-case "repeated idempotent append demand reports no change"
       (let* ((root
               (poo-flow-module-extension-node
                'workflow '((needs . (test lint))) '()))

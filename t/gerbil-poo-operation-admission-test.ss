@@ -8,10 +8,10 @@
 ;;; examples remain native objects and introduce no alternate POO Flow object,
 ;;; dispatch, precedence, or inherited-computation adapter.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
                  check-exception
-                 test-case
                  test-suite)
         (only-in :clan/poo/object
                  $computed-slot-spec
@@ -59,7 +59,7 @@
   (test-suite
    "pinned gerbil-poo operation admission"
 
-   (test-case "constructs, projects, calls, and clones native objects"
+   (poo-flow-test-case "constructs, projects, calls, and clones native objects"
      (.def base-value
        (identity 'base)
        (render (lambda (suffix) (cons identity suffix))))
@@ -71,7 +71,7 @@
        (check-equal? (.slot? clone 'render) #t)
        (check-equal? (length (.all-slots clone)) 2)))
 
-   (test-case "expresses a Scenario as defaults, inherited refinement, nested composition, and behavior"
+   (poo-flow-test-case "expresses a Scenario as defaults, inherited refinement, nested composition, and behavior"
      (.def scenario-base
        (profiles ? '())
        (metadata (.o (owner 'poo-flow)
@@ -96,7 +96,7 @@
                    '(github-release repository-ready
                      (developer staging production))))
 
-   (test-case "keeps run-local Session mutation outside the shared prototype"
+   (poo-flow-test-case "keeps run-local Session mutation outside the shared prototype"
      (.def (session-prototype @)
        (state 'created)
        (history '())
@@ -117,7 +117,7 @@
        ;; A further mix uses the prototype, never the mutated instance cache.
        (check-equal? (.get (.mix first-session) state) 'created)))
 
-   (test-case "makes prototype surgery and instance invalidation explicit"
+   (poo-flow-test-case "makes prototype surgery and instance invalidation explicit"
      (.def evolving-scenario
        (status ? 'draft)
        (version 1))
@@ -134,7 +134,7 @@
      (check-equal? (.get evolving-scenario projection-kind)
                    'github-workflow))
 
-   (test-case "preserves C3 super order and lazy slot caching"
+   (poo-flow-test-case "preserves C3 super order and lazy slot caching"
      (let ((b-evaluations 0)
            (c-evaluations 0))
        (let* ((a (.o (responsibility '(a))))
@@ -162,18 +162,18 @@
          (check-equal? b-evaluations 1)
          (check-equal? c-evaluations 1))))
 
-   (test-case "dispatches validation and projection through a Type descriptor"
+   (poo-flow-test-case "dispatches validation and projection through a Type descriptor"
      (check-equal? (element? Type AdmissionSymbol) #t)
      (check-equal? (validate AdmissionSymbol 'flow) 'flow)
      (check-equal? (admission-project AdmissionSymbol 'flow) "flow")
      (check-exception (validate AdmissionSymbol 42) TypeError?))
 
-   (test-case "preserves native missing-method failure"
+   (poo-flow-test-case "preserves native missing-method failure"
      (check-exception
       (admission-project (.o) 'flow)
       NoApplicableMethod?))
 
-   (test-case "preserves native invalid-precedence failure"
+   (poo-flow-test-case "preserves native invalid-precedence failure"
      (let* ((x (.o))
             (y (.o))
             (xy (.mix x y))

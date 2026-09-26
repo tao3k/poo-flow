@@ -6,8 +6,9 @@
 ;;; Qualification boundary: a mechanism-only Case composes Profiles from two
 ;;; independently owned industries.  It proves composition and diagnostics but
 ;;; makes no claim that either Standard applies to the other's industry.
-(import (only-in :clan/poo/object .ref)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref)
+        (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/src/modules/standards/interface
                  poo-flow-standard-budget
                  poo-flow-standard-catalog
@@ -40,7 +41,7 @@
 (def standards-multi-industry-profile-composition-test
   (test-suite
    "Multi-industry Standard Profile composition qualification"
-   (test-case
+   (poo-flow-test-case
     "a Case resolves both industry Profiles as one immutable closure"
     (let* ((nasa-provider
             (nasa-7150-2d-standard-provider
@@ -77,7 +78,7 @@
       (check-equal? (.ref bundle 'edition-count) 4)
       (check-equal? (.ref bundle 'artifact-count) 10)
       (check-equal? (.ref bundle 'runtime-executed?) #f)))
-   (test-case
+   (poo-flow-test-case
     "a conflicting edition identity fails with the first typed diagnostic"
     (let* ((nasa-provider
             (nasa-7150-2d-standard-provider

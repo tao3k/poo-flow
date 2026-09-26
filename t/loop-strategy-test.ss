@@ -6,7 +6,8 @@
 ;;; Boundary: loop-strategy tests cover policy selection and handoff projection.
 ;;; Invariant: tests assert harness-only local validation, not runtime execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -55,7 +55,7 @@
 ;; : TestSuite
 (def loop-strategy-test
   (test-suite "loop strategy policy selection"
-    (test-case "selects priority-ordered patterns below autonomy ceiling"
+    (poo-flow-test-case "selects priority-ordered patterns below autonomy ceiling"
       (let* ((triage (test-pattern 'daily-triage 'l1 5))
              (repair (test-pattern 'pr-repair 'l2 20))
              (migration (test-pattern 'dependency-migration 'l3 10))
@@ -89,7 +89,7 @@
         (check-equal? (test-ref (test-ref contract 'runtime-boundary)
                                 'local-execution)
                       'validation-only)))
-    (test-case "uses autonomy rank as tie breaker after priority"
+    (poo-flow-test-case "uses autonomy rank as tie breaker after priority"
       (let* ((planner (test-pattern 'planner 'l2 10))
              (connector (test-pattern 'connector-writer 'l2+ 10))
              (plan
@@ -100,7 +100,7 @@
         (check-equal? (map loop-pattern-name
                            (loop-strategy-selected-patterns plan))
                       '(connector-writer planner))))
-    (test-case "finds human-gated patterns as policy facts"
+    (poo-flow-test-case "finds human-gated patterns as policy facts"
       (let* ((safe (test-pattern 'safe-triage 'l1 1))
              (upgrade
               (make-loop-pattern-descriptor
@@ -121,7 +121,7 @@
                             plan
                             'governor-approval))
                       '(upgrade-watch))))
-    (test-case "rejects plans that imply local production execution"
+    (poo-flow-test-case "rejects plans that imply local production execution"
       (let* ((plan
               (make-loop-strategy-plan
                'bad-local-runtime
@@ -137,7 +137,7 @@
         (check-equal? (execution-failure-owner failure) 'loop-strategy)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-strategy-plan)))
-    (test-case "rejects invalid loop pattern descriptors"
+    (poo-flow-test-case "rejects invalid loop pattern descriptors"
       (let* ((bad-pattern
               (make-loop-pattern-descriptor
                'bad-loop

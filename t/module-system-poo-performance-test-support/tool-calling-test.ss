@@ -5,9 +5,9 @@
 
 ;;; Boundary: POO performance cases for tool-calling control-plane objects.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
@@ -132,7 +132,7 @@
 
 ;; Registers one case in the enclosing TestSuite.
 (def (module-system-poo-performance-tool-calling-object-list-control-case)
-  (test-case "validates tool-call proof objects through stable POO lists"
+  (poo-flow-test-case "validates tool-call proof objects through stable POO lists"
     (let* ((pair-count 96)
            (rounds 4)
            (pairs

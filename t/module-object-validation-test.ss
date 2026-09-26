@@ -6,10 +6,10 @@
 ;;; Boundary: module object validation receipts bridge POO Flow objects to the
 ;;; Gerbil harness structural validation vocabulary.
 
-(import (only-in :clan/poo/object .ref object?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?
                  check-exception
                  )
@@ -59,7 +59,7 @@
 ;; : TestSuite
 (def module-object-validation-test
   (test-suite "poo-flow module object validation"
-    (test-case "projects module objects into harness validation receipts"
+    (poo-flow-test-case "projects module objects into harness validation receipts"
       ;; This case locks the downstream receipt shape to the upstream facade
       ;; contract without asserting harness-private implementation details.
       (let* ((validation
@@ -191,13 +191,13 @@
                        validation)
                       '())))
 
-    (test-case "rejects symbolic field kinds at the native Type boundary"
+    (poo-flow-test-case "rejects symbolic field kinds at the native Type boundary"
       (check-exception
        (poo-flow-module-field-contract
         'broken 'Unknown 'override #f '((scope . validation)))
        true))
 
-    (test-case "reports upstream contract diagnostics without dropping harness evidence"
+    (poo-flow-test-case "reports upstream contract diagnostics without dropping harness evidence"
       ;; Broken field metadata, defaults, and merge strategy should all be
       ;; reported by the harness facade rather than reimplemented in poo-flow.
       (let* ((broken-field
@@ -239,7 +239,7 @@
         (check-equal? (receipt-ref field-validation 'diagnostics)
                       diagnostics)))
 
-    (test-case "requires catalog objects to pass upstream harness validation"
+    (poo-flow-test-case "requires catalog objects to pass upstream harness validation"
       (let* ((broken-field
               (poo-flow-module-field-contract
                'broken PooFlowModuleStringType 'merge-strategy 42 'not-an-alist))

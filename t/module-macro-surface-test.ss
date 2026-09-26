@@ -6,9 +6,9 @@
 ;;; Boundary: executable contracts for the public module/profile macro surface.
 ;;; Invariant: syntax lowers to ordinary POO objects and pure projection values.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/user-interface/init-syntax
@@ -129,9 +129,9 @@
 ;; : TestSuite
 (def module-macro-surface-test
   (test-suite "poo-flow public module macro surface"
-    (test-case "loader identifier macro preserves the generated binding"
+    (poo-flow-test-case "loader identifier macro preserves the generated binding"
       (check-equal? load-profile-binding 'syntax-probe-binding))
-    (test-case "profile extension appends bundles to a POO profile"
+    (poo-flow-test-case "profile extension appends bundles to a POO profile"
       (check-equal? (poo-flow-user-profile-name macro-extended-profile)
                     'macro-extended)
       (check-equal?
@@ -139,14 +139,14 @@
        (+ (length (poo-flow-user-profile-module-bundles
                    poo-flow-kernel-profile))
           (length macro-extra-module-bundles))))
-    (test-case "field-row tail projection preserves fixed-first ordering"
+    (poo-flow-test-case "field-row tail projection preserves fixed-first ordering"
       (check-equal?
        (poo-flow-product-field-rows/tail
         '((tail . value))
         (kind 'module)
         (name 'syntax-surface))
        '((kind . module) (name . syntax-surface) (tail . value))))
-    (test-case "durable module macros expose POO-native named profiles"
+    (poo-flow-test-case "durable module macros expose POO-native named profiles"
       (check-equal?
        (poo-flow-artifact-profile?
         (.ref durable-artifact-module-witness 'macro-artifact))
@@ -155,7 +155,7 @@
        (poo-flow-artifact-database-profile?
         (.ref durable-database-module-witness 'macro-database))
        #t))
-    (test-case "backend profile macros construct and derive POO profiles"
+    (poo-flow-test-case "backend profile macros construct and derive POO profiles"
       (check-equal? (poo-flow-sandbox-profile-backend-kind
                      cube-direct-profile)
                     'cube)
@@ -171,7 +171,7 @@
                     'nono)
       (check-equal? (poo-flow-sandbox-profile-name nono-derived-profile)
                     'nono/derived))
-    (test-case "backend profile collections preserve declaration order"
+    (poo-flow-test-case "backend profile collections preserve declaration order"
       (check-equal? (profile-names cube-profile-list)
                     '(cube/list cube/list-derived))
       (check-equal? (profile-names docker-profile-list)

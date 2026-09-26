@@ -6,7 +6,8 @@
 ;;; Boundary: Cube interface tests cover Marlin-facing lifecycle manifests.
 ;;; Invariant: tests do not call Cube APIs or create remote sandboxes.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -33,7 +33,7 @@
 ;; : TestSuite
 (def agent-sandbox-cube-interface-test
   (test-suite "CubeSandbox interface contract"
-    (test-case "declares POO descriptor for Marlin Cube API handoff"
+    (poo-flow-test-case "declares POO descriptor for Marlin Cube API handoff"
       (let* ((descriptor (make-cube-interface-descriptor))
              (contract (cube-interface-descriptor->contract descriptor))
              (override (make-cube-interface-descriptor
@@ -53,7 +53,7 @@
                                                'lifecycle-operations))
                                 'stage)
                       'resolve-template)))
-    (test-case "projects Cube runtime manifests into lifecycle plans"
+    (poo-flow-test-case "projects Cube runtime manifests into lifecycle plans"
       (let* ((profile (make-cube-agent-sandbox-profile 'python-template))
              (request (agent-sandbox-request
                        profile
@@ -102,7 +102,7 @@
                       "python")
         (check-equal? (test-ref snapshot 'policy) 'clone)
         (check-equal? (test-ref resume 'policy) 'supported)))
-    (test-case "rejects non-Cube and unsupported Cube interface policy"
+    (poo-flow-test-case "rejects non-Cube and unsupported Cube interface policy"
       (let* ((nono-request
               (agent-sandbox-request
                (make-nono-agent-sandbox-profile 'always-further/opencode)

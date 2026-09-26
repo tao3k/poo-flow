@@ -6,9 +6,9 @@
 ;;; Boundary: Kleisli tests cover value-dependent Functional + POO flow binding.
 ;;; Invariant: binders return ordinary flow declarations; runner owns execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/core/api)
 
@@ -61,7 +61,7 @@
 ;; : TestSuite
 (def functional-flow-kleisli-test
   (test-suite "functional flow kleisli"
-    (test-case "binds dynamically through the category object"
+    (poo-flow-test-case "binds dynamically through the category object"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category
                                      'inc
@@ -95,7 +95,7 @@
         (check-equal? (receipt-kind kleisli-receipt) 'kleisli)
         (check-equal? (receipt-status kleisli-receipt) 'ok)
         (check-equal? (length (receipt-children kleisli-receipt)) 2)))
-    (test-case "rejects binders that do not return flows"
+    (poo-flow-test-case "rejects binders that do not return flows"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (bad (flow-bind 'bad-bind
                              inc
@@ -107,7 +107,7 @@
         (check-equal? (execution-failure? failure) #t)
         (check-equal? (execution-failure-code failure)
                       'invalid-kleisli-binder-result)))
-    (test-case "authors bind flows with hygienic macros"
+    (poo-flow-test-case "authors bind flows with hygienic macros"
       (check-equal? (flow-name kleisli-macro-bound) 'kleisli-macro-bound)
       (check-equal? (flow-name kleisli-macro-kleisli) 'kleisli-macro-kleisli)
       (check-equal? (kleisli-run kleisli-macro-bound 3) 8)

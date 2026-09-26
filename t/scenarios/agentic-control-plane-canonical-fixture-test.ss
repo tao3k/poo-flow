@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/qualification/agentic-control-plane-fixture)
 
@@ -12,7 +13,7 @@
 
 (def agentic-control-plane-canonical-fixture-test
   (test-suite "AC-10 S3 canonical vertical fixture"
-    (test-case "one fixture joins every accepted owner identity"
+    (poo-flow-test-case "one fixture joins every accepted owner identity"
       (let (left canonical-fixture)
         (check (.ref left 'status) => 'qualified)
         (check (map car (.ref left 'identities))
@@ -25,13 +26,13 @@
                => "dad236461f018a3c8f7226b9b9335785a73288120c0fe4dc7eb73ac0a2133f09")
         (check (.ref left 'required-consumers)
                => '(runtime-c-installed python-cffi-wheel lean-ffi-smoke))))
-    (test-case "runtime event preserves batch authorization identity"
+    (poo-flow-test-case "runtime event preserves batch authorization identity"
       (let (fields (.ref canonical-fixture 'runtime-native-fields))
         (check (cdr (assq 'layout-version fields)) => 1)
         (check (cdr (assq 'header-bytes fields)) => 96)
         (check (cdr (assq 'authorization-identity fields)) => '(3 1))
         (check (cdr (assq 'required-evidence-bits fields)) => 255)))
-    (test-case "negative family rejects every required mutation"
+    (poo-flow-test-case "negative family rejects every required mutation"
       (let (negative
             (poo-flow-agentic-control-plane-negative-fixtures
              canonical-fixture))

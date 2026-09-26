@@ -5,9 +5,9 @@
 
 ;;; Funflow: GitHub CI profile contract backed by JSON Schema projection.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object
                  object<-alist)
@@ -99,7 +99,7 @@
 ;; : TestSuite
 (def funflow-github-ci-json-schema-contract-test
   (test-suite "funflow github-ci json schema contract"
-    (test-case "keeps the upstream workflow schema pinned in the repo"
+    (poo-flow-test-case "keeps the upstream workflow schema pinned in the repo"
       (let ((receipt (poo-flow-funflow-github-ci-contract-receipt)))
         (check-equal?
          (funflow-github-ci-audit-ref 'repo-path)
@@ -109,7 +109,7 @@
          "7a952fdb7c1b130732e40ccea9db9bced906c1198e97834f8a49ae3b411f3161")
         (check-equal? (funflow-github-ci-test-ref receipt 'valid?) #t)
         (check-equal? (funflow-github-ci-test-ref receipt 'diagnostic-count) 0)))
-    (test-case "feeds the pinned raw github workflow schema into the bridge"
+    (poo-flow-test-case "feeds the pinned raw github workflow schema into the bridge"
       (let* ((schema
               (poo-flow-json-schema-read-file
                "schemas/json/github-workflow.json"))
@@ -134,7 +134,7 @@
         (check-equal?
          (>= (funflow-github-ci-test-ref receipt 'diagnostic-count) 1)
          #t)))
-    (test-case "validates top-level github workflow profile shape"
+    (poo-flow-test-case "validates top-level github workflow profile shape"
       (let ((alist-receipt
              (poo-flow-funflow-github-ci-validate-workflow->alist
               funflow-github-ci-valid-workflow))
@@ -145,7 +145,7 @@
         (check-equal? (funflow-github-ci-test-ref alist-receipt 'checked-slots)
                       '(name run-name on env defaults concurrency permissions jobs))
         (check-equal? (funflow-github-ci-test-ref poo-receipt 'valid?) #t)))
-    (test-case "validates native JSON hash objects directly"
+    (poo-flow-test-case "validates native JSON hash objects directly"
       (let* ((string-key-workflow
               (string->json funflow-github-ci-native-json
                             (JSONReadOptions object-as-hash: #t)))
@@ -167,7 +167,7 @@
         (check-equal?
          (funflow-github-ci-test-ref symbol-key-receipt 'valid?)
          #t)))
-    (test-case "rejects missing and empty required workflow slots"
+    (poo-flow-test-case "rejects missing and empty required workflow slots"
       (let ((missing-receipt
              (poo-flow-funflow-github-ci-validate-workflow->alist
               funflow-github-ci-missing-jobs-workflow))
@@ -181,7 +181,7 @@
         (check-equal? (funflow-github-ci-test-ref empty-receipt 'valid?) #f)
         (check-equal? (funflow-github-ci-test-ref empty-receipt 'invalid-slots)
                       '(jobs))))
-    (test-case "recursively validates dynamic job ids and job bodies"
+    (poo-flow-test-case "recursively validates dynamic job ids and job bodies"
       (let ((missing-runs-on
              (poo-flow-funflow-github-ci-validate-workflow->alist
               funflow-github-ci-missing-runs-on-workflow))

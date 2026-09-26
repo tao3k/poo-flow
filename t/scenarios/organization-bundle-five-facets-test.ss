@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :clan/poo/object :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :clan/poo/object :std/test
         :poo-flow/src/semantic/organization-bundle)
 
 
@@ -53,26 +54,26 @@
 (def organization-bundle-five-facets-test
   (test-suite
    "five typed organization facets"
-   (test-case "five facets validate and normalize deterministically"
+   (poo-flow-test-case "five facets validate and normalize deterministically"
      (let* ((bundle (five-facet-bundle))
             (receipt (poo-flow-organization-bundle-validate bundle))
             (canonical (poo-flow-organization-bundle-normalize bundle)))
        (check-equal? (poo-flow-organization-validation-accepted? receipt) #t)
        (check-equal? (map car (cddr canonical))
                      '(organization authority context protocol evidence outcomes))))
-   (test-case "protocol participants resolve through organization facet"
+   (poo-flow-test-case "protocol participants resolve through organization facet"
      (check-equal? (not (not (member 'missing-protocol-participant
                                      (codes (poo-flow-organization-bundle-validate
                                              (five-facet-bundle 'bad-protocol)))))) #t))
-   (test-case "evidence target resolves through protocol facet"
+   (poo-flow-test-case "evidence target resolves through protocol facet"
      (check-equal? (not (not (member 'missing-evidence-target
                                      (codes (poo-flow-organization-bundle-validate
                                              (five-facet-bundle 'bad-evidence)))))) #t))
-   (test-case "incompatible shared identity fails closed"
+   (poo-flow-test-case "incompatible shared identity fails closed"
      (check-equal? (not (not (member 'incompatible-shared-identity
                                      (codes (poo-flow-organization-bundle-validate
                                              (five-facet-bundle 'conflict)))))) #t))
-   (test-case "missing facet fails closed"
+   (poo-flow-test-case "missing facet fails closed"
      (let* ((base (five-facet-bundle))
             (invalid (poo-flow-organization-bundle
                       9 (.ref base 'organization) (.ref base 'authority)

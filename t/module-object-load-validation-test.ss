@@ -6,10 +6,10 @@
 ;;; Boundary: load! fixture module objects are integration validation cases.
 ;;; Invariant: unit receipt-shape tests do not import fixture packages.
 
-(import (only-in :clan/poo/object .ref object?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/interface
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def module-object-load-validation-test
   (test-suite "poo-flow module object load validation"
-    (test-case "wraps load! object fragments with upstream object validation"
+    (poo-flow-test-case "wraps load! object fragments with upstream object validation"
       (let* ((objects poo-flow-custom-module-object1-module)
              (validation
               (poo-flow-module-object-validation (car objects)))

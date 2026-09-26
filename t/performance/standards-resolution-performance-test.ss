@@ -7,8 +7,9 @@
 ;;; Invariant: fixture and index construction happen outside timing; samples
 ;;; measure exact-root resolution and receipt construction only.
 
-(import (only-in :clan/poo/object .ref)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref)
+        (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -83,7 +84,7 @@
 (def standards-resolution-performance-test
   (test-suite
    "Standards indexed resolution performance"
-   (test-case
+   (poo-flow-test-case
     "resolves 10,000 exact roots through the ASP benchmark contract"
     (let* ((count 10000)
            (_fixture-start

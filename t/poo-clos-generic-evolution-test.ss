@@ -5,7 +5,8 @@
 
 ;;; POO-native ensure/reinitialize generic-function conformance.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/poo-clos/interface)
@@ -19,7 +20,7 @@
 
 (def poo-clos-generic-evolution-test
   (test-suite "POO-native CLOS generic evolution"
-    (test-case "ensure creates an explicit dispatchable binding"
+    (poo-flow-test-case "ensure creates an explicit dispatchable binding"
       (let (binding
             (poo-clos-ensure-generic-function
              'ensured required: 1 rest?: #t))
@@ -28,7 +29,7 @@
         (check-exception (poo-clos-call binding)
                          (failure-code? 'argument-count-mismatch))))
 
-    (test-case "reinitialization preserves admitted methods atomically"
+    (poo-flow-test-case "reinitialization preserves admitted methods atomically"
       (let* ((binding
               (poo-clos-ensure-generic-function 'configured required: 1))
              (method
@@ -50,7 +51,7 @@
            (failure-code? 'method-required-argument-mismatch))
           (check (eq? (poo-clos-generic-binding-current binding) next) => #t))))
 
-    (test-case "ensure reuses bindings and checks their identity"
+    (poo-flow-test-case "ensure reuses bindings and checks their identity"
       (let (binding
             (poo-clos-ensure-generic-function 'same required: 0))
         (check (eq? (poo-clos-ensure-generic-function

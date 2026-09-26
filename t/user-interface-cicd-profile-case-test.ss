@@ -6,7 +6,8 @@
 ;;; Boundary: CI/CD downstream sandbox profile cases live here.
 ;;; Invariant: cases stay declarative and do not execute release workflows.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -31,7 +31,7 @@
 ;;; configuration story.
 (def user-interface-cicd-profile-case-test
   (test-suite "poo-flow user interface CI/CD sandbox profiles"
-    (test-case "loads CI/CD sandbox profiles from root user-interface config"
+    (poo-flow-test-case "loads CI/CD sandbox profiles from root user-interface config"
       (let* ((nono-config
               (car poo-flow-custom-my-module-cicd-module))
              (profiles
@@ -87,7 +87,7 @@
                         (scope . cicd)
                         (stage . promote)
                         (artifacts . consume)))))
-    (test-case "defaults nono use-module config to native FFI binding"
+    (poo-flow-test-case "defaults nono use-module config to native FFI binding"
       (let* ((check-capabilities '(process-run filesystem-read tmpdir))
              (check-metadata '((intent . ci-check)))
              (nono-config
@@ -104,7 +104,7 @@
                     nono-config
                     ':binding))))
         (check-equal? binding 'native-ffi)))
-    (test-case "rejects CI/CD resources without filesystem sandbox"
+    (poo-flow-test-case "rejects CI/CD resources without filesystem sandbox"
       (let* ((broken-capabilities '(process-run filesystem-read tmpdir))
              (broken-metadata '((intent . ci-check)
                                 (scope . cicd)))

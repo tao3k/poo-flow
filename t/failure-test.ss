@@ -6,7 +6,8 @@
 ;;; Boundary: failure tests cover typed control-plane payloads.
 ;;; Invariant: tests inspect failure structs, not exception message text.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api)
@@ -80,7 +80,7 @@
 ;; : TestSuite
 (def failure-test
   (test-suite "typed control-plane failures"
-    (test-case "raises structured failure for unknown task family"
+    (poo-flow-test-case "raises structured failure for unknown task family"
       (let (failure (capture-control-plane-failure
                      (lambda ()
                        (task-family-for-kind-in default-task-family-registry
@@ -90,7 +90,7 @@
         (check-equal? (execution-failure-code failure) 'unknown-task-family)
         (check-equal? (cdr (assoc 'kind (execution-failure-detail failure)))
                       'unknown-runtime)))
-    (test-case "raises structured failure for unsupported planner"
+    (poo-flow-test-case "raises structured failure for unsupported planner"
       (let* ((descriptor (make-flow-declaration-descriptor
                           'unsupported-task-flow
                           'task
@@ -111,7 +111,7 @@
         (check-equal? (execution-failure-code failure) 'unsupported-flow-planner)
         (check-equal? (cdr (assoc 'planner (execution-failure-detail failure)))
                       'unsupported-planner)))
-    (test-case "raises structured failure for missing dependency value"
+    (poo-flow-test-case "raises structured failure for missing dependency value"
       (let* ((task (make-pure-task 'inc (lambda (x) (+ x 1)) 'number 'number))
              (node (make-plan-node '(node malformed 0 pure inc)
                                    0
@@ -138,7 +138,7 @@
         (check-equal? (execution-failure-code failure) 'missing-dependency-value)
         (check-equal? (cdr (assoc 'node-id (execution-failure-detail failure)))
                       '(node missing 99 pure missing))))
-    (test-case "raises structured failure for unsupported adapter operation"
+    (poo-flow-test-case "raises structured failure for unsupported adapter operation"
       (let* ((descriptor (make-task-family-descriptor 'custom
                                                       'external
                                                       'adapter
@@ -170,7 +170,7 @@
         (check-equal? (execution-failure-code failure) 'unsupported-adapter-operation)
         (check-equal? (cdr (assoc 'operation (execution-failure-detail failure)))
                       'custom-dispatch)))
-    (test-case "wraps adapter result errors in receipt failures"
+    (poo-flow-test-case "wraps adapter result errors in receipt failures"
       (let* ((flow (external-flow 'remote 'submit '((payload . value)) 'value 'value))
              (config (make-run-config 'failing
                                       (make-local-eager-strategy)
@@ -185,7 +185,7 @@
         (check-equal? (execution-failure-code failure) 'adapter-failure)
         (check-equal? (cdr (assoc 'adapter (execution-failure-detail failure)))
                       'failing)))
-    (test-case "projects local and adapter failures into try-result values"
+    (poo-flow-test-case "projects local and adapter failures into try-result values"
       (let* ((runner (make-runner (make-local-eager-strategy)
                                   (make-request-only-adapter)))
              (flow (throw-string-flow 'throw-demo

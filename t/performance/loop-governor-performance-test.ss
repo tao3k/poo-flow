@@ -6,9 +6,9 @@
 ;;; Boundary: loop governor performance gates cover one-pass policy projection.
 ;;; Invariant: governor projection consumes state facts without runtime mutation.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -117,7 +117,7 @@
 ;; : TestSuite
 (def loop-governor-performance-test
   (test-suite "loop governor performance"
-    (test-case "keeps large governor projection inside benchmark contract"
+    (poo-flow-test-case "keeps large governor projection inside benchmark contract"
       (let* ((pattern-count 600)
              (governor
               (loop-governor-performance-governor pattern-count))

@@ -5,8 +5,9 @@
 
 ;;; Scenario: user-interface LangChain and LangGraph composition instances.
 
-(import (only-in :clan/poo/object .all-slots .def .o .ref .slot?)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .all-slots .def .o .ref .slot?)
+        (only-in :std/test check-equal? test-suite)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-analysis
@@ -181,7 +182,7 @@
 
 (def langchain-langgraph-core-test
  (test-suite "langchain and langgraph user compositions"
-  (test-case "langchain linear chain declares one production stage"
+  (poo-flow-test-case "langchain linear chain declares one production stage"
     (let* ((stage (single-stage langchain-composition))
            (compose-payload
             (poo-flow-scenario-case-profiles langchain-composition))
@@ -202,7 +203,7 @@
                       parser-after-model
                       no-implicit-tool-branch))))
 
-  (test-case "graph core proves the LangChain case is a total linear chain"
+  (poo-flow-test-case "graph core proves the LangChain case is a total linear chain"
     (let* ((analysis (poo-flow-graph-control-analysis-receipt
                       langchain-linear-control-graph))
            (metadata (.ref analysis 'metadata)))
@@ -219,7 +220,7 @@
       (check-equal? (alist-value metadata 'conditional-edge-pairs) '())
       (check-equal? (alist-value metadata 'dead-end-ids) '())))
 
-  (test-case "local composition preserves source module and selected profiles"
+  (poo-flow-test-case "local composition preserves source module and selected profiles"
     (let* ((stage (single-stage audited-langchain-composition))
            (compose-payload
             (poo-flow-scenario-case-profiles
@@ -234,7 +235,7 @@
                       langchain-production))
       (check-equal? (.ref (.ref module 'identity) 'name) 'langchain)))
 
-  (test-case "langgraph state graph declares bounded loop and handoff"
+  (poo-flow-test-case "langgraph state graph declares bounded loop and handoff"
     (let* ((stage (single-stage langgraph-composition))
            (compose-payload
             (poo-flow-scenario-case-profiles langgraph-composition))
@@ -256,7 +257,7 @@
                       explicit-runtime-handoff))
       (check-equal? (.ref stage 'handoff) 'marlin-control-plane)))
 
-  (test-case "graph core accepts explicit LangGraph loop edges"
+  (poo-flow-test-case "graph core accepts explicit LangGraph loop edges"
     (let* ((analysis (poo-flow-graph-control-analysis-receipt
                       langgraph-state-control-graph))
            (metadata (.ref analysis 'metadata)))
@@ -273,7 +274,7 @@
       (check-equal? (alist-value metadata 'loop-edge-pairs)
                     '((agent-node router) (tool-node router)))))
 
-  (test-case "graph core reports undeclared LangGraph branch targets"
+  (poo-flow-test-case "graph core reports undeclared LangGraph branch targets"
     (let* ((analysis (poo-flow-graph-control-analysis-receipt
                       langgraph-broken-branch-graph))
            (metadata (.ref analysis 'metadata))
@@ -285,7 +286,7 @@
       (check-equal? (alist-value diagnostics 'undeclared-branch-targets)
                     '(missing-node))))
 
-  (test-case "runtime executor records a production LangGraph path"
+  (poo-flow-test-case "runtime executor records a production LangGraph path"
     (let* ((receipt
             (poo-flow-graph-runtime-execute
              langgraph-production-runtime-graph
@@ -330,7 +331,7 @@
                      "theorem generatedProductionRuntimeReusable")
                     #t)))
 
-  (test-case "runtime executor rejects missing human approval"
+  (poo-flow-test-case "runtime executor rejects missing human approval"
     (let* ((receipt
             (poo-flow-graph-runtime-execute
              langgraph-production-runtime-graph

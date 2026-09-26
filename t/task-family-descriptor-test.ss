@@ -5,7 +5,8 @@
 
 ;;; Boundary: task-family descriptor tests stay separate from flow execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def task-family-descriptor-test
   (test-suite "task family descriptors"
-    (test-case "declares POO-backed task family policy"
+    (poo-flow-test-case "declares POO-backed task family policy"
       (check-equal? (task-family-descriptor? pure-task-family-descriptor) #t)
       (check-equal? (role-object? store-task-family-descriptor) #t)
       (check-equal? (task-family-name scheme-task-family-descriptor) 'scheme)
@@ -35,7 +35,7 @@
                     'rust-or-external-runtime)
       (check-equal? (task-family-adapter-dispatch external-task-family-descriptor)
                     'submit))
-    (test-case "routes tasks through descriptor policy"
+    (poo-flow-test-case "routes tasks through descriptor policy"
       (let ((registry (make-store-task-family-registry))
             (pure (make-pure-task 'inc (lambda (x) (+ x 1)) 'number 'number))
             (put (make-store-task 'put-cache 'put 'cache-handle 'artifact 'artifact))

@@ -6,13 +6,13 @@
 ;;; Boundary: sandbox cases prove declarations stay data-only before realization.
 ;;; Backend descriptors are inspected as upstream module facts, not executed here.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
                  check-not-equal?
                  check-output
-                 test-case
         test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
@@ -46,7 +46,7 @@
 ;;; data rather than backend implementation code.
 (def user-interface-config-sandbox-case-test
   (test-suite "poo-flow user interface sandbox config"
-    (test-case "loads upstream agent sandbox profile defaults"
+    (poo-flow-test-case "loads upstream agent sandbox profile defaults"
       (let* ((presentation
               (poo-flow-default-sandbox-profile-presentation))
              (nono-profile
@@ -89,7 +89,7 @@
          #t)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))
-(test-case "rejects absolute paths in public sandbox recipes"
+(poo-flow-test-case "rejects absolute paths in public sandbox recipes"
   (let (profile
         (poo-flow-sandbox-profile
          (absolute-path-recipe
@@ -112,7 +112,7 @@
     (check-error
      (lambda () (poo-flow-sandbox-profile->descriptor profile)))))
 
-(test-case "rejects relative runtime targets in public sandbox recipes"
+(poo-flow-test-case "rejects relative runtime targets in public sandbox recipes"
   (let (profile
         (poo-flow-sandbox-profile
          (relative-target-recipe
@@ -135,7 +135,7 @@
     (check-error
      (lambda () (poo-flow-sandbox-profile->descriptor profile)))))
 
-(test-case "rejects traversal sources outside the logical resource root"
+(poo-flow-test-case "rejects traversal sources outside the logical resource root"
   (let (profile
         (poo-flow-sandbox-profile
          (traversal-source-recipe
@@ -157,7 +157,7 @@
     (check-error
      (lambda () (poo-flow-sandbox-profile->descriptor profile)))))
 
-(test-case "rejects alternate absolute source syntaxes"
+(poo-flow-test-case "rejects alternate absolute source syntaxes"
   (let ((windows-drive-profile
          (poo-flow-sandbox-profile
           (windows-drive-source-recipe
@@ -213,7 +213,7 @@
      (poo-flow-sandbox-profile-recipe-portable? file-uri-profile)
      #f)))
 
-(test-case "accepts canonical relative sources under a logical resource root"
+(poo-flow-test-case "accepts canonical relative sources under a logical resource root"
   (let (profile
         (poo-flow-sandbox-profile
          canonical-relative-source-recipe
@@ -232,7 +232,7 @@
     (check-equal?
      (poo-flow-sandbox-profile-recipe-portable? profile)
      #t)))
-    (test-case "declares sandbox and loop module flags without descriptors"
+    (poo-flow-test-case "declares sandbox and loop module flags without descriptors"
       (let* ((modules
               (poo-flow-user-config-modules test-poo-flow-user-config))
              (loop-module
@@ -260,7 +260,7 @@
                        docker-module
                        '+docker)
                       #t)))
-    (test-case "backend modules contribute capabilities without core branches"
+    (poo-flow-test-case "backend modules contribute capabilities without core branches"
       (let* ((modules
               (poo-flow-user-config-modules test-poo-flow-user-config))
              (nono
@@ -281,7 +281,7 @@
            (poo-flow-user-module-selection-has-flag?
             selection ':backend-capability-registry))
          #t)))
-    (test-case "queries selected module features without package management"
+    (poo-flow-test-case "queries selected module features without package management"
       (let* ((custom-config
               (pooFlowUserConfigFromProfile test-poo-flow-user-custom-profile)))
         (check-equal? (poo-flow-user-config-feature?
@@ -339,7 +339,7 @@
                        'my-module
                        '+doctor)
                       #t)))
-    (test-case "keeps flow loop and sandbox settings declarative"
+    (poo-flow-test-case "keeps flow loop and sandbox settings declarative"
       (let ((settings (poo-flow-user-config-settings test-poo-flow-user-config)))
         (check-equal? (.ref settings 'surface) "poo-flow")
         (check-equal? (.ref settings 'flow-mode) 'funflow)

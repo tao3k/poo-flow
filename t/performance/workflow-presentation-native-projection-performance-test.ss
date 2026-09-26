@@ -5,7 +5,8 @@
 
 ;;; Boundary: workflow presentation uses one native POO projection constructor.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -54,7 +55,7 @@
 
 (def workflow-presentation-native-projection-performance-test
   (test-suite "workflow presentation native projection performance"
-    (test-case "keeps one native workflow projection inside the fixed gate"
+    (poo-flow-test-case "keeps one native workflow projection inside the fixed gate"
       (let-values (((receipt summary)
                     (benchmark-run/result
                      workflow-presentation-native-projection-fixture

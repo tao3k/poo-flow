@@ -17,6 +17,7 @@
                  PooFlowDebugMemoryPolicyContract
                  PooFlowDebugMemorySampleContract
                  PooFlowDebugMemoryReceiptContract
+                 PooFlowDebugDurationReceiptContract
                  PooFlowDebugCallPolicyContract
                  PooFlowDebugCallReceiptContract)
         (only-in "funcs.ss" poo-flow-observation-admission-summary
@@ -25,6 +26,7 @@
                  poo-flow-debug-call-receipt
                  poo-flow-debug-call-receipt-sexp
                  poo-flow-debug-memory-policy
+                 poo-flow-debug-memory-policy?
                  poo-flow-debug-memory-sample
                  poo-flow-debug-memory-receipt
                  poo-flow-debug-memory-receipt-sexp)
@@ -33,6 +35,7 @@
         PooFlowDebugMemoryPolicyContract
         PooFlowDebugMemorySampleContract
         PooFlowDebugMemoryReceiptContract
+        PooFlowDebugDurationReceiptContract
         PooFlowDebugCallPolicyContract
         PooFlowDebugCallReceiptContract
         poo-flow-debug-call-policy
@@ -42,6 +45,7 @@
         PooFlowDebugCallAnomaly?
         PooFlowDebugCallAnomaly-receipt
         poo-flow-debug-memory-policy
+        poo-flow-debug-memory-policy?
         poo-flow-debug-memory-sample
         poo-flow-debug-memory-receipt
         poo-flow-debug-memory-receipt-sexp
@@ -49,13 +53,19 @@
         poo-flow-debug-memory-checkpoint
         call-with-poo-flow-debug-memory-span
         call-with-poo-flow-debug-memory-monitor
+        call-with-poo-flow-debug-memory-case-watchdog
         PooFlowDebugMemoryAnomaly?
         PooFlowDebugMemoryAnomaly-receipt
+        PooFlowDebugDurationAnomaly?
+        PooFlowDebugDurationAnomaly-receipt
         (import: "slot-debug.ss"))
 
 (deferror-class PooFlowObservationProjectionError ())
 (deferror-class PooFlowDebugMemoryAnomaly (receipt))
+(deferror-class PooFlowDebugDurationAnomaly (receipt))
 (deferror-class PooFlowDebugCallAnomaly (receipt))
+
+(def DebugDurationReceipt. (.ref PooFlowDebugDurationReceiptContract 'proto))
 
 ;;; Active call identities are dynamic and thread-local.  The trace retains
 ;;; symbols only, so cycle/depth checks never keep user arguments or receivers.
@@ -65,6 +75,10 @@
 ;; : (-> Integer Natural)
 (def (poo-flow-debug-elapsed-nanoseconds started-jiffy)
   (quotient (* (- (current-jiffy) started-jiffy) 1000000000)
+            (jiffies-per-second)))
+
+(def (poo-flow-debug-elapsed-milliseconds started-jiffy)
+  (quotient (* (- (current-jiffy) started-jiffy) 1000)
             (jiffies-per-second)))
 
 ;; : (-> Value Symbol)
@@ -292,6 +306,27 @@
     (or (> heap-size heap-limit)
         (> (- live (list-ref baseline-counters 2)) live-growth-limit))))
 
+(def (poo-flow-debug-raise-duration-anomaly phase policy-label limit elapsed)
+  (let* ((phase-value phase)
+         (policy-label-value policy-label)
+         (limit-value limit)
+         (elapsed-value elapsed)
+         (receipt
+          (validate PooFlowDebugDurationReceiptContract
+            (.o (:: @ DebugDurationReceipt.)
+                phase: phase-value
+                policy-label: policy-label-value
+                limit-milliseconds: limit-value
+                elapsed-milliseconds: elapsed-value
+                accepted?: #f
+                reason: 'duration-exceeded)))
+         (failure
+          (PooFlowDebugDurationAnomaly
+           "POO Flow testing Case duration budget exceeded"
+           irritants: '())))
+    (set! (PooFlowDebugDurationAnomaly-receipt failure) receipt)
+    (raise failure)))
+
 ;; : (-> PooFlowDebugMemoryPolicy PooFlowDebugMemorySample Symbol port: OutputPort emit?: Boolean PooFlowDebugMemoryReceipt)
 ;; poo-flow-debug-memory-checkpoint
 ;;   : (-> PooFlowDebugMemoryPolicy PooFlowDebugMemorySample Symbol port: OutputPort emit?: Boolean PooFlowDebugMemoryReceipt)
@@ -380,10 +415,18 @@
 ;;     %
 (def (call-with-poo-flow-debug-memory-monitor policy phase thunk
                                               port: (port (current-error-port))
-                                              emit?: (emit? #f))
+                                              emit?: (emit? #f)
+                                              max-duration-milliseconds:
+                                              (max-duration-milliseconds #f))
   (unless (procedure? thunk)
     (error "POO Flow debug memory monitor requires a thunk"))
+  (unless (or (not max-duration-milliseconds)
+              (and (exact-integer? max-duration-milliseconds)
+                   (> max-duration-milliseconds 0)))
+    (error "invalid POO Flow debug Case duration limit"
+           max-duration-milliseconds))
   (let* ((policy-label (.ref policy 'label))
+         (started-jiffy (current-jiffy))
          (collect-before-sample? (.ref policy 'collect-before-sample?))
          (fail-closed? (.ref policy 'fail-closed?))
          (sample-interval-milliseconds
@@ -449,7 +492,17 @@
                           (DDT 'debug-memory
                                poo-flow-debug-memory-receipt-sexp receipt)))
                       (poo-flow-debug-raise-memory-anomaly receipt)))
-                  (monitor)))
+                  (let (elapsed
+                        (poo-flow-debug-elapsed-milliseconds started-jiffy))
+                    (if (and max-duration-milliseconds
+                             (>= elapsed max-duration-milliseconds))
+                      (begin
+                        (thread-terminate! worker)
+                        (set! joined? #t)
+                        (poo-flow-debug-raise-duration-anomaly
+                         phase policy-label
+                         max-duration-milliseconds elapsed))
+                      (monitor)))))
               (begin
                 (set! joined? #t)
                 (if (eq? (car outcome) 'failure)
@@ -458,3 +511,118 @@
       (lambda ()
         (unless joined?
           (thread-terminate! worker))))))
+
+;;; Native std/test checks use a continuation installed by the harness.  The
+;;; Case body must therefore remain on the harness thread.  Only the sampler
+;;; runs on a separate Scheme thread and interrupts the owner on rejection.
+;;; Heap counters remain process-wide; this is not a thread-local heap quota.
+(def (call-with-poo-flow-debug-memory-case-watchdog
+      policy phase thunk
+      port: (port (current-error-port))
+      emit?: (emit? #f)
+      max-duration-milliseconds: (max-duration-milliseconds 60000))
+  (unless (and (procedure? thunk)
+               (symbol? phase)
+               (output-port? port)
+               (boolean? emit?)
+               (exact-integer? max-duration-milliseconds)
+               (> max-duration-milliseconds 0))
+    (error "invalid POO Flow testing Case watchdog request"
+           phase max-duration-milliseconds))
+  (let* ((owner (current-thread))
+         (gate (make-mutex))
+         (done? #f)
+         (started-jiffy (current-jiffy))
+         (interval-seconds
+          (/ (max 1 (.ref policy 'sample-interval-milliseconds)) 1000.0))
+         (baseline-counters
+          (poo-flow-debug-memory-counters
+           (.ref policy 'collect-before-sample?)))
+         (heap-limit (.ref policy 'heap-limit-bytes))
+         (live-growth-limit (.ref policy 'live-growth-limit-bytes))
+         (collect-before-sample? (.ref policy 'collect-before-sample?))
+         (fail-closed? (.ref policy 'fail-closed?)))
+    (def (claim-stop!)
+      (mutex-lock! gate)
+      (let (claimed? (not done?))
+        (when claimed? (set! done? #t))
+        (mutex-unlock! gate)
+        claimed?))
+    (def (finish!)
+      (mutex-lock! gate)
+      (set! done? #t)
+      (mutex-unlock! gate))
+    (def (watch)
+      (thread-sleep! interval-seconds)
+      (unless done?
+        (let (counters
+              (poo-flow-debug-memory-counters collect-before-sample?))
+          (cond
+           ((and fail-closed?
+                 (poo-flow-debug-memory-counters-rejected?
+                  heap-limit live-growth-limit baseline-counters counters))
+            (when (claim-stop!)
+              (thread-interrupt!
+               owner
+               (lambda ()
+                 (let* ((after
+                         (poo-flow-debug-memory-sample-from-counters
+                          phase counters))
+                        (receipt
+                         (poo-flow-debug-memory-receipt
+                          policy
+                          (poo-flow-debug-memory-sample-from-counters
+                           phase baseline-counters)
+                          after)))
+                   (when emit?
+                     (parameterize ((current-error-port port))
+                       (DDT 'debug-memory
+                            poo-flow-debug-memory-receipt-sexp receipt)))
+                   (poo-flow-debug-raise-memory-anomaly receipt))))))
+           ((>= (poo-flow-debug-elapsed-milliseconds started-jiffy)
+                max-duration-milliseconds)
+            (when (claim-stop!)
+              (thread-interrupt!
+               owner
+               (lambda ()
+                 (poo-flow-debug-raise-duration-anomaly
+                  phase (.ref policy 'label)
+                  max-duration-milliseconds
+                  (poo-flow-debug-elapsed-milliseconds
+                   started-jiffy)))))))
+          (unless done? (watch)))))
+    (let (watchdog (make-thread watch))
+      (thread-start! watchdog)
+      (dynamic-wind
+        void
+        (lambda ()
+          (let (value (thunk))
+            (finish!)
+            (let (after-counters
+                  (poo-flow-debug-memory-counters
+                   (.ref policy 'collect-before-sample?)))
+              (if (or emit?
+                      (poo-flow-debug-memory-counters-rejected?
+                       heap-limit live-growth-limit
+                       baseline-counters after-counters))
+                (let* ((before
+                        (poo-flow-debug-memory-sample-from-counters
+                         phase baseline-counters))
+                       (after
+                        (poo-flow-debug-memory-sample-from-counters
+                         phase after-counters))
+                       (receipt
+                        (poo-flow-debug-memory-receipt
+                         policy before after)))
+                  (when emit?
+                    (parameterize ((current-error-port port))
+                      (DDT 'debug-memory
+                           poo-flow-debug-memory-receipt-sexp receipt)))
+                  (when (and fail-closed?
+                             (not (.ref receipt 'accepted?)))
+                    (poo-flow-debug-raise-memory-anomaly receipt))
+                  (values value receipt))
+                (values value #f)))))
+        (lambda ()
+          (finish!)
+          (thread-terminate! watchdog))))))

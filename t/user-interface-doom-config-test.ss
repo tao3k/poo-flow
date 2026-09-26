@@ -3,8 +3,9 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :clan/poo/object .all-slots .ref)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .all-slots .ref)
+        (only-in :std/test check-equal? test-suite)
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/module-system/profile-composition/accessors
         :poo-flow/src/module-system/loader/collection
@@ -22,7 +23,7 @@
 (def user-interface-doom-config-test
   (test-suite
    "Doom-style User Interface roots"
-   (test-case
+   (poo-flow-test-case
     "config directly composes reusable Profiles across three stages"
     (check-equal?
      (poo-flow-scenario-case? default-agent-control-plane) #t)
@@ -37,14 +38,14 @@
      (.all-slots
       (poo-flow-scenario-case-stages default-agent-control-plane))
      '(development staging production)))
-   (test-case
+   (poo-flow-test-case
     "Profile and Scenario libraries retain explicit import paths"
     (check-equal? (.ref (.ref langchain 'memory) 'name)
                   'langchain-stateless-memory)
     (check-equal? (poo-flow-scenario-case? langchain-scenario) #t)
     (check-equal? (poo-flow-scenario-case? tool-calling-agent-loop-scenario)
                   #t))
-   (test-case
+   (poo-flow-test-case
     "custom modules expose one admitted interface entry"
     (let* ((collection
             (make-poo-flow-module-source-collection

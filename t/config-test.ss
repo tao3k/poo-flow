@@ -6,7 +6,8 @@
 ;;; Boundary: config tests cover preflight policy without reading real secrets.
 ;;; Invariant: failure details expose missing key identity, never config values.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api)
@@ -33,7 +33,7 @@
 ;; : TestSuite
 (def config-test
   (test-suite "external config policy"
-    (test-case "reports missing keys without secret values"
+    (poo-flow-test-case "reports missing keys without secret values"
       (let* ((requirement (make-config-requirement 'env 'TOKEN #t))
              (config (make-run-config
                       'needs-token
@@ -47,7 +47,7 @@
         (check-equal? (cdr (assoc 'source missing-shape)) 'env)
         (check-equal? (cdr (assoc 'key missing-shape)) 'TOKEN)
         (check-equal? (assoc 'value missing-shape) #f)))
-    (test-case "runs when required source keys are present"
+    (poo-flow-test-case "runs when required source keys are present"
       (let* ((requirement (make-config-requirement 'env 'TOKEN #t))
              (options (list (cons 'config-requirements (list requirement))
                             (cons 'config-source
@@ -61,7 +61,7 @@
              (result (run-flow-with-config config flow 1)))
         (check-equal? (config-preflight-ok? (run-config-preflight config)) #t)
         (check-equal? (run-result-value result) 2)))
-    (test-case "raises typed failure before runtime submission when missing"
+    (poo-flow-test-case "raises typed failure before runtime submission when missing"
       (let* ((requirement (make-config-requirement 'env 'TOKEN #t))
              (config (make-run-config
                       'missing-token
@@ -78,7 +78,7 @@
         (check-equal? (execution-failure-owner failure) 'config)
         (check-equal? (execution-failure-code failure) 'missing-config-keys)
         (check-equal? (cdr (assoc 'key (car missing))) 'TOKEN)))
-    (test-case "derives requirements from configurable arguments"
+    (poo-flow-test-case "derives requirements from configurable arguments"
       (let* ((arguments (list (make-config-argument 'literal "--threads" #f)
                               (make-config-argument 'env 'TOKEN #t)
                               (make-config-argument 'file 'CONFIG #f)
@@ -87,7 +87,7 @@
         (check-equal? (length requirements) 2)
         (check-equal? (config-requirement-source (car requirements)) 'env)
         (check-equal? (config-requirement-key (cadr requirements)) 'CONFIG)))
-    (test-case "renders configurable arguments without leaking secrets"
+    (poo-flow-test-case "renders configurable arguments without leaking secrets"
       (let* ((source (list (cons 'env
                                  (list (cons 'TOKEN "secret")
                                        (cons 'MODE "release")))

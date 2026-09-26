@@ -6,9 +6,9 @@
 ;;; Boundary: AI agent lifecycle proof gate scenario tests.
 ;;; Invariant: lifecycle gates reject unsafe session/sandbox/loop/subagent policy.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/modules/session/lifecycle-gate)
 
@@ -153,7 +153,7 @@
 ;; : TestSuite
 (def agent-lifecycle-gate-test
   (test-suite "poo-flow AI agent lifecycle proof gate"
-    (test-case "accepts complete session sandbox loop subagent lifecycle"
+    (poo-flow-test-case "accepts complete session sandbox loop subagent lifecycle"
       (let* ((gate lifecycle-accepted-gate)
              (facts (poo-flow-agent-lifecycle-gate->lean-facts gate)))
         (check-equal? (poo-flow-agent-lifecycle-gate? gate) #t)
@@ -180,7 +180,7 @@
                       #t)
         (check-equal? (alist-value 'ai.topology/subagent-session-sound facts)
                       #t)))
-    (test-case "rejects subagents without parent session binding"
+    (poo-flow-test-case "rejects subagents without parent session binding"
       (let* ((gate lifecycle-unparented-subagent-gate)
              (facts (poo-flow-agent-lifecycle-gate->lean-facts gate)))
         (check-equal? (poo-flow-agent-lifecycle-gate-accepted? gate) #f)
@@ -195,7 +195,7 @@
                        'ai.lifecycle/reusable-policy-surface
                        facts)
                       #f)))
-    (test-case "rejects sandbox and tool scope leaks"
+    (poo-flow-test-case "rejects sandbox and tool scope leaks"
       (let* ((gate lifecycle-sandbox-leak-gate)
              (facts (poo-flow-agent-lifecycle-gate->lean-facts gate)))
         (check-equal? (poo-flow-agent-lifecycle-gate-accepted? gate) #f)
@@ -211,7 +211,7 @@
                        'ai.lifecycle/reusable-policy-surface
                        facts)
                       #f)))
-    (test-case "rejects loop policies without exit and handoff guards"
+    (poo-flow-test-case "rejects loop policies without exit and handoff guards"
       (let* ((gate lifecycle-loop-open-gate)
              (facts (poo-flow-agent-lifecycle-gate->lean-facts gate)))
         (check-equal? (poo-flow-agent-lifecycle-gate-accepted? gate) #f)

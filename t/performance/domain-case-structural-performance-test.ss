@@ -5,7 +5,8 @@
 
 ;;; Boundary: exclusive complexity gate for DomainCase structural catalogs.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -83,7 +84,7 @@
 
 (def domain-case-structural-performance-test
   (test-suite "DomainCase structural catalog performance"
-    (test-case "indexes 2000 ordered components and projections"
+    (poo-flow-test-case "indexes 2000 ordered components and projections"
       (let* ((count 2000)
              (components
               (map domain-case-structural-performance-component

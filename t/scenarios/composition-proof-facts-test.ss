@@ -2,12 +2,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite)
         :poo-flow/src/module-system/composition/proof-facts)
 
 (def composition-proof-facts-test
   (test-suite "composition proof facts"
-    (test-case "projects accepted and rejected composition facts"
+    (poo-flow-test-case "projects accepted and rejected composition facts"
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))

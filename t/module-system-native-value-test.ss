@@ -7,8 +7,9 @@
 ;;; Invariant: Loader, resolver, diagnostics, and projection APIs expose
 ;;; prototype-composable objects rather than parallel Scheme records.
 
-(import (only-in :clan/poo/object .ref object?)
-        (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
+        (only-in :std/test check-equal? test-suite)
         :poo-flow/src/module-system/facade)
 
 (export module-system-native-value-test)
@@ -20,7 +21,7 @@
 ;; : TestSuite
 (def module-system-native-value-test
   (test-suite "native POO module-system value families"
-    (test-case "source loader resolver diagnostics and projections compose as POO"
+    (poo-flow-test-case "source loader resolver diagnostics and projections compose as POO"
       (let* ((source (poo-flow-local-source "modules/example/config.ss"))
              (module
               (make-empty-poo-flow-module-descriptor

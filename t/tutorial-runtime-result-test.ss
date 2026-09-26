@@ -6,7 +6,8 @@
 ;;; Boundary: runtime tutorial stages prove Docker/Store handoff behavior.
 ;;; Invariant: these tests keep heavy runtime semantics behind command output.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
@@ -102,7 +102,7 @@
 ;; : TestSuite
 (def tutorial-runtime-result-test
   (test-suite "funflow tutorial runtime result ladder"
-    (test-case "stage 7 docker process runtime command returns CCompilation visible result"
+    (poo-flow-test-case "stage 7 docker process runtime command returns CCompilation visible result"
       (let (seen-request #f)
         (let* ((runtime-command
                 (make-stdout-runtime-command
@@ -145,7 +145,7 @@
           (check-equal? (docker-config-ref docker 'image #f) "gcc:9.3.0")
           (check-equal? (docker-config-ref docker 'output-policy #f)
                         'process-handle))))
-    (test-case "stage 8 docker artifact feeds store manifest"
+    (poo-flow-test-case "stage 8 docker artifact feeds store manifest"
       (let ((seen-docker #f)
             (seen-store #f))
         (let* ((runtime-command
@@ -197,7 +197,7 @@
           (check-equal? (execution-request-kind seen-store) 'store)
           (check-equal? (runtime-command-name runtime-command)
                         'stage-8-docker-store))))
-    (test-case "stage 9 descriptor command drives docker store workflow"
+    (poo-flow-test-case "stage 9 descriptor command drives docker store workflow"
       (let ((seen-docker #f)
             (seen-store #f))
         (let* ((descriptor
@@ -258,7 +258,7 @@
           (check-equal? (execution-request-kind seen-store) 'store)
           (check-equal? (runtime-command-name runtime-command)
                         'stage-9-docker-store-runtime))))
-    (test-case "stage 10 descriptor manifest exposes rust cli handoff"
+    (poo-flow-test-case "stage 10 descriptor manifest exposes rust cli handoff"
       (let* ((descriptor
               (make-stdout-runtime-command-descriptor
                'stage-10-rust-cli

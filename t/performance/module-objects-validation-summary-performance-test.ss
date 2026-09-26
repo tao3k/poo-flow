@@ -6,11 +6,11 @@
 ;;; Boundary: module object validation gates cover catalog summary aggregation.
 ;;; Invariant: summary aggregation stays report-only and never realizes runtime descriptors.
 
-(import :gerbil/runtime/gambit
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :gerbil/runtime/gambit
         (only-in :clan/poo/object .o .ref object?)
         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -107,7 +107,7 @@
 ;; : TestSuite
 (def module-objects-validation-summary-performance-test
   (test-suite "module objects validation summary performance"
-    (test-case "keeps large catalog validation summary inside benchmark contract"
+    (poo-flow-test-case "keeps large catalog validation summary inside benchmark contract"
       (let* ((validation-count 5000)
              (validations
               (module-objects-validation-summary-validations validation-count))

@@ -6,7 +6,8 @@
 ;;; Boundary: live nono profile checks use native FFI, not the nono CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by package tests.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o)
@@ -116,7 +116,7 @@
 ;; : TestSuite
 (def nono-sandbox-live-profile-test
   (test-suite "nono-sandbox native live user-interface profile"
-    (test-case "normalizes custom ci/check profile into POO sandbox policy"
+    (poo-flow-test-case "normalizes custom ci/check profile into POO sandbox policy"
       (let ((profile (make-custom-cicd-ci-check-profile)))
         (check-equal? (agent-sandbox-profile-backend-kind profile) 'nono)
         (check-equal? (agent-sandbox-profile-backend-ref profile) 'ci/check)
@@ -129,7 +129,7 @@
         (check-equal? (test-ref (agent-sandbox-profile-metadata profile)
                                 'source)
                       +custom-cicd-profile-source+)))
-    (test-case "projects ci/check into nono C binding manifest with filesystem sandbox"
+    (poo-flow-test-case "projects ci/check into nono C binding manifest with filesystem sandbox"
       (let* ((runtime-manifest
               (make-custom-cicd-ci-check-runtime-manifest))
              (manifest
@@ -154,7 +154,7 @@
                       'NONO_ACCESS_MODE_READ_WRITE)
         (check-equal? (test-ref network-call 'network-constant)
                       'NONO_NETWORK_MODE_BLOCKED)))
-    (test-case "checks ci/check through native nono FFI"
+    (poo-flow-test-case "checks ci/check through native nono FFI"
       (let* ((runtime-manifest
               (make-custom-cicd-ci-check-runtime-manifest))
              (receipt (nono-live-cicd-receipt runtime-manifest)))
@@ -181,7 +181,7 @@
             (check-equal? (test-ref receipt 'skipped?) #t)
             (check-equal? (test-ref receipt 'skip-reason)
                           'native-library-not-found)))))
-    (test-case "dispatches custom use-module binding to native nono FFI"
+    (poo-flow-test-case "dispatches custom use-module binding to native nono FFI"
       (let* ((selection (custom-cicd-nono-selection))
              (runtime-manifest
               (make-custom-cicd-ci-check-runtime-manifest))

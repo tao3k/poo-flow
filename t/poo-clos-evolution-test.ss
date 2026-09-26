@@ -5,7 +5,8 @@
 
 ;;; POO-native CLOS class evolution, identity, and reflection conformance.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/poo-clos/interface)
@@ -19,7 +20,7 @@
 
 (def poo-clos-evolution-test
   (test-suite "POO-native CLOS class evolution"
-    (test-case "redefinition preserves class identity and migrates lazily"
+    (poo-flow-test-case "redefinition preserves class identity and migrates lazily"
       (let* ((updates '())
              (x-slot
               (poo-clos-direct-slot-definition 'x initargs: (list x:)))
@@ -82,7 +83,7 @@
                         'generation-dispatch)
           (check-equal? (poo-clos-generic-generation generic) 1))))
 
-    (test-case "discarded bound slots are supplied to the update hook"
+    (poo-flow-test-case "discarded bound slots are supplied to the update hook"
       (let* ((receipt #f)
              (old-slot
               (poo-clos-direct-slot-definition 'old initargs: (list old:)))
@@ -99,7 +100,7 @@
         (check-equal? (poo-clos-slot-value instance 'new) 8)
         (check-equal? receipt '((new) (old) (old 7)))))
 
-    (test-case "change-class preserves identity, common slots, and hook views"
+    (poo-flow-test-case "change-class preserves identity, common slots, and hook views"
       (let* ((receipt #f)
              (common-a
               (poo-clos-direct-slot-definition
@@ -141,7 +142,7 @@
         (check-equal? (poo-clos-slot-value instance 'only-b) 9)
         (check-equal? receipt '(change-a 5 change-b (only-b: 9)))))
 
-    (test-case "successive redefinitions retain the exact class object"
+    (poo-flow-test-case "successive redefinitions retain the exact class object"
       (let* ((class-value (poo-clos-class 'stable-generation))
              (first (poo-clos-redefine-class class-value))
              (second (poo-clos-redefine-class class-value)))
@@ -149,7 +150,7 @@
         (check (eq? first second) => #t)
         (check-equal? (poo-clos-class-generation class-value) 2)))
 
-    (test-case "diamond dependents are reinitialized exactly once"
+    (poo-flow-test-case "diamond dependents are reinitialized exactly once"
       (let* ((root (poo-clos-class 'evolution-diamond-root))
              (left
               (poo-clos-class
@@ -168,7 +169,7 @@
          (map poo-clos-class-generation (list root left right leaf))
          '(1 1 1 1))))
 
-    (test-case "MOP-EXTENDED is a sealed read-only capability profile"
+    (poo-flow-test-case "MOP-EXTENDED is a sealed read-only capability profile"
       (let (profile (poo-clos-mop-extended-profile))
         (check (poo-clos-mop-profile-admits? profile 'generic-methods) => #t)
         (check (poo-clos-mop-profile-admits? profile 'replace-native-c3)
@@ -176,7 +177,7 @@
         (check-equal? (.ref profile 'status) 'admitted)
         (check-equal? (.ref profile 'sealed?) #t)))
 
-    (test-case "make-instances-obsolete preserves class identity"
+    (poo-flow-test-case "make-instances-obsolete preserves class identity"
       (let* ((class-value (poo-clos-class 'explicit-obsolescence))
              (instance (poo-clos-make-instance class-value))
              (reinitialized (poo-clos-make-instances-obsolete class-value)))

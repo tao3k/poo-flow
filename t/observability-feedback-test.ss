@@ -7,7 +7,8 @@
 
 (export observability-feedback-test)
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :poo-flow/src/module-system/observability/objects
         :poo-flow/src/module-system/observability/types
         (only-in :poo-flow/src/module-system/types
@@ -56,7 +57,7 @@
   (test-suite
    "native POO observability Type and Contract"
 
-   (test-case "constructs a prototype-derived diagnostic and evidence"
+   (poo-flow-test-case "constructs a prototype-derived diagnostic and evidence"
      (let (diagnostic (observability-sandbox-diagnostic 'error))
        (check (poo-flow-observability-prototype?
                poo-flow-observability-receipt-prototype) => #t)
@@ -67,12 +68,12 @@
        (check (poo-flow-observability-diagnostic-code diagnostic)
               => 'permission-widening-denied)))
 
-   (test-case "rejects an invalid diagnostic obligation"
+   (poo-flow-test-case "rejects an invalid diagnostic obligation"
      (check-exception
       (observability-sandbox-diagnostic 'bad-severity)
       true))
 
-   (test-case "projects blocked feedback from the admitted receipt"
+   (poo-flow-test-case "projects blocked feedback from the admitted receipt"
      (let* ((receipt
              (observability-blocked-receipt
               (observability-sandbox-diagnostic 'error)))
@@ -97,7 +98,7 @@
                       (observability-test-ref feedback 'diagnostic-codes))
               ? values)))
 
-   (test-case "accepts ready feedback without diagnostics"
+   (poo-flow-test-case "accepts ready feedback without diagnostics"
      (let* ((receipt (observability-ready-receipt))
             (feedback
              (poo-flow-observability-agent-feedback

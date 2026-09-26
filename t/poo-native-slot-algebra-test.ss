@@ -7,7 +7,8 @@
 ;;; Invariant: refinements retain inherited declarations and never mutate their
 ;;; parent objects.
 
-(import (only-in :std/test check-exception check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-exception check-equal? test-suite)
         (only-in :clan/poo/object .all-slots .def .get .o)
         (only-in :poo-flow/src/module-system/observability/effective-object
                  poo-flow-native-slot-view
@@ -52,12 +53,12 @@
   (test-suite
    "native POO noun-slot algebra"
 
-   (test-case "base collection defaults remain empty"
+   (poo-flow-test-case "base collection defaults remain empty"
      (check-equal? (.all-slots (.get OntologyCase profile-selection)) '())
      (check-equal? (.all-slots (.get OntologyCase events)) '())
      (check-equal? (.all-slots (.get OntologyCase trajectories)) '()))
 
-   (test-case "refinement retains identities and overrides one identity"
+   (poo-flow-test-case "refinement retains identities and overrides one identity"
      (check-equal?
       (.get PrescriptionCase events prescription)
       'prescription-event)
@@ -71,7 +72,7 @@
       (.get PrescriptionCase events prescription)
       'prescription-event))
 
-   (test-case "selection recursively refines named groups"
+   (poo-flow-test-case "selection recursively refines named groups"
      (check-equal?
       (.get ReviewedPrescriptionCase
             profile-selection common evidence)
@@ -85,12 +86,12 @@
             profile-selection healthcare base)
       'healthcare-base-profile))
 
-   (test-case "unmentioned noun slots remain inherited"
+   (poo-flow-test-case "unmentioned noun slots remain inherited"
      (check-equal?
       (.get ReviewedPrescriptionCase trajectories safety)
       'prescription-safety-trajectory))
 
-   (test-case "effective value precedes its native slot declaration lineage"
+   (poo-flow-test-case "effective value precedes its native slot declaration lineage"
      (let* ((events-view
              (poo-flow-native-slot-view
               ReviewedPrescriptionCase 'events fixture-prototype-sources))
@@ -107,7 +108,7 @@
                            source-path)
                      "t/poo-native-slot-algebra-test.ss")))
 
-   (test-case "default presentation shows only the effective value"
+   (poo-flow-test-case "default presentation shows only the effective value"
      (let (presented
            (poo-flow-native-slot-presentation
             ReviewedPrescriptionCase 'events))
@@ -115,7 +116,7 @@
        (check-equal? (.get (.get presented effective-value) prescription)
                      'reviewed-prescription-event)))
 
-   (test-case "progressive views preserve native declaration order"
+   (poo-flow-test-case "progressive views preserve native declaration order"
      (let* ((provenance
              (poo-flow-native-slot-presentation
               ReviewedPrescriptionCase 'events 'provenance
@@ -146,19 +147,19 @@
                            source-line)
                      32)))
 
-   (test-case "detailed presentation requires declared source metadata"
+   (poo-flow-test-case "detailed presentation requires declared source metadata"
      (check-exception
       (poo-flow-native-slot-presentation
        ReviewedPrescriptionCase 'events 'advanced)
       true))
 
-   (test-case "unknown disclosure level fails closed"
+   (poo-flow-test-case "unknown disclosure level fails closed"
      (check-exception
       (poo-flow-native-slot-presentation
        ReviewedPrescriptionCase 'events 'unsupported)
       true))
 
-   (test-case "default and detailed views use one native slot evaluation"
+   (poo-flow-test-case "default and detailed views use one native slot evaluation"
      (let* ((evaluation-count 0)
             (subject (.o measured:
                          (begin
@@ -177,14 +178,14 @@
         'native-result)
        (check-equal? evaluation-count 1)))
 
-   (test-case "incomplete provenance labels fail closed"
+   (poo-flow-test-case "incomplete provenance labels fail closed"
      (check-exception
       (poo-flow-native-slot-view
        ReviewedPrescriptionCase 'events
        (.o reviewed: (fixture-source ReviewedPrescriptionCase 32)))
       true))
 
-   (test-case "duplicate prototype labels fail closed"
+   (poo-flow-test-case "duplicate prototype labels fail closed"
      (check-exception
       (poo-flow-native-slot-view
        ReviewedPrescriptionCase 'events
@@ -194,7 +195,7 @@
            ontology: (fixture-source OntologyCase 18)))
       true))
 
-   (test-case "invalid declared source fails closed"
+   (poo-flow-test-case "invalid declared source fails closed"
      (check-exception
       (poo-flow-native-slot-view
        ReviewedPrescriptionCase 'events
@@ -204,7 +205,7 @@
            ontology: (fixture-source OntologyCase 18)))
       true))
 
-   (test-case "missing native slot cannot be presented"
+   (poo-flow-test-case "missing native slot cannot be presented"
      (check-exception
       (poo-flow-native-slot-view
        ReviewedPrescriptionCase 'nonexistent fixture-prototype-sources)

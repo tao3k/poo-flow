@@ -6,9 +6,9 @@
 ;;; Boundary: POO object-family syntax performance gate.
 ;;; Invariant: repeated stable object-family accessors are generated once.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -131,7 +131,7 @@
 ;; : TestSuite
 (def object-family-syntax-performance-test
   (test-suite "object family syntax performance"
-    (test-case "keeps generated POO object-family projections inside benchmark contract"
+    (poo-flow-test-case "keeps generated POO object-family projections inside benchmark contract"
       (let-values (((construction-receipt objects construction-phase)
                     (testing-benchmark-run/result
                      'poo-object-family-syntax

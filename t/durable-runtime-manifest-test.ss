@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/memory-core/durable/store
         :poo-flow/src/modules/memory-core/durable/store-backend
@@ -18,7 +19,7 @@
 ;; : TestSuite
 (def durable-runtime-manifest-test
   (test-suite "poo-flow durable runtime manifest envelope"
-    (test-case "projects policy store backend and operations into one envelope"
+    (poo-flow-test-case "projects policy store backend and operations into one envelope"
       (let ((manifest
              (poo-flow-durable-runtime-manifest-alist
               poo-flow-durable-policy/default
@@ -54,7 +55,7 @@
         (check-equal? (test-ref manifest 'backend-valid) #t)
         (check-equal? (test-ref manifest 'diagnostic-count) 0)
         (check-equal? (test-ref manifest 'runtime-executed) #f)))
-    (test-case "emits byte carrier for runtime languages"
+    (poo-flow-test-case "emits byte carrier for runtime languages"
       (let* ((payload
               (poo-flow-durable-runtime-manifest-string
                (poo-flow-durable-policy 'durable/runtime 'shared)

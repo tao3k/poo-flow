@@ -2,14 +2,15 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite)
         :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-ffi-bridge
         :poo-flow/src/proof/proof-gate-receipts)
 
 (def proof-ffi-bridge-test
   (test-suite "proof FFI bridge"
-    (test-case "projects the accepted proof payload"
+    (poo-flow-test-case "projects the accepted proof payload"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)

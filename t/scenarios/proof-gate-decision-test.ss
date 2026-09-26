@@ -2,14 +2,15 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite)
         :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-decision
         :poo-flow/src/proof/proof-gate-receipts)
 
 (def proof-gate-decision-test
   (test-suite "proof gate decision"
-    (test-case "derives accepted and rejected decisions"
+    (poo-flow-test-case "derives accepted and rejected decisions"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)

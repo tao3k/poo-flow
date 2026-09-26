@@ -6,7 +6,8 @@
 ;;; Boundary: test verifies durable sandbox config projection without runtime work.
 ;;; Invariant: assertions inspect user-interface metadata only.
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref .slot?)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
@@ -56,7 +57,7 @@
 ;; : TestSuite
 (def user-interface-custom-sandbox-durable-test
   (test-suite "poo-flow custom user-interface sandbox-durable case"
-    (test-case "projects durable sandbox config without runtime work"
+    (poo-flow-test-case "projects durable sandbox config without runtime work"
       (let* ((selection (car poo-flow-custom-my-module-sandbox-durable-case))
              (config (sandbox-config
                       poo-flow-custom-my-module-sandbox-durable-case))

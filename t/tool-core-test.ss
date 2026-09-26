@@ -6,9 +6,9 @@
 ;;; Boundary: POO-native tool specs and policy-catalog validation.
 ;;; Invariant: Scheme builds tool handoff receipts only; no tool runtime starts.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/modules/tool-core/objects-policy-refs
@@ -31,7 +31,7 @@
 ;; : TestSuite
 (def tool-core-test
   (test-suite "poo-flow tool-core"
-    (test-case "deduplicates policy refs while preserving wildcard and seed semantics"
+    (poo-flow-test-case "deduplicates policy refs while preserving wildcard and seed semantics"
       (check-equal?
        (poo-flow-tool-unique-symbols
         '(calculator * shell calculator audit shell)
@@ -42,7 +42,7 @@
         '(calculator shell calculator)
         '(* shell audit calculator))
        '(calculator shell audit)))
-    (test-case "authors custom tool specs and projects handoff manifests"
+    (poo-flow-test-case "authors custom tool specs and projects handoff manifests"
       (let* ((calculator
               (poo-flow-tool-spec
                'calculator
@@ -74,7 +74,7 @@
         (check-equal? (test-ref manifest 'tool-ref) 'calculator)
         (check-equal? (test-ref manifest 'handoff-ready?) #t)
         (check-equal? (test-ref manifest 'runtime-executed) #f)))
-    (test-case "projects built-in shell and filesystem tools as sandboxed handoff specs"
+    (poo-flow-test-case "projects built-in shell and filesystem tools as sandboxed handoff specs"
       (let* ((catalog poo-flow-tool-core-default-catalog)
              (shell
               (poo-flow-tool-catalog-find catalog 'run-shell-command))
@@ -94,7 +94,7 @@
         (check-equal? (test-ref row 'runtime-owner)
                       "marlin-agent-core")
         (check-equal? (test-ref row 'runtime-executed) #f)))
-    (test-case "represents MCP tools without starting an MCP server"
+    (poo-flow-test-case "represents MCP tools without starting an MCP server"
       (let* ((mcp-tool
               (poo-flow-tool-core-mcp-tool
                'github/search-issues
@@ -113,7 +113,7 @@
         (check-equal? (test-ref row 'runtime-backend) 'mcp/github)
         (check-equal? (test-ref row 'handoff-ready?) #t)
         (check-equal? (test-ref row 'runtime-executed) #f)))
-    (test-case "validates session tool policies against concrete catalog specs"
+    (poo-flow-test-case "validates session tool policies against concrete catalog specs"
       (let* ((calc
               (poo-flow-tool-spec
                'calculator

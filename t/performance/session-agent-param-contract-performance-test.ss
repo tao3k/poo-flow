@@ -6,9 +6,9 @@
 ;;; Boundary: AgentParam contract performance gate.
 ;;; Invariant: batch AgentParam projection stays bounded and report-only.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
@@ -314,7 +314,7 @@
 ;; : TestSuite
 (def session-agent-param-contract-performance-test
   (test-suite "session AgentParam contract performance"
-    (test-case "keeps AgentParam contract batch projection inside benchmark contract"
+    (poo-flow-test-case "keeps AgentParam contract batch projection inside benchmark contract"
       (let* ((contract-count 200)
              (node (agent-param-performance-node))
              (validation (agent-param-performance-validation))

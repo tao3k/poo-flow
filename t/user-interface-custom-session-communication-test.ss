@@ -7,9 +7,9 @@
 ;;; Invariant: communication receipts are route declarations only; Scheme does
 ;;; not deliver messages or mutate session state.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
@@ -34,7 +34,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-communication-test
   (test-suite "poo-flow custom user-interface session-communication case"
-    (test-case "projects custom session communication receipt rows"
+    (poo-flow-test-case "projects custom session communication receipt rows"
       (let* ((selection
               (car poo-flow-custom-my-module-session-communication-case))
              (rows

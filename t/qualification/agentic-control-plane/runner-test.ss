@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/qualification/runner)
 
@@ -18,7 +19,7 @@
 
 (def runner-test
   (test-suite "AC-10 S4 cross-language qualification receipts"
-    (test-case "registry declares exact release owners and installed gates"
+    (poo-flow-test-case "registry declares exact release owners and installed gates"
       (check (map (lambda (gate) (.ref gate 'gate-id)) registry)
              => +poo-flow-ac10-release-gates+)
       (check (map (lambda (id)
@@ -27,7 +28,7 @@
                     python-proof-installed-wheel lean-ffi-smoke))
              => '(#t #t #t #t)))
 
-    (test-case "focused mode verifies upstream build evidence"
+    (poo-flow-test-case "focused mode verifies upstream build evidence"
       (let* ((receipt
               (accepted-receipt 'scheme-canonical-fixture "revision"))
              (run
@@ -43,7 +44,7 @@
                => '((kind . gerbil-bazel.action-receipt.v1)
                     (gate-id . scheme-canonical-fixture)))))
 
-    (test-case "missing and stale release receipts fail closed"
+    (poo-flow-test-case "missing and stale release receipts fail closed"
       (let* ((focused
               (poo-flow-qualification-run-receipt
                'focused

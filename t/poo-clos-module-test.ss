@@ -5,7 +5,8 @@
 
 ;;; POO CLOS first-class module boundary and lazy runtime contract.
 
-(import (only-in :std/test test-suite test-case check-equal?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal?)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-modules-system-use-module-group
                  poo-flow-user-module-selection-flags
@@ -56,7 +57,7 @@
 
 (def poo-clos-module-test
   (test-suite "POO CLOS first-class module boundary"
-    (test-case "declaration syntax selects the POO-native core owner"
+    (poo-flow-test-case "declaration syntax selects the POO-native core owner"
       (let (bundles
             (poo-flow-modules!
              :core (poo-clos +native)
@@ -66,9 +67,9 @@
                 (poo-flow-user-module-selection-key (car bundle)))
               bundles)
          '((core . poo-clos) (flow . funflow)))))
-    (test-case "module-system feature layout exposes the POO CLOS owner"
+    (poo-flow-test-case "module-system feature layout exposes the POO CLOS owner"
       (check-equal? (all-files-exist? module-system-feature-interface-paths) #t))
-    (test-case "registry resolves the lightweight POO CLOS config"
+    (poo-flow-test-case "registry resolves the lightweight POO CLOS config"
       (let (paths
             (map poo-flow-module-source-ref-value
                  (poo-flow-src-modules-source-refs)))
@@ -80,7 +81,7 @@
                      paths)
            #t #f)
          #f)))
-    (test-case "descriptor declares native MOP ownership without runtime load"
+    (poo-flow-test-case "descriptor declares native MOP ownership without runtime load"
       (check-equal? (poo-flow-module-descriptor? poo-clos-module) #t)
       (check-equal? (poo-flow-module-name poo-clos-module) 'poo-clos)
       (check-equal? (poo-flow-module-group poo-clos-module) 'core)
@@ -91,13 +92,13 @@
         (poo-flow-module-interface-object poo-clos-module))
        "PooClos")
       (check-equal? (poo-flow-module-extensions poo-clos-module) '()))
-    (test-case "default selection is POO-native"
+    (poo-flow-test-case "default selection is POO-native"
       (let (default (car poo-clos-module-default-selection))
         (check-equal? (poo-flow-modules-system-use-module-group 'poo-clos)
                       'core)
         (check-equal? (poo-flow-user-module-selection-flags default)
                       '(+native))))
-    (test-case "Funflow references the sole method-combination owner"
+    (poo-flow-test-case "Funflow references the sole method-combination owner"
       (check-equal?
        (poo-flow-module-source-ref-kind
         poo-flow-funflow-method-combination-module-ref)

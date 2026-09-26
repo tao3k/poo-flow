@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
@@ -283,7 +284,7 @@
 
 (def feature-system-policy-strategy-binding-test
   (test-suite "Feature policy/strategy algebra binding"
-    (test-case "accepted assembly binds ordered POO role contributions"
+    (poo-flow-test-case "accepted assembly binds ordered POO role contributions"
       (let* ((policy-binding (.ref binding-ready 'policy-binding))
              (strategy-binding (.ref binding-ready 'strategy-binding))
              (policy-prototype (.ref policy-binding 'prototype))
@@ -314,7 +315,7 @@
         (check (.ref strategy-prototype 'binding-base-strategy) => #t)
         (check (.ref strategy-prototype 'binding-agent-strategy) => #t)))
 
-    (test-case "invalid contribution shapes and algebra conflicts reject"
+    (poo-flow-test-case "invalid contribution shapes and algebra conflicts reject"
       (check (.ref binding-raw-policy-rejected 'status) => 'rejected)
       (check (memq 'invalid-policy-contribution
                    (binding-diagnostic-codes binding-raw-policy-rejected))
@@ -329,14 +330,14 @@
                    (binding-diagnostic-codes binding-composition-rejected))
              ? values))
 
-    (test-case "contributions require an algebra declared by the Domain Case"
+    (poo-flow-test-case "contributions require an algebra declared by the Domain Case"
       (check (.ref binding-no-algebra-assembly 'accepted?) => #t)
       (check (.ref binding-no-algebra-rejected 'accepted?) => #f)
       (check (memq 'missing-policy-algebra
                    (binding-diagnostic-codes binding-no-algebra-rejected))
              ? values))
 
-    (test-case "a rejected Domain Case assembly cannot reach binding"
+    (poo-flow-test-case "a rejected Domain Case assembly cannot reach binding"
       (check (.ref binding-invalid-component-assembly 'accepted?) => #f)
       (check (.ref binding-invalid-assembly-rejected 'accepted?) => #f)
       (check (.ref binding-invalid-assembly-rejected 'policy-binding) => #f)
@@ -345,7 +346,7 @@
                     binding-invalid-assembly-rejected))
              ? values))
 
-    (test-case "256 Feature contributions bind in resolver order"
+    (poo-flow-test-case "256 Feature contributions bind in resolver order"
       (let* ((descriptors (binding-stress-descriptors 256))
              (bundle
               (feature-manifest-bundle

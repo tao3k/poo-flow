@@ -5,7 +5,8 @@
 
 ;;; CLOS specializer, multi-dispatch, and standard-combination conformance.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/poo-clos/interface)
@@ -30,7 +31,7 @@
 
 (def poo-clos-dispatch-test
   (test-suite "POO-native CLOS multi-dispatch conformance"
-    (test-case "native prototype and any specializers participate in multi-argument dispatch"
+    (poo-flow-test-case "native prototype and any specializers participate in multi-argument dispatch"
       (let* ((generic (poo-clos-generic-function 'meet 2))
              (generic
               (poo-clos-add-method
@@ -73,12 +74,12 @@
                         qualifier: (.ref method 'qualifier)
                         lambda-list: (.ref method 'lambda-list))))))))))
 
-    (test-case "native prototypes cannot masquerade as CLOS classes"
+    (poo-flow-test-case "native prototypes cannot masquerade as CLOS classes"
       (check-exception
        (poo-clos-class-specializer animal-class)
        (failure-code? 'invalid-specializer)))
 
-    (test-case "eql specializers are more specific than class specializers"
+    (poo-flow-test-case "eql specializers are more specific than class specializers"
       (let* ((generic (poo-clos-generic-function 'feed 1))
              (generic
               (poo-clos-add-method
@@ -97,7 +98,7 @@
         (check-equal? (poo-clos-call generic dog) 'this-dog)
         (check-equal? (poo-clos-call generic (.o (:: @ dog-class))) 'dog)))
 
-    (test-case "standard qualifier order and lexical next are preserved"
+    (poo-flow-test-case "standard qualifier order and lexical next are preserved"
       (let ((trace '())
             (base-generic (poo-clos-generic-function 'render 1)))
         (def (record value)
@@ -142,7 +143,7 @@
              primary-dog primary-animal after-animal after-dog
              around-dog-exit)))))
 
-    (test-case "replacement arguments retain the exact applicable method set"
+    (poo-flow-test-case "replacement arguments retain the exact applicable method set"
       (def (delegate frame _value)
         (poo-clos-call-next-method frame cat))
       (def (terminal _frame _value) 'terminal)
@@ -162,7 +163,7 @@
         (check-exception (poo-clos-call generic dog)
                          (failure-code? 'changed-applicable-methods))))
 
-    (test-case "rest arguments and multiple values survive effective invocation"
+    (poo-flow-test-case "rest arguments and multiple values survive effective invocation"
       (def (many _frame _required . rest)
         (apply values rest))
       (let* ((generic (poo-clos-generic-function 'many 1 rest?: #t))
@@ -174,7 +175,7 @@
          (call-with-values (lambda () (poo-clos-call generic 'x 1 2 3)) list)
          '(1 2 3))))
 
-    (test-case "same qualifier and specializers replace the prior method"
+    (poo-flow-test-case "same qualifier and specializers replace the prior method"
       (let* ((generic (poo-clos-generic-function 'replace 1))
              (specializers (list any-specializer))
              (old (primary-method 'old specializers 'old))
@@ -192,7 +193,7 @@
           (check-exception (poo-clos-call without-new 1)
                            (failure-code? 'no-applicable-method)))))
 
-    (test-case "a method has one generic owner and find-method uses ANSI qualifiers"
+    (poo-flow-test-case "a method has one generic owner and find-method uses ANSI qualifiers"
       (let* ((specializers (list any-specializer))
              (method (primary-method 'owned specializers 'owned))
              (first (poo-clos-generic-function 'first-owner 1))
@@ -210,7 +211,7 @@
         (check-equal? (poo-clos-method-generic-function method) #f)
         (check (eq? (poo-clos-add-method second method) second) => #t)))
 
-    (test-case "applicable methods extend keyword admission"
+    (poo-flow-test-case "applicable methods extend keyword admission"
       (let* ((method-list
               (poo-clos-lambda-list 1 0 #f #t (list extra:) #f))
              (method
@@ -227,7 +228,7 @@
         (check-exception (poo-clos-call generic 'value unknown: 9)
                          (failure-code? 'invalid-keyword-argument))))
 
-    (test-case "no-applicable-method precedes keyword validation"
+    (poo-flow-test-case "no-applicable-method precedes keyword validation"
       (let* ((protocol
               (poo-clos-generic-protocol
                'no-app-first
@@ -240,7 +241,7 @@
         (check-equal? (poo-clos-call generic 'value unknown: 1)
                       'no-applicable)))
 
-    (test-case "terminal protocol functions are ordinary mutable generics"
+    (poo-flow-test-case "terminal protocol functions are ordinary mutable generics"
       (let* ((target (poo-clos-generic-function 'terminal-target 1))
              (no-applicable
               (poo-clos-method
@@ -276,7 +277,7 @@
                                 no-applicable)
         (poo-clos-remove-method poo-clos-no-next-method-generic no-next)))
 
-    (test-case "typed failures close invalid and inapplicable calls"
+    (poo-flow-test-case "typed failures close invalid and inapplicable calls"
       (check-exception
        (poo-clos-generic-function
         'bad-order 2 argument-precedence-order: '(0 0))

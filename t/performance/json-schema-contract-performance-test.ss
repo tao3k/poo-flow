@@ -7,9 +7,9 @@
 ;;; Invariant: benchmark thunks exclude gxi startup, package install, schema
 ;;; download, Python execution, GitHub Actions execution, and external IO.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-elapsed-us
@@ -218,7 +218,7 @@
 ;; : TestSuite
 (def json-schema-contract-performance-test
   (test-suite "json schema contract performance"
-    (test-case "keeps recursive map-value validation inside regression budgets"
+    (poo-flow-test-case "keeps recursive map-value validation inside regression budgets"
       (let (receipt (json-schema-contract-performance-receipt))
         (json-schema-contract-performance-display-receipt receipt)
         (check-equal?

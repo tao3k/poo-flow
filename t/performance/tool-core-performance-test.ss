@@ -7,9 +7,9 @@
 ;;; Invariant: validation resolves POO tool specs and policy refs without
 ;;; runtime execution or backend startup.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
@@ -125,7 +125,7 @@
 ;; : TestSuite
 (def tool-core-performance-test
   (test-suite "tool-core performance"
-    (test-case "keeps catalog policy validation inside benchmark contract"
+    (poo-flow-test-case "keeps catalog policy validation inside benchmark contract"
       (let* ((summary
               (tool-core-performance-summary tool-core-performance-count))
              (receipt

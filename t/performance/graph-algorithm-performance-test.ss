@@ -5,7 +5,8 @@
 
 ;;; Boundary: end-to-end complexity gate for the shared graph algorithms.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -58,7 +59,7 @@
 
 (def graph-algorithm-performance-test
   (test-suite "graph algorithm performance"
-    (test-case "analyzes and condenses a 1000-node linear DAG"
+    (poo-flow-test-case "analyzes and condenses a 1000-node linear DAG"
       (let* ((node-count 1000)
              (graph-value
               (graph-algorithm-performance-linear-dag node-count))

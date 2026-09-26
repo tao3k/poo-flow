@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/qualification/capability-prototypes)
@@ -10,7 +11,7 @@
 
 (def capability-prototypes-test
   (test-suite "qualification POO capability prototypes"
-    (test-case "multiple parents preserve orthogonal inherited slots"
+    (poo-flow-test-case "multiple parents preserve orthogonal inherited slots"
       (let (left
             (poo-core-role-object
              (slots ((kind 'left)))
@@ -27,7 +28,7 @@
                       poo-flow-revision-bound-capability-valid?
                       poo-flow-owner-bound-capability-valid?))
                => #t)))
-    (test-case "orthogonal parent order does not change capability values"
+    (poo-flow-test-case "orthogonal parent order does not change capability values"
       (let ((left
              (poo-core-role-object
               (slots ((kind 'left)))
@@ -40,26 +41,26 @@
                       (poo-flow-versioned-capability 'schema.v1 1)))))
         (check (.ref left 'schema-id) => (.ref right 'schema-id))
         (check (.ref left 'source-revision) => (.ref right 'source-revision))))
-    (test-case "local extension intentionally overrides inherited value"
+    (poo-flow-test-case "local extension intentionally overrides inherited value"
       (let (extended
             (poo-core-role-object
              (slots ((schema-id 'schema.v2)))
              (supers (poo-flow-versioned-capability 'schema.v1 1))))
         (check (.ref extended 'schema-id) => 'schema.v2)
         (check (.ref extended 'schema-version) => 1)))
-    (test-case "separate compositions remain isolated"
+    (poo-flow-test-case "separate compositions remain isolated"
       (let ((first (poo-flow-owner-bound-capability '(owner-a)))
             (second (poo-flow-owner-bound-capability '(owner-b))))
         (check (.ref first 'owner-artifacts) => '(owner-a))
         (check (.ref second 'owner-artifacts) => '(owner-b))))
-    (test-case "missing required capability slot fails validation"
+    (poo-flow-test-case "missing required capability slot fails validation"
       (check (poo-flow-versioned-capability-valid?
               (poo-flow-versioned-capability #f 1))
              => #f)
       (check (poo-flow-versioned-capability-valid?
               (poo-flow-owner-bound-capability '(owner-a)))
              => #f))
-    (test-case "duplicate capability and slot ownership conflict fail closed"
+    (poo-flow-test-case "duplicate capability and slot ownership conflict fail closed"
       (check
        (poo-flow-qualification-capability-composition-diagnostics
         '((versioned schema-id schema-version)

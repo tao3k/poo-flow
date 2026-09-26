@@ -5,7 +5,8 @@
 
 ;;; Boundary: sandbox profile user interface stays on the module-system facade.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
         test-suite)
         (only-in :clan/poo/object .o .ref .slot? object?)
@@ -204,7 +204,7 @@
 ;; : TestSuite
 (def agent-sandbox-profile-user-interface-test
   (test-suite "poo-flow agent sandbox profile user interface"
-    (test-case "declares nono and cubeSandbox profiles as inert user data"
+    (poo-flow-test-case "declares nono and cubeSandbox profiles as inert user data"
       (let* ((nono-profile
               (poo-flow-sandbox-profile-by-name user-sandbox-profiles
                                                 'agent/nono))
@@ -220,7 +220,7 @@
                       'cube-local)
         (check-equal? (poo-flow-sandbox-profile-network-policy cube-profile)
                       '(allowlisted "github.com" "crates.io"))))
-    (test-case "applies POO slot transforms through nono object validation"
+    (poo-flow-test-case "applies POO slot transforms through nono object validation"
       (let* ((profile-payload
               (poo-flow-user-module-selection-flag-entry
                user-nono-operator-module
@@ -263,7 +263,7 @@
                         (backend . nono-sandbox)
                         (intent . operator-demo)
                         (stage . extension)))))
-    (test-case "applies profile inheritance for cube and docker sandbox objects"
+    (poo-flow-test-case "applies profile inheritance for cube and docker sandbox objects"
       (let* ((cube-profiles
               (cdr (poo-flow-user-module-selection-flag-entry
                     user-cube-build-module
@@ -328,7 +328,7 @@
                        'backend-kind
                        (poo-flow-sandbox-profile->profile docker-profile))
                       'docker)))
-    (test-case "projects user declarations into validated agent sandbox profiles"
+    (poo-flow-test-case "projects user declarations into validated agent sandbox profiles"
       (let* ((nono-profile
               (poo-flow-sandbox-profile-by-name user-sandbox-profiles
                                                 'agent/nono))
@@ -354,7 +354,7 @@
                         (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))))
-    (test-case "presents profile collections as runtime handoff intent data"
+    (poo-flow-test-case "presents profile collections as runtime handoff intent data"
       (let* ((presentation
               (pooFlowSandboxProfilesPresentation user-sandbox-profiles))
              (runtime-intents (.ref presentation 'runtime-intents))

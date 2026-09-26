@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
@@ -224,7 +225,7 @@
 
 (def feature-system-domain-case-assembly-test
   (test-suite "Feature composition to existing Domain Case algebra"
-    (test-case "accepted plan closes through the existing Domain Case owner"
+    (poo-flow-test-case "accepted plan closes through the existing Domain Case owner"
       (let ((closure (.ref domain-case-feature-assembly 'closure-receipt))
             (domain-case (.ref domain-case-feature-assembly 'domain-case)))
         (check (.ref domain-case-feature-assembly 'kind)
@@ -242,7 +243,7 @@
         (check (.ref domain-case-agent-component 'parent-component-ids)
                => '(domain-case-base-component))))
 
-    (test-case "contract inheritance stays separate from policy and adapters"
+    (poo-flow-test-case "contract inheritance stays separate from policy and adapters"
       (let ((domain-case (.ref domain-case-feature-assembly 'domain-case)))
         (check (.ref domain-case 'policy-algebra) => #f)
         (check (.ref domain-case 'strategy-algebra) => #f))
@@ -263,7 +264,7 @@
                       'projection-catalog))
              => 2))
 
-    (test-case "module-owned Domain Case cache reuses the closure"
+    (poo-flow-test-case "module-owned Domain Case cache reuses the closure"
       (let ((first-domain-case
              (.ref domain-case-feature-assembly 'domain-case))
             (second-domain-case
@@ -275,7 +276,7 @@
         (check (.ref domain-case-feature-cache-hit-assembly 'key)
                => (.ref domain-case-feature-assembly 'key))))
 
-    (test-case "missing Feature dependency leaves inheritance child-first"
+    (poo-flow-test-case "missing Feature dependency leaves inheritance child-first"
       (check (.ref domain-case-unordered-assembly 'status) => 'rejected)
       (check (.ref domain-case-unordered-assembly 'accepted?) => #f)
       (check (.ref domain-case-unordered-assembly 'domain-case) => #f)
@@ -288,7 +289,7 @@
                     domain-case-unordered-assembly))
              ? values))
 
-    (test-case "raw projection syntax is rejected before Domain Case closure"
+    (poo-flow-test-case "raw projection syntax is rejected before Domain Case closure"
       (check (.ref domain-case-raw-projection-assembly 'status) => 'rejected)
       (check (.ref domain-case-raw-projection-assembly 'closure-receipt) => #f)
       (check (.ref domain-case-raw-projection-assembly
@@ -299,7 +300,7 @@
                     domain-case-raw-projection-assembly))
              ? values))
 
-    (test-case "256-Feature inheritance chain closes under the memory guard"
+    (poo-flow-test-case "256-Feature inheritance chain closes under the memory guard"
       (let* ((descriptors (domain-case-stress-descriptors 256))
              (bundle (feature-manifest-bundle
                       'feature-domain-case-stress descriptors))

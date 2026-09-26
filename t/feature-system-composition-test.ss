@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/interface
@@ -119,7 +120,7 @@
 
 (def feature-system-composition-test
   (test-suite "POO-native Feature composition plan"
-    (test-case "composition follows resolver order, not declaration order"
+    (poo-flow-test-case "composition follows resolver order, not declaration order"
       (check (.ref composition-plan 'kind) => 'feature-composition-plan)
       (check (.ref composition-plan 'schema-version) => 1)
       (check (.ref composition-plan 'bundle-id) => 'composition-bundle)
@@ -131,7 +132,7 @@
       (check (composition-manifest-feature-ids composition-plan)
              => '(composition-base composition-agent)))
 
-    (test-case "composition preserves POO values and contribution order"
+    (poo-flow-test-case "composition preserves POO values and contribution order"
       (let ((components (.ref composition-plan 'components)))
         (check (length components) => 2)
         (check (eq? (car components) composition-base-component) => #t)
@@ -149,7 +150,7 @@
       (check (.ref composition-plan 'projections)
              => '(runtime-v1 evidence-v1)))
 
-    (test-case "empty bundle produces the identity composition"
+    (poo-flow-test-case "empty bundle produces the identity composition"
       (check (.ref composition-empty-plan 'feature-ids) => '())
       (check (.ref composition-empty-plan 'manifests) => '())
       (check (.ref composition-empty-plan 'components) => '())
@@ -158,7 +159,7 @@
       (check (.ref composition-empty-plan 'adapter-requirements) => '())
       (check (.ref composition-empty-plan 'projections) => '()))
 
-    (test-case "1024-Feature composition remains ordered and linear"
+    (poo-flow-test-case "1024-Feature composition remains ordered and linear"
       (let* ((descriptors (composition-stress-descriptors 1024))
              (bundle (feature-manifest-bundle
                       'composition-stress-bundle descriptors))

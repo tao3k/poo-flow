@@ -6,9 +6,9 @@
 ;;; Boundary: core cases exercise the thin declarative user-interface surface.
 ;;; These checks intentionally stop before sandbox realization or runtime work.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
@@ -69,7 +69,7 @@
 ;;; surface exposed to downstream users.
 (def user-interface-config-core-case-test
   (test-suite "poo-flow user interface core config"
-    (test-case "keeps user practice config thin and inspectable"
+    (poo-flow-test-case "keeps user practice config thin and inspectable"
       (check-equal? (poo-flow-user-profile? test-poo-flow-user-profile) #t)
       (check-equal? (poo-flow-user-profile-name test-poo-flow-user-profile)
                     'developer)
@@ -79,7 +79,7 @@
       (check-equal? (poo-flow-user-config? test-poo-flow-user-config) #t)
       (check-equal? (poo-flow-user-config-module-keys test-poo-flow-user-config)
                     expected-poo-flow-core-module-keys))
-    (test-case "loads custom module bundles through init-style declarations"
+    (poo-flow-test-case "loads custom module bundles through init-style declarations"
       (let* ((custom-config
               (pooFlowUserConfigFromProfile test-poo-flow-user-custom-profile))
              (custom-modules

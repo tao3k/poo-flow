@@ -5,7 +5,8 @@
 
 ;;; Contract: native POO Contracts project into type-fact proof rows.
 
-(import :std/test)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 ;; : (-> PooFlowTypeFactsProjectionExpr PooFlowTypeFactsProjectionValue)
 (def (type-facts-projection-eval expr)
@@ -20,7 +21,7 @@
 
 (def type-facts-contract-projection-test
   (test-suite "type-facts-contract-projection-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/module-system/descriptor/contracts.ss"))
       (eval '(import "./src/type-facts/objects.ss"))
       (eval '(import :clan/poo/object :clan/poo/mop))

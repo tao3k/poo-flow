@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/module-system/contribution/interface
@@ -96,7 +97,7 @@
 
 (def governance-core-test
   (test-suite "POO Flow Governance core and Cedar Provider boundary"
-    (test-case "core prototype requires explicit contributor identity"
+    (poo-flow-test-case "core prototype requires explicit contributor identity"
       (check-equal?
        (poo-flow-governance-profile? PooFlowGovernanceProfile.) #f)
       (check-equal?
@@ -105,14 +106,14 @@
                     #t)
       (check-equal? (element? PooFlowGovernanceThreat BlockingThreat) #t)
       (check-equal? (poo-flow-governance-source? DerivedGovernanceSource) #t))
-    (test-case "Profile generic dispatch produces a typed inert assessment"
+    (poo-flow-test-case "Profile generic dispatch produces a typed inert assessment"
       (let (assessment
             (poo-flow-governance-evaluate
              TestGovernanceProfile (.o request: 'release)))
         (check-equal? (poo-flow-governance-assessment? assessment) #t)
         (check-equal? (.ref assessment 'handoff-ready?) #t)
         (check-equal? (.ref assessment 'runtime-executed?) #f)))
-    (test-case "pre-threat exposure blocks Provider handoff"
+    (poo-flow-test-case "pre-threat exposure blocks Provider handoff"
       (let (assessment
             (poo-flow-governance-evaluate
              UnsafeGovernanceProfile (.o request: 'release)))
@@ -120,18 +121,18 @@
         (check-equal?
          (.ref assessment 'unresolved-threats)
          '("test/threat/unreviewed-external-input"))))
-    (test-case "observed preconditions require evidence identity"
+    (poo-flow-test-case "observed preconditions require evidence identity"
       (check-exception
        (poo-flow-governance-precondition "test/precondition/forged" #t #f)
        true))
-    (test-case "governance contribution is semantic and inert"
+    (poo-flow-test-case "governance contribution is semantic and inert"
       (let* ((contribution
               (poo-flow-governance-contribution
                TestGovernanceProfile '(knowledge-governance) '()))
              (receipt (admit-contributions (list contribution) '())))
         (check-equal? (.ref receipt 'accepted?) #t)
         (check-equal? (.ref receipt 'runtime-executed?) #f)))
-    (test-case "shared module projection admits only its declared family"
+    (poo-flow-test-case "shared module projection admits only its declared family"
       (let (selection
             (poo-flow-user-module-selection 'custom 'test-governance '()))
         (check-equal?
@@ -148,7 +149,7 @@
           TestGovernanceModuleProfile 'other-family
           '(knowledge-governance) '())
          true)))
-    (test-case "Authorization contracts keep elevated capability strict"
+    (poo-flow-test-case "Authorization contracts keep elevated capability strict"
       (check-equal?
        (.ref CedarAuthorizationProvider 'identity)
        "poo-flow/authorization/cedar")
@@ -169,7 +170,7 @@
          (poo-flow-authorization-provider-engines
           CedarAuthorizationProvider)
          '("cedar-rust" "cedar-lean"))))
-    (test-case "Authorization Provider publishes its CLOS method bundle"
+    (poo-flow-test-case "Authorization Provider publishes its CLOS method bundle"
       (check-equal?
        (length
         (poo-clos-generic-methods AuthorizationCapabilityContractGeneric))
@@ -187,7 +188,7 @@
           unsupported-provider
           (list test-elevated-capability))
          true)))
-    (test-case "Cedar adapter binds the exact Governance Profile identity"
+    (poo-flow-test-case "Cedar adapter binds the exact Governance Profile identity"
       (let* ((profiles (list TestGovernanceProfile))
              (assessments
               (list (poo-flow-governance-evaluate TestGovernanceProfile (.o))))
@@ -203,7 +204,7 @@
         (check-equal?
          (.ref (.ref snapshot 'proof-binding) 'composition)
          "test/governance")))
-    (test-case "Cedar capability owns the source-admission requirement"
+    (poo-flow-test-case "Cedar capability owns the source-admission requirement"
       (let* ((protected
               (poo-flow-cedar-runtime-capability
                "test::Action" 1 source-admission-required?: #t))
@@ -228,7 +229,7 @@
          (poo-flow-cedar-runtime-capability
           "test::Action" 1 source-admission-required?: 'yes)
          true)))
-    (test-case "Cedar adapter rejects another composition"
+    (poo-flow-test-case "Cedar adapter rejects another composition"
       (check-exception
        (let* ((profiles (list TestGovernanceProfile))
               (assessments
@@ -238,7 +239,7 @@
           (test-proof "other/governance" profiles assessments)
           (list test-policy) test-schema test-entities (list test-capability)))
        true))
-    (test-case "Cedar adapter cannot bypass unresolved Governance threats"
+    (poo-flow-test-case "Cedar adapter cannot bypass unresolved Governance threats"
       (check-exception
        (let* ((profiles (list UnsafeGovernanceProfile))
               (assessments

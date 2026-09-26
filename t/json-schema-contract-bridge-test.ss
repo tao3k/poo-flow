@@ -5,9 +5,9 @@
 
 ;;; Contract: JSON Schema bridge emits executable POO Flow slot contracts.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/module-system/descriptor/contracts
@@ -238,7 +238,7 @@
 ;; : TestSuite
 (def json-schema-contract-bridge-test
   (test-suite "json schema contract bridge"
-    (test-case "emits executable slot predicates for items and oneOf"
+    (poo-flow-test-case "emits executable slot predicates for items and oneOf"
       (let* ((artifact
               (poo-flow-json-schema->contract-artifact
                json-schema-bridge-test-schema
@@ -315,7 +315,7 @@
         (check-equal? (maybe? 'json-null) #t)
         (check-equal? (maybe? "ok") #t)
         (check-equal? (maybe? 7) #f)))
-    (test-case "reports invalid supported constraint values"
+    (poo-flow-test-case "reports invalid supported constraint values"
       (let* ((artifact
               (poo-flow-json-schema->contract-artifact
                json-schema-bridge-invalid-constraint-schema
@@ -334,7 +334,7 @@
         (check-equal?
          (json-schema-bridge-test-ref diagnostic 'reason)
          'invalid-constraint-value)))
-    (test-case "recursively validates generic map-value contracts"
+    (poo-flow-test-case "recursively validates generic map-value contracts"
       (let* ((artifact
               (poo-flow-json-schema->contract-artifact
                json-schema-bridge-recursive-map-schema
@@ -372,7 +372,7 @@
         (check-equal?
          (json-schema-bridge-test-ref invalid-stage-key-receipt 'invalid-slots)
          '(stages/build))))
-    (test-case "recursively validates generic additionalProperties maps"
+    (poo-flow-test-case "recursively validates generic additionalProperties maps"
       (let* ((artifact
               (poo-flow-json-schema->contract-artifact
                json-schema-bridge-additional-recursive-map-schema

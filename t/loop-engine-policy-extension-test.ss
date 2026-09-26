@@ -6,9 +6,9 @@
 ;;; Boundary: focused tests for loop-engine POO-native policy extensions.
 ;;; Invariant: extension receipts are report-only and runtime-owned by Marlin.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .o)
         :poo-flow/src/modules/loop-engine/policy-extension)
@@ -106,7 +106,7 @@
 ;;; carried as inert policy receipts rather than Scheme locks.
 ;; : TestCase
 (def (loop-engine-policy-extension-coordination-case)
-  (test-case "projects loop-engine coordination policy receipt"
+  (poo-flow-test-case "projects loop-engine coordination policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (coordination-receipt
             (test-row-by-field receipts 'kind 'coordination-receipt))
@@ -151,7 +151,7 @@
 ;;; declared as receipt data while Marlin retains execution control.
 ;; : TestCase
 (def (loop-engine-policy-extension-observability-case)
-  (test-case "projects loop-engine observability policy receipt"
+  (poo-flow-test-case "projects loop-engine observability policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (observability-receipt
             (test-row-by-field receipts 'kind 'observability-receipt)))
@@ -171,7 +171,7 @@
 ;;; visible without enabling Scheme-side mutations.
 ;; : TestCase
 (def (loop-engine-policy-extension-safety-case)
-  (test-case "projects loop-engine safety policy receipt"
+  (poo-flow-test-case "projects loop-engine safety policy receipt"
     (let* ((receipts (custom-loop-policy-extension-receipts))
            (safety-receipt
             (test-row-by-field receipts 'kind 'safety-receipt)))
@@ -194,7 +194,7 @@
 ;;; that every extension receipt is lowered through the generic receipt list.
 ;; : TestCase
 (def (loop-engine-policy-extension-collection-case)
-  (test-case "lowers policy-extension receipts through the generic collection"
+  (poo-flow-test-case "lowers policy-extension receipts through the generic collection"
     (let (receipts (custom-loop-policy-extension-receipts))
       (check-equal? (map (lambda (receipt) (test-ref receipt 'kind))
                          receipts)
@@ -212,7 +212,7 @@
 ;;; values must fail before any runtime handoff row can be assembled.
 ;; : TestCase
 (def (loop-engine-policy-extension-invalid-slot-case)
-  (test-case "rejects invalid loop-engine policy-extension slot types"
+  (poo-flow-test-case "rejects invalid loop-engine policy-extension slot types"
     (check-equal?
      (with-catch
       (lambda (_) #t)

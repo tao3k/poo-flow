@@ -20,6 +20,7 @@
         poo-flow-debug-slot-receipt
         poo-flow-debug-slot-receipt-sexp
         poo-flow-debug-memory-policy
+        poo-flow-debug-memory-policy?
         poo-flow-debug-memory-sample
         poo-flow-debug-memory-receipt
         poo-flow-debug-memory-receipt-sexp)
@@ -284,6 +285,28 @@
         sample-interval-milliseconds: sample-interval-value
         collect-before-sample?: collect-value
         fail-closed?: fail-closed-value)))
+
+;;; At the runtime Case boundary, check the native POO shape owned by this
+;;; constructor.  A compiled test batch may hold a distinct descriptor copy;
+;;; descriptor identity is checked when the policy is constructed, while the
+;;; resource-facing fields are checked again here before they are read.
+(def (poo-flow-debug-memory-policy? value)
+  (and (object? value)
+       (.slot? value 'label)
+       (symbol? (.ref value 'label))
+       (.slot? value 'heap-limit-bytes)
+       (exact-integer? (.ref value 'heap-limit-bytes))
+       (>= (.ref value 'heap-limit-bytes) 0)
+       (.slot? value 'live-growth-limit-bytes)
+       (exact-integer? (.ref value 'live-growth-limit-bytes))
+       (>= (.ref value 'live-growth-limit-bytes) 0)
+       (.slot? value 'sample-interval-milliseconds)
+       (exact-integer? (.ref value 'sample-interval-milliseconds))
+       (> (.ref value 'sample-interval-milliseconds) 0)
+       (.slot? value 'collect-before-sample?)
+       (boolean? (.ref value 'collect-before-sample?))
+       (.slot? value 'fail-closed?)
+       (boolean? (.ref value 'fail-closed?))))
 
 ;;; The effectful adapter supplies already-read scalar counters here.
 (def (poo-flow-debug-memory-sample phase-value heap-size-value allocated-value

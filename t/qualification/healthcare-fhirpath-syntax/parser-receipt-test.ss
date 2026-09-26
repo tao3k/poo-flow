@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/string/path path-expand)
         (only-in :clan/poo/object .ref)
@@ -46,7 +47,7 @@
 
 (def healthcare-fhirpath-parser-receipt-test
   (test-suite "Healthcare FHIRPath syntax receipt qualification"
-    (test-case "parser-owned syntax receipts bind the Lambda capability"
+    (poo-flow-test-case "parser-owned syntax receipts bind the Lambda capability"
       (let* ((capability (.ref FHIRValidationCapabilities 'fhirpath-syntax))
              (evidence (.ref capability 'evidence-digests)))
         (check (.ref capability 'state) => 'syntax-qualified)
@@ -63,7 +64,7 @@
              (check (parse-artifact-ref artifact 'grammarDigest)
                     => (cadr evidence))))
          fixture-paths)))
-    (test-case "syntax fixtures are exact expressions from the locked AU source"
+    (poo-flow-test-case "syntax fixtures are exact expressions from the locked AU source"
       (let-values (((_entry _receipt bytes)
                     (poo-flow-fhir-load-fixed-source
                      +poo-flow-fhir-au-core-patient-source-identity+)))
@@ -83,6 +84,6 @@
                         (call-with-input-file path read-all-as-string)))
                      fixture-paths)))
           (check retained => official))))
-    (test-case "syntax qualification does not widen evaluator authority"
+    (poo-flow-test-case "syntax qualification does not widen evaluator authority"
       (check (.ref (.ref FHIRValidationCapabilities 'general-fhirpath) 'state)
              => 'not-evaluated))))

@@ -5,7 +5,8 @@
 
 ;;; Boundary: flow descriptor tests cover declaration policy, not execution.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -13,7 +14,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api)
@@ -23,7 +23,7 @@
 ;; : TestSuite
 (def flow-descriptor-test
   (test-suite "flow declaration descriptors"
-    (test-case "declares POO-backed flow planning policy"
+    (poo-flow-test-case "declares POO-backed flow planning policy"
       (check-equal? (flow-declaration-descriptor? branch-flow-descriptor) #t)
       (check-equal? (role-object? sequential-flow-descriptor) #t)
       (check-equal? (flow-declaration-name task-flow-descriptor) 'task-flow)
@@ -46,7 +46,7 @@
                                                  'branch-capability
                                                  #f)
                     #f))
-    (test-case "selects descriptors from flow declaration shape"
+    (poo-flow-test-case "selects descriptors from flow declaration shape"
       (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
              (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))
              (pipeline (flow-then 'pipeline inc double))
@@ -59,7 +59,7 @@
         (check-equal? (flow-task-declaration? inc) #t)
         (check-equal? (flow-sequential-declaration? pipeline) #t)
         (check-equal? (flow-branch-declaration? branch) #t)))
-    (test-case "strategy selects planner through flow descriptor policy"
+    (poo-flow-test-case "strategy selects planner through flow descriptor policy"
       (let* ((left (pure-flow 'left (lambda (x) (+ x 1)) 'number 'number))
              (right (pure-flow 'right (lambda (x) (* x 2)) 'number 'number))
              (branch (flow-branch 'fanout left right))

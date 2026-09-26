@@ -6,7 +6,8 @@
 ;;; Boundary: module-selection syntax and declaration-contract admission.
 ;;; Invariant: contract qualification does not load profiles or root config.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection
                  poo-flow-user-module-selection-flags
@@ -27,7 +28,7 @@
 
 (def user-interface-config-syntax-contract-test
   (test-suite "poo-flow user interface config syntax contract"
-    (test-case "builds module selections and conditional gates"
+    (poo-flow-test-case "builds module selections and conditional gates"
       (let ((nono-selections
              (poo-flow-modules-system-use-module
               'nono-sandbox
@@ -51,7 +52,7 @@
                         (entrypoint . #f)
                         (flags +native)
                         (enabled? . #t)))))
-    (test-case "validates use-module declarations before projection"
+    (poo-flow-test-case "validates use-module declarations before projection"
       (let* ((valid-selections
               (poo-flow-modules-system-use-module
                'nono-sandbox

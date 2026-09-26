@@ -6,9 +6,9 @@
 ;;; Boundary: focused tests for loop-engine to Funflow workflow agreement.
 ;;; Invariant: workflow agreement is report-only and never executes a pipeline.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
@@ -46,7 +46,7 @@
 ;;; Funflow pipeline should be visibly unbacked by Funflow config.
 ;; : TestCase
 (def (custom-loop-workflow-missing-funflow-case)
-  (test-case "reports missing Funflow workflow pipeline agreement"
+  (poo-flow-test-case "reports missing Funflow workflow pipeline agreement"
     (let* ((presentation
             (custom-workflow-presentation
              (list poo-flow-custom-my-module-loop-engine-case)))
@@ -89,7 +89,7 @@
 ;;; concrete pipeline/check-map owner without executing that pipeline.
 ;; : TestCase
 (def (custom-loop-workflow-funflow-backed-case)
-  (test-case "backs loop-engine workflow ref with Funflow pipeline config"
+  (poo-flow-test-case "backs loop-engine workflow ref with Funflow pipeline config"
     (let* ((presentation
             (custom-workflow-presentation
              (list poo-flow-custom-my-module-funflow-cicd-case

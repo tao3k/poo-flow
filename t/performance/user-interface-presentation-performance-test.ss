@@ -7,9 +7,9 @@
 ;;; Invariant: public authoring remains POO-native; generated runtime receipts
 ;;; are fixed structs until Marlin ABI handoff serialization.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -126,7 +126,7 @@
 ;; : TestSuite
 (def user-interface-presentation-performance-test
   (test-suite "user-interface presentation performance"
-    (test-case "keeps batch presentation projection inside benchmark contract"
+    (poo-flow-test-case "keeps batch presentation projection inside benchmark contract"
       (let-values (((receipt summary)
                     (benchmark-run/result
                      user-interface-presentation-fixture

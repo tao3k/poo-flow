@@ -2,7 +2,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :clan/poo/object :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :clan/poo/object :std/test
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel)
 
@@ -37,12 +38,12 @@
 (def organization-bundle-kernel-test
   (test-suite
    "immutable organization Bundle kernel"
-   (test-case "open and validate"
+   (poo-flow-test-case "open and validate"
      (let-values (((state receipt) (open+validate (bundle 7 '(search)))))
        (check-equal? (.ref state 'phase) 'validated)
        (check-equal? (.ref state 'epoch) 0)
        (check-equal? (.ref receipt 'code) 'kernel-validated)))
-   (test-case "advance increments and preserves previous state"
+   (poo-flow-test-case "advance increments and preserves previous state"
      (let-values (((state initial-receipt) (open+validate (bundle 7 '(search)))))
        (let-values (((next receipt)
                      (poo-flow-organization-bundle-kernel-advance
@@ -51,7 +52,7 @@
          (check-equal? (.ref next 'epoch) 1)
          (check-equal? (.ref state 'epoch) 0)
          (check-equal? (.ref next 'previous-identity) (.ref state 'identity)))))
-   (test-case "noop preserves state and epoch"
+   (poo-flow-test-case "noop preserves state and epoch"
      (let-values (((state initial-receipt) (open+validate (bundle 7 '(search)))))
        (let-values (((next receipt)
                      (poo-flow-organization-bundle-kernel-advance
@@ -59,7 +60,7 @@
          (check-eq? next state)
          (check-equal? (.ref receipt 'code) 'kernel-noop)
          (check-equal? (.ref receipt 'after-epoch) 0))))
-   (test-case "identity and epoch conflicts fail closed"
+   (poo-flow-test-case "identity and epoch conflicts fail closed"
      (let-values (((state initial-receipt) (open+validate (bundle 7 '(search))))
                   ((other other-receipt) (open+validate (bundle 8 '(search)))))
        (let-values (((next identity-receipt)
@@ -72,7 +73,7 @@
                       state (.ref state 'identity) 9 '#(unstable))))
          (check-equal? next #f)
          (check-equal? (.ref epoch-receipt 'code) 'kernel-stale-epoch))))
-   (test-case "invalid next Bundle carries validation rejection"
+   (poo-flow-test-case "invalid next Bundle carries validation rejection"
      (let-values (((state initial-receipt) (open+validate (bundle 7 '(search)))))
        (let-values (((next receipt)
                      (poo-flow-organization-bundle-kernel-advance
@@ -82,7 +83,7 @@
          (check-equal? (.ref receipt 'code) 'kernel-next-bundle-rejected)
          (check-equal? (poo-flow-organization-validation-accepted?
                         (.ref receipt 'validation-receipt)) #f))))
-   (test-case "invalid phase fails closed"
+   (poo-flow-test-case "invalid phase fails closed"
      (let-values (((candidate open-receipt) (poo-flow-organization-bundle-kernel-open
                                   (bundle 7 '(search)))))
        (let-values (((next receipt)

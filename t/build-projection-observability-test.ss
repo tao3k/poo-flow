@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal?)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .o)
         (only-in :poo-flow/src/module-system/observability/config
@@ -21,7 +22,7 @@
 
 (def build-projection-observability-test
   (test-suite "POO PackageSpec projection observability"
-    (test-case "native package catalog reaches the ASP projector unchanged"
+    (poo-flow-test-case "native package catalog reaches the ASP projector unchanged"
       (let ((projected? #f)
             (port (open-output-string))
             (package-spec (.o)))
@@ -40,7 +41,7 @@
           (check-equal? (contains? output "phase=executor-handoff") #t)
           (check-equal? (contains? output "phase=executor-active") #f))))
 
-    (test-case "package build delegates the native public closure to ASP"
+    (poo-flow-test-case "package build delegates the native public closure to ASP"
       (let (source (call-with-input-file "build.ss" read-all-as-string))
         (check-equal? (contains? source
                                  ":asp-gerbil-scheme/building-api")
@@ -76,7 +77,7 @@
         (check-equal? (contains? source "\"performance-tests.ss\"") #t)
         (check-equal? (contains? source "\"run-contribute-test.ss\"") #t)))
 
-    (test-case "Bazel stages one package surface without owning the module graph"
+    (poo-flow-test-case "Bazel stages one package surface without owning the module graph"
       (let ((root-build
              (call-with-input-file "BUILD.bazel" read-all-as-string))
             (gerbil-build
@@ -94,7 +95,7 @@
                                  "build_script = \"//:build.ss\"")
                       #t)))
 
-    (test-case "performance suite consumes the public POO testing interface"
+    (poo-flow-test-case "performance suite consumes the public POO testing interface"
       (let (performance-source
             (call-with-input-file "performance-tests.ss" read-all-as-string))
         (check-equal?
@@ -106,7 +107,7 @@
          (contains? performance-source "+asp-testing-interface+")
          #f)))
 
-    (test-case "Just test launch is fail-closed before Profile loading"
+    (poo-flow-test-case "Just test launch is fail-closed before Profile loading"
       (let (source (call-with-input-file "justfile" read-all-as-string))
         (check-equal?
          (contains? source
@@ -123,7 +124,7 @@
         (check-equal? (contains? source ".devenv/devenv-profile-exec") #f)
         (check-equal? (contains? source "rm -rf") #f)))
 
-    (test-case "unit tests inherit the POO Flow default testing policy"
+    (poo-flow-test-case "unit tests inherit the POO Flow default testing policy"
       (let (source (call-with-input-file "unit-tests.ss" read-all-as-string))
         (check-equal?
          (contains? source ":poo-flow/testing-api")
@@ -134,7 +135,7 @@
         (check-equal? (contains? source "+asp-testing-interface+") #f)
         (check-equal? (contains? source "maxHeapMiB: 1024") #f)))
 
-    (test-case "default policy measures catalog size without an invented limit"
+    (poo-flow-test-case "default policy measures catalog size without an invented limit"
       (let (port (open-output-string))
         (parameterize ((current-output-port port))
           (poo-flow-observe-build-projection
@@ -145,7 +146,7 @@
           (check-equal? (contains? output "target-count=601") #t)
           (check-equal? (contains? output "reason=target-count") #f))))
 
-    (test-case "derived POO policy overrides the budget without environment state"
+    (poo-flow-test-case "derived POO policy overrides the budget without environment state"
       (let ((port (open-output-string))
             (policy
              (.o (:: @ poo-flow-default-build-observability-policy)
@@ -157,7 +158,7 @@
           (check-equal? (contains? output "phase=spec-projected") #t)
           (check-equal? (contains? output "phase=spec-budget-exceeded") #f))))
 
-    (test-case "derived POO policy can admit against measured package evidence"
+    (poo-flow-test-case "derived POO policy can admit against measured package evidence"
       (let ((port (open-output-string))
             (policy
              (.o (:: @ poo-flow-default-build-observability-policy)
@@ -171,7 +172,7 @@
           (check-equal? (contains? output "reason=target-count") #t)
           (check-equal? (contains? output "budget=256") #t))))
 
-    (test-case "concurrent Owner receipts remain complete line records"
+    (poo-flow-test-case "concurrent Owner receipts remain complete line records"
       (let* ((worker-count 12)
              (records-per-worker 40)
              (port (open-output-string))
@@ -199,7 +200,7 @@
                    records)
            #t))))
 
-    (test-case "Owner elapsed time is sampled from the wall clock"
+    (poo-flow-test-case "Owner elapsed time is sampled from the wall clock"
       (let (started-jiffy (current-jiffy))
         (thread-sleep! 0.03)
         (check-equal?

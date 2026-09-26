@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         :poo-flow/src/modules/query/interface)
@@ -80,7 +81,7 @@
   (test-suite
    "canonical Query core"
 
-   (test-case "publishes one semantic language with two surfaces"
+   (poo-flow-test-case "publishes one semantic language with two surfaces"
      (check (.ref PooFlowQueryModule. 'query) => PooFlowQuery.)
      (check (.ref (.ref PooFlowQueryModule. 'languages) 'gql)
             => PooFlowGqlQueryLanguage.)
@@ -94,7 +95,7 @@
      (check (.ref PooFlowQueryModule. 'result-contract)
             => PooFlowQueryResultContract.))
 
-   (test-case "projects the POO AST deterministically to standard GQL"
+   (poo-flow-test-case "projects the POO AST deterministically to standard GQL"
      (check
       (poo-flow-query->gql Query)
       =>
@@ -103,7 +104,7 @@
        "WHERE s.identity = 'healthcare'\n"
        "RETURN s.identity, c.id, p.identity\n")))
 
-   (test-case "escapes GQL string literals without transferring parser ownership"
+   (poo-flow-test-case "escapes GQL string literals without transferring parser ownership"
      (let (escaped
            (.o (:: @ CaseProfileProgram)
                where:
@@ -122,7 +123,7 @@
          "WHERE s.identity = 'patient''s-case'\n"
          "RETURN s.identity, c.id, p.identity\n"))))
 
-   (test-case "admits a bounded read-only Query against its ElementSpace"
+   (poo-flow-test-case "admits a bounded read-only Query against its ElementSpace"
      (let (receipt (poo-flow-query-admit Query QuerySpace))
        (check (poo-flow-query-admission-receipt? receipt) => #t)
        (check (.ref receipt 'accepted?) => #t)
@@ -133,7 +134,7 @@
        (check (.ref receipt 'action-authority?) => #f)
        (check (.ref receipt 'runtime-executed?) => #f)))
 
-   (test-case "binds an admitted MRR candidate through Provider x Query dispatch"
+   (poo-flow-test-case "binds an admitted MRR candidate through Provider x Query dispatch"
      (let* ((admission (poo-flow-query-admit Query QuerySpace))
             (candidate
              (poo-flow-query-execution-candidate
@@ -160,7 +161,7 @@
        (check (.ref receipt 'mutation-authority?) => #f)
        (check (.ref receipt 'action-authority?) => #f)))
 
-   (test-case "rejects drifted or over-bound Provider evidence"
+   (poo-flow-test-case "rejects drifted or over-bound Provider evidence"
      (let* ((admission (poo-flow-query-admit Query QuerySpace))
             (candidate
              (poo-flow-query-execution-candidate
@@ -186,7 +187,7 @@
                    incomplete-query-result))
        (check (.ref receipt 'action-authority?) => #f)))
 
-   (test-case "rejects undeclared Elements without widening the space"
+   (poo-flow-test-case "rejects undeclared Elements without widening the space"
      (let* ((query
              (validate
               PooFlowQuery
@@ -198,7 +199,7 @@
               => '((undeclared-selected-elements (missing-profile))))
        (check (.ref receipt 'action-authority?) => #f)))
 
-   (test-case "rejects raw GQL and arbitrary Scheme programs"
+   (poo-flow-test-case "rejects raw GQL and arbitrary Scheme programs"
      (check
       (poo-flow-query?
        (.o (:: @ Query) program: "MATCH (n) RETURN n"))
@@ -208,7 +209,7 @@
        (.o (:: @ Query) program: (lambda (_) #t)))
       => #f))
 
-   (test-case "rejects revision drift and incomplete complete-space claims"
+   (poo-flow-test-case "rejects revision drift and incomplete complete-space claims"
      (let* ((space
              (poo-flow-query-element-space
               'healthcare/case-space "sha256:space-v2"

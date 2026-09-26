@@ -5,7 +5,8 @@
 (export feature-system-bundle-v1-composition-writer-test-suite
         feature-system-bundle-v1-composition-writer-test)
 
-(import :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         :std/test
         :clan/poo/object
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/semantic-module/objects
@@ -50,7 +51,7 @@
   (test-suite
    "Bundle v1 composition writer"
 
-   (test-case
+   (poo-flow-test-case
     "arbitrary POO composition lowers with symbols and dependency edges"
     (let-values (((plan image)
                   (poo-flow-scenario-case->bundle-v1-image

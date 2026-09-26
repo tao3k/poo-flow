@@ -5,7 +5,8 @@
 
 ;;; Two-phase CLOS load forms, proper class names, and circular references.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite test-case check-equal? check-exception check)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/poo-clos/interface)
@@ -46,7 +47,7 @@
 
 (def poo-clos-load-form-test
   (test-suite "POO-native CLOS two-phase load forms"
-    (test-case "saving slots allocates without initforms and closes a self cycle"
+    (poo-flow-test-case "saving slots allocates without initforms and closes a self cycle"
       (set! load-form-initform-count 0)
       (let (source (poo-clos-make-instance LoadFormEntity))
         (poo-clos-set-slot-value! source 'name 'saved)
@@ -75,7 +76,7 @@
             (check (eq? (poo-clos-slot-value loaded 'link) loaded) => #t)
             (check (poo-clos-slot-bound? loaded 'spare) => #f)))))
 
-    (test-case "an explicit slot list preserves only selected bound slots"
+    (poo-flow-test-case "an explicit slot list preserves only selected bound slots"
       (let (source (poo-clos-make-instance LoadFormEntity))
         (poo-clos-set-slot-value! source 'name 'selected)
         (poo-clos-set-slot-value! source 'link 'not-selected)
@@ -91,7 +92,7 @@
           (check (poo-clos-slot-bound? loaded 'link) => #f)
           (check (poo-clos-slot-bound? loaded 'spare) => #f))))
 
-    (test-case "invalid slot requests fail before either form is published"
+    (poo-flow-test-case "invalid slot requests fail before either form is published"
       (let (source (poo-clos-make-instance LoadFormEntity))
         (check-exception
          (poo-clos-make-load-form-saving-slots
@@ -102,7 +103,7 @@
           source slot-names: '(unknown))
          (failure-code? 'invalid-load-form-slot))))
 
-    (test-case "make-load-form is extensible and rejects its ANSI default"
+    (poo-flow-test-case "make-load-form is extensible and rejects its ANSI default"
       (let (source (poo-clos-make-instance LoadFormEntity))
         (check-equal?
          (length
@@ -113,7 +114,7 @@
        (poo-clos-make-load-form (poo-clos-make-instance NonLoadableEntity))
        (failure-code? 'make-load-form-unavailable)))
 
-    (test-case "class creation forms resolve only proper FIND-CLASS names"
+    (poo-flow-test-case "class creation forms resolve only proper FIND-CLASS names"
       (let* ((forms
               (call-with-values
                (lambda () (poo-clos-make-load-form LoadFormEntity)) list))

@@ -7,9 +7,9 @@
 ;;; Invariant: user config projects effective policy validation only; Scheme
 ;;; never executes tools, hooks, providers, sandboxes, or communication.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key
@@ -97,7 +97,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-policy-test
   (test-suite "poo-flow custom user-interface session-policy case"
-    (test-case "projects custom effective session-policy validation"
+    (poo-flow-test-case "projects custom effective session-policy validation"
       (let* ((selection
               (car poo-flow-custom-my-module-session-policy-case))
              (rows

@@ -6,9 +6,9 @@
 ;;; Boundary: inert agent harness/session/run object family tests.
 ;;; Invariant: projections distinguish workflow runs, sessions, and dispatches.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         :poo-flow/src/core/api)
 
@@ -25,7 +25,7 @@
 ;; : TestSuite
 (def agent-harness-object-test
   (test-suite "agent harness object families"
-    (test-case "projects inert profile harness session and operation facts"
+    (poo-flow-test-case "projects inert profile harness session and operation facts"
       (let* ((profile
               (make-poo-flow-agent-profile
                'reviewer
@@ -93,7 +93,7 @@
         (check-equal? (test-ref session-snapshot 'subject-kind) 'agent-session)
         (check-equal? (test-ref session-snapshot 'subject-id) 'review-session)
         (check-equal? (test-ref session-snapshot 'last-event-index) 2)))
-    (test-case "keeps workflow runs and dispatch receipts separate"
+    (poo-flow-test-case "keeps workflow runs and dispatch receipts separate"
       (let* ((run
               (make-poo-flow-workflow-run
                'run_1
@@ -139,7 +139,7 @@
         (check-equal? (test-ref dispatch-snapshot 'status) 'admitted)
         (check-equal? (poo-flow-runtime-snapshot-status? 'admitted) #t)
         (check-equal? (poo-flow-runtime-snapshot-status? 'finished) #f)))
-    (test-case "projects runner receipts into workflow run objects"
+    (poo-flow-test-case "projects runner receipts into workflow run objects"
       (let* ((receipt
               (make-receipt
                'demo-flow

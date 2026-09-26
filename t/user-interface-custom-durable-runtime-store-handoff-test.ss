@@ -7,9 +7,9 @@
 ;;; Invariant: user config projects negotiation and handoff data only; Marlin
 ;;; owns the runtime store implementation.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in "../user-interface/custom/my-module/cases/durable-runtime-store-handoff"
                  poo-flow-custom-my-module-durable-runtime-store-handoff-case))
@@ -24,7 +24,7 @@
 ;; : TestSuite
 (def user-interface-custom-durable-runtime-store-handoff-test
   (test-suite "poo-flow custom durable runtime store handoff case"
-    (test-case "projects backend negotiation and Marlin handoff"
+    (poo-flow-test-case "projects backend negotiation and Marlin handoff"
       (let* ((negotiation-row
               (car poo-flow-custom-my-module-durable-runtime-store-handoff-case))
              (handoff-row

@@ -6,7 +6,8 @@
 ;;; Boundary: lazy loader tests cover deferred source loading only.
 ;;; Invariant: lazy plans never call loader handlers until explicitly forced.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -15,7 +16,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         "./support/performance"
@@ -111,7 +111,7 @@
 ;; : TestSuite
 ;; : TestCase
 (def (module-system-lazy-loader-large-registry-case)
-  (test-case "expands large module registry manifests without loading modules"
+  (poo-flow-test-case "expands large module registry manifests without loading modules"
         (for-each
          (lambda (module-count)
            (let* ((module-roots
@@ -141,7 +141,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-deferred-standard-library-case)
-  (test-case "defers standard-library module loading until forced"
+  (poo-flow-test-case "defers standard-library module loading until forced"
         (set! lazy-loader-call-count 0)
         (let* ((backends (list user-standard-library-loader))
                (deferred
@@ -183,7 +183,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-module-tree-case)
-  (test-case "projects the public interface entrypoint from a module tree"
+  (poo-flow-test-case "projects the public interface entrypoint from a module tree"
         (set! lazy-loader-call-count 0)
         (let* ((module-root "src/modules/nono-sandbox")
                (source-refs
@@ -211,7 +211,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-src-modules-case)
-  (test-case "projects canonical src/modules interfaces as lazy load plans"
+  (poo-flow-test-case "projects canonical src/modules interfaces as lazy load plans"
         (set! lazy-loader-call-count 0)
         (let* ((plans
                 (poo-flow-src-modules-lazy-load-plans
@@ -293,7 +293,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-user-root-case)
-  (test-case "projects only the Doom-style init and config roots"
+  (poo-flow-test-case "projects only the Doom-style init and config roots"
         (set! lazy-loader-call-count 0)
         (let* ((user-root "user-interface")
                (source-refs
@@ -367,7 +367,7 @@
 
 ;; : TestCase
 (def (module-system-user-root-authoring-contract-case)
-  (test-case "admits value composition and rejects advanced root mechanisms"
+  (poo-flow-test-case "admits value composition and rejects advanced root mechanisms"
     (check-equal?
      (begin
        (poo-flow-user-tree-config-authoring-validate! "user-interface")
@@ -394,7 +394,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
-  (test-case "official contribution sources are optional and resolve by checkout identity"
+  (poo-flow-test-case "official contribution sources are optional and resolve by checkout identity"
     (check-equal?
      (map poo-flow-module-source-collection-identity
           poo-flow-official-contribution-sources)
@@ -422,7 +422,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-auto-import-removal-case)
-  (test-case "removes auto-imported entrypoints through POO extension"
+  (poo-flow-test-case "removes auto-imported entrypoints through POO extension"
         (set! lazy-loader-call-count 0)
         (let* ((source-refs
                 (poo-flow-user-tree-source-refs "user-interface"))

@@ -6,7 +6,8 @@
 ;;; Boundary: nono profile candidate tests cover backend-specific projection.
 ;;; Invariant: tests do not execute nono promote/apply or native sandbox code.
 
-(import (only-in :std/test
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,7 +15,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/modules/agent-sandbox/api
@@ -37,7 +37,7 @@
 
 (def agent-sandbox-nono-profile-candidate-test
  (test-suite "nono profile candidate projection"
-   (test-case "builds nono backend candidates through backend constructor"
+   (poo-flow-test-case "builds nono backend candidates through backend constructor"
      (let* ((choice
              (make-agent-sandbox-profile-candidate-choice
               'grant
@@ -58,7 +58,7 @@
                      "developer")
        (check-equal? (length (agent-sandbox-profile-candidate-choices candidate))
                      1)))
-   (test-case "projects denied nono why JSON into grant candidate"
+   (poo-flow-test-case "projects denied nono why JSON into grant candidate"
      (let* ((why '((status . "denied")
                    (reason . "path_not_granted")
                    (details . "Path is not covered by any capability: /repo")
@@ -95,7 +95,7 @@
                      1)
        (check-equal? (length (agent-sandbox-alist-ref patch 'skipped '()))
                      0)))
-   (test-case "projects allowed nono why JSON into skip candidate"
+   (poo-flow-test-case "projects allowed nono why JSON into skip candidate"
      (let* ((why '((status . "allowed")
                    (reason . "granted_path")
                    (granted_path . "/repo")
@@ -118,7 +118,7 @@
                      0)
        (check-equal? (length (agent-sandbox-alist-ref patch 'skipped '()))
                      1)))
-   (test-case "creates promotion request from denied nono why candidate"
+   (poo-flow-test-case "creates promotion request from denied nono why candidate"
      (let* ((why '((status . "denied")
                    (reason . "path_not_granted")
                    (suggested_flag . "--allow /repo")))

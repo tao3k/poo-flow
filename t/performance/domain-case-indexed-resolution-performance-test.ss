@@ -5,7 +5,8 @@
 
 ;;; Boundary: exclusive complexity gate for DomainCase winner resolution.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -52,7 +53,7 @@
 
 (def domain-case-indexed-resolution-performance-test
   (test-suite "DomainCase indexed resolution performance"
-    (test-case "resolves 2000 slot and method identities"
+    (poo-flow-test-case "resolves 2000 slot and method identities"
       (let* ((count 2000)
              (slots (map domain-case-resolution-slot (iota count)))
              (contracts (map domain-case-resolution-method (iota count)))
