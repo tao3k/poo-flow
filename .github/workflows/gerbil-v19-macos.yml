@@ -138,7 +138,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          just build-core
+          (cd core && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/.gerbil/lib" gerbil build)
           gerbil clean
           gerbil env gxi t/qualification/darwin-gerbil-build-scenario.ss \
             cold "$TOOLCHAIN" "$RUNNER_TEMP/cold-build.ss"
