@@ -16,8 +16,7 @@
 (asp-gerbil-scheme-package-spec!
  (cedar-conformance-package @ asp-gerbil-scheme-library-package-prototype)
  (spec cedar-conformance-spec)
- (modules ["src/module-system/object-family/syntax.ss"
-           "src/modules/authorization/providers/cedar/objects.ss"
+ (modules ["src/modules/authorization/providers/cedar/objects.ss"
            "bindings/cedar-gerbil/crates/cedar-gerbil/scheme/conformance.ss"]))
 
 ;; : (-> Path Void)

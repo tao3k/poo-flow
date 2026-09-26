@@ -4,7 +4,7 @@
 
 ;;; Boundary: analyzes composition lineage for cycles and productive recursion.
 ;;; Invariant: analysis reports lineage facts without mutating the composed objects.
-(import (only-in :poo-flow/src/module-system/object-family/syntax
+(import (only-in :poo-flow-foundation/module-system/object-family/syntax
                  defpoo-object-family)
         (only-in :std/list/list duplicates))
 

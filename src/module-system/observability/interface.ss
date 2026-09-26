@@ -6,7 +6,7 @@
 ;;; Boundary: native POO observation, authoring, quality, and development
 ;;; performance interface. Debug effects remain opt-in function calls; loading
 ;;; this interface only makes their bounded contracts available by default.
-(import (only-in :poo-flow/src/module-system/observability/types
+(import (only-in :poo-flow-foundation/module-system/observability/types
                  PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
                  PooFlowObservationContextContract PooFlowObservationContract
                  PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
@@ -30,7 +30,7 @@
                  poo-flow-native-slot-presentation)
         "source-authoring.ss"
         "source-admission.ss"
-        :poo-flow/src/module-system/observability/debug)
+        :poo-flow-foundation/module-system/observability/debug)
 (export PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
         PooFlowObservationContextContract PooFlowObservationContract
         PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
@@ -49,4 +49,4 @@
         poo-flow-native-slot-presentation
         (import: "source-authoring.ss")
         (import: "source-admission.ss")
-        (import: :poo-flow/src/module-system/observability/debug))
+        (import: :poo-flow-foundation/module-system/observability/debug))

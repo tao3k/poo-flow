@@ -2,7 +2,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :poo-flow/src/module-system/object-family/indexed
+(import (only-in :poo-flow-foundation/module-system/object-family/indexed
                  poo-indexed-family
                  poo-indexed-family-object
                  poo-indexed-family-lenses

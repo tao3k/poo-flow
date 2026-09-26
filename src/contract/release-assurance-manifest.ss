@@ -10,7 +10,7 @@
         (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family/syntax
+        :poo-flow-foundation/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-release-assurance-manifest-schema+

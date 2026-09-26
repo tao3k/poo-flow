@@ -9,10 +9,10 @@
 
 (import (only-in :clan/poo/object .def .o .ref object?)
         (only-in :clan/poo/mop .defgeneric validate)
-        (only-in :poo-flow/src/module-system/types poo-flow-contract-admit)
-        (only-in :poo-flow/src/module-system/object-family/syntax defpoo-object-family)
-        :poo-flow/src/module-system/observability/funcs
-        (only-in :poo-flow/src/module-system/observability/types
+        (only-in :poo-flow-foundation/module-system/types poo-flow-contract-admit)
+        (only-in :poo-flow-foundation/module-system/object-family/syntax defpoo-object-family)
+        :poo-flow-foundation/module-system/observability/funcs
+        (only-in :poo-flow-foundation/module-system/observability/types
                  PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
                  PooFlowObservationContextContract PooFlowAdmissionObservationContract
                  poo-flow-observability-diagnostic-contract?

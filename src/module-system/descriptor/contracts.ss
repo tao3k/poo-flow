@@ -9,7 +9,7 @@
 (import (only-in :clan/poo/object .cc .o .ref)
         (only-in :clan/poo/mop element? raise-type-error)
         (only-in :std/list/list filter-map)
-        (only-in :poo-flow/src/module-system/types
+        (only-in :poo-flow-foundation/module-system/types
                  poo-flow-predicate-contract
                  poo-flow-predicate-type))
 

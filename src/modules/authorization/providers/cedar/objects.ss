@@ -6,7 +6,7 @@
 ;;; Invariant: construction and projection perform no authorization or runtime IO.
 (import (only-in :clan/poo/object .o .ref .alist object?)
         (only-in :std/encoding/hex hex-encode)
-        :poo-flow/src/module-system/object-family/syntax)
+        :poo-flow-foundation/module-system/object-family/syntax)
 
 (export poo-flow-cedar-policy poo-flow-cedar-policy?
         poo-flow-cedar-schema poo-flow-cedar-entities

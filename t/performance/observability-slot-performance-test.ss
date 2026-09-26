@@ -14,7 +14,7 @@
                  micro-kernel-receipt-pass?
                  micro-kernel-run/result)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow/src/module-system/observability/debug
+        (only-in :poo-flow-foundation/module-system/observability/debug
                  PooFlowDebugSlotPolicyContract)
         (only-in "../support/poo-performance"
                  poo-performance-fixture-policy-contract-pass?

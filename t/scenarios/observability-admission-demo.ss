@@ -12,7 +12,7 @@
                  poo-flow-observation-provenance
                  poo-flow-observe-contract-admission
                  poo-flow-observation-explain)
-        (only-in :poo-flow/src/module-system/observability/debug
+        (only-in :poo-flow-foundation/module-system/observability/debug
                  poo-flow-observation-debug)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract
