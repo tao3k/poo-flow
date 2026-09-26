@@ -29,7 +29,7 @@
         (only-in :poo-flow/src/module-system/poo-clos/config
                  poo-clos-module
                  poo-clos-module-default-selection)
-        (only-in :poo-flow/src/modules/funflow/method-combination
+        (only-in :poo-flow/modules/funflow/method-combination
                  poo-flow-funflow-method-combination-module-ref))
 
 (export poo-clos-module-test)

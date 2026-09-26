@@ -13,7 +13,7 @@ or provider adapter is allowed to schedule work.
 ** 10.06.28.20 Implemented Shape
 Funflow =:needs= lowers into workflow-owned CI/CD dependency facts:
 
-- =src/modules/funflow/config.ss= accepts a single symbol or a list of symbols
+- =modules/funflow/config.ss= accepts a single symbol or a list of symbols
   for =:needs=.
 - Non-symbol dependency refs are rejected at the Funflow config boundary.
 - =src/modules/workflow/interface.ss= exposes

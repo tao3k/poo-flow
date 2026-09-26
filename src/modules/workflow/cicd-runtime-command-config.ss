@@ -9,7 +9,7 @@
 
 (import :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/sandbox-core/profile-catalog
-        :poo-flow/src/modules/funflow/config
+        :poo-flow/modules/funflow/config
         :poo-flow/src/modules/workflow/types
         :poo-flow/src/modules/workflow/objects
         :poo-flow/src/modules/workflow/funs)

@@ -608,7 +608,7 @@ Phase 4: broaden runtime projection generation carefully.
   =tool-catalog=, =memory-store-spec=, and =memory-catalog= prototype frames
   and prototype-to-domain/catalog converter frames. Their spec/store list
   converters now use owner-local recursion instead of anonymous =map= frames.
-  =src/modules/funflow/config.ss= uses the same helper for its public
+  =modules/funflow/config.ss= uses the same helper for its public
   =funflow-check=, =funflow-pipeline=, DAG edge, composition-step, and
   functional-DAG prototype frames, while Funflow converter functions remain
   explicit because they validate metadata and derive graph-owned state. Catalog

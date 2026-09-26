@@ -314,7 +314,7 @@ P4: Funflow and CI/CD Profile Policy Integration
   reference profile-policy objects by name or object identity, then lower to
   projection receipts.
 - Main owners:
-  - =src/modules/funflow/config.ss=
+  - =modules/funflow/config.ss=
   - =src/modules/workflow/config.ss=
   - workflow CI/CD feature modules.
   - user configuration examples under =user-interface/custom/my-module/=.

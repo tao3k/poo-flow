@@ -7,10 +7,11 @@
 * Purpose
 
 Every maintained, contributor and user module has one default public
-=interface.ss=.  The stable shell is
-=modules/<name>/{types,objects,funs,config,interface}.ss=; =syntax.ss= is
-optional.  File names alone are not evidence: each role must own its declared
-responsibility.
+=interface.ss=.  The stable owner is =modules/<name>/=; role files such as
+=types.ss=, =objects.ss=, =funs.ss=, =config.ss=, and =syntax.ss= exist only
+when they own real content.  File names alone are not evidence: each role
+must own its declared responsibility.  The functional Funflow module has
+=funs.ss=, =config.ss=, and =interface.ss= without empty type or object files.
 
 | Role | Sole responsibility | Normal mechanism |
 |------+---------------------+------------------|
@@ -20,7 +21,8 @@ responsibility.
 | =config/provider= | Profile composition and open crossings | POO composition; CLOS only for independent axes |
 | =interface= | one public POO entry and closed re-export | imports/exports only |
 
-Imports flow =types -> objects -> funs/contracts -> config/provider=.
+For roles that are present, imports flow
+=types -> objects -> funs/contracts -> config/provider=.
 =interface.ss= closes and re-exports the surface but owns no behavior.  A
 specialized Provider interface may be opt-in; it is never a second default
 entrypoint.

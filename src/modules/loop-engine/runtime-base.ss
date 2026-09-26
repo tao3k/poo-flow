@@ -6,7 +6,7 @@
 ;;; Boundary: loop-engine runtime base facts and policy envelopes.
 ;;; Invariant: base helpers are pure report rows and never realize runtime work.
 
-(import (only-in "../funflow/config.ss"
+(import (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-workflow-agreement)
         "core.ss"
         "result-contract.ss")

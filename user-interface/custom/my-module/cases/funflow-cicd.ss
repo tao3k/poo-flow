@@ -6,7 +6,7 @@
 ;;; Boundary: downstream Funflow CI/CD pipeline declaration.
 ;;; Invariant: this file declares POO workflow objects only; no runtime work.
 
-(import :poo-flow/src/modules/funflow/config)
+(import :poo-flow/modules/funflow/config)
 
 (export poo-flow-custom-my-module-funflow-cicd-case)
 

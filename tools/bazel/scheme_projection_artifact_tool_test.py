@@ -139,7 +139,7 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
                 runner_source,
             )
             self.assertIn(
-                ":poo-flow/src/modules/funflow/profile-library",
+                ":poo-flow/modules/funflow/profile-library",
                 runner_source,
             )
             self.assertNotIn(

@@ -208,8 +208,8 @@ describe and validate the control plane.
 ** 10.06.15.40 Proposed Module Shape
 Use a Funflow-owned feature surface rather than a core path:
 
-- =src/modules/funflow/config.ss= owns the default =(+cicd ...)= payload.
-- =src/modules/funflow/interface.ss= may own the public projection once the surface outgrows config-only data.
+- =modules/funflow/config.ss= owns the default =(+cicd ...)= payload.
+- =modules/funflow/interface.ss= may own the public projection once the surface outgrows config-only data.
 
 The first public shape should stay small:
 
@@ -264,7 +264,7 @@ Milestone 1: documentation and boundary decision.
 
 Milestone 2: config-only Funflow payload.
 
-- Extend =src/modules/funflow/config.ss= with the default =(+cicd ...)= payload.
+- Extend =modules/funflow/config.ss= with the default =(+cicd ...)= payload.
 - Export payload entries for =checks=, =artifacts=, =release=, and =webhook=.
  
 - Keep it non-executing and inspectable.
@@ -293,7 +293,7 @@ Implement Milestone 2 first.
 
 The code change should be intentionally narrow:
 
-- extend =src/modules/funflow/config.ss= with the default =(+cicd ...)= payload;
+- extend =modules/funflow/config.ss= with the default =(+cicd ...)= payload;
 - register a generated/local source ref only if the existing loader path
   requires it;
 - add a user-manual-facing example before adding adapter internals;

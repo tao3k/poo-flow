@@ -9,7 +9,7 @@
 
 (import (only-in "../../module-system/poo-clos/config.ss"
                  poo-clos-module-bundles)
-        (only-in "../../modules/funflow/config.ss"
+        (only-in :poo-flow/modules/funflow/config
                  poo-flow-funflow-cicd-default-payload
                  poo-flow-funflow-module-bundles
                  poo-upstream-flow-funflow-module-bundles)
