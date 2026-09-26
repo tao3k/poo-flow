@@ -175,12 +175,18 @@
         (poo-flow-ascent-hypothesis-specialize-source
          program "source/cycle" cycle base)
         true)
+       (check-exception
+        (poo-flow-ascent-hypothesis-specialize-source
+         program "source/cycle" withdrawn base)
+        true)
        (let-values
         (((successor society)
           (poo-flow-ascent-hypothesis-revise
            specialized new-demand new-observation base)))
         (check (.ref successor 'prediction-verdict) => 'falsified)
         (check (.ref successor 'failed-pairs) => '(36))
+        (check (.ref successor 'cause-observation-identity)
+               => (.ref new-observation 'identity))
         (check (agent-count society) => 3)
         (check (.ref successor 'external-effect-executed?) => #f)
         (check (.ref successor 'mrr-admitted?) => #f))))

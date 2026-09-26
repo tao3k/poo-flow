@@ -117,10 +117,9 @@
                        (.ref program 'organization-digest))
                (equal? (.ref expression 'radix) (.ref program 'radix)))
     (error "Ascent source specialization requires the exact candidate society"))
+  (when (equal? source-id-value (.ref program 'source-identity))
+    (error "Ascent source specialization requires a new source identity"))
   (let ((pairs (source-pairs expression)))
-    (when (and (equal? source-id-value (.ref program 'source-identity))
-               (equal? pairs (.ref program 'source-pair-values)))
-      (error "Ascent source specialization requires a new source snapshot"))
     (let* ((generation-value (+ 1 (.ref program 'generation)))
            (predecessor (.ref program 'identity)))
       (.o kind: 'poo-flow.ascent-hypothesis-candidate.v1
@@ -231,6 +230,10 @@
         (error "derived Ascent society failed Bundle validation"))
       derived)))
 
+(def (candidate-observation-identity demand-id failed-pairs verdict)
+  (list 'poo-flow.ascent-hypothesis-observation.v1
+        demand-id failed-pairs verdict))
+
 (def (poo-flow-ascent-hypothesis-observe program demand expression organization)
   (unless (and (object? program)
                (eq? (.ref program 'kind)
@@ -260,6 +263,8 @@
           (map (lambda (value) (.ref value 'pair)) failures))
          (verdict-value (if (null? failures) 'matched 'falsified)))
     (.o kind: 'poo-flow.ascent-hypothesis-observation.v1
+        identity: (candidate-observation-identity
+                   (.ref demand 'identity) failed-pair-values verdict-value)
         program-identity: (.ref program 'identity)
         demand-identity: (.ref demand 'identity)
         generation: (.ref program 'generation)
@@ -318,7 +323,11 @@
     (unless (and (list? failed-pair-values)
                  (equal? failed-pair-values ordered-failures)
                  (eq? (.ref observation 'prediction-verdict)
-                      (if (null? failed-pair-values) 'matched 'falsified)))
+                      (if (null? failed-pair-values) 'matched 'falsified))
+                 (equal? (.ref observation 'identity)
+                         (candidate-observation-identity
+                          (.ref demand 'identity) failed-pair-values
+                          (.ref observation 'prediction-verdict))))
       (error "Ascent observation failures must match predicted pairs"))
     (let* ((next-generation (+ 1 (.ref program 'generation)))
          (source-id (.ref program 'source-identity))
@@ -337,12 +346,14 @@
          (prediction-values (.ref program 'predictions))
          (prediction-rows (.ref program 'prediction-projection))
          (limit-value (.ref program 'max-derived-agents))
+         (observation-id (.ref observation 'identity))
          (verdict-value (.ref observation 'prediction-verdict)))
       (values
        (.o kind: 'poo-flow.ascent-hypothesis-candidate.v1
-           identity: (list predecessor next-generation source-id failed-pair-values)
+           identity: (list predecessor next-generation observation-id)
            generation: next-generation
            predecessor-identity: predecessor
+           cause-observation-identity: observation-id
            source-identity: source-id
            source-pair-values: source-values
            radix: radix-value

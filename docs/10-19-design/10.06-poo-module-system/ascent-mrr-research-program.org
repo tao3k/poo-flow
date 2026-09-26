@@ -241,10 +241,13 @@ A POO prediction demands membership from the native closure, and a failed
 prediction derives a bounded successor organization with an additional review
 Agent.  =poo-flow-ascent-hypothesis-specialize-source= creates a pure candidate
 for a changed source snapshot: its new demand rejects the predecessor demand.
+The source identity must change even when a counterfactual changes only the
+pair content; the old identity cannot denote two snapshots.
 Scheme observation evaluates that demand against the selected snapshot and
 binds the candidate verdict to source, generation, and organization identity.
 Revision consumes only that matching observation; an old observation or a
-failure outside the predicted pairs is rejected before society derivation.  The
+failure outside the predicted pairs is rejected before society derivation.
+The successor carries the observation identity as its cause.  The
 scenario is exercised by =t/scenarios/ascent-hypothesis-program-test.ss=.
 The specialization is a counterfactual; it does not change the source owner,
 admit MRR evidence, or authorize the derived society for execution.  A real
