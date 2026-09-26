@@ -5,9 +5,9 @@
 
 ;;; Boundary: shared module objects available to every module namespace.
 
-(import :poo-flow/src/module-system/object-core/interface)
+(import :core/module-schema/interface)
 
-(export (import: :poo-flow/src/module-system/object-core/interface)
+(export (import: :core/module-schema/interface)
         poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
 

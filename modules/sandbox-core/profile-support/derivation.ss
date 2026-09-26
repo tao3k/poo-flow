@@ -8,8 +8,8 @@
 (import (only-in :std/list/list any fold)
         :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/object-core/interface
+        :core/extension-graph/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/objects
         :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/agent-sandbox/profile-validation

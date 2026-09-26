@@ -14,9 +14,9 @@ dependency direction is POO Flow Core -> gerbil-parser -> POO Flow; Core
 must not import POO Flow or a maintained product module.
 
 Maintained product modules live in =modules/<module>/=.  In particular,
-workflow implementation belongs to =modules/workflow/=.  Module-system
-features such as POO-native CLOS and Loader observability live here, under
-=poo-clos/= and =observability/= respectively.
+workflow implementation belongs to =modules/workflow/=.  Loader
+observability and POO Flow module admission live here; POO-native CLOS,
+extension-graph operations, and module-schema contracts belong to Core.
 
 * Feature owners
 
@@ -27,13 +27,10 @@ features such as POO-native CLOS and Loader observability live here, under
 | loader | =loader/interface.ss= | discovery, resolution, lazy loading |
 | projection | =projection/interface.ss= | option and receipt projection |
 | profile composition | =profile-composition/interface.ss= | functional composition values |
-| object core | =object-core/interface.ss= | POO object inheritance and merge |
 | object validation | =object-validation/interface.ss= | object contract evidence |
-| extension | =extension/interface.ss= | extension fixed point |
 | composition | =composition/interface.ss= | public re-export of Core lineage and local proof facts |
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | semantic module | =semantic-module/interface.ss= | semantic module objects and types |
-| POO CLOS | =poo-clos/interface.ss= | native MOP extension, multiple dispatch, and method combination |
 | observability | =observability/interface.ss= | module authoring and observation |
 
 The shared factors below are owned once by the =core/= Git submodule and
@@ -44,6 +41,9 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 |-
 | type and contract evidence | =types.ss= | native classification and validation contracts |
 | object family | =object-family/interface.ss= | hygienic POO object-family declarations |
+| extension graph | =extension-graph/interface.ss= | ordered contributions and fixed-point resolution |
+| module schema | =module-schema/interface.ss= | inherited field contracts and merge |
+| POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =observability/debug.ss= | reusable POO/debug observation contracts |
 | testing Case profile | =observability/testing-case.ss= | POO-native Case policy around the native test runner |

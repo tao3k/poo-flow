@@ -15,7 +15,7 @@ The module system follows that rule:
 - =poo-module-descriptor-prototype= supplies module-owned slots;
 - future module descriptors can add UX, backend, or policy roles through the same Gerbil POO composition path.
 
-=src/module-system/extension/interface.ss= now makes =poo-flow-module-object= a Gerbil POO object with inherited objects passed as =supers:=. The =fields= slot is computed through gerbil-poo =superfun=, so object field resolution uses native POO/C4 precedence rather than a local recursive inheritance merge.
+=core/module-schema/interface.ss= exposes =poo-flow-module-object= as a Gerbil POO object with inherited objects passed as =supers:=. The =fields= slot is computed through gerbil-poo =superfun=, so object field resolution uses native POO/C4 precedence rather than a local recursive inheritance merge.
 ** 10.06.03.25 v0.19 Source Evidence
 =poo-flow= now targets Gerbil v0.19. The earlier staging checkout below is historical research; the active =gerbil-poo/object.ss= delegates =compute-precedence-list!= to =c4-linearize= in the installed v0.19 runtime.
 

@@ -26,7 +26,7 @@
         (only-in :poo-flow/src/module-system/load poo-flow-modules!)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/extension/interface
+        :core/extension-graph/interface
         :poo-flow/src/module-system/loader/interface
         :poo-flow/src/module-system/loader/tree)
 

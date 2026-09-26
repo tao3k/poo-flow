@@ -3,7 +3,7 @@
 ;;; Importing this module must fail before object contributions are accepted.
 ;;; The harness trusts this fixture to prove load! propagates object contracts.
 
-(import :poo-flow/src/module-system/object-core/interface
+(import :core/module-schema/interface
         :poo-flow/src/user-interface/init-syntax)
 
 ;;; The negative fixture must fail through the user-facing loader path, so the

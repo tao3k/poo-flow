@@ -11,7 +11,7 @@
         (only-in :std/test
                  test-suite
                  check-equal?)
-        :poo-flow/src/module-system/object-core/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/object-validation/interface
         "./fixtures/object-load-valid/objects")
 

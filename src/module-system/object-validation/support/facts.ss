@@ -7,7 +7,7 @@
 
 (import :gerbil/core
         (only-in :clan/poo/object .ref object? object<-alist)
-        :poo-flow/src/module-system/object-core/interface)
+        :core/module-schema/interface)
 
 (export poo-flow-module-object-validation-kind
         poo-flow-module-object-validation-schema

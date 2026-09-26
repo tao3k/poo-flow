@@ -12,7 +12,7 @@
                  .ref
                  .ref/cached
                  object<-fun)
-        :poo-flow/src/module-system/object-core/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/object-validation/support/facts
         :poo-flow/src/module-system/object-validation/support/harness
         :poo-flow/src/module-system/object-validation/support/object

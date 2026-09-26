@@ -19,8 +19,8 @@
                  test-suite)
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/object-core/interface)
+        :core/extension-graph/interface
+        :core/module-schema/interface)
 
 (export module-object-practice-test)
 

@@ -9,7 +9,7 @@
         (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-field-contract-validation
                  poo-object-contract-validation)
-        :poo-flow/src/module-system/object-core/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/object-validation/support/facts
         :poo-flow/src/module-system/projection/syntax)
 

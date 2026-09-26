@@ -15,7 +15,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/extension/interface
+        (only-in :core/extension-graph/interface
                  poo-flow-module-extension-contribution
                  poo-flow-module-extension-resolve
                  poo-flow-module-extension-node
