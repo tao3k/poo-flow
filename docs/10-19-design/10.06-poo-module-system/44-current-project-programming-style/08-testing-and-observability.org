@@ -31,7 +31,9 @@ For a retained-allocation risk, a Case may opt into
 each periodic sample so live-growth limits can stop a real allocation before
 the worker's hard heap cap; it is intentionally not the default because each
 collection has a cost.  The isolated observability suite verifies a bounded
-retained-allocation rejection and a subsequent successful Case.
+retained-allocation rejection and a subsequent successful Case.  Its receipt
+proves process-wide live growth during the Case span; it does not attribute
+every byte to that Case alone.
 
 * Observability
 

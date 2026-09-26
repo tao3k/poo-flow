@@ -65,7 +65,7 @@
       memory-policy:
       (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
            live-growth-limit-bytes: 8388608
-           sample-interval-milliseconds: 1
+           sample-interval-milliseconds: 10
            collect-before-sample?: #t)
       max-duration-milliseconds: 2000))
 
@@ -148,8 +148,8 @@
                   (lambda ()
                     (let loop ((retained '()) (count 0))
                       (when (< count 64)
-                        (set! allocated (+ allocated 1048576))
                         (let (next (cons (make-u8vector 1048576 7) retained))
+                          (set! allocated (+ allocated 1048576))
                           (thread-sleep! 0.002)
                           (loop next (+ count 1)))))))))
         (check-equal? (PooFlowDebugMemoryAnomaly? captured) #t)
@@ -161,7 +161,7 @@
                   'live-growth-bytes)
             8388608)
          #t)
-        (check-equal? (> allocated 8388608) #t)
+        (check-equal? (>= allocated 1048576) #t)
         (check-equal? (< allocated 67108864) #t)))
 
     (poo-flow-test-case "isolated worker remains usable after memory rejection"
