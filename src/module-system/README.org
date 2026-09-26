@@ -8,7 +8,10 @@
 
 =src/module-system= owns the POO Flow module mechanism.  Its root contains only
 package-level entrypoints; each implementation feature owns a directory with an
-=interface.ss= public factor and focused implementation factors.
+=interface.ss= public factor and focused implementation factors.  The separate
+=poo-flow-foundation= package owns the shared, parser-safe POO contracts.  The
+dependency direction is Foundation -> gerbil-parser -> POO Flow; Foundation
+must not import POO Flow or a maintained product module.
 
 Maintained product modules live in =modules/<module>/=.  In particular,
 workflow implementation belongs to =modules/workflow/=.  Module-system
@@ -29,10 +32,29 @@ features such as POO-native CLOS and Loader observability live here, under
 | extension | =extension/interface.ss= | extension fixed point |
 | composition | =composition/interface.ss= | lineage and proof facts |
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
-| object family | =object-family/interface.ss= | hygienic object-family declarations |
 | semantic module | =semantic-module/interface.ss= | semantic module objects and types |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension, multiple dispatch, and method combination |
 | observability | =observability/interface.ss= | module authoring and observation |
+
+The shared factors below are owned once by the =foundation/= Git submodule and
+installed under the =poo-flow-foundation= Gerbil package namespace.  Do not
+copy them back into =src/module-system= or import them through a POO Flow alias.
+
+| Shared feature | Foundation public factor | Responsibility |
+|-
+| type and contract evidence | =module-system/types.ss= | native classification and validation contracts |
+| object family | =module-system/object-family/interface.ss= | hygienic POO object-family declarations |
+| core observability | =module-system/observability/debug.ss= | reusable POO/debug observation contracts |
+
+Further extraction requires a real shared consumer and a single source owner.
+A source file is not eligible merely because it has no =:poo-flow/= import:
+its exported semantics, source-owner qualifications, build targets, and tests
+must also move atomically.  For example, =composition/lineage.ss= is currently
+the RFC45-05 POO Flow source owner; =composition/proof-facts.ss= describes a
+POO Flow proof receipt.  =semantic-module/= defines POO Flow admission and
+authoring roles.  These remain here until their contracts and qualification
+owners are deliberately transferred, rather than acquiring duplicate modules
+or re-export shims in both packages.
 
 The mechanism consumes =poo-flow-load-modules= directory discovery as its
 maintained-module input.  It must not import maintained module implementations.
