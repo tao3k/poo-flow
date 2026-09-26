@@ -112,6 +112,10 @@ POO/C4 linearization decides precedence. It does not prove that the resulting fl
 
 In this repository, =PooC4= means the proof-facing view of POO objects after C4 linearization:
 
+This name identifies the v0.19 runtime boundary; the Lean layer takes the
+projected order as evidence. It does not reimplement or prove Gerbil's C4
+candidate-selection or suffix algorithm.
+
 #+begin_src text
 POO prototype objects
   -> C4 linearization

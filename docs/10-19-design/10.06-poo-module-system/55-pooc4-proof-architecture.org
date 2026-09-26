@@ -10,6 +10,10 @@ This document is the reader-facing architecture for the POO/C4 linearization pro
 
 PooC4 means the proof-facing view of POO objects after C4 linearization. In other words, it is POO/C4 linearization plus the control-plane proof obligations that must hold for the linearized result. It starts from the practical problem in POO flow: policy objects, strategy objects, shared profiles, sessions, sandboxes, subagents, and runtime handoff can be freely composed. That freedom is the value of POO, but it also creates hidden correctness risks:
 
+The Lean modules do not prove or reproduce Gerbil's C4 linearizer or its suffix
+property. Native Gerbil v0.19 supplies the order; this layer reasons about
+projected facts and control-plane obligations after that boundary.
+
 - a module may start before its real dependencies are complete;
 - a selector override may broaden a policy outside its parent scope;
 - a shared profile may be reused in a context where its sandbox is too wide;
