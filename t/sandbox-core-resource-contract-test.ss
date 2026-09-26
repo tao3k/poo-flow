@@ -165,6 +165,9 @@
                invalid-cpu-resources-prototype))
              (diagnostics
               (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+               validation))
+             (summary
+              (poo-flow-sandbox-resources-prototype-contract-validation->alist
                validation)))
         (check-equal?
          (poo-flow-sandbox-resources-prototype-contract-validation-valid?
@@ -175,6 +178,10 @@
           'slot-contract-failed
           (diagnostic-codes diagnostics))
          #t)
+        (check-equal?
+         (map (lambda (entry) (alist-ref/default entry 'code #f))
+              (alist-ref/default summary 'diagnostics '()))
+         '(slot-contract-failed))
         (check-equal?
          (contract-error?
           (lambda ()
