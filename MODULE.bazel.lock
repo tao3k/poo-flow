@@ -215,11 +215,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-parser",
               "package": "gerbil-parser",
-              "revision": "70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
-              "sha256": "ad4c33b4ad7ee223999811e827f72a2ecaa4496f1c0b6692674d957678afe367",
-              "strip_prefix": "gerbil-parser-70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
+              "revision": "5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
+              "sha256": "e8557a8a8134a270a0e6ef354dd4355bc50aed6ad3523985e3dc704877b91965",
+              "strip_prefix": "gerbil-parser-5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
               "urls": [
-                "https://github.com/tao3k/gerbil-parser/archive/70adc63aae349f55981fa0a3e3f7f26775c0ef9c.tar.gz"
+                "https://github.com/tao3k/gerbil-parser/archive/5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7.tar.gz"
               ]
             }
           },
@@ -310,11 +310,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-parser",
               "package": "gerbil-parser",
-              "revision": "70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
-              "sha256": "ad4c33b4ad7ee223999811e827f72a2ecaa4496f1c0b6692674d957678afe367",
-              "strip_prefix": "gerbil-parser-70adc63aae349f55981fa0a3e3f7f26775c0ef9c",
+              "revision": "5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
+              "sha256": "e8557a8a8134a270a0e6ef354dd4355bc50aed6ad3523985e3dc704877b91965",
+              "strip_prefix": "gerbil-parser-5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7",
               "urls": [
-                "https://github.com/tao3k/gerbil-parser/archive/70adc63aae349f55981fa0a3e3f7f26775c0ef9c.tar.gz"
+                "https://github.com/tao3k/gerbil-parser/archive/5b0ef35bc49cab9ee89cd9fd12d1f13ff29f8df7.tar.gz"
               ]
             }
           },
