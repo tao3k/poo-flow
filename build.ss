@@ -68,6 +68,7 @@
     "src/modules/proof/interface.ss"
     "src/semantic/orgize-interface.ss"
     "src/modules/query/interface.ss"
+    "src/modules/search/interface.ss"
     "src/modules/query/rust-ir.ss"
     "src/modules/tla-plus/interface.ss"
     "src/modules/standards/interface.ss"
