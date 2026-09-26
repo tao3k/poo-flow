@@ -195,17 +195,17 @@
               ]
             }
           },
-          "poo_flow_parser_foundation_sources": {
+          "poo_flow_foundation_sources": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
               "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/poo-flow",
-              "package": "poo-flow",
-              "revision": "2ce55a9810f8559cc0f40a6c877a52ab7893c166",
-              "sha256": "a8ca33a6880f04da0ef2c1f62788f49687199125d9b59f4d5e38636bc59555f6",
-              "strip_prefix": "poo-flow-2ce55a9810f8559cc0f40a6c877a52ab7893c166",
+              "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
+              "package": "poo-flow-foundation",
+              "revision": "3101247a81a65b3a584d86bb95c4d7436df692f7",
+              "sha256": "e2b6359b609aafee8d00290622992377d9d665b9ccdae67cc480743c8ddd24be",
+              "strip_prefix": "poo-flow-foundation-3101247a81a65b3a584d86bb95c4d7436df692f7",
               "urls": [
-                "https://github.com/tao3k/poo-flow/archive/2ce55a9810f8559cc0f40a6c877a52ab7893c166.tar.gz"
+                "https://github.com/tao3k/poo-flow-foundation/archive/3101247a81a65b3a584d86bb95c4d7436df692f7.tar.gz"
               ]
             }
           },
@@ -234,20 +234,6 @@
               "strip_prefix": "orgize-32f22822dec1fad8c72a4d1cacbe193f809e60f5",
               "urls": [
                 "https://github.com/tao3k/orgize/archive/32f22822dec1fad8c72a4d1cacbe193f809e60f5.tar.gz"
-              ]
-            }
-          },
-          "poo_flow_foundation_sources": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
-            "attributes": {
-              "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
-              "package": "poo-flow-foundation",
-              "revision": "3101247a81a65b3a584d86bb95c4d7436df692f7",
-              "sha256": "e2b6359b609aafee8d00290622992377d9d665b9ccdae67cc480743c8ddd24be",
-              "strip_prefix": "poo-flow-foundation-3101247a81a65b3a584d86bb95c4d7436df692f7",
-              "urls": [
-                "https://github.com/tao3k/poo-flow-foundation/archive/3101247a81a65b3a584d86bb95c4d7436df692f7.tar.gz"
               ]
             }
           }
