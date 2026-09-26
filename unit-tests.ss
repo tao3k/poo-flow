@@ -39,7 +39,9 @@
     (testing-interface-add-profile
       +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
-           ignoreDirectories: '("packages/lambda-episteme"
+           ignoreDirectories: '("t/qualification/ascent-integration"
+                                "packages/gerbil-ascent"
+                                "packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "core"
                                 "t/performance"
