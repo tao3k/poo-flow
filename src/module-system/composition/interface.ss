@@ -6,8 +6,8 @@
 ;;; Boundary: public composition-analysis feature interface.
 ;;; Invariant: lineage and proof projection remain pure module-system data.
 
-(import "lineage.ss"
+(import :poo-flow-foundation/module-system/composition/lineage
         "proof-facts.ss")
 
-(export (import: "lineage.ss")
+(export (import: :poo-flow-foundation/module-system/composition/lineage)
         (import: "proof-facts.ss"))

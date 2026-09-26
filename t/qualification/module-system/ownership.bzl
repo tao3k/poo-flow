@@ -53,16 +53,6 @@ OWNER_MAP_ROWS = [
         "target_name": "rfc45_04_sources",
     },
     {
-        "row_id": "rfc45-05-lineage-cycle",
-        "rfc": "45-05",
-        "source_path": "src/module-system/composition/lineage.ss",
-        "source_symbol": "poo-flow-lineage-analysis",
-        "source_kind": "function",
-        "test_path": "t/qualification/module-system/owner-contract-test.ss",
-        "test_symbol": "owner-contract-test",
-        "target_name": "rfc45_05_sources",
-    },
-    {
         "row_id": "rfc45-06-gerbil-poo-consumption",
         "rfc": "45-06",
         "source_path": "src/qualification/module-system/gerbil-poo-consumption.ss",
