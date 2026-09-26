@@ -278,7 +278,7 @@
 ;;; Boundary: sandbox resources prototype slot readability diagnostics is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
 ;;; or projection responsibilities centralized for callers.
-;; : (-> Symbol Symbol PooSandboxResourcesPrototype [Alist])
+;; : (-> Symbol Symbol PooSandboxResourcesPrototype [POOObject])
 (def (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics code
                                                                         slot
                                                                         resources)
@@ -319,7 +319,7 @@
                      (cons 'value slot-value))))))))
       '())))
 
-;; : (-> PooSandboxResourcesPrototype [Alist])
+;; : (-> PooSandboxResourcesPrototype [POOObject])
 (def (poo-flow-sandbox-resources-prototype-slot-contracts-diagnostics
       resources)
   (poo-flow-sandbox-resource-segments/tail
@@ -334,7 +334,7 @@
 ;;; Boundary: sandbox resources prototype missing slot diagnostics is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
 ;;; or projection responsibilities centralized for callers.
-;; : (-> PooSandboxResourcesPrototype [Alist])
+;; : (-> PooSandboxResourcesPrototype [POOObject])
 (def (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics resources
                                                                     slot
                                                                     code
@@ -394,7 +394,7 @@
 ;;; Boundary: sandbox resources prototype structured filesystem diagnostics is
 ;;; the policy-visible edge for sandbox, core behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
-;; : (-> PooSandboxResourcesPrototype [Alist])
+;; : (-> PooSandboxResourcesPrototype [POOObject])
 (def (poo-flow-sandbox-resources-prototype-structured-filesystem-diagnostics
       resources)
   (if (not (poo-flow-sandbox-resources-prototype-slot-readable?
@@ -415,7 +415,7 @@
 ;;; Boundary: sandbox resources prototype local diagnostics is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
-;; : (-> PooSandboxResourcesPrototype [Alist])
+;; : (-> PooSandboxResourcesPrototype [POOObject])
 (def (poo-flow-sandbox-resources-prototype-local-diagnostics resources)
   (if (not (object? resources))
     (list
@@ -485,18 +485,18 @@
        (equal? (.ref validation 'schema)
                poo-flow-sandbox-resources-prototype-contract-validation-schema)))
 
-;; : (-> PooFlowTypeValidationReceipt Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-sandbox-resources-prototype-contract-validation-valid?
       validation)
   (and (poo-flow-sandbox-resources-prototype-contract-validation? validation)
        (.ref validation 'valid)))
 
-;; : (-> PooFlowTypeValidationReceipt [Alist])
+;; : (-> POOObject [POOObject])
 (def (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
       validation)
   (.ref validation 'diagnostics))
 
-;; : (-> PooFlowTypeValidationReceipt Alist)
+;; : (-> POOObject Alist)
 (defpoo-module-final-projection
   poo-flow-sandbox-resources-prototype-contract-validation->alist
   (validation)
