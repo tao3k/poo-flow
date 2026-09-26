@@ -8,23 +8,23 @@
 (export pooFlowUserConfigPresentation)
 
 (import (only-in :clan/poo/object object<-alist)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/modules/workflow/interface
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/sandbox-core/profile-support/policy
+        :poo-flow/modules/workflow/interface
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/entrypoints
         :poo-flow/src/module-system/observability/module-presentation
-        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
-        :poo-flow/src/modules/workflow/cicd-config
-        :poo-flow/src/modules/workflow/cicd-pipeline-run-config
-        :poo-flow/src/modules/session-core/presentation
-        (only-in "../modules/loop-engine/config.ss"
+        :poo-flow/modules/sandbox-core/backend-capability-catalog
+        :poo-flow/modules/workflow/cicd-config
+        :poo-flow/modules/workflow/cicd-pipeline-run-config
+        :poo-flow/modules/session-core/presentation
+        (only-in :poo-flow/modules/loop-engine/config
                  poo-flow-user-config-loop-engine-intents
                  poo-flow-user-loop-engine-intent-ref)
         :poo-flow/src/user-interface/presentation-config-support
-        :poo-flow/src/modules/loop-engine/presentation
-        :poo-flow/src/modules/workflow/presentation)
+        :poo-flow/modules/loop-engine/presentation
+        :poo-flow/modules/workflow/presentation)
 
 ;; : (-> ModuleSelections Bool)
 (def (poo-flow-user-config-loop-engine-only? selected-modules)

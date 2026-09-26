@@ -6,7 +6,7 @@
 ;;; Boundary: downstream loop-engine profile declarations.
 ;;; Invariant: standalone module; it declares workflow loop intent only.
 
-(import :poo-flow/src/modules/loop-engine/config)
+(import :poo-flow/modules/loop-engine/config)
 
 (export poo-flow-custom-my-module-loops-module)
 

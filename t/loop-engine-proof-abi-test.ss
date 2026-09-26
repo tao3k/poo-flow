@@ -11,7 +11,7 @@
                  check-eq?
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/loop-engine/proof-abi)
+        :poo-flow/modules/loop-engine/proof-abi)
 
 (export loop-engine-proof-abi-test)
 

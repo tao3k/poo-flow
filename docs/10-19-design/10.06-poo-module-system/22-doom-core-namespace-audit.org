@@ -36,7 +36,7 @@ implementation files as "user interface" components.
 =poo-flow= should keep three namespaces distinct:
 - =src/module-system/*= for module-system mechanics, root profile projection
   helpers, loader/doctor/projection owners, and shared POO object contracts.
-- =src/modules/<domain>/*= for developer-owned built-in modules such as
+- =modules/<domain>/*= for developer-owned built-in modules such as
   =nono-sandbox=, =cubeSandbox=, =docker-sandbox=, =funflow=, and
   =loop-governor=.
 - =user-interface/*= for downstream/user practice files such as =init.ss=,
@@ -48,23 +48,23 @@ not live under =src/modules= or use =user-interface= as a mechanism namespace.
 
 ** 10.06.22.40 Applied Rename
 This audit validates the following final source move:
-- =src/modules/module-system.ss= -> =src/module-system/facade.ss=
-- =src/modules/modules-system-base.ss= -> =src/module-system/declaration/interface.ss=
-- =src/modules/modules-system/user-profile.ss= -> =src/user-interface/root-profile.ss=
-- =src/modules/modules-system/root-objects.ss= -> =src/user-interface/root-objects.ss=
-- =src/modules/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
+- =modules/module-system.ss= -> =src/module-system/facade.ss=
+- =modules/modules-system-base.ss= -> =src/module-system/declaration/interface.ss=
+- =modules/modules-system/user-profile.ss= -> =src/user-interface/root-profile.ss=
+- =modules/modules-system/root-objects.ss= -> =src/user-interface/root-objects.ss=
+- =modules/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
   -> =src/module-system/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
-- =src/modules/{object-core,object-validation,objects,extension}.ss=
+- =modules/{object-core,object-validation,objects,extension}.ss=
   -> =src/module-system/{object-core,object-validation,objects,extension}.ss=
-- =src/modules/user-config.ss= -> =src/user-interface/profile-config.ss=
-- =src/modules/user-config-syntax.ss= -> =src/user-interface/init-syntax.ss=
-- =src/modules/user-interface-case.ss= -> =src/user-interface/declaration-case.ss=
+- =modules/user-config.ss= -> =src/user-interface/profile-config.ss=
+- =modules/user-config-syntax.ss= -> =src/user-interface/init-syntax.ss=
+- =modules/user-interface-case.ss= -> =src/user-interface/declaration-case.ss=
 - =src/testing/user-interface-live-case*.ss=
   -> =src/testing/module-system-live-case*.ss=
 
 The move removes the misleading intermediate =modules-system= owner name and
 separates module-system mechanics from concrete built-in modules under
-=src/modules/<domain>/*=.
+=modules/<domain>/*=.
 
 ** 10.06.22.50 Current Public Surface
 Source-level mechanics use root/declaration/module-system names:
@@ -83,10 +83,10 @@ directories, and documentation prose. Domain object names such as
 than a source namespace.
 
 ** 10.06.22.60 Rules
-- Do not create compatibility modules at the old =src/modules/user-interface/*=
+- Do not create compatibility modules at the old =modules/user-interface/*=
   paths.
 - Do not place core loaders, root profile projection, or shared object contracts
-  under =src/modules/user-interface=.
+  under =modules/user-interface=.
 - Do not name source owners or framework APIs =user-interface= when the owner is
   the module system.
 - Do not recreate =src/module-system.ss=; it collides with the

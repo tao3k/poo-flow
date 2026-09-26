@@ -22,7 +22,7 @@
                  poo-flow-custom-my-module-cicd-module)
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/agent-sandbox/config)
+        :poo-flow/modules/agent-sandbox/config)
 
 (export user-interface-cicd-profile-case-test)
 

@@ -10,7 +10,7 @@
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/entrypoints
-        :poo-flow/src/modules/sandbox-core/profile-catalog
+        :poo-flow/modules/sandbox-core/profile-catalog
         (only-in :poo-flow/src/user-interface/presentation
                  pooFlowUserConfigPresentation)
         :poo-flow/src/module-system/projection/syntax

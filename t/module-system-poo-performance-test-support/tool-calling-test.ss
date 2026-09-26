@@ -15,7 +15,7 @@
         "../support/poo-performance-fixtures"
         "../support/poo-performance-object-scenarios"
         "../support/poo-performance"
-        :poo-flow/src/modules/tool-core/calling-control)
+        :poo-flow/modules/tool-core/calling-control)
 
 (export tool-calling-test)
 

@@ -56,7 +56,7 @@ landed or released baseline.
 | Area | Current state | Remaining closure |
 |------+---------------+-------------------|
 | Profile and Scenario expression | Direct =poo-flow.scenario-case.v1= values, cached ExecutionPlan and 1,000/5,000 Profile receipts exist | finish directory discovery and user-facing config roles |
-| Session policy generation | =src/modules/session/policy-syntax.ss= exists | verify family coverage and reduce remaining large owners |
+| Session policy generation | =modules/session/policy-syntax.ss= exists | verify family coverage and reduce remaining large owners |
 | Runtime projection generation | =src/module-system/projection/runtime-syntax.ss= exists | separate receipt/request/envelope/manifest/snapshot owners |
 | Loop intent | =runtime-intent.ss= exists but remains a large mixed owner | make =runtime.ss= a small orchestrator |
 | Standards | RFC 163 M0--M4 are implemented in the working tree | land the core and preserve contribution ownership |
@@ -73,8 +73,8 @@ landed or released baseline.
 | =src/core/*= | functional flow and execution-independent control values |
 | =src/module-system/*= | module contracts, loading, CLOS/MOP, composition and observability |
 | =src/feature-system/*= | reusable cross-module Features, including Sources Lock |
-| =src/modules/standards/*= | domain-neutral Standard catalog, resolution and lazy materialization |
-| =src/modules/*= | maintained concrete modules |
+| =modules/standards/*= | domain-neutral Standard catalog, resolution and lazy materialization |
+| =modules/*= | maintained concrete modules |
 | =src/user-interface/*= | internal UI loading, Profile/Scenario composition and diagnostics |
 | =user-interface/*= | root user configuration and realistic examples |
 | =packages/lambda-aitia= | Software/SDLC causal assurance and its standards |

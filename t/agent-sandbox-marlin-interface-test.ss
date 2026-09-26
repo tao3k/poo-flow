@@ -18,10 +18,10 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/api
-        :poo-flow/src/modules/agent-sandbox/cube
-        :poo-flow/src/modules/agent-sandbox/nono
-        :poo-flow/src/modules/nono-sandbox/c-binding)
+        :poo-flow/modules/agent-sandbox/api
+        :poo-flow/modules/agent-sandbox/cube
+        :poo-flow/modules/agent-sandbox/nono
+        :poo-flow/modules/nono-sandbox/c-binding)
 
 (export agent-sandbox-marlin-interface-test)
 

@@ -79,7 +79,7 @@
      (poo-flow-module-tree-source-refs module-root-path)
      metadata)))
 
-;;; Boundary: src/modules lazy plans never call loader handlers.
+;;; Boundary: modules lazy plans never call loader handlers.
 ;; : (-> [PooModuleLoaderBackend] [PooFlowLazyLoadPlan])
 (def (poo-flow-src-modules-lazy-load-plans backends . maybe-metadata)
   (let (metadata

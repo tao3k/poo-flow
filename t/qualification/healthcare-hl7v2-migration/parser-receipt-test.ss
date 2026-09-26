@@ -7,7 +7,7 @@
          :std/test
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/standards/interface
+        :poo-flow/modules/standards/interface
         :poo-flow/lambda-episteme/modules/healthcare/standards/interface
         :poo-flow/lambda-episteme/modules/ontology/interface
         (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/cases/au-legacy-interface-fhir-migration/case

@@ -10,10 +10,10 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/sandbox-core/profile)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/nono-sandbox/config
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/sandbox-core/profile)
 
 ;;; Fixture alist reads stay local to the derivation receipt assertions so the
 ;;; test does not depend on profile projection internals for metadata lookup.

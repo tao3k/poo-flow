@@ -417,7 +417,7 @@ functional composition.  This RFC does not approve a new public macro DSL.
 The POO Flow implementation SHALL follow RFC 162's responsibility audit:
 
 #+begin_example
-src/modules/standards/
+modules/standards/
   types.ss       boundary types and typed failures
   objects.ss     POO prototypes and immutable constructors
   funs.ss        pure resolution, closure and composition algorithms
@@ -850,7 +850,7 @@ performance test emits =fixture-start=, =fixture-ready= and
 
 *** M1 -- Standard core
 
-- [X] Add the four-layer =src/modules/standards/= skeleton.
+- [X] Add the four-layer =modules/standards/= skeleton.
 - [X] Implement native types, POO objects and pure exact-selection closure.
 - [X] Implement catalog, resolution and conflict receipts.
 - [X] Prove import is effect-free through focused tests.

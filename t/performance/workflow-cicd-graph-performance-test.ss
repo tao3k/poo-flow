@@ -11,7 +11,7 @@
          (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-elapsed-us)
         "../support/performance"
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-graph-performance-test)
 

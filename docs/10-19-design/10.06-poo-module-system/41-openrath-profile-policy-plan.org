@@ -60,11 +60,11 @@ The part to avoid is making Python-style classes or attribute assignment the
 
 =poo-flow= already has the right lower-level profile pieces:
 
-- =src/modules/sandbox-core/profile-support/authoring.ss= owns row slots, row
+- =modules/sandbox-core/profile-support/authoring.ss= owns row slots, row
   operators, row merge shape, and authoring diagnostics.
-- =src/modules/sandbox-core/profile-support/derivation.ss= owns derivation
+- =modules/sandbox-core/profile-support/derivation.ss= owns derivation
   metadata and row validation, including filesystem-resource safety checks.
-- =src/modules/sandbox-core/profile-support/resolve.ss= owns profile object
+- =modules/sandbox-core/profile-support/resolve.ss= owns profile object
   resolution, row contribution merge, profile derivation, and profile
   collection.
 - =src/core/policy.ss= owns the current =execution-policy= shape: strategy,
@@ -185,18 +185,18 @@ Next implementation pressure:
 
 Current landing:
 
-- =src/modules/sandbox-core/profile-support/policy.ss= owns the POO-native
+- =modules/sandbox-core/profile-support/policy.ss= owns the POO-native
   backend capability objects, profile-policy objects, validation receipts, and
   projection receipts.
-- =src/modules/sandbox-core/profile-support/prototype.ss= adds
+- =modules/sandbox-core/profile-support/prototype.ss= adds
   =backend-capability= and =profile-policy= object slots to the shared profile
   object.
-- =src/modules/sandbox-core/profile-support/resolve.ss= validates final
+- =modules/sandbox-core/profile-support/resolve.ss= validates final
   composed profile capabilities against the backend capability object before
   returning a public sandbox profile.
-- =src/modules/{nono-sandbox,docker-sandbox,cubeSandbox}/objects.ss= publish
+- =modules/{nono-sandbox,docker-sandbox,cubeSandbox}/objects.ss= publish
   backend capability objects and wire them into their backend profile objects.
-- =src/modules/agent-sandbox/config.ss= projects profile-policy receipts into
+- =modules/agent-sandbox/config.ss= projects profile-policy receipts into
   user-facing profile presentation data, including =policy-projections=,
   =policy-valid?=, and =policy-diagnostics=.
 - =t/sandbox-profile-policy-test.ss= covers capability objects, structured
@@ -242,10 +242,10 @@ P1: Profile Policy Validation Receipts
 - Scheme boundary: =profile-policy= remains a POO object family. Validation reads
   composed POO slots and emits diagnostic POO objects or serializable receipts.
 - Main owners:
-  - =src/modules/sandbox-core/profile-support/policy.ss=
-  - =src/modules/sandbox-core/profile-support/resolve.ss=
-  - =src/modules/sandbox-core/profile-support/derivation.ss=
-  - =src/modules/agent-sandbox/config.ss=
+  - =modules/sandbox-core/profile-support/policy.ss=
+  - =modules/sandbox-core/profile-support/resolve.ss=
+  - =modules/sandbox-core/profile-support/derivation.ss=
+  - =modules/agent-sandbox/config.ss=
 - Required behavior:
   - represent diagnostics as =profile-policy.diagnostic.v1= receipts.
   - validate concrete filesystem/workspace paths when a profile declares them.
@@ -265,9 +265,9 @@ P2: Backend Capability Registry
 - Scheme boundary: backend capabilities are POO objects that profile policy can
   inherit, extend, and validate against.
 - Main owners:
-  - =src/modules/sandbox-core/profile-support/policy.ss=
-  - =src/modules/sandbox-core/profile-support/resolve.ss=
-  - =src/modules/agent-sandbox/config.ss=
+  - =modules/sandbox-core/profile-support/policy.ss=
+  - =modules/sandbox-core/profile-support/resolve.ss=
+  - =modules/agent-sandbox/config.ss=
   - backend modules for nono, docker, cube, and future sandbox providers.
 - Required behavior:
   - publish static capability objects for command, filesystem, network,
@@ -288,12 +288,12 @@ P3: Session/Profile Handoff Policy
   Scheme layer builds receipts and intent objects; Marlin/Rust or backend code
   owns execution.
 - Main owners:
-  - =src/modules/session-core/config.ss=
-  - =src/modules/session-core/presentation.ss=
-  - =src/modules/session/objects.ss=
-  - =src/modules/session/transform.ss=
-  - =src/modules/sandbox-core/profile.ss=
-  - =src/modules/agent-sandbox/config.ss=
+  - =modules/session-core/config.ss=
+  - =modules/session-core/presentation.ss=
+  - =modules/session/objects.ss=
+  - =modules/session/transform.ss=
+  - =modules/sandbox-core/profile.ss=
+  - =modules/agent-sandbox/config.ss=
 - Required behavior:
   - attach profile-policy projection receipts to session placement results.
   - preserve session lineage, requested profile, backend intent, and validation
@@ -315,7 +315,7 @@ P4: Funflow and CI/CD Profile Policy Integration
   projection receipts.
 - Main owners:
   - =modules/funflow/config.ss=
-  - =src/modules/workflow/config.ss=
+  - =modules/workflow/config.ss=
   - workflow CI/CD feature modules.
   - user configuration examples under =user-interface/custom/my-module/=.
 - Required behavior:
@@ -435,10 +435,10 @@ P2: Capability Registry Object
     entries, alias target holes, and registry shape errors.
   - =nono-sandbox=, =docker-sandbox=, and =cubeSandbox= each export a backend
     capability registry contribution object beside their profile/module objects.
-  - =src/modules/sandbox-core/backend-capability-catalog.ss= builds a merged
+  - =modules/sandbox-core/backend-capability-catalog.ss= builds a merged
     backend registry from enabled user module selections and exports it through
     =src/user-interface/profile-config.ss=.
-  - =src/modules/sandbox-core/backend-capability-catalog.ss= also preserves the
+  - =modules/sandbox-core/backend-capability-catalog.ss= also preserves the
     contribution registry list before merge so validation can report conflicts
     before last-writer merge semantics erase evidence.
   - =agent-sandbox/config.ss= exposes registry-aware policy validation,
@@ -476,15 +476,15 @@ P4: Funflow/CI/CD Integration
 
 The likely owners are:
 
-- =src/modules/sandbox-core/profile.ss=: public profile-policy facade and
+- =modules/sandbox-core/profile.ss=: public profile-policy facade and
   exports.
-- =src/modules/sandbox-core/profile-support/authoring.ss=: policy row slots,
+- =modules/sandbox-core/profile-support/authoring.ss=: policy row slots,
   row diagnostics, and authoring checks.
-- =src/modules/sandbox-core/profile-support/derivation.ss=: lineage,
+- =modules/sandbox-core/profile-support/derivation.ss=: lineage,
   monotonic safety validation, and inherited profile-policy checks.
-- =src/modules/sandbox-core/profile-support/resolve.ss=: composed object
+- =modules/sandbox-core/profile-support/resolve.ss=: composed object
   resolution and projection-only handoff construction.
-- =src/modules/*/objects.ss=: backend capability objects for concrete modules.
+- =modules/*/objects.ss=: backend capability objects for concrete modules.
 - =src/module-system/object-validation/interface.ss=: shared structured diagnostic
   projection and summary formatting.
 - =user-interface/custom/*=: real user-facing profile examples and policy

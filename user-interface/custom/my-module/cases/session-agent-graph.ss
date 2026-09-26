@@ -7,7 +7,7 @@
 ;;; Invariant: this is declarative graph/registry data; message delivery,
 ;;; providers, tools, and sandbox runtime stay behind Marlin handoff.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-agent-graph-case)
 

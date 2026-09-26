@@ -16,7 +16,7 @@
                  poo-flow-user-module-selection-flag-entry)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/src/modules/workflow/cicd-config
+        (only-in :poo-flow/modules/workflow/cicd-config
                  poo-flow-user-config-cicd-intents
                  poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle)
         (only-in "../user-interface/custom/my-module/cases/cicd"

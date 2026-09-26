@@ -26,9 +26,9 @@ The Scheme implementation owns several high-impact module families:
 | Scheme Area | Control-Plane Power | Proof Risk |
 | =src/core/= | Builds flow, policy, receipt, role, runtime protocol, and runner concepts. | A generated flow may claim a step can run without enough dependency or runtime-boundary evidence. |
 | =src/module-system/= | Builds module activation, profiles, object validation, presentation, and projection. | A POO/C3-linearized object may resolve a slot but still violate scope or parent policy. |
-| =src/modules/session/= | Builds session and handoff objects. | A session may dispatch or hand off without lifecycle facts. |
-| =src/modules/agent-sandbox/= | Builds sandbox/profile policy. | Tool, file, or capability permissions may be reused outside the allowed scope. |
-| =src/modules/workflow/= | Builds workflow and CI/CD runtime projections. | Runtime metadata may be mistaken for proof that a workflow is executable. |
+| =modules/session/= | Builds session and handoff objects. | A session may dispatch or hand off without lifecycle facts. |
+| =modules/agent-sandbox/= | Builds sandbox/profile policy. | Tool, file, or capability permissions may be reused outside the allowed scope. |
+| =modules/workflow/= | Builds workflow and CI/CD runtime projections. | Runtime metadata may be mistaken for proof that a workflow is executable. |
 | =user-interface/= | Builds realistic downstream configuration surfaces. | User-facing config may compose several policies whose combined behavior is not obvious locally. |
 
 The proof layer does not replace these Scheme modules. It gives their outputs a mathematical contract. Scheme can remain expressive, macro-driven, and POO-native, while Lean checks the claims that must not be left to convention.

@@ -230,17 +230,17 @@ rather than Scheme-side architecture:
 POO Flow already has the foundation, but not the full multi-agent session graph.
 
 Delivered:
-- =src/modules/session/objects.ss= models session values, chunks, lineage,
+- =modules/session/objects.ss= models session values, chunks, lineage,
   placement, handoff rows, graph edges, and graph presentation. Chunks are
   cheap rows; lineage and placement are POO mixins composed into the final
   session value.
-- =src/modules/session/transform.ss= models report-only session transforms and
+- =modules/session/transform.ss= models report-only session transforms and
   memory intents. A transform derives a session receipt and emits handoff
   intent without provider, tool, memory, selector, or sandbox execution.
-- =src/modules/session-core/config.ss= and
-  =src/modules/session-core/presentation.ss= expose the upstream session-core
+- =modules/session-core/config.ss= and
+  =modules/session-core/presentation.ss= expose the upstream session-core
   module row and feature flags.
-- =src/modules/loop-engine/runtime-agent.ss= projects agent profiles,
+- =modules/loop-engine/runtime-agent.ss= projects agent profiles,
   harnesses, sessions, workflow runs, dispatch receipts, and operations for
   loop-engine handoff.
 
@@ -308,8 +308,8 @@ policy can narrow or request explicit grants, and peer sharing must be named by
 session id or channel id.
 
 Candidate owners:
-- =src/modules/session/policy.ss=
-- =src/modules/session/config.ss=
+- =modules/session/policy.ss=
+- =modules/session/config.ss=
 - =t/session-policy-contract-test.ss=
 
 Current implementation locks the first execution-policy slice:
@@ -328,7 +328,7 @@ The next implementation slice extended this foundation with the remaining base s
 - =session-communication-policy=;
 - =session-sharing-policy=;
 - =session-resource-policy=.
-These are exposed by =src/modules/session/policy.ss= and covered by focused policy and topology tests.
+These are exposed by =modules/session/policy.ss= and covered by focused policy and topology tests.
 *** 10.06.42.70.10 P1 Session Registry Receipt
 Add a report-only registry projection for declared session values:
 - project id;
@@ -353,12 +353,12 @@ Scheme layer declarative. It should not retain live session objects forever and
 should not pretend to be a runtime store.
 
 Candidate owners:
-- =src/modules/session/registry.ss=
-- =src/modules/session/config.ss=
+- =modules/session/registry.ss=
+- =modules/session/config.ss=
 - =t/session-registry-receipt-test.ss=
 
 Current implementation:
-- =src/modules/session/registry.ss= owns =poo-flow-session-registry-entry= and =poo-flow-session-registry-receipt=.
+- =modules/session/registry.ss= owns =poo-flow-session-registry-entry= and =poo-flow-session-registry-receipt=.
 - Registry entries project session id, parent ids, agent id, placement ref, communication channels, policy summaries, materialization state, runtime owner, and =runtime-executed: #f=.
 - =t/session-registry-receipt-test.ss= proves a root and child session registry without runtime state.
 *** 10.06.42.70.20 P2 Multi-Agent Session Topology
@@ -385,8 +385,8 @@ Loop-engine should project its existing agent profile/session rows through this
 shared topology instead of owning a parallel shape forever.
 
 Candidate owners:
-- =src/modules/session/agent.ss=
-- =src/modules/loop-engine/runtime-agent.ss=
+- =modules/session/agent.ss=
+- =modules/loop-engine/runtime-agent.ss=
 - =user-interface/custom/my-module/cases/session-agent-graph.ss=
 - =t/session-multi-agent-graph-test.ss=
 
@@ -398,12 +398,12 @@ Execution policy refs should be part of the topology row rather than hidden insi
 - =resource-sharing-policy-ref=.
 - =durable-policy-ref=.
 Current implementation:
-- =src/modules/session/agent.ss= owns =poo-flow-session-agent-node= and =poo-flow-session-agent-graph=.
+- =modules/session/agent.ss= owns =poo-flow-session-agent-node= and =poo-flow-session-agent-graph=.
 - Agent nodes carry project/root/parent/input/output refs, peer session refs, communication channels, model/prompt/tool/hook/resource/durable policy refs, tool/memory refs, sandbox profile ref, role, and result contract.
 - =user-interface/custom/my-module/cases/session-agent-graph.ss= declares a root session with build and audit child-agent sessions.
 - =t/session-multi-agent-graph-test.ss= proves graph topology and registry correlation without executing agents or delivering messages.
-- =src/modules/loop-engine/runtime-agent.ss= now projects loop-engine agent/judge/human-audit rows into the same =poo-flow-session-agent-graph= topology instead of maintaining a parallel agent/session graph.
-- =src/modules/loop-engine/runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/user-interface/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
+- =modules/loop-engine/runtime-agent.ss= now projects loop-engine agent/judge/human-audit rows into the same =poo-flow-session-agent-graph= topology instead of maintaining a parallel agent/session graph.
+- =modules/loop-engine/runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/user-interface/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
 - =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph and that topology trace profile/session ids stay aligned; =t/performance/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
 *** 10.06.42.70.30 P3 Session Communication Receipt
 Add a report-only communication object between sessions:
@@ -425,13 +425,13 @@ all use the same receipt shape. Cross-root communication must validate the
 target =root-session-id= and =project-id= explicitly.
 
 Candidate owners:
-- =src/modules/session/communication.ss=
-- =src/modules/session/config.ss=
+- =modules/session/communication.ss=
+- =modules/session/config.ss=
 - =user-interface/custom/my-module/cases/session-agent-graph.ss=
 - =t/session-communication-receipt-test.ss=
 
 Current implementation:
-- =src/modules/session/communication.ss= owns
+- =modules/session/communication.ss= owns
   =poo-flow-session-communication-receipt=.
 - The receipt records project id, source and target root session ids, source
   and target session ids, agent ids, channel id, message kind, bounded payload
@@ -458,8 +458,8 @@ can narrow or request explicit grants, and peer sharing must be named by
 session id or channel id.
 
 Candidate owners:
-- =src/modules/session/policy.ss=
-- =src/modules/session/config.ss=
+- =modules/session/policy.ss=
+- =modules/session/config.ss=
 - =t/session-policy-contract-test.ss=
 
 P4 depends on P0. Its job is not to define policy syntax again; its job is to
@@ -484,12 +484,12 @@ The validation receipt must also include:
 - diagnostics for hooks that try to borrow parent or child agent permissions without an explicit hook policy.
 
 Current implementation:
-- =src/modules/session/policy.ss= exposes the foundational POO policy family for isolation, sandbox, context, history, communication, session-sharing, resource, model, prompt, tool, hook, resource-sharing, and agent-execution policies through the shared =policy-syntax.ss= constructor pattern.
+- =modules/session/policy.ss= exposes the foundational POO policy family for isolation, sandbox, context, history, communication, session-sharing, resource, model, prompt, tool, hook, resource-sharing, and agent-execution policies through the shared =policy-syntax.ss= constructor pattern.
 - =t/session-policy-contract-test.ss= projects the foundational isolation, sandbox, context, history, communication, session-sharing, and resource policy rows so sandbox and session-sharing cannot remain untested constructor surfaces.
 - =user-interface/custom/my-module/cases/session-policy.ss= projects isolation, sandbox, and session-sharing policy rows beside the effective validation receipt, keeping the downstream custom module on the same POO-native object path.
-- =src/modules/session/policy-validation.ss= treats isolation and sandbox as first-class effective policy inputs: bounded projection includes =effective-isolation-mode=, isolation sibling/parent/peer controls, =effective-sandbox-profile-ref=, sandbox inheritance mode, and sandbox sharing mode. Metadata-provided sibling session refs drive explicit =sibling-context-not-granted= diagnostics so child sessions cannot read sibling context through a generic context-policy fallback.
+- =modules/session/policy-validation.ss= treats isolation and sandbox as first-class effective policy inputs: bounded projection includes =effective-isolation-mode=, isolation sibling/parent/peer controls, =effective-sandbox-profile-ref=, sandbox inheritance mode, and sandbox sharing mode. Metadata-provided sibling session refs drive explicit =sibling-context-not-granted= diagnostics so child sessions cannot read sibling context through a generic context-policy fallback.
 - =t/scenarios/performance/session-policy-family/benchmark.ss= and =t/performance/session-policy-family-performance-test.ss= keep the foundational constructor family as a hot benchmark gate before effective validation.
-- =src/modules/session/policy-validation.ss= owns the defstruct-backed
+- =modules/session/policy-validation.ss= owns the defstruct-backed
   =poo-flow-session-policy-validation-receipt= constructor, explicit receipt
   accessors, =poo-flow-session-policy-validation-receipt->alist=, and bounded
   =poo-flow-session-policy-tool-attempt= rows.
@@ -535,7 +535,7 @@ This keeps the OpenRath simplicity while adding structured validation and
 module-system presentation before Marlin handoff.
 
 Current implementation:
-- =src/modules/session/agent-param.ss= owns
+- =modules/session/agent-param.ss= owns
   =poo-flow-session-agent-param-contract=.
 - The constructor takes a =poo-flow-session-agent-node= and an effective
   =poo-flow-session-policy-validation-receipt=. This keeps P5 attached to P2
@@ -568,7 +568,7 @@ Scheme should be able to validate and present selector intent without running a
 model call. This is stricter than OpenRath's runtime =Selector.forward=.
 
 Current implementation:
-- =src/modules/session/selector.ss= owns
+- =modules/session/selector.ss= owns
   =poo-flow-session-selector-candidate= and
   =poo-flow-session-selector-receipt=.
 - Candidates are POO objects over =workflow=, =transform=, or =agent-param=
@@ -606,7 +606,7 @@ Use the current project rule: generated receipt internals may use Gerbil
 =defstruct=, and ABI/manifest/test-summary boundaries project to bounded alists.
 
 Current implementation:
-- =src/modules/session/materialization.ss= owns
+- =modules/session/materialization.ss= owns
   =poo-flow-session-materialization-receipt= as a Gerbil =defstruct= and
   =poo-flow-session-materialization-receipt->alist= as the bounded ABI
   projection.
@@ -672,11 +672,11 @@ Each gate should prove:
 - sandbox/resource sharing is policy-visible and never implicit;
 - tools are denied unless a session/agent/hook policy has an explicit matching grant;
 Current tool-core application:
-- =src/modules/tool-core/*= turns built-in tools, custom tools, and MCP tool rows into report-only POO specs and handoff manifests.
+- =modules/tool-core/*= turns built-in tools, custom tools, and MCP tool rows into report-only POO specs and handoff manifests.
 - Session and hook tool grants are validated against concrete catalog specs before runtime handoff.
 - =t/user-interface-custom-tool-core-test.ss= is the user-facing scenario gate; =t/performance/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
 Current memory-core application:
-- =src/modules/memory-core/*= turns local, durable, and custom memory stores into report-only POO specs and handoff manifests.
+- =modules/memory-core/*= turns local, durable, and custom memory stores into report-only POO specs and handoff manifests.
 - Session memory intents are validated against concrete store catalogs before selector, transform, or materialization receipts consume those refs.
 - =t/user-interface-custom-memory-core-test.ss= is the user-facing scenario gate; =t/performance/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= are the matching performance gate.
 - hook-triggered tools do not inherit main-agent or sub-agent permissions implicitly;

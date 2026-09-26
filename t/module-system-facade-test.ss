@@ -57,7 +57,7 @@
         (lambda (port)
           (source-port-has-module-prefix?
            port
-           ":poo-flow/src/modules/")))
+           ":poo-flow/modules/")))
        #f))
     (poo-flow-test-case "keeps the user-interface facade independent of the aggregate module facade"
       (check-equal?
@@ -178,7 +178,7 @@
                (.o id: 'root
                    imports:
                    (poo-flow-imports
-                    (poo-flow-import ":poo-flow/src/modules/root#child" child))
+                    (poo-flow-import ":poo-flow/modules/root#child" child))
                    config: (.o surface: "root")
                    flags: '(+root)
                    depth: (cons 10 10)

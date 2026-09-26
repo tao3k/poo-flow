@@ -6,7 +6,7 @@
 ;;; Boundary: downstream session transform case.
 ;;; Invariant: importing this module derives session receipts only.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-transform-case)
 

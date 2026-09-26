@@ -7,7 +7,7 @@
 ;;; Invariant: communication rows are report-only; Scheme does not deliver
 ;;; messages, mutate sessions, or open runtime channels.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-communication-case)
 

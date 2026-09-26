@@ -14,7 +14,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/src/modules/standards/interface)
+        :poo-flow/modules/standards/interface)
 
 (export standards-resolution-performance-test)
 

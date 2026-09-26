@@ -9,7 +9,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref)
         (only-in :std/test check-equal? test-suite)
-        (only-in :poo-flow/src/modules/standards/interface
+        (only-in :poo-flow/modules/standards/interface
                  poo-flow-standard-budget
                  poo-flow-standard-catalog
                  poo-flow-standard-compose-profiles

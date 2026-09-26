@@ -77,11 +77,11 @@ be duplicated by hand.
 ** 10.06.51.40 Ownership Map
 Macro ownership follows the layer whose code is generated:
 
-- =src/modules/sandbox-core/backend-object-syntax.ss= owns sandbox backend
+- =modules/sandbox-core/backend-object-syntax.ss= owns sandbox backend
   object, profile, field-contract, capability, and backend registry families.
-- =src/modules/session/policy-syntax.ss= owns session policy constructor,
+- =modules/session/policy-syntax.ss= owns session policy constructor,
   accessor, predicate, validation, and projection family generation.
-- =src/modules/session/receipt-syntax.ss= owns record-backed session receipt
+- =modules/session/receipt-syntax.ss= owns record-backed session receipt
   accessor wrappers and record/object-backed final receipt projection
   generation outside policy families.
 - =src/core/object-syntax.ss= owns repeated core role-backed POO object frames
@@ -111,10 +111,10 @@ Macro ownership follows the layer whose code is generated:
 - =src/module-system/projection/runtime-syntax.ss= owns runtime manifest,
   receipt, and Marlin handoff projection generation when the output is a pure
   final boundary projection.
-- =src/modules/workflow/cicd-projection-syntax.ss= owns workflow CI/CD
+- =modules/workflow/cicd-projection-syntax.ss= owns workflow CI/CD
   fixed-field runtime, receipt, and graph projection rows. It must not own
   scheduling, command execution, or public user-interface scenario behavior.
-- =src/modules/sandbox-core/profile-support/projection-syntax.ss= owns
+- =modules/sandbox-core/profile-support/projection-syntax.ss= owns
   sandbox profile-support fixed-field rows and bounded row-tail composition
   for derivation, resolve, policy, authoring, validation, and presentation
   payloads. It must not hide policy decisions or backend capability semantics.
@@ -125,7 +125,7 @@ Macro ownership follows the layer whose code is generated:
   generated custom-module binding names. It must not own runtime module
   selection, descriptor realization, benchmark payloads, or public scenario
   behavior.
-- Module-local =src/modules/*/config.ss= files may expose narrow macros only
+- Module-local =modules/*/config.ss= files may expose narrow macros only
   when they lower directly to POO objects or named functional constructors for
   that module.
 
@@ -184,7 +184,7 @@ Phase 2: stabilize sandbox backend object families.
   instead of mapping inputs against =iota= and flattening intermediate error
   lists.
 Phase 3: deepen session policy generation.
-- Keep =src/modules/session/policy-syntax.ss= as the syntax owner.
+- Keep =modules/session/policy-syntax.ss= as the syntax owner.
 - Generate repeated constructor, predicate, accessor, validator, and projection
   frames only when the policy spec names kind, schema, scope, slots, and
   validation boundaries clearly.
@@ -269,13 +269,13 @@ Phase 3: deepen session policy generation.
 - Completed user-interface scenario batch benchmark slice: the scenario-batch performance owner now derives row counts, runtime flags, and case names through owner-local reverse accumulators instead of recursive append or non-tail list scans, while keeping benchmark payloads under =t/scenarios/performance= and leaving public =user-interface/= POO declarations unchanged.
 - Completed AgentParam batch projection slice: =poo-flow-session-agent-param-contracts->alists= now uses the shared session receipt batch macro, and that macro expands to an ordered reverse accumulator instead of an anonymous =map= frame for session receipt batch projections.
 - Completed core/session/workflow row-frame projection slice: session transform and session value metadata prefixes now use owner-local fixed-prefix tail helpers; core plan, runner, receipt, runtime, failure, strategy, task, flow registry, and validation fixed receipt or error detail rows route through =defpoo-core-receipt-projection=; CI/CD runtime metadata and runtime readiness rows now use declarative field/tail helpers instead of hand-written =cons= towers.
-- Completed agent-sandbox projection and merge slice: request, profile, descriptor, validation, bridge, Marlin, Cube, nono, and sandbox resource final rows now share =src/modules/agent-sandbox/projection-syntax.ss= instead of copying owner-local =list (cons ...)= frames, while sandbox resource merge now collects unseen right-hand bindings in reverse accumulators and appends them to the left side once instead of repeatedly growing lists with =append=.
+- Completed agent-sandbox projection and merge slice: request, profile, descriptor, validation, bridge, Marlin, Cube, nono, and sandbox resource final rows now share =modules/agent-sandbox/projection-syntax.ss= instead of copying owner-local =list (cons ...)= frames, while sandbox resource merge now collects unseen right-hand bindings in reverse accumulators and appends them to the left side once instead of repeatedly growing lists with =append=.
 - Completed session-agent topology accumulator follow-up: =poo-flow-session-agent-node-topology-summary= now derives agent ids, lineage edge pairs, and durable policy refs with one tail-recursive reverse accumulator instead of recursively rebuilding the tail summary before each cons.
 - Completed workflow CI/CD runtime projection readability slice: runtime metadata, runtime policy, command envelopes, durable rows, and check receipt field projections now use an owner-local =poo-flow-cicd-field-rows= declarative macro over the bounded row-tail helper instead of hand-written nested =cons= towers, preserving durable-field tail composition without making public =user-interface/= declarations depend on benchmark or ABI plumbing.
 - Completed sandbox-core profile-support projection helper slice:
   profile derivation, resolve, backend capability policy diagnostics,
   authoring diagnostics, and validation payload rows now share
-  =src/modules/sandbox-core/profile-support/projection-syntax.ss= for
+  =modules/sandbox-core/profile-support/projection-syntax.ss= for
   fixed-field rows and bounded row-tail composition instead of hand-written
   =append= and nested =cons= frames. Dynamic registry entry merging remains
   explicit functional code because it is data-dependent, not a fixed final
@@ -598,13 +598,13 @@ Phase 4: broaden runtime projection generation carefully.
   projection, runtime intent, runtime summary, and strict handoff summary
   mapping stay explicit. Each single-row projection remains explicit at its
   call site. Session-owned batch serializers stay under
-  =src/modules/session/receipt-syntax.ss= and
-  =src/modules/session/policy-syntax.ss=.
+  =modules/session/receipt-syntax.ss= and
+  =modules/session/policy-syntax.ss=.
 - Completed module config prototype slice:
   =src/module-system/declaration/config-syntax.ss= now declares POO config
   prototype objects, kind predicates, and mechanical prototype converters.
-  =src/modules/tool-core/config.ss= and
-  =src/modules/memory-core/config.ss= use it for their public =tool-spec=,
+  =modules/tool-core/config.ss= and
+  =modules/memory-core/config.ss= use it for their public =tool-spec=,
   =tool-catalog=, =memory-store-spec=, and =memory-catalog= prototype frames
   and prototype-to-domain/catalog converter frames. Their spec/store list
   converters now use owner-local recursion instead of anonymous =map= frames.

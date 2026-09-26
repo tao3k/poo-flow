@@ -7,11 +7,11 @@
 ;;; Invariant: this is crash/replay/repair handoff data only; Scheme does not
 ;;; replay event logs, claim leases, repair state, or run workflow commands.
 
-(import :poo-flow/src/modules/memory-core/config
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/recovery-scenario
-        :poo-flow/src/modules/session/config)
+(import :poo-flow/modules/memory-core/config
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/recovery-scenario
+        :poo-flow/modules/session/config)
 
 (export poo-flow-custom-my-module-durable-recovery-case)
 

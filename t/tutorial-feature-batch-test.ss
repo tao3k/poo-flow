@@ -18,11 +18,11 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/custom-task/interface
-        :poo-flow/src/modules/docker/interface
-        :poo-flow/src/modules/text/interface
-        :poo-flow/src/modules/workflow/flows
-        :poo-flow/src/modules/workflow/store)
+        :poo-flow/modules/custom-task/interface
+        :poo-flow/modules/docker/interface
+        :poo-flow/modules/text/interface
+        :poo-flow/modules/workflow/flows
+        :poo-flow/modules/workflow/store)
 
 ;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)

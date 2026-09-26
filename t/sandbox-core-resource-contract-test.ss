@@ -12,7 +12,7 @@
                  test-suite)
         (only-in :poo-flow/src/type-facts/objects
                  poo-flow-type-validation-receipt-harness-validation)
-        :poo-flow/src/modules/sandbox-core/resource-contract)
+        :poo-flow/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
 

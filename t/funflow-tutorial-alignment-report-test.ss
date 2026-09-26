@@ -12,9 +12,9 @@
                  check-equal?
                  )
           (only-in :clan/poo/object .ref object?)
-          (only-in :poo-flow/src/modules/workflow/flows-alignment-report
+          (only-in :poo-flow/modules/workflow/flows-alignment-report
                    poo-flow-funflow-tutorial-alignment-report)
-          (only-in :poo-flow/src/modules/workflow/flows-alignment-specs
+          (only-in :poo-flow/modules/workflow/flows-alignment-specs
                    poo-flow-funflow-tutorial-alignment-schema
                    poo-flow-funflow-tutorial-alignment-report-kind
                    poo-flow-funflow-tutorial-alignment-spec?

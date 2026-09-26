@@ -10,7 +10,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/session/lifecycle-gate)
+        :poo-flow/modules/session/lifecycle-gate)
 
 
 (export agent-lifecycle-gate-test)

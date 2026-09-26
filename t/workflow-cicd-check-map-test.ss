@@ -12,8 +12,8 @@
                  check-equal?
                  )
         (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-check-map-test)
 

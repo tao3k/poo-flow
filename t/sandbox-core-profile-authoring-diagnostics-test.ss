@@ -9,7 +9,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/sandbox-core/objects)
+        :poo-flow/modules/sandbox-core/objects)
 
 (export sandbox-core-profile-authoring-diagnostics-test)
 

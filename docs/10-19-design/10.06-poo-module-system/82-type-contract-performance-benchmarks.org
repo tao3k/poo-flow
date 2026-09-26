@@ -55,7 +55,7 @@ The benchmark implementation is split by responsibility:
 
 The support file is deliberately source-level. It imports the current
 =src/module-system/descriptor/contracts.ss=, =src/type-facts=, and
-=src/modules/session= owners directly so benchmark results track the active
+=modules/session= owners directly so benchmark results track the active
 checkout, not stale installed ABI state.
 
 ** 10.06.82.30 Benchmark Classes

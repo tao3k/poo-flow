@@ -24,7 +24,7 @@
     (poo-flow-test-case "validates the native contract"
       (eval '(import (only-in :clan/poo/object .o)))
       (eval '(import (only-in :clan/poo/mop Type element?)))
-      (eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+      (eval '(import "./modules/sandbox-core/resource-contract.ss"))
       (let* ((row
         (sandbox-resource-eval
          '(poo-flow-sandbox-resources-prototype-type-contract->alist)))

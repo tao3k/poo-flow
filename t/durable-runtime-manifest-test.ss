@@ -4,10 +4,10 @@
 
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/store-backend
-        :poo-flow/src/modules/memory-core/durable/runtime-manifest)
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/store-backend
+        :poo-flow/modules/memory-core/durable/runtime-manifest)
 
 (export durable-runtime-manifest-test)
 

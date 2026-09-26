@@ -32,7 +32,7 @@ framework entrypoints and zero catalog targets. =build.ss= imports only ASP's
 Build API because importing a =:poo-flow= loader before the package exists is a
 self-dependency that fails in a hermetic Bazel image. After bootstrap, module
 selection resolves through the ordered POO load path. Available
-=src/modules/<module-name>/interface.ss= roots remain catalog data, so adding
+=modules/<module-name>/interface.ss= roots remain catalog data, so adding
 100 or 1,000 unselected modules does not widen the package bootstrap.
 =init-syntax.ss= and =declaration-case.ss= are registered framework source refs
 rather than bootstrap targets. The ordinary

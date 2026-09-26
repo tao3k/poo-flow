@@ -10,8 +10,8 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/transform)
+        :poo-flow/modules/session/objects
+        :poo-flow/modules/session/transform)
 
 (export session-transform-test)
 

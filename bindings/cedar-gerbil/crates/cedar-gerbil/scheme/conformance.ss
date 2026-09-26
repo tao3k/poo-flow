@@ -6,7 +6,7 @@
 (import (only-in :std/ffi C-ffi-macrology)
         (only-in :std/encoding/json json->string)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/modules/authorization/providers/cedar/objects
+        :poo-flow/modules/authorization/providers/cedar/objects
         (only-in :gerbil-scheme-rust/scheme/native gerbil-rs-root-string))
 (export main)
 

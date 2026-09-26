@@ -17,8 +17,8 @@
                  check-true
                  test-error
                  test-suite)
-        :poo-flow/src/modules/agent-sandbox/api
-        :poo-flow/src/modules/agent-sandbox/profile-candidate)
+        :poo-flow/modules/agent-sandbox/api
+        :poo-flow/modules/agent-sandbox/profile-candidate)
 
 (export agent-sandbox-profile-candidate-test)
 

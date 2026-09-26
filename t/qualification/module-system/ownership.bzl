@@ -35,7 +35,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-03-runtime-context-recovery",
         "rfc": "45-03",
-        "source_path": "src/modules/session/runtime-context-recovery.ss",
+        "source_path": "modules/session/runtime-context-recovery.ss",
         "source_symbol": "poo-flow-runtime-context",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",

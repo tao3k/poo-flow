@@ -18,8 +18,8 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/docker/interface
-        :poo-flow/src/modules/agent-sandbox/resource)
+        :poo-flow/modules/docker/interface
+        :poo-flow/modules/agent-sandbox/resource)
 
 (export docker-descriptor-test)
 

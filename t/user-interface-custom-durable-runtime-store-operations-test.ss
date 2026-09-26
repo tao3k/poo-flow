@@ -11,7 +11,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/modules/memory-core/durable/store-operation
+        (only-in :poo-flow/modules/memory-core/durable/store-operation
                  +poo-flow-durable-runtime-store-operation-specs+)
         (only-in "../user-interface/custom/my-module/cases/durable-runtime-store-operations"
                  poo-flow-custom-my-module-durable-runtime-store-operations-case))

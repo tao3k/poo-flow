@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .o))
 
 (eval '(import "./src/type-facts/objects.ss"))
-(eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+(eval '(import "./modules/sandbox-core/resource-contract.ss"))
 
 ;; : (-> PooFlowTypeFactsSandboxScenarioExpr PooFlowTypeFactsSandboxScenarioValue)
 (def (type-facts-sandbox-scenario-eval expr)

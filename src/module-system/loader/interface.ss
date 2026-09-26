@@ -82,7 +82,7 @@
         poo-flow-module-load-receipt->alist
         poo-flow-module-tree-source-refs
         poo-flow-module-tree-lazy-load-plans
-        poo-flow-src-modules-root
+        poo-flow-modules-root
         poo-flow-module-system-source
         poo-flow-module-system-source-refs
         poo-flow-src-modules-source-refs

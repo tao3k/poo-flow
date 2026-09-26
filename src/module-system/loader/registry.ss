@@ -13,7 +13,7 @@
                  poo-flow-maintained-module-source))
 
 (export poo-flow-module-tree-source-refs
-        poo-flow-src-modules-root
+        poo-flow-modules-root
         poo-flow-module-system-source
         poo-flow-module-system-source-refs
         poo-flow-src-modules-source-refs
@@ -59,9 +59,9 @@
 (def (poo-flow-module-tree-source-refs module-root-path)
   (list (poo-flow-module-tree-interface-source module-root-path)))
 
-;;; Boundary: src/modules is the maintained source collection root.
+;;; Boundary: modules is the maintained source collection root.
 ;; : Path
-(def poo-flow-src-modules-root "src/modules")
+(def poo-flow-modules-root "modules")
 
 ;;; Boundary: framework source refs are explicit front-end entrypoints. They
 ;;; are metadata consumed by the Loader and never import their implementations.

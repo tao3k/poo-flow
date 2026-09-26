@@ -17,7 +17,7 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/workflow/store)
+        :poo-flow/modules/workflow/store)
 
 ;;; This suite keeps task-family routing policy executable without invoking
 ;;; runtime adapters, so descriptor regressions fail at the control-plane edge.

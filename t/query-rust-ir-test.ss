@@ -6,7 +6,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :std/test check test-suite)
         (only-in :std/misc/ports read-all-as-string)
-        (only-in :poo-flow/src/modules/query/rust-ir
+        (only-in :poo-flow/modules/query/rust-ir
                  poo-flow-query-execution-candidate-transport-diagnostic
                  poo-flow-query-execution-candidate-transport-ir-json))
 

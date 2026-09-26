@@ -17,7 +17,7 @@ lean_lib PooFlowProof where
   roots := #[`PooFlowProof]
 
 /-!
-Native module libraries mirror proof-bearing owners under `src/modules`.
+Native module libraries mirror proof-bearing owners under `modules`.
 Lake derives each complete import closure from these roots; no external scanner
 or changed-file projection owns the proof graph. `PooFlowProof` above remains
 the explicit repository-wide integration aggregate.

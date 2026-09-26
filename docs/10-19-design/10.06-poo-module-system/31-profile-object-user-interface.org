@@ -199,8 +199,8 @@ plain POO:
 
 #+begin_src scheme
 (import :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/nono-sandbox/profile-interface
-        :poo-flow/src/modules/sandbox-core/profile-interface)
+        :poo-flow/modules/nono-sandbox/profile-interface
+        :poo-flow/modules/sandbox-core/profile-interface)
 
 (def session-metadata
   '((intent . coding-agent)
@@ -391,14 +391,14 @@ the stable request surface as POO slots: =observability:=, =observes:=,
 
 ** 10.06.31.110 Upstream Owners
 The upstream owners are:
-- =src/modules/sandbox-core/profile-interface.ss=: backend-neutral profile
+- =modules/sandbox-core/profile-interface.ss=: backend-neutral profile
   prototypes, shared resource prototypes, network constructors, and derivation
   helpers.
-- =src/modules/nono-sandbox/profile-interface.ss=: =nono-sandbox-profile= and
+- =modules/nono-sandbox/profile-interface.ss=: =nono-sandbox-profile= and
   nono-specific defaults.
-- =src/modules/docker-sandbox/profile-interface.ss=: =docker-sandbox-profile=
+- =modules/docker-sandbox/profile-interface.ss=: =docker-sandbox-profile=
   and Docker-specific defaults.
-- =src/modules/cubeSandbox/profile-interface.ss=: =cubeSandbox-profile= and
+- =modules/cubeSandbox/profile-interface.ss=: =cubeSandbox-profile= and
   Cube-specific defaults.
 - =src/user-interface/init-syntax.ss=: the =use-module= syntax bridge from
   public POO declarations to inert module selections.

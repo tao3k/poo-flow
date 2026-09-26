@@ -11,7 +11,7 @@
                  test-suite
                  check-equal?
                  )
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-dependency-graph-test)
 

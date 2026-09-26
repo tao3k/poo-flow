@@ -7,7 +7,7 @@
          (only-in :std/test check test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        :poo-flow/src/modules/query/interface)
+        :poo-flow/modules/query/interface)
 
 (export query-core-test)
 

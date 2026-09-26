@@ -14,11 +14,11 @@
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/user-interface/root-objects
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects
-        :poo-flow/src/modules/docker-sandbox/objects)
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects
+        :poo-flow/modules/docker-sandbox/objects)
 
 (export module-object-catalog-validation-test)
 

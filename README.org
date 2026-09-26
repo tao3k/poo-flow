@@ -45,8 +45,8 @@ The security argument is split across four owners so that one tool cannot
 silently claim another tool's guarantee:
 
 | Layer | Owner | What it establishes | What it cannot establish |
-| POO Governance | =src/modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
-| Cedar Provider | =src/modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
+| POO Governance | =modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
+| Cedar Provider | =modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
 | TLA+ / TLC | =packages/proof/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
 | Lean | =packages/proof/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
 
@@ -233,7 +233,7 @@ The important source areas are:
 
 - =src/core/= for flow, task, plan, role, policy, receipt, runtime protocol, and runner concepts;
 - =src/module-system/= for module activation, object validation, profiles, projection, observability, proof-facing facts, and user-facing module forms;
-- =src/modules/= for concrete workflow, sandbox, session, loop, and backend modules;
+- =modules/= for concrete workflow, sandbox, session, loop, and backend modules;
 - =user-interface/= for example downstream configuration surfaces;
 - =packages/proof/lean/= for the Lean proof package;
 - =docs/10-19-design/= for the design record, proof architecture, and research audits;

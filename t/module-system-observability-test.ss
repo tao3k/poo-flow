@@ -102,7 +102,7 @@
            ':poo-flow/src/module-system/contribution/interface)
           (check-equal? (.ref contribution-observation 'accepted?) #f))))
     (poo-flow-test-case "all maintained module sources import precise owners"
-      (let* ((paths (module-observability-source-files "src/modules"))
+      (let* ((paths (module-observability-source-files "modules"))
              (observations
               (apply append
                      (map (lambda (path)

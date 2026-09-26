@@ -7,7 +7,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/graph/types
                  poo-flow-graph poo-flow-graph-edge poo-flow-graph-node)
-        :poo-flow/src/modules/temporal-causality/interface)
+        :poo-flow/modules/temporal-causality/interface)
 
 (export temporal-causality-core-test)
 

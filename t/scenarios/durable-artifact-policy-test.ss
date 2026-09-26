@@ -5,7 +5,7 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          :std/test
         :clan/poo/object
-        :poo-flow/src/modules/memory-core/durable/artifact-policy
+        :poo-flow/modules/memory-core/durable/artifact-policy
         :poo-flow/src/module-system/semantic-module/objects
         :poo-flow/src/module-system/profile-composition/interface)
 

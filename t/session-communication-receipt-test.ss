@@ -10,7 +10,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-communication-receipt-test)
 

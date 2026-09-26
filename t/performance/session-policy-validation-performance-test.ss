@@ -16,9 +16,9 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/tool-core/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/session/config
+        :poo-flow/modules/tool-core/config
+        :poo-flow/modules/memory-core/config)
 
 (export session-policy-validation-performance-test)
 

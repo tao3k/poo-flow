@@ -118,7 +118,7 @@
                    (poo-flow-performance-build-list
                     module-count
                     (lambda (index)
-                      (string-append "src/modules/generated-"
+                      (string-append "modules/generated-"
                                      (number->string index)))))
                   (source-refs
                    (lazy-loader-module-tree-source-refs module-roots))
@@ -129,7 +129,7 @@
                       (lazy-loader-module-tree-source-refs module-roots)))))
              (check-equal? (length source-refs) module-count)
              (check-equal? (poo-flow-module-source-ref-value (car source-refs))
-                           "src/modules/generated-0/interface.ss")
+                           "modules/generated-0/interface.ss")
              ;; Emit the scale receipt without embedding a machine-specific
              ;; timing threshold in this semantic unit test. Performance
              ;; admission belongs to a selected Observability profile.
@@ -185,7 +185,7 @@
 (def (module-system-lazy-loader-module-tree-case)
   (poo-flow-test-case "projects the public interface entrypoint from a module tree"
         (set! lazy-loader-call-count 0)
-        (let* ((module-root "src/modules/nono-sandbox")
+        (let* ((module-root "modules/nono-sandbox")
                (source-refs
                 (poo-flow-module-tree-source-refs module-root))
                (interface-source (car source-refs))
@@ -199,7 +199,7 @@
           (check-equal? (length source-refs) 1)
           (check-equal? (poo-flow-module-source-ref-kind interface-source) 'local)
           (check-equal? (poo-flow-module-source-ref-value interface-source)
-                        "src/modules/nono-sandbox/interface.ss")
+                        "modules/nono-sandbox/interface.ss")
           (check-equal? (cdr (assoc 'entrypoint-role interface-metadata))
                         'interface)
           (check-equal? (length plans) 1)
@@ -211,7 +211,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-src-modules-case)
-  (poo-flow-test-case "projects canonical src/modules interfaces as lazy load plans"
+  (poo-flow-test-case "projects canonical modules interfaces as lazy load plans"
         (set! lazy-loader-call-count 0)
         (let* ((plans
                 (poo-flow-src-modules-lazy-load-plans
@@ -232,24 +232,24 @@
                (poo-flow-load-modules poo-flow-maintained-module-source))
               (length (poo-flow-module-system-source-refs))))
           (check-equal? (car source-values)
-                        "src/modules/agent-sandbox/interface.ss")
+                        "modules/agent-sandbox/interface.ss")
           (check-equal?
            (if (member "src/module-system/poo-clos/config.ss"
                        source-values)
              #t
              #f)
            #t)
-          (check-equal? (if (member "src/modules/sandbox-core/interface.ss"
+          (check-equal? (if (member "modules/sandbox-core/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/nono-sandbox/interface.ss"
+          (check-equal? (if (member "modules/nono-sandbox/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/standards/interface.ss"
+          (check-equal? (if (member "modules/standards/interface.ss"
                                     source-values)
                           #t
                           #f)
@@ -274,14 +274,14 @@
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/workflow/interface.ss"
+          (check-equal? (if (member "modules/workflow/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
           ;; The former workflow binding macros duplicated public constructors;
           ;; discovery must not resurrect that removed DSL surface.
-          (check-equal? (if (member "src/modules/workflow/syntax.ss"
+          (check-equal? (if (member "modules/workflow/syntax.ss"
                                     source-values)
                           #t
                           #f)

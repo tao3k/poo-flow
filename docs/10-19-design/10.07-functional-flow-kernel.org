@@ -139,7 +139,7 @@ Constraints:
 ** 10.07.70 Workflow Module Constructor Landing
 
 The workflow layer uses its public constructors directly. The former
-=src/modules/workflow/syntax.ss= binding macros were removed because they added
+=modules/workflow/syntax.ss= binding macros were removed because they added
 no phase semantics and duplicated the functional API.
 
 Implemented workflow constructor surface:

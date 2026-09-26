@@ -12,7 +12,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-registry-receipt-test)
 

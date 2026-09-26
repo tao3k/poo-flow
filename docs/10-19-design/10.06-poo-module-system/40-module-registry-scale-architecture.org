@@ -16,7 +16,7 @@ The module-system path is split into three layers.
 
 1. =src/module-system/loader/registry.ss=
 
-This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/loader/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
+This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/loader/source=. It must not import loaders, resolvers, extension graphs, concrete =modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
 
 2. =src/module-system/loader/tree.ss=
 
@@ -31,10 +31,10 @@ The facade re-exports stable module-system contracts only. Concrete workflow, sa
 The User Interface facade follows the same bounded rule. It owns stable
 entrypoint, presentation, and observation mechanics. Module System loading is
 imported from its own interface by the consumer that needs it. A concrete capability is
-exported by =src/modules/<module-name>/interface.ss= and is loaded only when a
+exported by =modules/<module-name>/interface.ss= and is loaded only when a
 configuration selects that module. In particular, durable memory behavior is
-owned by =src/modules/memory-core/interface.ss= and session lifecycle behavior
-is owned by =src/modules/session/interface.ss=; neither is re-exported by the
+owned by =modules/memory-core/interface.ss= and session lifecycle behavior
+is owned by =modules/session/interface.ss=; neither is re-exported by the
 global User Interface facade.
 
 The facade is an advanced presentation owner and is not the production
@@ -114,8 +114,8 @@ This removes the 20s+ package-env startup from focused agent checks. Full packag
 Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-optimization-audit.org::*10.06.39.70 Warm Build Cache Incident (2026-07-02)][10.06.39.70]]: local warm-path checks use =GERBIL_PATH=.gerbil gxi build.ss compile --debug=, one =touch build.ss= run validates the retouch path, and =gxpkg build -g= remains package-manager/CI parity.
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
-- import =src/modules/*= from =src/module-system/facade.ss=;
-- import =src/modules/*= from =src/user-interface/facade.ss=;
+- import =modules/*= from =src/module-system/facade.ss=;
+- import =modules/*= from =src/user-interface/facade.ss=;
 - import or re-export the aggregate =src/module-system/facade.ss= from
   =src/user-interface/facade.ss=;
 - promote a registry-owned lazy framework source into the package bootstrap

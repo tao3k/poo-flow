@@ -205,7 +205,7 @@ impl Snapshot {
         if bootstrap.schema_id != "poo-flow.cedar-authority-snapshot.v1"
             || bootstrap.object_kind != "cedar-authority-snapshot"
             || bootstrap.producer != "poo-flow.scheme-control"
-            || bootstrap.source != "src/modules/authorization/providers/cedar/objects.ss"
+            || bootstrap.source != "modules/authorization/providers/cedar/objects.ss"
         {
             return Err(Error::new(
                 "snapshot-owner-invalid",

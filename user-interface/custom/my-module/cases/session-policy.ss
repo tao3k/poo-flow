@@ -7,9 +7,9 @@
 ;;; Invariant: declarations describe permissions only and never execute tools,
 ;;; hooks, providers, or sandboxes.
 
-(import :poo-flow/src/modules/session/syntax
-        :poo-flow/src/modules/tool-core/config
-        :poo-flow/src/modules/memory-core/config
+(import :poo-flow/modules/session/syntax
+        :poo-flow/modules/tool-core/config
+        :poo-flow/modules/memory-core/config
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry))
 

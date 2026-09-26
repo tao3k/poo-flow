@@ -91,7 +91,7 @@ Admission rejects invalid shapes, incompatible contracts, missing requirements
 and duplicate export identities. Successful source admission records
 =runtime-executed? #f=; it cannot be used as execution evidence.
 
-POO Flow's =src/modules/governance/= core owns the engine-neutral Profile and
+POO Flow's =modules/governance/= core owns the engine-neutral Profile and
 Source contracts.  Lambda Episteme child modules construct vertical domain
 Profiles containing native ontology and policy objects plus optional Source
 references.  Sources do not read files at import time. Their language is open;

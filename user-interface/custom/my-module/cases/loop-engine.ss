@@ -9,8 +9,8 @@
 ;;; This case configures one concrete loop handoff story: an agent proposes a
 ;;; CI/CD repair, peer agents judge it, and a human node reviews release risk.
 ;; : [PooUserModuleSelection]
-(import :poo-flow/src/modules/loop-engine/config
-        :poo-flow/src/modules/session/syntax
+(import :poo-flow/modules/loop-engine/config
+        :poo-flow/modules/session/syntax
         (only-in :poo-flow/src/loops/spec-evolution
                  external-feedback-receipt-prototype
                  spec-change-proposal-prototype

@@ -17,7 +17,7 @@
                  check-true
                  test-error
                  test-suite)
-        :poo-flow/src/modules/agent-sandbox/resource)
+        :poo-flow/modules/agent-sandbox/resource)
 
 (export sandbox-resource-test)
 

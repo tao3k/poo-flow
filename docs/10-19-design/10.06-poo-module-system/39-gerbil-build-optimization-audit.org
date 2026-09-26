@@ -318,7 +318,7 @@ The next optimization pass used the Gerbil Scheme harness native POO scenarios a
 4. replace per-entry =filter= plus =append= update loops with one extension index, one base preservation pass, and one materialization pass;
 5. keep diagnostics indexed so a duplicate key is reported once without walking accumulated diagnostics.
 
-The owner boundary for this pass was =src/modules/sandbox-core/profile-support/policy.ss=. The code now uses indexed helpers for:
+The owner boundary for this pass was =modules/sandbox-core/profile-support/policy.ss=. The code now uses indexed helpers for:
 1. registry entry and alias flattening;
 2. duplicate registry-key diagnostics;
 3. alias target validation;
@@ -340,7 +340,7 @@ The next optimization owner was the loop-engine capability receipt. The earlier 
 2. generated runtime receipts use fixed =defstruct= values and struct accessors;
 3. manifest, JSON, Marlin handoff, and test summaries receive an explicit bounded =receipt->alist= projection.
 
-This landed in =src/modules/loop-engine/runtime.ss= as =loop-engine-capability-receipt=. Presentation keeps the generated receipt as a struct, while runtime handoff and manifest requests call =loop-engine-capability-receipt->alist= once at the boundary.
+This landed in =modules/loop-engine/runtime.ss= as =loop-engine-capability-receipt=. Presentation keeps the generated receipt as a struct, while runtime handoff and manifest requests call =loop-engine-capability-receipt->alist= once at the boundary.
 
 The user-interface performance gate now checks the representation contract directly:
 - =t/performance/user-interface-presentation-performance-test.ss= asserts presentation capability receipts are =loop-engine-capability-receipt?= values.
