@@ -401,16 +401,25 @@
             resources
             'filesystem))
     '()
-    (let (resource-policy
-          (poo-flow-sandbox-resources-prototype->resource-policy resources))
-      (if (poo-flow-sandbox-resource-policy-has-structured-filesystem?
-           resource-policy)
-        '()
-        (list
-         (poo-flow-sandbox-resources-prototype-diagnostic
-          'filesystem-not-structured
-          "sandbox resources filesystem must project to a structured resource-policy entry"
-          resource-policy))))))
+    (with-catch
+     (lambda (_failure)
+       (list
+        (poo-flow-sandbox-resources-prototype-diagnostic
+         'filesystem-not-structured
+         "sandbox resources filesystem cannot project to a structured resource-policy entry"
+         resources)))
+     (lambda ()
+       (let (resource-policy
+             (poo-flow-sandbox-filesystem-prototype->resource-policy
+              (.ref resources 'filesystem)))
+         (if (poo-flow-sandbox-resource-policy-has-structured-filesystem?
+              resource-policy)
+           '()
+           (list
+            (poo-flow-sandbox-resources-prototype-diagnostic
+             'filesystem-not-structured
+             "sandbox resources filesystem must project to a structured resource-policy entry"
+             resource-policy))))))))
 
 ;;; Boundary: sandbox resources prototype local diagnostics is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
@@ -452,6 +461,14 @@
        'unreadable-memory-slot
        'memory
        resources)
+      (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+       'unreadable-ports-slot
+       'ports
+       resources)
+      (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+       'unreadable-timeout-slot
+       'timeout-ms
+       resources)
       (poo-flow-sandbox-resources-prototype-slot-contracts-diagnostics
        resources))
      (poo-flow-sandbox-resources-prototype-structured-filesystem-diagnostics
@@ -478,10 +495,14 @@
 
 (def (poo-flow-sandbox-resources-prototype-contract-validation? validation)
   (and (object? validation)
-       (.slot? validation 'kind)
+       (andmap
+        (lambda (slot)
+          (poo-flow-sandbox-resources-prototype-slot-readable?
+           validation slot))
+        '(kind schema object valid diagnostics checked-signals
+          type-facts lean-fact-contracts runtime-executed))
        (equal? (.ref validation 'kind)
                poo-flow-sandbox-resources-prototype-contract-validation-kind)
-       (.slot? validation 'schema)
        (equal? (.ref validation 'schema)
                poo-flow-sandbox-resources-prototype-contract-validation-schema)))
 

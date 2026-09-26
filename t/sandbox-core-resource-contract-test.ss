@@ -6,7 +6,7 @@
 ;;; Boundary: sandbox resource POO prototypes use native typed contracts.
 
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
-         (only-in :clan/poo/object .def .ref object?)
+         (only-in :clan/poo/object .def .o .ref object?)
         (only-in :std/test
                  check-equal?
                  test-suite)
@@ -30,6 +30,14 @@
   filesystem: =>.+ poo-flow-runtime-volume-filesystem-prototype
   cpu: 2
   memory: "4Gi")
+
+;; : PooSandboxResourcesPrototype
+(.def unreadable-optional-resources-prototype
+  filesystem: poo-flow-runtime-volume-filesystem-prototype
+  ports: =>.+ '((scope . runtime))
+  cpu: 2
+  memory: "4Gi"
+  timeout-ms: =>.+ 1000)
 
 ;; : PooSandboxFilesystemPrototype
 (.def unstructured-filesystem-prototype
@@ -214,6 +222,34 @@
           (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
            validation))
          '(unreadable-filesystem-slot))))
+    (poo-flow-test-case "reports present but unreadable optional slots"
+      (let ((validation
+             (poo-flow-sandbox-resources-prototype-contract-validation
+              unreadable-optional-resources-prototype)))
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+          validation)
+         #f)
+        (check-equal?
+         (diagnostic-codes
+          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+           validation))
+         '(unreadable-ports-slot unreadable-timeout-slot))))
+    (poo-flow-test-case "rejects incomplete validation receipts safely"
+      (let* ((complete
+              (poo-flow-sandbox-resources-prototype-contract-validation
+               poo-flow-runtime-volume-resources-prototype))
+             (incomplete
+              (.o kind: (.ref complete 'kind)
+                  schema: (.ref complete 'schema))))
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          incomplete)
+         #f)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+          incomplete)
+         #f)))
     (poo-flow-test-case "reports unstructured filesystem projection"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
