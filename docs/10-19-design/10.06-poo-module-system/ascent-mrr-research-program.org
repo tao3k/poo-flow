@@ -143,22 +143,25 @@ newly derived, and complete published pair budgets are separate positive
 bounds; each new candidate is deduplicated and checked before joining the
 round's pending frontier.  A private indexed frontier processes only changed
 inputs; only relations used on the right of a join receive an adjacency index.
-Dense and sparse radix paths both publish persistent =UIntTrieSet= results
-through a POO lookup.  The exact three diamond snapshots from the Rust Ascent
+Dense and sparse radix paths publish complete canonical pair lists through a
+POO lookup; callers can request an official persistent =UIntTrieSet= by a
+separate =pairs-of= conversion.  The exact three diamond snapshots from the Rust Ascent
 fixture, cyclic closure and withdrawal, two simultaneously changing join
 inputs, rule-order independence, sparse radix, and invalid declarations are
 covered by =t/qualification/ascent-binary-program-test.ss=.  This is the
 first composable rule fragment, not full Ascent syntax or arbitrary arity,
 negation, aggregates, generic lattice values, or BYODS.  The standard 20-node
-chain fixture checks all 190 exact output pairs, and its baseline head measured
-1.889ms p95 on Ubuntu against a 1ms target and 2ms ceiling.  The exact
+chain fixture checks all 190 exact output pairs.  Its earlier persistent-set
+publication head measured 1.889ms p95 on Ubuntu, and the subsequent bounded
+head measured 2.298391ms p95 and failed the 2ms ceiling.  The exact
 =reach <- edge; reach <- reach join edge= shape calls the existing Scheme
 bounded closure algorithm directly; other rule sets use the generic evaluator.
 There is no positional compiled-rule tuple.  A local diagnostic measured about
-1.3ms p95 both for the complete evaluator and for construction of its 190-pair
-official =UIntTrieSet= output.  Thus the full persistent-result path is still
-above the submillisecond target; the separate closure algorithm measured 119us
-p95 locally and does not include persistent-set publication.
+1.3ms p95 both for the evaluator with eager set publication and for construction
+of its 190-pair official =UIntTrieSet= output.  With canonical list publication,
+the full rule evaluator measured 139us p95 locally over the standard 20 samples;
+this is a different output contract and does not include the optional persistent
+set conversion.  The separate closure algorithm measured 119us p95 locally.
 
 The project-standard
 =t/scenarios/performance/ascent-reachability-closure/benchmark.ss= measures

@@ -4,8 +4,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Finite positive binary rules. Relations, rules, and results are POO
-;;; objects; evaluation uses the standard persistent set at its boundary and
-;;; private adjacency indexes for the bounded semi-naive hot path.
+;;; objects; evaluation publishes canonical pair lists and can materialize the
+;;; official persistent set on demand. Private adjacency indexes serve the
+;;; bounded semi-naive hot path.
 
 (import (only-in :clan/poo/object .o .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
@@ -168,9 +169,13 @@
       (def (publish-result results path-name)
         (.o (relation-names (vector->list names))
             (evaluation-path path-name)
+            (pair-list-of
+             (lambda (name)
+               (vector-ref results (position-of name))))
             (pairs-of
              (lambda (name)
-               (vector-ref results (position-of name))))))
+               (.call UIntTrieSet .<-list
+                      (vector-ref results (position-of name)))))))
       (let (pattern (and dense? (transitive-pattern rules all position-of)))
         (if pattern
           (let* ((source-position (.ref pattern 'source-index))
@@ -184,10 +189,11 @@
                  (results (make-vector count #f)))
             (let publish-sources ((i 0))
               (when (< i count)
-                (vector-set! results i (.ref (list-ref sources i) 'pairs))
+                (vector-set! results i
+                             (.call UIntTrieSet .list<-
+                                    (.ref (list-ref sources i) 'pairs)))
                 (publish-sources (+ i 1))))
-            (vector-set! results head-position
-                         (.call UIntTrieSet .<-list closure-pairs))
+            (vector-set! results head-position closure-pairs)
             (publish-result results 'transitive-closure))
           (begin
             (let ((active? #t) (epoch 0))
@@ -263,6 +269,6 @@
               (let publish ((i 0))
                 (when (< i count)
                   (vector-set! results i
-                               (.call UIntTrieSet .<-list (vector-ref all i)))
+                               (list-sort < (vector-ref all i)))
                   (publish (+ i 1))))
               (publish-result results 'semi-naive))))))))

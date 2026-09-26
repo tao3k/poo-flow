@@ -25,7 +25,7 @@
        (max-output-pairs output-limit))))
 
 (def (pairs result name)
-  (.call UIntTrieSet .list<- ((.ref result 'pairs-of) name)))
+  ((.ref result 'pair-list-of) name))
 
 (def ascent-binary-program-test
   (test-suite "ASCENT positive binary rules in Scheme"
@@ -38,6 +38,9 @@
              (result (evaluate declarations rules)))
         (check-equal? (pairs result 'reach)
                       '(10 11 12 18 19 20 26 27 28 34 35 36))
+        (check-equal?
+         (.call UIntTrieSet .list<- ((.ref result 'pairs-of) 'reach))
+         (pairs result 'reach))
         (check-equal? (.ref result 'evaluation-path) 'transitive-closure)
         (check-equal? (pairs result 'edge) '(10 11 19 28 34))
         (check-equal? (pairs (evaluate declarations (reverse rules)) 'reach)
