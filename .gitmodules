@@ -11,3 +11,6 @@
 [submodule "core"]
 	path = core
 	url = https://github.com/tao3k/poo-flow-core.git
+[submodule "packages/gerbil-ascent"]
+	path = packages/gerbil-ascent
+	url = https://github.com/tao3k/gerbil-ascent.git

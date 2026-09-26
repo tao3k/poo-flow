@@ -205,7 +205,14 @@ check-aitia-native:
 [group('dependency')]
 deps:
     {{ gerbil_darwin_env }} gerbil deps --install
+    just build-foundation
     {{ gerbil_darwin_env }} gerbil clean
+
+# Compile the source-owned Foundation submodule in this package environment.
+[group('dependency')]
+build-foundation:
+    test -f foundation/build.ss
+    cd foundation && GERBIL_PATH="{{ justfile_directory() }}/.gerbil" GERBIL_LOADPATH="{{ justfile_directory() }}/foundation:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} gerbil build
 
 # Clean only native Gerbil package build artifacts.
 [group('build')]
@@ -280,6 +287,12 @@ test-file path:
     grep -F 'MODULE-OK {{ path }}' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
+
+# Check the pinned ASCENT submodule through POO Flow's Observability Case.
+[group('test')]
+test-ascent-integration:
+    test -f packages/gerbil-ascent/core/binary-program.ss
+    GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
 
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.

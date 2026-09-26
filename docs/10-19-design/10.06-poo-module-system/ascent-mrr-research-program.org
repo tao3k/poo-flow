@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: ASCENT package boundary for POO Flow and MRR
+#+DATE: 2026-09-26
+
+The Scheme ASCENT kernel and its implementation qualification live in the
+[[https://github.com/tao3k/gerbil-ascent][gerbil-ascent]] package. POO Flow includes that repository as the pinned
+=packages/gerbil-ascent= submodule and runs
+=t/qualification/ascent-integration/guarded-test.ss= with its Observability
+Case extension. Foundation is the leaf package's sole direct dependency; it
+supplies the POO and ASP packages. POO Flow does not duplicate its evaluator or differential
+oracle.
+
+MRR owns the semantic Ascent adapter, source identity, lineage, and admission.
+Its CI checks those MRR contracts without installing the Scheme package.
+The leaf package's =docs/research-program.org= holds the detailed rule
+experiments, performance receipts, Rust Ascent comparison, and open research
+questions.
