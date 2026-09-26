@@ -146,8 +146,9 @@ inputs; only relations used on the right of a join receive an adjacency index.
 Dense and sparse radix paths publish complete canonical pair lists through a
 POO lookup; callers can request an official persistent =UIntTrieSet= by a
 separate =pairs-of= conversion.  The exact three diamond snapshots from the Rust Ascent
-fixture, cyclic closure and withdrawal, two simultaneously changing join
-inputs, rule-order independence, sparse radix, and invalid declarations are
+fixture, cyclic closure and withdrawal, a seeded recursive head, two
+simultaneously changing join inputs, rule-order independence, sparse radix,
+and invalid declarations are
 covered by =t/qualification/ascent-binary-program-test.ss=.  This is the
 first composable rule fragment, not full Ascent syntax or arbitrary arity,
 negation, aggregates, generic lattice values, or BYODS.  The standard 20-node

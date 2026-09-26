@@ -69,6 +69,19 @@
         (check-equal? (pairs withdrawn 'reach) '(10 11 12 35))
         (check-equal? (pairs fully-withdrawn 'reach) '(10 12))
         (check-equal? (pairs first 'reach) '(10 11 12 19 35))))
+    (test-case "seeded recursive head preserves source facts and rule order"
+      (let* ((declarations (list (relation 'edge '(10 19))
+                                 (relation 'reach '(12))))
+             (rules (list (poo-flow-ascent-binary-copy-rule 'reach 'edge)
+                          (poo-flow-ascent-binary-join-rule
+                           'reach 'reach 'edge)))
+             (result (evaluate declarations rules 3 3 6)))
+        (check-equal? (.ref result 'evaluation-path) 'semi-naive)
+        (check-equal? (pairs result 'reach) '(10 11 12 19))
+        (check-equal? (pairs (evaluate declarations (reverse rules) 3 3 6)
+                             'reach)
+                      (pairs result 'reach))
+        (check-exception (evaluate declarations rules 2 3 6) true)))
     (test-case "two changing join inputs and multiple heads"
       (let* ((result
               (evaluate
