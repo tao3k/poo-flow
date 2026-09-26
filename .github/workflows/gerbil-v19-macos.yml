@@ -11,7 +11,7 @@ on:
       - main
     paths:
       - .github/workflows/gerbil-v19-macos.yml
-      - packages/tools/ci/install-gerbil-v19-release.sh
+      - packages/automation/install_gerbil_release.py
       - build.ss
       - gerbil.pkg
       - src/**
@@ -21,7 +21,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/gerbil-v19-macos.yml
-      - packages/tools/ci/install-gerbil-v19-release.sh
+      - packages/automation/install_gerbil_release.py
       - build.ss
       - gerbil.pkg
       - src/**
@@ -74,7 +74,7 @@ jobs:
 
       - name: Install immutable v0.19 Darwin capability
         shell: bash
-        run: bash packages/tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+        run: python3 packages/automation/install_gerbil_release.py "$GERBIL_RELEASE_ROOT"
 
       - name: Verify selected Gerbil capability
         shell: bash

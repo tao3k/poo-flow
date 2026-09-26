@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from packages.tools.bazel import gerbil_project_environment_tool as environment_tool
+from packages.bazel import gerbil_project_environment_tool as environment_tool
 
 
 class GerbilProjectEnvironmentToolTest(unittest.TestCase):

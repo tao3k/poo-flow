@@ -13,7 +13,7 @@ import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 
-from packages.tools.bazel.gerbil_environment import build_gerbil_environment
+from packages.bazel.gerbil_environment import build_gerbil_environment
 
 
 RUNTIME_SCHEMA = "poo-flow.gerbil-project-environment-runtime.v1"

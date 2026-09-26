@@ -154,7 +154,7 @@ gerbil_project_environment = rule(
         "working_directory": attr.string(),
         "_runner": attr.label(
             cfg = "exec",
-            default = Label("//packages/tools/bazel:gerbil_project_environment_tool"),
+            default = Label("//packages/bazel:gerbil_project_environment_tool"),
             executable = True,
         ),
     },

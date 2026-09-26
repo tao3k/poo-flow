@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "packages" / "scripts" / "gerbil_dependency_pin.py"
+SCRIPT = ROOT / "packages" / "automation" / "gerbil_dependency_pin.py"
 
 
 def pin_module():

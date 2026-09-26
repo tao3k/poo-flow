@@ -36,10 +36,10 @@ jobs:
 
       - name: Validate repository license, version, and dependency contracts
         run: |
-          python3 packages/scripts/check_license_contract.py
-          python3 packages/scripts/check_version_contract.py
-          python3 packages/scripts/gerbil_dependency_pin.py check
-          python3 -m unittest discover -s packages/scripts/tests -p 'test_*.py'
+          python3 packages/automation/check_license_contract.py
+          python3 packages/automation/check_version_contract.py
+          python3 packages/automation/gerbil_dependency_pin.py check
+          python3 -m unittest discover -s packages/automation/tests -p 'test_*.py'
 
   native-gerbil-tests:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -104,7 +104,7 @@ jobs:
 
       - name: Install immutable Gerbil v0.19 release
         shell: bash
-        run: bash packages/tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+        run: python3 packages/automation/install_gerbil_release.py "$GERBIL_RELEASE_ROOT"
 
       - name: Restore native Gerbil package cache
         id: native-gerbil-pkg-cache
@@ -286,7 +286,7 @@ jobs:
           set -euo pipefail
           host="$RUNNER_TEMP/cedarRuntimeHost"
           POO_FLOW_CEDAR_BUILD_PROFILE=dev \
-            packages/tools/ci/build-cedar-runtime-host "$host"
+            python3 packages/automation/build_cedar_runtime_host.py "$host"
           echo "POO_FLOW_CEDAR_RUNTIME_HOST=$host" >> "$GITHUB_ENV"
 
       - name: Run Cedar Rust Runtime Host tests
@@ -416,7 +416,7 @@ jobs:
 
       - name: Install immutable Gerbil v0.19 release
         if: matrix.gerbil-install == 'release'
-        run: bash packages/tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/${{ matrix.gerbil-label }}"
+        run: python3 packages/automation/install_gerbil_release.py "$GITHUB_WORKSPACE/.ci/gerbil-release/${{ matrix.gerbil-label }}"
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
@@ -489,7 +489,7 @@ jobs:
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel build //packages/gerbil:dependency_packages
+        run: bazel build //:dependency_packages
 
       - name: Validate shared Gerbil provider
         run: bazel test --test_output=errors //t/qualification/gerbil-bazel:tests
@@ -513,12 +513,12 @@ jobs:
           bazel build \
             --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
             --profile="$profile" \
-            //packages/gerbil:compile
+            //:compile
           build_status=$?
           set -e
 
           elapsed_seconds=$((SECONDS - start_seconds))
-          gerbil_receipt="bazel-bin/packages/gerbil/compile.receipt.json"
+          gerbil_receipt="bazel-bin/compile.receipt.json"
           jq -n \
             --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
@@ -546,8 +546,8 @@ jobs:
           path: |
             ${{ steps.scheme-compile.outputs.ci-receipt }}
             ${{ steps.scheme-compile.outputs.profile }}
-            bazel-bin/packages/gerbil/compile.receipt.json
-            bazel-bin/packages/gerbil/compile.log
+            bazel-bin/compile.receipt.json
+            bazel-bin/compile.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -556,7 +556,7 @@ jobs:
         id: wheel-scheme-projection
         timeout-minutes: 2
         env:
-          PROJECTION_ARTIFACT: bazel-bin/packages/gerbil/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_ARTIFACT: bazel-bin/wheel_smoke.ss.poo-flow-projection.sexp
           PROJECTION_BUDGET_SECONDS: 120
         shell: bash
         run: |
@@ -570,7 +570,7 @@ jobs:
           set +e
           bazel build \
             --profile="$profile" \
-            //packages/gerbil:wheel_smoke_projection_artifact
+            //:wheel_smoke_projection_artifact
           build_status=$?
           set -e
 
@@ -585,8 +585,8 @@ jobs:
           jq -n \
             --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
           --arg producerJob "native-linux" \
-          --arg action "//packages/gerbil:wheel_smoke_projection_artifact" \
-          --arg compileOwner "//packages/gerbil:compile" \
+          --arg action "//:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//:compile" \
           --arg currentHeadSha "$GITHUB_SHA" \
           --arg artifactDigest "$artifact_digest" \
             --argjson status "$build_status" \

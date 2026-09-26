@@ -138,7 +138,7 @@ def run_external_module(
             consumer,
             bazel_tmp,
             [f"--output_user_root={test_root / 'bazel-no-root-override'}"],
-            ["query", "--lockfile_mode=off", "@poo_flow//packages/gerbil:compile"],
+            ["query", "--lockfile_mode=off", "@poo_flow//:compile"],
             capture_output=True,
         )
         if missing_override.returncode == 0:
@@ -152,7 +152,7 @@ def run_external_module(
 
         _write_consumer_module(consumer, exported, include_override=True)
         (consumer / "BUILD.bazel").write_text(
-            'alias(\n    name = "poo_flow_compile",\n    actual = "@poo_flow//packages/gerbil:compile",\n)\n',
+            'alias(\n    name = "poo_flow_compile",\n    actual = "@poo_flow//:compile",\n)\n',
             encoding="utf-8",
         )
         output_args = (
@@ -165,7 +165,7 @@ def run_external_module(
             consumer,
             bazel_tmp,
             output_args,
-            ["query", "--lockfile_mode=off", "@poo_flow//packages/gerbil:compile"],
+            ["query", "--lockfile_mode=off", "@poo_flow//:compile"],
         )
         if query.returncode != 0:
             raise ExternalModuleError(

@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "packages" / "scripts" / "check_license_contract.py"
+SCRIPT = ROOT / "packages" / "automation" / "check_license_contract.py"
 
 
 def license_contract_module():

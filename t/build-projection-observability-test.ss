@@ -79,20 +79,18 @@
 
     (poo-flow-test-case "Bazel stages one package surface without owning the module graph"
       (let ((root-build
-             (call-with-input-file "BUILD.bazel" read-all-as-string))
-            (gerbil-build
-             (call-with-input-file "packages/gerbil/BUILD.bazel" read-all-as-string)))
+             (call-with-input-file "BUILD.bazel" read-all-as-string)))
         (check-equal? (contains? root-build
                                  "name = \"gerbil_package_sources\"")
                       #t)
         (check-equal? (contains? root-build "\"*.ss\"") #t)
         (check-equal? (contains? root-build "scheme_build_sources") #f)
         (check-equal? (contains? root-build "\"testing-api.ss\"") #f)
-        (check-equal? (contains? gerbil-build
-                                 "srcs = [\"//:gerbil_package_sources\"]")
+        (check-equal? (contains? root-build
+                                 "srcs = [\":gerbil_package_sources\"]")
                       #t)
-        (check-equal? (contains? gerbil-build
-                                 "build_script = \"//:build.ss\"")
+        (check-equal? (contains? root-build
+                                 "build_script = \":build.ss\"")
                       #t)))
 
     (poo-flow-test-case "performance suite consumes the public POO testing interface"

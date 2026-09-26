@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 
 from _scheme_datum import parse_scheme_datum, write_scheme_datum
-from packages.tools.bazel import scheme_projection_artifact_tool as projection_tool
+from packages.bazel import scheme_projection_artifact_tool as projection_tool
 
 
 class SchemeProjectionArtifactToolTest(unittest.TestCase):

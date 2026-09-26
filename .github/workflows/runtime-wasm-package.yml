@@ -19,7 +19,7 @@ on:
       - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
-      - packages/tools/ci/install-gerbil-v19-release.sh
+      - packages/automation/install_gerbil_release.py
   pull_request:
     paths:
       - bindings/runtime-wasm/**
@@ -32,7 +32,7 @@ on:
       - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
-      - packages/tools/ci/install-gerbil-v19-release.sh
+      - packages/automation/install_gerbil_release.py
   workflow_dispatch:
 
 permissions:
@@ -63,7 +63,7 @@ jobs:
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
           brew install gcc jq openssl pkg-config sqlite zlib emscripten binaryen bazelisk
           test -x /opt/homebrew/bin/gcc-16
-          bash packages/tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/v0.19-2591dcd"
+          python3 packages/automation/install_gerbil_release.py "$GITHUB_WORKSPACE/.ci/gerbil-release/v0.19-2591dcd"
 
       - name: Declare Bazel disk-cache generation
         shell: bash
@@ -114,14 +114,14 @@ jobs:
         timeout-minutes: 2
         shell: bash
         run: |
-          test -n "$(bazelisk query 'somepath(//packages/gerbil:compile, //packages/gerbil:asp_gerbil_scheme_package)')"
-          test -n "$(bazelisk query 'somepath(//packages/gerbil:compile, //packages/gerbil:gerbil_poo_package)')"
-          test -n "$(bazelisk query 'somepath(//packages/gerbil:compile, //packages/gerbil:gerbil_parser_package)')"
-          test -n "$(bazelisk query 'somepath(//packages/gerbil:gerbil_parser_package, //packages/gerbil:poo_flow_foundation_package)')"
+          test -n "$(bazelisk query 'somepath(//:compile, //:asp_gerbil_scheme_package)')"
+          test -n "$(bazelisk query 'somepath(//:compile, //:gerbil_poo_package)')"
+          test -n "$(bazelisk query 'somepath(//:compile, //:gerbil_parser_package)')"
+          test -n "$(bazelisk query 'somepath(//:gerbil_parser_package, //:poo_flow_foundation_package)')"
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: 12
-        run: bazelisk build //packages/gerbil:dependency_packages
+        run: bazelisk build //:dependency_packages
 
       - name: Build, test, and pack the package
         # Dependency actions are materialized and attributed by the preceding

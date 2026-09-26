@@ -30,7 +30,7 @@ rule keeps lowering in the host build and emits immutable files for this browser
 runtime:
 
 ```starlark
-load("@poo_flow//packages/tools/bazel:bundle_v1.bzl", "poo_flow_bundle_v1")
+load("@poo_flow//packages/bazel:bundle_v1.bzl", "poo_flow_bundle_v1")
 
 poo_flow_bundle_v1(
     name = "principles_bundle",
