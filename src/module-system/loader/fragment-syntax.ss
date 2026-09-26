@@ -221,7 +221,7 @@
          (if objects-fragment?
            (syntax
             (begin
-              (import :poo-flow/src/module-system/object-core/interface)
+              (import :core/module-schema/interface)
               ;; : Any
               (def binding
                 (begin (include fragment-source)))

@@ -13,7 +13,7 @@
                  check-equal?
                  check-exception
                  )
-        :poo-flow/src/module-system/object-core/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/objects)
 

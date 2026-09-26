@@ -6,7 +6,7 @@
 ;;; Boundary: inert test fixtures for downstream module-system live cases.
 ;;; Invariant: no sandbox execution or process work here.
 ;;; Note: this is not the module-system POO object model. That model is owned by
-;;; src/module-system/object-core/interface.ss, modules/*/objects.ss, and object-validation.ss.
+;;; core/module-schema/interface.ss, modules/*/objects.ss, and object-validation.ss.
 
 (import (only-in :clan/poo/object
                  .ref

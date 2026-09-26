@@ -6,8 +6,8 @@
 ;;; Boundary: reusable native POO object scenarios for performance gates.
 
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/object-core/interface
-        :poo-flow/src/module-system/extension/interface
+        :core/module-schema/interface
+        :core/extension-graph/interface
         :poo-flow/src/module-system/object-validation/interface)
 
 (export poo-performance-slot-ref/default

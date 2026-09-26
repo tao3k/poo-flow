@@ -18,8 +18,8 @@
                  test-error
                  test-suite)
         :poo-flow/src/user-interface/facade
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/object-core/interface
+        :core/extension-graph/interface
+        :core/module-schema/interface
         :poo-flow/src/module-system/objects
         :poo-flow/modules/nono-sandbox/objects
         :poo-flow/modules/cubeSandbox/objects)
