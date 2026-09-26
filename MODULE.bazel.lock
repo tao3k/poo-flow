@@ -243,11 +243,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
               "package": "poo-flow-foundation",
-              "revision": "29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
-              "sha256": "9efaa72168a5218cfa226562f07db706688c2ab6debf4324366c1b72f7fdfb5a",
-              "strip_prefix": "poo-flow-foundation-29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
+              "revision": "93b0f1a1a4c17c79eccd6863029fe85949e94aec",
+              "sha256": "04499ef74d63096b80e37f7249a77898671dd14a70501ff429d23a537347bb42",
+              "strip_prefix": "poo-flow-foundation-93b0f1a1a4c17c79eccd6863029fe85949e94aec",
               "urls": [
-                "https://github.com/tao3k/poo-flow-foundation/archive/29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49.tar.gz"
+                "https://github.com/tao3k/poo-flow-foundation/archive/93b0f1a1a4c17c79eccd6863029fe85949e94aec.tar.gz"
               ]
             }
           }
@@ -310,11 +310,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/poo-flow-foundation",
               "package": "poo-flow-foundation",
-              "revision": "29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
-              "sha256": "9efaa72168a5218cfa226562f07db706688c2ab6debf4324366c1b72f7fdfb5a",
-              "strip_prefix": "poo-flow-foundation-29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49",
+              "revision": "93b0f1a1a4c17c79eccd6863029fe85949e94aec",
+              "sha256": "04499ef74d63096b80e37f7249a77898671dd14a70501ff429d23a537347bb42",
+              "strip_prefix": "poo-flow-foundation-93b0f1a1a4c17c79eccd6863029fe85949e94aec",
               "urls": [
-                "https://github.com/tao3k/poo-flow-foundation/archive/29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49.tar.gz"
+                "https://github.com/tao3k/poo-flow-foundation/archive/93b0f1a1a4c17c79eccd6863029fe85949e94aec.tar.gz"
               ]
             }
           },

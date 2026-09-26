@@ -47,7 +47,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | composition lineage | =module-system/composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =module-system/observability/debug.ss= | reusable POO/debug observation contracts |
 
-Further extraction requires a real shared consumer and a single source owner.
+Further extraction requires a real downstream consumer and a single source owner.
 A source file is not eligible merely because it has no =:poo-flow/= import:
 its exported semantics, source-owner qualifications, build targets, and tests
 must also move atomically.  The shared lineage analysis is qualified in
