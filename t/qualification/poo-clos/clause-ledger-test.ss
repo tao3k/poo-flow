@@ -31,7 +31,6 @@
 (def (poo-clos-owned-sources)
   (append
    (scheme-files "core/poo-clos" (lambda (_name) #t))
-   (scheme-files "src/module-system/poo-clos" (lambda (_name) #t))
    (scheme-files "core/t"
                  (lambda (name) (string-prefix? "poo-clos-" name)))
    (scheme-files "t"
