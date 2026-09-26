@@ -112,7 +112,7 @@ flowchart LR
 - [ ] Project revision and upgrade policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.ProfileRevisionUpgrade=.  It imports RFC
+The Lean anchor is =PooFlowProof.PooC4.ProfileRevisionUpgrade=.  It imports RFC
 45-82 so requirement resolutions, semantic edges, caches, and SCCs remain bound
 to exact immutable profile and root revisions.
 

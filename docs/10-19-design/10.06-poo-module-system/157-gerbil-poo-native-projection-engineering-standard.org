@@ -10,7 +10,7 @@
 - Status :: Normative V1 engineering standard
 - Scope :: POO Flow object construction, presentation, projection, conversion, and persistence boundaries
 - Source evidence :: Gerbil =:clan/poo= implementations in =.data/gerbil-poo/object.ss=, =mop.ss=, =io.ss=, =proto.ss=, and =.data/gerbil-persist/persist.ss=, =content-addressing.ss=
-- Lean model :: =PooFlowProof.PooC3.NativeProjectionPipeline=
+- Lean model :: =PooFlowProof.PooC4.NativeProjectionPipeline=
 
 * Decision
 
@@ -45,7 +45,7 @@ state MUST NOT enter that promise.
 ** Prototype composition
 
 =.mix= and =.+= are used only when inheritance or override is semantically
-present. Splitting one flat slot set into artificial parents adds C3
+present. Splitting one flat slot set into artificial parents adds C4
 instantiation work and is forbidden. Large data-keyed projections use one
 =object<-fun= object; small stable domain prototypes use =.o= or =define-type=.
 

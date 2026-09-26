@@ -183,7 +183,7 @@
       (loop-policy-slot 'observability)))
 
 ;;; Boundary: default loop pattern slots are inert policy data.
-;;; Intent: C3/POO composition ranks policy defaults before Marlin executes.
+;;; Intent: C4/POO composition ranks policy defaults before Marlin executes.
 ;; : (-> Unit LoopPatternDescriptorPrototype)
 (def loop-pattern-descriptor-prototype
   (poo-core-role-object

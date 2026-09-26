@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: focused native test for module-object POO ancestry.
-;;; Invariant: field resolution is delegated to gerbil-poo supers and C3.
+;;; Invariant: field resolution is delegated to gerbil-poo supers and C4.
 
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :std/test
@@ -22,7 +22,7 @@
 ;; : TestSuite
 (def module-object-native-inheritance-test
   (test-suite "native POO module-object inheritance"
-    (poo-flow-test-case "diamond field precedence follows native C3 supers"
+    (poo-flow-test-case "diamond field precedence follows native C4 supers"
       (let* ((root
               (poo-flow-module-object
                'object/root '()
@@ -58,7 +58,7 @@
          (poo-flow-module-field-contract-default
           (poo-flow-module-object-field child 'right-only))
          'right-only)))
-    (poo-flow-test-case "inconsistent native C3 ancestry is rejected"
+    (poo-flow-test-case "inconsistent native C4 ancestry is rejected"
       (let* ((root (poo-flow-module-object 'root '() '() '()))
              (a (poo-flow-module-object 'a (list root) '() '()))
              (b (poo-flow-module-object 'b (list root) '() '()))

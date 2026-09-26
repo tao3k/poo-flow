@@ -42,7 +42,7 @@
        scripts: '()
        group: 'core
        flags: '(+native)
-       features: '(native-poo native-mop c3 multiple-dispatch
+       features: '(native-poo native-mop c4 multiple-dispatch
                    method-combination lexical-next)
        depth: (cons -110 -110)
        phase-files:

@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: loop-agent tests cover POO/C3 policy descriptors only.
+;;; Boundary: loop-agent tests cover POO/C4 policy descriptors only.
 ;;; Invariant: scheduling and execution stay out of this test surface.
 
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)

@@ -21,8 +21,8 @@ The public facade lives in =src/module-system/api.ss=. The implementation owners
 [[file:01-doom-core-audit.org][01 Doom Core Audit]]
 - [[file:02-marlin-gerbil-modules-audit.org][02 Marlin Gerbil Modules Audit]]
 [[file:02-marlin-gerbil-modules-audit.org][02 Marlin Gerbil Modules Audit]]
-- [[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
-[[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
+- [[file:03-gerbil-scheme-c4-foundation.org][03 Gerbil Scheme C4 Foundation]]
+[[file:03-gerbil-scheme-c4-foundation.org][03 Gerbil Scheme C4 Foundation]]
 - [[file:04-poo-flow-module-system-design.org][04 poo-flow Module System Design]]
 [[file:04-poo-flow-module-system-design.org][04 poo-flow Module System Design]]
 - [[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
@@ -31,8 +31,8 @@ The public facade lives in =src/module-system/api.ss=. The implementation owners
 [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
 - [[file:86-doom-emacs-core-module-boundary-research.org][86 Doom Emacs Core Module Boundary Research]]
 [[file:86-doom-emacs-core-module-boundary-research.org][86 Doom Emacs Core Module Boundary Research]]
-- [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
-[[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
+- [[file:07-loop-engineering-c4-control-loops.org][07 Loop Engineering With Native C4]]
+[[file:07-loop-engineering-c4-control-loops.org][07 Loop Engineering With Native C4]]
 - [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
 - [[file:15-bass-cicd-module-audit.org][15 Bass CI/CD Module Audit]]
 [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
@@ -94,7 +94,7 @@ The public facade lives in =src/module-system/api.ss=. The implementation owners
 - [[file:163-standard-module-lazy-industry-conformance-rfc.org][163 Standard Module, Lazy Industry Packs, and Conformance Receipts RFC]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
-- =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.
+- =src/core/roles.ss= owns Gerbil POO role composition and C4-facing slot probing.
 - =src/core/task.ss= owns task-family descriptors and immutable task-family registries.
 - =src/core/flow.ss= owns flow-declaration descriptors and immutable flow-declaration registries.
 - =src/core/config.ss= accepts task and flow registries at the =run-config= boundary.

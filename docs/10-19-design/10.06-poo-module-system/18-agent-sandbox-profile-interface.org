@@ -24,7 +24,7 @@ poo-flow-default-sandbox-profiles
 (poo-flow-default-sandbox-profile-presentation)
 #+end_src
 
-The public user row is module-level: =(use-module nono-sandbox ...)=. The full profile construction layer remains upstream so agents or higher profiles can generate one =users= profile without making the user understand descriptor catalogs, C3 slot resolution internals, or Marlin runtime manifests.
+The public user row is module-level: =(use-module nono-sandbox ...)=. The full profile construction layer remains upstream so agents or higher profiles can generate one =users= profile without making the user understand descriptor catalogs, C4 slot resolution internals, or Marlin runtime manifests.
 
 ** 10.06.18.30 Boundary
 The boundary is:

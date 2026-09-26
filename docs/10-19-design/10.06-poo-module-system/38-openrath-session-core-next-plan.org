@@ -62,7 +62,7 @@ Problems we should avoid:
 - Tool, memory, provider, and selector concepts can drift into independent API
   islands. POO Flow should keep them as module-system objects that merge through
   one POO extension model.
-- OpenRath does not have Gerbil POO's C3 inheritance, slot operators, fixed
+- OpenRath does not have Gerbil POO's C4 inheritance, slot operators, fixed
   point object extension, or harness-backed object contracts. We should use
   those strengths instead of emulating Python classes.
 

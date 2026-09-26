@@ -307,7 +307,7 @@ For each new source:
 |------------------+----------------+----------------|
 | POO composition | reuse | =compose=, profiles, module-system core |
 | policy/evidence separation | reuse | =56-ai-strategy-policy-support-evidence= |
-| policy composition proof | reuse | =60-pooc3-policy-composition-proof= |
+| policy composition proof | reuse | =60-pooc4-policy-composition-proof= |
 | observation | reuse | =ObservationEvent= RFC family |
 | recovery | reuse | =RecoveryDecision= and recovery authorization |
 | effect admission | reuse | coordinator/control-plane handoff owners |

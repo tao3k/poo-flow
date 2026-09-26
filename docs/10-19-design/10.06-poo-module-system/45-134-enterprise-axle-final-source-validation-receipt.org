@@ -46,12 +46,12 @@ uv run pytest -q tests/test_axle_verify.py
 # 1 passed in 0.02s
 
 cd packages/proof/lean
-lake build PooFlowProof.PooC3.Enterprise
+lake build PooFlowProof.PooC4.Enterprise
 # Build completed successfully: 177 jobs
 
 cd packages/proof/python
 uv run python -m poo_flow_proof.axle_verify \
-  ../lean/PooFlowProof/PooC3/Enterprise/<leaf>.lean
+  ../lean/PooFlowProof/PooC4/Enterprise/<leaf>.lean
 # 14 leaf inputs: 7 verified, 7 rejected before verify
 #+end_src
 
@@ -64,7 +64,7 @@ A focused preserved-imports diagnostic was also executed:
 
 #+begin_src text
 uv run python -m poo_flow_proof.axle_verify --preserve-imports \
-  ../lean/PooFlowProof/PooC3/Enterprise/Core.lean
+  ../lean/PooFlowProof/PooC4/Enterprise/Core.lean
 # request: a3652e6b-eaea-47eb-9e31-657da9d0a404
 # rejected: unknown module prefix 'PooFlowProof'
 #+end_src

@@ -25,7 +25,7 @@ This RFC owns:
 
 - the semantic inputs and phases of POO Flow dispatch;
 - instance, type, and prototype dispatch sources;
-- candidate identity and C3 precedence boundaries;
+- candidate identity and C4 precedence boundaries;
 - inherited computation, =super=, and next-method continuation;
 - dispatch outcomes, structured conditions, traces, budgets, cycles, and cache
   identity;
@@ -57,7 +57,7 @@ Pinned source evidence establishes:
   =compute-precedence-list!=, =.mix=, and =.extend=;
 - =mop.ss=: =.defgeneric=, =.call.method=, =.call=, =.ref=,
   instance-sourced generic dispatch, and type-sourced generic dispatch;
-- upstream use of =c3-compute-precedence-list= for prototype precedence.
+- upstream use of =c4-linearize= for prototype precedence (exported from the historical =:gerbil/runtime/c3= module path).
 
 These are upstream semantics.  POO Flow may project Module responsibilities,
 structured conditions, and observation values around them, but it must not
@@ -81,7 +81,7 @@ flowchart LR
   D["dispatch demand"]
   S["instance, type, and prototype sources"]
   C["candidate providers"]
-  P["upstream C3 precedence"]
+  P["upstream C4 precedence"]
   V["selected provider"]
   E["lazy responsibility evaluation"]
   N["super and next-method continuation"]
@@ -147,7 +147,7 @@ Each candidate is identified by:
 
 Candidate enumeration does not choose a winner.
 
-For a valid prototype graph, upstream C3 precedence determines the dispatch
+For a valid prototype graph, upstream C4 precedence determines the dispatch
 order.  POO Flow must not add a second priority number, linearization pass, or
 last-writer-wins rule.
 
@@ -160,9 +160,9 @@ Contribution priority and dispatch precedence are separate relations:
 
 - contribution priority participates in admission and conflict resolution
   before a prototype graph is finalized;
-- C3 precedence resolves behavior inside the finalized prototype graph.
+- C4 precedence resolves behavior inside the finalized prototype graph.
 
-Numeric contribution priority cannot dynamically skip a C3 provider, rewrite a
+Numeric contribution priority cannot dynamically skip a C4 provider, rewrite a
 =super= chain, or select a method after dispatch begins.
 
 If admitted contributions cannot form one valid prototype graph, composition
@@ -209,7 +209,7 @@ The dispatch plane recognizes at least:
 - effect required in a pure plane;
 - candidate evaluation condition.
 
-For a valid C3 graph, dispatch does not invent an ambiguity result after
+For a valid C4 graph, dispatch does not invent an ambiguity result after
 precedence resolution.  Contribution ambiguity must be rejected before the
 graph enters dispatch.
 
@@ -320,7 +320,7 @@ their native prototype-graph identity are equal.
 
 Priority ownership remains with
 [[file:45-101-typed-module-relation-contribution-composition-conflict-and-withdrawal-algebra.org][Typed
-Module Relation Contribution and Conflict Algebra]].  Native prototype and C3
+Module Relation Contribution and Conflict Algebra]].  Native prototype and C4
 precedence ownership remains with
 [[file:45-102-native-prototype-precedence-and-typed-relation-conflict-resolution-bridge.org][Native
 Prototype Precedence and Typed Relation Conflict Resolution Bridge]].
@@ -485,7 +485,7 @@ Dispatch is not written inside =use-composition=.
 - [X] Prove upstream =.ref=, =.get=, =.@=, and =.call= identities.
 - [X] Prove upstream =.defgeneric= and instance/type source behavior.
 - [X] Prove upstream =NoApplicableMethod= identity.
-- [X] Prove upstream C3 precedence entrypoints.
+- [X] Prove upstream C4 precedence entrypoints.
 - [X] Keep upstream dispatch mechanics outside =poo-flow-core= ownership.
 - [X] Move the exact direct native dispatch paths needed by the first focused
   Module kernel to =ADMITTED= in RFC 45-120.
@@ -496,7 +496,7 @@ Dispatch is not written inside =use-composition=.
   as explicit dispatch inputs.
 - [X] Separate source enumeration, candidate identity, precedence, evaluation,
   inherited continuation, and outcome.
-- [X] Separate contribution priority from C3 dispatch precedence.
+- [X] Separate contribution priority from C4 dispatch precedence.
 - [X] Separate =super= continuation from coordinator recovery continuation.
 - [ ] Define concrete POO values for dispatch demand, explanation, and
   structured conditions.
@@ -516,7 +516,7 @@ Dispatch is not written inside =use-composition=.
 - [ ] Map each Module-derived responsibility to one dispatch contract.
 - [ ] Prove pure dispatch cannot execute runtime effects.
 - [ ] Prove EffectIntent handoff and receipt separation.
-- [ ] Prove application contribution admission finishes before C3 dispatch.
+- [ ] Prove application contribution admission finishes before C4 dispatch.
 - [ ] Run focused GSLPH development checks without adding a product dependency.
 
 * Rejected alternatives
@@ -524,8 +524,8 @@ Dispatch is not written inside =use-composition=.
 - A hidden global dispatch registry.
 - A second project-owned method lookup or prototype linearization engine.
 - Last-writer-wins dispatch.
-- Numeric contribution priority replacing C3 precedence.
-- Dispatch ambiguity invented after a valid C3 order exists.
+- Numeric contribution priority replacing C4 precedence.
+- Dispatch ambiguity invented after a valid C4 order exists.
 - Host =if= or =case= selecting Module or Profile behavior.
 - Treating =super= as a recoverable runtime continuation.
 - Performing runtime effects inside a pure dispatched responsibility.

@@ -554,7 +554,7 @@ become allow merely because control resumes through a continuation.
 The contributor-layer definitions and theorems live in:
 
 #+begin_quote
-=packages/proof/lean/PooFlowProof/PooC3/ContributorRepositoryQualification.lean=
+=packages/proof/lean/PooFlowProof/PooC4/ContributorRepositoryQualification.lean=
 #+end_quote
 
 The Lean surface mirrors the Typst model:

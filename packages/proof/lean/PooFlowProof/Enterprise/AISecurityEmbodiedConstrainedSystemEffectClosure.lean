@@ -14,13 +14,13 @@ necessary, but it cannot substitute domain coverage, replay safety, fenced
 recovery, terminal recovery evidence, or compensation evidence.
 -/
 def constrainedSystemEffectClosed
-    (facts : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts)
+    (facts : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts)
     (effectDomainCovered : Prop)
     (duplicateSafe : Prop)
     (recoveryFenced : Prop)
     (recoveryTerminal : Prop)
     (compensationValidated : Prop) : Prop :=
-  PooFlowProof.PooC3.authorizedEffectL1 facts ∧
+  PooFlowProof.PooC4.authorizedEffectL1 facts ∧
     effectDomainCovered ∧
     duplicateSafe ∧
     recoveryFenced ∧
@@ -28,18 +28,18 @@ def constrainedSystemEffectClosed
     compensationValidated
 
 theorem authorizedEffectAloneDoesNotClose
-    (facts : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts)
-    (_authorized : PooFlowProof.PooC3.authorizedEffectL1 facts) :
+    (facts : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts)
+    (_authorized : PooFlowProof.PooC4.authorizedEffectL1 facts) :
     ¬constrainedSystemEffectClosed facts False True True True True := by
   simp [constrainedSystemEffectClosed]
 
 theorem ease001FormalBound
-    (facts : PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts)
+    (facts : PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts)
     (effectDomainCovered duplicateSafe recoveryFenced recoveryTerminal
       compensationValidated : Prop)
     (closed : constrainedSystemEffectClosed facts effectDomainCovered
       duplicateSafe recoveryFenced recoveryTerminal compensationValidated) :
-    PooFlowProof.PooC3.authorizedEffectL1 facts ∧
+    PooFlowProof.PooC4.authorizedEffectL1 facts ∧
       effectDomainCovered ∧
       duplicateSafe ∧
       recoveryFenced ∧

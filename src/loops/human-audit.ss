@@ -88,7 +88,7 @@
     (executes-runtime . #f)))
 
 ;;; Boundary: human audit is a governor-derived node in the governance chain.
-;;; It reuses POO/C3 governor policy shape while marking the node as human.
+;;; It reuses POO/C4 governor policy shape while marking the node as human.
 ;; : (-> Unit Role)
 (def loop-human-governor-node-role
   (.o (:: @ loop-governor-human-node-role)

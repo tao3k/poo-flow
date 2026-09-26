@@ -114,7 +114,7 @@ flowchart LR
 - [ ] Project ingress and causal-cut policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.EventIngressCausalCut=.  It imports RFC
+The Lean anchor is =PooFlowProof.PooC4.EventIngressCausalCut=.  It imports RFC
 45-71, so replay includes explicit temporal and entropy identities rather than
 ambient clock or randomness effects.
 

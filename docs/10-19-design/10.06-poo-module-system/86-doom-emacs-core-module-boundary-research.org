@@ -372,9 +372,9 @@ modules such as =(:flow . funflow)=:
 - =config.ss= owns only module interface, descriptor, selection, depth, and the
   canonical entrypoint, without importing runtime factors;
 - =types.ss=, =objects.ss=, =classes.ss=, and =dispatch.ss= extend the native
-  Gerbil POO MOP and C3;
+  Gerbil POO MOP and C4;
 - =interface.ss= is the explicit opt-in runtime factor;
-- =t/scenarios/performance/poo-clos-native-c3/= proves native precedence and
+- =t/scenarios/performance/poo-clos-native-c4/= proves native precedence and
   exact metaobject identity.
 
 The kernel profile declares =(:core . poo-clos)= and the registry resolves its

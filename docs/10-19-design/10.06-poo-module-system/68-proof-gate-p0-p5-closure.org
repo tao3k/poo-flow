@@ -56,7 +56,7 @@ unknown schemas and facts missing required fields before they cross the bridge.
 
 * P4 Lean Alignment
 
-=PooFlowProof.PooC3.ProofGateBundle= defines the Lean-side acceptance rule:
+=PooFlowProof.PooC4.ProofGateBundle= defines the Lean-side acceptance rule:
 
 #+begin_src typst
 $

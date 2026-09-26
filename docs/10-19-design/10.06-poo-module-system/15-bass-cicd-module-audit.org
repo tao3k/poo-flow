@@ -74,7 +74,7 @@ The manual keeps module language small:
   solve, not by their internal hierarchy.
 
 This is the pattern =poo-flow= should copy. The user manual should not expose
-our C3 graph, descriptor registry, loader backend, runtime-command manifest
+our C4 graph, descriptor registry, loader backend, runtime-command manifest
 schema, or Rust handoff internals first. Those belong in design docs and
 diagnostics. The user-facing manual should show the smallest useful action and
 let the module system remain mostly invisible.
@@ -122,7 +122,7 @@ The Bass docs also make runtime boundaries feel natural:
 
 The =poo-flow= user manual should therefore have two matching tracks:
 - =guide=: task-first recipes such as define a workflow, run/check it, inspect a receipt, pass a secret, mount/cache an artifact, export a runtime manifest, define CI checks, and hand off to Marlin.
-- =poo-flow bassics=: concept glossary for profile, category, module, =+feature=, POO object, role/C3 composition, descriptor, receipt, runtime manifest, and adapter.
+- =poo-flow bassics=: concept glossary for profile, category, module, =+feature=, POO object, role/C4 composition, descriptor, receipt, runtime manifest, and adapter.
 
 The =init.ss= surface should now be documented as a category tree, not as a constructor API:
 #+begin_src scheme
@@ -188,7 +188,7 @@ CI/CD should be implemented as a =funflow= feature payload plus optional adapter
 The Scheme side should own:
 
 - module descriptors and user-facing scenario names;
-- POO/C3 role composition for CI/CD policies, sources, artifacts, checks,
+- POO/C4 role composition for CI/CD policies, sources, artifacts, checks,
   releases, secrets, cache intents, and runtime handoff receipts;
 - static and dynamic validation receipts;
 - declarative workflow/check maps that can be inspected before execution;
@@ -239,8 +239,8 @@ The descriptor surface should project to ordinary module-system data:
 
 The important rule is that =+github=, =+docker=, =+nix=, and similar names are adapter metadata, not replacements for the base =+cicd= contract.
 
-** 10.06.15.50 POO/C3 Use
-Gerbil POO and C3 multiple inheritance are a strength here. CI/CD descriptors
+** 10.06.15.50 POO/C4 Use
+Gerbil POO and C4 multiple inheritance are a strength here. CI/CD descriptors
 should be role-composed instead of flattened into one record type.
 
 Recommended role families:
@@ -253,7 +253,7 @@ Recommended role families:
 - =ci-cache-consumer= for cache intents and invalidation policy;
 - =runtime-handoff-producer= for Rust/Marlin execution manifests.
 
-C3 lets a GitHub release module combine check, artifact, release, secret, and
+C4 lets a GitHub release module combine check, artifact, release, secret, and
 runtime-handoff roles without making core know about GitHub.
 
 ** 10.06.15.60 Delivery Milestones

@@ -116,7 +116,7 @@ flowchart LR
 - [X] Every typed failure is disjoint from =MissingValue=.
 - [X] Structural and runtime-authorization failures are not semantic conflicts.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.PhasedSlotResolution=.
+  =PooFlowProof.PooC4.PhasedSlotResolution=.
 - [ ] A later implementation-refinement proof must bind actual POO evaluator
   transitions, effect-boundary authorization, and condition receipts to these
   typed witnesses.

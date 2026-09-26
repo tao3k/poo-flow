@@ -141,7 +141,7 @@ not by assembling command-line state.
 Closure requirement:
 - define first-class policy families for work lanes, user gates, monitors,
   capability gates, write scopes, claim ownership, and successor handoff;
-- make them composable through C3 role inheritance and slot precedence;
+- make them composable through C4 role inheritance and slot precedence;
 - provide final alist/JSON-like rows only at projection and runtime handoff
   boundaries.
 

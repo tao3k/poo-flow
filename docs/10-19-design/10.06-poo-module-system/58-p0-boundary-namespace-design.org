@@ -32,7 +32,7 @@ These are the P0 boundary names. New documents and code should use these names c
 | =intent= | natural-language or graph-shaped user request | Scheme expansion, validation, runtime execution |
 | =author= | user and agent declarations such as =init.ss=, =use-module=, profiles, feature config | generated manifests, Lean facts, runtime execution |
 | =graph= | user-visible agentic workflow graph: loop, step, model, module, gate, result path | POO method order, final ABI rows |
-| =semantic= | Scheme/POO object graph, prototypes, C3 composition, functional workflow builders | external execution |
+| =semantic= | Scheme/POO object graph, prototypes, C4 composition, functional workflow builders | external execution |
 | =contract= | typed slots, structural validation, safety invariants, hard gates | graph rendering or runtime work |
 | =observability= | events, spans, diagnostics, receipts, evidence provenance | semantic ownership or runtime execution |
 | =projection= | manifest rows, graph previews, proof facts, doctor reports, runtime handoff payloads | source semantics |
@@ -46,7 +46,7 @@ flowchart LR
   Intent["intent\nuser graph request"]
   Author["author\ninit.ss, use-module, profiles"]
   Graph["graph\nloop, step, model, module, gate"]
-  Semantic["semantic\nScheme/POO + C3"]
+  Semantic["semantic\nScheme/POO + C4"]
   Contract["contract\nslot checks, hard gates"]
   Observability["observability\nevents, spans, diagnostics, receipts"]
   Projection["projection\nmanifest, proof facts, reports"]
@@ -70,7 +70,7 @@ P0 namespace families:
 | =poo-flow.intent.*= | graph intent helpers and guide-system input forms | =poo-flow.intent.graph= |
 | =poo-flow.author.*= | authoring macros, =use-module= support, profile assembly | =poo-flow.author.init= |
 | =poo-flow.graph.*= | graph data structures and algorithms | =poo-flow.graph.algorithms= |
-| =poo-flow.semantic.*= | POO object graph, prototype composition, C3-facing helpers | =poo-flow.semantic.objects= |
+| =poo-flow.semantic.*= | POO object graph, prototype composition, C4-facing helpers | =poo-flow.semantic.objects= |
 | =poo-flow.contract.*= | slot contracts, structural validation, hard gates | =poo-flow.contract.resource= |
 | =poo-flow.observability.*= | events, spans, diagnostics, receipts, evidence projections | =poo-flow.observability.receipt= |
 | =poo-flow.projection.*= | manifest, report, proof, runtime handoff projections | =poo-flow.projection.manifest= |
@@ -149,7 +149,7 @@ Ordinary agent repair should stop at =author=, =graph=, =semantic=, or =contract
 Avoid these names in new public surfaces:
 
 - =core= for business modules. Use the real boundary: =semantic=, =contract=, =graph=, or =observability=.
-- =merge=. POO+C3 composition should name the actual operation: =compose=, =extend=, =linearize=, or =project=.
+- =merge=. POO+C4 composition should name the actual operation: =compose=, =extend=, =linearize=, or =project=.
 - =config= as a semantic owner. Use =author= for user declarations and =contract= for validation.
 - =runtime= for Scheme-side construction. Use =projection= or =runtime/handoff=.
 - =diagnostics= as a top-level framework. Use =observability=, with diagnostics as one projection.

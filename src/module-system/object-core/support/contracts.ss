@@ -165,7 +165,7 @@
   (and (poo-flow-module-value-type? value-type)
        (element? value-type value)))
 
-;;; Field contracts translate object-level C3 inheritance into merge operations
+;;; Field contracts translate object-level C4 inheritance into merge operations
 ;;; without hardcoding backend-specific fields in the module system.
 ;; : (-> Symbol Symbol Symbol PooModuleFieldDefault PooModuleFieldMetadata PooModuleFieldContract)
 (def (poo-flow-module-field-contract identity value-type merge default metadata)

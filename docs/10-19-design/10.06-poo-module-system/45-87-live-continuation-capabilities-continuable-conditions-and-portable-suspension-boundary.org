@@ -116,14 +116,14 @@ an independent one-shot resumption capability is required.
 - [X] Evidence cannot exercise continuation or resumption authority.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ContinuationSuspensionBoundary=.  They do not freeze the
+=PooFlowProof.PooC4.ContinuationSuspensionBoundary=.  They do not freeze the
 Gerbil/Gambit API names delegated to RFC 45-88, and they do not replace the
 implementation admission checklist.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ContinuationSuspensionBoundary=: 29/29 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ContinuationSuspensionBoundary=: 29/29 jobs |
 | Local Lean closure | =accepted= | =lake build=: 102/102 jobs |
 | AXLE independent declaration check | =accepted= | Request =e3ec35cb-f554-44d3-a154-e8eb028f763d=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =530d20b4-afe6-4d06-b56f-a489ca259147= cannot resolve local module prefix =PooFlowProof= |

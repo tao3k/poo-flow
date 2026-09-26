@@ -56,7 +56,7 @@ The closest local analogy is:
 #+begin_src mermaid
 flowchart LR
   Author["Author surface\ninit.ss, use-module, POO profiles"]
-  POO["Semantic object graph\nPOO objects + C3 composition"]
+  POO["Semantic object graph\nPOO objects + C4 composition"]
   Contracts["Contract layer\nslot types, harness checks, hard gates"]
   Graph["Graph layer\nDAG, loop, session, sandbox diagnostics"]
   Manifest["Runtime handoff manifest\nfinal projection only"]
@@ -83,7 +83,7 @@ The internal thesis remains stronger:
 #+begin_src text
 The graph is backed by a composed policy graph.
 The policy graph is built from Scheme and POO objects.
-C3 determines composition order.
+C4 determines composition order.
 Validators prove legal composition.
 Graph explanation makes the result inspectable.
 Manifest projection hands a validated policy to runtime.
@@ -102,7 +102,7 @@ BAML is a new DSL and compiler for LLM functions, prompts, structured output, an
 
 =poo-flow= should not become a new standalone language. The project advantage is different:
 - Gerbil Scheme already gives us S-expressions, macros, modules, and functional composition.
-- Gerbil POO gives us objects, prototypes, C3 linearization, extension, and multiple inheritance.
+- Gerbil POO gives us objects, prototypes, C4 linearization, extension, and multiple inheritance.
 - The project layer can use these directly instead of inventing a separate parser and syntax family.
 
 =poo-flow= also has a proof-facing route through Lean. That makes its type and validation ceiling higher than a normal agent DSL, as long as the proof machinery stays behind the user-facing graph.
@@ -128,7 +128,7 @@ BAML's type story is productized better today. It gives users a direct path from
 
 =poo-flow= is not theoretically weaker. Its type and proof potential is stronger because it is not limited to a narrow DSL:
 - Scheme is the host language, not a made-up configuration syntax.
-- POO and C3 can describe multi-module policy composition, not only function signatures.
+- POO and C4 can describe multi-module policy composition, not only function signatures.
 - The project harness can validate structured POO objects.
 - Lean-facing facts can turn selected validation results into proof obligations.
 - Graph algorithms can explain whole-system policy behavior rather than a single LLM call.
@@ -156,11 +156,11 @@ come from validated POO objects.
 
 This aligns with the existing safety rule:
 - POO expresses strategy fragments.
-- C3 determines composition order.
+- C4 determines composition order.
 - validators check legality.
 - Marlin executes the final policy.
 
-C3 is not safety. C3 only answers precedence. Safety comes from contracts, hard gates, denylist union, monotonic permission narrowing, budget tightening, and human-gate monotonicity.
+C4 is not safety. C4 only answers precedence. Safety comes from contracts, hard gates, denylist union, monotonic permission narrowing, budget tightening, and human-gate monotonicity.
 *** 10.06.55.50.30 No Untyped Public Blobs
 BAML is valuable because it refuses a loose =any= culture. =poo-flow= should apply the same pressure to public control-plane surfaces:
 - no raw alist DSL as the normal user interface;
@@ -180,7 +180,7 @@ These outputs are not semantic owners. They are products of the POO graph and co
 *** 10.06.55.50.50 Fast Feedback Surface
 BAML's editor/playground story matters. Agent-facing configuration needs a fast preview loop:
 - show selected modules and features;
-- show composed POO ancestry and C3 precedence;
+- show composed POO ancestry and C4 precedence;
 - show which validators fired;
 - show sandbox/resource/security deltas;
 - show graph reachability, cycles, gates, and denied expansion;
@@ -250,7 +250,7 @@ Use the following layer names when designing new work:
 1. Author surface.
    =init.ss=, =use-module=, profiles, feature flags, and POO-native declarations.
 2. Semantic object graph.
-   POO objects, prototype extension, C3 composition, inherited policy fragments, and functional workflow builders.
+   POO objects, prototype extension, C4 composition, inherited policy fragments, and functional workflow builders.
 3. Contract and validator layer.
    Slot contracts, structural harness validation, hard safety gates, budget gates, denylist union, permission narrowing, and human-gate monotonicity.
 4. Graph explanation layer.
@@ -305,7 +305,7 @@ Phase 2: manifest contract tightening.
 - Treat anonymous untyped payload rows as implementation bugs except at private test fixtures.
 
 Phase 3: doctor and preview surface.
-- Add a profile preview path that shows author surface, C3 order, validator decisions, graph facts, and final report-only manifest.
+- Add a profile preview path that shows author surface, C4 order, validator decisions, graph facts, and final report-only manifest.
 - Keep the preview non-executing.
 - Add scenario cases for sandbox, workflow, loop-engine, governor, and human-audit interaction.
 

@@ -38,7 +38,7 @@ sequenceDiagram
   participant Manifest as Control-plane runtime manifest
   participant Marlin as Marlin/Rust runtime
 
-  Scheme->>Scheme: compose POO policy graph with C3
+  Scheme->>Scheme: compose POO policy graph with C4
   Scheme->>Scheme: validate slots, budgets, safety, graph gates
   Scheme->>Audit: request approval for spec/profile/eval/policy mutation
   Audit-->>Scheme: approved evidence or rejection

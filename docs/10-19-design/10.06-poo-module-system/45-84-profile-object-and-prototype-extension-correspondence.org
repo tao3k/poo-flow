@@ -73,7 +73,7 @@ $ "Extension" := "native prototype" $
 $ "Strategy" := "first-class POO object" $
 
 $ "prototype-recursion" in "native fixed-point evaluation" $
-$ "inheritance-cycle" notin "C3-admitted roots" $
+$ "inheritance-cycle" notin "C4-admitted roots" $
 
 $ "slot-priority" != "inheritance-precedence" $
 $ "local-lifting-formula" = false $
@@ -84,7 +84,7 @@ $ "canonical-entry-point" = "user-composition" $
 The second surface fixes the negative boundary: POO Flow neither replaces
 native fixed-point evaluation nor treats =.mix= as universal composition.
 Prototype recursion and inheritance cycles occupy different semantic planes,
-and slot-local contribution priority cannot rewrite C3 precedence.
+and slot-local contribution priority cannot rewrite C4 precedence.
 
 ** Lean proof obligations
 
@@ -108,21 +108,21 @@ and slot-local contribution priority cannot rewrite C3 precedence.
 - [X] The composition root is immutable.
 - [X] The composition root does not resolve a newer revision.
 - [X] Prototype recursion remains native fixed-point evaluation.
-- [X] An inheritance cycle fails C3 admission.
-- [X] Slot-local priority cannot change C3 precedence.
+- [X] An inheritance cycle fails C4 admission.
+- [X] Slot-local priority cannot change C4 precedence.
 - [X] Correspondence uses the pinned =gerbil-poo= construction.
 - [X] Correspondence invents no local lifting formula.
 - [X] Composition is not universally reduced to =.mix=.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ProfilePrototypeCorrespondence=.  RFC 45-85 remains the
+=PooFlowProof.PooC4.ProfilePrototypeCorrespondence=.  RFC 45-85 remains the
 owner of upstream POOF proof adoption; this proof module deliberately does not
 claim to replace it.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ProfilePrototypeCorrespondence=: 26/26 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ProfilePrototypeCorrespondence=: 26/26 jobs |
 | Local Lean closure | =accepted= | =lake build=: 99/99 jobs |
 | AXLE independent declaration check | =accepted= | Request =04cc0a34-76a5-472e-8878-47ecb2601cae=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =6d13abb4-0a36-4b2d-bd41-763204559767= cannot resolve local module prefix =PooFlowProof= |
@@ -177,7 +177,7 @@ The relevant upstream evidence is:
 | Prototype identity | =identity-proto= | Empty higher-order extension |
 | Binary prototype composition | =compose-proto= | Higher-order extension composition |
 | Variadic prototype composition | =compose-proto*= | Ordered extension closure |
-| Multiple-inheritance order | native C3 precedence | Object inheritance only |
+| Multiple-inheritance order | native C4 precedence | Object inheritance only |
 
 This table is a correspondence contract, not permission to expose every native
 operation through a second POO Flow macro.
@@ -368,7 +368,7 @@ observe and govern native prototype evaluation; they do not replace
 ** Inheritance cycles
 
 The object supers relation is a precedence graph.  A cycle in that graph is
-structurally invalid and native =gerbil-poo= rejects it while computing C3
+structurally invalid and native =gerbil-poo= rejects it while computing C4
 precedence.
 
 POO Flow MUST NOT convert this structural error into a resumable fixed-point
@@ -392,7 +392,7 @@ flowchart TD
 Numeric priority remains a slot-local input to a
 =RequirementResolutionPolicy=.  It MUST NOT:
 
-- reorder the native C3 precedence graph;
+- reorder the native C4 precedence graph;
 - become a global Profile strength;
 - select packages or modules;
 - override declared operand order outside the owning slot policy; or
@@ -460,7 +460,7 @@ The following designs are outside the approved architecture:
 - [ ] Verify the root performs one explicit =instantiate-proto= transition.
 - [ ] Verify an inheritance cycle fails before generation admission.
 - [ ] Verify recursive slot divergence yields an actionable diagnostic receipt.
-- [ ] Verify numeric priority cannot alter C3 precedence.
+- [ ] Verify numeric priority cannot alter C4 precedence.
 - [ ] Verify no package, filesystem, module, or provider registry participates
   in semantic operand resolution.
 - [ ] Verify macro expansion produces ordinary POO-native or functional code.

@@ -18,10 +18,10 @@ are implementation escape hatches, not the recommended interface.
 the object model that =poo-flow= should use directly:
 - objects carry supers, slots, defaults, instances, precedence lists, and slot
   functions;
-- slot resolution is already backed by C3 through =clan/list=;
+- slot resolution is already backed by C4 through =clan/list=;
 - =.def=, =.o=, ==>=, and ==>.+= are the native authoring vocabulary.
 
-=poo-flow= should depend on that instead of reimplementing C3 or presenting a
+=poo-flow= should depend on that instead of reimplementing C4 or presenting a
 second profile DSL to users.
 
 ** 10.06.16.30 Current Good Landing
@@ -92,4 +92,4 @@ Do not rewrite downstream profiles into raw =.o= object expressions or a hidden
 wrapper DSL. The public spelling is Gerbil POO =.def= inside =use-module=.
 
 Keep the user interface declarative by exposing upstream profile prototypes and
-native slot transforms while the implementation remains native Gerbil POO/C3.
+native slot transforms while the implementation remains native Gerbil POO/C4.

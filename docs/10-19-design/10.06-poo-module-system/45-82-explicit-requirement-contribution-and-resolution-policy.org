@@ -130,7 +130,7 @@ flowchart LR
 - [ ] Project requirement resolution through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.ExplicitRequirementResolution=.  It
+The Lean anchor is =PooFlowProof.PooC4.ExplicitRequirementResolution=.  It
 imports RFC 45-81 so semantic requirement edges never become Gerbil module
 imports or runtime discovery.
 

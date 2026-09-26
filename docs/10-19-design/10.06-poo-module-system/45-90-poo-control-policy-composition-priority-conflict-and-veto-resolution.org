@@ -120,14 +120,14 @@ question.
 - [X] A missing governance owner blocks implementation.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ControlPolicyResolution=.  They prove the abstract
+=PooFlowProof.PooC4.ControlPolicyResolution=.  They prove the abstract
 resolver laws and fail-closed admission predicate; all concrete resolution
 tests remain pending.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ControlPolicyResolution=: 32/32 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ControlPolicyResolution=: 32/32 jobs |
 | Local Lean closure | =accepted= | =lake build=: 105/105 jobs |
 | AXLE independent declaration check | =accepted= | Request =f5fb1605-b512-4341-bf0b-1658a94264e7=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =bdd07370-75cc-4665-92b7-aeb477b8ab85= cannot resolve local module prefix =PooFlowProof= |

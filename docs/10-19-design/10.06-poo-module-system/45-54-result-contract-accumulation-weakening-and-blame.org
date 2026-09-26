@@ -97,7 +97,7 @@ flowchart LR
 - [X] Removed-obligation blame is bound to the weakening authority.
 - [X] Composition conflict and concrete value violation are distinct failures.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.ResultContractAccumulation=.
+  =PooFlowProof.PooC4.ResultContractAccumulation=.
 - [ ] A later implementation-refinement proof must bind native POO contract
   identity, declared contract algebra, weakening authority, and blame receipts
   to this abstract model.

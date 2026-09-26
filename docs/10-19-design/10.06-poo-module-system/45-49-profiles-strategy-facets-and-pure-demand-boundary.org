@@ -85,7 +85,7 @@ flowchart LR
 - [X] A live demand preserves the original pure composition and carries the
   live context externally.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.StrategyFacetPurity=.
+  =PooFlowProof.PooC4.StrategyFacetPurity=.
 - [ ] A later implementation-refinement proof must show that the selected
   native =gerbil-poo= slots project to these abstract fields.
 

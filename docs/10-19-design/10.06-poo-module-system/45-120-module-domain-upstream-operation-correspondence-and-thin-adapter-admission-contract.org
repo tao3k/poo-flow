@@ -164,7 +164,7 @@ inferred from an earlier state.
 | Descriptor specialization | pinned =object.ss= with =export #t= | =.cc= | =ADMITTED= for immutable Type or Contract descriptor specialization | No mutation or alternate descriptor store |
 | Prototype ancestry and extension | pinned =object.ss= and =proto.ss= with =export #t= | =.mix= and =.extend= | =ADMITTED= for direct Module prototype derivation and composition; =.+=, =compose-proto=, =compose-proto*=, and =instantiate-protos= remain only =SEMANTICS-PROVEN= | No project prototype engine; =compose profiles= is not inferred by name similarity |
 | Delegation and =super= | pinned =object.ss= with =export #t= | =$computed-slot-spec= and inherited computation through the native slot-spec protocol | =ADMITTED= for internal derived-responsibility implementations and advanced native authoring only | No raw =(lambda (self super) ...)= ordinary user interface |
-| Precedence | pinned =object.ss= with =export #t= | native =compute-precedence-list!= and =c3-compute-precedence-list= reached through =.mix= | =ADMITTED= by delegation to upstream graph evaluation and native Contract ancestry classification | No project priority or linearization engine may replace upstream semantics |
+| Precedence | pinned =object.ss= with =export #t= | native =compute-precedence-list!= and =c4-linearize= reached through =.mix= | =ADMITTED= by delegation to upstream graph evaluation and native Contract ancestry classification | No project priority or linearization engine may replace upstream semantics |
 | Development observation output | pinned =gerbil-poo/debug.ss= and =gerbil-utils/debug.ss=; blob evidence in RFC 45-120-03 | =DDT=, =trace-poo=, =traced-function= | =ADMITTED= only for the bounded development adapter and native debug conformance tests | No copied tracer, global trace hook, raw-data telemetry, or public debugging DSL; =trace-poo= changes receiver/cache identity |
 
 * Module-domain responsibilities
@@ -223,7 +223,7 @@ package.  Its test cases cover:
 - controlled =.putslot!=, =.putdefault!=, and =.def!= evolution, including the
   explicit =uninstantiate-object!= boundary for an already cached value;
 - a diamond built with =.extend= and =.mix= whose computed responsibility follows
-  upstream C3 and calls each inherited contribution once;
+  upstream C4 and calls each inherited contribution once;
 - a second projection of that responsibility observes the upstream lazy cache;
 - =.defgeneric= and =define-type= dispatch, successful validation, and rejected
   validation;
@@ -352,7 +352,7 @@ The admitted dependency order is:
 
 #+begin_src mermaid
 flowchart LR
-  U["upstream gerbil-poo"] -->|"provides native object, prototype, slot, dispatch, and C3 mechanics"| O["project objects.ss and object-core.ss"]
+  U["upstream gerbil-poo"] -->|"provides native object, prototype, slot, dispatch, and C4 mechanics"| O["project objects.ss and object-core.ss"]
   O -->|"provides the project object foundation required by type construction"| T["project types.ss: POO type and contract prototypes"]
   T -->|"validates and explains the four required responsibilities"| M["four-slot Module POO value"]
   M -->|"becomes an immutable semantic input after Module admission"| D["DispatchEvaluation"]
@@ -387,7 +387,7 @@ The project foundation must satisfy all of these boundaries:
 
 ** Foundation admission checklist
 
-- [X] Keep upstream object, prototype, dispatch, and C3 mechanics upstream-owned.
+- [X] Keep upstream object, prototype, dispatch, and C4 mechanics upstream-owned.
 - [X] Recognize the existing project object and contract owners below Module.
 - [X] Reject an adapter-first, wrapper-first, or conversion-first implementation.
 - [X] Require POO-native Type and Contract prototypes before Module admission.

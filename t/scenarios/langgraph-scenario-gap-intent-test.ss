@@ -200,7 +200,7 @@
 
 (def expected-runtime-row-lean-source
   (string-append
-   "import PooFlowProof.PooC3.ScenarioGap\n\n"
+   "import PooFlowProof.PooC4.ScenarioGap\n\n"
    "namespace PooFlowProof\n\n"
    "def GeneratedScenarioGapRuntimeRowFacts : ScenarioRuntimeRowFacts :=\n"
    "  { planOk := true\n"

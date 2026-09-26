@@ -2,9 +2,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-import PooFlowProof.PooC3.ScenarioGap
+import PooFlowProof.PooC4.ScenarioGap
 
-namespace PooFlowProof.PooC3
+namespace PooFlowProof.PooC4
 
 private theorem generatedRuntimeRowRejectedByPlan
     (facts : ScenarioRuntimeRowFacts)
@@ -66,4 +66,4 @@ theorem GeneratedScenarioGapRejectedKindRuntimeRowRejected :
     GeneratedScenarioGapRejectedKindRuntimeRowFacts
     rfl
 
-end PooFlowProof.PooC3
+end PooFlowProof.PooC4

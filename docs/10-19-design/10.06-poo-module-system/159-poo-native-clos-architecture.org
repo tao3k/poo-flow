@@ -50,10 +50,10 @@ facade must not load CLOS dispatch, lifecycle generics, declaration IR, or
 method-combination code.
 
 Native POO owns object identity, Type/Class/Slot metaobjects, prototype
-inheritance, slots, and C3.  The CLOS extension owns only the semantics that
+inheritance, slots, and C4.  The CLOS extension owns only the semantics that
 coordinate multiple arguments, specializers, effective methods, class
 generations, and invocation frames.  Class precedence is projected from the
-instance prototype's native C3; POO CLOS must not compute a parallel CPL.  It
+instance prototype's native C4; POO CLOS must not compute a parallel CPL.  It
 does not wrap a Common Lisp runtime, expose raw alist DSLs, or construct a
 parallel record-based object hierarchy.
 
@@ -75,7 +75,7 @@ flowchart LR
 |---------------+--------------------|
 | Metaobjects | POO class, slot, instance state, slot cell, specializer, method, generic function, effective method, invocation frame, and condition values |
 | Specialization | class, =eql=, universal, multiple dispatch, and argument precedence order |
-| Class precedence | native Gerbil POO C3, projected back to the exact POO CLOS class metaobjects |
+| Class precedence | native Gerbil POO C4, projected back to the exact POO CLOS class metaobjects |
 | Method management | add, remove, lookup, same-signature replacement, generation tracking, and cache invalidation |
 | Standard combination | around, before, primary, after, multiple values, and exact next-method applicability |
 | Custom combination | all ANSI built-ins plus declarative short and long forms, method groups, ordering, required groups, arguments, generic-function binding, =call-method=, and =make-method= |
@@ -168,5 +168,5 @@ separately approved workload and SLA.
 - [[https://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm][CLHS: define-method-combination]]
 - [[https://www.lispworks.com/documentation/HyperSpec/Body/f_mk_ld_.htm][CLHS: make-load-form]]
 - [[https://www.lispworks.com/documentation/HyperSpec/Body/f_mk_l_1.htm][CLHS: make-load-form-saving-slots]]
-- =.data/gerbil-poo/object.ss= for native POO objects, slots, and C3.
+- =.data/gerbil-poo/object.ss= for native POO objects, slots, and C4.
 - =.data/gerbil-poo/mop.ss= for the upstream generic-function boundary.

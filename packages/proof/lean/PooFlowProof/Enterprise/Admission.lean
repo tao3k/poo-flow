@@ -8,7 +8,7 @@ import PooFlowProof.Enterprise.SeparationOfDuties
 
 namespace PooFlowProof.Enterprise.Admission
 
-open PooFlowProof.PooC3
+open PooFlowProof.PooC4
 
 structure Admitted
     (Principal Asset Action Responsibility Evidence FacetIdentity

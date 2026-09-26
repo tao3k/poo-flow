@@ -107,7 +107,7 @@ flowchart LR
 - [ ] Project delegation envelopes and receipts through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.DistributedEvaluatorDelegation=.  It
+The Lean anchor is =PooFlowProof.PooC4.DistributedEvaluatorDelegation=.  It
 imports RFC 45-67 directly, so a current worker result remains a candidate
 until the coordinator completes independent local cache admission.
 

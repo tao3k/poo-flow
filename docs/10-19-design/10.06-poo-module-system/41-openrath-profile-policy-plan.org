@@ -96,7 +96,7 @@ Profile policy should be a composable object family with slots for:
 - =projection-policy=: how a valid profile lowers into backend handoff data
   without executing it.
 
-Composition must use POO/C3-style precedence for role and slot ordering, but
+Composition must use POO/C4-style precedence for role and slot ordering, but
 safety is not decided by precedence. Safety is decided by validation phases
 after composition.
 

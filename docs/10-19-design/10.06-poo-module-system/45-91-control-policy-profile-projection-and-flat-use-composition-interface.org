@@ -236,7 +236,7 @@ $ "profile-result"("project"(p)) = "none" $
 - [X] An unverified ~gerbil-poo~ interface blocks implementation.
 
 These obligations are checked by
-=PooFlowProof.PooC3.ControlPolicyProfileProjection=.  They establish only the
+=PooFlowProof.PooC4.ControlPolicyProfileProjection=.  They establish only the
 abstract POO-native projection, authority-separation, macro-boundary, and
 conservative-extension laws.  The original executable interface and admission
 checklists remain pending.
@@ -244,7 +244,7 @@ checklists remain pending.
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.ControlPolicyProfileProjection=: 33/33 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.ControlPolicyProfileProjection=: 33/33 jobs |
 | Local Lean closure | =accepted= | =lake build=: 106/106 jobs |
 | AXLE independent declaration check | =accepted= | Request =941621a5-28f6-4c04-84de-da6b56c4e2b3=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =81fa56a7-abee-4e34-af4e-7b07e7d1c320= cannot resolve local module prefix =PooFlowProof= |

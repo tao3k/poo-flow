@@ -331,7 +331,7 @@ $ "legacy-parser-fallback" = false $
 - [X] Unverified ~gerbil-poo~ calls block implementation.
 
 These obligations are checked by
-=PooFlowProof.PooC3.UserCompositionMacroContract=.  They establish the
+=PooFlowProof.PooC4.UserCompositionMacroContract=.  They establish the
 abstract current-gap witness, thin hygienic target boundary, direct-replacement
 law, phase separation, and fail-closed admission predicate.  They do not mark
 the original executable macro, User Interface case, or admission checklists as
@@ -340,7 +340,7 @@ implemented.
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.UserCompositionMacroContract=: 34/34 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.UserCompositionMacroContract=: 34/34 jobs |
 | Local Lean closure | =accepted= | =lake build=: 107/107 jobs |
 | AXLE independent declaration check | =accepted= | Request =23dabac7-7ffa-4126-b6d1-5e5007e9cce5=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =466a7b25-3301-4c98-9565-9dc0c4ab9717= cannot resolve local module prefix =PooFlowProof= |

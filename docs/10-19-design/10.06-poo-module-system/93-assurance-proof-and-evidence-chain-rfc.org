@@ -525,12 +525,12 @@ This RFC does not:
 This RFC unifies, but does not erase, the existing proof work:
 
 - [[file:54-lean-c-ffi-proof-bridge-rfc.org][Lean C FFI proof bridge]];
-- [[file:55-pooc3-proof-architecture.org][POO C3 proof architecture]];
-- [[file:56-pooc3-formal-semantics.org][POO C3 formal semantics]];
-- [[file:57-pooc3-lean-proof-implementation.org][POO C3 Lean proof implementation]];
-- [[file:58-pooc3-session-lifecycle-proof-link.org][session lifecycle proof link]];
+- [[file:55-pooc4-proof-architecture.org][POO C4 proof architecture]];
+- [[file:56-pooc4-formal-semantics.org][POO C4 formal semantics]];
+- [[file:57-pooc4-lean-proof-implementation.org][POO C4 Lean proof implementation]];
+- [[file:58-pooc4-session-lifecycle-proof-link.org][session lifecycle proof link]];
 - [[file:59-agent-lifecycle-proof-gate.org][agent lifecycle proof gate]];
-- [[file:60-pooc3-policy-composition-proof.org][policy composition proof]];
+- [[file:60-pooc4-policy-composition-proof.org][policy composition proof]];
 - [[file:66-composition-proof-gate.org][composition proof gate]];
 - [[file:67-control-plane-handoff-proof.org][control-plane handoff proof]];
 - [[file:68-proof-gate-p0-p5-closure.org][proof-gate closure]];

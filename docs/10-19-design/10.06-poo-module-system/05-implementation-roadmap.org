@@ -94,7 +94,7 @@ Delivered behavior:
 - kept root =user-interface/custom/*/config.ss= as the downstream custom-module authoring space;
 - added =user-interface/README.org= to document that descriptor realization remains in =src/modules=;
 - added =t/user-interface-config-test.ss= to verify the real root-level init declaration instead of defining examples inside tests.
-** 10.06.05.17 Slice 1C: Doom And C3 Interface Polish
+** 10.06.05.17 Slice 1C: Doom And C4 Interface Polish
 Status: implemented.
 
 Delivered behavior:

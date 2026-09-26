@@ -25,7 +25,7 @@ This RFC owns:
 - its derived dispatch responsibilities;
 - policy-prototype composition;
 - immutability and lazy native-slot memoization boundaries;
-- inherited computation and C3 policy ordering;
+- inherited computation and C4 policy ordering;
 - cycle, budget, cache, observability, redaction, and effect projection;
 - the relation between =DispatchEvaluation= and Module-derived
   responsibilities.
@@ -49,7 +49,7 @@ semantic slots:
 - =context=.
 
 All other dispatch behavior is derived through native POO slot computation,
-prototype extension, policy mixing, generic dispatch, C3 precedence, and
+prototype extension, policy mixing, generic dispatch, C4 precedence, and
 inherited computation.
 
 The object is higher-order because its derived responsibilities select and
@@ -66,7 +66,7 @@ flowchart LR
   P["pure policy prototypes"]
   G["final prototype graph"]
   S["sources and candidates"]
-  O["C3 precedence and selected provider"]
+  O["C4 precedence and selected provider"]
   N["inherited computation and next-method"]
   V["semantic outcome"]
   E["dispatch explanation"]
@@ -79,7 +79,7 @@ flowchart LR
   P -->|"extends behavior without widening context authority"| G
   B -->|"supplies the minimal dispatch protocol"| G
   G -->|"derives admitted source and candidate identities"| S
-  S -->|"orders the finalized graph through upstream C3 semantics"| O
+  S -->|"orders the finalized graph through upstream C4 semantics"| O
   O -->|"evaluates the selected provider with inherited continuation"| N
   N -->|"returns a value or structured semantic condition"| V
   C -->|"bounds cycle, cache, budget, and observation behavior"| V
@@ -149,7 +149,7 @@ The internal semantic responsibilities are:
 |----------------+------------+---------------|
 | =sources= | receiver, responsibility, and policy graph | Enumerate admitted instance, type, and prototype sources |
 | =candidates= | sources and context | Produce provider identities and structured rejection reasons |
-| =precedence= | candidates and finalized prototype graph | Preserve upstream C3 dispatch order |
+| =precedence= | candidates and finalized prototype graph | Preserve upstream C4 dispatch order |
 | =selected= | precedence and applicability | Select one provider without contribution-priority substitution |
 | =next= | selected provider and inherited position | Continue =super= or next-method within one dispatch chain |
 | =outcome= | selected evaluation, context, and effect boundary | Return value, condition, suspended, denied, or cancelled result |
@@ -199,9 +199,9 @@ A policy prototype:
 - never executes a runtime effect.
 
 Policy conflicts are resolved before dispatch by contribution admission.  The
-finalized policy graph is then ordered by upstream C3 precedence.
+finalized policy graph is then ordered by upstream C4 precedence.
 
-* Contribution admission and C3 boundary
+* Contribution admission and C4 boundary
 
 Contribution priority determines which policy prototypes enter the finalized
 graph and how conflicting contributions are admitted.
@@ -209,7 +209,7 @@ graph and how conflicting contributions are admitted.
 After finalization:
 
 - numeric priority no longer participates;
-- C3 precedence is authoritative;
+- C4 precedence is authoritative;
 - a policy cannot skip a provider by comparing priority;
 - =super= follows the established inherited-computation chain;
 - invalid linearization fails before evaluation.
@@ -227,7 +227,7 @@ The semantics-proven upstream families are:
 - callable and generic dispatch: =.call= and =.defgeneric=;
 - inherited computation: =object/slot-spec= and computed-slot behavior;
 - missing-method condition: =NoApplicableMethod=;
-- precedence: =compute-precedence-list!= using upstream C3 behavior.
+- precedence: =compute-precedence-list!= using upstream C4 behavior.
 
 No POO Flow adapter is admitted merely because the upstream operation exists.
 
@@ -281,7 +281,7 @@ computation.
 
 The inherited continuation:
 
-- remains within the current receiver, responsibility, context, and C3 path;
+- remains within the current receiver, responsibility, context, and C4 path;
 - advances to the next applicable provider;
 - cannot restart or fork runtime execution;
 - cannot widen authority;
@@ -386,7 +386,7 @@ generic operations.
 * Ownership
 
 - Upstream =gerbil-poo= owns object, slot, generic, inherited-computation, and
-  C3 dispatch mechanics.
+  C4 dispatch mechanics.
 - =poo-flow-core= owns the =DispatchEvaluation= semantic contract, context,
   policies, conditions, cache identity, outcomes, and explanations.
 - =wendao-episteme= owns domain behavior supplied through admitted prototypes.
@@ -411,7 +411,7 @@ generic operations.
 - [X] Freeze pure capability, cycle/budget, cache, observability/redaction,
   condition, and effect-projection policy roles.
 - [X] Require policy prototypes to preserve or narrow authority.
-- [X] Separate contribution admission from C3 dispatch.
+- [X] Separate contribution admission from C4 dispatch.
 - [X] Preserve upstream inherited-computation behavior.
 - [ ] Define exact internal prototype identities only after adapter admission.
 
@@ -448,7 +448,7 @@ generic operations.
 - Mutable active dispatch evaluation.
 - Reusing one evaluation instance with a different context.
 - A policy registry outside the prototype graph.
-- Policy priority dynamically overriding C3.
+- Policy priority dynamically overriding C4.
 - Hidden host recursion for fixed-point behavior.
 - Performing effects inside a policy slot.
 - Escaping inherited computation as a recovery continuation.

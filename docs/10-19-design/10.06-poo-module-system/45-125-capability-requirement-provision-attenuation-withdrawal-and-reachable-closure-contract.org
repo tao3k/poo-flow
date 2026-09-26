@@ -26,7 +26,7 @@ This RFC owns:
   denial evidence;
 - positive monotonic capability closure;
 - stratified negative contributions;
-- contribution-admission priority versus C3 dispatch precedence;
+- contribution-admission priority versus C4 dispatch precedence;
 - capability cycles, conflicts, outcomes, cache identity, provenance, and
   explanation;
 - separation of semantic capability evidence from runtime handles.
@@ -72,7 +72,7 @@ flowchart LR
   R -->|"supplies Module, Profile, import-edge, and attenuation identities"| C
   C -->|"submits requirements, provisions, withdrawals, and policy evidence"| A
   A -->|"resolves contribution priority before dispatch begins"| G
-  G -->|"uses upstream C3 only inside the admitted prototype graph"| P
+  G -->|"uses upstream C4 only inside the admitted prototype graph"| P
   P -->|"stabilizes positive provisions and derived positive facts"| N
   N -->|"applies only dependencies on completed lower strata"| S
   S -->|"returns satisfied and unsatisfied requirement evidence"| O
@@ -270,19 +270,19 @@ It:
 A withdrawal cannot erase evidence that the withdrawn contribution existed.
 The explanation preserves both the contribution and withdrawal paths.
 
-* Contribution priority and C3
+* Contribution priority and C4
 
-Contribution priority and C3 precedence remain separate:
+Contribution priority and C4 precedence remain separate:
 
 - contribution priority admits, rejects, or withdraws capability contributions
   before the prototype graph is finalized;
-- C3 precedence dispatches behavior inside the finalized graph.
+- C4 precedence dispatches behavior inside the finalized graph.
 
 This RFC does not redefine the numeric priority scale.
 
 After dispatch begins, a priority value cannot:
 
-- skip a C3 provider;
+- skip a C4 provider;
 - rewrite =super=;
 - revive a withdrawn contribution;
 - override attenuation;
@@ -459,7 +459,7 @@ generic operations.
 * Ownership
 
 - Upstream =gerbil-poo= owns object, prototype, dispatch, inherited
-  computation, and C3 mechanics.
+  computation, and C4 mechanics.
 - =poo-flow-core= owns capability semantic identity, requirements, provisions,
   closure, attenuation, stratification, conditions, cache identity, provenance,
   and explanation.
@@ -498,7 +498,7 @@ generic operations.
 - [X] Preserve withdrawn contribution evidence.
 - [X] Reject unstratified negative cycles.
 - [X] Prove absence only after lower strata complete.
-- [X] Separate contribution priority from C3.
+- [X] Separate contribution priority from C4.
 - [ ] Prove withdrawal, denial, incompatibility, and absence conditions.
 
 ** Cache and observability
@@ -535,7 +535,7 @@ generic operations.
 - Unioning runtime authority across import paths.
 - Mixing withdrawal and absence into an unrestricted positive fixed point.
 - Treating unfinished evaluation as proof of absence.
-- Numeric contribution priority replacing C3 dispatch.
+- Numeric contribution priority replacing C4 dispatch.
 - Last-writer-wins provider selection.
 - Mutating the original capability contract during withdrawal.
 - Re-evaluating one contribution for every provenance witness.

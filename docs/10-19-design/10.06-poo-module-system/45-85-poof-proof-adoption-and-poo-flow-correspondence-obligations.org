@@ -19,14 +19,14 @@ This RFC records an approved proof-ownership boundary.
 - [X] Prototype primitives are classified as direct correspondence.
 - [X] Slot specifications are classified as representation refinement.
 - [X] Object instantiation is classified as whole-implementation refinement.
-- [X] Native C3 is classified as dependency delegation.
+- [X] Native C4 is classified as dependency delegation.
 - [X] Correspondence closure is separate from package installation, Profile
   semantics, and generation admission.
 - [X] Cross-module conservative-extension criteria are delegated to
   [[file:45-86-poo-conservative-extension-criterion-and-cross-module-obligations.org][45-86]].
 - [ ] Verify the exact correspondence from the pinned POOF source to the pinned
   =gerbil-poo= implementation surface.
-- [ ] Record the actually resolved =gerbil-utils= identity in a build or
+- [ ] Record the Gerbil v0.19 runtime identity supplying =c4-linearize= in a
   correspondence-audit receipt.
 - [ ] Run the upstream POOF executable checks when a Racket runtime is
   available.
@@ -51,7 +51,7 @@ declare the implementation correspondence audit complete.
   prototype: "direct-correspondence",
   slot: "representation-refinement",
   object: "whole-object-refinement",
-  c3: "dependency-delegation",
+  c4: "dependency-delegation",
 )
 
 $ "owner"("POO algebra") = Authority.theory $
@@ -71,12 +71,12 @@ path.
 #let correspondence-complete(
   poof-pinned,
   gerbil-poo-pinned,
-  gerbil-utils-resolved,
+  gerbil-runtime-pinned,
   four-classes-verified,
 ) = (
   poof-pinned
   and gerbil-poo-pinned
-  and gerbil-utils-resolved
+  and gerbil-runtime-pinned
   and four-classes-verified
 )
 
@@ -84,7 +84,7 @@ $ "operational-failure"
   != "incomplete-correspondence"
   != "profile-admission-failure" $
 
-$ not "gerbil-utils-resolved"
+$ not "gerbil-runtime-pinned"
   ==> not "correspondence-complete" $
 
 $ "Profile root instantiation count" = 1 $
@@ -92,7 +92,7 @@ $ "conformance witness" != "replacement proof" $
 #+end_src
 
 The correspondence claim remains incomplete when the delegated
-=gerbil-utils= identity is unresolved or any of the four classifications is
+=Gerbil v0.19 runtime= identity is unresolved or any of the four classifications is
 unverified.  That state neither fabricates a package failure nor admits or
 rejects a Profile value.
 
@@ -108,7 +108,7 @@ rejects a Profile value.
 - [X] Prototype primitives are direct correspondence.
 - [X] Slot specifications are representation refinement.
 - [X] Whole-object construction is implementation refinement.
-- [X] C3 is dependency delegation.
+- [X] C4 is dependency delegation.
 - [X] A missing delegated dependency identity keeps correspondence incomplete.
 - [X] Unverified classifications keep correspondence incomplete.
 - [X] Operational failure, incomplete correspondence, and Profile admission
@@ -130,19 +130,19 @@ rejects a Profile value.
 - [X] This RFC does not redefine conservative extension.
 
 These obligations are checked by
-=PooFlowProof.PooC3.PoofProofAdoption=.  They prove the adoption boundary, not
+=PooFlowProof.PooC4.PoofProofAdoption=.  They prove the adoption boundary, not
 the still-pending executable correspondence review recorded in the
 implementation checklist.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.PoofProofAdoption=: 27/27 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.PoofProofAdoption=: 27/27 jobs |
 | Local Lean closure | =accepted= | =lake build=: 100/100 jobs |
 | AXLE independent declaration check | =accepted= | Request =6c99a3b5-402f-4b20-920c-f2cb739bf3d3=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =0e9db41f-38d5-48b7-9fe8-9f3f99aff5fe= cannot resolve local module prefix =PooFlowProof= |
 | POOF executable checks | =blocked-missing-runtime= | =make test= stops before checks because =racket= is unavailable |
-| POOF to =gerbil-poo= implementation audit | =incomplete-correspondence= | Four-class review and resolved =gerbil-utils= identity remain pending |
+| POOF to =gerbil-poo= implementation audit | =incomplete-correspondence= | Four-class review and Gerbil v0.19 runtime identity remain pending |
 
 The accepted AXLE request replaced the project import with =import Mathlib=.
 It independently verifies the 28 declarations in this module but does not
@@ -169,7 +169,7 @@ POO Flow MUST NOT:
 - choose between local =.mix= and =.+= lifting formulas;
 - implement an object-to-prototype conversion independent of the upstream
   construction;
-- replace native C3 behavior; or
+- replace native C4 behavior; or
 - present local conformance examples as a new proof of POO.
 
 The work remaining in POO Flow is correspondence, projection, and conservative
@@ -267,7 +267,7 @@ This table identifies adopted reference constructions.  It does not require
 
 The extracted executable checks cover fixed-point use, order-sensitive
 composition, alternative groupings, =self=-dependent computation, inherited
-computation, prototype identity, object instantiation, C3 precedence, and
+computation, prototype identity, object instantiation, C4 precedence, and
 memoization behavior.
 
 POO Flow SHALL cite these upstream checks as upstream evidence.  It SHALL NOT
@@ -361,32 +361,26 @@ They are derived object-representation operations above the prototype
 primitives.  They MUST NOT participate in a competition to redefine POOF
 =mix=.
 
-** C3 dependency delegation
+** C4 dependency delegation
 
-At the pinned =gerbil-poo= revision, =compute-precedence-list!= delegates the
+At the current v0.19 =gerbil-poo= revision, =compute-precedence-list!= delegates the
 linearization algorithm to:
 
 #+begin_example
-:clan/list c3-compute-precedence-list
+:gerbil/runtime/c3 c4-linearize
 #+end_example
 
-The pinned =gerbil.pkg= declares:
+The pinned =gerbil.pkg= declares the package name without a =gerbil-utils=
+dependency:
 
 #+begin_src scheme
-(package: clan/poo
- depend: ("github.com/mighty-gerbils/gerbil-utils"))
+(package: clan/poo)
 #+end_src
 
-The source declaration identifies the dependency repository but does not record
-a resolved revision in that file.  A correspondence or build receipt MUST
-therefore include the actual resolved =gerbil-utils= identity used to supply
-=:clan/list=.
-
-This evidence requirement does not transfer ownership of =gerbil-utils=,
-=clan/list=, their build, or their publication to POO Flow.  POO Flow records
-the resolved dependency boundary only when making a verified correspondence
-claim.  An absent identity leaves that claim incomplete; it does not create a
-runtime Git-identity gate.
+The import in =object.ss= is =:gerbil/runtime/c3=, but the imported procedure is
+=c4-linearize=. A correspondence receipt MUST identify the Gerbil v0.19 runtime
+revision supplying that implementation. This evidence requirement does not
+transfer runtime ownership to POO Flow or create a runtime Git-identity gate.
 
 * Correspondence graph
 
@@ -398,9 +392,9 @@ flowchart LR
     LIST["POOF prototype-list composition"] -->|"is directly realized as"| ILIST["compose-proto*"]
     SLOT["POOF slot prototype functions"] -->|"are represented by explicit native variants"| SPEC["gerbil-poo slot specs"]
     OBJECT["POOF object-prototype construction"] -->|"is refined across precedence, slot compilation, and lazy projection"| GOBJECT["gerbil-poo object implementation"]
-    C3["POOF multiple-inheritance precedence"] -->|"is delegated by the pinned implementation"| CLAN[":clan/list C3"]
-    DEPS["resolved gerbil-utils identity"] -->|"supplies the admitted clan/list implementation"| CLAN
-    GOBJECT -->|"uses the admitted precedence implementation"| CLAN
+    C4["POOF multiple-inheritance precedence"] -->|"is delegated by the pinned implementation"| RUNTIME["Gerbil v0.19 c4-linearize"]
+    RUNTIMEID["pinned Gerbil runtime identity"] -->|"supplies the admitted implementation"| RUNTIME
+    GOBJECT -->|"uses the admitted precedence implementation"| RUNTIME
 #+end_src
 
 The graph distinguishes direct correspondence, representation refinement,
@@ -417,7 +411,7 @@ The minimal receipt contains only:
 | Field | Meaning |
 | Theory source | POOF repository and commit |
 | Implementation source | =gerbil-poo= repository and commit |
-| Delegated implementation source | Resolved =gerbil-utils= identity supplying =:clan/list= |
+| Delegated implementation source | Pinned Gerbil v0.19 runtime identity supplying =c4-linearize= |
 | Correspondence result | Completion of the four correspondence classifications |
 | Unresolved blocker | Exact fact that prevents a complete correspondence claim |
 
@@ -454,7 +448,7 @@ The following outcomes MUST remain distinct:
 
 One outcome MUST NOT be projected into either of the other two.
 
-In particular, a missing resolved =gerbil-utils= identity does not prohibit an
+In particular, a missing Gerbil runtime identity in the correspondence receipt does not prohibit an
 otherwise working native POO runtime.  An actually incompatible dependency is
 exposed by its real package, load, compile, or test boundary.
 
@@ -497,7 +491,7 @@ The correspondence review MUST verify the four classifications recorded above:
 - direct prototype correspondence;
 - slot representation refinement;
 - whole-object implementation refinement; and
-- C3 dependency delegation with a resolved =gerbil-utils= identity.
+- C4 dependency delegation with a pinned Gerbil v0.19 runtime identity.
 
 This review verifies lineage and implementation correspondence.  It does not
 repeat the denotational proof.
@@ -611,7 +605,7 @@ The following work is outside the approved architecture:
 - a local proof of prototype identity or associativity;
 - a new object-to-prototype algebra;
 - a =.mix=-versus-=.+= candidate competition;
-- a replacement C3 implementation;
+- a replacement C4 implementation;
 - copying the full upstream test suite into POO Flow;
 - claiming that local examples supersede the POOF source;
 - calling unexecuted upstream checks green; or
@@ -631,7 +625,7 @@ The following work is outside the approved architecture:
 - [ ] Verify the slot representation-refinement mapping.
 - [ ] Verify the whole-object implementation-refinement path.
 - [ ] Verify native =self=/=super= correspondence through slot specs.
-- [ ] Record the resolved =gerbil-utils= identity supplying =:clan/list=.
+- [ ] Record the Gerbil v0.19 runtime identity supplying =c4-linearize=.
 - [ ] Verify the delegated native precedence correspondence.
 - [ ] Materialize the minimal receipt through the existing POO evidence
   machinery.

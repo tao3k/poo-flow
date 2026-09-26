@@ -398,7 +398,7 @@
           placement-metadata: placement-metadata-value
           placement-runtime-executed: #f))))
 
-;;; Compose lineage and placement with C3 POO inheritance. Local variable names
+;;; Compose lineage and placement with C4 POO inheritance. Local variable names
 ;;; intentionally differ from slot names to avoid fixed-point self-reference
 ;;; such as `chunks: chunks`.
 ;; : (-> Symbol [PooSessionChunk] PooSessionLineage PooSessionPlacement [Alist] PooSession)

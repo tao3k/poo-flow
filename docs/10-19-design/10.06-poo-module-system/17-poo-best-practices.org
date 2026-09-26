@@ -97,7 +97,7 @@ Use Gerbil POO supers for inheritance:
  metadata)
 #+end_src
 
-Do not implement a second recursive inheritance merge. Gerbil POO/C3 owns
+Do not implement a second recursive inheritance merge. Gerbil POO/C4 owns
 precedence. Local code may project resolved fields into module-specific
 receipts.
 

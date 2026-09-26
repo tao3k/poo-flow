@@ -3,12 +3,12 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 import PooFlowProof.Enterprise.BundleEvidenceBinding
-import PooFlowProof.PooC3.RecoveryPolicyAuthorization
+import PooFlowProof.PooC4.RecoveryPolicyAuthorization
 
 namespace PooFlowProof.Enterprise.AgentActionEvidenceEnvelopeClosure
 
 open BundleEvidenceBinding
-open PooFlowProof.PooC3.RecoveryPolicyAuthorization
+open PooFlowProof.PooC4.RecoveryPolicyAuthorization
 
 abbrev AgentActionId := String
 abbrev AgentObservationEventId := String

@@ -175,8 +175,8 @@ Lean compilation establishes that
 
 - =PooFlowProof.Enterprise.BundleEvidenceBinding.BundleSubject=;
 - =PooFlowProof.Enterprise.BundleEvidenceBinding.BoundVerificationReceipt=;
-- =PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts=;
-- =PooFlowProof.PooC3.authorizedEffectL1=.
+- =PooFlowProof.PooC4.AuthorizedEffectEvidenceFacts=;
+- =PooFlowProof.PooC4.authorizedEffectL1=.
 
 The runtime-projection AXLE preflight finds 85 declarations across 5 owner
 sources, but composed-owner extraction reports
@@ -186,14 +186,14 @@ sources, but composed-owner extraction reports
 
 AXLE owner-source composition MUST preserve imported namespace identity and
 declaration aliases across all admitted owner sources. The repair MUST reuse
-the authoritative PooC3 declarations. A duplicate local evidence structure,
+the authoritative PooC4 declarations. A duplicate local evidence structure,
 predicate, axiom, or timeout increase is not an admissible repair.
 
 ** Cross-owner AXLE regression obligations
 
 - positive fixture: the five-owner runtime closure extracts without unknown
   declarations;
-- negative fixture: removing the PooC3 owner source fails closed;
+- negative fixture: removing the PooC4 owner source fails closed;
 - identity property: fully qualified and source-local aliases resolve to one
   canonical declaration;
 - theorem roots:
@@ -558,7 +558,7 @@ that an authorized effect is already a constrained system effect.  The repaired
 effect-domain coverage, duplicate safety, exclusive fencing, terminal recovery,
 and validated compensation evidence.
 
-This owner reuses =PooFlowProof.PooC3.authorizedEffectL1=,
+This owner reuses =PooFlowProof.PooC4.authorizedEffectL1=,
 =PromotionTransactionRecovery.closedDuplicateRequiresPriorCommit=,
 =PromotionTransactionRecovery.closedRollbackRestoresCompleteEffectObservation=,
 and =EffectDomainCoverage.coveredRollbackAgreesOnEveryPlanEffect=.

@@ -134,7 +134,7 @@
      (check-equal? (.get evolving-scenario projection-kind)
                    'github-workflow))
 
-   (poo-flow-test-case "preserves C3 super order and lazy slot caching"
+   (poo-flow-test-case "preserves C4 super order and lazy slot caching"
      (let ((b-evaluations 0)
            (c-evaluations 0))
        (let* ((a (.o (responsibility '(a))))

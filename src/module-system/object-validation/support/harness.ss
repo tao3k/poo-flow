@@ -260,7 +260,7 @@
 (def (field-contract-validations-valid? validations)
   (andmap poo-flow-module-field-contract-validation-valid? validations))
 
-;;; Higher-order boundary: each resolved C3 field is validated independently so
+;;; Higher-order boundary: each resolved C4 field is validated independently so
 ;;; upstream diagnostics keep the concrete field identity.
 ;; : (-> PooModuleObject [POOObject])
 (def (poo-flow-module-object-field-contract-validations object)
@@ -342,7 +342,7 @@
 ;;   : (-> (List Symbol) (List Symbol))
 ;;   | doc m%
 ;;       `duplicate-identities` finds duplicated resolved field identities after
-;;       gerbil-poo C3 inheritance has projected the object field list.
+;;       gerbil-poo C4 inheritance has projected the object field list.
 ;;
 ;;       # Examples
 ;;
@@ -376,5 +376,5 @@
      (duplicate-identities/rev identities seen duplicates '()))))
 
 ;;; Object diagnostics stay intentionally narrow: only object-local metadata and
-;;; C3-resolved identity collisions are checked here.
+;;; C4-resolved identity collisions are checked here.
 ;; : (-> PooModuleObject [POOObject])

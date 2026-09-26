@@ -164,7 +164,7 @@ The POO layer should expose these as object families, not raw permission maps:
 5. =resource-sharing-policy= for workspace paths, artifacts, tool results, memory refs, and accounting ownership;
 6. =communication-receipt= for parent-child, child-parent, sibling, and cross-root message intents that effective policy validation can partition by channel and target-session grants;
 7. =agent-execution-policy= for the composed policy refs bound to one agent/session.
-These objects should compose through POO/C3 like the rest of the module system. A project can define shared defaults, a root session can narrow them, a role policy can add capabilities, and a child agent policy can override or deny selected slots. Validation happens after composition so the effective policy is inspectable before runtime.
+These objects should compose through POO/C4 like the rest of the module system. A project can define shared defaults, a root session can narrow them, a role policy can add capabilities, and a child agent policy can override or deny selected slots. Validation happens after composition so the effective policy is inspectable before runtime.
 The target invariant is stricter than coarse tool permission:
 - tool grants include =tool-ref=, =action=, =resource-ref=, and =trigger-ref=;
 - every grant is anchored to =project-id=, =root-session-id=, =child-session-id=, or =agent-id= through the policy scope;
@@ -184,9 +184,9 @@ The strengthening direction is:
 2. =session-id= is a capability boundary, not just a label. Every sandbox,
    context, history, memory, artifact, and communication grant is keyed through
    session identity.
-3. POO/C3 composes policy defaults. Parent project policy, root-session policy,
+3. POO/C4 composes policy defaults. Parent project policy, root-session policy,
    role policy, and child-session policy can inherit and override each other.
-4. Safety is decided after composition. C3 chooses value precedence; validators
+4. Safety is decided after composition. C4 chooses value precedence; validators
    decide whether the composed policy is safe, monotonic, and allowed.
 5. Runtime work is never implied by policy. Policies lower into handoff
    receipts and Marlin-owned execution contracts.
@@ -302,7 +302,7 @@ Start with a POO-native policy object family for session isolation and sharing:
 - =session-resource-policy=.
 
 These policy objects are the base layer for every later registry, graph, and
-communication feature. They should compose through POO/C3, but safety decisions
+communication feature. They should compose through POO/C4, but safety decisions
 must be validated after composition. Parent policy can provide defaults, child
 policy can narrow or request explicit grants, and peer sharing must be named by
 session id or channel id.
@@ -452,7 +452,7 @@ Add a POO-native policy object family for session isolation and sharing:
 - =session-sharing-policy=;
 - =session-resource-policy=.
 
-These policies should compose through POO/C3, but safety decisions must be
+These policies should compose through POO/C4, but safety decisions must be
 validated after composition. Parent policy can provide defaults, child policy
 can narrow or request explicit grants, and peer sharing must be named by
 session id or channel id.

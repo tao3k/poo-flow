@@ -11,7 +11,7 @@
 
 (def domain-case-instance-overlay-performance-test
   (test-suite "DomainCase instance overlay hot path"
-    (poo-flow-test-case "constant-slot overlay removes per-Agent C3 mix"
+    (poo-flow-test-case "constant-slot overlay removes per-Agent C4 mix"
       (let (receipts (run-domain-case-instance-overlay-benchmark))
         (check (map (lambda (receipt) (.ref receipt 'shared-slot-count))
                     receipts)

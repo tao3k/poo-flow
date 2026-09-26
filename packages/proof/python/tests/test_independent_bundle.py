@@ -44,7 +44,7 @@ def declaration(
     return DeclarationIdentity(
         name=name,
         kind="theorem",
-        owner_path="PooFlowProof/PooC3/Enterprise/Test.lean",
+        owner_path="PooFlowProof/PooC4/Enterprise/Test.lean",
         owner_source_digest=DIGEST_C,
         local_dependencies=dependencies,
     )
@@ -52,7 +52,7 @@ def declaration(
 
 def bundle() -> IndependentDeclarationBundle:
     return IndependentDeclarationBundle(
-        root_module="PooFlowProof.PooC3.Enterprise.Test",
+        root_module="PooFlowProof.PooC4.Enterprise.Test",
         root_declarations=("Enterprise.Test.safe",),
         lean_toolchain="leanprover/lean4:v4.31.0",
         axle_environment=environment(),

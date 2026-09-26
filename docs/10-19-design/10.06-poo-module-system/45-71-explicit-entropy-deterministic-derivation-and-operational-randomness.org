@@ -100,7 +100,7 @@ flowchart LR
 - [ ] Project entropy and derivation policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.ExplicitEntropyDerivation=.  It imports
+The Lean anchor is =PooFlowProof.PooC4.ExplicitEntropyDerivation=.  It imports
 RFC 45-70 so temporal and entropy observations remain explicit, immutable
 semantic inputs rather than hidden ambient effects.
 

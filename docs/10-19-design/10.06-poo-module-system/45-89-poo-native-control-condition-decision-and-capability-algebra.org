@@ -113,14 +113,14 @@ object has the same visible slot shape as a capability.
 - [X] Missing prior-RFC closure blocks implementation.
 
 These obligations are checked by
-=PooFlowProof.PooC3.PooControlAlgebra=.  They prove the abstract algebra and
+=PooFlowProof.PooC4.PooControlAlgebra=.  They prove the abstract algebra and
 fail-closed admission predicate; all executable algebra and cross-plane tests
 remain pending.
 
 ** Verification receipts
 
 | Verification surface | State | Receipt |
-| Local Lean module | =accepted= | =lake build PooFlowProof.PooC3.PooControlAlgebra=: 31/31 jobs |
+| Local Lean module | =accepted= | =lake build PooFlowProof.PooC4.PooControlAlgebra=: 31/31 jobs |
 | Local Lean closure | =accepted= | =lake build=: 104/104 jobs |
 | AXLE independent declaration check | =accepted= | Request =c1dc27f7-ada1-4df4-a27c-173bcf18f173=; Lean 4.31.0; 0 failed declarations, errors, or warnings |
 | AXLE preserved-import check | =blocked-verifier-import-boundary= | Request =e293a097-ca99-47ba-9b0b-373477c4478e= cannot resolve local module prefix =PooFlowProof= |

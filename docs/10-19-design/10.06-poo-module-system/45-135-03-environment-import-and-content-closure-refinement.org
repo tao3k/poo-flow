@@ -37,7 +37,7 @@ proves that Mathlib is provided by that materialization.
 Proof owner:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC3/Enterprise/BundleEnvironmentClosure.lean
+packages/proof/lean/PooFlowProof/PooC4/Enterprise/BundleEnvironmentClosure.lean
 #+end_src
 
 The compiled theorems establish:
@@ -205,7 +205,7 @@ The proof boundary must reject:
 
 #+begin_src text
 cd packages/proof/lean
-lake env lean PooFlowProof/PooC3/Enterprise/BundleEnvironmentClosure.lean
+lake env lean PooFlowProof/PooC4/Enterprise/BundleEnvironmentClosure.lean
 exit-code: 0
 warnings: 0
 #+end_src

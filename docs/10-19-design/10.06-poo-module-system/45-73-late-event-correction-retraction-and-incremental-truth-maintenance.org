@@ -102,7 +102,7 @@ flowchart LR
 - [ ] Project truth-maintenance policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.IncrementalTruthMaintenance=.  It
+The Lean anchor is =PooFlowProof.PooC4.IncrementalTruthMaintenance=.  It
 imports RFC 45-72 directly, so correction starts from an admitted new causal
 cut rather than mutating transport arrivals or historical evidence in place.
 

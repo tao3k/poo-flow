@@ -149,7 +149,7 @@ op("Uses")(d,p)
 
 op("Extends")(q,p)
   =>
-    op("Lin")_(upright("POO/C3"))(q,p)
+    op("Lin")_(upright("POO/C4"))(q,p)
     and op("PreservesContract")(q,p)
 
 op("PreservesContract")(q,p)

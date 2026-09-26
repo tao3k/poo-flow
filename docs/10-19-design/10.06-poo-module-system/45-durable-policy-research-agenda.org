@@ -368,7 +368,7 @@ Conceptual object families:
 - =sandbox-policy=: inherit, clone, share, isolate, or replace placement.
 
 These should be POO objects, not option trees.
-C3/C4-style composition decides inherited slot precedence.
+C4-style composition decides inherited slot precedence.
 Validation decides whether the resulting policy is legal.
 Projection produces bounded runtime receipts.
 

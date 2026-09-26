@@ -257,10 +257,10 @@ test:
 test-profile:
     time just test
 
-# Run the existing C3 identity/performance witness under the test heap fence.
+# Run the existing C4 identity/performance witness under the test heap fence.
 [group('test')]
-benchmark-poo-clos-native-c3:
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c3/scenario.ss
+benchmark-poo-clos-native-c4:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c4/scenario.ss
 
 # Keep the Core submodule's qualification under its own Justfile.
 [group('test')]
@@ -409,7 +409,7 @@ check-governance-lean:
 # traversing the repository-wide Lean aggregate.
 [group('check')]
 check-native-semantic-query-lean:
-    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC3.NativeSemanticQueryModel
+    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC4.NativeSemanticQueryModel
 
 # Parser admission and TLC remain separate evidence over the same model.
 [group('check')]

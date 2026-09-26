@@ -52,7 +52,7 @@
    (closed-clause 'C434-inheritance 'poo-clos 'classes
            'diamond-inheritance 'duplicate-direct-superclass)
    (closed-clause 'C435-class-precedence 'poo-clos 'classes
-           'native-c3-order 'inconsistent-c3)
+           'native-c4-order 'inconsistent-c4)
    (closed-clause 'C436-class-redefinition 'poo-clos 'evolution
            'identity-preserved-generation 'invalid-class-redefinition)
    (closed-clause 'C436-dependent-propagation 'poo-clos 'evolution
@@ -147,7 +147,7 @@
                    "core/t/poo-clos-method-combination-test.ss"
                    'poo-clos-method-combination-test 13)
    (evidence-suite 'evolution "core/t/poo-clos-evolution-test.ss"
-                   'poo-clos-evolution-test 7)
+                   'poo-clos-evolution-test 8)
    (evidence-suite 'generic-evolution
                    "core/t/poo-clos-generic-evolution-test.ss"
                    'poo-clos-generic-evolution-test 3)

@@ -40,7 +40,7 @@ text retained later in this document as historical evidence.
 
 ** Current proof receipt
 
-- Lean owner: =PooFlowProof.PooC3.DependencySourceIdentity=.
+- Lean owner: =PooFlowProof.PooC4.DependencySourceIdentity=.
 - Proved: zero candidates fail closed, multiple candidates fail closed, exactly
   one candidate resolves, incomplete canonical identities are rejected, and a
   logical package name does not determine source identity.

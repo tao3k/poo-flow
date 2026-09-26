@@ -12,7 +12,7 @@ Doom is useful because it is Lisp-family software. Its user interface shows how 
 
 - Doom gives the authoring experience target.
 - Nix gives the configuration semantics target.
-- Gerbil Scheme, POO, and C3 give the host-language implementation substrate.
+- Gerbil Scheme, POO, and C4 give the host-language implementation substrate.
 
 ** 10.06.06.20 Doom Lessons To Borrow
 *** Declarative Entry Macro
@@ -96,13 +96,13 @@ These policies are schema vocabulary, not implicit alist order. =src/module-syst
 - conflict accepts identical values and returns an invalid receipt for divergent values;
 - missing schemas and missing required values remain data findings.
 
-** 10.06.06.40 Gerbil POO And C3 Shape
-Gerbil POO and C3 are the reason this module system should stay in Scheme. They let the interface remain Lisp-friendly while preserving object composition semantics.
+** 10.06.06.40 Gerbil POO And C4 Shape
+Gerbil POO and C4 are the reason this module system should stay in Scheme. They let the interface remain Lisp-friendly while preserving object composition semantics.
 
 The design rule is:
 
 - use POO objects for descriptor and interface values;
-- use C3 composition for role and prototype inheritance;
+- use C4 composition for role and prototype inheritance;
 - expose stable accessors for user-facing inspection;
 - keep leaf owners split under =src/module-system=;
 - keep =:poo-flow/src/module-system= as the only normal user import.

@@ -157,7 +157,7 @@
                       'checked-interface-only)
         (check-equal? (test-ref (test-ref contract 'runtime-boundary)
                                 'governor-inheritance)
-                      'poo-c3)
+                      'poo-c4)
         (check-equal? (test-ref (test-ref contract 'runtime-boundary)
                                 'human-decision-state)
                       'review-loop)

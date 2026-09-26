@@ -249,7 +249,7 @@
       (responsibility 'human-inbox-projection)
       (loop-policy-slot 'human-inbox)))
 
-;;; Boundary: handoff role carries the Marlin target through C3 composition.
+;;; Boundary: handoff role carries the Marlin target through C4 composition.
 ;;; Runtime request construction remains a later Rust boundary.
 ;; : (-> Unit Role)
 (def loop-governor-handoff-role
@@ -356,7 +356,7 @@
 
 ;; : (-> LoopGovernorCandidate Boolean)
 
-;;; Slot probing goes through role helpers so C3-composed overrides keep the
+;;; Slot probing goes through role helpers so C4-composed overrides keep the
 ;;; same access boundary as pattern descriptors and strategy plans.
 ;; : (-> LoopGovernor Symbol LoopGovernorSlotValue LoopGovernorSlotValue)
 

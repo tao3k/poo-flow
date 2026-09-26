@@ -99,7 +99,7 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
             "governance_admitted": true,
             "certification_names": [
                 "PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure",
-                "PooFlowProof.PooC3.CedarDualEngineArbitration"
+                "PooFlowProof.PooC4.CedarDualEngineArbitration"
             ]
         },
         "authority_id": "healthcare.authority",

@@ -470,9 +470,9 @@
                      (car maybe-namespace)))
          (facts (poo-flow-graph-runtime-receipt->lean-facts receipt)))
     (string-append
-     "import PooFlowProof.PooC3.LangChainLangGraph\n\n"
+     "import PooFlowProof.PooC4.LangChainLangGraph\n\n"
      "namespace " namespace "\n\n"
-     "open PooFlowProof.PooC3.LangChainLangGraph\n\n"
+     "open PooFlowProof.PooC4.LangChainLangGraph\n\n"
      "def generatedRuntimeFactRows : List (String × Bool) :=\n"
      (runtime-lean-fact-rows-source facts)
      "\n\n"

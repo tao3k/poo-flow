@@ -78,7 +78,7 @@ The two AXLE + Lean declaration-closure v1 roots are
 =oscillatingClassificationCarriesCanonicalHistory=.  Their v1 receipts close
 3/3 and 44/19 preflight/exact declarations respectively, with
 =verification.okay=true= and no failed declarations.  They use the top-level
-=PooFlowProof.Enterprise= owner path; =PooFlowProof.PooC3.Enterprise= is not an
+=PooFlowProof.Enterprise= owner path; =PooFlowProof.PooC4.Enterprise= is not an
 authorized alias.
 
 * Deterministic budget closure

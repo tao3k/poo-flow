@@ -55,7 +55,7 @@ flowchart TD
   DeveloperLoop["Developer Feedback Loop\nminutes to hours\nproduct judgement, spec and eval deltas"]
   HumanAudit["Human Audit Loop\nlegal approval boundary"]
   CheckedInterface["Checked mutation interface\nvalidated spec/profile/eval/policy changes"]
-  ControlPlane["Scheme control plane\nS-expression + POO + C3 + validators + graph"]
+  ControlPlane["Scheme control plane\nS-expression + POO + C4 + validators + graph"]
   Manifest["Control-plane runtime manifest\nreport-only, runtime-executed=false"]
   Marlin["Marlin/Rust runtime\nheavy execution"]
   CodingLoop["Agentic Coding Loop\ncode, test, observe, repair"]
@@ -112,7 +112,7 @@ sequenceDiagram
   participant Marlin as Marlin/Rust runtime
 
   User->>Scheme: author S-expression POO policy/profile/spec
-  Scheme->>Scheme: compose POO objects with C3
+  Scheme->>Scheme: compose POO objects with C4
   Scheme->>Scheme: validate slots, safety, budget, graph gates
   Scheme->>Audit: submit spec/profile/eval/policy delta when mutation is needed
   Audit-->>Scheme: approved / rejected / escalated / changes-requested
@@ -123,7 +123,7 @@ sequenceDiagram
 
 The manifest should expose:
 - resolved POO object graph identity;
-- C3-derived role/slot precedence;
+- C4-derived role/slot precedence;
 - selected modules and features;
 - workflow DAG or loop pattern facts;
 - sandbox profile and capability constraints;
@@ -147,7 +147,7 @@ The policy graph composes facts from:
 - human-audit: approved spec/profile/eval/policy mutation evidence;
 - external feedback: evidence receipts and product direction signals.
 
-POO and C3 make these fragments composable. Validators make them legal. Graph
+POO and C4 make these fragments composable. Validators make them legal. Graph
 analysis makes them explainable. Marlin executes only after the handoff bundle
 is valid.
 

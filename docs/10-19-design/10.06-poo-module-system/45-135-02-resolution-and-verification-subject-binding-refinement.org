@@ -43,7 +43,7 @@ without invalidating an unbound receipt.
 Proof owner:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC3/Enterprise/BundleEvidenceBinding.lean
+packages/proof/lean/PooFlowProof/PooC4/Enterprise/BundleEvidenceBinding.lean
 #+end_src
 
 The compiled theorems establish:
@@ -233,7 +233,7 @@ The bundle/verifier boundary must reject:
 
 #+begin_src text
 cd packages/proof/lean
-lake env lean PooFlowProof/PooC3/Enterprise/BundleEvidenceBinding.lean
+lake env lean PooFlowProof/PooC4/Enterprise/BundleEvidenceBinding.lean
 exit-code: 0
 warnings: 0
 #+end_src

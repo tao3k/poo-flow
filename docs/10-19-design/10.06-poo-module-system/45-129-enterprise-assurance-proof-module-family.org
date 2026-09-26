@@ -35,7 +35,7 @@ and runtime evidence.  It does not duplicate those owners.
 Downstream proofs SHALL import:
 
 #+begin_src lean
-import PooFlowProof.PooC3.Enterprise
+import PooFlowProof.PooC4.Enterprise
 #+end_src
 
 The aggregate module currently re-exports the Enterprise assurance surface.
@@ -76,7 +76,7 @@ flowchart TD
     ER["Enterprise.ResponsibilityTransfer"]
     ET["Enterprise.TenantOrganization"]
     EX["Enterprise.Assurance"]
-    API["PooFlowProof.PooC3.Enterprise"]
+    API["PooFlowProof.PooC4.Enterprise"]
 
     CQ -->|"qualified asset + governed admission"| EC
     GD -->|"decision, quorum, separation, revocation"| ES
@@ -215,7 +215,7 @@ The split is not merely source organization.
 * Local build receipts
 
 #+begin_src text
-rtk lake build PooFlowProof.PooC3.Enterprise
+rtk lake build PooFlowProof.PooC4.Enterprise
 Build completed successfully (177 jobs).
 
 rtk lake build
@@ -239,7 +239,7 @@ runtime, Cedar DRT, or organization-specific policy closure.
 - [X] Add =ResponsibilityTransfer=.
 - [X] Add the independently aggregated =TenantOrganization= subfamily.
 - [X] Add =Assurance=.
-- [X] Add the stable =PooFlowProof.PooC3.Enterprise= aggregate import.
+- [X] Add the stable =PooFlowProof.PooC4.Enterprise= aggregate import.
 - [X] Keep generic-to-enterprise dependency direction acyclic.
 
 ** Local proof
