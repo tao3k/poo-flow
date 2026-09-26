@@ -48,22 +48,7 @@
         poo-flow-contract-slot->type-fact
         poo-flow-native-contract->type-facts
         poo-flow-contract-slot->lean-fact-contract
-        poo-flow-native-contract->lean-fact-contracts
-        make-poo-flow-type-validation-receipt
-        poo-flow-type-validation-receipt?
-        poo-flow-type-validation-receipt-kind
-        poo-flow-type-validation-receipt-schema
-        poo-flow-type-validation-receipt-object
-        poo-flow-type-validation-receipt-valid
-        poo-flow-type-validation-receipt-source-ref
-        poo-flow-type-validation-receipt-harness-validation
-        poo-flow-type-validation-receipt-diagnostics
-        poo-flow-type-validation-receipt-checked-signals
-        poo-flow-type-validation-receipt-type-facts
-        poo-flow-type-validation-receipt-lean-fact-contracts
-        poo-flow-type-validation-receipt-runtime-executed
-        poo-flow-type-validation-receipt-valid?
-        poo-flow-type-validation-receipt->alist)
+        poo-flow-native-contract->lean-fact-contracts)
 
 ;; poo-flow-type-fact-contract
 ;;   : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol Alist PooFlowTypeFactContract)
@@ -258,60 +243,3 @@
          (poo-flow-contract-slot->lean-fact-contract object-contract
                                                      slot-contract))
        (poo-flow-native-contract-slots object-contract)))
-
-;; poo-flow-type-validation-receipt
-;;   : (-> Symbol String Symbol Boolean PooFlowSourceRef PooFlowHarnessValidation [Alist] [Symbol] [PooFlowTypeFactContract] [PooFlowLeanFactContract] Boolean PooFlowTypeValidationReceipt)
-;;   | doc m%
-;;       Fixed validation receipt row for type-fact checks. It keeps runtime
-;;       execution evidence as a field, but exposes external shape only through
-;;       `poo-flow-type-validation-receipt->alist`.
-;;     %
-(defstruct poo-flow-type-validation-receipt
-  (kind
-   schema
-   object
-   valid
-   source-ref
-   harness-validation
-   diagnostics
-   checked-signals
-   type-facts
-   lean-fact-contracts
-   runtime-executed)
-  transparent: #t)
-
-;; : (-> PooFlowTypeValidationReceipt Boolean)
-(def (poo-flow-type-validation-receipt-valid? receipt)
-  (and (poo-flow-type-validation-receipt? receipt)
-       (poo-flow-type-validation-receipt-valid receipt)))
-
-;; : (-> (-> PooFlowFactContract Alist) [PooFlowFactContract] [Alist])
-(def (poo-flow-type-facts->alists projector facts)
-  (map projector facts))
-
-;; : (-> PooFlowTypeValidationReceipt Alist)
-(def (poo-flow-type-validation-receipt->alist receipt)
-  (list
-   (cons 'kind (poo-flow-type-validation-receipt-kind receipt))
-   (cons 'schema (poo-flow-type-validation-receipt-schema receipt))
-   (cons 'object (poo-flow-type-validation-receipt-object receipt))
-   (cons 'valid (poo-flow-type-validation-receipt-valid receipt))
-   (cons 'source-ref (poo-flow-type-validation-receipt-source-ref receipt))
-   (cons 'harness-validation
-         (poo-flow-type-validation-receipt-harness-validation receipt))
-   (cons 'diagnostics
-         (poo-flow-type-validation-receipt-diagnostics receipt))
-   (cons 'diagnostic-count
-         (length (poo-flow-type-validation-receipt-diagnostics receipt)))
-   (cons 'checked-signals
-         (poo-flow-type-validation-receipt-checked-signals receipt))
-   (cons 'type-facts
-         (poo-flow-type-facts->alists
-          poo-flow-type-fact-contract->alist
-          (poo-flow-type-validation-receipt-type-facts receipt)))
-   (cons 'lean-fact-contracts
-         (poo-flow-type-facts->alists
-          poo-flow-lean-fact-contract->alist
-          (poo-flow-type-validation-receipt-lean-fact-contracts receipt)))
-   (cons 'runtime-executed
-         (poo-flow-type-validation-receipt-runtime-executed receipt))))

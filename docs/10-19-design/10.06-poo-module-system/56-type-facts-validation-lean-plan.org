@@ -82,14 +82,21 @@ The first implementation slice adds:
 
 The new structures are:
 - =poo-flow-type-fact-contract=;
-- =poo-flow-lean-fact-contract=;
-- =poo-flow-type-validation-receipt=.
+- =poo-flow-lean-fact-contract=.
 
-The sandbox resource contract now returns a =poo-flow-type-validation-receipt= from =poo-flow-sandbox-resources-prototype-contract-validation=. Its final projection still emits alist rows, but the semantic owner is now a structured validation receipt.
+The original generic =poo-flow-type-validation-receipt= and ASP Harness
+adapter were superseded. =poo-flow-sandbox-resources-prototype-contract-validation=
+now returns a native POO receipt with local typed diagnostics. Alists exist
+only at its explicit final report projection.
 ** 10.06.56.40 Why defstruct Here
-=defstruct= is appropriate at this layer because validation receipts are not user extension objects. They are stable internal facts with fixed accessors.
+=defstruct= remains appropriate for fixed type-fact and Lean-fact projection
+rows. Validation receipts themselves use native POO objects because they are
+public module-boundary values and must not create a second semantic authority.
 
-=defstruct= is not a weaker substitute for BAML-style DSL types. It is a Scheme-native way to give fixed shape to proof and validation receipts while keeping the semantic model in POO. Combined with Lean-facing contracts, this gives =poo-flow= a stronger validation ceiling than a standalone DSL type system, because it can validate whole-system policy composition rather than only function input/output shapes.
+=defstruct= is used here only for closed type-fact and Lean-fact rows. A
+validation receipt is a public POO value, not a second record-based semantic
+model. Lean-facing contracts still validate whole-system policy composition
+rather than only function input/output shapes.
 
 Use POO when:
 - users or modules extend the object;
@@ -98,7 +105,7 @@ Use POO when:
 - the value participates in semantic policy composition.
 
 Use =defstruct= when:
-- the value is a closed receipt;
+- the value is a closed fact projection row;
 - fields need stable accessors;
 - tests, projection, and Lean extraction need fixed names;
 - mutation and inheritance would weaken the proof boundary.
@@ -112,7 +119,7 @@ The intended path is:
 flowchart TD
   SlotContract["Slot contract\nfield, kind, merge, default"]
   TypeFact["Type fact\nScheme defstruct"]
-  Validation["Validation receipt\nvalid, diagnostics, source"]
+  Validation["Native POO validation receipt\nvalid, diagnostics, owner"]
   LeanContract["Lean fact contract\nowner, name, polarity"]
   LeanProjection["Lean input projection\nstable fact rows"]
   Theorem["Lean theorem / obligation"]

@@ -3,15 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: sandbox resource POO prototypes use harness-backed typed contracts.
+;;; Boundary: sandbox resource POO prototypes use native typed contracts.
 
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
-         (only-in :clan/poo/object .def)
+         (only-in :clan/poo/object .def .ref object?)
         (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/type-facts/objects
-                 poo-flow-type-validation-receipt-harness-validation)
         :poo-flow/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
@@ -51,10 +49,6 @@
   cpu: 2
   memory: "4Gi")
 
-;; : (-> HashTable Symbol Value)
-(def (receipt-ref receipt key)
-  (hash-get receipt key))
-
 ;; : (-> Alist Symbol Object Object)
 (def (alist-ref/default entries key default-value)
   (let (entry (assoc key entries))
@@ -62,8 +56,8 @@
 
 ;; : (-> Object Object)
 (def (diagnostic-code diagnostic)
-  (if (list? diagnostic)
-    (alist-ref/default diagnostic 'code #f)
+  (if (object? diagnostic)
+    (.ref diagnostic 'code)
     #f))
 
 ;; diagnostic-codes
@@ -137,13 +131,10 @@
             (published-by . runtime))
            (cpu . 2)
            (memory . "4Gi")))))
-    (poo-flow-test-case "validates runtime volume resources through harness facade"
+    (poo-flow-test-case "validates runtime volume resources with native POO contracts"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                poo-flow-runtime-volume-resources-prototype))
-             (harness-validation
-              (poo-flow-type-validation-receipt-harness-validation
-               validation))
              (summary
               (poo-flow-sandbox-resources-prototype-contract-validation->alist
                validation)))
@@ -155,11 +146,16 @@
          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
           validation)
          '())
-        (check-equal? (receipt-ref harness-validation 'kind)
-                      "poo-object-contract-validation")
-        (check-equal? (alist-ref/default summary 'harness-valid #f) #t)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          validation)
+         #t)
+        (check-equal? (not (not (member 'native-poo-slot-types
+                                        (alist-ref/default summary
+                                                           'checked-signals '()))))
+                      #t)
         (check-equal? (alist-ref/default summary 'diagnostic-count #f) 0)))
-    (poo-flow-test-case "reports typed cpu contract failures from harness diagnostics"
+    (poo-flow-test-case "reports typed cpu contract failures natively"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                invalid-cpu-resources-prototype))
@@ -172,8 +168,8 @@
          #f)
         (check-equal?
          (diagnostic-member?
-          "field:cpu:default-not-compatible-with-type:Number"
-          diagnostics)
+          'slot-contract-failed
+          (diagnostic-codes diagnostics))
          #t)
         (check-equal?
          (contract-error?
