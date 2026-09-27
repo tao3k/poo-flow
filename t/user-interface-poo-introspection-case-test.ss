@@ -6,7 +6,7 @@
 ;;; Boundary: tests the public CI/CD POO authoring gate user config.
 ;;; Invariant: assertions inspect formal use-module data, not runtime work.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

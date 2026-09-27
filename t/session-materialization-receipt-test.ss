@@ -7,7 +7,7 @@
 ;;; Invariant: Scheme records pending/materialized/failed state only; it never
 ;;; synchronizes runtime futures, opens sandbox handles, or replays IO.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

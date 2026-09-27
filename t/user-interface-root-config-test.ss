@@ -6,7 +6,7 @@
 ;;; Boundary: top-level root profile and modules-directory facade.
 ;;; Invariant: root config stays declarative and does not load test fixtures.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)

@@ -6,7 +6,7 @@
 ;;; Boundary: live nono profile checks use native FFI, not the nono CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by package tests.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

@@ -7,7 +7,7 @@
 ;;; Invariant: fixtures are constructed before timing; samples measure only
 ;;; Scheme control-plane graph analysis and never execute workflow commands.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-elapsed-us)
         "../support/performance"

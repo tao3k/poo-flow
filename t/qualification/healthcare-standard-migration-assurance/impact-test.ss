@@ -6,7 +6,7 @@
 ;;; Exact change-impact qualification between the migration TLA+ model and its
 ;;; Lean refinement.  A changed upstream digest must invalidate the retained
 ;;; downstream Binding before an Agent can write it into the governance slot.
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
         (only-in :clan/poo/object .all-slots .cc .ref)
         (only-in :std/crypto/digest sha256)

@@ -5,7 +5,7 @@
 
 ;;; Clause ledger completeness and profile-separation checks.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal? check)
         (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/module-system/observability/module-presentation

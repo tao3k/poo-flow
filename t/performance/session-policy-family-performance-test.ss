@@ -7,7 +7,7 @@
 ;;; Invariant: POO-native policy constructors project to bounded rows before
 ;;; effective validation, without runtime, tool, hook, provider, or sandbox work.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

@@ -6,7 +6,7 @@
 ;;; Boundary: C language tests prove the nono-sandbox binding is compiler-visible.
 ;;; Invariant: the probe checks headers and signatures but never links or applies nono.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

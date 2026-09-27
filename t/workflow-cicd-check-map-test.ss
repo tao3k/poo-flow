@@ -6,7 +6,7 @@
 ;;; Boundary: workflow CI/CD check maps are inert POO control-plane data.
 ;;; Invariant: tests prove receipts and runtime readiness without execution.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  test-suite
                  check-equal?

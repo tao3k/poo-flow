@@ -6,7 +6,7 @@
 ;;; Boundary: loop governor performance gates cover one-pass policy projection.
 ;;; Invariant: governor projection consumes state facts without runtime mutation.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

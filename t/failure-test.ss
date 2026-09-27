@@ -6,7 +6,7 @@
 ;;; Boundary: failure tests cover typed control-plane payloads.
 ;;; Invariant: tests inspect failure structs, not exception message text.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

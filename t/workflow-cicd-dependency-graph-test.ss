@@ -6,7 +6,7 @@
 ;;; Boundary: workflow CI/CD dependency graphs report topology only.
 ;;; Invariant: tests inspect graph diagnostics without scheduling work.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  test-suite
                  check-equal?

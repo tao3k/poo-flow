@@ -6,7 +6,7 @@
 ;;; Boundary: durable runtime store operation receipts for Marlin handoff.
 ;;; Invariant: tests validate receipt projection only; no durable store runs.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

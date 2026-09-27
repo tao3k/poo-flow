@@ -7,7 +7,7 @@
 ;;; Invariant: transform rows are report-only handoff receipts; Scheme never
 ;;; invokes a provider, memory backend, sandbox runtime, or tool.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

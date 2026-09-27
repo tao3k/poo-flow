@@ -7,7 +7,7 @@
 ;;; Invariant: validation resolves POO memory specs and intent refs without
 ;;; runtime recall, commit, or backend startup.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

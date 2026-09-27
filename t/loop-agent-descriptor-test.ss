@@ -6,7 +6,7 @@
 ;;; Boundary: loop-agent tests cover POO/C4 policy descriptors only.
 ;;; Invariant: scheduling and execution stay out of this test surface.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

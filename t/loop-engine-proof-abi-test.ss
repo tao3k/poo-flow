@@ -6,7 +6,7 @@
 ;;; Boundary: proof ABI tests pin the Scheme-to-Lean proof-case vector shape.
 ;;; Invariant: these tests do not execute runtime work or call the proof checker.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-eq?
                  check-equal?

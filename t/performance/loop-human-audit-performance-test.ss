@@ -6,7 +6,7 @@
 ;;; Boundary: loop human-audit performance gates cover reused governor facts.
 ;;; Invariant: audit projection is review data and never mutates runtime state.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

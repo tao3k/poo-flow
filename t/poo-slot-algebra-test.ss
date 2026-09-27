@@ -7,7 +7,7 @@
 ;;; Invariant: refinements retain inherited declarations and never mutate their
 ;;; parent objects.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test check-exception check-equal? test-suite)
         (only-in :clan/poo/object .all-slots .def .get .o)
         (only-in :core/observability/slot-presentation

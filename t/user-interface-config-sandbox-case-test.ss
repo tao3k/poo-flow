@@ -6,7 +6,7 @@
 ;;; Boundary: sandbox cases prove declarations stay data-only before realization.
 ;;; Backend descriptors are inspected as upstream module facts, not executed here.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

@@ -6,7 +6,7 @@
 ;;; Boundary: module object validation gates cover catalog summary aggregation.
 ;;; Invariant: summary aggregation stays report-only and never realizes runtime descriptors.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          :gerbil/runtime/gambit
         (only-in :clan/poo/object .o .ref object?)
         (only-in :std/test

@@ -6,7 +6,7 @@
 ;;; Boundary: tutorial result tests mirror Funflow's local/config outputs.
 ;;; Invariant: each stage proves a user-visible result, not only an API shape.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

@@ -6,7 +6,7 @@
 ;;; Boundary: real module object catalog validation stays out of the unit root.
 ;;; Invariant: catalog checks load backend object sets but never realize runtime.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  test-suite
