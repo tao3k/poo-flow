@@ -90,7 +90,7 @@
         poo-flow-module-auto-import-root-identity
         poo-flow-module-auto-import-entry-node
         poo-flow-module-auto-imports-node
-        poo-flow-module-auto-imports-mk-merge
+        poo-flow-module-auto-imports-resolve
         poo-flow-module-auto-imports-result-source-refs
         poo-flow-user-tree-source
         poo-flow-user-tree-entrypoint-policy

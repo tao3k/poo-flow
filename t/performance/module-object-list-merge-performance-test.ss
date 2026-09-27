@@ -19,7 +19,7 @@
                  poo-flow-module-extension-node-slots)
         (only-in :core/module-system/schema/interface
                  PooFlowModuleListType
-                 poo-flow-module-config-merge-result-root
+                 poo-flow-module-field-resolution-result-root
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
                  poo-flow-module-object
@@ -101,7 +101,7 @@
           (poo-flow-module-objects-resolve-contributions/node
            module-object-list-merge-objects-node
            contributions))
-         (root (poo-flow-module-config-merge-result-root result))
+         (root (poo-flow-module-field-resolution-result-root result))
          (node (poo-flow-module-objects-ref root 'large.module.object))
          (slots (poo-flow-module-extension-node-slots node))
          (capabilities

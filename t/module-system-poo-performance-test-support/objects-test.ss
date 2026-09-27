@@ -196,9 +196,9 @@
                     contributions)))))
           (check-equal? (length contributions) (* object-count field-count))
           (check-equal?
-           (poo-flow-module-config-merge-result-stable? result)
+           (poo-flow-module-field-resolution-result-stable? result)
            #t)
-          (check-equal? (poo-flow-module-config-merge-result-iterations result)
+          (check-equal? (poo-flow-module-field-resolution-result-iterations result)
                         1)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 

@@ -96,7 +96,7 @@
                 (poo-flow-module-field-contributions-resolve
                  base-node contributions))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
+                (poo-flow-module-field-resolution-result-root merge-result)))
           (check-equal? (poo-flow-module-object? practice-object) #t)
           (check-equal? (map poo-flow-module-field-contract-identity
                              (poo-flow-module-object-resolved-fields
@@ -107,11 +107,11 @@
           (check-equal? (map poo-flow-module-extension-contribution?
                              extension-contributions)
                         '(#t #t))
-          (check-equal? (poo-flow-module-config-merge-result? merge-result) #t)
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+          (check-equal? (poo-flow-module-field-resolution-result? merge-result) #t)
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
-          (check-equal? (poo-flow-module-config-merge-result-contributions
+          (check-equal? (poo-flow-module-field-resolution-result-contributions
                          merge-result)
                         contributions)
           (check-equal? (slot-value resolved-node 'capabilities)
@@ -219,8 +219,8 @@
                 (poo-flow-module-field-contributions-resolve
                  base-node noop-contributions))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+                (poo-flow-module-field-resolution-result-root merge-result)))
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
           (check-equal? (length (poo-flow-module-extension-node-slots
@@ -228,7 +228,7 @@
                         field-count)
           (check-equal? (slot-value resolved-node 'field-0)
                         '(0 1000))
-          (check-equal? (poo-flow-module-config-merge-result-iterations
+          (check-equal? (poo-flow-module-field-resolution-result-iterations
                          noop-result)
                         0)
           (check-equal? (< elapsed-ms 1000) #t)
@@ -289,7 +289,7 @@
                        remove-contribution
                        map-set-contribution)))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
+                (poo-flow-module-field-resolution-result-root merge-result)))
           (check-equal? (poo-flow-module-transformer-contract?
                          poo-flow-module-transformer-list-append-contract)
                         #t)
@@ -323,7 +323,7 @@
                          capabilities-field
                          'process-run)
                         '("transformer:list.remove:argument-kind-mismatch"))
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
           (check-equal? (slot-value resolved-node 'capabilities)

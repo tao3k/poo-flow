@@ -427,7 +427,7 @@
                   (poo-flow-module-extension-node-remove
                    "user-interface/config.ss"))))
                (result
-                (poo-flow-module-auto-imports-mk-merge
+                (poo-flow-module-auto-imports-resolve
                  source-refs
                  (list disable-config)))
                (resolved-source-values

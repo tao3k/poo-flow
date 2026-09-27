@@ -149,6 +149,9 @@ The ambiguous schema =support/merge.ss= and =mk-merge= entry are removed.
 Core now separates pure =slot-policy.ss= from targeted
 =field-resolution.ss=. Core's object-catalog fallback still invokes the latter
 for extension-graph operations; it is not ordinary inherited configuration.
+The result object is now named =field-resolution-result=, while loader graph
+contributions use the explicit =auto-imports-resolve= entrypoint; neither is a
+second ordinary-configuration evaluator.
 Child topology and other non-inheritance operations remain explicit and
 require separate evidence before further simplification.
 

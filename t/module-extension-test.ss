@@ -136,7 +136,7 @@
                  'workflow/pipeline/default run-field
                  "gxi build.ss --optimized"))))
              (resolved-root
-              (poo-flow-module-config-merge-result-root result)))
+              (poo-flow-module-field-resolution-result-root result)))
         (check-equal? (poo-flow-module-field-contract? needs-field) #t)
         (check-equal? (poo-flow-module-field-contract-accepts?
                        needs-field '(lint))
@@ -144,9 +144,9 @@
         (check-equal? (poo-flow-module-field-contract-accepts?
                        needs-field 'lint)
                       #f)
-        (check-equal? (poo-flow-module-config-merge-result? result) #t)
-        (check-equal? (poo-flow-module-config-merge-result-stable? result) #t)
-        (check-equal? (poo-flow-module-config-merge-result-iterations result) 1)
+        (check-equal? (poo-flow-module-field-resolution-result? result) #t)
+        (check-equal? (poo-flow-module-field-resolution-result-stable? result) #t)
+        (check-equal? (poo-flow-module-field-resolution-result-iterations result) 1)
         (check-equal? (slot-value resolved-root 'needs) '(test lint))
         (check-equal? (slot-value resolved-root 'features) '(sandbox ci))
         (check-equal? (slot-value resolved-root 'run)
@@ -212,7 +212,7 @@
                    (runtime-args . ("--trace-cube"))
                    (profile . strict))))))
              (resolved-root
-              (poo-flow-module-config-merge-result-root result))
+              (poo-flow-module-field-resolution-result-root result))
              (resolved-nono
               (poo-flow-module-extension-child-ref
                (poo-flow-module-extension-node-children resolved-root)
@@ -364,7 +364,7 @@
                    (runtime-args . ("--trace-cube"))
                    (profile . strict))))))
              (resolved-objects
-              (poo-flow-module-config-merge-result-root result))
+              (poo-flow-module-field-resolution-result-root result))
              (resolved-shared
               (poo-flow-module-objects-ref
                resolved-objects
