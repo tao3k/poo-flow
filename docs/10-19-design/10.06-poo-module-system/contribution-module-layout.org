@@ -256,12 +256,12 @@ Generated output enumeration and independent source-catalog receipts are not
 part of this module convention.
 
 * CLOS contracts for pure model snapshots
-=contribution/model.ss= projects existing =poo-clos= class metadata onto ordinary
+=core/poo-clos/model.ss= projects existing =poo-clos= class metadata onto ordinary
 POO values. Contributors declare =poo-clos-class= and
 =poo-clos-direct-slot-definition= values in =types.ss=. CLOS owns superclass
 resolution and effective slots, including conjunction of inherited predicates.
-=objects.ss= extends =poo-flow-model-prototype= with =.o= and checks the result
-with =poo-flow-check-model=. Public algorithm boundaries use =poo-flow-model?=
+=objects.ss= extends =poo-clos-model-prototype= with =.o= and checks the result
+with =poo-clos-check-model=. Public algorithm boundaries use =poo-clos-model?=
 to revalidate derived overrides. An equal kind or copied class marker never
 substitutes for actual prototype ancestry.
 
@@ -273,7 +273,7 @@ requiring CLOS lifecycle state use =poo-clos-make-instance= instead. No second
 class registry, slot merge algorithm, or public macro language is introduced.
 
 SDLC supplies domain classes in the independent contribution repository; this
-projection and its tests belong to POO Flow. NASA source rows remain source
+projection and its tests belong to Core. NASA source rows remain source
 catalog data rather than being turned into lifecycle instances.
 
 
