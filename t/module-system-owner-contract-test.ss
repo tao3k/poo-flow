@@ -19,7 +19,7 @@
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/user-interface/module-authoring-syntax
         :poo-flow/src/authoring/module-option-projection

@@ -12,7 +12,7 @@
 (import :gerbil/core
         :poo-flow/modules/agent-sandbox/alist
         :poo-flow/modules/nono-sandbox/c-binding-runtime
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         (only-in ./_nono
                  nono_native_apply_null
                  nono_native_capability_roundtrip

@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/entrypoints
         :poo-flow/modules/sandbox-core/profile-catalog
         (only-in :poo-flow/src/user-interface/presentation

@@ -15,7 +15,7 @@
                  $constant-slot-spec)
         (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-by-name)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry))
 
 (export pooFlowModuleSystemLiveCase

@@ -9,7 +9,7 @@
         (only-in :clan/poo/mop element?)
         (only-in :core/contribution/objects
                  admit-contributions)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection)
         (only-in :core/poo-clos/interface
                  poo-clos-generic-methods

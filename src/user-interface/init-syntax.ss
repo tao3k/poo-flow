@@ -9,7 +9,7 @@
 (import (only-in :clan/poo/object .o object<-alist)
         :poo-flow/src/authoring/fragment-syntax
         :poo-flow/src/authoring/module-config-syntax
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
         :poo-flow/src/user-interface/module-presentation
@@ -57,7 +57,7 @@
         :poo-flow/src/user-interface/init-declaration-syntax
         :poo-flow/src/user-interface/profile-config
         :poo-flow/src/user-interface/module-selection-syntax
-        :poo-flow/src/module-system/declaration/contract)
+        :poo-flow/src/user-interface/module-selection-contract)
 
 (export poo-flow-module-bundles
         (import: :poo-flow/src/user-interface/module-selection-syntax)

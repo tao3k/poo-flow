@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: module-system base facts for hot-plug module selection.
+;;; Boundary: POO Flow user-facing facts for hot-plug module selection.
 ;;; Invariant: this module stays below profile/doctor presentation logic.
 ;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep the downstream surface focused on POO Flow module activation.

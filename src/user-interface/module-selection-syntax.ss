@@ -7,7 +7,7 @@
 ;;; Invariant: expansion produces POO selection values only; source discovery,
 ;;; descriptor realization, and runtime effects stay behind loader boundaries.
 
-(import (only-in :poo-flow/src/module-system/declaration/interface
+(import (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-bundle
                  poo-flow-user-custom-modules-selection
                  poo-flow-user-module-selection))

@@ -36,7 +36,6 @@ at that boundary and remove the old file after its consumers migrate.
 
 | Current source | Target owner | Separation required |
 |-
-| =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + =src/user-interface/= | Separate generic selection from user categories and settings. |
 | =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
 | =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
 | =loader/resolver.ss= | Core lookup + product activation | Keep typed failure, Doctor, and RunConfig lowering in POO Flow; user-bundle selection lives in =src/user-interface/module-source-selection.ss=. |
@@ -53,7 +52,10 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 6 Scheme files and this README. Product source admission lives in
+contains 4 Scheme files and this README. POO Flow selection values and the
+public =use-module= category/flag contract now live in
+=src/user-interface/module-selection.ss= and =module-selection-contract.ss=;
+Core owns the generic Profile selection algebra. Product source admission lives in
 =src/authoring/module-source-admission.ss= and imports generic Core POO
 contracts directly; its role and repair vocabulary are POO Flow policy.
 Product module config authoring now

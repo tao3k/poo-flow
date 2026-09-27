@@ -8,7 +8,7 @@
 ;;; config authoring remains prototype composition plus named conversion helpers.
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
-        (only-in :poo-flow/src/module-system/declaration/contract
+        (only-in :poo-flow/src/user-interface/module-selection-contract
                  poo-flow-modules-system-use-module/contract))
 
 (export defpoo-module-config-prototype

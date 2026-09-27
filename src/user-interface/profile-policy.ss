@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :std/list/list any filter filter-map)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-key)
         (only-in :poo-flow/src/user-interface/profile-core
                  poo-flow-user-profile-diagnostic-kind

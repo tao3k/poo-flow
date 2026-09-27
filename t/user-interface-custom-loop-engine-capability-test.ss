@@ -16,7 +16,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/presentation-config
         (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?

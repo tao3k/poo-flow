@@ -19,7 +19,7 @@ The current module syntax boundary is thin and upstream-owned:
 - =use-module= handles sandbox POO =.def= profile forms and a generic live-case
   row with =:inherits=, =:isolation=, =:environment=, =:command=, and =:nono=.
 - There is no =funflow :config (pipeline ...)= branch yet.
-- =src/module-system/declaration/interface.ss= owns the =use-module= declaration contract gate
+- =src/user-interface/module-selection.ss= owns the =use-module= declaration contract gate
   so category symbols such as =workflow= cannot silently become custom modules.
 - =load!= wraps downstream fragments so user files can keep declarations pure.
 
@@ -116,7 +116,7 @@ The public downstream shape should be:
 
 The macro expansion should construct a =poo-flow-cicd-check-map= through a new
 Funflow config helper. The helper should live beside the module owner, not in
-=module-system/declaration/interface.ss=:
+=user-interface/module-selection.ss=:
 
 - =modules/funflow/config.ss= owns the public POO prototypes:
   =funflow-check= and =funflow-pipeline=.

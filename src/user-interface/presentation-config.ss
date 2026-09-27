@@ -12,7 +12,7 @@
         :poo-flow/modules/sandbox-core/profile-support/policy
         :poo-flow/modules/workflow/interface
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/entrypoints
         :poo-flow/src/user-interface/module-presentation
         :poo-flow/modules/sandbox-core/backend-capability-catalog

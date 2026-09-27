@@ -17,7 +17,7 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules
                  pooFlowUserConfig)

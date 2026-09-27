@@ -30,7 +30,7 @@ not by the generic module system.
 
 | Feature | Public factor | Responsibility |
 |---------+---------------+----------------|
-| declaration | =declaration/interface.ss=; =src/user-interface/selection-flags.ss=, =module-selection-syntax.ss=; =src/authoring/module-config-syntax.ss= | POO-native selection values, product user syntax, and config authoring |
+| declaration | =src/user-interface/module-selection.ss=, =module-selection-contract.ss=, =selection-flags.ss=, =module-selection-syntax.ss=; =src/authoring/module-config-syntax.ss= | POO-native user selection values, product contract/syntax policy, and config authoring |
 | descriptor | =descriptor/interface.ss=; =src/user-interface/module-authoring-syntax.ss= | module descriptor contracts and product catalog authoring |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/tree.ss=; =src/authoring/module-imports.ss=, =source-registry.ss=; =src/user-interface/module-source-selection.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
 | projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =src/authoring/module-option-projection.ss=; =src/user-interface/module-value-catalog.ss=, =module-runtime-presentation.ss= | Core option values and validation; product descriptor projection, value catalog, and runtime presentation |

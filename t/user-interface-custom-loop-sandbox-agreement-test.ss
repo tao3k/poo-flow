@@ -11,7 +11,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  pooFlowUserConfig
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules

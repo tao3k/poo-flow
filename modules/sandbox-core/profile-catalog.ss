@@ -9,7 +9,7 @@
 (import (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles
                  poo-flow-sandbox-profile?)
-        :poo-flow/src/module-system/declaration/interface)
+        :poo-flow/src/user-interface/module-selection)
 
 (export poo-flow-user-module-selection-sandbox-profiles
         poo-flow-sandbox-profile-catalog-defaults

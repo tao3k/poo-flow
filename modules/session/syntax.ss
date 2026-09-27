@@ -8,7 +8,7 @@
 ;;; selection contract without importing the user-interface aggregate.
 
 (import (only-in :clan/poo/object object<-alist)
-        (only-in :poo-flow/src/module-system/declaration/contract
+        (only-in :poo-flow/src/user-interface/module-selection-contract
                  poo-flow-modules-system-use-module/contract)
         "funs.ss"
         :poo-flow/modules/memory-core/durable/policy

@@ -7,7 +7,7 @@
 ;;; Invariant: macros may stay ergonomic, but every expansion must produce
 ;;; concrete module selections rather than category aliases or loose data.
 
-(import :poo-flow/src/module-system/declaration/interface
+(import :poo-flow/src/user-interface/module-selection
         :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-use-module-contract-validation-kind

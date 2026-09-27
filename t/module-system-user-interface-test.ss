@@ -19,7 +19,7 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/tree

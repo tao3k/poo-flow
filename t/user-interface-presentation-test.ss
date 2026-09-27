@@ -14,7 +14,7 @@
         (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-brand-group
                  poo-flow-brand-name)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config-presentation-kind)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)

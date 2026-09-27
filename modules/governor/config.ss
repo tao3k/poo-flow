@@ -6,7 +6,7 @@
 ;;; Boundary: loop governor kernel module selection.
 ;;; Invariant: profile owners compose this row; user-interface does not.
 
-(import :poo-flow/src/module-system/declaration/interface)
+(import :poo-flow/src/user-interface/module-selection)
 
 (export poo-flow-loop-governor-module-bundles)
 

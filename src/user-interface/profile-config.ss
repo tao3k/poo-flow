@@ -6,7 +6,7 @@
 ;;; Boundary: public facade for profile config, policy, and presentation.
 ;;; Invariant: profile objects, diagnostics, and presentations live in leaf owners.
 
-(import :poo-flow/src/module-system/declaration/interface
+(import :poo-flow/src/user-interface/module-selection
         :poo-flow/modules/sandbox-core/profile-catalog
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         :poo-flow/modules/workflow/cicd-config
@@ -16,7 +16,7 @@
         :poo-flow/src/user-interface/profile-policy
         :poo-flow/src/user-interface/profile-presentation)
 
-(export (import: :poo-flow/src/module-system/declaration/interface)
+(export (import: :poo-flow/src/user-interface/module-selection)
         (import: :poo-flow/modules/sandbox-core/profile-catalog)
         (import: :poo-flow/modules/sandbox-core/backend-capability-catalog)
         (import: :poo-flow/modules/workflow/cicd-config)

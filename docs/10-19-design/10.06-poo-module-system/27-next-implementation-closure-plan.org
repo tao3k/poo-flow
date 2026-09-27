@@ -226,7 +226,7 @@ Reason:
 Prior M2 owner files:
 - =modules/workflow/{objects,funs}.ss= for workflow-owned manifest/check-map
   validation if the validation is check-map specific.
-- =src/module-system/declaration/interface.ss= for user-config presentation validation if the
+- =src/user-interface/module-selection.ss= for user-config presentation validation if the
   validation consumes module-selected manifest maps and summary rows.
 - =src/user-interface/profile-config.ss= only forwards results; it should not own
   validation logic.
@@ -258,7 +258,7 @@ Exit criteria:
 - Generic presentation fixtures with CI/CD intent but no check-map still expose stable empty ABI rows.
 - No provider-specific CI/CD adapter or runtime execution is added.
 Status 2026-06-20:
-- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/declaration/interface.ss=.
+- Implemented user-config Marlin handoff ABI projection helpers in =src/user-interface/module-selection.ss=.
 - Forwarded the new projection through profile and doctor presentations in =src/user-interface/profile-config.ss=.
 - Added a user-interface result gate in =t/user-interface-cicd-test.ss= that starts from downstream Funflow config and reaches ABI payload data.
 - Updated =t/user-interface-presentation-test.ss= trace stages and empty-fixture coverage.

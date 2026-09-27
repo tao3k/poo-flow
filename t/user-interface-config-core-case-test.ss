@@ -20,7 +20,7 @@
         (only-in :poo-flow/testing-api
                  +poo-flow-testing-interface+
                  poo-flow-testing-admit-user-profile!)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config?
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
