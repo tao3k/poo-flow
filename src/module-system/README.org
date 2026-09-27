@@ -46,6 +46,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
 | module relations | =module-schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
+| CLOS pure model | =poo-clos/model.ss= | validate ordinary POO values against effective class slots without lifecycle allocation |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =observability/debug.ss= | reusable POO/debug observation contracts |
 | slot presentation | =observability/slot-presentation.ss= | read-only POO slot value and prototype-source views |
