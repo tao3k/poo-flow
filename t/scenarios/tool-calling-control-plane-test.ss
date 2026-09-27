@@ -5,7 +5,6 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite)
         (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/modules/tool-core/calling-control
         :poo-flow/user-interface/profiles/tool-calling
         :poo-flow/user-interface/scenarios/tool-calling-agent-loop/scenario)

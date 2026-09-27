@@ -82,6 +82,21 @@ def test_scheme_projection_cache_invalidates_when_source_changes(
     assert len(calls) == 2
 
 
+def test_scheme_projection_cache_tracks_direct_profile_owner(tmp_path) -> None:
+    projection = tmp_path / "modules" / "funflow" / "runtime-load-projection.ss"
+    _runtime_projection_fixture(tmp_path)
+    source = _source_fixture(tmp_path)
+    owner = tmp_path / "src" / "module-system" / "profile-composition" / "profile-bundle.ss"
+    owner.parent.mkdir(parents=True)
+    owner.write_text(";; first\n", encoding="utf-8")
+
+    first = scheme_cache.scheme_load_cache_key(source, tmp_path, projection)
+    owner.write_text(";; updated owner\n", encoding="utf-8")
+    second = scheme_cache.scheme_load_cache_key(source, tmp_path, projection)
+
+    assert first != second
+
+
 def test_scheme_projection_cache_can_be_disabled(tmp_path, monkeypatch) -> None:
     scheme_load.clear_load_cache()
     _runtime_projection_fixture(tmp_path)

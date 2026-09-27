@@ -36,7 +36,8 @@ def runner_source(module_path: Path, projection_path: Path) -> str:
     source_path = scheme_string(str(module_path))
     projection_source_path = scheme_string(str(projection_path))
     return (
-        "(import :poo-flow/src/module-system/profile-composition/interface\n"
+        "(import :poo-flow/src/module-system/profile-composition/binding-syntax\n"
+        "        :poo-flow/src/module-system/profile-composition/profile-bundle\n"
         "        :poo-flow/modules/funflow/profile-library)\n"
         f"(include {projection_source_path})\n"
         "(poo-flow-runtime-load-write!\n"
@@ -48,7 +49,8 @@ def aot_runner_source(module_path: Path, projection_path: Path) -> str:
     source_path = scheme_string(str(module_path))
     projection_source_path = scheme_string(str(projection_path))
     return (
-        "(import :poo-flow/src/module-system/profile-composition/interface\n"
+        "(import :poo-flow/src/module-system/profile-composition/binding-syntax\n"
+        "        :poo-flow/src/module-system/profile-composition/profile-bundle\n"
         "        :poo-flow/modules/funflow/profile-library)\n"
         f"(include {projection_source_path})\n"
         "(export main)\n"

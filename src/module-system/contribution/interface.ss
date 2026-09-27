@@ -4,7 +4,10 @@
 
 ;;; POO Flow contribution verification and Profile composition boundary.
 (import :clan/poo/object
-        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
+                 use-module user-composition)
+        (only-in :poo-flow/src/scenario/accessors
+                 poo-flow-scenario-case-profiles)
         :poo-flow/src/utilities/functional
         :core/contribution/verification)
 (export .o .ref .mix .extend .slot? object?

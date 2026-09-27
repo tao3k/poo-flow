@@ -6,7 +6,7 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .all-slots .ref)
         (only-in :std/test check-equal? test-suite)
-        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/scenario/case poo-flow-scenario-case?)
         :poo-flow/src/scenario/accessors
         :poo-flow/src/module-system/loader/collection
         (only-in :poo-flow/src/module-system/loader/source

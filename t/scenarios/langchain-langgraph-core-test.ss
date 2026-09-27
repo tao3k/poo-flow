@@ -13,12 +13,15 @@
         :poo-flow/src/graph/control-analysis
         :poo-flow/src/graph/runtime-executor
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
+                 user-composition)
+        :poo-flow/src/module-system/profile-composition/profile-bundle
         (rename-in
          (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
                   use-module)
          (use-module use-profile-module))
         :poo-flow/src/scenario/accessors
+        (only-in :poo-flow/src/scenario/case poo-flow-scenario-case?)
         :poo-flow/user-interface/profiles/langchain
         :poo-flow/user-interface/profiles/langgraph
         :poo-flow/user-interface/scenarios/langchain/scenario

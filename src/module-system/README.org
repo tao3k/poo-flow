@@ -32,7 +32,7 @@ not by the generic module system.
 | descriptor | =descriptor/interface.ss= | module descriptor contracts |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/selection.ss=, =loader/tree.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
 | projection | =projection/interface.ss= | option and receipt projection |
-| profile composition | =profile-composition/interface.ss= | functional composition values |
+| profile composition | =profile-composition/profile-bundle.ss=, =binding-syntax.ss=, =bindings.ss= | functional Profile selection and binding values; Scenario Case/workload live in =src/scenario/= |
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
 | semantic module policy | =semantic-module/objects.ss= | POO Flow default authoring roles over Core semantic Module Contracts |

@@ -135,7 +135,11 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             )
             runner_source = runner_capture.read_text(encoding="utf-8")
             self.assertIn(
-                ":poo-flow/src/module-system/profile-composition/interface",
+                ":poo-flow/src/module-system/profile-composition/binding-syntax",
+                runner_source,
+            )
+            self.assertIn(
+                ":poo-flow/src/module-system/profile-composition/profile-bundle",
                 runner_source,
             )
             self.assertIn(

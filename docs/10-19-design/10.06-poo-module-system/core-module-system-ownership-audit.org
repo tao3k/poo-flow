@@ -70,7 +70,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
 | =profile-composition/plan-projection.ss= | =src/scenario/plan-projection.ss= | Moved the Scenario Case to product ExecutionPlan projection; it depends on the POO Flow Plan and is not a generic Core Module mechanism. |
 | =profile-composition/scenario-case.ss= | =src/scenario/case.ss= | Moved fresh Session state and Scenario Case construction to the product Scenario owner. |
-| =profile-composition/interface.ss= | Retire | Consumers import Core composition and POO Flow Scenario separately. |
+| =profile-composition/interface.ss= | Retired | Consumers now import Profile binding syntax, ProfileBundle and bindings, or Scenario Case/workload/Plan owners directly. |
 | =projection/catalog.ss=, =projection/options.ss= | Core Module values/validation + POO Flow projection | Core owns option config, schema, and validation receipt POO families plus pure validation; product descriptors still decide schema discovery and projection. Value catalog uses the product kind and stays outside Core. |
 | =projection/runtime.ss= | Core evaluation projection + POO Flow runtime presentation | Pure module closure/evaluation in Core; agent-harness vocabulary and runtime manifest outside Core. |
 | =projection/syntax.ss=, =projection/runtime-syntax.ss= | Core internal syntax or retire | Review public-macro necessity; retained hygienic syntax expands to POO/function code, not a second DSL. |
