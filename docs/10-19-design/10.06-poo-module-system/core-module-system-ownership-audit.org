@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Core Module System ownership and migration audit
+
+* Decision and observed baseline
+
+The generic POO Module System is a Core mechanism.  =src/module-system/= is
+not its permanent owner.  Core owns module identity, contracts, descriptors,
+source references, lazy selection, pure resolution, option projection, Profile
+composition, and generic module diagnostics.  POO Flow owns named product
+modules, policies, source locations, ASP/runtime handoffs, and presentation.
+The end state has no =src/module-system/= implementation directory or
+compatibility import aliases: consumers import the single owner directly.
+
+This audit records parent commit =deca0fb= and Core gitlink =3c42394=.
+=src/module-system/= currently has 49 Scheme files (9,925 lines).  Core already
+owns =module-schema/=, =object-family/=, =extension-graph/=, =contribution/=,
+=composition/lineage.ss=, generic =observability/=, and =poo-clos/=.
+No current Core Scheme source imports =:poo-flow/=.  Twelve checked-out
+Lambda-episteme Scheme files directly import the current module-system path;
+that is a consumer migration, not a reason to retain two authorities.
+
+The earlier deletion of thin =interface.ss= files was useful cleanup but did
+not move the mechanism.  In particular, =projection/catalog.ss=,
+=projection/options.ss=, and =projection/runtime.ss= still implement behavior
+in POO Flow; deleting only =projection/interface.ss= would not satisfy this
+decision.
+
+* File-by-file ownership
+
+Targets below are /semantic owners/, not a promise to copy each file as-is.
+Where one file combines mechanism and product policy, split the implementation
+at that boundary and remove the old file after its consumers migrate.
+
+| Current source | Target owner | Required separation |
+|-
+| =interface.ss= | Core Module interface + POO Flow identity policy | Move schema lookup/object contract; keep brand and product kind IDs outside Core. |
+| =api.ss=, =facade.ss= | Retire | Repoint public imports to Core and product modules, then remove both forwarding surfaces. |
+| =load.ss= | POO Flow user interface | Keep the product category vocabulary outside Core; use Core declaration values. |
+| =authoring/contracts.ss= | Core authoring admission + POO Flow source policy | Generic role/Contract execution belongs in Core; source-form inspection and POO Flow repair vocabulary remain an adapter. |
+| =contribution/verification.ss= | Core contribution governance | Host-trusted issuance, admission, revocation, and private identity storage are generic. |
+| =contribution/interface.ss= | Retire | Import Core contribution/governance and Core Profile composition directly; do not reexport unrelated POO and utility helpers. |
+| =declaration/flags.ss=, =declaration/config-syntax.ss= | Core Module declaration | Generic flag algebra and hygienic POO declarations. |
+| =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + POO Flow policy | Separate generic selection/validation from product category names, user settings, and presentation. |
+| =descriptor/interface.ss= | Core descriptor + POO Flow contribution adapter | Generic identity/import/phase/option descriptor belongs in Core; Task/Flow registry payloads remain product contributions. |
+| =descriptor/syntax.ss= | Core declaration syntax + POO Flow UI | Keep only hygienic mechanism syntax in Core; product-facing catalog syntax belongs with its user interface. |
+| =loader/source.ss=, =loader/context.ss= | Core Module source/context | Source identities, import values, flags, phase queries, and closure order are reusable mechanisms. |
+| =loader/backend.ss=, =loader/selection.ss= | Core Module loader | Pure backend descriptors, lazy values, selection, and load receipts. |
+| =loader/resolver.ss= | Core catalog/resolution + POO Flow activation adapter | Pure catalog lookup/closure in Core; Task/Flow registry and run-config lowering outside Core. |
+| =loader/collection.ss= | Core collection + POO Flow source adapter | Ordered source collection algebra in Core; filesystem discovery and source-authoring admission outside Core. |
+| =loader/tree.ss= | Core lazy graph + POO Flow root assembly | Lazy graph composition in Core; maintained/user roots and product activation outside Core. |
+| =loader/registry.ss= | Core source metadata + POO Flow registry | Generic source-ref construction in Core; fixed =modules/= and =src/user-interface/= paths outside Core. |
+| =loader/official-contributions.ss= | POO Flow package adapter | Checked-out =packages/= layout is product configuration, not Core. |
+| =loader/import-policy.ss=, =loader/fragment-syntax.ss= | POO Flow authoring/UI adapter | Product import whitelist and source-fragment I/O cannot become Core authority. |
+| =loader/interface.ss=, =loader/module-source-interface.ss= | Retire | Repoint consumers to Core loader and the POO Flow package adapter. |
+| =observability/module-diagnostics.ss= | Core Module diagnostics | Generic descriptor findings and non-mutating diagnostic facts. |
+| =observability/module-presentation.ss= | Core observation facts + POO Flow presentation | Separate generic observation objects from product/source syntax and display. |
+| =observability/module-source-observation.ss= | POO Flow source-policy adapter | Reader-native lexical/inline-prototype inspection is source policy, not Core loading. |
+| =observability/doctor-presentation.ss= | POO Flow observability | User-facing aggregation over Core diagnostics and product load receipts. |
+| =observability/source-authoring.ss=, =observability/source-admission.ss= | POO Flow observability | Product source admission and logging. |
+| =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
+| =profile-composition/accessors.ss=, =builders.ss=, =funcs.ss=, =profile-bundle.ss= | Core Profile composition | POO-native selection and pure ProfileBundle algebra; no product module registry. |
+| =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
+| =profile-composition/plan-projection.ss= | Core pure projection + POO Flow execution adapter | Core may describe composition; the product execution-plan and runtime handoff stay outside Core. |
+| =profile-composition/scenario-case.ss= | POO Flow Scenario/Session | Fresh Session state and vertical Case construction are not the generic Module System. |
+| =profile-composition/interface.ss= | Retire | Consumers import Core composition and POO Flow Scenario separately. |
+| =projection/catalog.ss=, =projection/options.ss= | Core Module projection | Generic catalog, schema/option validation, and inspectable receipts. |
+| =projection/runtime.ss= | Core evaluation projection + POO Flow runtime presentation | Pure module closure/evaluation in Core; agent-harness vocabulary and runtime manifest outside Core. |
+| =projection/syntax.ss=, =projection/runtime-syntax.ss= | Core internal syntax or retire | Review public-macro necessity; retained hygienic syntax expands to POO/function code, not a second DSL. |
+| =projection/interface.ss= | Retire | Remove only when the three implementation owners and consumers have moved. |
+| =semantic-module/types.ss=, =semantic-module/objects.ss= | Core semantic Module + POO Flow authoring defaults | Identity/import/capability/Profile/authoring Contracts in Core; user-root defaults and product role policy outside Core. |
+
+* Dependency blockers and required order
+
+1. *Separate Core-safe contracts.* =descriptor/interface.ss= imports
+   =src/core/{task,flow,failure,roles,object-syntax}=; =resolver.ss= imports
+   =src/core/{task,flow,config,failure}=.  Move or parameterize generic
+   contracts first.  Core must not import the POO Flow Task/Flow registries.
+2. *Establish one Core Module model.* Compose existing Core
+   =module-schema/relations.ss= with the extracted interface, semantic Module,
+   descriptor, source-ref, and declaration objects.  Do not recreate the
+   relation Contracts under a second name or add path compatibility aliases.
+3. *Move the pure engine as a unit.* Migrate lazy backend, collection algebra,
+   source selection, catalog resolution, option projection, closure evaluation,
+   and module diagnostics against that one model.  Split filesystem discovery,
+   Task/Flow activation, and product roots at their explicit adapter edge.
+4. *Move Profile composition against Core Module identities.* First migrate
+   pure values/builders and the bounded syntax; keep Scenario/Session runtime
+   effects and product execution-plan lowering in POO Flow.
+5. *Rewire all consumers and delete the old tree.* Repoint POO Flow's user
+   interface and observability, the checked-out Lambda-episteme imports, and
+   build roots.  Remove =src/module-system/= only after no source, test,
+   documentation, or build root refers to it.
+
+The resulting dependency direction is =Core -> gerbil-parser -> POO Flow=;
+Core may depend on Gerbil/gerbil-poo standard facilities but not on
+=:poo-flow/=, ASP, Lambda-episteme, or parser-owned syntax.  POO Flow adapters
+consume Core through direct imports.  Candidate composition stays pure;
+filesystem/process effects remain behind explicit host/runtime handoffs.
+
+* Admission and publication gates
+
+- The migration must not introduce a second Module descriptor, schema,
+  option-merge algorithm, loader registry, or compatibility alias.
+- Core: =just test= before =just build=; native owner tests must cover deep
+  prototypes, wide option schemas, lazy 100/1,000-module catalog selection,
+  missing/conflicting imports, and non-mutating diagnostics.
+- POO Flow: focused consumer tests, then heap-fenced =just test= before
+  =just build=.  Require =MODULE-OK=, =HARNESS-OK=, final =OK=, and no
+  =ERROR CASE= / =ERROR HARNESS= / heap or stack overflow markers.
+- Lambda-episteme: rewire its direct declaration, Profile, loader, and
+  testing-adapter imports; validate its owned tests before updating the
+  gitlink.  Do not silently leave the old path as an alias.
+- Verify Core has no =:poo-flow/=, ASP, Lambda, or parser imports; verify no
+  remaining =:poo-flow/src/module-system/= import after cutover.  The
+  exact post-push Ubuntu jobs, not an earlier green head, are the PR gate.
+
+Core is a separate Git repository and source-owned submodule.  At this audit
+snapshot it has no open PR.  Parent PR #57 cannot itself publish a new Core
+commit: the Core change must be published and admitted in its own repository
+before #57 pins its commit.  Do not push unreviewed Core changes directly to
+=main= or silently open another PR against the user's one-PR instruction.
