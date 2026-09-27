@@ -5,7 +5,7 @@
 
 ;;; Boundary: semantic equivalence checks for indexed DomainCase resolution.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
         (only-in :clan/poo/object .ref)
         :poo-flow/src/feature-system/domain-case/contracts)

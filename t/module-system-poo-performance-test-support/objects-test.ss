@@ -5,7 +5,7 @@
 
 ;;; Boundary: POO performance object and object-catalog test cases.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  check-equal?

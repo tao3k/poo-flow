@@ -7,7 +7,7 @@
 ;;; Invariant: fixture and index construction happen outside timing; samples
 ;;; measure exact-root resolution and receipt construction only.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref)
         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api

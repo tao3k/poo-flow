@@ -5,7 +5,7 @@
 
 ;;; Boundary: sandbox resource POO prototypes use native typed contracts.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .def .o .ref object?)
         (only-in :std/test
                  check-equal?

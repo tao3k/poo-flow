@@ -6,7 +6,7 @@
 ;;; Boundary: focused tests for loop-engine to Funflow workflow agreement.
 ;;; Invariant: workflow agreement is report-only and never executes a pipeline.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

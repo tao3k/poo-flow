@@ -6,7 +6,7 @@
 ;;; Boundary: this integration test imports Module System and User Interface
 ;;; from their respective public owners. Neither facade leaks the other domain.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

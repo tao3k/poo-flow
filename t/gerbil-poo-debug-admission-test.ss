@@ -5,7 +5,7 @@
 
 ;;; Boundary: direct gerbil-poo debug consumption, never semantic evidence authority.
 ;;; All output uses in-memory ports and synthetic canaries, never real secrets.
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal?)
         (only-in :clan/poo/support/debug traced-function)
         (only-in :clan/poo/debug DDT trace-poo)

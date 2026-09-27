@@ -5,7 +5,7 @@
 
 ;;; Scenario: user-interface LangChain and LangGraph composition instances.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .all-slots .def .o .ref .slot?)
         (only-in :std/test check-equal? test-suite)
         :poo-flow/src/graph/types

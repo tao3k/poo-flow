@@ -8,7 +8,7 @@
 (import :gerbil/core
         (only-in :clan/poo/object .ref object?)
         (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :poo-flow/src/module-system/observability/testing-case
+        (only-in :core/observability/testing-case
                  poo-flow-test-case)
         :core/module-schema/interface
         :core/module-schema/validation)

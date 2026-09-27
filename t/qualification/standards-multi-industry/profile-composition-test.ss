@@ -6,7 +6,7 @@
 ;;; Qualification boundary: a mechanism-only Case composes Profiles from two
 ;;; independently owned industries.  It proves composition and diagnostics but
 ;;; makes no claim that either Standard applies to the other's industry.
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref)
         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/modules/standards/interface

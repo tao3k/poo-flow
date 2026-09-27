@@ -6,7 +6,7 @@
 ;;; Boundary: Docker descriptor tests cover tutorial-shaped request data only.
 ;;; Invariant: Scheme never pulls images, mounts volumes, or executes Docker.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

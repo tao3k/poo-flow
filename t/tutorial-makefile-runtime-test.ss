@@ -6,7 +6,7 @@
 ;;; Boundary: makefile-tool runtime stages prove descriptor handoff behavior.
 ;;; Invariant: tests emulate runtime responses without executing Makefile work.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

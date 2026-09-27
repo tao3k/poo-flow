@@ -7,7 +7,7 @@
 ;;; Invariant: benchmark thunks exclude gxi startup, package install, Lean
 ;;; execution, Marlin runtime work, and external IO.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

@@ -5,7 +5,7 @@
 
 ;;; Scenario: user-interface CrewAI-style composition instance.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .all-slots .o .ref .slot?)
         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/src/module-system/loader/fragment-syntax load!)

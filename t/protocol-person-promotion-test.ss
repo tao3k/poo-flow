@@ -4,7 +4,7 @@
 
 (export protocol-person-promotion-test)
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
         :clan/poo/object
         :poo-flow/src/policy/protocol-person-promotion)

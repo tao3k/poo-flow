@@ -50,7 +50,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =observability/debug.ss= | reusable POO/debug observation contracts |
 | slot presentation | =observability/slot-presentation.ss= | read-only POO slot value and prototype-source views |
-| testing Case profile | =observability/testing-case.ss= | POO-native Case policy around the native test runner |
+| testing Case profile | =core/observability/testing-case.ss= | POO-native Case policy around the native test runner; consumers import Core directly |
 
 Further extraction requires a real downstream consumer and a single source owner.
 A source file is not eligible merely because it has no =:poo-flow/= import:

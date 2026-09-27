@@ -6,7 +6,7 @@
 ;;; Boundary: Funflow tutorial alignment is a POO report, not loose prose.
 ;;; Invariant: heavy Docker/CAS/process work remains runtime-owned.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  test-suite
                  check-equal?

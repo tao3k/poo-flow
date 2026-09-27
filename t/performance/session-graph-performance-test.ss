@@ -6,7 +6,7 @@
 ;;; Boundary: session graph performance gates cover indexed lineage traversal.
 ;;; Invariant: graph presentation stays report-only and never executes runtime work.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

@@ -6,7 +6,7 @@
 ;;; Boundary: inert agent harness/session/run object family tests.
 ;;; Invariant: projections distinguish workflow runs, sessions, and dispatches.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check-equal?
                  test-suite)

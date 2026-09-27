@@ -6,7 +6,7 @@
 ;;; Boundary: loop-governor tests cover multi-loop policy projection only.
 ;;; Invariant: runtime state is passed as inert facts and is never mutated.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?

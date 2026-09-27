@@ -6,7 +6,7 @@
 ;;; Boundary: shared sandbox resources are backend-neutral POO data objects.
 ;;; Invariant: tests assert composition and projection only, never runtime setup.
 
-(import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?
