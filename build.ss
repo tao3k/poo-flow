@@ -56,7 +56,7 @@
     "src/user-interface/module-selection-syntax.ss"
     "src/module-system/loader/collection.ss"
     "src/building/official-contributions.ss"
-    "src/module-system/loader/selection.ss"
+    "src/user-interface/module-source-selection.ss"
     "src/module-system/loader/tree.ss"
     "src/authoring/source-authoring.ss"
     "src/testing/source-admission.ss"

@@ -31,7 +31,7 @@
         :core/module-system/loader/objects
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/building/official-contributions
-        :poo-flow/src/module-system/loader/selection
+        :poo-flow/src/user-interface/module-source-selection
         :poo-flow/src/module-system/loader/tree)
 
 (export module-system-lazy-loader-test)

@@ -19,7 +19,7 @@
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
         :poo-flow/src/module-system/loader/collection
-        :poo-flow/src/module-system/loader/selection
+        :poo-flow/src/user-interface/module-source-selection
         :poo-flow/src/module-system/loader/resolver
         :core/module-system/catalog/objects
         :core/extension-graph/interface
