@@ -13,7 +13,8 @@
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/user-interface/selection-flags)
 
 (export poo-flow-user-config-kind

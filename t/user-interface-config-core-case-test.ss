@@ -29,7 +29,7 @@
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-entrypoint
                  poo-flow-user-module-selection-source-ref)
-        (only-in :poo-flow/src/module-system/loader/source
+        (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-kind
                  poo-flow-module-source-ref-value))
 

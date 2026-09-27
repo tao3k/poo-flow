@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: module source refs and structured import values.
+;;; Boundary: POO Flow import conventions over Core SourceRef identities.
 ;;; Invariant: imports describe source refs or inline profiles.
 ;;; They never load files, query registries, or evaluate modules.
 ;;; Intent: callers can inspect provenance and profile payloads before any loader exists.
@@ -22,21 +22,8 @@
         :poo-flow/src/module-system/interface
         :core/module-system/source/objects)
 
-(export poo-flow-module-source-ref-prototype
-        make-poo-flow-module-source-ref
-        poo-flow-module-source-ref?
-        poo-flow-module-source-ref-kind
-        poo-flow-module-source-ref-value
-        poo-flow-module-source-ref-metadata
-        make-poo-flow-module-local-source
-        make-poo-flow-module-custom-interface-source
+(export make-poo-flow-module-custom-interface-source
         make-poo-flow-module-custom-collection-source
-        make-poo-flow-module-package-source
-        make-poo-flow-module-standard-library-source
-        make-poo-flow-module-registry-source
-        make-poo-flow-module-generated-source
-        poo-flow-module-source-ref=?
-        poo-flow-module-source-ref->alist
         poo-flow-module-custom-interface-entrypoint
         poo-flow-local-source
         poo-flow-custom-source

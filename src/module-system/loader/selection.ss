@@ -7,7 +7,7 @@
 
 (import :poo-flow/src/core/failure
         :poo-flow/src/module-system/loader/collection
-        (only-in :poo-flow/src/module-system/loader/source
+        (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-metadata
                  poo-flow-module-source-ref-value)
         (only-in :poo-flow/src/module-system/declaration/interface

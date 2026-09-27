@@ -21,9 +21,8 @@
 ;;   | contract: generate one fixed module-system alist projection function
 ;;   | doc m%
 ;;       Rows are explicit and ordered at the call site. Field keys are fixed
-;;       symbols, not dynamic expressions. Guarded rows preserve existing safe
-;;       defaults for legacy projection inputs while keeping the final shape
-;;       explicit.
+;;       symbols, not dynamic expressions. Guarded rows provide an explicit
+;;       fallback while keeping the final shape explicit.
 ;;
 ;;       # Examples
 ;;

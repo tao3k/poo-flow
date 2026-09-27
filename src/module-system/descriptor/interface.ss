@@ -19,7 +19,8 @@
                  poo-flow-module-flags-enabled?)
         (only-in :core/object-family/syntax
                  defpoo-object-family)
-        :poo-flow/src/module-system/loader/source)
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects)
 
 (export poo-flow-module-role
         poo-flow-module-descriptor-prototype
@@ -82,8 +83,8 @@
   (and (poo-flow-module-descriptor? descriptor)
        (poo-flow-module-flags-enabled? descriptor required-flags)))
 
-;;; Boundary: descriptor defaults make direct constructors and facade modules compatible.
-;;; Intent: every module surface eventually lowers into this stable slot layout.
+;;; Boundary: descriptor defaults define the product module slot layout.
+;;; Intent: every module surface lowers into this slot layout.
 ;; : (-> Unit PooModuleDescriptorPrototype)
 (def poo-flow-module-descriptor-prototype
   (poo-core-role-object

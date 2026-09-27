@@ -19,7 +19,8 @@
         :poo-flow/src/core/api
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/user-interface/module-diagnostics
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/loader/resolver
         :core/module-system/catalog/objects)
 

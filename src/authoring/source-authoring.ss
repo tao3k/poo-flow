@@ -12,7 +12,7 @@
                  poo-flow-scheme-inline-prototype-datum-observations
                  poo-flow-scheme-inline-prototype-port-observations
                  poo-flow-scheme-inline-prototype-file-observations)
-        (only-in :poo-flow/src/module-system/loader/import-policy
+        (only-in :poo-flow/src/authoring/import-policy
                  poo-flow-module-owner-import-datum-observations
                  poo-flow-module-owner-import-port-observations
                  poo-flow-module-owner-import-file-observations

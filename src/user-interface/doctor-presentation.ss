@@ -10,7 +10,8 @@
 
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         "module-diagnostics.ss"
         :poo-flow/src/module-system/projection/syntax

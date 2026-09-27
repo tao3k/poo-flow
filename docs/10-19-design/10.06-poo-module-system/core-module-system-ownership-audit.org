@@ -42,10 +42,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + =src/user-interface/= | Separate generic selection from user categories and settings. |
 | =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
 | =descriptor/syntax.ss= | Core syntax + =src/user-interface/= | Split hygienic constructor syntax from product catalog syntax. |
-| =loader/source.ss= | Core SourceRef + =src/authoring/= | Core owns inert identity; custom import forms are product policy. |
 | =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
-| =loader/fragment-syntax.ss=, =loader/load-binding-syntax-core.inc=, =loader/import-policy.ss= | =src/authoring/= | Reader policy and source-fragment I/O are product authoring boundaries. |
-| =loader/official-contributions.ss=, =loader/registry.ss= | Product package/source registry | Fixed package paths and maintained roots stay outside Core. |
 | =loader/resolver.ss=, =loader/selection.ss= | Core lookup + product activation | Keep typed failure, Doctor, user-bundle selection and RunConfig lowering in POO Flow. |
 | =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
 | =projection/options.ss= | Core option validation + product descriptor projection | Product descriptors decide schema discovery. |
@@ -63,7 +60,7 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 20 Scheme files plus one include file and this README; its deletion
+contains 15 Scheme files and this README; its deletion
 is still the closure condition, not a completed claim.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:

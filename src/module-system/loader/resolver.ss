@@ -18,7 +18,8 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/core/config
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/user-interface/module-diagnostics
         :core/module-system/catalog/objects

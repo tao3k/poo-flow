@@ -24,12 +24,13 @@
                  execution-failure?
                  execution-failure-code)
         (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         :core/extension-graph/interface
         :core/module-system/loader/objects
         :poo-flow/src/module-system/loader/collection
-        :poo-flow/src/module-system/loader/official-contributions
+        :poo-flow/src/building/official-contributions
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree)
 

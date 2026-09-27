@@ -13,7 +13,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/user-interface/init-syntax
                  poo-flow-profile-extend)
-        (only-in :poo-flow/src/module-system/loader/fragment-syntax
+        (only-in :poo-flow/src/authoring/fragment-syntax
                  poo-flow-load-profile-module-binding)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-bundle)

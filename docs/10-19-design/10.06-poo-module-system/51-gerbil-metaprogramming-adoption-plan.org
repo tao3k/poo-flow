@@ -120,7 +120,7 @@ Macro ownership follows the layer whose code is generated:
   payloads. It must not hide policy decisions or backend capability semantics.
 - =src/user-interface/init-syntax.ss= owns public =use-module= syntax and any
   private branch-generation helpers.
-- =src/module-system/loader/fragment-syntax.ss= owns source-aware =load!= fragment
+- =src/authoring/fragment-syntax.ss= owns source-aware =load!= fragment
   resolution, compile-time fragment reading, object-fragment wrapping, and
   generated custom-module binding names. It must not own runtime module
   selection, descriptor realization, benchmark payloads, or public scenario
@@ -611,7 +611,7 @@ Phase 4: broaden runtime projection generation carefully.
   =+poo-flow-testing-interface+=.  This avoids rebuilding the full presentation
   graph merely to decide whether a declaration is admissible.
 Phase 4b: keep user fragment loading source-aware and compile-time bounded.
-- Keep =src/module-system/loader/fragment-syntax.ss= as the syntax owner for =load!=
+- Keep =src/authoring/fragment-syntax.ss= as the syntax owner for =load!=
   fragment includes.
 - Keep the generated public surface boring: one binding, a wrapped fragment
   body, and an export.

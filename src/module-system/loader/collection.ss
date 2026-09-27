@@ -11,7 +11,7 @@
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive)
         :core/module-system/loader/load-path
-        (only-in :poo-flow/src/module-system/loader/import-policy
+        (only-in :poo-flow/src/authoring/import-policy
                  poo-flow-module-owner-import-file-observations)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface)
@@ -21,7 +21,8 @@
                  poo-flow-module-authoring-admission-diagnostics)
         (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-default-module-authoring-profile)
-        :poo-flow/src/module-system/loader/source)
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects)
 
 (export poo-flow-module-source-collection-prototype
         make-poo-flow-module-source-collection

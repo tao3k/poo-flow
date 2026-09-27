@@ -7,7 +7,7 @@
 ;;; Invariant: macros expand to profile-config data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o object<-alist)
-        :poo-flow/src/module-system/loader/fragment-syntax
+        :poo-flow/src/authoring/fragment-syntax
         :poo-flow/src/module-system/declaration/config-syntax
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
@@ -65,7 +65,7 @@
         poo-flow-init-module-bundles
         use-module
         poo-flow-module-configs
-        (import: :poo-flow/src/module-system/loader/fragment-syntax)
+        (import: :poo-flow/src/authoring/fragment-syntax)
         (import: :poo-flow/src/user-interface/init-declaration-syntax)
         poo-flow-profile-set
         poo-flow-profile-extend

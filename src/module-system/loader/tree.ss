@@ -16,16 +16,17 @@
                  poo-flow-module-authoring-admission-diagnostics)
         (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-user-root-module-authoring-profile)
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/resolver
         :core/module-system/catalog/objects
         :core/extension-graph/interface
         :core/module-system/loader/objects
-        :poo-flow/src/module-system/loader/registry)
+        :poo-flow/src/authoring/source-registry)
 
-(export (import: :poo-flow/src/module-system/loader/registry)
+(export (import: :poo-flow/src/authoring/source-registry)
         poo-flow-module-tree-lazy-load-plans
         poo-flow-src-modules-lazy-load-plans
         poo-flow-module-auto-import-root-identity

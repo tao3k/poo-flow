@@ -12,7 +12,8 @@
         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/src/user-interface/module-diagnostics
                  make-poo-flow-module-diagnostic)
-        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/loader/resolver
         :poo-flow/src/module-system/projection/runtime
