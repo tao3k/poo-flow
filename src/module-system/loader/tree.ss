@@ -20,6 +20,7 @@
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/resolver
+        :core/module-catalog/objects
         :core/extension-graph/interface
         :core/module-loader/backend
         :poo-flow/src/module-system/loader/registry)

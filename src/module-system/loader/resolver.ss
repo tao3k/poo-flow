@@ -3,12 +3,12 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: module catalog resolution and activation lowering.
-;;; Invariant: resolver matches existing catalog values by source ref.
+;;; Boundary: product resolution admission and Task/Flow activation lowering.
+;;; Invariant: Core Catalog matches existing values by SourceRef.
 ;;; It never evaluates, imports, or opens the source ref payload.
 ;;; Intent: agents can trust resolver receipts as replayable evidence of selection order.
-;;; Ownership: this file owns catalog-source lookup, activation snapshots, and run-config lowering.
-;;; Catalog lookup compares source refs that were built by modules/source.ss.
+;;; Ownership: Core owns Catalog lookup; this adapter owns typed failure,
+;;; Doctor handoff, activation snapshots, and RunConfig lowering.
 ;;; Activation receives descriptors that were already constructed by descriptor owners.
 ;;; The resolver may report missing sources, but it must not try to load them.
 ;;; Run-config lowering is the only place this owner touches core config values.
@@ -21,29 +21,13 @@
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/observability/module-diagnostics
+        :core/module-catalog/objects
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 
-(export poo-flow-module-catalog-entry-prototype
-        make-poo-flow-module-catalog-entry
-        poo-flow-module-catalog-entry?
-        poo-flow-module-catalog-entry-source
-        poo-flow-module-catalog-entry-module
-        poo-flow-module-catalog-entry->alist
-        poo-flow-module-catalog-prototype
-        make-poo-flow-module-catalog
-        poo-flow-module-catalog?
-        poo-flow-module-catalog-name
-        poo-flow-module-catalog-entries
-        poo-flow-module-catalog-source-refs
-        poo-flow-module-catalog-modules
-        poo-flow-module-catalog-add
-        poo-flow-module-catalog-find-source
-        resolve-poo-flow-module-source
+(export resolve-poo-flow-module-source
         resolve-poo-flow-module-sources
-        resolve-poo-flow-module-source/default
-        poo-flow-module-catalog->alist
         poo-flow-module-resolve-doctor
         poo-flow-module-resolve-and-activate
         poo-flow-module-resolve-and-activate-with-base
@@ -57,95 +41,6 @@
         activate-poo-flow-modules
         activate-poo-flow-modules-with-base
         poo-flow-module-activation->run-config)
-
-;;; Boundary: catalog entries bind already-built descriptors to source metadata.
-;; : (-> PooModuleSourceRef PooModuleDescriptor PooModuleCatalogEntry)
-(defpoo-object-family
-  (prototype poo-flow-module-catalog-entry-prototype
-             catalog-entry?
-             poo-flow-module-catalog-entry?)
-  (constructor make-poo-flow-module-catalog-entry
-               (source-value source)
-               (module-value module))
-  (accessors
-   (poo-flow-module-catalog-entry-source source)
-   (poo-flow-module-catalog-entry-module module))
-  (projections))
-
-;;; Boundary: catalog entry projection preserves source/module association.
-;; : (-> PooModuleCatalogEntry Alist)
-(defpoo-module-final-projection
-  poo-flow-module-catalog-entry->alist (entry)
-  (bindings ((source
-              (poo-flow-module-source-ref->alist
-               (poo-flow-module-catalog-entry-source entry)))
-             (module
-              (poo-flow-module-name
-               (poo-flow-module-catalog-entry-module entry)))))
-  (fields ((source source)
-           (module module))))
-
-;;; Boundary: catalogs are immutable resolver indexes, not loaders.
-;; : (-> Symbol [PooModuleCatalogEntry] PooModuleCatalog)
-(defpoo-object-family
-  (prototype poo-flow-module-catalog-prototype
-             catalog?
-             poo-flow-module-catalog?)
-  (constructor make-poo-flow-module-catalog
-               (name-value name)
-               (entries-value entries))
-  (accessors
-   (poo-flow-module-catalog-name name)
-   (poo-flow-module-catalog-entries entries))
-  (projections))
-
-;;; Boundary: source ref listing is for inspection, not resolution side effects.
-;; : (-> PooModuleCatalog [PooModuleSourceRef])
-(def (poo-flow-module-catalog-source-refs catalog)
-  (map poo-flow-module-catalog-entry-source
-       (poo-flow-module-catalog-entries catalog)))
-
-;;; Boundary: module listing keeps catalog lookup separate from activation.
-;; : (-> PooModuleCatalog [PooModuleDescriptor])
-(def (poo-flow-module-catalog-modules catalog)
-  (map poo-flow-module-catalog-entry-module
-       (poo-flow-module-catalog-entries catalog)))
-
-;;; Boundary: catalog add returns a new catalog and preserves insertion order.
-;; : (-> PooModuleCatalog PooModuleCatalogEntry PooModuleCatalog)
-(def (poo-flow-module-catalog-add catalog entry)
-  (make-poo-flow-module-catalog
-   (poo-flow-module-catalog-name catalog)
-   (append (poo-flow-module-catalog-entries catalog)
-           (list entry))))
-
-;;; Boundary: source matching is pure first-match lookup over normalized refs.
-;;; Intent: resolver evidence should be replayable and independent from filesystem state.
-;; : (-> [PooModuleCatalogEntry] PooModuleSourceRef MaybePooModuleCatalogEntry)
-(def (poo-flow-module-catalog-find-source-in entries source-ref)
-  (cond
-   ((null? entries) #f)
-   ((poo-flow-module-source-ref=?
-     (poo-flow-module-catalog-entry-source (car entries))
-     source-ref)
-    (car entries))
-   (else
-    (poo-flow-module-catalog-find-source-in (cdr entries) source-ref))))
-
-;;; Boundary: public catalog find delegates to pure entry lookup.
-;; : (-> PooModuleCatalog PooModuleSourceRef MaybePooModuleCatalogEntry)
-(def (poo-flow-module-catalog-find-source catalog source-ref)
-  (poo-flow-module-catalog-find-source-in
-   (poo-flow-module-catalog-entries catalog)
-   source-ref))
-
-;;; Boundary: default resolver is the non-throwing catalog lookup surface.
-;; : (-> PooModuleCatalog PooModuleSourceRef DefaultDescriptor MaybePooModuleDescriptor)
-(def (resolve-poo-flow-module-source/default catalog source-ref default)
-  (let (entry (poo-flow-module-catalog-find-source catalog source-ref))
-    (if entry
-      (poo-flow-module-catalog-entry-module entry)
-      default)))
 
 ;;; Boundary: missing catalog source is a typed config failure, not a loader miss.
 ;; : (-> PooModuleCatalog PooModuleSourceRef PooModuleDescriptor)
@@ -168,16 +63,6 @@
     '()
     (cons (resolve-poo-flow-module-source catalog (car source-refs))
           (resolve-poo-flow-module-sources catalog (cdr source-refs)))))
-
-;;; Boundary: catalog alist projection is an inspection surface only.
-;; : (-> PooModuleCatalog Alist)
-(defpoo-module-final-projection
-  poo-flow-module-catalog->alist (catalog)
-  (bindings ((entries
-              (map poo-flow-module-catalog-entry->alist
-                   (poo-flow-module-catalog-entries catalog)))))
-  (fields ((name (poo-flow-module-catalog-name catalog))
-           (entries entries))))
 
 ;;; Boundary: resolve-doctor validates source selection before activation.
 ;; : (-> PooModuleCatalog [PooModuleSourceRef] PooModuleDoctorReport)

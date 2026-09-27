@@ -51,7 +51,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/context.ss= | Retired; Core Module context + POO Flow descriptor admission | Core owns pure phase, Hook, Flag, and stable-depth queries; POO Flow owns product =active?= admission. |
 | =loader/backend.ss= | Retired; Core Module Loader Backend | Core now owns backend descriptors, lazy values, forcing, and load receipts. |
 | =loader/selection.ss= | Core selection + POO Flow product selection | Separate generic ordered selection from user-bundle policy and failure presentation. |
-| =loader/resolver.ss= | Core catalog/resolution + POO Flow activation adapter | Pure catalog lookup/closure in Core; Task/Flow registry and run-config lowering outside Core. |
+| =loader/resolver.ss= | Core Catalog + POO Flow resolution/activation adapter | Core owns immutable ordered Catalog and pure SourceRef lookup; typed failures, Doctor, Task/Flow registries, and RunConfig remain product concerns. |
 | =loader/collection.ss= | Core collection + POO Flow source adapter | Ordered source collection algebra in Core; filesystem discovery and source-authoring admission outside Core. |
 | =loader/tree.ss= | Core lazy graph + POO Flow root assembly | Lazy graph composition in Core; maintained/user roots and product activation outside Core. |
 | =loader/registry.ss= | Core source metadata + POO Flow registry | Generic source-ref construction in Core; fixed =modules/= and =src/user-interface/= paths outside Core. |
@@ -93,6 +93,11 @@ in =core/module-context/queries.ss=, while product =active?= admission lives
 with the POO Flow descriptor.
 The full Backend mechanism now lives in =core/module-loader/backend.ss=; the
 product Loader imports it directly and the old Backend file is removed.
+Immutable Catalog objects, first-match SourceRef lookup, and inspection now
+live in =core/module-catalog/objects.ss=.  POO Flow's resolver retains typed
+missing-source failure, Doctor, and Task/Flow activation.  Product internals
+import Core Catalog directly; the product resolver no longer reexports its
+generic bindings.
 The remaining rows above are still migration work,
 not completed features.
 

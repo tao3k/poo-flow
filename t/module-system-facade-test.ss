@@ -22,6 +22,7 @@
         :poo-flow/src/module-system/loader/source
         :core/module-context/queries
         :poo-flow/src/module-system/loader/resolver
+        :core/module-catalog/objects
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)
 
