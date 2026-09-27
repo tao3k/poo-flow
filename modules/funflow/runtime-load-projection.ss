@@ -12,11 +12,11 @@
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-key)
-        (only-in :poo-flow/src/module-system/profile-composition/accessors
+        (only-in :poo-flow/src/scenario/accessors
                  poo-flow-scenario-case-name
                  poo-flow-scenario-case-profiles
                  poo-flow-scenario-case-stages)
-        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+        (only-in :poo-flow/src/scenario/case
                  poo-flow-scenario-case?)
         (only-in :poo-flow/modules/funflow/config
                  funflow-plan

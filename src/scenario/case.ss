@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Boundary: behavioral Scenario Case and fresh Session objects for one closed
-;;; user-composition value.
+;;; user-composition value. Scenario owns execution projection and lifecycle.
 ;;; Invariant: planning remains pure; only a fresh Session instance mutates.
 
 (import (only-in :clan/poo/object .all-slots .call .mix .o .put! .ref .set! object?)

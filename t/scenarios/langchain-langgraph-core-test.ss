@@ -18,7 +18,7 @@
          (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
                   use-module)
          (use-module use-profile-module))
-        :poo-flow/src/module-system/profile-composition/accessors
+        :poo-flow/src/scenario/accessors
         :poo-flow/user-interface/profiles/langchain
         :poo-flow/user-interface/profiles/langgraph
         :poo-flow/user-interface/scenarios/langchain/scenario

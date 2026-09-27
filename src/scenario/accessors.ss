@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: POO accessors for profile composition objects.
+;;; Boundary: POO accessors for Scenario Case objects.
 ;;; Invariant: accessors do not interpret graph, loop, or proof payloads.
 
 (import (only-in :clan/poo/object .ref))

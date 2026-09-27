@@ -39,12 +39,12 @@
                  poo-flow-scenario-case-workload/ref)
         (only-in :poo-flow/src/scenario/plan-projection
                  poo-flow-scenario-case->execution-plan)
-        (only-in :poo-flow/src/module-system/profile-composition/accessors
+        (only-in :poo-flow/src/scenario/accessors
                  poo-flow-scenario-case-name
                  poo-flow-scenario-case-modules
                  poo-flow-scenario-case-profiles
                  poo-flow-scenario-case-stages)
-        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+        (only-in :poo-flow/src/scenario/case
                  +poo-flow-scenario-case-kind+
                  +poo-flow-scenario-session-kind+
                  +poo-flow-scenario-admission-kind+

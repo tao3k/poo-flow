@@ -304,7 +304,7 @@ For example, =Scenario.prepare= is normally a method slot; projecting
 universal requirement that every Module contain both mechanisms.
 
 The first production closure of this model is owned by
-=src/module-system/profile-composition/scenario-case.ss=.  =user-composition=
+=src/scenario/case.ss=.  =user-composition=
 now returns =poo-flow.scenario-case.v1= directly; the former inert
 =poo-flow.composition= identity and public compatibility accessors are removed.
 The Case owns lazy =execution-plan=, =admission=, and =presentation= slots plus

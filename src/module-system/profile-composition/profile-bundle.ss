@@ -17,7 +17,7 @@
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-scenario-module-binding
                  poo-flow-scenario-profile-binding)
-        (only-in :poo-flow/src/module-system/profile-composition/scenario-case
+        (only-in :poo-flow/src/scenario/case
                  poo-flow-scenario-case))
 
 (export +poo-flow-profile-export-kind+
