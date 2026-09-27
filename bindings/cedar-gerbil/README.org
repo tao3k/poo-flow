@@ -72,3 +72,8 @@ Use =just inspect-cedar-file POLICY.cedar= to parse and count a multi-policy
 artifact without starting the Host.
 The CI job replays [[file:fixtures/atomic-case/manifest.json][a domain-neutral case manifest]] against
 [[file:fixtures/atomic-case/policies.cedar][a two-policy Cedar artifact]] through this same CLI.
+One Host and one Authority serve all cases in a manifest. The diagnostic
+command consumes each issued grant inside that Authority to validate its
+request binding and clear pending state; it never passes the returned handoff
+to an effect dispatcher. Its final line reports case count, policy count,
+locally consumed grant count, and elapsed time.
