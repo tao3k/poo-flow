@@ -12,7 +12,7 @@
         :poo-flow/src/module-system/descriptor/interface
         :core/module-system/funs
         :core/module-system/projection/option-objects
-        :poo-flow/src/module-system/projection/catalog
+        :poo-flow/src/user-interface/module-value-catalog
         :poo-flow/src/module-system/projection/options)
 
 (export poo-flow-module-runtime-import

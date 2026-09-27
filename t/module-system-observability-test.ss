@@ -93,13 +93,13 @@
                 (poo-flow-authoring-owner-import-port-observations
                  'modules/example/objects.ss
                  (open-input-string
-                  "(import (only-in :poo-flow/src/module-system/contribution/interface poo-flow-verification-adapter))")))
+                  "(import (only-in :poo-flow/src/user-interface/facade poo-flow-module-interface))")))
                (contribution-observation
                 (car contribution-observations)))
           (check-equal? (length contribution-observations) 1)
           (check-equal?
            (.ref contribution-observation 'owner)
-           ':poo-flow/src/module-system/contribution/interface)
+           ':poo-flow/src/user-interface/facade)
           (check-equal? (.ref contribution-observation 'accepted?) #f))))
     (poo-flow-test-case "all maintained module sources import precise owners"
       (let* ((paths (module-observability-source-files "modules"))

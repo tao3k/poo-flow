@@ -15,7 +15,7 @@
         (only-in :core/observability/debug
                  poo-flow-observation-debug)
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  SemanticModuleContract
                  poo-flow-semantic-module))
 

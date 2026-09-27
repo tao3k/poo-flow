@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: Marlin-style module facade tests stay separate from activation tests.
+;;; Boundary: module owner contracts stay separate from activation tests.
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
@@ -18,7 +18,15 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/api
+        :poo-flow/src/module-system/interface
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/module-system/descriptor/syntax
+        :poo-flow/src/module-system/projection/options
+        :poo-flow/src/module-system/projection/runtime
+        :poo-flow/src/user-interface/module-value-catalog
+        :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation
         :poo-flow/src/module-system/loader/source
         :core/module-system/funs
         :poo-flow/src/module-system/loader/resolver
@@ -26,7 +34,7 @@
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)
 
-(export module-system-facade-test)
+(export module-system-owner-contract-test)
 
 (def (source-datum-has-module-prefix? value prefix)
   (cond
@@ -46,11 +54,10 @@
        ((source-datum-has-module-prefix? value prefix) #t)
        (else (loop))))))
 
-;;; This suite protects the public module-system facade from leaking leaf-owner
-;;; implementation details.
+;;; This suite exercises direct owner imports without an aggregate module API.
 ;; : TestSuite
-(def module-system-facade-test
-  (test-suite "poo-flow module system facade"
+(def module-system-owner-contract-test
+  (test-suite "poo-flow module owner contracts"
     (poo-flow-test-case "keeps the user-interface facade independent of concrete modules"
       (check-equal?
        (call-with-input-file
@@ -59,15 +66,6 @@
           (source-port-has-module-prefix?
            port
            ":poo-flow/modules/")))
-       #f))
-    (poo-flow-test-case "keeps the user-interface facade independent of the aggregate module facade"
-      (check-equal?
-       (call-with-input-file
-        "src/user-interface/facade.ss"
-        (lambda (port)
-          (source-port-has-module-prefix?
-           port
-           ":poo-flow/src/module-system/facade")))
        #f))
     (poo-flow-test-case "builds Marlin-style interface config descriptors"
       (let* ((interface

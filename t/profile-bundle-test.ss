@@ -9,7 +9,7 @@
         (only-in :core/observability/slot-presentation
                  poo-flow-slot-presentation)
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-semantic-module)
         :core/profile-composition/profile-bundle
         (only-in :poo-flow/src/scenario/profile-root

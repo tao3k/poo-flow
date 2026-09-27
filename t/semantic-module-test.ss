@@ -10,7 +10,7 @@
         (only-in :core/module-system/schema/relations
                  poo-flow-semantic-identity poo-flow-empty-imports
                  SemanticImports. ModuleImportsContract)
-        :poo-flow/src/module-system/semantic-module/objects)
+        :poo-flow/src/authoring/semantic-module)
 (export semantic-module-test)
 (def semantic-module-test
   (test-suite "role-constrained native Module"

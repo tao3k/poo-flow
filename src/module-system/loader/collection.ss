@@ -19,7 +19,7 @@
                  poo-flow-module-authoring-admit-port
                  poo-flow-module-authoring-admission-accepted?
                  poo-flow-module-authoring-admission-diagnostics)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-default-module-authoring-profile)
         :poo-flow/src/module-system/loader/source)
 

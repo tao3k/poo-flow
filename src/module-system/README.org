@@ -29,14 +29,14 @@ not by the generic module system.
 
 | Feature | Public factor | Responsibility |
 |---------+---------------+----------------|
-| declaration | =declaration/interface.ss= | POO-native selections and flags |
+| declaration | =declaration/interface.ss=; =src/user-interface/selection-flags.ss=, =module-selection-syntax.ss= | POO-native selection values and product user syntax/flag policy |
 | descriptor | =descriptor/interface.ss= | module descriptor contracts |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/selection.ss=, =loader/tree.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
-| projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =projection/catalog.ss=, =options.ss=, =runtime.ss= | Core option values and validation; product catalog, descriptor and runtime projection |
+| projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =src/user-interface/module-value-catalog.ss=; =projection/options.ss=, =runtime.ss= | Core option values and validation; product value catalog, descriptor and runtime projection |
 | profile composition | =core/profile-composition/=; =src/scenario/composition-syntax.ss=, =profile-root.ss= | Core owns Profile selection, =use-module=, and ProfileBundle algebra; Scenario owns =user-composition= and root projection |
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
-| contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
-| semantic module policy | =semantic-module/objects.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
+| contribution verification | =core/contribution/verification.ss= | direct Core import; the redundant product re-export was removed |
+| semantic module policy | =src/authoring/semantic-module.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
 | observability | =core/observability/= | Core owns reusable observation primitives; feature adapters consume them directly |
 
 The shared factors below are owned once by the =core/= Git submodule and
@@ -69,7 +69,7 @@ its exported semantics, source-owner qualifications, build targets, and tests
 must also move atomically.  The shared lineage analysis is qualified in
 Core; the POO Flow RFC45 test remains a consumer test.  In contrast,
 =src/proof/composition-facts.ss= describes a POO Flow proof receipt and
-=semantic-module/objects.ss= defines only POO Flow default authoring roles over
+=src/authoring/semantic-module.ss= defines only POO Flow default authoring roles over
 Core-owned semantic Module Contracts and constructors.  Consumers import Core
 directly beside the product policy.
 

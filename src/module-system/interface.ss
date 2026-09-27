@@ -7,7 +7,7 @@
 ;;; Schema indexing, option vocabulary, and native construction live in Core.
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         :core/module-system/config
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-default-module-authoring-profile))
 
 (export poo-flow-modules-kind

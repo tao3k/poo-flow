@@ -10,7 +10,7 @@
         :clan/poo/object
         :poo-flow/src/core/plan
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        :poo-flow/src/module-system/semantic-module/objects
+        :poo-flow/src/authoring/semantic-module
         :core/profile-composition/selection-syntax
         :poo-flow/src/scenario/composition-syntax
         :core/profile-composition/profile-bundle

@@ -21,7 +21,7 @@
                  poo-flow-poo-slot-authoring-datum-bindings
                  poo-flow-poo-slot-authoring-self-reference?)
         :core/poo-clos/interface
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  ModuleAuthoringExecutor. ModuleSourceRole.
                  ConfigSourceRole.))
 

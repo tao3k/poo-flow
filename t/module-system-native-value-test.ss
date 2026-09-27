@@ -12,7 +12,13 @@
         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/src/user-interface/module-diagnostics
                  make-poo-flow-module-diagnostic)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/module-system/loader/resolver
+        :poo-flow/src/module-system/projection/runtime
+        :core/module-system/loader/objects
+        :core/module-system/catalog/objects
+        :core/module-system/projection/option-objects)
 
 (export module-system-native-value-test)
 

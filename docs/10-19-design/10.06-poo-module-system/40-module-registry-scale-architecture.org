@@ -22,11 +22,7 @@ This owner stores source-ref metadata and static module-tree manifests. It impor
 
 This owner consumes registry source refs and turns them into lazy-load plans, auto-import graphs, and strict load/catalog operations. Loader behavior stays here because it is an action boundary. Registry users can inspect module sources without forcing descriptor realization.
 
-3. =src/module-system/facade.ss=
-
-The facade re-exports stable module-system contracts only. Concrete workflow, sandbox, profile, presentation, and object modules should be imported from their real owner by callers that need them. The facade must not be used as a convenience import for downstream implementation modules.
-
-4. =src/user-interface/facade.ss=
+3. =src/user-interface/facade.ss=
 
 The User Interface facade follows the same bounded rule. It owns stable
 entrypoint, presentation, and observation mechanics. Module System loading is
@@ -106,18 +102,19 @@ The package-env receipt is the removed cost center. Native runner startup is sub
 ** 40.55 Fast Gate Entrypoint
 Focused module-system gates must not be run through =gxpkg env=. Native =gxtest= owns focused single-file tests:
 #+begin_src sh
-gxtest t/module-system-lazy-loader-test.ss
+just test-file t/module-system-lazy-loader-test.ss
 #+end_src
 
-This removes the 20s+ package-env startup from focused agent checks. Full package builds remain package-graph work and should use =gxpkg build -g= for normal CI/development parity; reserve =gxpkg build -R -O= for an explicitly requested release/optimization gate. The Gerbil package build file =build.ss= is not an agent fast-gate interface.
+Focused tests use the heap-fenced Just entrypoint. Full package builds use
+=just build=, while CI validates the exact package graph.
 
-Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-optimization-audit.org::*10.06.39.70 Warm Build Cache Incident (2026-07-02)][10.06.39.70]]: local warm-path checks use =GERBIL_PATH=.gerbil gxi build.ss compile --debug=, one =touch build.ss= run validates the retouch path, and =gxpkg build -g= remains package-manager/CI parity.
+For warm-build performance checks, use the Justfile's package environment and
+the receipts in [[file:39-gerbil-build-optimization-audit.org::*10.06.39.70 Warm Build Cache Incident (2026-07-02)][10.06.39.70]]. Do not bypass the test heap fence or hard-code a
+Gerbil load directory.
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
-- import =modules/*= from =src/module-system/facade.ss=;
 - import =modules/*= from =src/user-interface/facade.ss=;
-- import or re-export the aggregate =src/module-system/facade.ss= from
-  =src/user-interface/facade.ss=;
+- add an aggregate Module System re-export instead of direct owner imports;
 - promote a registry-owned lazy framework source into the package bootstrap
   without an explicit consumer and a cold-build receipt;
 - promote a testing extension into the production bootstrap merely so focused

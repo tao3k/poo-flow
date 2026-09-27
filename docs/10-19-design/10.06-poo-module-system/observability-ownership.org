@@ -189,15 +189,14 @@ slots.
 
 The POO Build Observability extension validates the PackageSpec boundary before
 calling its projector.  POO Flow's ordinary package leaves =modules= and
-=public-entry-modules= unset: the =gerbil.pkg=-pinned ASP Scheme Build API
-produces the native source catalog and hands it directly to =std/make=.  This
-avoids expanding =src/module-system/api.ss= once to manufacture another graph
-before the native planner expands the package sources it already owns.
+=public-entry-modules= bound to precise owner modules. The =gerbil.pkg=-pinned
+ASP Scheme Build API projects that native source catalog to =std/make=. There
+is no package-local aggregate Module System API to expand first.
 
 ASP Scheme owns the reusable PackageSpec versus native =defbuild-script= A/B
 evidence through the same =std/make= executor.  POO Flow additionally guards
-its package declaration against reintroducing either an eager public-entry
-closure or a reduced direct-root list; its observability qualification checks
+its package declaration against reintroducing an aggregate public-entry
+closure; its observability qualification checks
 the catalog handoff and projected target count.
 
 * Development memory diagnosis

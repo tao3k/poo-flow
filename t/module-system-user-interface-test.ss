@@ -3,8 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: this integration test imports Module System and User Interface
-;;; from their respective public owners. Neither facade leaks the other domain.
+;;; Boundary: this integration test imports precise Module System and User
+;;; Interface owners without a module-system aggregate.
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
@@ -18,7 +18,17 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
-        :poo-flow/src/module-system/api
+        :poo-flow/src/module-system/interface
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/module-system/loader/tree
+        :poo-flow/src/module-system/projection/options
+        :poo-flow/src/module-system/projection/runtime
+        :poo-flow/src/user-interface/module-value-catalog
+        :core/module-system/loader/objects
+        :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation
         :poo-flow/src/user-interface/module-diagnostics
         :poo-flow/src/user-interface/doctor-presentation
         :poo-flow/src/module-system/loader/source

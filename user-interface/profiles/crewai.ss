@@ -6,7 +6,7 @@
 
 (import (only-in :clan/poo/object .def .o .ref)
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-semantic-module)
         (only-in :core/profile-composition/profile-bundle
                  poo-flow-profile-export

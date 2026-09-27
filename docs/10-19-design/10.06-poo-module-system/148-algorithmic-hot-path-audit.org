@@ -58,8 +58,8 @@ and method-key projection with SRFI-1 =append-map=.  The change removes the
 intermediate list of lists while leaving order, duplicate resolution, and the
 POO-owned public values unchanged.
 
-The POO CLOS runtime remains outside =src/module-system/api.ss= and is loaded
-only through its explicit module owner.  Its metadata-only =config.ss= is the
+The POO CLOS runtime is loaded only through its explicit Core module owner.
+Its metadata-only =config.ss= is the
 kernel profile entrypoint; selecting the module does not pull dispatch,
 lifecycle, or declaration syntax into ASP's mandatory build closure.
 
@@ -124,11 +124,9 @@ host contention.
 
 * Build boundary
 
-The root and contributor scripts declare public entry modules. The root now
-uses =src/module-system/api.ss=, which composes the subsystem-owned public
-=interface.ss= files. ASP's native Gerbil import closure therefore discovers
-CLOS, profile composition, contribution, loader, and the other public Module
-System sources without =all-gerbil-modules= or implementation-file enumeration.
+The root and contributor scripts declare precise public entry modules. ASP's
+native Gerbil import closure discovers their dependencies without an aggregate
+Module System API or =all-gerbil-modules= enumeration.
 
 This correction invalidates the former 1.95-second root comparison: that build
 only reached the metadata-only =src/module-system/interface.ss= and omitted the

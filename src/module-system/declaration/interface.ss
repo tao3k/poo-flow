@@ -14,7 +14,7 @@
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/module-system/loader/source
-        :poo-flow/src/module-system/declaration/flags)
+        :poo-flow/src/user-interface/selection-flags)
 
 (export poo-flow-user-config-kind
         poo-flow-user-module-selection-kind

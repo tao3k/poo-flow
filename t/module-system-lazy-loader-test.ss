@@ -23,7 +23,7 @@
         (only-in :poo-flow/src/core/failure
                  execution-failure?
                  execution-failure-code)
-        (only-in :poo-flow/src/module-system/load poo-flow-modules!)
+        (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :core/extension-graph/interface

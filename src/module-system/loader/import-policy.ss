@@ -30,9 +30,6 @@
 ;;; import the precise owner that defines the bindings they consume.
 (def poo-flow-module-forbidden-aggregate-imports
   '(:poo-flow/src/core/api
-    :poo-flow/src/module-system/api
-    :poo-flow/src/module-system/facade
-    :poo-flow/src/module-system/contribution/interface
     :poo-flow/src/user-interface/facade
     :poo-flow/src/feature-system/interface))
 

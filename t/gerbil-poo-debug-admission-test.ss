@@ -13,7 +13,7 @@
         (only-in :clan/poo/mop define-type Type.)
         (only-in :core/module-system/schema/relations
                  SemanticImports. poo-flow-semantic-identity)
-        :poo-flow/src/module-system/semantic-module/objects)
+        :poo-flow/src/authoring/semantic-module)
 (export gerbil-poo-debug-admission-test)
 
 (define-type (DebugSymbol @ Type.)

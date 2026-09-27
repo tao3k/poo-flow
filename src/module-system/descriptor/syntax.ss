@@ -10,7 +10,7 @@
 
 (import (only-in :clan/poo/object .o)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/projection/catalog)
+        :poo-flow/src/user-interface/module-value-catalog)
 
 (export defpoo-flow-module-object-block
         poo-flow-module-option-block

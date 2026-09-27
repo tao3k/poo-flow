@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/declaration/interface
-        (only-in :poo-flow/src/module-system/load
+        (only-in :poo-flow/src/user-interface/module-selection-syntax
                  poo-flow-modules!)
         :poo-flow/modules/loop-engine/config
         :poo-flow/src/user-interface/profile-core

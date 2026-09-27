@@ -56,11 +56,11 @@
         :poo-flow/modules/sandbox-core/profile-interface
         :poo-flow/src/user-interface/init-declaration-syntax
         :poo-flow/src/user-interface/profile-config
-        :poo-flow/src/module-system/load
+        :poo-flow/src/user-interface/module-selection-syntax
         :poo-flow/src/module-system/declaration/contract)
 
 (export poo-flow-module-bundles
-        (import: :poo-flow/src/module-system/load)
+        (import: :poo-flow/src/user-interface/module-selection-syntax)
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module

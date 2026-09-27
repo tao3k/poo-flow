@@ -9,7 +9,7 @@
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/core/plan execution-plan? execution-plan-nodes)
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-semantic-module)
         :core/profile-composition/selection-syntax
         :poo-flow/src/scenario/composition-syntax

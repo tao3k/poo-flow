@@ -31,7 +31,7 @@
                  make-poo-flow-module-source-collection
                  make-poo-flow-contribution-module-source
                  poo-flow-module-source-collection-role-entrypoints)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :poo-flow/src/authoring/semantic-module
                  ModuleAuthoringExecutor.
                  ModuleSourceRole.
                  ObjectsSourceRole.

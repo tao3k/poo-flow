@@ -34,58 +34,36 @@ Targets below are /semantic owners/, not a promise to copy each file as-is.
 Where one file combines mechanism and product policy, split the implementation
 at that boundary and remove the old file after its consumers migrate.
 
-| Current source | Target owner | Required separation |
+| Current source | Target owner | Separation required |
 |-
-| =interface.ss= | Core Module interface + POO Flow identity policy | Move schema lookup/object contract; keep brand and product kind IDs outside Core. |
-| =api.ss=, =facade.ss= | Retire | Repoint public imports to Core and product modules, then remove both forwarding surfaces. |
-| =load.ss= | POO Flow user interface | Keep the product category vocabulary outside Core; use Core declaration values. |
-| =authoring/contracts.ss= | Core authoring admission + POO Flow source policy | Generic role/Contract execution belongs in Core; source-form inspection and POO Flow repair vocabulary remain an adapter. |
-| =contribution/verification.ss= | Core contribution governance | Host-trusted issuance, admission, revocation, and private identity storage are generic. |
-| =contribution/interface.ss= | Retire | Import Core contribution/governance and Core Profile composition directly; do not reexport unrelated POO and utility helpers. |
-| =declaration/flags.ss= | POO Flow user interface | Ordered user-selection flag patching is product declaration policy, not generic Core flag algebra. |
-| =declaration/config-syntax.ss= | Core declaration syntax after macro review | Retain only hygienic POO constructor syntax that is independent of POO Flow user categories. |
-| =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + POO Flow policy | Separate generic selection/validation from product category names, user settings, and presentation. |
-| =descriptor/interface.ss= | Core descriptor + POO Flow contribution adapter | Generic identity/import/phase/option descriptor belongs in Core; Task/Flow registry payloads remain product contributions. |
-| =descriptor/syntax.ss= | Core declaration syntax + POO Flow UI | Keep only hygienic mechanism syntax in Core; product-facing catalog syntax belongs with its user interface. |
-| =loader/source.ss= | Core SourceRef + POO Flow import policy | Core owns inert SourceRef identity and inspection; custom directory and import forms remain product policy. |
-| =loader/context.ss= | Retired; Core Module context + POO Flow descriptor admission | Core owns pure phase, Hook, Flag, and stable-depth queries; POO Flow owns product =active?= admission. |
-| =loader/backend.ss= | Retired; Core Module Loader Backend | Core now owns backend descriptors, lazy values, forcing, and load receipts. |
-| =loader/selection.ss= | Core selection + POO Flow product selection | Separate generic ordered selection from user-bundle policy and failure presentation. |
-| =loader/resolver.ss= | Core Catalog + POO Flow resolution/activation adapter | Core owns immutable ordered Catalog and pure SourceRef lookup; typed failures, Doctor, Task/Flow registries, and RunConfig remain product concerns. |
-| =loader/collection.ss= | Core LoadPath + POO Flow source adapter | Core owns the minimal POO SourceCollection protocol and ordered LoadPath composition (=core/module-system/loader/load-path.ss=); filesystem discovery, role validation, and source-authoring admission remain in POO Flow. |
-| =loader/tree.ss= | Core lazy graph + POO Flow root assembly | Lazy graph composition in Core; maintained/user roots and product activation outside Core. |
-| =loader/registry.ss= | Core source metadata + POO Flow registry | Generic source-ref construction in Core; fixed =modules/= and =src/user-interface/= paths outside Core. |
-| =loader/official-contributions.ss= | POO Flow package adapter | Checked-out =packages/= layout is product configuration, not Core. |
-| =loader/import-policy.ss=, =loader/fragment-syntax.ss= | POO Flow authoring/UI adapter | Product import whitelist and source-fragment I/O cannot become Core authority. |
-| =loader/interface.ss=, =loader/module-source-interface.ss= | Retired | Consumers import Core loader values and POO Flow collection, selection, and tree owners directly; no local loader aggregate remains. |
-| =observability/module-diagnostics.ss= | Core Diagnostic values + POO Flow findings | =core/module-system/observability/diagnostics.ss= owns POO Diagnostic/DoctorReport values and pure status; product Task/Flow/Option findings and Doctor presentation remain outside Core. |
-| =observability/module-presentation.ss= | Core observation facts + POO Flow presentation | Separate generic observation objects from product/source syntax and display. |
-| =observability/module-source-observation.ss= | POO Flow source-policy adapter | Reader-native lexical/inline-prototype inspection is source policy, not Core loading. |
-| =observability/doctor-presentation.ss= | POO Flow observability | User-facing aggregation over Core diagnostics and product load receipts. |
-| =observability/source-authoring.ss=, =observability/source-admission.ss= | POO Flow observability | Product source admission and logging. |
-| =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
-| =profile-composition/profile-bundle.ss= | Core Profile composition | POO-native selection and pure ProfileBundle algebra now live in =core/profile-composition/=; product Scenario root projection remains in =src/scenario/profile-root.ss=. |
-| =profile-composition/funcs.ss= | Retired | The Plan owner uses Gerbil =list->hash-table-eq= directly; no duplicate public indexing utility remains. |
-| =profile-composition/accessors.ss=, =builders.ss= | Scenario owner + Core Profile bindings | Case accessors and workload are now =src/scenario/accessors.ss= and =workload.ss=; inert binding values are =core/profile-composition/bindings.ss=. |
-| Profile binding syntax | Split by owner | Core =selection-syntax.ss= owns =use-module=; Scenario =composition-syntax.ss= owns =user-composition=. The old mixed module is removed. |
-| =profile-composition/plan-projection.ss= | =src/scenario/plan-projection.ss= | Moved the Scenario Case to product ExecutionPlan projection; it depends on the POO Flow Plan and is not a generic Core Module mechanism. |
-| =profile-composition/scenario-case.ss= | =src/scenario/case.ss= | Moved fresh Session state and Scenario Case construction to the product Scenario owner. |
-| =profile-composition/interface.ss= | Retired | Consumers now import Profile binding syntax, ProfileBundle and bindings, or Scenario Case/workload/Plan owners directly. |
-| =projection/catalog.ss=, =projection/options.ss= | Core Module values/validation + POO Flow projection | Core owns option config, schema, and validation receipt POO families plus pure validation; product descriptors still decide schema discovery and projection. Value catalog uses the product kind and stays outside Core. |
-| =projection/runtime.ss= | Core evaluation projection + POO Flow runtime presentation | Pure module closure/evaluation in Core; agent-harness vocabulary and runtime manifest outside Core. |
-| =projection/syntax.ss=, =projection/runtime-syntax.ss= | Core internal syntax or retire | Review public-macro necessity; retained hygienic syntax expands to POO/function code, not a second DSL. |
-| =projection/interface.ss= | Retired | Public entrypoints compose Core option values/validation with POO Flow catalog, descriptor and runtime projection owners directly; behavior remains with those owners. |
-| =semantic-module/types.ss=, =semantic-module/objects.ss= | Core semantic Module + POO Flow authoring defaults | Identity/import/capability/Profile/authoring Contracts in Core; user-root defaults and product role policy outside Core. |
+| =interface.ss= | Core Module interface + product identity policy | Keep brand and product kind IDs outside Core. |
+| =authoring/contracts.ss= | Core admission + =src/authoring/= | Split generic Contracts from source-form and repair vocabulary. |
+| =declaration/config-syntax.ss= | Core declaration syntax | Retain only hygienic syntax that expands to POO values. |
+| =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + =src/user-interface/= | Separate generic selection from user categories and settings. |
+| =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
+| =descriptor/syntax.ss= | Core syntax + =src/user-interface/= | Split hygienic constructor syntax from product catalog syntax. |
+| =loader/source.ss= | Core SourceRef + =src/authoring/= | Core owns inert identity; custom import forms are product policy. |
+| =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
+| =loader/fragment-syntax.ss=, =loader/load-binding-syntax-core.inc=, =loader/import-policy.ss= | =src/authoring/= | Reader policy and source-fragment I/O are product authoring boundaries. |
+| =loader/official-contributions.ss=, =loader/registry.ss= | Product package/source registry | Fixed package paths and maintained roots stay outside Core. |
+| =loader/resolver.ss=, =loader/selection.ss= | Core lookup + product activation | Keep typed failure, Doctor, user-bundle selection and RunConfig lowering in POO Flow. |
+| =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
+| =projection/options.ss= | Core option validation + product descriptor projection | Product descriptors decide schema discovery. |
+| =projection/runtime-syntax.ss=, =projection/syntax.ss= | Core syntax + product boundary | Keep only necessary hygienic macros, with final receipts at the boundary. |
+| =projection/runtime.ss= | Core evaluation + product runtime presentation | Keep agent-harness vocabulary and runtime manifest outside Core. |
 
 * Dependency blockers and required order
 
-The current cut removes the old =profile-composition/= and =observability/=
-subdirectories from =src/module-system/=. Core owns Profile selection,
+The current cuts remove the old =profile-composition/=, =observability/=,
+and =semantic-module/= subdirectories from =src/module-system/=. They also
+move user-selection flags/syntax and the product value catalog to
+=src/user-interface/=. Product SemanticModule authoring defaults now live in
+=src/authoring/semantic-module.ss=. Core owns Profile selection,
 ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 27 Scheme files plus one include file and this README; its deletion
+contains 20 Scheme files plus one include file and this README; its deletion
 is still the closure condition, not a completed claim.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:
