@@ -7,20 +7,20 @@
 ;;; Invariant: imports describe source refs or inline profiles.
 ;;; They never load files, query registries, or evaluate modules.
 ;;; Intent: callers can inspect provenance and profile payloads before any loader exists.
-;;; Ownership: source/import shapes are parser-visible facts consumed by descriptors and catalogs.
+;;; Ownership: Core owns SourceRef identity; this file owns product import
+;;; forms and custom source conventions consumed by descriptors and catalogs.
 ;;; Descriptors may inspect the profile slot to expand inline modules.
 ;;; Catalogs may compare source refs by kind/value for deterministic lookup.
 ;;; Future loader backends must consume these values from outside this owner.
-;;; Agents should treat this file as the source/import shape authority.
+;;; Agents should import Core for SourceRef mechanics and this module for
+;;; POO Flow import conventions.
 ;;; No function here may read a path, query a registry, or evaluate a profile.
 ;; | SourceRefValue = Path | Symbol | PooModuleSourceRef | Value
 ;; | PooModuleSourceRefCandidate = Value
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/module-system/interface
-        (only-in :core/object-family/syntax
-                 defpoo-object-family)
-        :poo-flow/src/module-system/projection/syntax)
+        :core/module-source/objects)
 
 (export poo-flow-module-source-ref-prototype
         make-poo-flow-module-source-ref
@@ -51,29 +51,6 @@
         poo-flow-extensions
         poo-flow-extensions-append
         poo-flow-import?)
-
-;;; Boundary: source refs are extensible POO values shared by catalogs and
-;;; import declarations. The marker lives on the prototype, while source kind
-;;; remains an ordinary data slot such as local, package, or registry.
-;; : (-> Symbol SourceRefValue Alist PooModuleSourceRef)
-(defpoo-object-family
-  (prototype poo-flow-module-source-ref-prototype
-             module-source-ref?
-             poo-flow-module-source-ref?)
-  (constructor make-poo-flow-module-source-ref
-               (kind-value kind)
-               (value-value value)
-               (metadata-value metadata))
-  (accessors
-   (poo-flow-module-source-ref-kind kind)
-   (poo-flow-module-source-ref-value value)
-   (poo-flow-module-source-ref-metadata metadata))
-  (projections))
-
-;;; Boundary: local sources are path metadata, not file reads.
-;; : (-> Path PooModuleSourceRef)
-(def (make-poo-flow-module-local-source path)
-  (make-poo-flow-module-source-ref 'local path '()))
 
 ;;; Boundary: custom module directories are user-owned; the module-system only
 ;;; records the interface.ss entrypoint that a future loader may consume.
@@ -110,45 +87,6 @@
    (list (cons 'kind 'custom-module-collection)
          (cons 'modules-root modules-root-path)
          (cons 'entrypoint-role 'discover))))
-
-;;; Boundary: package sources are symbolic references for future loaders.
-;; : (-> Symbol PooModuleSourceRef)
-(def (make-poo-flow-module-package-source package-name)
-  (make-poo-flow-module-source-ref 'package package-name '()))
-
-;;; Boundary: standard-library sources name upstream built-in modules without
-;;; importing or realizing them at declaration time.
-;; : (-> Symbol PooModuleSourceRef)
-(def (make-poo-flow-module-standard-library-source module-name)
-  (make-poo-flow-module-source-ref 'standard-library module-name
-                                   (list (cons 'library 'standard))))
-
-;;; Boundary: registry sources name catalogs without querying them.
-;; : (-> Symbol PooModuleSourceRef)
-(def (make-poo-flow-module-registry-source registry-name)
-  (make-poo-flow-module-source-ref 'registry registry-name '()))
-
-;;; Boundary: generated sources are provenance tags for constructed modules.
-;; : (-> Symbol PooModuleSourceRef)
-(def (make-poo-flow-module-generated-source module-name)
-  (make-poo-flow-module-source-ref 'generated module-name '()))
-
-;;; Boundary: source equality ignores metadata and compares resolver identity.
-;; : (-> PooModuleSourceRef PooModuleSourceRef Boolean)
-(def (poo-flow-module-source-ref=? left right)
-  (and (eq? (poo-flow-module-source-ref-kind left)
-            (poo-flow-module-source-ref-kind right))
-       (equal? (poo-flow-module-source-ref-value left)
-               (poo-flow-module-source-ref-value right))))
-
-;;; Boundary: source refs project to alists only at inspection boundaries.
-;; : (-> PooModuleSourceRef Alist)
-(defpoo-module-final-projection
-  poo-flow-module-source-ref->alist (source-ref)
-  (bindings ())
-  (fields ((kind (poo-flow-module-source-ref-kind source-ref))
-           (value (poo-flow-module-source-ref-value source-ref))
-           (metadata (poo-flow-module-source-ref-metadata source-ref)))))
 
 ;;; Boundary: import-local sources are catalog-compatible source refs.
 ;; : (-> Path PooModuleSourceRef)
