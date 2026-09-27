@@ -93,7 +93,7 @@
                 (poo-flow-authoring-owner-import-port-observations
                  'modules/example/objects.ss
                  (open-input-string
-                  "(import (only-in :poo-flow/src/module-system/contribution/interface make-contribution))")))
+                  "(import (only-in :poo-flow/src/module-system/contribution/interface poo-flow-verification-adapter))")))
                (contribution-observation
                 (car contribution-observations)))
           (check-equal? (length contribution-observations) 1)

@@ -7,7 +7,7 @@
 ;;; Invariant: this projection remains inert and grants no runtime authority.
 (import (only-in :clan/poo/object .ref .slot?)
         (only-in :std/list/list every)
-        (only-in :poo-flow/src/module-system/contribution/objects
+        (only-in :core/contribution/objects
                  make-contribution
                  contribution?)
         (only-in :poo-flow/src/module-system/declaration/interface

@@ -80,10 +80,11 @@ semantic resolution. Do not force users to reconstruct private core machinery.
 
 * Public source contract
 
-=src/module-system/contribution/interface.ss= is a POO Flow facade in the
-existing package. It exposes native object operations, existing
-=use-composition= and the pure contribution envelope. It does not introduce
-another composition language.
+=core/contribution/objects.ss= owns the pure POO contribution envelope and
+capability admission. =src/module-system/contribution/interface.ss= retains
+POO Flow Profile composition and host-trusted verification. Consumers import
+the precise Core owner for contribution values; no second composition
+language is introduced.
 
 A contribution binds identity, revision, semantic owner, compatible contract,
 open semantic facets, explicit requirements and a native profile value.

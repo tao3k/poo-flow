@@ -31,6 +31,7 @@ not by the generic module system.
 | profile composition | =profile-composition/interface.ss= | functional composition values |
 | object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
 | composition | =composition/interface.ss= | public re-export of Core lineage and local proof facts |
+| contribution verification | =contribution/interface.ss= | host-trusted verification and Profile composition; not pure contribution admission |
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | semantic module | =semantic-module/interface.ss= | semantic Module admission and authoring roles over Core relations |
 | observability | =observability/interface.ss= | module authoring and observation |
@@ -44,6 +45,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | type and contract evidence | =types.ss= | native classification and validation contracts |
 | object family | =object-family/interface.ss= | hygienic POO object-family declarations |
 | extension graph | =extension-graph/interface.ss= | ordered contributions and fixed-point resolution |
+| contribution contract | =contribution/objects.ss= | pure POO contribution values and capability admission |
 | module schema | =module-schema/interface.ss= | inherited field contracts and merge |
 | native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
 | module relations | =module-schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
