@@ -150,7 +150,7 @@ root slot changes and child topology operations cannot be silently discarded
 by child-only grouping. Core now tests a root update together with a child
 update; the child-only List merge retains its measured performance gate.
 
-The parent package pins parser =9672e49= and Orgize =bafc627= together.
+The parent package pins parser =fb2485d= and Orgize =f80ee4d= together.
 The former is the exact Core-namespace parser revision required by the
 latter. Orgize =8f615eb= instead required parser =2adf0e3=, which still
 imports =:poo-flow-foundation/= and fails the Core-only external Bazel build;
