@@ -74,6 +74,12 @@ at that boundary and remove the old file after its consumers migrate.
 
 * Dependency blockers and required order
 
+The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:
+host-trusted verification and semantic Module Contracts/construction moved
+to =core/contribution/verification.ss= and top-level =core/semantic-module/=.
+POO Flow retains its authoring role defaults.  The remaining rows above are
+still migration work, not completed features.
+
 1. *Separate Core-safe contracts.* =descriptor/interface.ss= imports
    =src/core/{task,flow,failure,roles,object-syntax}=; =resolver.ss= imports
    =src/core/{task,flow,config,failure}=.  Move or parameterize generic

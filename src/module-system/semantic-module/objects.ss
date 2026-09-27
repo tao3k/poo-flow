@@ -7,7 +7,10 @@
 (import (only-in :clan/poo/object .o .mix .ref)
         (only-in :clan/poo/mop validate)
         :core/module-schema/relations
-        "types.ss")
+        :core/semantic-module/types
+        (only-in :core/semantic-module/objects
+                 SemanticModule. ModuleSourceRole. ModuleAuthoringProfile.
+                 make-semantic-module))
 (export SemanticModule. ModuleSourceRole.
         ModuleAuthoringProfile. ModuleAuthoringExecutor.
         TypesSourceRole. ObjectsSourceRole. FunsSourceRole.
@@ -18,10 +21,6 @@
         poo-flow-semantic-module
         poo-flow-default-module-authoring-profile
         poo-flow-user-root-module-authoring-profile)
-
-(def SemanticModule. (.ref SemanticModuleContract 'proto))
-(def ModuleSourceRole. (.ref ModuleSourceRoleContract 'proto))
-(def ModuleAuthoringProfile. (.ref ModuleAuthoringProfileContract 'proto))
 
 ;;; The executor stays a native POO prototype.  CLOS specializes it through
 ;;; the explicit prototype bridge rather than requiring a duplicate class.
@@ -118,7 +117,7 @@
                              profiles: (profiles-value (poo-flow-empty-profiles))
                              authoring: (authoring-value
                                          (poo-flow-default-module-authoring-profile)))
-  (validate SemanticModuleContract
-    (.o (:: @ SemanticModule.) identity: identity-value imports: imports-value
-        capabilities: capabilities-value profiles: profiles-value
-        authoring: authoring-value)))
+  (make-semantic-module identity-value authoring-value
+                        imports: imports-value
+                        capabilities: capabilities-value
+                        profiles: profiles-value))

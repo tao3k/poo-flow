@@ -34,8 +34,8 @@ not by the generic module system.
 | projection | =projection/interface.ss= | option and receipt projection |
 | profile composition | =profile-composition/interface.ss= | functional composition values |
 | object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
-| contribution verification | =contribution/interface.ss= | host-trusted verification and Profile composition; not pure contribution admission |
-| semantic module | =semantic-module/types.ss=, =objects.ss= | semantic Module admission and authoring roles over Core relations |
+| contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
+| semantic module policy | =semantic-module/objects.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
 | observability | =observability/source-authoring.ss=, =source-admission.ss=, =module-diagnostics.ss=, =doctor-presentation.ss= | POO Flow-specific adapters consume Core observation primitives directly; no local aggregate interface |
 
 The shared factors below are owned once by the =core/= Git submodule and
@@ -48,9 +48,11 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | object family | =object-family/interface.ss= | hygienic POO object-family declarations |
 | extension graph | =extension-graph/interface.ss= | ordered contributions and fixed-point resolution |
 | contribution contract | =contribution/objects.ss= | pure POO contribution values and capability admission |
+| contribution verification | =contribution/verification.ss= | host-trusted issuance, admission and revocation |
 | module schema | =module-schema/interface.ss= | inherited field contracts and merge |
 | native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
 | module relations | =module-schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
+| semantic module | =semantic-module/types.ss=, =objects.ss= | native Module and authoring role Contracts and generic construction |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
 | CLOS pure model | =poo-clos/model.ss= | validate ordinary POO values against effective class slots without lifecycle allocation |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
@@ -65,9 +67,9 @@ its exported semantics, source-owner qualifications, build targets, and tests
 must also move atomically.  The shared lineage analysis is qualified in
 Core; the POO Flow RFC45 test remains a consumer test.  In contrast,
 =src/proof/composition-facts.ss= describes a POO Flow proof receipt and
-=semantic-module/= defines POO Flow admission and authoring roles on Core-owned
-relations. The relation Contracts and constructors have one implementation in
-Core; consumers import them directly beside the POO Flow semantic Module policy.
+=semantic-module/objects.ss= defines only POO Flow default authoring roles over
+Core-owned semantic Module Contracts and constructors.  Consumers import Core
+directly beside the product policy.
 
 The mechanism consumes =poo-flow-load-modules= directory discovery as its
 maintained-module input.  It must not import maintained module implementations.
