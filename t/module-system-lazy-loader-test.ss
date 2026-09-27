@@ -27,7 +27,10 @@
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :core/extension-graph/interface
-        :poo-flow/src/module-system/loader/interface
+        :core/module-system/loader/objects
+        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/module-system/loader/official-contributions
+        :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree)
 
 (export module-system-lazy-loader-test)

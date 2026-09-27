@@ -15,7 +15,7 @@
         "module-diagnostics.ss"
         :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/module-system/projection/interface
-        :poo-flow/src/module-system/loader/interface)
+        :core/module-system/loader/objects)
 
 (export poo-flow-module-doctor-presentation-kind
         poo-flow-module-source-doctor-presentation-kind

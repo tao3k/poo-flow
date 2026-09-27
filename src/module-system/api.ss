@@ -12,7 +12,11 @@
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/loader/interface
+        :core/module-system/loader/objects
+        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/module-system/loader/official-contributions
+        :poo-flow/src/module-system/loader/selection
+        :poo-flow/src/module-system/loader/tree
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/module-system/projection/interface
         :core/module-system/types
@@ -23,7 +27,11 @@
         (import: :poo-flow/src/module-system/contribution/interface)
         (import: :poo-flow/src/module-system/declaration/interface)
         (import: :poo-flow/src/module-system/descriptor/interface)
-        (import: :poo-flow/src/module-system/loader/interface)
+        (import: :core/module-system/loader/objects)
+        (import: :poo-flow/src/module-system/loader/collection)
+        (import: :poo-flow/src/module-system/loader/official-contributions)
+        (import: :poo-flow/src/module-system/loader/selection)
+        (import: :poo-flow/src/module-system/loader/tree)
         (import: :poo-flow/src/module-system/profile-composition/interface)
         (import: :poo-flow/src/module-system/projection/interface)
         (import: :core/module-system/types)

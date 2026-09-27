@@ -57,7 +57,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/registry.ss= | Core source metadata + POO Flow registry | Generic source-ref construction in Core; fixed =modules/= and =src/user-interface/= paths outside Core. |
 | =loader/official-contributions.ss= | POO Flow package adapter | Checked-out =packages/= layout is product configuration, not Core. |
 | =loader/import-policy.ss=, =loader/fragment-syntax.ss= | POO Flow authoring/UI adapter | Product import whitelist and source-fragment I/O cannot become Core authority. |
-| =loader/interface.ss= | Retire after remaining consumers use Core loader and POO Flow product owners directly; =loader/module-source-interface.ss= is removed and its public build roots now name the three leaf owners. |
+| =loader/interface.ss=, =loader/module-source-interface.ss= | Retired | Consumers import Core loader values and POO Flow collection, selection, and tree owners directly; no local loader aggregate remains. |
 | =observability/module-diagnostics.ss= | Core Diagnostic values + POO Flow findings | =core/module-system/observability/diagnostics.ss= owns POO Diagnostic/DoctorReport values and pure status; product Task/Flow/Option findings and Doctor presentation remain outside Core. |
 | =observability/module-presentation.ss= | Core observation facts + POO Flow presentation | Separate generic observation objects from product/source syntax and display. |
 | =observability/module-source-observation.ss= | POO Flow source-policy adapter | Reader-native lexical/inline-prototype inspection is source policy, not Core loading. |

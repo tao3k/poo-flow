@@ -56,7 +56,7 @@ Planned loader sources:
 - registry manifests;
 - generated module descriptors.
 Implemented first-pass behavior:
-- added =src/module-system/loader/interface.ss= as a source-loader owner under =src/module-system=;
+- initially added =src/module-system/loader/interface.ss=; the later Core migration retired that aggregate, leaving Core loader values and direct POO Flow collection/selection/tree owners;
 - added static loader entries for source-ref to descriptor mappings;
 - added load receipts so user tooling can inspect loaded and missing sources before activation;
 - added =poo-module-load-catalog= to hand loaded descriptors to the existing catalog resolver;
