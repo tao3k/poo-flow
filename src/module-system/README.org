@@ -38,6 +38,7 @@ not by the generic module system.
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution verification | =core/contribution/verification.ss= | direct Core import; the redundant product re-export was removed |
 | semantic module policy | =src/authoring/semantic-module.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
+| source admission | =src/authoring/module-source-admission.ss= | POO Flow authoring roles, diagnostics, and inert source validation over Core POO contracts |
 | observability | =core/observability/= | Core owns reusable observation primitives; feature adapters consume them directly |
 
 The shared factors below are owned once by the =core/= Git submodule and

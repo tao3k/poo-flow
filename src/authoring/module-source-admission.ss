@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: role-aware source admission for one loaded POO Module Interface.
+;;; Boundary: POO Flow role-aware source admission for one loaded Module Interface.
 ;;; Invariant: source is read as inert data; this owner never expands or runs it.
 
 (import (only-in :clan/poo/object .def .o .ref .slot? object?)

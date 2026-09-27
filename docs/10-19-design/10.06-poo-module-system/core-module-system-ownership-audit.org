@@ -36,7 +36,6 @@ at that boundary and remove the old file after its consumers migrate.
 
 | Current source | Target owner | Separation required |
 |-
-| =authoring/contracts.ss= | Core admission + =src/authoring/= | Split generic Contracts from source-form and repair vocabulary. |
 | =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + =src/user-interface/= | Separate generic selection from user categories and settings. |
 | =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
 | =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
@@ -54,7 +53,10 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 7 Scheme files and this README. Product module config authoring now
+contains 6 Scheme files and this README. Product source admission lives in
+=src/authoring/module-source-admission.ss= and imports generic Core POO
+contracts directly; its role and repair vocabulary are POO Flow policy.
+Product module config authoring now
 lives in =src/authoring/module-config-syntax.ss=; user-facing module and catalog
 syntax lives in =src/user-interface/module-authoring-syntax.ss=. Neither is a
 separate Core mechanism: the generated forms are POO values, while their public

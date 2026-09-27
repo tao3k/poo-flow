@@ -10,7 +10,7 @@
         :poo-flow/src/core/failure
         (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface)
-        (only-in :poo-flow/src/module-system/authoring/contracts
+        (only-in :poo-flow/src/authoring/module-source-admission
                  poo-flow-module-authoring-admit-port
                  poo-flow-module-authoring-admission-accepted?
                  poo-flow-module-authoring-admission-diagnostics)

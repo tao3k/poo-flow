@@ -17,7 +17,7 @@ The detailed Object/Entity/Element/Relation/Query correspondence is
 
 | Change surface | Normative module | Executable owner |
 |----------------+------------------+------------------|
-| Module shell and =types/objects/funs/config/interface= roles | [[file:44-current-project-programming-style/01-module-interface-and-source-roles.org][01 Module Interface And Source Roles]] | =src/module-system/authoring/contracts.ss= |
+| Module shell and =types/objects/funs/config/interface= roles | [[file:44-current-project-programming-style/01-module-interface-and-source-roles.org][01 Module Interface And Source Roles]] | =src/authoring/module-source-admission.ss= |
 | POO slots, Profile behavior, Provider crossings and CLOS | [[file:44-current-project-programming-style/02-poo-dispatch-and-extension.org][02 POO Dispatch And Extension]] | POO/CLOS conformance tests |
 | Pure algorithms, receipts and runtime handoff | [[file:44-current-project-programming-style/03-functional-kernel-and-runtime-projection.org][03 Functional Kernel And Runtime Projection]] | module and projection tests |
 | Query, Relation, GQL and one semantic model | [[file:44-current-project-programming-style/04-semantic-query-and-relation.org][04 Semantic Query And Relation]] | authoring Query admission + RFC 165 proofs |

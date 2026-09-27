@@ -107,7 +107,7 @@ extension or another Provider only after a real Case proves that candidate
 selection itself cannot be expressed by standard GQL.
 
 The executable owner is
-=src/module-system/authoring/contracts.ss=.  It rejects mechanically certain
+=src/authoring/module-source-admission.ss=.  It rejects mechanically certain
 raw Query initializers while preserving ordinary pure functions, vertical
 domain slots and Provider implementations.
 

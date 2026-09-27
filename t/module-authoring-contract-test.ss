@@ -7,7 +7,7 @@
          (only-in :clan/poo/object .cc .o .ref)
         (only-in :clan/poo/mop TypeError?)
         (only-in :std/test check-equal? check-exception test-suite)
-        :poo-flow/src/module-system/authoring/contracts
+        :poo-flow/src/authoring/module-source-admission
         (only-in :core/poo-clos/interface
                  poo-clos-call
                  poo-clos-call-next-method
@@ -441,7 +441,7 @@
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations
         'module-authoring-contract
-        "src/module-system/authoring/contracts.ss"))
+        "src/authoring/module-source-admission.ss"))
       '()))
 
    (poo-flow-test-case "Core slot presentation blocks lazy self-reference regression"
