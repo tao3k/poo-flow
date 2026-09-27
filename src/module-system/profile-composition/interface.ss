@@ -37,7 +37,7 @@
                  poo-flow-scenario-case-multiplicities->launch-ranges
                  poo-flow-scenario-case-workload
                  poo-flow-scenario-case-workload/ref)
-        (only-in :poo-flow/src/module-system/profile-composition/plan-projection
+        (only-in :poo-flow/src/scenario/plan-projection
                  poo-flow-scenario-case->execution-plan)
         (only-in :poo-flow/src/module-system/profile-composition/accessors
                  poo-flow-scenario-case-name

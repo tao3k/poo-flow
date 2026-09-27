@@ -3,16 +3,16 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: pure indexing and graph projection from a closed Scenario Case
-;;; into the canonical ExecutionPlan.
+;;; Boundary: POO Flow Scenario projection from a closed Case into its
+;;; product-owned ExecutionPlan.
 ;;; Invariant: internal traversal records are compact structs; public Plan
 ;;; nodes remain owned by src/core/plan.ss.
 
 (import (only-in :clan/poo/object .all-slots .o .ref .slot? object?)
+        (only-in :gerbil/runtime/hash list->hash-table-eq)
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :std/list/list append-map filter-map fold)
-        :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition/funcs)
+        :poo-flow/src/core/plan)
 
 (export poo-flow-scenario-case->execution-plan)
 
@@ -25,6 +25,12 @@
 (defstruct composition-plan-edge (source-key target-key) transparent: #t)
 (defstruct composition-plan-state (descriptors edges) transparent: #t)
 (defstruct composition-plan-stage-view (name value) transparent: #t)
+
+;; The Gerbil hash constructor keeps the last duplicate key. Reversing the
+;; source entries preserves the first declared target, stage, or binding.
+(def (composition-plan-leftmost-index-by key-of values)
+  (list->hash-table-eq
+   (reverse (map (lambda (value) (cons (key-of value) value)) values))))
 
 (def (composition-plan-stage-name stage)
   (composition-plan-stage-view-name stage))
@@ -120,7 +126,7 @@
           (composition-plan-referenced-case-names
            stages stage-index binding-index))
          (referenced-index
-          (poo-flow-leftmost-index-by
+          (composition-plan-leftmost-index-by
            (lambda (name) name) referenced)))
     (filter-map
      (lambda (stage)
@@ -145,7 +151,7 @@
 
 (def (composition-plan-stage-edges stage path targets)
   (let (target-index
-        (poo-flow-leftmost-index-by
+        (composition-plan-leftmost-index-by
          composition-plan-target-name targets))
     (map
      (lambda (edge)
@@ -304,10 +310,10 @@
                (.all-slots stage-space)))
          (bindings (.ref composition 'profile-bindings))
          (stage-index
-          (poo-flow-leftmost-index-by
+          (composition-plan-leftmost-index-by
            composition-plan-stage-name stages))
          (binding-index
-          (poo-flow-leftmost-index-by
+          (composition-plan-leftmost-index-by
            (lambda (binding) (.ref binding 'slot)) bindings))
          (root-key (string-append "composition:" (symbol->string name)))
          (root-descriptor

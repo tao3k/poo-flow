@@ -32,7 +32,7 @@ first choice when it already owns the algorithm: this pass uses
 | CLOS dependent evolution | diamond reachability used =memq= against the growing result list | one =make-hash-table-eq= visited set admits each class generation once before Gerbil =stable-sort= orders it by native C4 depth |
 | JSON Schema fast validation | every declared property rescanned all candidate rows at every recursive object node | one candidate identity index per node changes property admission from properties times rows to properties plus rows |
 | Runner DAG execution | each dependency edge used =assoc= against prior values and every node rescanned the complete plan to reconstruct its frontier | =core/funcs.ss= owns structural-id values plus an incremental dependency-count frontier; receipts retain canonical plan order and stored =#f= values |
-| Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =profile-composition/funcs.ss= builds leftmost target, stage, and binding indexes once per owning scope |
+| Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =src/scenario/plan-projection.ss= builds leftmost target, stage, and binding indexes once per owning scope with Gerbil =list->hash-table-eq= |
 | Set-shaped contract checks | each required value rescanned the complete observed/allowed list | =utilities/functional.ss= builds one hash membership index and preserves the existing list-shaped public contract |
 
 * Native product and type expression

@@ -65,10 +65,10 @@ at that boundary and remove the old file after its consumers migrate.
 | =observability/source-authoring.ss=, =observability/source-admission.ss= | POO Flow observability | Product source admission and logging. |
 | =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
 | =profile-composition/profile-bundle.ss= | Core Profile composition after source split | POO-native selection and pure ProfileBundle algebra; product Scenario root projection remains outside Core. |
-| =profile-composition/funcs.ss= | Core utility or standard library | First check whether the leftmost-index helper is already available; do not promote a duplicate collection algorithm. |
+| =profile-composition/funcs.ss= | Retired | The Plan owner uses Gerbil =list->hash-table-eq= directly; no duplicate public indexing utility remains. |
 | =profile-composition/accessors.ss=, =builders.ss= | POO Flow Scenario | These inspect/build Scenario Case, module bindings, multiplicity, workload, and launch ranges, not generic Module contracts. |
 | =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
-| =profile-composition/plan-projection.ss= | POO Flow Scenario/plan adapter | It lowers a closed Scenario Case into the product execution plan; move only a demonstrably reusable pure kernel to Core. |
+| =profile-composition/plan-projection.ss= | =src/scenario/plan-projection.ss= | Moved the Scenario Case to product ExecutionPlan projection; it depends on the POO Flow Plan and is not a generic Core Module mechanism. |
 | =profile-composition/scenario-case.ss= | POO Flow Scenario/Session | Fresh Session state and vertical Case construction are not the generic Module System. |
 | =profile-composition/interface.ss= | Retire | Consumers import Core composition and POO Flow Scenario separately. |
 | =projection/catalog.ss=, =projection/options.ss= | Core Module projection | Generic catalog, schema/option validation, and inspectable receipts. |
@@ -126,6 +126,11 @@ Core may depend on Gerbil/gerbil-poo standard facilities but not on
 =:poo-flow/=, ASP, Lambda-episteme, or parser-owned syntax.  POO Flow adapters
 consume Core through direct imports.  Candidate composition stays pure;
 filesystem/process effects remain behind explicit host/runtime handoffs.
+
+The =src/core/= directory is POO Flow's historical product code, not the
+independent =core/= package. Its =plan.ss= imports POO Flow Flow, Task, and
+projection syntax; the Scenario projection therefore stays under
+=src/scenario/= rather than claiming Core package ownership.
 
 * Native configuration composition
 
