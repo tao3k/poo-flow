@@ -127,6 +127,31 @@ Core may depend on Gerbil/gerbil-poo standard facilities but not on
 consume Core through direct imports.  Candidate composition stays pure;
 filesystem/process effects remain behind explicit host/runtime handoffs.
 
+* Native configuration composition
+
+Ordinary inherited configuration is a native POO object relation, not a second
+Nix-style evaluator. Core =SemanticModule= now composes its =imports= object
+through the POO prototype chain. The =contributions= slot rule prepends local
+values to the inherited value; C4, not a hand-written graph merge, determines
+ancestor precedence and de-duplicates diamonds. A leaf retains the identity of
+the imports object passed to its constructor. Core tests cover that identity
+and a diamond with one shared base.
+
+This does not yet remove the old =poo-flow-module-config-mk-merge= path.
+Current production consumers still include Core schema fallback and POO Flow
+sandbox Profile resolution. Those sites combine explicit field operations and
+extension fixed-point behavior with ordinary inheritance. Migrate the ordinary
+slots to native POO first; retain only actual removal, conflict, or fixed-point
+requirements as named pure policies. Do not publish a compatibility facade or
+claim the old merge engine has been retired until those callers and tests move.
+
+The parent package pins parser =2adf0e3= and Orgize =8f615eb= together.
+The former is the exact parser revision required by the latter; the previous
+parser =941ec97= pin conflicts with Orgize's transitive requirement, and the
+previous Orgize =79f8471= pin does not resolve in the current repository.
+Dependency installation must use a clean isolated =GERBIL_PATH= for this pin
+change; never remove an installed package to work around a tag conflict.
+
 * Admission and publication gates
 
 - The migration must not introduce a second Module descriptor, schema,
