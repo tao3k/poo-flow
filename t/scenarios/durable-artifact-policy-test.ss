@@ -6,6 +6,7 @@
          :std/test
         :clan/poo/object
         :poo-flow/modules/memory-core/durable/artifact-policy
+        (only-in :core/module-schema/relations poo-flow-semantic-identity)
         :poo-flow/src/module-system/semantic-module/objects
         :poo-flow/src/module-system/profile-composition/interface)
 

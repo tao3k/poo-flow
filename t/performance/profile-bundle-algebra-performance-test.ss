@@ -6,8 +6,8 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal?)
         (only-in :clan/poo/object .o .ref)
+        (only-in :core/module-schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
-                 poo-flow-semantic-identity
                  poo-flow-semantic-module)
         :poo-flow/src/module-system/profile-composition/profile-bundle)
 

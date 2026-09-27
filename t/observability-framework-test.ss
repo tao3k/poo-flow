@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Real Module admission -> native observation -> explanation -> upstream debug.
+;;; Real Module admission -> POO Flow observation -> explanation -> gerbil-poo debug.
 (import (only-in :std/test test-suite check-equal? check-exception)
         (only-in :std/test/base current-test-case)
         (only-in :clan/poo/object .o .cc .ref .slot? .call)
@@ -23,6 +23,10 @@
                  poo-flow-observability-diagnostic-record)
         (only-in :core/types
                  poo-flow-contract-admit poo-flow-predicate-contract)
+        (only-in :core/module-schema/relations
+                 SemanticImports. poo-flow-semantic-identity
+                 poo-flow-empty-imports poo-flow-empty-capabilities
+                 poo-flow-empty-profiles)
         :poo-flow/src/module-system/semantic-module/objects)
 (export observability-framework-test)
 
@@ -70,7 +74,7 @@
       max-duration-milliseconds: 2000))
 
 (def observability-framework-test
-  (test-suite "upstream-based POO observability framework"
+  (test-suite "POO Flow observability over gerbil-poo"
     (let (harness-thread (current-thread))
       (poo-flow-test-case "default POO Case preserves native assertions"
         (check-equal? (eq? (current-thread) harness-thread) #t)

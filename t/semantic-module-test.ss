@@ -7,6 +7,9 @@
          (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .all-slots)
         (only-in :clan/poo/mop element? validate TypeError?)
+        (only-in :core/module-schema/relations
+                 poo-flow-semantic-identity poo-flow-empty-imports
+                 SemanticImports. ModuleImportsContract)
         :poo-flow/src/module-system/semantic-module/objects)
 (export semantic-module-test)
 (def semantic-module-test

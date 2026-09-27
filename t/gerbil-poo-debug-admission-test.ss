@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: direct upstream debug consumption, never semantic evidence authority.
+;;; Boundary: direct gerbil-poo debug consumption, never semantic evidence authority.
 ;;; All output uses in-memory ports and synthetic canaries, never real secrets.
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal?)
@@ -11,6 +11,8 @@
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :clan/poo/object .o .ref .call .all-slots compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type.)
+        (only-in :core/module-schema/relations
+                 SemanticImports. poo-flow-semantic-identity)
         :poo-flow/src/module-system/semantic-module/objects)
 (export gerbil-poo-debug-admission-test)
 
