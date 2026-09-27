@@ -4,7 +4,8 @@
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
-        :poo-flow/src/module-system/contribution/interface
+        (only-in :clan/poo/object .o .ref)
+        :core/contribution/objects
         (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
                  compose profiles))
 (export contract-test)

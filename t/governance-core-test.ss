@@ -7,7 +7,7 @@
          :std/test
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop element?)
-        (only-in :poo-flow/src/module-system/contribution/interface
+        (only-in :core/contribution/objects
                  admit-contributions)
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection)

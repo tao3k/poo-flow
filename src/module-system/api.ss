@@ -15,6 +15,7 @@
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/diagnostics/interface
         :core/extension-graph/interface
+        :core/contribution/objects
         :poo-flow/src/module-system/loader/interface
         :core/module-schema/interface
         :core/object-family/interface
@@ -33,6 +34,7 @@
         (import: :poo-flow/src/module-system/descriptor/interface)
         (import: :poo-flow/src/module-system/diagnostics/interface)
         (import: :core/extension-graph/interface)
+        (import: :core/contribution/objects)
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :core/module-schema/interface)
         (import: :core/object-family/interface)
