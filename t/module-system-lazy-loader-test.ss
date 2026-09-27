@@ -26,13 +26,13 @@
         (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         :core/extension-graph/interface
         :core/module-system/loader/objects
-        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/authoring/module-source-collection
         :poo-flow/src/building/official-contributions
         :poo-flow/src/user-interface/module-source-selection
-        :poo-flow/src/module-system/loader/tree)
+        :poo-flow/src/user-interface/module-source-tree)
 
 (export module-system-lazy-loader-test)
 

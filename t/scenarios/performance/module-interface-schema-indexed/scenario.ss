@@ -16,7 +16,7 @@
         (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface
                  poo-flow-module-interface-schema-spec)
-        (only-in :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/authoring/module-descriptor
                  poo-flow-modules)
         (only-in :core/module-system/projection/option-objects
                  poo-flow-module-option-schema-id

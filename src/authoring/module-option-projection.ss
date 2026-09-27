@@ -11,7 +11,7 @@
 
 (import (only-in :clan/poo/object .all-slots .ref .slot?)
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         :core/module-system/projection/option-objects
         :core/module-system/projection/option-validation)
 

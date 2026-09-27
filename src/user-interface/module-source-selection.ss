@@ -6,7 +6,7 @@
 ;;; Boundary: resolve source-neutral POO selections against an ordered load path.
 
 (import :poo-flow/src/core/failure
-        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/authoring/module-source-collection
         (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-metadata
                  poo-flow-module-source-ref-value)

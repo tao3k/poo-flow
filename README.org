@@ -238,7 +238,7 @@ The =user-interface/= tree is also a community profile library, not only an exam
 The important source areas are:
 
 - =src/core/= for flow, task, plan, role, policy, receipt, runtime protocol, and runner concepts;
-- =src/module-system/= for module activation, object validation, profiles, projection, observability, proof-facing facts, and user-facing module forms;
+- =core/module-system/= for reusable POO module contracts, catalog, lazy loading, and projection mechanisms; =src/authoring/= and =src/user-interface/= for POO Flow module policy and user-facing adapters;
 - =modules/= for concrete workflow, sandbox, session, loop, and backend modules;
 - =user-interface/= for example downstream configuration surfaces;
 - =packages/proof/lean/= for the Lean proof package;

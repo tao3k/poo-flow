@@ -4,18 +4,18 @@
 
 #+title: Core Module System ownership and migration audit
 
-* Decision and observed baseline
+* Decision and migration baseline
 
 The generic POO Module System is a Core mechanism.  =src/module-system/= is
 not its permanent owner.  Core owns module identity, contracts, descriptors,
 source references, lazy selection, pure resolution, option projection, Profile
 composition, and generic module diagnostics.  POO Flow owns named product
 modules, policies, source locations, ASP/runtime handoffs, and presentation.
-The end state has no =src/module-system/= implementation directory or
+The POO Flow implementation no longer has a =src/module-system/= directory or
 compatibility import aliases: consumers import the single owner directly.
 
 This audit records parent commit =deca0fb= and Core gitlink =3c42394=.
-=src/module-system/= currently has 49 Scheme files (9,925 lines).  Core already
+At that commit, =src/module-system/= had 49 Scheme files (9,925 lines). Core already
 owns =module-system/schema/=, =object-family/=, =extension-graph/=, =contribution/=,
 =composition/lineage.ss=, generic =observability/=, and =poo-clos/=.
 No current Core Scheme source imports =:poo-flow/=.  Twelve checked-out
@@ -28,18 +28,17 @@ lives in =src/authoring/module-option-projection.ss=. Product runtime receipts
 and scalar presentation now live in =src/user-interface/module-runtime-presentation.ss=;
 the closure and phase-order mechanism they use remains in Core.
 
-* File-by-file ownership
+* Final product adapters
 
-Targets below are /semantic owners/, not a promise to copy each file as-is.
-Where one file combines mechanism and product policy, split the implementation
-at that boundary and remove the old file after its consumers migrate.
+Core owns the reusable descriptor, LoadPath, Catalog, lazy-load, and import
+closure mechanisms. POO Flow keeps only its branded values and policy adapters:
 
-| Current source | Target owner | Separation required |
+| Product owner | Source | Boundary |
 |-
-| =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
-| =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
-| =loader/resolver.ss= | Core lookup + product activation | Keep typed failure, Doctor, and RunConfig lowering in POO Flow; user-bundle selection lives in =src/user-interface/module-source-selection.ss=. |
-| =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
+| Authoring | =src/authoring/module-descriptor.ss= | POO Flow Task/Flow descriptor slots and import admission over Core closure. |
+| Authoring | =src/authoring/module-source-collection.ss= | Maintained/contributor filesystem discovery and role/style policy over Core LoadPath. |
+| User Interface | =src/user-interface/module-activation.ss= | Typed source failure, Doctor handoff, Task/Flow activation, and RunConfig lowering over Core Catalog. |
+| User Interface | =src/user-interface/module-source-tree.ss= | Maintained/user roots and catalog assembly over Core lazy plans and extension graph. |
 
 * Dependency blockers and required order
 
@@ -51,8 +50,9 @@ move user-selection flags/syntax and the product value catalog to
 ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
-second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 4 Scheme files and this README. POO Flow selection values and the
+second =src/observability/= owner. The =src/module-system/= directory is
+removed after its consumers import Core or these product owners directly.
+POO Flow selection values and the
 public =use-module= category/flag contract now live in
 =src/user-interface/module-selection.ss= and =module-selection-contract.ss=;
 Core owns the generic Profile selection algebra. Product source admission lives in
@@ -64,8 +64,7 @@ syntax lives in =src/user-interface/module-authoring-syntax.ss=. Neither is a
 separate Core mechanism: the generated forms are POO values, while their public
 vocabulary and contract lowering remain POO Flow-owned. Shared final projection and runtime
 receipt syntax now live in =src/utilities/=, while POO Flow identity and default
-Interface policy live in =src/authoring/module-interface.ss=. Its deletion
-is still the closure condition, not a completed claim.
+Interface policy live in =src/authoring/module-interface.ss=.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:
 host-trusted verification and semantic Module Contracts/construction moved
@@ -86,28 +85,9 @@ live in =core/module-system/catalog/objects.ss=.  POO Flow's resolver retains ty
 missing-source failure, Doctor, and Task/Flow activation.  Product internals
 import Core Catalog directly; the product resolver no longer reexports its
 generic bindings.
-The remaining rows above are still migration work,
-not completed features.
-
-1. *Separate Core-safe contracts.* =descriptor/interface.ss= imports
-   =src/core/{task,flow,failure,roles,object-syntax}=; =resolver.ss= imports
-   =src/core/{task,flow,config,failure}=.  Move or parameterize generic
-   contracts first.  Core must not import the POO Flow Task/Flow registries.
-2. *Establish one Core Module model.* Compose existing Core
-   =core/module-system/schema/relations.ss= with the extracted interface, semantic Module,
-   descriptor, source-ref, and declaration objects.  Do not recreate the
-   relation Contracts under a second name or add path compatibility aliases.
-3. *Move the pure engine as a unit.* Migrate lazy backend, collection algebra,
-   source selection, catalog resolution, option projection, closure evaluation,
-   and module diagnostics against that one model.  Split filesystem discovery,
-   Task/Flow activation, and product roots at their explicit adapter edge.
-4. *Move Profile composition against Core Module identities.* First migrate
-   pure values/builders and the bounded syntax; keep Scenario/Session runtime
-   effects and product execution-plan lowering in POO Flow.
-5. *Rewire all consumers and delete the old tree.* Repoint POO Flow's user
-   interface and observability, the checked-out Lambda-episteme imports, and
-   build roots.  Remove =src/module-system/= only after no source, test,
-   documentation, or build root refers to it.
+The POO Flow source, test, and build roots no longer import the old tree.
+Downstream repositories remain independent consumers and need their own
+exact-head validation before their dependency pins change.
 
 The resulting dependency direction is =Core -> gerbil-parser -> POO Flow=;
 Core may depend on Gerbil/gerbil-poo standard facilities but not on
@@ -174,6 +154,9 @@ change; never remove an installed package to work around a tag conflict.
 - POO Flow: focused consumer tests, then heap-fenced =just test= before
   =just build=.  Require =MODULE-OK=, =HARNESS-OK=, final =OK=, and no
   =ERROR CASE= / =ERROR HARNESS= / heap or stack overflow markers.
+  After a module-path migration in a persistent =GERBIL_PATH=, clean and
+  rebuild before the full-suite rerun so old compiled imports cannot create
+  duplicate POO type identities.
 - Lambda-episteme: rewire its direct declaration, Profile, loader, and
   testing-adapter imports; validate its owned tests before updating the
   gitlink.  Do not silently leave the old path as an alias.

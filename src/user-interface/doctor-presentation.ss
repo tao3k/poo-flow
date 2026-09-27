@@ -12,7 +12,7 @@
         :poo-flow/src/authoring/module-interface
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         "module-diagnostics.ss"
         :poo-flow/src/utilities/final-projection-syntax
         (only-in :core/module-system/projection/option-objects

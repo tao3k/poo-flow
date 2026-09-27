@@ -20,7 +20,7 @@
         :poo-flow/src/core/api
         :poo-flow/src/authoring/module-interface
         :poo-flow/src/user-interface/module-selection
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         :poo-flow/src/user-interface/module-authoring-syntax
         :poo-flow/src/authoring/module-option-projection
         :poo-flow/src/user-interface/module-runtime-presentation
@@ -30,7 +30,7 @@
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
         :core/module-system/funs
-        :poo-flow/src/module-system/loader/resolver
+        :poo-flow/src/user-interface/module-activation
         :core/module-system/catalog/objects
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)

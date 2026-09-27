@@ -8,7 +8,7 @@
 
 (import :poo-flow/src/core/task
         :poo-flow/src/core/flow
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-stable-duplicates)
         :core/module-system/observability/diagnostics

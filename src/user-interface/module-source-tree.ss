@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: lazy plans, auto-import graphs, and catalog loading for module trees.
+;;; Boundary: POO Flow root and user module tree loading over Core lazy plans.
 ;;; Invariant: static entrypoint metadata lives in module-registry and stays loader-free.
 
 (import (only-in :clan/poo/object .o)
@@ -18,9 +18,9 @@
                  poo-flow-user-root-module-authoring-profile)
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        :poo-flow/src/module-system/loader/collection
+        :poo-flow/src/authoring/module-source-collection
         :poo-flow/src/user-interface/module-source-selection
-        :poo-flow/src/module-system/loader/resolver
+        :poo-flow/src/user-interface/module-activation
         :core/module-system/catalog/objects
         :core/extension-graph/interface
         :core/module-system/loader/objects

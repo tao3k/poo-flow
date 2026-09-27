@@ -14,8 +14,8 @@
                  make-poo-flow-module-diagnostic)
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/loader/resolver
+        :poo-flow/src/authoring/module-descriptor
+        :poo-flow/src/user-interface/module-activation
         :poo-flow/src/user-interface/module-runtime-presentation
         :core/module-system/loader/objects
         :core/module-system/catalog/objects

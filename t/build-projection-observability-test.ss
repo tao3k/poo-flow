@@ -31,7 +31,7 @@
           ((poo-flow-make-observed-package-spec-projector
             (lambda (_package-spec)
               (set! projected? #t)
-              '("src/core/api.ss" "src/module-system/descriptor/interface.ss"))
+              '("src/core/api.ss" "src/authoring/module-descriptor.ss"))
             poo-flow-default-build-observability-policy)
            package-spec))
         (let (output (get-output-string port))
@@ -59,7 +59,7 @@
                       #t)
         (check-equal? (contains? source "\"src/core/api.ss\"") #t)
         (check-equal? (contains? source
-                                 "\"src/module-system/descriptor/interface.ss\"")
+                                 "\"src/authoring/module-descriptor.ss\"")
                       #t)
         (check-equal? (contains? source
                                  "\"src/authoring/module-interface.ss\"")

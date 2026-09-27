@@ -9,7 +9,7 @@
 (import (only-in :clan/poo/object .@ .o .ref)
         :poo-flow/src/core/agent-harness-vocabulary
         :poo-flow/src/authoring/module-interface
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         :core/module-system/funs
         :core/module-system/projection/option-objects
         :poo-flow/src/user-interface/module-value-catalog

@@ -9,7 +9,7 @@
 (import
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        (only-in :poo-flow/src/module-system/loader/collection
+        (only-in :poo-flow/src/authoring/module-source-collection
                  poo-flow-load-modules
                  poo-flow-maintained-module-source))
 

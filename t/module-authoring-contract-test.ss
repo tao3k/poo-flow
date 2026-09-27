@@ -27,7 +27,7 @@
                  poo-flow-module-interface
                  poo-flow-module-interface-authoring
                  poo-flow-module-interface-prototype)
-        (only-in :poo-flow/src/module-system/loader/collection
+        (only-in :poo-flow/src/authoring/module-source-collection
                  make-poo-flow-module-source-collection
                  make-poo-flow-contribution-module-source
                  poo-flow-module-source-collection-role-entrypoints)

@@ -21,7 +21,7 @@ and the product source-collection protocol. It must not import resolvers,
 extension graphs, or concrete =modules/*= packages. Expanding the catalog to
 hundreds of modules should only expand data and string/source-ref mapping.
 
-2. =src/module-system/loader/tree.ss=
+2. =src/user-interface/module-source-tree.ss=
 
 This owner consumes registry source refs and turns them into lazy-load plans, auto-import graphs, and strict load/catalog operations. Loader behavior stays here because it is an action boundary. Registry users can inspect module sources without forcing descriptor realization.
 

@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: module descriptors and import closure validation.
+;;; Boundary: POO Flow module descriptors and import closure validation.
 ;;; Invariant: descriptors are POO values and never load module sources.
 
 (import (only-in :clan/poo/object .o .@ .ref object?)

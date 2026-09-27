@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: product resolution admission and Task/Flow activation lowering.
+;;; Boundary: POO Flow resolution admission and Task/Flow activation lowering.
 ;;; Invariant: Core Catalog matches existing values by SourceRef.
 ;;; It never evaluates, imports, or opens the source ref payload.
 ;;; Intent: agents can trust resolver receipts as replayable evidence of selection order.
@@ -20,7 +20,7 @@
         :poo-flow/src/core/config
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
-        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/authoring/module-descriptor
         :poo-flow/src/user-interface/module-diagnostics
         :core/module-system/catalog/objects
         (only-in :core/object-family/syntax

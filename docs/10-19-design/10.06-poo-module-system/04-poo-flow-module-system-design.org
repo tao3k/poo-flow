@@ -4,6 +4,11 @@
 
 #+title: 10.06.04 poo-flow Module System Design
 
+This document records the original module-system design and its historical
+API names. The maintained ownership and import paths are documented in
+[[file:core-module-system-ownership-audit.org][Core Module System ownership and migration audit]]; new code imports Core,
+=src/authoring/=, or =src/user-interface/= directly.
+
 * 10.06.04 poo-flow Module System Design
 ** 10.06.04.05 Current Implementation Delta
 The module system now includes the Marlin-style facade in =src/module-system.ss= while preserving the existing descriptor/catalog/activation API.
@@ -274,7 +279,7 @@ not read files, query package managers, or evaluate Scheme code.
 
 This keeps the boundary explicit:
 - loading belongs to a later source-loader layer;
-- resolving belongs to =src/module-system/loader/resolver.ss=;
+- resolving belongs to =src/user-interface/module-activation.ss=;
 - activation receives descriptor values only.
 
 ** 10.06.04.40 Activation Rules

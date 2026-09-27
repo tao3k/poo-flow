@@ -463,7 +463,7 @@
 ;;
 ;;       ```scheme
 ;;       (poo-flow-poo-slot-authoring-file-observations
-;;        'module "src/module-system/ability.ss")
+;;        'module "src/authoring/module-descriptor.ss")
 ;;       ;; => ordered authoring observations
 ;;       ```
 ;;     %
