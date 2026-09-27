@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite)
-        (only-in :poo-flow/src/module-system/observability/testing-case
+        (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :clan/poo/object .o .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
