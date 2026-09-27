@@ -10,10 +10,10 @@ This page describes the current implementation, not its target ownership.
 The complete Core migration and deletion of this directory are audited in
 [[file:../../docs/10-19-design/10.06-poo-module-system/core-module-system-ownership-audit.org][Core Module System ownership and migration audit]].
 
-=src/module-system= owns the POO Flow module mechanism.  Its root contains only
-package-level entrypoints; each implementation feature owns a directory with an
-=interface.ss= public factor and focused implementation factors.  The separate
-=core= package owns the shared, parser-safe POO contracts.  The
+=src/module-system= currently houses the remaining POO Flow module adapters
+and mechanisms awaiting Core migration.  Its root contains product entrypoints;
+Core owns the shared, parser-safe POO contracts and is becoming the sole
+Module System mechanism owner.  The
 dependency direction is POO Flow Core -> gerbil-parser -> POO Flow; Core
 must not import POO Flow or a maintained product module.
 
@@ -53,6 +53,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
 | module relations | =module-schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
 | semantic module | =semantic-module/types.ss=, =objects.ss= | native Module and authoring role Contracts and generic construction |
+| module interface | =module-interface/objects.ss= | native interface schema index, option policy and construction |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
 | CLOS pure model | =poo-clos/model.ss= | validate ordinary POO values against effective class slots without lifecycle allocation |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
