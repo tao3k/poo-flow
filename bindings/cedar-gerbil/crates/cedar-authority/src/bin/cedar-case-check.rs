@@ -106,20 +106,36 @@ fn start_host(path: &Path) -> Result<Host, String> {
         .stderr(Stdio::inherit())
         .spawn()
         .map_err(|error| error.to_string())?;
-    let stdout = child.stdout.take().ok_or("missing Host readiness pipe")?;
+    let stdout = match child.stdout.take() {
+        Some(stdout) => stdout,
+        None => {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err("missing Host readiness pipe".into());
+        }
+    };
     let (sender, receiver) = mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let mut line = String::new();
         let result = BufReader::new(stdout).read_line(&mut line).map(|_| line);
         let _ = sender.send(result);
     });
-    let ready = receiver
-        .recv_timeout(Duration::from_secs(10))
-        .map_err(|error| format!("Host readiness timeout: {error}"))?
-        .map_err(|error| error.to_string())?;
-    let ready: RuntimeReady = serde_json::from_str(&ready).map_err(|error| error.to_string())?;
-    if ready.schema_id != HOST_READY_SCHEMA || Path::new(&ready.endpoint) != endpoint {
-        return Err("Host readiness identity mismatch".into());
+    let readiness = (|| -> Result<(), String> {
+        let ready = receiver
+            .recv_timeout(Duration::from_secs(10))
+            .map_err(|error| format!("Host readiness timeout: {error}"))?
+            .map_err(|error| error.to_string())?;
+        let ready: RuntimeReady =
+            serde_json::from_str(&ready).map_err(|error| error.to_string())?;
+        if ready.schema_id != HOST_READY_SCHEMA || Path::new(&ready.endpoint) != endpoint {
+            return Err("Host readiness identity mismatch".into());
+        }
+        Ok(())
+    })();
+    if let Err(error) = readiness {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error);
     }
     Ok(Host {
         child,
