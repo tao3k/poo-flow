@@ -10,7 +10,7 @@
         :poo-flow/src/core/agent-harness-vocabulary
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/loader/context
+        :core/module-context/queries
         :poo-flow/src/module-system/projection/catalog
         :poo-flow/src/module-system/projection/options)
 

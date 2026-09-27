@@ -20,7 +20,7 @@
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
         :poo-flow/src/module-system/loader/source
-        :poo-flow/src/module-system/loader/context
+        :core/module-context/queries
         :poo-flow/src/module-system/loader/resolver
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)

@@ -15,6 +15,8 @@
         :poo-flow/src/module-system/interface
         (only-in :core/module-graph/closure
                  module-closure module-missing-imports)
+        (only-in :core/module-context/queries
+                 poo-flow-module-flags-enabled?)
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/loader/source)
@@ -49,6 +51,7 @@
         poo-flow-module-depth
         poo-flow-module-phase-files
         poo-flow-module-hooks
+        poo-flow-module-active?
         poo-flow-module-task-descriptors
         poo-flow-module-flow-descriptors
         poo-flow-module-names
@@ -73,6 +76,11 @@
       (scheme-owner 'gerbil)
       (runtime-owner 'marlin-agent-core)
       (module-capability 'poo-flow-descriptor-activation)))
+
+;;; Product admission is distinct from Core's pure flag query.
+(def (poo-flow-module-active? descriptor . required-flags)
+  (and (poo-flow-module-descriptor? descriptor)
+       (poo-flow-module-flags-enabled? descriptor required-flags)))
 
 ;;; Boundary: descriptor defaults make direct constructors and facade modules compatible.
 ;;; Intent: every module surface eventually lowers into this stable slot layout.

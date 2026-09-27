@@ -47,7 +47,8 @@ at that boundary and remove the old file after its consumers migrate.
 | =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + POO Flow policy | Separate generic selection/validation from product category names, user settings, and presentation. |
 | =descriptor/interface.ss= | Core descriptor + POO Flow contribution adapter | Generic identity/import/phase/option descriptor belongs in Core; Task/Flow registry payloads remain product contributions. |
 | =descriptor/syntax.ss= | Core declaration syntax + POO Flow UI | Keep only hygienic mechanism syntax in Core; product-facing catalog syntax belongs with its user interface. |
-| =loader/source.ss=, =loader/context.ss= | Core Module source/context + POO Flow import policy | Core now owns inert SourceRef identity and inspection; custom directory and import forms remain product policy pending the remaining context split. |
+| =loader/source.ss= | Core SourceRef + POO Flow import policy | Core owns inert SourceRef identity and inspection; custom directory and import forms remain product policy. |
+| =loader/context.ss= | Retired; Core Module context + POO Flow descriptor admission | Core owns pure phase, Hook, Flag, and stable-depth queries; POO Flow owns product =active?= admission. |
 | =loader/backend.ss=, =loader/selection.ss= | Core Module loader | Pure backend descriptors, lazy values, selection, and load receipts. |
 | =loader/resolver.ss= | Core catalog/resolution + POO Flow activation adapter | Pure catalog lookup/closure in Core; Task/Flow registry and run-config lowering outside Core. |
 | =loader/collection.ss= | Core collection + POO Flow source adapter | Ordered source collection algebra in Core; filesystem discovery and source-authoring admission outside Core. |
@@ -86,6 +87,9 @@ and default authoring Profile.  Generic ordered inline closure and missing
 import findings now live in =core/module-graph/closure.ss=; POO Flow supplies
 descriptor accessors.  Inert SourceRef identity and inspection now live in
 =core/module-source/objects.ss=; product import forms remain in POO Flow.
+=src/module-system/loader/context.ss= has been removed: its pure queries live
+in =core/module-context/queries.ss=, while product =active?= admission lives
+with the POO Flow descriptor.
 The remaining rows above are still migration work,
 not completed features.
 
