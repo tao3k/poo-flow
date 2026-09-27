@@ -93,7 +93,8 @@
                (extension-contributions
                 (poo-flow-module-field-contributions->extensions contributions))
                (merge-result
-                (poo-flow-module-config-mk-merge base-node contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node contributions))
                (resolved-node
                 (poo-flow-module-config-merge-result-root merge-result)))
           (check-equal? (poo-flow-module-object? practice-object) #t)
@@ -197,7 +198,8 @@
                                                       base-entries))
                (start-jiffy (current-jiffy))
                (merge-result
-                (poo-flow-module-config-mk-merge base-node contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node contributions))
                (elapsed-ms
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
@@ -205,15 +207,17 @@
                 (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
-                   (poo-flow-module-config-mk-merge base-node contributions))))
+                   (poo-flow-module-field-contributions-resolve
+                    base-node contributions))))
                (noop-best-ms
                 (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
-                   (poo-flow-module-config-mk-merge base-node
+                   (poo-flow-module-field-contributions-resolve base-node
                                                     noop-contributions))))
                (noop-result
-                (poo-flow-module-config-mk-merge base-node noop-contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node noop-contributions))
                (resolved-node
                 (poo-flow-module-config-merge-result-root merge-result)))
           (check-equal? (poo-flow-module-config-merge-result-stable?
@@ -279,7 +283,7 @@
                  '((stage . build)
                    (owner . object-core))))
                (merge-result
-                (poo-flow-module-config-mk-merge
+                (poo-flow-module-field-contributions-resolve
                  base-node
                  (list append-contribution
                        remove-contribution

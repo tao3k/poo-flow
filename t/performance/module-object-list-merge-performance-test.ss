@@ -23,7 +23,7 @@
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
                  poo-flow-module-object
-                 poo-flow-module-objects-mk-merge/node
+                 poo-flow-module-objects-resolve-contributions/node
                  poo-flow-module-objects-node
                  poo-flow-module-objects-ref))
 
@@ -98,7 +98,7 @@
 ;; : (-> [PooModuleFieldContribution] Alist)
 (def (module-object-list-merge-summary/from-contributions contributions)
   (let* ((result
-          (poo-flow-module-objects-mk-merge/node
+          (poo-flow-module-objects-resolve-contributions/node
            module-object-list-merge-objects-node
            contributions))
          (root (poo-flow-module-config-merge-result-root result))

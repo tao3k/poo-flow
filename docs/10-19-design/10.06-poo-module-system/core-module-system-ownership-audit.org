@@ -137,13 +137,20 @@ ancestor precedence and de-duplicates diamonds. A leaf retains the identity of
 the imports object passed to its constructor. Core tests cover that identity
 and a diamond with one shared base.
 
-This does not yet remove the old =poo-flow-module-config-mk-merge= path.
-Current production consumers still include Core schema fallback and POO Flow
-sandbox Profile resolution. Those sites combine explicit field operations and
-extension fixed-point behavior with ordinary inheritance. Migrate the ordinary
-slots to native POO first; retain only actual removal, conflict, or fixed-point
-requirements as named pure policies. Do not publish a compatibility facade or
-claim the old merge engine has been retired until those callers and tests move.
+Sandbox Profile resolution now builds native POO prototypes from backend field
+defaults and applies validated rows with prototype extension. Explicit
+append/prepend/remove semantics reuse Core's pure slot-value policy; Sandbox no
+longer constructs field-contribution lists or invokes =mk-merge=. In the local
+1000-Profile case the old path measured 235 ms and the new path measured
+213-263 ms on the same machine. These single runs do not establish a speedup;
+the new path remains inside the focused 3000 ms scale gate.
+
+The ambiguous schema =support/merge.ss= and =mk-merge= entry are removed.
+Core now separates pure =slot-policy.ss= from targeted
+=field-resolution.ss=. Core's object-catalog fallback still invokes the latter
+for extension-graph operations; it is not ordinary inherited configuration.
+Child topology and other non-inheritance operations remain explicit and
+require separate evidence before further simplification.
 
 The object-catalog fast path is restricted to direct-child contributions. A
 contribution addressed to the =objects= root must use the extension resolver:

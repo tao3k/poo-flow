@@ -123,7 +123,7 @@
                  (features . (ci)))
                '()))
              (result
-              (poo-flow-module-config-mk-merge
+              (poo-flow-module-field-contributions-resolve
                root-node
                (list
                 (poo-flow-module-field-contribution
@@ -198,7 +198,7 @@
                 (poo-flow-module-object-node nono-sandbox-object '() '())
                 (poo-flow-module-object-node cube-sandbox-object '() '()))))
              (result
-              (poo-flow-module-config-mk-merge
+              (poo-flow-module-field-contributions-resolve
                root-node
                (append
                 (poo-flow-module-object-contributions
@@ -350,7 +350,7 @@
                       poo-flow-nono-sandbox-module-objects
                       poo-flow-cubeSandbox-module-objects))
              (result
-              (poo-flow-module-objects-mk-merge
+              (poo-flow-module-objects-resolve-contributions
                objects
                (append
                 (poo-flow-module-object-contributions

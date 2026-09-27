@@ -185,13 +185,13 @@
                (contributions
                 (poo-performance-catalog-contributions objects field-count))
                (result
-                (poo-flow-module-objects-mk-merge/node objects-node
+                (poo-flow-module-objects-resolve-contributions/node objects-node
                                                      contributions))
               (receipt
                 (poo-performance-run-gate
                  (poo-performance-composition-fixture)
                  (lambda ()
-                   (poo-flow-module-objects-mk-merge/node
+                   (poo-flow-module-objects-resolve-contributions/node
                     objects-node
                     contributions)))))
           (check-equal? (length contributions) (* object-count field-count))
