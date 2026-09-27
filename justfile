@@ -287,7 +287,7 @@ test-ascent-integration:
     test -f packages/gerbil-ascent/core/binary-program.ss
     GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
 
-# Keep pinned ASCENT rule, BYODS and retained-session latency under the native Linux gate.
+# Gate the selected pinned ASCENT SS scenarios under the native Linux job.
 [group('test')]
 test-ascent-performance:
     test -f packages/gerbil-ascent/t/scenarios/performance/ascent-byods-trrel/scenario.ss
