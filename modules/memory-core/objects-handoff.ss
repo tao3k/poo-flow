@@ -6,7 +6,7 @@
 ;;; Boundary: memory handoff manifest objects and projections.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/transform
         :poo-flow/modules/memory-core/objects-core)

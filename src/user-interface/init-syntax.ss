@@ -7,12 +7,12 @@
 ;;; Invariant: macros expand to profile-config data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o object<-alist)
-        :poo-flow/src/module-system/loader/fragment-syntax
-        :poo-flow/src/module-system/declaration/config-syntax
-        (only-in :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/authoring/fragment-syntax
+        :poo-flow/src/authoring/module-config-syntax
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
-        :poo-flow/src/module-system/observability/module-presentation
+        :poo-flow/src/user-interface/module-presentation
         :poo-flow/modules/memory-core/interface
         :poo-flow/modules/cubeSandbox/config
         :poo-flow/modules/cubeSandbox/profile-interface
@@ -56,16 +56,16 @@
         :poo-flow/modules/sandbox-core/profile-interface
         :poo-flow/src/user-interface/init-declaration-syntax
         :poo-flow/src/user-interface/profile-config
-        :poo-flow/src/module-system/load
-        :poo-flow/src/module-system/declaration/contract)
+        :poo-flow/src/user-interface/module-selection-syntax
+        :poo-flow/src/user-interface/module-selection-contract)
 
 (export poo-flow-module-bundles
-        (import: :poo-flow/src/module-system/load)
+        (import: :poo-flow/src/user-interface/module-selection-syntax)
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
         poo-flow-module-configs
-        (import: :poo-flow/src/module-system/loader/fragment-syntax)
+        (import: :poo-flow/src/authoring/fragment-syntax)
         (import: :poo-flow/src/user-interface/init-declaration-syntax)
         poo-flow-profile-set
         poo-flow-profile-extend
@@ -103,7 +103,7 @@
         loop-engine-observability-policy-extension
         loop-engine-safety-policy-extension
         (import: :poo-flow/modules/nono-sandbox/profile-interface)
-        (import: :poo-flow/src/module-system/observability/module-presentation)
+        (import: :poo-flow/src/user-interface/module-presentation)
         (import: :poo-flow/modules/sandbox-core/profile-interface))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays

@@ -8,7 +8,6 @@
         (only-in :std/test/base current-test-case)
         (only-in :clan/poo/object .o .cc .ref .slot? .call)
         (only-in :clan/poo/mop element? validate TypeError?)
-        :poo-flow/src/module-system/observability/interface
         :core/observability/debug
         (only-in :poo-flow/testing-api
                  poo-flow-test-case
@@ -17,17 +16,26 @@
                  poo-flow-testing-case-profile?
                  poo-flow-default-testing-case-profile)
         (only-in :core/observability/types
+                 PooFlowObservationContract
+                 PooFlowAdmissionObservationContract
                  PooFlowObservabilityDiagnosticContract
                  PooFlowDebugDurationReceiptContract)
-        (only-in :poo-flow/src/module-system/observability/objects
+        (only-in :core/observability/objects
+                 poo-flow-observation-identity
+                 poo-flow-observation-provenance
+                 poo-flow-observation-context
+                 poo-flow-observe-admission-evidence
+                 poo-flow-observe-contract-admission
+                 poo-flow-observation-explain
+                 poo-flow-observation-summary
                  poo-flow-observability-diagnostic-record)
         (only-in :core/types
                  poo-flow-contract-admit poo-flow-predicate-contract)
-        (only-in :core/module-schema/relations
+        (only-in :core/module-system/schema/relations
                  SemanticImports. poo-flow-semantic-identity
                  poo-flow-empty-imports poo-flow-empty-capabilities
                  poo-flow-empty-profiles)
-        :poo-flow/src/module-system/semantic-module/objects)
+        :poo-flow/src/authoring/semantic-module)
 (export observability-framework-test)
 
 (def (framework-id name) (poo-flow-observation-identity 'test name 'v1))

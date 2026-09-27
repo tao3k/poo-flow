@@ -5,14 +5,14 @@
 
 ;;; Contract: public receipt for JSON Schema to POO Flow contract generation.
 
-(import (only-in :core/module-schema/slot-contracts
+(import (only-in :core/module-system/schema/slot-contracts
                  poo-flow-native-contract->alist)
         (only-in "../type-facts/objects.ss"
                  poo-flow-type-fact-contract->alist
                  poo-flow-lean-fact-contract->alist
                  poo-flow-native-contract->type-facts
                  poo-flow-native-contract->lean-fact-contracts)
-        (only-in "../module-system/observability/objects.ss"
+        (only-in :core/observability/objects
                  poo-flow-observability-diagnostic-record
                  poo-flow-observability-diagnostic-severity
                  poo-flow-observability-diagnostic->alist)

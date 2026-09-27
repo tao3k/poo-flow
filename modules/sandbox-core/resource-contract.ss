@@ -9,14 +9,14 @@
 (import :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         (only-in :clan/poo/mop element?)
-        (only-in :core/module-schema/slot-contracts
+        (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-slot
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-type
                  poo-flow-contract-value-type
                  poo-flow-native-contract
                  poo-flow-native-contract->alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/src/type-facts/objects)
 
 (export poo-flow-runtime-filesystem-prototype
@@ -518,7 +518,7 @@
   (.ref validation 'diagnostics))
 
 ;; : (-> POOObject Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-sandbox-resources-prototype-contract-validation->alist
   (validation)
   (bindings ((diagnostic-objects (.ref validation 'diagnostics))))

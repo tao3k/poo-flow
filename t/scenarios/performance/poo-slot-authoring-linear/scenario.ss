@@ -12,7 +12,7 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :poo-flow/src/module-system/observability/module-presentation
+        (only-in :poo-flow/src/user-interface/module-presentation
                  poo-flow-poo-slot-authoring-datum-bindings))
 
 (def +nesting-depth+ 300)

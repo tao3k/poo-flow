@@ -92,7 +92,7 @@ Macro ownership follows the layer whose code is generated:
   snapshot, execution policy, config preflight, runtime response, adapter
   result, and control-plane failure rows, plus fixed flow-strand descriptor and
   registry snapshots.
-- =src/module-system/projection/syntax.ss= owns fixed module-system final
+- =src/utilities/final-projection-syntax.ss= owns shared fixed final
   projections for diagnostics, doctor receipts, source refs, resolver catalog
   entries, catalog snapshots, durable policy diagnostics, and durable policy
   receipts, strict observability rows, POO slot-authoring report rows, and
@@ -103,12 +103,12 @@ Macro ownership follows the layer whose code is generated:
   projection rows, plus graph topology, Funflow functional-DAG, sandbox profile,
   sandbox resource contract validation, module object-validation, and
   module field/type validation projection rows.
-- =src/module-system/declaration/config-syntax.ss= owns repeated module config
+- =src/authoring/module-config-syntax.ss= owns repeated module config
   POO prototype declarations, kind-slot predicates, and mechanical
   prototype-to-constructor converters for public config prototype objects. It
   must not generate catalog fallback, manifest projection, graph derivation, or
   runtime handoff logic.
-- =src/module-system/projection/runtime-syntax.ss= owns runtime manifest,
+- =src/utilities/runtime-receipt-syntax.ss= owns runtime manifest,
   receipt, and Marlin handoff projection generation when the output is a pure
   final boundary projection.
 - =modules/workflow/cicd-projection-syntax.ss= owns workflow CI/CD
@@ -120,7 +120,7 @@ Macro ownership follows the layer whose code is generated:
   payloads. It must not hide policy decisions or backend capability semantics.
 - =src/user-interface/init-syntax.ss= owns public =use-module= syntax and any
   private branch-generation helpers.
-- =src/module-system/loader/fragment-syntax.ss= owns source-aware =load!= fragment
+- =src/authoring/fragment-syntax.ss= owns source-aware =load!= fragment
   resolution, compile-time fragment reading, object-fragment wrapping, and
   generated custom-module binding names. It must not own runtime module
   selection, descriptor realization, benchmark payloads, or public scenario
@@ -320,10 +320,10 @@ Phase 3: deepen session policy generation.
 - Completed runtime tail-append cleanup slice: extension capability insertion, receipt audit paths, module observability paths, loop-engine sandbox profile refs, user-module flag extension, session-case row-group flattening, descriptor module-set flattening, live-case read argv generation, and test-local command/registry fixtures now use owner-local tail accumulators instead of =append ... (list ...)= frames.
 - Completed test/support traversal cleanup slice: lazy-loader source refs, POO performance contribution fixtures, sandbox resource diagnostic-code projections, and tutorial word-count fixtures now use owner-local recursive accumulators instead of =apply append=, =filter-map=, or =foldl=, leaving only benchmark expected-repair prose for those legacy patterns.
 - Completed diagnostic field-row cleanup slice: sandbox resource contract diagnostics, memory/tool catalog diagnostics, store unsupported-operation detail rows, graph cycle diagnostics, loop human/governor inbox rows, and Nono native/build receipts now use owner-local field-row declarative helpers instead of hand-written fixed =list (cons ...)= frames.
-- Completed module-system row helper slice: module-system projection syntax now owns reusable fixed row/tail helpers, and use-module contract diagnostics, loop-engine result-contract diagnostics/projections, durable runtime-store bridge metadata/options, and resolver missing-source detail rows route through those helpers instead of ad hoc =append= or fixed =list (cons ...)= frames.
+- Completed product row helper slice: =src/utilities/product-syntax.ss= owns reusable fixed row/tail helpers, and use-module contract diagnostics, loop-engine result-contract diagnostics/projections, durable runtime-store bridge metadata/options, and resolver missing-source detail rows route through those helpers instead of ad hoc =append= or fixed =list (cons ...)= frames.
 - Completed core/workflow/sandbox config projection slice: core run-config receipts, custom/Docker/workflow builder option prefixes, sandbox backend config flags, Funflow workflow agreement/DAG metadata, CI/CD dependency/runtime/pipeline/Marlin ABI rows, and Nono C binding runtime validation/capability plans now use bounded field-row or value-tail helpers instead of ad hoc =append= or fixed =list (cons ...)= frames, while preserving scenario benchmark and runtime handoff order.
 Phase 4: broaden runtime projection generation carefully.
-- Keep =src/module-system/projection/runtime-syntax.ss= limited to pure
+- Keep =src/utilities/runtime-receipt-syntax.ss= limited to pure
   projection families.
 - Generate lineage, selector, resource-dispatch, memory, compression,
   capability, and handoff receipt projections only when the payload shape is
@@ -438,11 +438,11 @@ Phase 4: broaden runtime projection generation carefully.
   manifest projections explicit in each backend owner.
 - Completed module-system final projection slice: diagnostic rows, doctor
   reports, validation receipts, source refs, catalog entries, and catalog
-  snapshots now route through =defpoo-module-final-projection= while resolver
+  snapshots now route through =defpoo-final-projection= while resolver
   selection, activation validation, and runtime handoff logic stay explicit in
   their local owners.
 - Completed durable policy final projection slice: durable policy diagnostic and
-  receipt =->alist= rows now route through =defpoo-module-final-projection=,
+  receipt =->alist= rows now route through =defpoo-final-projection=,
   with policy validation, receipt construction, and runtime ownership checks
   left as explicit code in =durable-policy.ss=.
 - Completed durable policy accumulator slice: durable policy diagnostics,
@@ -452,23 +452,23 @@ Phase 4: broaden runtime projection generation carefully.
   performance gate.
 - Completed module observability projection slice: strict module observation
   rows, POO slot-authoring observation rows, and slot-authoring summaries now
-  route through =defpoo-module-final-projection= while recursive trace
+  route through =defpoo-final-projection= while recursive trace
   construction and diagnostic filtering stay explicit.
 - Completed user-module selection projection slice: selection feature facts and
   selection presentation rows now route through
-  =defpoo-module-final-projection= while mixed flag normalization, source-ref
+  =defpoo-final-projection= while mixed flag normalization, source-ref
   lookup, and settings projection stay explicit in =base.ss=.
 - Completed durable runtime store receipt projection slice: contract, backend,
   negotiation, and operation receipt =->alist= rows now route through
-  =defpoo-module-final-projection=; operation projection no longer uses a
+  =defpoo-final-projection=; operation projection no longer uses a
   runtime projection table, and contract/backend validation plus Marlin handoff
   construction stay explicit.
 - Completed loader/profile summary projection slice: module load receipts and
-  user profile summary rows now route through =defpoo-module-final-projection=
+  user profile summary rows now route through =defpoo-final-projection=
   while loader selection, lazy-plan forcing, and profile presentation object
   construction stay explicit.
 - Completed durable recovery scenario projection slice: recovery scenario final
-  rows now route through =defpoo-module-final-projection= while recovery
+  rows now route through =defpoo-final-projection= while recovery
   diagnostics and observability row generation stay explicit.
 - Completed durable recovery diagnostics aggregation slice:
   workflow-task, memory-job, sandbox-ref, and final scenario diagnostics now
@@ -479,10 +479,10 @@ Phase 4: broaden runtime projection generation carefully.
   manifests, tool catalogs, tool policy-validation receipts, memory store specs,
   memory handoff manifests, memory catalogs, memory policy-validation receipts,
   and memory durable job receipts now route through
-  =defpoo-module-final-projection= while POO constructors, policy lookup,
+  =defpoo-final-projection= while POO constructors, policy lookup,
   durable job validation, and catalog matching stay explicit in their module
   owners. Tool and memory catalog nested spec/store serialization now uses
-  =defpoo-module-final-projection-batch= instead of owner-local anonymous
+  =defpoo-final-projection-batch= instead of owner-local anonymous
   =map= frames.
 - Completed tool-core validation summary slice:
   tool catalogs derive refs and count in one owner-local summary pass, tool
@@ -519,10 +519,10 @@ Phase 4: broaden runtime projection generation carefully.
   performance gates.
 - Completed graph/Funflow projection slice: graph node, edge, graph, and
   analysis rows plus Funflow DAG edge, composition-step, and functional-DAG rows
-  now route through =defpoo-module-final-projection= while graph algorithms,
+  now route through =defpoo-final-projection= while graph algorithms,
   Funflow dependency derivation, and runtime scheduling boundaries stay
   explicit. Graph node and edge collection serialization now uses
-  =defpoo-module-final-projection-batch= instead of anonymous =map= frames in
+  =defpoo-final-projection-batch= instead of anonymous =map= frames in
   the graph projection owner. Funflow functional-DAG edge and composition-step
   collection serialization now uses the same batch projection helper.
 - Completed Funflow DAG composition-step accumulator slice:
@@ -562,7 +562,7 @@ Phase 4: broaden runtime projection generation carefully.
   collection/composition helpers rather than fixed final projection rows.
 - Completed sandbox presentation/contract projection slice: sandbox profile
   presentation rows and resources prototype contract validation rows now route
-  through =defpoo-module-final-projection= while profile construction, backend
+  through =defpoo-final-projection= while profile construction, backend
   capability lookup, resource policy derivation, and strict handoff validation
   remain explicit.
 - Completed sandbox derivation flattening slice:
@@ -576,12 +576,12 @@ Phase 4: broaden runtime projection generation carefully.
   functional code.
 - Superseded module validation projection slices: the old ASP Harness/TypeSpec
   adapter and its =->alist= receipts have been removed. Core now owns native
-  POO Type/C4 validation in =core/module-schema/validation.ss=, with static
+  POO Type/C4 validation in =core/module-system/schema/validation.ss=, with static
   receipt shapes constructed using =.o=. No duplicate final-projection macro
   is needed at this boundary.
 - Completed final projection batch helper slice:
-  =src/module-system/projection/syntax.ss= exports
-  =defpoo-module-final-projection-batch= for the shared list guard plus map
+  =src/utilities/final-projection-syntax.ss= exports
+  =defpoo-final-projection-batch= for the shared list guard plus map
   frame. Durable policy, runtime-store contract, backend negotiation,
   runtime-store operation, recovery scenario, memory durable job, and module
   object validation collection serializers now route through that helper.
@@ -592,7 +592,7 @@ Phase 4: broaden runtime projection generation carefully.
   =modules/session/receipt-syntax.ss= and
   =modules/session/policy-syntax.ss=.
 - Completed module config prototype slice:
-  =src/module-system/declaration/config-syntax.ss= now declares POO config
+  =src/authoring/module-config-syntax.ss= now declares POO config
   prototype objects, kind predicates, and mechanical prototype converters.
   =modules/tool-core/config.ss= and
   =modules/memory-core/config.ss= use it for their public =tool-spec=,
@@ -611,7 +611,7 @@ Phase 4: broaden runtime projection generation carefully.
   =+poo-flow-testing-interface+=.  This avoids rebuilding the full presentation
   graph merely to decide whether a declaration is admissible.
 Phase 4b: keep user fragment loading source-aware and compile-time bounded.
-- Keep =src/module-system/loader/fragment-syntax.ss= as the syntax owner for =load!=
+- Keep =src/authoring/fragment-syntax.ss= as the syntax owner for =load!=
   fragment includes.
 - Keep the generated public surface boring: one binding, a wrapped fragment
   body, and an export.

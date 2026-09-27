@@ -330,5 +330,5 @@ contribution assessment and lifecycle transitions remain pure. Private receipt
 identity, copied snapshots, interval checks and revocation define session-local
 admission. This is not a persistent signature store or concurrent authority
 service. No NASA field or source identifier occurs in the generic mechanism.
-=t/contribution/unit/verification-test.ss= qualifies the generic boundary;
+=core/t/contribution-verification-test.ss= qualifies the generic boundary;
 NASA request semantics and scenario tests stay in the independent contribution.

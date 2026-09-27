@@ -7,7 +7,7 @@
 ;;; Invariant: facts are Scheme control-plane data; Lean and runtime payloads
 ;;; are final projections, not semantic owners.
 
-(import (only-in :core/module-schema/slot-contracts
+(import (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-slot-key
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-report-kind

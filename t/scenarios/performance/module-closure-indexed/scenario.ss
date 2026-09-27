@@ -12,7 +12,7 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/authoring/module-descriptor
                  make-empty-poo-flow-module-descriptor
                  poo-flow-module-name
                  poo-flow-module-imports

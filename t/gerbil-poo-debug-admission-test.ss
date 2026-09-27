@@ -11,9 +11,9 @@
         (only-in :clan/poo/debug DDT trace-poo)
         (only-in :clan/poo/object .o .ref .call .all-slots compute-precedence-list!)
         (only-in :clan/poo/mop define-type Type.)
-        (only-in :core/module-schema/relations
+        (only-in :core/module-system/schema/relations
                  SemanticImports. poo-flow-semantic-identity)
-        :poo-flow/src/module-system/semantic-module/objects)
+        :poo-flow/src/authoring/semantic-module)
 (export gerbil-poo-debug-admission-test)
 
 (define-type (DebugSymbol @ Type.)

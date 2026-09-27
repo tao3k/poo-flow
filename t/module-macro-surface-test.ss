@@ -13,16 +13,16 @@
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/user-interface/init-syntax
                  poo-flow-profile-extend)
-        (only-in :poo-flow/src/module-system/loader/fragment-syntax
+        (only-in :poo-flow/src/authoring/fragment-syntax
                  poo-flow-load-profile-module-binding)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-bundle)
         (only-in :poo-flow/src/user-interface/profile-config
                  poo-flow-user-profile-module-bundles
                  poo-flow-user-profile-name)
         (only-in :poo-flow/src/profiles/kernel/interface
                  poo-flow-kernel-profile)
-        (only-in :poo-flow/src/module-system/projection/syntax
+        (only-in :poo-flow/src/utilities/final-projection-syntax
                  poo-flow-product-field-rows/tail)
         (only-in :poo-flow/modules/memory-core/durable/artifact-policy
                  artifact-module

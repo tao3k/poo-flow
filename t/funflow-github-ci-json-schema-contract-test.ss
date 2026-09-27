@@ -14,7 +14,7 @@
         (only-in :std/encoding/json
                  JSONReadOptions
                  string->json)
-        (only-in :core/module-schema/slot-contracts
+        (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-slot-name
                  poo-flow-native-contract-slots)
         (only-in :poo-flow/src/contract/json-schema-source

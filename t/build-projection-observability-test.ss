@@ -7,13 +7,14 @@
          (only-in :std/test test-suite check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .o)
-        (only-in :poo-flow/src/module-system/observability/config
+        (only-in :poo-flow/src/building/build-config
                  poo-flow-default-build-observability-policy)
-        (only-in :poo-flow/src/module-system/observability/build-projection
+        (only-in :poo-flow/src/building/build-projection
                  poo-flow-make-observed-package-spec-projector
                  poo-flow-observe-build-projection
-                 poo-flow-write-observation-line!
-                 poo-flow-build-elapsed-milliseconds))
+                 poo-flow-build-elapsed-milliseconds)
+        (only-in :core/observability/output
+                 poo-flow-write-observation-line!))
 
 (export build-projection-observability-test)
 
@@ -30,7 +31,7 @@
           ((poo-flow-make-observed-package-spec-projector
             (lambda (_package-spec)
               (set! projected? #t)
-              '("src/core/api.ss" "src/module-system/api.ss"))
+              '("src/core/api.ss" "src/authoring/module-descriptor.ss"))
             poo-flow-default-build-observability-policy)
            package-spec))
         (let (output (get-output-string port))
@@ -58,10 +59,10 @@
                       #t)
         (check-equal? (contains? source "\"src/core/api.ss\"") #t)
         (check-equal? (contains? source
-                                 "\"src/module-system/api.ss\"")
+                                 "\"src/authoring/module-descriptor.ss\"")
                       #t)
         (check-equal? (contains? source
-                                 "\"src/module-system/interface.ss\"")
+                                 "\"src/authoring/module-interface.ss\"")
                       #f)
         (check-equal? (contains? source
                                  "\"src/feature-system/interface.ss\"")

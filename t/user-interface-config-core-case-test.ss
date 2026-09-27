@@ -20,7 +20,7 @@
         (only-in :poo-flow/testing-api
                  +poo-flow-testing-interface+
                  poo-flow-testing-admit-user-profile!)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config?
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
@@ -29,7 +29,7 @@
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-entrypoint
                  poo-flow-user-module-selection-source-ref)
-        (only-in :poo-flow/src/module-system/loader/source
+        (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-kind
                  poo-flow-module-source-ref-value))
 

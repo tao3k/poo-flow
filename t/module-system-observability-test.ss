@@ -18,9 +18,9 @@
                  check-output
                  test-error
                  test-suite)
-        :poo-flow/src/module-system/observability/module-presentation
-        :poo-flow/src/module-system/observability/module-source-observation
-        :poo-flow/src/module-system/observability/source-authoring
+        :poo-flow/src/user-interface/module-presentation
+        :poo-flow/src/authoring/module-source-observation
+        :poo-flow/src/authoring/source-authoring
         (only-in :core/observability/funcs
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-sample
@@ -93,13 +93,13 @@
                 (poo-flow-authoring-owner-import-port-observations
                  'modules/example/objects.ss
                  (open-input-string
-                  "(import (only-in :poo-flow/src/module-system/contribution/interface poo-flow-verification-adapter))")))
+                  "(import (only-in :poo-flow/src/user-interface/facade poo-flow-module-interface))")))
                (contribution-observation
                 (car contribution-observations)))
           (check-equal? (length contribution-observations) 1)
           (check-equal?
            (.ref contribution-observation 'owner)
-           ':poo-flow/src/module-system/contribution/interface)
+           ':poo-flow/src/user-interface/facade)
           (check-equal? (.ref contribution-observation 'accepted?) #f))))
     (poo-flow-test-case "all maintained module sources import precise owners"
       (let* ((paths (module-observability-source-files "modules"))
@@ -121,7 +121,7 @@
               (poo-flow-authoring-build-bootstrap-import-port-observations
                'build.ss
                (open-input-string
-                "(import (only-in \"./src/module-system/observability/config.ss\" policy))")))
+                "(import (only-in \"./src/building/build-config.ss\" policy))")))
              (observation (car observations)))
         (check-equal? (.ref observation 'phase) 'build-bootstrap-admission)
         (check-equal? (.ref observation 'status)

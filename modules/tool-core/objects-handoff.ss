@@ -6,7 +6,7 @@
 ;;; Boundary: POO-native runtime handoff manifest projections.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/tool-core/objects-spec
         :poo-flow/modules/tool-core/objects-support)
@@ -75,7 +75,7 @@
             +poo-flow-tool-core-handoff-manifest-kind+)))
 
 ;; : (-> PooToolHandoffManifest Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-tool-handoff-manifest->alist (manifest)
   (bindings ((checked-manifest
               (poo-flow-session-require

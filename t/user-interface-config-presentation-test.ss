@@ -11,7 +11,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/init-syntax
         :poo-flow/modules/agent-sandbox/config

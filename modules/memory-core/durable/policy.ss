@@ -8,7 +8,7 @@
 ;;; Marlin owns fact logs, checkpoints, indexes, leases, replay, and repair.
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export +poo-flow-durable-policy-kind+
         +poo-flow-durable-policy-schema+
@@ -176,7 +176,7 @@
                diagnostic))))
 
 ;; : (-> [PooDurablePolicyDiagnostic] [PooDurablePolicyDiagnosticRow])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-policy-diagnostic-alists (diagnostics)
   (projector poo-flow-durable-policy-diagnostic->alist)
   (error-message "durable policy diagnostic projection requires a list"))
@@ -525,7 +525,7 @@
     (error "durable policy batch projection requires a list" policies)))
 
 ;; : (-> PooDurablePolicyReceipt PooDurablePolicyReceiptRow)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-policy-receipt->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-policy-receipt-diagnostics receipt))))
@@ -568,7 +568,7 @@
            (runtime-executed #f))))
 
 ;; : (-> [PooDurablePolicyReceipt] [PooDurablePolicyReceiptRow])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-policy-receipts->alists (receipts)
   (projector poo-flow-durable-policy-receipt->alist)
   (error-message "durable policy receipt serialization requires a list"))

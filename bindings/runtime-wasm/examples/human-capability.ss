@@ -7,7 +7,9 @@
 ;;; explicit across every stage before bundle publication.
 
 (import :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition/interface
+        :core/profile-composition/selection-syntax
+        :poo-flow/src/scenario/composition-syntax
+        :core/profile-composition/profile-bundle
         (only-in :poo-flow/src/profiles/human-ai-capability
                  HumanAICapabilityModule
                  HumanCapabilityScenarioProfile)

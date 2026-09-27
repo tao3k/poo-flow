@@ -6,7 +6,7 @@
 ;;; Boundary: inert test fixtures for downstream module-system live cases.
 ;;; Invariant: no sandbox execution or process work here.
 ;;; Note: this is not the module-system POO object model. That model is owned by
-;;; core/module-schema/interface.ss, modules/*/objects.ss, and object-validation.ss.
+;;; core/module-system/schema/interface.ss, modules/*/objects.ss, and object-validation.ss.
 
 (import (only-in :clan/poo/object
                  .ref
@@ -15,7 +15,7 @@
                  $constant-slot-spec)
         (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-by-name)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry))
 
 (export pooFlowModuleSystemLiveCase

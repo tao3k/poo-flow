@@ -18,7 +18,7 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config-presentation-kind
                  poo-flow-user-config?)
         (only-in :poo-flow/src/user-interface/declaration-case

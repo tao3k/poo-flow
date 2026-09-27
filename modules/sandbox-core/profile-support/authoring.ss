@@ -7,8 +7,7 @@
 
 (import :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :core/extension-graph/interface
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/agent-sandbox/profile-validation
@@ -30,9 +29,7 @@
         poo-flow-sandbox-profile-object-authoring-diagnostics
         poo-flow-sandbox-profile-object-backend-row?
         poo-flow-sandbox-profile-object-row-field
-        poo-flow-sandbox-profile-object-row-merge
-        poo-flow-sandbox-profile-object-field-with-merge
-        poo-flow-sandbox-profile-object-row-contribution)
+        poo-flow-sandbox-profile-object-row-merge)
 
 ;;; Profile row aliases keep the authoring surface small while the backend
 ;;; object uses canonical sandbox-core field names.
@@ -75,7 +72,7 @@
 
 ;;; Authoring diagnostics are report-only facts for enforcing the POO-native
 ;;; programming contract. They do not reject rows; structural validation below
-;;; remains the hard gate before merge planning.
+;;; remains the hard gate before POO extension.
 ;; : (-> Symbol SandboxProfileForm Alist ValidationError)
 (def (poo-flow-sandbox-profile-object-authoring-diagnostic code row payload)
   (poo-flow-sandbox-profile-field-rows/tail
@@ -194,7 +191,7 @@
        (eq? (car row) 'backend)))
 
 ;;; Row-field resolution is the contract gate: unknown row names never become
-;;; extension contributions, even if their payload shape looks list-like.
+;;; POO prototype slots, even if their payload shape looks list-like.
 ;; : (-> PooModuleObject SandboxProfileForm MaybePooModuleFieldContract)
 (def (poo-flow-sandbox-profile-object-row-field profile-object row)
   (if (and (pair? row) (symbol? (car row)))
@@ -214,30 +211,3 @@
    ((eq? operator ':remove) 'remove)
    (else
     (poo-flow-module-field-contract-merge field))))
-
-;;; A per-row field copy lets `:remove` and `:append` share the backend field
-;;; contract without mutating the inherited object.
-;; : (-> PooModuleFieldContract Symbol PooModuleFieldContract)
-(def (poo-flow-sandbox-profile-object-field-with-merge field merge)
-  (poo-flow-module-field-contract
-   (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-field-contract-value-type field)
-   merge
-    (poo-flow-module-field-contract-default field)
-   (poo-flow-module-field-contract-metadata field)))
-
-;;; A user row becomes one field contribution against the inherited backend
-;;; profile object, so merge/remove remains ordinary POO extension behavior.
-;; : (-> PooModuleObject SandboxProfileForm PooModuleFieldContribution)
-(def (poo-flow-sandbox-profile-object-row-contribution profile-object row)
-  (let* ((field (poo-flow-sandbox-profile-object-row-field profile-object row))
-         (operator (poo-flow-sandbox-profile-object-row-operator row))
-         (merge (poo-flow-sandbox-profile-object-row-merge operator field))
-         (contribution-field
-          (if operator
-            (poo-flow-sandbox-profile-object-field-with-merge field merge)
-            field)))
-    (poo-flow-module-field-contribution
-     (poo-flow-module-object-identity profile-object)
-     contribution-field
-     (poo-flow-sandbox-profile-object-row-value row))))

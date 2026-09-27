@@ -17,9 +17,9 @@
         "../support/poo-performance"
         :core/object-family/indexed
         :poo-flow/src/core/runtime-protocol
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :core/extension-graph/interface
-        :core/module-schema/validation)
+        :core/module-system/schema/validation)
 
 (export contracts-test)
 

@@ -3,13 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: sandbox profile derivation metadata and row contributions.
+;;; Boundary: sandbox profile derivation metadata and validated row input.
 
 (import (only-in :std/list/list any fold)
         :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :core/extension-graph/interface
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/agent-sandbox/profile-validation
@@ -32,7 +32,7 @@
         poo-flow-sandbox-profile-object-validate-rows)
 
 ;;; Option lookup is scoped to derivation/config helper options. User profile
-;;; rows still pass through field-contract validation before merge planning.
+;;; rows still pass through field-contract validation before POO extension.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-sandbox-profile-object-option options key default-value)
   (let (entry (assoc key options))
@@ -78,7 +78,7 @@
     (if (and entry (list? (cdr entry))) (cdr entry) '())))
 
 ;;; Each derivation step is an audit row, not runtime metadata. The child
-;;; profile name is recorded separately from the parent so fixed-point merges
+;;; profile name is recorded separately from the parent so composition lineage
 ;;; can be inspected after multiple project/session/task hops.
 ;; : (-> Symbol Symbol Symbol Value Alist)
 (def (poo-flow-sandbox-profile-object-derivation-step name-value
@@ -125,8 +125,8 @@
       (runtime-executed #f)))))
 
 
-;;; Validation rejects malformed rows before merge planning, keeping bad user
-;;; fragments from becoming partial POO contributions. The recursive scan is
+;;; Validation rejects malformed rows before POO extension, keeping bad user
+;;; fragments from becoming partial profiles. The recursive scan is
 ;;; deliberately narrow: only filesystem resource rows can fail the extra
 ;;; project-workspace/path safety checks.
 ;; : (-> [AgentSandboxResourcePolicyEntry] Boolean)
@@ -152,8 +152,8 @@
     (not (poo-flow-sandbox-profile-object-unsafe-filesystem-resource? value))
     #t))
 
-;;; Row validation is the last user-interface gate before profile rows become
-;;; object contributions, so backend inheritance and unsafe filesystem policy
+;;; Row validation is the last user-interface gate before profile rows extend
+;;; the POO prototype, so backend inheritance and unsafe filesystem policy
 ;;; are rejected here with the original row preserved in the diagnostic.
 ;; : (-> PooModuleObject SandboxProfileForm SandboxProfileForm)
 (def (poo-flow-sandbox-profile-object-validate-row profile-object row)
@@ -195,8 +195,8 @@
                        (poo-flow-sandbox-profile-object-row-value
                         row)))))))))))
 
-;;; Batch validation preserves the original row list so merge planning can keep
-;;; user declaration order after all rows have passed the contract gate.
+;;; Batch validation preserves declaration order for the POO extension fold
+;;; after all rows have passed the contract gate.
 ;; : (-> PooModuleObject [SandboxProfileForm] [SandboxProfileForm])
 (def (poo-flow-sandbox-profile-object-validate-rows profile-object forms)
   (for-each (lambda (row)

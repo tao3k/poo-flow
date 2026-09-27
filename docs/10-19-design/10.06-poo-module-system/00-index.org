@@ -6,7 +6,7 @@
 ** 10.06.10 Purpose
 This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
 
-The public facade lives in =src/module-system/api.ss=. The implementation owners live under =src/module-system/*=; =modules/*= is reserved for concrete workflow and sandbox modules. The module system depends on core registries and config APIs, but core does not import or re-export it.
+Public consumers import the precise owner: shared POO Module mechanisms from =core/module-system/=, product authoring and UI policy from =src/authoring/= and =src/user-interface/=, and concrete workflow or sandbox modules from =modules/*=. No aggregate Module System facade is installed.
 ** 10.06.15 Agentic Control Plane RFC Suite
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][90 POO Flow Agentic Control Plane Architecture RFC]]
 - [[file:91-canonical-organization-bundle-rfc.org][91 Canonical Organization Bundle RFC]]
@@ -98,7 +98,7 @@ The module-system design builds on existing =poo-flow= contracts:
 - =src/core/task.ss= owns task-family descriptors and immutable task-family registries.
 - =src/core/flow.ss= owns flow-declaration descriptors and immutable flow-declaration registries.
 - =src/core/config.ss= accepts task and flow registries at the =run-config= boundary.
-- =src/module-system/api.ss= and =src/module-system/*= own source refs, catalog resolution, module activation, and import validation.
+- =core/module-system/= owns generic source refs, Catalog lookup, and lazy-load values; POO Flow descriptor, activation, and authoring owners consume them directly.
 - =src/extensions/*= demonstrates descriptor bundles as extension modules.
 ** 10.06.40 Delivered Surface
 The implemented module-system surface includes:

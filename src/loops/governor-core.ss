@@ -13,7 +13,7 @@
         (only-in "./strategy.ss"
                  loop-strategy-engine-role
                  loop-strategy-plan?)
-        (only-in :core/module-schema/slot-contracts
+        (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type

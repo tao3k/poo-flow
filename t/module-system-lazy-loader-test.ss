@@ -23,12 +23,16 @@
         (only-in :poo-flow/src/core/failure
                  execution-failure?
                  execution-failure-code)
-        (only-in :poo-flow/src/module-system/load poo-flow-modules!)
-        :poo-flow/src/module-system/loader/source
-        :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
+        :poo-flow/src/authoring/module-descriptor
         :core/extension-graph/interface
-        :poo-flow/src/module-system/loader/interface
-        :poo-flow/src/module-system/loader/tree)
+        :core/module-system/loader/objects
+        :poo-flow/src/authoring/module-source-collection
+        :poo-flow/src/building/official-contributions
+        :poo-flow/src/user-interface/module-source-selection
+        :poo-flow/src/user-interface/module-source-tree)
 
 (export module-system-lazy-loader-test)
 
@@ -427,7 +431,7 @@
                   (poo-flow-module-extension-node-remove
                    "user-interface/config.ss"))))
                (result
-                (poo-flow-module-auto-imports-mk-merge
+                (poo-flow-module-auto-imports-resolve
                  source-refs
                  (list disable-config)))
                (resolved-source-values

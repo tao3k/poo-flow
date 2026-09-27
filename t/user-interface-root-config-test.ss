@@ -21,7 +21,7 @@
                  poo-flow-testing-admit-user-profile!)
         (only-in :poo-flow/src/user-interface/root-profile
                  pooFlowRootProfile)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
                  poo-flow-user-module-selection-key

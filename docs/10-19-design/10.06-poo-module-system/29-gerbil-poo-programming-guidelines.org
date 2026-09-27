@@ -107,7 +107,7 @@ extension or another Provider only after a real Case proves that candidate
 selection itself cannot be expressed by standard GQL.
 
 The executable owner is
-=src/module-system/authoring/contracts.ss=.  It rejects mechanically certain
+=src/authoring/module-source-admission.ss=.  It rejects mechanically certain
 raw Query initializers while preserving ordinary pure functions, vertical
 domain slots and Provider implementations.
 
@@ -304,7 +304,7 @@ For example, =Scenario.prepare= is normally a method slot; projecting
 universal requirement that every Module contain both mechanisms.
 
 The first production closure of this model is owned by
-=src/module-system/profile-composition/scenario-case.ss=.  =user-composition=
+=src/scenario/case.ss=.  =user-composition=
 now returns =poo-flow.scenario-case.v1= directly; the former inert
 =poo-flow.composition= identity and public compatibility accessors are removed.
 The Case owns lazy =execution-plan=, =admission=, and =presentation= slots plus

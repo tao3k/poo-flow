@@ -6,7 +6,7 @@
 ;;; Boundary: lightweight Doom-style init declaration syntax.
 ;;; Invariant: the common init.ss path lowers only to declarative module data.
 
-(import :poo-flow/src/module-system/load
+(import :poo-flow/src/user-interface/module-selection-syntax
         (only-in :poo-flow/src/user-interface/profile-core
                  pooFlowUserProfile
                  pooFlowUserProfileSet

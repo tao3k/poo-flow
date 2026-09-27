@@ -44,9 +44,8 @@ part of the active Loader, profile, Funflow, or user-interface graph.
 
 This owner is a POO-native CLOS metaprotocol extension, not an ANSI
 compatibility layer.  Its lightweight descriptor participates in the kernel
-selection, while the runtime facade is lazy and opt-in and is not imported or
-re-exported by =src/module-system/api.ss=.  Importing the general Module System
-facade must not load CLOS dispatch, lifecycle generics, declaration IR, or
+selection, while the runtime interface is lazy and opt-in. Importing an ordinary
+Module owner must not load CLOS dispatch, lifecycle generics, declaration IR, or
 method-combination code.
 
 Native POO owns object identity, Type/Class/Slot metaobjects, prototype

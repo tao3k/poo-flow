@@ -443,8 +443,10 @@ Current boundary:
 - Composition no longer derives profile bindings from expander-context source
   paths.  Profile values and module selections enter through explicit imports
   and the canonical loader boundary; there is no second profile-name resolver.
-- ~src/module-system/profile-composition/interface.ss~ exports the complete composition
-  surface, including the user declaration macro.
+- ~core/profile-composition/profile-bundle.ss~ owns pure composition values;
+  ~src/scenario/composition-syntax.ss~ owns user declaration
+  syntax and ~src/scenario/profile-root.ss~ owns Scenario projection. Consumers
+  import those owners directly.
 - User configuration files load the core composition macro package through the
   existing user-module loading path; there is no standalone
   ~user-interface/composition.ss~ facade.

@@ -6,7 +6,7 @@
 ;;; Boundary: memory catalog objects and lookup helpers.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/transform
         :poo-flow/modules/memory-core/objects-core)
@@ -81,7 +81,7 @@
 (def (poo-flow-memory-catalog-find catalog store-ref)
   (poo-flow-memory-store-spec-find (.ref catalog 'stores) store-ref))
 ;; : (-> PooMemoryCatalog Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-memory-catalog->alist (catalog)
   (bindings ((checked-catalog
               (poo-flow-session-require

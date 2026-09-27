@@ -17,9 +17,12 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/api
-        :poo-flow/src/module-system/loader/source
-        :poo-flow/src/module-system/loader/resolver)
+        :poo-flow/src/authoring/module-descriptor
+        :poo-flow/src/user-interface/module-diagnostics
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
+        :poo-flow/src/user-interface/module-activation
+        :core/module-system/catalog/objects)
 
 (export module-system-test)
 

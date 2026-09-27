@@ -6,7 +6,7 @@
 ;;; Boundary: minimal kernel profile data for root profile projection.
 ;;; Invariant: no init syntax, doctor, or presentation owners are imported here.
 
-(import (only-in :poo-flow/src/module-system/declaration/interface
+(import (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-settings)
         (only-in :poo-flow/src/user-interface/profile-core
                  pooFlowUserProfile

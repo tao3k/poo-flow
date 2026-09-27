@@ -9,8 +9,8 @@
 (export poo-flow-user-config-workflow-cicd-focused-presentation)
 
 (import (only-in :clan/poo/object .ref object<-fun)
-        :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/authoring/module-interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/entrypoints
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         (only-in :poo-flow/modules/sandbox-core/profile-support/policy-backend-validation

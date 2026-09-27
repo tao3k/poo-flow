@@ -17,13 +17,13 @@
         "../support/performance"
         (only-in :core/extension-graph/interface
                  poo-flow-module-extension-node-slots)
-        (only-in :core/module-schema/interface
+        (only-in :core/module-system/schema/interface
                  PooFlowModuleListType
-                 poo-flow-module-config-merge-result-root
+                 poo-flow-module-field-resolution-result-root
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
                  poo-flow-module-object
-                 poo-flow-module-objects-mk-merge/node
+                 poo-flow-module-objects-resolve-contributions/node
                  poo-flow-module-objects-node
                  poo-flow-module-objects-ref))
 
@@ -98,10 +98,10 @@
 ;; : (-> [PooModuleFieldContribution] Alist)
 (def (module-object-list-merge-summary/from-contributions contributions)
   (let* ((result
-          (poo-flow-module-objects-mk-merge/node
+          (poo-flow-module-objects-resolve-contributions/node
            module-object-list-merge-objects-node
            contributions))
-         (root (poo-flow-module-config-merge-result-root result))
+         (root (poo-flow-module-field-resolution-result-root result))
          (node (poo-flow-module-objects-ref root 'large.module.object))
          (slots (poo-flow-module-extension-node-slots node))
          (capabilities

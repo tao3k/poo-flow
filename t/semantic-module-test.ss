@@ -7,10 +7,10 @@
          (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .o .cc .ref .all-slots)
         (only-in :clan/poo/mop element? validate TypeError?)
-        (only-in :core/module-schema/relations
+        (only-in :core/module-system/schema/relations
                  poo-flow-semantic-identity poo-flow-empty-imports
                  SemanticImports. ModuleImportsContract)
-        :poo-flow/src/module-system/semantic-module/objects)
+        :poo-flow/src/authoring/semantic-module)
 (export semantic-module-test)
 (def semantic-module-test
   (test-suite "role-constrained native Module"

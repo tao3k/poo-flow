@@ -9,7 +9,7 @@
 
 (import :poo-flow/modules/session/syntax
         :poo-flow/modules/memory-core/config
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist))
 

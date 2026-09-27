@@ -18,7 +18,7 @@
                  spec-evolution-review-item->alist
                  spec-evolution-review-item->human-audit-review-item
                  spec-evolution-review-item->runtime-manifest-row)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         "prototypes.ss"
         "contract.ss"
         "kind-contract.ss"

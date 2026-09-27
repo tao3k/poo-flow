@@ -17,9 +17,9 @@
         "../support/poo-performance-fixtures"
         "../support/poo-performance-object-scenarios"
         "../support/poo-performance"
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :core/extension-graph/interface
-        :core/module-schema/validation)
+        :core/module-system/schema/validation)
 
 (export objects-test)
 
@@ -185,20 +185,20 @@
                (contributions
                 (poo-performance-catalog-contributions objects field-count))
                (result
-                (poo-flow-module-objects-mk-merge/node objects-node
+                (poo-flow-module-objects-resolve-contributions/node objects-node
                                                      contributions))
               (receipt
                 (poo-performance-run-gate
                  (poo-performance-composition-fixture)
                  (lambda ()
-                   (poo-flow-module-objects-mk-merge/node
+                   (poo-flow-module-objects-resolve-contributions/node
                     objects-node
                     contributions)))))
           (check-equal? (length contributions) (* object-count field-count))
           (check-equal?
-           (poo-flow-module-config-merge-result-stable? result)
+           (poo-flow-module-field-resolution-result-stable? result)
            #t)
-          (check-equal? (poo-flow-module-config-merge-result-iterations result)
+          (check-equal? (poo-flow-module-field-resolution-result-iterations result)
                         1)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 

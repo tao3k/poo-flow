@@ -7,7 +7,7 @@
 
 (import (only-in :clan/poo/object .ref)
         "./performance"
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-settings
                  pooFlowUserConfig)
         (only-in :poo-flow/src/user-interface/presentation-config

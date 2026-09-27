@@ -148,7 +148,7 @@ not infer those identities from a digest or create a second Query authority.
 
 * Executable Scheme authoring Contract
 
-=src/module-system/authoring/contracts.ss= is the source-admission owner.  A
+=src/authoring/module-source-admission.ss= is the source-admission owner.  A
 public =query=, =queries=, =*-query= or =*-queries= slot initialized by a raw
 string, list, vector or lambda is rejected as
 =poo-query-must-be-native-object=.  The repair is

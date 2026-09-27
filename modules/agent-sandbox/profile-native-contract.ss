@@ -7,7 +7,7 @@
 ;;; Invariant: profile objects are semantic POO values; rows are projections.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :core/module-schema/slot-contracts
+        (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
                  poo-flow-native-contract

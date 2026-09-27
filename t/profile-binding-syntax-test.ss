@@ -6,13 +6,14 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal?)
         (only-in :clan/poo/object .o .ref)
-        (only-in :core/module-schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-semantic-module)
-        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+        (only-in :core/profile-composition/profile-bundle
                  profiles compose poo-flow-profile-export
                  poo-flow-module-profiles)
-        :poo-flow/src/module-system/profile-composition/binding-syntax)
+        :core/profile-composition/selection-syntax
+        :poo-flow/src/scenario/composition-syntax)
 
 (export profile-binding-syntax-test)
 

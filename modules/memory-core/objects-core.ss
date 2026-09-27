@@ -6,7 +6,7 @@
 ;;; Boundary: memory store spec primitives shared by memory-core modules.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/transform)
 
@@ -183,7 +183,7 @@
   (.ref spec 'recall-policies))
 
 ;; : (-> PooMemoryStoreSpec Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-memory-store-spec->alist (spec)
   (bindings ((checked-spec
               (poo-flow-session-require
@@ -206,7 +206,7 @@
            (metadata (.ref checked-spec 'metadata)))))
 
 ;; : (-> [PooMemoryStoreSpec] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-memory-store-specs->alists (specs)
   (projector poo-flow-memory-store-spec->alist)
   (error-message "memory store serialization requires a list"))

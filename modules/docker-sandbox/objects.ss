@@ -5,7 +5,7 @@
 
 ;;; Boundary: Docker sandbox module objects.
 
-(import :core/module-schema/interface
+(import :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/backend-object-syntax
         :poo-flow/modules/sandbox-core/objects

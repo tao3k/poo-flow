@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: sandbox-core profile derivation follows module-system POO merge.
+;;; Boundary: sandbox-core profile derivation follows native POO extension.
 ;;; Invariant: derived profiles are inert recipes; no backend runtime executes.
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
@@ -47,7 +47,7 @@
 
 (def sandbox-core-profile-derivation-test
  (test-suite "sandbox-core profile derivation"
-   (poo-flow-test-case "derives session and task profiles through POO row merges"
+   (poo-flow-test-case "derives session and task profiles through POO extensions"
      (let* ((project-profile
              (poo-flow-nono-sandbox-profile-config
               'project/dev

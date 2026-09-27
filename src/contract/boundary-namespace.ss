@@ -42,7 +42,7 @@
                  poo-flow-type-fact-contract->alist
                  poo-flow-lean-fact
                  poo-flow-lean-fact-contract->alist)
-        (only-in "../module-system/observability/objects.ss"
+        (only-in :core/observability/objects
                  poo-flow-observability-diagnostic-record
                  poo-flow-observability-diagnostic-code
                  poo-flow-observability-diagnostic->alist

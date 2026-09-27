@@ -15,7 +15,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-01-mix-module-expansion",
         "rfc": "45-01",
-        "source_path": "src/module-system/profile-composition/profile-bundle.ss",
+        "source_path": "core/profile-composition/profile-bundle.ss",
         "source_symbol": "compose",
         "source_kind": "function",
         "test_path": "t/profile-bundle-test.ss",
@@ -45,7 +45,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-04-observability-snapshot",
         "rfc": "45-04",
-        "source_path": "src/module-system/observability/module-presentation.ss",
+        "source_path": "src/user-interface/module-presentation.ss",
         "source_symbol": "poo-flow-module-presentation-trace",
         "source_kind": "function",
         "test_path": "t/module-system-observability-test.ss",
@@ -65,7 +65,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-07-public-composition",
         "rfc": "45-07",
-        "source_path": "src/module-system/profile-composition/binding-syntax.ss",
+        "source_path": "src/scenario/composition-syntax.ss",
         "source_symbol": "user-composition",
         "source_kind": "macro",
         "test_path": "t/profile-binding-syntax-test.ss",
