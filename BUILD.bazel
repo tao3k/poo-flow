@@ -91,7 +91,10 @@ gerbil_project_compile(
     build_script = "@orgize_sources//:build_script",
     require_library_output = True,
     source_resolution_receipts = ["@orgize_sources//:source_resolution_receipt"],
-    deps = [":gerbil_poo_package"],
+    deps = [
+        ":gerbil_poo_package",
+        ":gerbil_parser_package",
+    ],
 )
 
 gerbil_project_compile(

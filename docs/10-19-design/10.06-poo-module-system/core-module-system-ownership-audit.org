@@ -145,10 +145,13 @@ slots to native POO first; retain only actual removal, conflict, or fixed-point
 requirements as named pure policies. Do not publish a compatibility facade or
 claim the old merge engine has been retired until those callers and tests move.
 
-The parent package pins parser =2adf0e3= and Orgize =8f615eb= together.
-The former is the exact parser revision required by the latter; the previous
-parser =941ec97= pin conflicts with Orgize's transitive requirement, and the
-previous Orgize =79f8471= pin does not resolve in the current repository.
+The parent package pins parser =9672e49= and Orgize =bafc627= together.
+The former is the exact Core-namespace parser revision required by the
+latter. Orgize =8f615eb= instead required parser =2adf0e3=, which still
+imports =:poo-flow-foundation/= and fails the Core-only external Bazel build;
+the older Orgize =79f8471= pin does not resolve in the current repository.
+The Bazel =orgize_package= now declares its parser package dependency, so
+isolated external-module builds follow the same graph as =gxpkg=.
 Dependency installation must use a clean isolated =GERBIL_PATH= for this pin
 change; never remove an installed package to work around a tag conflict.
 
