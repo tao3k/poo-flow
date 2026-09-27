@@ -7,12 +7,10 @@
 ;;; and user module trees. Selection declarations remain separate POO values.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        (only-in :std/list/list any every filter)
+        (only-in :std/list/list any filter)
         (only-in :poo-flow/src/core/funcs
-                 poo-flow-directory-files-recursive
-                 poo-flow-make-value-index
-                 poo-flow-value-index-put!
-                 poo-flow-value-index-ref)
+                 poo-flow-directory-files-recursive)
+        :core/module-system/loader/load-path
         (only-in :poo-flow/src/module-system/loader/import-policy
                  poo-flow-module-owner-import-file-observations)
         (only-in :poo-flow/src/module-system/interface
@@ -59,13 +57,10 @@
 (def (nonempty-string? value)
   (and (string? value) (> (string-length value) 0)))
 
-(def (poo-flow-module-source-collection? value)
-  (and (object? value)
-       (.slot? value 'module-source-collection?)
-       (.ref value 'module-source-collection?)
+(def (poo-flow-product-module-source-collection? value)
+  (and (poo-flow-module-source-collection? value)
        (every (lambda (slot) (.slot? value slot))
-              '(identity owner source-root modules-directory style-policy locate))
-       (symbol? (.ref value 'identity))
+              '(owner source-root modules-directory style-policy))
        (symbol? (.ref value 'owner))
        (nonempty-string? (.ref value 'source-root))
        (nonempty-string? (.ref value 'modules-directory))
@@ -73,9 +68,6 @@
        (.slot? (.ref value 'style-policy) 'validate)
        (procedure? (.ref (.ref value 'style-policy) 'validate))
        (procedure? (.ref value 'locate))))
-
-(def (poo-flow-module-source-collection-identity collection)
-  (.ref collection 'identity))
 
 (def (poo-flow-module-source-collection-owner collection)
   (.ref collection 'owner))
@@ -134,9 +126,6 @@
                   collection module-key module-root entrypoint-role))
                entrypoint-roles)
           '())))))
-
-(def (poo-flow-module-source-collection-locate collection module-key)
-  ((.ref collection 'locate) collection module-key '(interface)))
 
 ;;; poo-flow-load-modules discovery is independent from User Interface enablement.
 ;;; Each direct modules/<module-name>/ directory contributes one conventional
@@ -294,11 +283,6 @@
 (def poo-flow-default-module-style-policy
   (.o (:: @ poo-flow-module-style-policy-prototype)))
 
-(def poo-flow-module-source-collection-prototype
-  (.o (module-source-collection? #t)
-      (style-policy poo-flow-default-module-style-policy)
-      (locate poo-flow-module-source-collection-default-locate)))
-
 (def (poo-flow-module-source-collection-directory-names collection)
   (let (modules-root
         (poo-flow-module-source-collection-modules-root collection))
@@ -346,7 +330,7 @@
 
 (def (poo-flow-module-source-collection-role-entrypoints collection
                                                          entrypoint-role)
-  (unless (poo-flow-module-source-collection? collection)
+  (unless (poo-flow-product-module-source-collection? collection)
     (error "POO-FLOW-MODULE-E003 invalid module source collection" collection))
   (poo-flow-module-entrypoint-role-valid! entrypoint-role)
   (let* ((modules-root
@@ -387,79 +371,12 @@
             (identity identity-value)
             (owner owner-value)
             (source-root source-root-value)
-            (modules-directory modules-directory-value)))
-    (unless (poo-flow-module-source-collection? collection)
+            (modules-directory modules-directory-value)
+            (style-policy poo-flow-default-module-style-policy)
+            (locate poo-flow-module-source-collection-default-locate)))
+    (unless (poo-flow-product-module-source-collection? collection)
       (error "invalid POO Flow module source collection" collection))
     collection))
-
-(def poo-flow-module-load-path-prototype
-  (.o (module-load-path? #t)))
-
-(def (poo-flow-module-load-path? value)
-  (and (object? value)
-       (.slot? value 'module-load-path?)
-       (.ref value 'module-load-path?)
-       (.slot? value 'identity)
-       (symbol? (.ref value 'identity))
-       (.slot? value 'collections)
-       (list? (.ref value 'collections))
-       (every poo-flow-module-source-collection?
-              (.ref value 'collections))))
-
-(def (poo-flow-module-load-path-identity load-path)
-  (.ref load-path 'identity))
-
-(def (poo-flow-module-load-path-collections load-path)
-  (.ref load-path 'collections))
-
-(def (poo-flow-module-load-path-valid! load-path)
-  (unless (poo-flow-module-load-path? load-path)
-    (error "invalid POO Flow module load path" load-path))
-  ;; Source counts can be large for user and organization overlays. Keep
-  ;; duplicate admission linear through the shared core hash index.
-  (let ((seen (poo-flow-make-value-index))
-        (identities
-         (map poo-flow-module-source-collection-identity
-              (poo-flow-module-load-path-collections load-path))))
-    (for-each
-     (lambda (identity)
-       (call-with-values
-        (lambda () (poo-flow-value-index-ref seen identity))
-        (lambda (present? _)
-          (when present?
-            (error "duplicate POO Flow module source collection" identities))
-          (poo-flow-value-index-put! seen identity #t))))
-     identities))
-  load-path)
-
-(def (make-poo-flow-module-load-path identity-value collections-value)
-  (poo-flow-module-load-path-valid!
-   (.o (:: @ poo-flow-module-load-path-prototype)
-       (identity identity-value)
-       (collections collections-value))))
-
-;;; Appended collections have lower priority. User collections can be placed
-;;; first when constructing a load path, matching Doom's override rule without
-;;; mutable global load-path state.
-(def (extend-poo-flow-module-load-path base identity-value collections-value)
-  (unless (poo-flow-module-load-path? base)
-    (error "module load path extension requires a valid base" base))
-  (poo-flow-module-load-path-valid!
-   (.o (:: @ base)
-       (identity identity-value)
-       (collections
-        (append (poo-flow-module-load-path-collections base)
-                collections-value)))))
-
-;;; First matching source wins; selection syntax is source-neutral.
-(def (poo-flow-module-load-path-locate load-path module-key)
-  (or (any (lambda (collection)
-             (let (source-refs
-                   (poo-flow-module-source-collection-locate
-                    collection module-key))
-               (and (pair? source-refs) source-refs)))
-           (poo-flow-module-load-path-collections load-path))
-      '()))
 
 (def poo-flow-maintained-module-source
   (make-poo-flow-module-source-collection
@@ -501,6 +418,7 @@
       (owner 'contributor)
       (source-root source-root-value)
       (modules-directory ".")
+      (style-policy poo-flow-default-module-style-policy)
       (locate poo-flow-contribution-root-locate)))
 
 (def (make-poo-flow-contribution-module-load-path identity-value

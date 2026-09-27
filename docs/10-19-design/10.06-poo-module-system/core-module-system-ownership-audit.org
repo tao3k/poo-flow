@@ -52,7 +52,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/backend.ss= | Retired; Core Module Loader Backend | Core now owns backend descriptors, lazy values, forcing, and load receipts. |
 | =loader/selection.ss= | Core selection + POO Flow product selection | Separate generic ordered selection from user-bundle policy and failure presentation. |
 | =loader/resolver.ss= | Core Catalog + POO Flow resolution/activation adapter | Core owns immutable ordered Catalog and pure SourceRef lookup; typed failures, Doctor, Task/Flow registries, and RunConfig remain product concerns. |
-| =loader/collection.ss= | Core collection + POO Flow source adapter | Ordered source collection algebra in Core; filesystem discovery and source-authoring admission outside Core. |
+| =loader/collection.ss= | Core LoadPath + POO Flow source adapter | Core owns the minimal POO SourceCollection protocol and ordered LoadPath composition (=core/module-system/loader/load-path.ss=); filesystem discovery, role validation, and source-authoring admission remain in POO Flow. |
 | =loader/tree.ss= | Core lazy graph + POO Flow root assembly | Lazy graph composition in Core; maintained/user roots and product activation outside Core. |
 | =loader/registry.ss= | Core source metadata + POO Flow registry | Generic source-ref construction in Core; fixed =modules/= and =src/user-interface/= paths outside Core. |
 | =loader/official-contributions.ss= | POO Flow package adapter | Checked-out =packages/= layout is product configuration, not Core. |
