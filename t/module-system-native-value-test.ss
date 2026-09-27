@@ -16,7 +16,7 @@
         :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/loader/resolver
-        :poo-flow/src/module-system/projection/runtime
+        :poo-flow/src/user-interface/module-runtime-presentation
         :core/module-system/loader/objects
         :core/module-system/catalog/objects
         :core/module-system/projection/option-objects)

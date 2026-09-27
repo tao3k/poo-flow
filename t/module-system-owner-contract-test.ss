@@ -23,7 +23,7 @@
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/descriptor/syntax
         :poo-flow/src/authoring/module-option-projection
-        :poo-flow/src/module-system/projection/runtime
+        :poo-flow/src/user-interface/module-runtime-presentation
         :poo-flow/src/user-interface/module-value-catalog
         :core/module-system/projection/option-objects
         :core/module-system/projection/option-validation

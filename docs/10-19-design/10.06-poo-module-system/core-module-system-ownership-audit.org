@@ -24,8 +24,9 @@ that is a consumer migration, not a reason to retain two authorities.
 
 Deleting thin =interface.ss= files alone did not move the mechanism. Core now
 owns the generic catalog and option validation; product descriptor projection
-lives in =src/authoring/module-option-projection.ss=. The remaining
-=projection/runtime.ss= still requires a mechanism/product boundary split.
+lives in =src/authoring/module-option-projection.ss=. Product runtime receipts
+and scalar presentation now live in =src/user-interface/module-runtime-presentation.ss=;
+the closure and phase-order mechanism they use remains in Core.
 
 * File-by-file ownership
 
@@ -43,7 +44,6 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
 | =loader/resolver.ss= | Core lookup + product activation | Keep typed failure, Doctor, and RunConfig lowering in POO Flow; user-bundle selection lives in =src/user-interface/module-source-selection.ss=. |
 | =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
-| =projection/runtime.ss= | Core evaluation + product runtime presentation | Keep agent-harness vocabulary and runtime manifest outside Core. |
 
 * Dependency blockers and required order
 
@@ -56,7 +56,7 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 10 Scheme files and this README. Shared final projection and runtime
+contains 9 Scheme files and this README. Shared final projection and runtime
 receipt syntax now live in =src/utilities/=, while POO Flow identity and default
 Interface policy live in =src/authoring/module-interface.ss=. Its deletion
 is still the closure condition, not a completed claim.

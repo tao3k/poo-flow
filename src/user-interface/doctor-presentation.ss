@@ -22,7 +22,7 @@
                  poo-flow-module-option-validation-receipt-code
                  poo-flow-module-option-validation-receipt-messages
                  poo-flow-module-option-validation-receipt-metadata)
-        (only-in :poo-flow/src/module-system/projection/runtime
+        (only-in :poo-flow/src/user-interface/module-runtime-presentation
                  poo-flow-module-evaluate
                  poo-flow-module-value-catalog-root)
         :core/module-system/loader/objects)
