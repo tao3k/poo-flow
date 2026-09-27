@@ -31,9 +31,8 @@ not by the generic module system.
 | profile composition | =profile-composition/interface.ss= | functional composition values |
 | object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution verification | =contribution/interface.ss= | host-trusted verification and Profile composition; not pure contribution admission |
-| diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | semantic module | =semantic-module/interface.ss= | semantic Module admission and authoring roles over Core relations |
-| observability | =observability/interface.ss= | module authoring and source admission; build observation belongs to =src/observability/= |
+| observability | =observability/source-authoring.ss=, =source-admission.ss=, =module-diagnostics.ss=, =doctor-presentation.ss= | POO Flow-specific adapters consume Core observation primitives directly; no local aggregate interface |
 
 The shared factors below are owned once by the =core/= Git submodule and
 installed under the =core= Gerbil package namespace.  Do not

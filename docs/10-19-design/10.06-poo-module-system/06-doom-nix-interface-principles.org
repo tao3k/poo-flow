@@ -177,7 +177,7 @@ Implemented helpers and projections:
 - =pooModuleDoctorPresentation= for value catalogs;
 - =pooModuleSourceDoctorPresentation= for source refs and loader backends;
 - doctor summaries for module ids, import graph, contribution counts, diagnostics, validation count, merge status, and merged options.
-The implemented doctor owner is =src/module-system/diagnostics/doctor.ss=. It borrows Doom's inspectable doctor experience while preserving the data-only, no-runtime-execution boundary.
+The implemented Doctor projection belongs to =src/module-system/observability/doctor-presentation.ss=, with module diagnostic facts in =src/module-system/observability/module-diagnostics.ss=. It borrows Doom's inspectable Doctor experience while preserving the data-only, no-runtime-execution boundary.
 ** 10.06.06.100 Maintained User Interface
 Status: implemented.
 =user-interface/= is the root-level downstream configuration surface. It is intentionally thin: users choose modules in =init.ss= and put custom module bodies under =custom/*/config.ss=.

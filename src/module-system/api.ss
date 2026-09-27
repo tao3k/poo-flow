@@ -9,38 +9,20 @@
 
 (import :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/authoring/interface
-        :core/composition/lineage
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/diagnostics/interface
-        :core/extension-graph/interface
-        :core/contribution/objects
         :poo-flow/src/module-system/loader/interface
-        :core/module-schema/interface
-        :core/object-family/interface
-        :core/module-schema/validation
-        :poo-flow/src/module-system/observability/interface
         :poo-flow/src/module-system/profile-composition/interface
-        :core/poo-clos/interface
         :poo-flow/src/module-system/projection/interface
         :poo-flow/src/module-system/semantic-module/interface)
 
 (export (import: :poo-flow/src/module-system/interface)
         (import: :poo-flow/src/module-system/authoring/interface)
-        (import: :core/composition/lineage)
         (import: :poo-flow/src/module-system/contribution/interface)
         (import: :poo-flow/src/module-system/declaration/interface)
         (import: :poo-flow/src/module-system/descriptor/interface)
-        (import: :poo-flow/src/module-system/diagnostics/interface)
-        (import: :core/extension-graph/interface)
-        (import: :core/contribution/objects)
         (import: :poo-flow/src/module-system/loader/interface)
-        (import: :core/module-schema/interface)
-        (import: :core/object-family/interface)
-        (import: :core/module-schema/validation)
-        (import: :poo-flow/src/module-system/observability/interface)
         (import: :poo-flow/src/module-system/profile-composition/interface)
-        (import: :core/poo-clos/interface)
         (import: :poo-flow/src/module-system/projection/interface)
         (import: :poo-flow/src/module-system/semantic-module/interface))

@@ -10,6 +10,8 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .ref object?)
         (only-in :std/test check-equal? test-suite)
+        (only-in :poo-flow/src/module-system/observability/module-diagnostics
+                 make-poo-flow-module-diagnostic)
         :poo-flow/src/module-system/facade)
 
 (export module-system-native-value-test)

@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: non-mutating module doctor diagnostics.
+;;; Boundary: non-mutating module diagnostics within Observability.
 ;;; Invariant: diagnostics never change activation behavior.
 
 (import (only-in :clan/poo/object .ref)

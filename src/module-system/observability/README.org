@@ -29,7 +29,9 @@ authorized recovery, Profile policy, or production telemetry.
 | =core/observability/types.ss= | Native responsibility Contracts. |
 | =core/observability/funcs.ss= | Pure bounded admission explanation and aggregate projections. |
 | =core/observability/objects.ss= | Native observation construction and slot-dispatched =.explain= / =.summary=. |
-| =src/module-system/observability/interface.ss= | POO Flow source admission and module authoring observation. |
+| =src/module-system/observability/source-authoring.ss= and =source-admission.ss= | POO Flow source admission and module authoring observation. |
+| =src/module-system/observability/module-diagnostics.ss= | Non-mutating module diagnostic facts and report. |
+| =src/module-system/observability/doctor-presentation.ss= | Doctor projection over diagnostic and loader receipts. |
 | =src/observability/build-config.ss= and =build-projection.ss= | Product build observation policy and ASP PackageSpec handoff. |
 | =src/observability/output.ss= | Shared bounded observation output. |
 | =core/observability/debug.ss= | Explicit development output and bounded call tracing. |
@@ -60,7 +62,7 @@ observation context contains identity, source, generation, causes, provenance,
 and a detail-inspection budget (default 256 visited receipts).
 
 #+begin_src scheme
-(import :poo-flow/src/module-system/observability/interface)
+(import :core/observability/objects)
 
 ;; context is a poo-flow-observation-context value; contract and candidate
 ;; are the actual source-owned Contract and subject under evaluation.

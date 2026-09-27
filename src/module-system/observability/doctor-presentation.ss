@@ -3,16 +3,16 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: user-facing module doctor presentations.
+;;; Boundary: module doctor projection owned by Observability.
 ;;; Invariant: doctor presentation explains data and never activates runtime execution.
 ;;; Intent: borrow Doom's doctor ergonomics while keeping POO values explicit.
-;;; Parser policy should treat this file as the module-system doctor surface owner.
+;;; Parser policy should treat this file as the module-system observation edge.
 
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/diagnostics/records
+        "module-diagnostics.ss"
         :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/module-system/projection/interface
         :poo-flow/src/module-system/loader/interface)

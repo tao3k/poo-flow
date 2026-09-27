@@ -319,7 +319,7 @@ The implementation is now split under =src/module-system/= instead of being held
 - =resolver.ss= owns source catalog lookup, activation, and run-config lowering;
 - =loader.ss= owns pure source-ref loader backends and load receipts;
 - =projection.ss= owns schemas, validation receipts, runtime projections, value catalogs, presentation receipts, and Nix-style option merge receipts;
-- =doctor.ss= owns user-facing module doctor and source doctor presentations;
+- =src/module-system/observability/module-diagnostics.ss= and =doctor-presentation.ss= own POO Flow-specific module diagnostics and their Doctor projection; shared observation primitives are imported directly from Core;
 - =descriptor-syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
 - =src/module-system.ss= remains a thin facade that re-exports the leaf owners.
 
