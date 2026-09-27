@@ -33,7 +33,7 @@ not by the generic module system.
 | declaration | =declaration/interface.ss=; =src/user-interface/selection-flags.ss=, =module-selection-syntax.ss= | POO-native selection values and product user syntax/flag policy |
 | descriptor | =descriptor/interface.ss= | module descriptor contracts |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/tree.ss=; =src/authoring/module-imports.ss=, =source-registry.ss=; =src/user-interface/module-source-selection.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
-| projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =src/user-interface/module-value-catalog.ss=; =projection/options.ss=, =runtime.ss= | Core option values and validation; product value catalog, descriptor and runtime projection |
+| projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =src/authoring/module-option-projection.ss=; =src/user-interface/module-value-catalog.ss=; =projection/runtime.ss= | Core option values and validation; product descriptor projection, value catalog, and runtime presentation |
 | profile composition | =core/profile-composition/=; =src/scenario/composition-syntax.ss=, =profile-root.ss= | Core owns Profile selection, =use-module=, and ProfileBundle algebra; Scenario owns =user-composition= and root projection |
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution verification | =core/contribution/verification.ss= | direct Core import; the redundant product re-export was removed |

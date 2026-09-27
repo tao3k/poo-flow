@@ -87,7 +87,7 @@ such as override, append, prepend, and remove without becoming a second Module
 merge evaluator. Core's =module-system/projection/option-objects.ss= owns option
 POO values and =option-validation.ss= owns pure validation findings, including
 missing schemas and constant mismatches. POO Flow's
-=src/module-system/projection/options.ss= projects product descriptors into
+=src/authoring/module-option-projection.ss= projects product descriptors into
 those Core values before runtime execution.
 
 ** 10.06.06.40 Gerbil POO And C4 Shape
@@ -161,7 +161,7 @@ This test file is the guardrail that keeps implementation modular while allowing
 ** 10.06.06.80 Current Option Policy And Validation
 The earlier general merge-receipt API is retired. Core owns named Slot value
 policies, option POO values, and validation findings; POO Flow's
-=src/module-system/projection/options.ss= owns descriptor-specific projection.
+=src/authoring/module-option-projection.ss= owns descriptor-specific projection.
 The former =projection/interface.ss= aggregate is also retired. Native POO C4
 remains the Module inheritance owner.
 ** 10.06.06.90 Implemented Doctor Presentation Layer

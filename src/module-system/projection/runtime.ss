@@ -13,7 +13,7 @@
         :core/module-system/funs
         :core/module-system/projection/option-objects
         :poo-flow/src/user-interface/module-value-catalog
-        :poo-flow/src/module-system/projection/options)
+        :poo-flow/src/authoring/module-option-projection)
 
 (export poo-flow-module-runtime-import
         poo-flow-module-apply

@@ -130,5 +130,5 @@ Delivered behavior:
 Status: superseded. The initial =projection/interface.ss= aggregate and its
 general merge-receipt helpers are not the current API. Core now owns native
 Slot value policies and option POO values/validation; POO Flow retains
-descriptor-specific =projection/options.ss=. Module inheritance remains with
+descriptor-specific =src/authoring/module-option-projection.ss=. Module inheritance remains with
 native POO C4, not a second merge evaluator.

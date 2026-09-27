@@ -21,7 +21,7 @@
         (only-in :core/module-system/projection/option-objects
                  poo-flow-module-option-schema-id
                  poo-flow-module-option-schema-value)
-        (only-in :poo-flow/src/module-system/projection/options
+        (only-in :poo-flow/src/authoring/module-option-projection
                  poo-flow-module-option-schemas)
         (only-in :core/module-system/projection/option-validation
                  poo-flow-module-find-schema))
