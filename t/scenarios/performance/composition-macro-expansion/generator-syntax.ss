@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .def)
         :poo-flow/src/module-system/profile-composition/binding-syntax
         (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
-                 compose)
+                 compose profiles)
         (for-syntax
          (only-in :gerbil/core/expander stx-identifier)))
 
