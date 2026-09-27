@@ -3,12 +3,11 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: shared module objects available to every module namespace.
+;;; Boundary: shared sandbox object owned by the sandbox module family.
 
 (import :core/module-schema/interface)
 
-(export (import: :core/module-schema/interface)
-        poo-flow-shared-sandbox-object
+(export poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
 
 (def poo-flow-shared-sandbox-object

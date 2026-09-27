@@ -17,6 +17,8 @@ Maintained product modules live in =modules/<module>/=.  In particular,
 workflow implementation belongs to =modules/workflow/=.  Loader
 observability and POO Flow module admission live here; POO-native CLOS,
 extension-graph operations, and module-schema contracts belong to Core.
+The shared Sandbox object is owned by =modules/sandbox-core/shared-object.ss=,
+not by the generic module system.
 
 * Feature owners
 

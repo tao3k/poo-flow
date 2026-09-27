@@ -6,7 +6,7 @@
 ;;; Boundary: nono sandbox module objects.
 
 (import :core/module-schema/interface
-        :poo-flow/src/module-system/objects
+        :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/backend-object-syntax
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/modules/sandbox-core/resource-contract)
