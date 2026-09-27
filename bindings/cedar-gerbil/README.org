@@ -81,6 +81,8 @@ Use =just inspect-cedar-file POLICY.cedar= to parse and count a multi-policy
 artifact without starting the Host.
 The CI job replays [[file:fixtures/atomic-case/manifest.json][a domain-neutral case manifest]] against
 [[file:fixtures/atomic-case/policies.cedar][a two-policy Cedar artifact]] through this same CLI.
+Its Host qualification also uses [[file:fixtures/atomic-case/overflow.cedar][a schema-valid overflow policy]] to check
+that aligned Rust and Lean evaluation errors fail case replay.
 One Scheme POO policy value may carry a Cedar file containing multiple static
 policies. The native Cedar parser expands the set under deterministic bundle
 identities; templates still require explicit linking.

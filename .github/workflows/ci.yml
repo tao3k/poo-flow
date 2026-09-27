@@ -299,7 +299,8 @@ jobs:
             -p poo-flow-cedar-authority \
             --features native-runtime-host-qualification \
             --test runtime_host \
-            --test authorization
+            --test authorization \
+            --test case_check
 
       - name: Replay generic Cedar artifact cases
         shell: bash

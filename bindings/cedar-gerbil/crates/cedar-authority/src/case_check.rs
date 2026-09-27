@@ -212,16 +212,21 @@ pub fn run_cli() -> Result<(), String> {
         let result = authority
             .issue(case.proposal.clone())
             .map_err(|error| format!("{}: {error}", case.name))?;
-        require_error_free_decision(&case.name, &result.receipt.payload.rust.payload.outcome)?;
-        if result.status != case.expected_status
-            || !result
-                .receipt
-                .payload
-                .rust
-                .payload
-                .outcome
-                .agrees_with(&result.receipt.payload.lean.payload.outcome)
+        if !result
+            .receipt
+            .payload
+            .rust
+            .payload
+            .outcome
+            .agrees_with(&result.receipt.payload.lean.payload.outcome)
         {
+            return Err(format!(
+                "{}: Cedar Rust and Lean outcomes disagree",
+                case.name
+            ));
+        }
+        require_error_free_decision(&case.name, &result.receipt.payload.rust.payload.outcome)?;
+        if result.status != case.expected_status {
             return Err(format!(
                 "{}: expected {}, got {}",
                 case.name, case.expected_status, result.status

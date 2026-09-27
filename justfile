@@ -324,7 +324,7 @@ test-bundle-v1:
 # Qualify an explicitly supplied Cedar Runtime Host artifact.
 [group('test')]
 test-cedar-runtime-host host:
-    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --features native-runtime-host-qualification --test runtime_host --test authorization
+    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --features native-runtime-host-qualification --test runtime_host --test authorization --test case_check
 
 # Qualify the Scheme POO -> native authority -> AOT Host path with one Cedar artifact.
 [group('test')]
