@@ -47,7 +47,7 @@ impl Drop for Host {
     }
 }
 
-fn read_policy_file(path: &Path) -> Result<Vec<PolicySource>, String> {
+fn read_policy_file(path: &Path) -> Result<(PolicySource, usize), String> {
     let bytes = std::fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
     let source = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
     let policies =
@@ -58,32 +58,18 @@ fn read_policy_file(path: &Path) -> Result<Vec<PolicySource>, String> {
             path.display()
         ));
     }
-    let prefix = canonical::raw_digest(&bytes);
-    let prefix = &prefix[7..];
-    let mut parsed = policies
-        .policies()
-        .map(|policy| {
-            let body = policy.to_cedar().ok_or_else(|| {
-                format!(
-                    "{}: linked policy cannot render as Cedar text",
-                    path.display()
-                )
-            })?;
-            Ok((policy.id().to_string(), body))
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    if parsed.is_empty() {
+    let count = policies.policies().count();
+    if count == 0 {
         return Err(format!("{}: no static policies", path.display()));
     }
-    parsed.sort_by(|left, right| left.0.cmp(&right.0));
-    Ok(parsed
-        .into_iter()
-        .enumerate()
-        .map(|(index, (_, source))| PolicySource {
-            identity: format!("artifact-{prefix}-{index}"),
-            source,
-        })
-        .collect())
+    let digest = canonical::raw_digest(&bytes);
+    Ok((
+        PolicySource {
+            identity: format!("artifact-{}", &digest[7..]),
+            source: source.to_owned(),
+        },
+        count,
+    ))
 }
 
 fn start_host(path: &Path) -> Result<Host, String> {
@@ -166,7 +152,7 @@ pub fn run_cli() -> Result<(), String> {
             println!(
                 "{}: {} static policies",
                 file.display(),
-                read_policy_file(&file)?.len()
+                read_policy_file(&file)?.1
             );
         }
         return Ok(());
@@ -195,11 +181,13 @@ pub fn run_cli() -> Result<(), String> {
             ));
         }
     }
+    let mut policy_count = 0;
     for file in &files {
-        manifest.bootstrap.policies.extend(read_policy_file(file)?);
+        let (source, count) = read_policy_file(file)?;
+        manifest.bootstrap.policies.push(source);
+        policy_count += count;
     }
     let case_count = manifest.cases.len();
-    let policy_count = manifest.bootstrap.policies.len();
     let started = Instant::now();
     let host = start_host(&host_path)?;
     let mut seed = [0u8; 32];
@@ -207,6 +195,8 @@ pub fn run_cli() -> Result<(), String> {
     let mut authority = Authority::new(manifest.bootstrap, host.deployment.clone(), seed)
         .map_err(|error| error.to_string())?;
     let mut consumed = 0;
+    let mut rust_worker_ms = 0_u64;
+    let mut lean_worker_ms = 0_u64;
     for case in manifest.cases {
         let result = authority
             .issue(case.proposal.clone())
@@ -225,6 +215,8 @@ pub fn run_cli() -> Result<(), String> {
                 case.name, case.expected_status, result.status
             ));
         }
+        rust_worker_ms += result.receipt.payload.rust.payload.elapsed_ms;
+        lean_worker_ms += result.receipt.payload.lean.payload.elapsed_ms;
         match (result.status.as_str(), result.grant) {
             ("authorized", Some(grant)) => {
                 // Consumption is confined to this diagnostic Authority.
@@ -241,7 +233,7 @@ pub fn run_cli() -> Result<(), String> {
     }
     authority.close();
     println!(
-        "cedar-case-check: {case_count} cases, {policy_count} policies, {consumed} locally consumed grants, {} ms",
+        "cedar-case-check: {case_count} cases, {policy_count} policies, {consumed} locally consumed grants, {} ms wall, {rust_worker_ms} ms Rust workers, {lean_worker_ms} ms Lean workers",
         started.elapsed().as_millis()
     );
     Ok(())

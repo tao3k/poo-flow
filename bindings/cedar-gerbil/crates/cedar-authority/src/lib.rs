@@ -10,8 +10,8 @@
 #[cfg(all(feature = "aot-runtime-host", unix))]
 pub mod aot_host;
 pub mod authority;
-pub mod case_check;
 pub mod canonical;
+pub mod case_check;
 pub mod projection;
 pub mod runtime;
 pub mod wire;

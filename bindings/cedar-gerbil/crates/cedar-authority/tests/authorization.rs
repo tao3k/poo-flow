@@ -6,7 +6,9 @@ mod support;
 
 use poo_flow_cedar_authority::authority::{Authority, ConsumeRequest, verify_signature};
 use poo_flow_cedar_authority::canonical;
-use poo_flow_cedar_authority::projection::{Bootstrap, HandoffInput, Proposal, Snapshot};
+use poo_flow_cedar_authority::projection::{
+    Bootstrap, HandoffInput, PolicySource, Proposal, Snapshot,
+};
 use poo_flow_cedar_authority::runtime::Deployment;
 use poo_flow_cedar_authority::wire::{CEDAR_VERSION, LEAN_REVISION};
 use serde_json::json;
@@ -62,6 +64,22 @@ fn proposal() -> Proposal {
             observation_digest: digest(9),
         },
     }
+}
+
+#[test]
+fn one_poo_source_can_carry_an_exported_cedar_policy_set() {
+    let mut input = bootstrap();
+    let source = input
+        .policies
+        .iter()
+        .map(|policy| policy.source.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    input.policies = vec![PolicySource {
+        identity: "generic-bundle".into(),
+        source,
+    }];
+    Snapshot::new(input).unwrap().prepare(&proposal()).unwrap();
 }
 
 fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstrap {

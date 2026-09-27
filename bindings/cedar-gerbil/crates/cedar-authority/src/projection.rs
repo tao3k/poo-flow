@@ -285,27 +285,65 @@ impl Snapshot {
                     "empty identity or oversized source",
                 ));
             }
-            let policy = Policy::parse(
-                Some(
-                    PolicyId::from_str(&input.identity)
-                        .map_err(cedar_error("policy-identity-invalid"))?,
-                ),
-                &input.source,
-            )
-            .map_err(cedar_error("cedar-policy-invalid"))?;
-            let canonical = policy
-                .to_json()
-                .map_err(cedar_error("cedar-policy-invalid"))?;
-            if let Some(previous) = by_id.get(&input.identity) {
-                if previous != &canonical {
-                    return Err(Error::new("policy-identity-conflict", &input.identity));
-                }
-                continue;
+            PolicyId::from_str(&input.identity).map_err(cedar_error("policy-identity-invalid"))?;
+            let parsed =
+                PolicySet::from_str(&input.source).map_err(cedar_error("cedar-policy-invalid"))?;
+            if parsed.templates().next().is_some() {
+                return Err(Error::new(
+                    "cedar-policy-invalid",
+                    "policy templates require explicit linking",
+                ));
             }
-            by_id.insert(input.identity.clone(), canonical);
-            policies
-                .add(policy)
+            let mut bodies = parsed
+                .policies()
+                .map(|policy| {
+                    policy
+                        .to_cedar()
+                        .map(|body| (policy.id().to_string(), body))
+                        .ok_or_else(|| {
+                            Error::new("cedar-policy-invalid", "linked policy cannot render")
+                        })
+                })
+                .collect::<Result<Vec<_>>>()?;
+            if bodies.is_empty() {
+                return Err(Error::new("cedar-policy-invalid", "empty policy artifact"));
+            }
+            bodies.sort_by(|left, right| left.0.cmp(&right.0));
+            let multiple = bodies.len() > 1;
+            for (index, (_, source)) in bodies.into_iter().enumerate() {
+                let identity = if multiple {
+                    format!("{}-{index}", input.identity)
+                } else {
+                    input.identity.clone()
+                };
+                let policy = Policy::parse(
+                    Some(
+                        PolicyId::from_str(&identity)
+                            .map_err(cedar_error("policy-identity-invalid"))?,
+                    ),
+                    &source,
+                )
                 .map_err(cedar_error("cedar-policy-invalid"))?;
+                let canonical = policy
+                    .to_json()
+                    .map_err(cedar_error("cedar-policy-invalid"))?;
+                if let Some(previous) = by_id.get(&identity) {
+                    if previous != &canonical {
+                        return Err(Error::new("policy-identity-conflict", &identity));
+                    }
+                    continue;
+                }
+                by_id.insert(identity, canonical);
+                if by_id.len() > 256 {
+                    return Err(Error::new(
+                        "policy-budget-exceeded",
+                        "maximum is 256 static policies",
+                    ));
+                }
+                policies
+                    .add(policy)
+                    .map_err(cedar_error("cedar-policy-invalid"))?;
+            }
         }
         let validation = Validator::new(schema.clone()).validate(&policies, ValidationMode::Strict);
         if !validation.validation_passed() {
