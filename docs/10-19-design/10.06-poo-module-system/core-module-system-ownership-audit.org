@@ -66,7 +66,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
 | =profile-composition/profile-bundle.ss= | Core Profile composition after source split | POO-native selection and pure ProfileBundle algebra; product Scenario root projection remains outside Core. |
 | =profile-composition/funcs.ss= | Retired | The Plan owner uses Gerbil =list->hash-table-eq= directly; no duplicate public indexing utility remains. |
-| =profile-composition/accessors.ss= | =src/scenario/accessors.ss= | Moved Scenario Case slot accessors to their product owner; =builders.ss= still mixes profile bindings with Scenario workload and awaits a separate split. |
+| =profile-composition/accessors.ss=, =builders.ss= | Scenario owner + Profile bindings | Case accessors and workload are now =src/scenario/accessors.ss= and =workload.ss=; =profile-composition/bindings.ss= retains only Profile slot and binding values. |
 | =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
 | =profile-composition/plan-projection.ss= | =src/scenario/plan-projection.ss= | Moved the Scenario Case to product ExecutionPlan projection; it depends on the POO Flow Plan and is not a generic Core Module mechanism. |
 | =profile-composition/scenario-case.ss= | =src/scenario/case.ss= | Moved fresh Session state and Scenario Case construction to the product Scenario owner. |

@@ -28,10 +28,11 @@
                  PooFlowProfileCompositionConflict?
                  PooFlowProfileCompositionConflict-receipt
                  poo-flow-profile-composition-conflict-presentation)
-        (only-in :poo-flow/src/module-system/profile-composition/builders
+        (only-in :poo-flow/src/module-system/profile-composition/bindings
                  poo-flow-profile-ref
                  poo-flow-scenario-module-binding
-                 poo-flow-scenario-profile-binding
+                 poo-flow-scenario-profile-binding)
+        (only-in :poo-flow/src/scenario/workload
                  poo-flow-scenario-case-multiplicity
                  poo-flow-scenario-case-launch-range
                  poo-flow-scenario-case-multiplicities->launch-ranges

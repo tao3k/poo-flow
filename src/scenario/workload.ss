@@ -3,21 +3,11 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: POO builders for profile composition objects.
-;;; Invariant: builders store selected profile objects, not registry keys.
+;;; Boundary: immutable Scenario multiplicity and workload values.
+;;; Invariant: ordinal lookup follows ordered launch ranges.
 
 (import (only-in :clan/poo/object .o .ref))
 
-(export poo-flow-profile-ref
-        poo-flow-scenario-module-binding
-        poo-flow-scenario-profile-binding)
-
-;;; Selects a profile slot from a POO module object.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-profile-ref session 'hardened)
-;;   | result: selected profile object stored on the module slot
-;; : (-> PooModule Symbol PooProfile)
 (import :poo-flow/src/utilities/functional)
 
 (export poo-flow-scenario-case-multiplicity
@@ -25,32 +15,6 @@
         poo-flow-scenario-case-multiplicities->launch-ranges
         poo-flow-scenario-case-workload
         poo-flow-scenario-case-workload/ref)
-
-(def (poo-flow-profile-ref module slot)
-  (.ref module slot))
-
-;;; Captures the lexical alias and module object used by a composition.
-;;   | doc m%
-;;       # Examples
-;;       (poo-flow-scenario-module-binding 'session session-module)
-;;   | result: module binding metadata object
-;; : (-> Symbol PooModule PooFlowScenarioModuleBinding)
-(def (poo-flow-scenario-module-binding alias module)
-  (let ((alias-value alias)
-        (module-value module))
-    (.o (kind 'poo-flow.scenario.module-binding.v1)
-        (alias alias-value)
-        (module module-value))))
-
-;;; Builds the top-level composition object with composition-level profiles.
-;; : (-> Symbol List List List PooFlowScenarioCase)
-(def (poo-flow-scenario-profile-binding alias slot)
-  (let ((alias-value alias)
-        (slot-value slot))
-    (.o (kind 'poo-flow.scenario.profile-binding.v1)
-        (alias alias-value)
-        (slot slot-value))))
-
 
 (def (poo-flow-scenario-case-multiplicity composition count)
   (unless (and (integer? count) (> count 0))

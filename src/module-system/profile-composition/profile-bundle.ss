@@ -14,7 +14,7 @@
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract)
         (only-in :core/module-system/schema/relations poo-flow-empty-profiles)
-        (only-in :poo-flow/src/module-system/profile-composition/builders
+        (only-in :poo-flow/src/module-system/profile-composition/bindings
                  poo-flow-scenario-module-binding
                  poo-flow-scenario-profile-binding)
         (only-in :poo-flow/src/scenario/case
