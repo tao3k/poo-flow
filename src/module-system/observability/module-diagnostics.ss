@@ -6,14 +6,12 @@
 ;;; Boundary: non-mutating module diagnostics within Observability.
 ;;; Invariant: diagnostics never change activation behavior.
 
-(import (only-in :clan/poo/object .ref)
-        :poo-flow/src/core/task
+(import :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/descriptor/interface
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-stable-duplicates)
-        (only-in :core/object-family/syntax
-                 defpoo-object-family)
+        :core/module-system/observability/diagnostics
         :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-module-diagnostic-prototype
@@ -35,23 +33,6 @@
         poo-flow-module-doctor
         poo-flow-module-doctor-ok?
         poo-flow-module-doctor-report->alist)
-
-;;; Diagnostic values are native POO families until projected at the edge.
-(defpoo-object-family
-  (prototype poo-flow-module-diagnostic-prototype
-             module-diagnostic?
-             poo-flow-module-diagnostic?)
-  (constructor make-poo-flow-module-diagnostic
-               (severity-value severity)
-               (code-value code)
-               (target-value target)
-               (detail-value detail))
-  (accessors
-   (poo-flow-module-diagnostic-severity severity)
-   (poo-flow-module-diagnostic-code code)
-   (poo-flow-module-diagnostic-target target)
-   (poo-flow-module-diagnostic-detail detail))
-  (projections))
 
 ;; : (-> PooModuleDiagnostic Alist)
 (defpoo-module-final-projection
@@ -219,43 +200,6 @@
             (poo-flow-module-duplicate-option-diagnostics closed-modules)
             (poo-flow-module-empty-contribution-diagnostics closed-modules))))
 
-;;; Boundary: module diagnostics with severity is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> DiagnosticSeverity [PooModuleDiagnostic] [PooModuleDiagnostic])
-(def (poo-flow-module-diagnostics-with-severity severity diagnostics)
-  (cond
-   ((null? diagnostics) '())
-   ((eq? (poo-flow-module-diagnostic-severity (car diagnostics)) severity)
-    (cons (car diagnostics)
-          (poo-flow-module-diagnostics-with-severity severity (cdr diagnostics))))
-   (else
-    (poo-flow-module-diagnostics-with-severity severity (cdr diagnostics)))))
-
-;;; Boundary: any error diagnostic upgrades the whole report to error.
-;; : (-> [PooModuleDiagnostic] Symbol)
-(def (poo-flow-module-diagnostics-status diagnostics)
-  (cond
-   ((pair? (poo-flow-module-diagnostics-with-severity 'error diagnostics)) 'error)
-   ((pair? diagnostics) 'warning)
-   (else 'ok)))
-
-;;; Boundary: reports summarize health and keep diagnostic values typed.
-;; : (-> [Symbol] Symbol [PooModuleDiagnostic] PooModuleDoctorReport)
-(defpoo-object-family
-  (prototype poo-flow-module-doctor-report-prototype
-             module-doctor-report?
-             poo-flow-module-doctor-report?)
-  (constructor make-poo-flow-module-doctor-report
-               (modules-value modules)
-               (status-value status)
-               (diagnostics-value diagnostics))
-  (accessors
-   (poo-flow-module-doctor-report-modules modules)
-   (poo-flow-module-doctor-report-status status)
-   (poo-flow-module-doctor-report-diagnostics diagnostics))
-  (projections))
-
 ;;; Boundary: doctor reports summarize closure health without activation.
 ;; : (-> [PooModuleDescriptor] PooModuleDoctorReport)
 (def (poo-flow-module-doctor modules)
@@ -265,11 +209,6 @@
      (poo-flow-module-names closed-modules)
      (poo-flow-module-diagnostics-status diagnostics)
      diagnostics)))
-
-;;; Boundary: doctor ok is a status predicate only.
-;; : (-> PooModuleDoctorReport Boolean)
-(def (poo-flow-module-doctor-ok? report)
-  (eq? (poo-flow-module-doctor-report-status report) 'ok))
 
 ;;; Boundary: alist conversion is reserved for CLI/agent presentation edges.
 ;; : (-> PooModuleDoctorReport Alist)

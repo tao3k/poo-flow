@@ -58,7 +58,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/official-contributions.ss= | POO Flow package adapter | Checked-out =packages/= layout is product configuration, not Core. |
 | =loader/import-policy.ss=, =loader/fragment-syntax.ss= | POO Flow authoring/UI adapter | Product import whitelist and source-fragment I/O cannot become Core authority. |
 | =loader/interface.ss=, =loader/module-source-interface.ss= | Retire | Repoint consumers to Core loader and the POO Flow package adapter. |
-| =observability/module-diagnostics.ss= | Core Module diagnostics | Generic descriptor findings and non-mutating diagnostic facts. |
+| =observability/module-diagnostics.ss= | Core Diagnostic values + POO Flow findings | =core/module-system/observability/diagnostics.ss= owns POO Diagnostic/DoctorReport values and pure status; product Task/Flow/Option findings and Doctor presentation remain outside Core. |
 | =observability/module-presentation.ss= | Core observation facts + POO Flow presentation | Separate generic observation objects from product/source syntax and display. |
 | =observability/module-source-observation.ss= | POO Flow source-policy adapter | Reader-native lexical/inline-prototype inspection is source policy, not Core loading. |
 | =observability/doctor-presentation.ss= | POO Flow observability | User-facing aggregation over Core diagnostics and product load receipts. |

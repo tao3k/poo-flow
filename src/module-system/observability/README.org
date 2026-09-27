@@ -30,7 +30,8 @@ authorized recovery, Profile policy, or production telemetry.
 | =core/observability/funcs.ss= | Pure bounded admission explanation and aggregate projections. |
 | =core/observability/objects.ss= | Native observation construction and slot-dispatched =.explain= / =.summary=. |
 | =src/module-system/observability/source-authoring.ss= and =source-admission.ss= | POO Flow source admission and module authoring observation. |
-| =src/module-system/observability/module-diagnostics.ss= | Non-mutating module diagnostic facts and report. |
+| =core/module-system/observability/diagnostics.ss= | Native POO Diagnostic and DoctorReport values plus source-neutral status aggregation. |
+| =src/module-system/observability/module-diagnostics.ss= | Product Task/Flow/Option findings, Doctor decision, and final alist projections. |
 | =src/module-system/observability/doctor-presentation.ss= | Doctor projection over diagnostic and loader receipts. |
 | =src/observability/build-config.ss= and =build-projection.ss= | Product build observation policy and ASP PackageSpec handoff. |
 | =src/observability/output.ss= | Shared bounded observation output. |
