@@ -52,3 +52,21 @@ Qualify the exported artifact itself with:
 #+begin_src sh
 just test-cedar-runtime-host "$out/bin/cedarRuntimeHost"
 #+end_src
+
+For an atomic downstream scenario, supply a JSON case manifest, the built Host,
+and an exported =.cedar= file:
+
+#+begin_src sh
+just test-cedar-case CASE.json "$out/bin/cedarRuntimeHost" POLICY.cedar
+#+end_src
+
+The manifest contains one authority bootstrap with an empty =policies= array
+and a nonempty =cases= array. Each case contains =name=, =proposal=, and
+=expected_status= (=authorized= or =denied=). The command parses the Cedar file
+with Cedar's official policy-set parser, admits its static policies into the
+existing authority boundary, and compares every case with both independent
+Runtime Host engines. No industry-specific Rust test is required. The command
+does not confer governance admission: the manifest supplies that claim, which
+must be verified by the application host before production publication.
+Use =just inspect-cedar-file POLICY.cedar= to parse and count a multi-policy
+artifact without starting the Host.
