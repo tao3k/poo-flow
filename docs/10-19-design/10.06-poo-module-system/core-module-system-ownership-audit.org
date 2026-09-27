@@ -145,6 +145,12 @@ slots to native POO first; retain only actual removal, conflict, or fixed-point
 requirements as named pure policies. Do not publish a compatibility facade or
 claim the old merge engine has been retired until those callers and tests move.
 
+The object-catalog fast path is restricted to direct-child contributions. A
+contribution addressed to the =objects= root must use the extension resolver:
+root slot changes and child topology operations cannot be silently discarded
+by child-only grouping. Core now tests a root update together with a child
+update; the child-only List merge retains its measured performance gate.
+
 The parent package pins parser =9672e49= and Orgize =bafc627= together.
 The former is the exact Core-namespace parser revision required by the
 latter. Orgize =8f615eb= instead required parser =2adf0e3=, which still
