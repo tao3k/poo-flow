@@ -140,7 +140,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "rE6daQEukQFVN+DWFNiULPYGMkZowsTWPwgjqMOkCcw=",
+        "usagesDigest": "CdL0dvtmygIVcXmzZrLCt9omIL88Wj9Lpe3Z3hr3fmU=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -201,11 +201,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-parser",
               "package": "gerbil-parser",
-              "revision": "941ec97e508dd51ecc1232bb34fec3872d25794f",
-              "sha256": "e6b723c1e34bf4fa8a8c8ca40139cafb83b37108d3b1bad2594ae8ea91eda6f1",
-              "strip_prefix": "gerbil-parser-941ec97e508dd51ecc1232bb34fec3872d25794f",
+              "revision": "9672e49f6aee198dfffdf105416d89fc9f71ef78",
+              "sha256": "947b3616c6fa0845eefa22aa198c14367a79f34481eb625d6c7b3630251c3116",
+              "strip_prefix": "gerbil-parser-9672e49f6aee198dfffdf105416d89fc9f71ef78",
               "urls": [
-                "https://github.com/tao3k/gerbil-parser/archive/941ec97e508dd51ecc1232bb34fec3872d25794f.tar.gz"
+                "https://github.com/tao3k/gerbil-parser/archive/9672e49f6aee198dfffdf105416d89fc9f71ef78.tar.gz"
               ]
             }
           },
@@ -215,11 +215,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/orgize",
               "package": "orgize",
-              "revision": "47d11598ca0fb36c754cb825d89a56a965bdd546",
-              "sha256": "2044abdfe7a87c6d1d61686eb0dfadd7d75f8cd0849f86c4493f0d49d57c7aa9",
-              "strip_prefix": "orgize-47d11598ca0fb36c754cb825d89a56a965bdd546",
+              "revision": "bafc6272d885817b35003a01311f8bb654d95866",
+              "sha256": "74d683533fe02f89ff8677e71d05ce03c6832c9ada8e9ef76a606fce6f5e82b6",
+              "strip_prefix": "orgize-bafc6272d885817b35003a01311f8bb654d95866",
               "urls": [
-                "https://github.com/tao3k/orgize/archive/47d11598ca0fb36c754cb825d89a56a965bdd546.tar.gz"
+                "https://github.com/tao3k/orgize/archive/bafc6272d885817b35003a01311f8bb654d95866.tar.gz"
               ]
             }
           }
@@ -227,7 +227,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "rE6daQEukQFVN+DWFNiULPYGMkZowsTWPwgjqMOkCcw=",
+        "usagesDigest": "CdL0dvtmygIVcXmzZrLCt9omIL88Wj9Lpe3Z3hr3fmU=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -282,11 +282,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-parser",
               "package": "gerbil-parser",
-              "revision": "941ec97e508dd51ecc1232bb34fec3872d25794f",
-              "sha256": "e6b723c1e34bf4fa8a8c8ca40139cafb83b37108d3b1bad2594ae8ea91eda6f1",
-              "strip_prefix": "gerbil-parser-941ec97e508dd51ecc1232bb34fec3872d25794f",
+              "revision": "9672e49f6aee198dfffdf105416d89fc9f71ef78",
+              "sha256": "947b3616c6fa0845eefa22aa198c14367a79f34481eb625d6c7b3630251c3116",
+              "strip_prefix": "gerbil-parser-9672e49f6aee198dfffdf105416d89fc9f71ef78",
               "urls": [
-                "https://github.com/tao3k/gerbil-parser/archive/941ec97e508dd51ecc1232bb34fec3872d25794f.tar.gz"
+                "https://github.com/tao3k/gerbil-parser/archive/9672e49f6aee198dfffdf105416d89fc9f71ef78.tar.gz"
               ]
             }
           },
@@ -296,11 +296,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/orgize",
               "package": "orgize",
-              "revision": "47d11598ca0fb36c754cb825d89a56a965bdd546",
-              "sha256": "2044abdfe7a87c6d1d61686eb0dfadd7d75f8cd0849f86c4493f0d49d57c7aa9",
-              "strip_prefix": "orgize-47d11598ca0fb36c754cb825d89a56a965bdd546",
+              "revision": "bafc6272d885817b35003a01311f8bb654d95866",
+              "sha256": "74d683533fe02f89ff8677e71d05ce03c6832c9ada8e9ef76a606fce6f5e82b6",
+              "strip_prefix": "orgize-bafc6272d885817b35003a01311f8bb654d95866",
               "urls": [
-                "https://github.com/tao3k/orgize/archive/47d11598ca0fb36c754cb825d89a56a965bdd546.tar.gz"
+                "https://github.com/tao3k/orgize/archive/bafc6272d885817b35003a01311f8bb654d95866.tar.gz"
               ]
             }
           }

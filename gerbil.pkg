@@ -7,5 +7,5 @@
 depend:
  ("github.com/tao3k/gerbil-poo@099b381588360a8a49fd772f666a1a00351366f5"
   "github.com/tao3k/asp-gerbil-scheme@19bf659450f619a410cef46b093ccaa6bb203c03"
-  "github.com/tao3k/gerbil-parser@941ec97e508dd51ecc1232bb34fec3872d25794f"
-  "github.com/tao3k/orgize@47d11598ca0fb36c754cb825d89a56a965bdd546"))
+  "github.com/tao3k/gerbil-parser@9672e49f6aee198dfffdf105416d89fc9f71ef78"
+  "github.com/tao3k/orgize@bafc6272d885817b35003a01311f8bb654d95866"))
