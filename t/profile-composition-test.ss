@@ -8,8 +8,9 @@
         (only-in :clan/poo/object .all-slots .def .o .ref object?)
         (only-in :clan/poo/mop element?)
         (only-in :poo-flow/src/core/plan execution-plan? execution-plan-nodes)
+        (only-in :core/module-schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
-                 poo-flow-semantic-identity poo-flow-semantic-module)
+                 poo-flow-semantic-module)
         :poo-flow/src/module-system/profile-composition/interface)
 
 (export profile-composition-test)

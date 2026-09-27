@@ -9,6 +9,7 @@
          :std/test
         :clan/poo/object
         :poo-flow/src/core/plan
+        (only-in :core/module-schema/relations poo-flow-semantic-identity)
         :poo-flow/src/module-system/semantic-module/objects
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/feature-system/bundle-v1-composition-writer

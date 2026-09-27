@@ -6,36 +6,22 @@
 ;;; Boundary: construct values from prototypes owned by explicit Type declarations.
 (import (only-in :clan/poo/object .o .mix .ref)
         (only-in :clan/poo/mop validate)
+        :core/module-schema/relations
         "types.ss")
-(export SemanticModule. SemanticImports. ModuleSourceRole.
+(export SemanticModule. ModuleSourceRole.
         ModuleAuthoringProfile. ModuleAuthoringExecutor.
         TypesSourceRole. ObjectsSourceRole. FunsSourceRole.
         ConfigSourceRole. UserConfigSourceRole.
-        InterfaceSourceRole. ImportContribution.
-        SemanticModuleContract ModuleIdentityContract ModuleImportsContract
-        ModuleProfilesContract ModuleCapabilitiesContract
+        InterfaceSourceRole.
+        SemanticModuleContract
         ModuleSourceRoleContract ModuleAuthoringProfileContract
-        ImportContributionContract
-        poo-flow-semantic-identity poo-flow-semantic-module
-        poo-flow-empty-imports poo-flow-empty-capabilities poo-flow-empty-profiles
+        poo-flow-semantic-module
         poo-flow-default-module-authoring-profile
-        poo-flow-user-root-module-authoring-profile
-        poo-flow-import-contribution poo-flow-module-imports)
+        poo-flow-user-root-module-authoring-profile)
 
 (def SemanticModule. (.ref SemanticModuleContract 'proto))
-(def SemanticImports. (.ref ModuleImportsContract 'proto))
-(def SemanticProfiles. (.ref ModuleProfilesContract 'proto))
-(def SemanticCapabilities. (.ref ModuleCapabilitiesContract 'proto))
-(def ModuleIdentity. (.ref ModuleIdentityContract 'proto))
 (def ModuleSourceRole. (.ref ModuleSourceRoleContract 'proto))
 (def ModuleAuthoringProfile. (.ref ModuleAuthoringProfileContract 'proto))
-(def ImportContribution. (.ref ImportContributionContract 'proto))
-(def CapabilityResponsibilities.
-  (.ref ModuleCapabilitiesContract 'responsibilities))
-(def CapabilityRequirements.
-  (.ref (.ref CapabilityResponsibilities. 'requirements) 'proto))
-(def CapabilityProvisions.
-  (.ref (.ref CapabilityResponsibilities. 'provisions) 'proto))
 
 ;;; The executor stays a native POO prototype.  CLOS specializes it through
 ;;; the explicit prototype bridge rather than requiring a duplicate class.
@@ -110,19 +96,6 @@
    'interface '(import export) '(add remove replace delete) '()
    'reexport-only))
 
-;; : (-> Symbol Symbol ModuleIdentity)
-(def (poo-flow-semantic-identity namespace-value name-value)
-  (validate ModuleIdentityContract
-    (.o (:: @ ModuleIdentity.)
-        namespace: namespace-value name: name-value)))
-
-(def (poo-flow-empty-imports) (.mix SemanticImports.))
-(def (poo-flow-empty-profiles) (.mix SemanticProfiles.))
-(def (poo-flow-empty-capabilities)
-  (.o (:: @ SemanticCapabilities.)
-      requirements: (.mix CapabilityRequirements.)
-      provisions: (.mix CapabilityProvisions.)))
-
 (def (poo-flow-default-module-authoring-profile)
   (validate ModuleAuthoringProfileContract
     (.o (:: @ ModuleAuthoringProfile.)
@@ -149,13 +122,3 @@
     (.o (:: @ SemanticModule.) identity: identity-value imports: imports-value
         capabilities: capabilities-value profiles: profiles-value
         authoring: authoring-value)))
-
-;; : (-> ModuleIdentity ModuleIdentity ModuleIdentity ModuleIdentity Symbol Object ImportContribution)
-(def (poo-flow-import-contribution identity-value owner-value instance-value source-value revision-value target-value)
-  (validate ImportContributionContract
-    (.o (:: @ ImportContribution.) identity: identity-value owner: owner-value instance: instance-value
-        source: source-value revision: revision-value target: target-value)))
-
-;; : (-> ImportContribution ... ModuleImports)
-(def (poo-flow-module-imports . contribution-values)
-  (.o (:: @ SemanticImports.) contributions: contribution-values))

@@ -7,8 +7,8 @@
 ;;; Invariant: commands are inert metadata; execution remains Python-owned.
 
 (import (only-in :clan/poo/object .def .o)
+        (only-in :core/module-schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
-                 poo-flow-semantic-identity
                  poo-flow-semantic-module)
         (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
                  poo-flow-module-profiles
