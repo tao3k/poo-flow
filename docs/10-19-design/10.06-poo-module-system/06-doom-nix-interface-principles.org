@@ -80,21 +80,15 @@ Nix modules compose into a final configuration value. They do not rely on the us
 The user should be able to inspect what a module contributed before any runner or adapter is invoked.
 
 *** Merge Policy Must Be Explicit
-Nix is valuable because override and merge behavior are part of the module model. =poo-flow= now implements the first explicit merge layer as data receipts:
-
-- option default;
-- option required;
-- option constant;
-- option optional;
-- option append;
-- option override;
-- option conflict.
-
-These policies are schema vocabulary, not implicit alist order. =src/module-system/projection/interface.ss= projects them into receipts before runtime execution:
-- append starts with the schema default and then dependency-to-root config values;
-- override uses the root-most configured value after dependency traversal;
-- conflict accepts identical values and returns an invalid receipt for divergent values;
-- missing schemas and missing required values remain data findings.
+Nix is valuable because option policy must be explicit. In the current POO
+design, C4 owns Module inheritance; Core's
+=module-system/schema/support/slot-policy.ss= applies named value operations
+such as override, append, prepend, and remove without becoming a second Module
+merge evaluator. Core's =module-system/projection/option-objects.ss= owns option
+POO values and =option-validation.ss= owns pure validation findings, including
+missing schemas and constant mismatches. POO Flow's
+=src/module-system/projection/options.ss= projects product descriptors into
+those Core values before runtime execution.
 
 ** 10.06.06.40 Gerbil POO And C4 Shape
 Gerbil POO and C4 are the reason this module system should stay in Scheme. They let the interface remain Lisp-friendly while preserving object composition semantics.
@@ -164,13 +158,12 @@ The required test shape is:
 - assert failure or validation behavior as data.
 
 This test file is the guardrail that keeps implementation modular while allowing a Doom-like authoring experience.
-** 10.06.06.80 Implemented Merge Receipt Layer
-Status: implemented for first-pass data semantics.
-Implemented helpers and projections:
-- =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
-- =poo-module-option-merge-receipts= for inspectable merge findings;
-- =poo-module-merged-option-alist= for valid final option values.
-The implemented merge owner is =src/module-system/projection/interface.ss=. It keeps append, override, conflict, constant, required, and missing-schema findings as inspectable data before runtime execution.
+** 10.06.06.80 Current Option Policy And Validation
+The earlier general merge-receipt API is retired. Core owns named Slot value
+policies, option POO values, and validation findings; POO Flow's
+=src/module-system/projection/options.ss= owns descriptor-specific projection.
+The former =projection/interface.ss= aggregate is also retired. Native POO C4
+remains the Module inheritance owner.
 ** 10.06.06.90 Implemented Doctor Presentation Layer
 Status: implemented for first-pass user-facing summaries.
 Implemented helpers and projections:

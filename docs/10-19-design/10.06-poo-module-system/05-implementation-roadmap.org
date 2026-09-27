@@ -126,13 +126,9 @@ Delivered behavior:
 - added =poo-module-when= for conditional module list inclusion;
 - added =defpoo-module-set= for value catalog construction from module lists;
 - updated =t/module-system-user-interface-test.ss= to cover macro-facing authoring.
-** 10.06.05.21 Slice 1F: Nix-Style Option Merge Receipts
-Status: implemented.
-Delivered behavior:
-- kept option merge receipts under =src/module-system/projection/interface.ss=;
-- exported merge receipts through =:poo-flow/src/module-system=;
-- added user-facing helpers =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
-- composed option configs dependencies-first and root-last for append and override behavior;
-- represented conflicting values as invalid receipts instead of runtime exceptions;
-- exposed =poo-module-merged-option-alist= for valid final option values;
-- updated =t/module-system-user-interface-test.ss= to cover public facade merge behavior.
+** 10.06.05.21 Slice 1F: Historical Option Merge Receipts
+Status: superseded. The initial =projection/interface.ss= aggregate and its
+general merge-receipt helpers are not the current API. Core now owns native
+Slot value policies and option POO values/validation; POO Flow retains
+descriptor-specific =projection/options.ss=. Module inheritance remains with
+native POO C4, not a second merge evaluator.

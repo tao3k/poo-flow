@@ -14,7 +14,16 @@
         :poo-flow/src/module-system/descriptor/interface
         "module-diagnostics.ss"
         :poo-flow/src/module-system/projection/syntax
-        :poo-flow/src/module-system/projection/interface
+        (only-in :core/module-system/projection/option-objects
+                 poo-flow-module-option-validation-receipt-id
+                 poo-flow-module-option-validation-receipt-source-module
+                 poo-flow-module-option-validation-receipt-valid?
+                 poo-flow-module-option-validation-receipt-code
+                 poo-flow-module-option-validation-receipt-messages
+                 poo-flow-module-option-validation-receipt-metadata)
+        (only-in :poo-flow/src/module-system/projection/runtime
+                 poo-flow-module-evaluate
+                 poo-flow-module-value-catalog-root)
         :core/module-system/loader/objects)
 
 (export poo-flow-module-doctor-presentation-kind

@@ -21,7 +21,11 @@
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree
         :poo-flow/src/module-system/descriptor/syntax
-        :poo-flow/src/module-system/projection/interface)
+        :poo-flow/src/module-system/projection/catalog
+        :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation
+        :poo-flow/src/module-system/projection/options
+        :poo-flow/src/module-system/projection/runtime)
 
 (export (import: :poo-flow/src/module-system/interface)
         (import: :poo-flow/src/module-system/loader/source)
@@ -37,4 +41,8 @@
         (import: :poo-flow/src/module-system/loader/selection)
         (import: :poo-flow/src/module-system/loader/tree)
         (import: :poo-flow/src/module-system/descriptor/syntax)
-        (import: :poo-flow/src/module-system/projection/interface))
+        (import: :poo-flow/src/module-system/projection/catalog)
+        (import: :core/module-system/projection/option-objects)
+        (import: :core/module-system/projection/option-validation)
+        (import: :poo-flow/src/module-system/projection/options)
+        (import: :poo-flow/src/module-system/projection/runtime))

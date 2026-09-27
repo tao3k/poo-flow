@@ -27,11 +27,11 @@ not by the generic module system.
 * Feature owners
 
 | Feature | Public factor | Responsibility |
-|-
+|---------+---------------+----------------|
 | declaration | =declaration/interface.ss= | POO-native selections and flags |
 | descriptor | =descriptor/interface.ss= | module descriptor contracts |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/selection.ss=, =loader/tree.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
-| projection | =projection/interface.ss= | option and receipt projection |
+| projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =projection/catalog.ss=, =options.ss=, =runtime.ss= | Core option values and validation; product catalog, descriptor and runtime projection |
 | profile composition | =profile-composition/profile-bundle.ss=, =binding-syntax.ss=, =bindings.ss= | functional Profile selection and binding values; Scenario Case/workload live in =src/scenario/= |
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
@@ -43,17 +43,17 @@ installed under the =core= Gerbil package namespace.  Do not
 copy them back into =src/module-system= or import them through a POO Flow alias.
 
 | Shared feature | Core public factor | Responsibility |
-|-
+|----------------+--------------------+----------------|
 | type and contract evidence | =types.ss= | native classification and validation contracts |
 | object family | =object-family/interface.ss= | hygienic POO object-family declarations |
 | extension graph | =extension-graph/interface.ss= | ordered contributions and fixed-point resolution |
 | contribution contract | =contribution/objects.ss= | pure POO contribution values and capability admission |
 | contribution verification | =contribution/verification.ss= | host-trusted issuance, admission and revocation |
-| module schema | =module-schema/interface.ss= | inherited field contracts and merge |
-| native slot contracts | =module-schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
-| module relations | =module-schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
-| semantic module | =semantic-module/types.ss=, =objects.ss= | native Module and authoring role Contracts and generic construction |
-| module interface | =module-interface/objects.ss= | native interface schema index, option policy and construction |
+| module schema | =module-system/schema/interface.ss= | inherited field contracts and Slot policies |
+| native slot contracts | =module-system/schema/slot-contracts.ss= | reusable POO Type and Contract descriptors |
+| module relations | =module-system/schema/relations.ss= | identity, imports, Profiles, capabilities, and import contributions |
+| semantic module | =module-system/types.ss=, =module-system/objects.ss= | native Module and authoring role Contracts and generic construction |
+| module interface | =module-system/config.ss= | native interface schema index, option policy and construction |
 | POO CLOS | =poo-clos/interface.ss= | native MOP extension and method combination |
 | CLOS pure model | =poo-clos/model.ss= | validate ordinary POO values against effective class slots without lifecycle allocation |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |

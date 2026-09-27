@@ -24,7 +24,11 @@
         :poo-flow/src/scenario/accessors
         :poo-flow/src/scenario/workload
         :poo-flow/src/scenario/plan-projection
-        :poo-flow/src/module-system/projection/interface
+        :poo-flow/src/module-system/projection/catalog
+        :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation
+        :poo-flow/src/module-system/projection/options
+        :poo-flow/src/module-system/projection/runtime
         :core/module-system/types
         :poo-flow/src/module-system/semantic-module/objects)
 
@@ -45,6 +49,10 @@
         (import: :poo-flow/src/scenario/accessors)
         (import: :poo-flow/src/scenario/workload)
         (import: :poo-flow/src/scenario/plan-projection)
-        (import: :poo-flow/src/module-system/projection/interface)
+        (import: :poo-flow/src/module-system/projection/catalog)
+        (import: :core/module-system/projection/option-objects)
+        (import: :core/module-system/projection/option-validation)
+        (import: :poo-flow/src/module-system/projection/options)
+        (import: :poo-flow/src/module-system/projection/runtime)
         (import: :core/module-system/types)
         (import: :poo-flow/src/module-system/semantic-module/objects))

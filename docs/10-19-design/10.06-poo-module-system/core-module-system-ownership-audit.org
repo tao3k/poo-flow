@@ -74,7 +74,7 @@ at that boundary and remove the old file after its consumers migrate.
 | =projection/catalog.ss=, =projection/options.ss= | Core Module values/validation + POO Flow projection | Core owns option config, schema, and validation receipt POO families plus pure validation; product descriptors still decide schema discovery and projection. Value catalog uses the product kind and stays outside Core. |
 | =projection/runtime.ss= | Core evaluation projection + POO Flow runtime presentation | Pure module closure/evaluation in Core; agent-harness vocabulary and runtime manifest outside Core. |
 | =projection/syntax.ss=, =projection/runtime-syntax.ss= | Core internal syntax or retire | Review public-macro necessity; retained hygienic syntax expands to POO/function code, not a second DSL. |
-| =projection/interface.ss= | Retire | Remove only when the three implementation owners and consumers have moved. |
+| =projection/interface.ss= | Retired | Public entrypoints compose Core option values/validation with POO Flow catalog, descriptor and runtime projection owners directly; behavior remains with those owners. |
 | =semantic-module/types.ss=, =semantic-module/objects.ss= | Core semantic Module + POO Flow authoring defaults | Identity/import/capability/Profile/authoring Contracts in Core; user-root defaults and product role policy outside Core. |
 
 * Dependency blockers and required order
