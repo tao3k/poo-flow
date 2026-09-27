@@ -21,7 +21,7 @@
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/resolver
         :core/extension-graph/interface
-        :poo-flow/src/module-system/loader/backend
+        :core/module-loader/backend
         :poo-flow/src/module-system/loader/registry)
 
 (export (import: :poo-flow/src/module-system/loader/registry)

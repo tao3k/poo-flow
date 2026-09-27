@@ -49,7 +49,8 @@ at that boundary and remove the old file after its consumers migrate.
 | =descriptor/syntax.ss= | Core declaration syntax + POO Flow UI | Keep only hygienic mechanism syntax in Core; product-facing catalog syntax belongs with its user interface. |
 | =loader/source.ss= | Core SourceRef + POO Flow import policy | Core owns inert SourceRef identity and inspection; custom directory and import forms remain product policy. |
 | =loader/context.ss= | Retired; Core Module context + POO Flow descriptor admission | Core owns pure phase, Hook, Flag, and stable-depth queries; POO Flow owns product =active?= admission. |
-| =loader/backend.ss=, =loader/selection.ss= | Core Module loader | Pure backend descriptors, lazy values, selection, and load receipts. |
+| =loader/backend.ss= | Retired; Core Module Loader Backend | Core now owns backend descriptors, lazy values, forcing, and load receipts. |
+| =loader/selection.ss= | Core selection + POO Flow product selection | Separate generic ordered selection from user-bundle policy and failure presentation. |
 | =loader/resolver.ss= | Core catalog/resolution + POO Flow activation adapter | Pure catalog lookup/closure in Core; Task/Flow registry and run-config lowering outside Core. |
 | =loader/collection.ss= | Core collection + POO Flow source adapter | Ordered source collection algebra in Core; filesystem discovery and source-authoring admission outside Core. |
 | =loader/tree.ss= | Core lazy graph + POO Flow root assembly | Lazy graph composition in Core; maintained/user roots and product activation outside Core. |
@@ -90,6 +91,8 @@ descriptor accessors.  Inert SourceRef identity and inspection now live in
 =src/module-system/loader/context.ss= has been removed: its pure queries live
 in =core/module-context/queries.ss=, while product =active?= admission lives
 with the POO Flow descriptor.
+The full Backend mechanism now lives in =core/module-loader/backend.ss=; the
+product Loader imports it directly and the old Backend file is removed.
 The remaining rows above are still migration work,
 not completed features.
 
