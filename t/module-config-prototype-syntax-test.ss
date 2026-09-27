@@ -8,7 +8,7 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .all-slots .ref .slot? object?)
-        :poo-flow/src/module-system/declaration/config-syntax)
+        :poo-flow/src/authoring/module-config-syntax)
 
 (export module-config-prototype-syntax-test)
 

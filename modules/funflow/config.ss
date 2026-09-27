@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/declaration/config-syntax
+        :poo-flow/src/authoring/module-config-syntax
         :poo-flow/src/utilities/final-projection-syntax
         (only-in :poo-flow/modules/workflow/cicd-funs
                  poo-flow-cicd-alist-ref

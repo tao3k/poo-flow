@@ -119,7 +119,7 @@ Delivered behavior:
 Status: implemented.
 
 Delivered behavior:
-- added =src/module-system/descriptor/syntax.ss= as the macro-only owner;
+- added =src/user-interface/module-authoring-syntax.ss= as the macro-only owner;
 - exported macro sugar through =:poo-flow/src/module-system=;
 - added =poo-module-option-block= for schema/config POO slot blocks;
 - added =poo-module-hook-block= for data-only hook payload blocks;

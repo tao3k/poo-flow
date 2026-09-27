@@ -30,8 +30,8 @@ not by the generic module system.
 
 | Feature | Public factor | Responsibility |
 |---------+---------------+----------------|
-| declaration | =declaration/interface.ss=; =src/user-interface/selection-flags.ss=, =module-selection-syntax.ss= | POO-native selection values and product user syntax/flag policy |
-| descriptor | =descriptor/interface.ss= | module descriptor contracts |
+| declaration | =declaration/interface.ss=; =src/user-interface/selection-flags.ss=, =module-selection-syntax.ss=; =src/authoring/module-config-syntax.ss= | POO-native selection values, product user syntax, and config authoring |
+| descriptor | =descriptor/interface.ss=; =src/user-interface/module-authoring-syntax.ss= | module descriptor contracts and product catalog authoring |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/tree.ss=; =src/authoring/module-imports.ss=, =source-registry.ss=; =src/user-interface/module-source-selection.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
 | projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =src/authoring/module-option-projection.ss=; =src/user-interface/module-value-catalog.ss=, =module-runtime-presentation.ss= | Core option values and validation; product descriptor projection, value catalog, and runtime presentation |
 | profile composition | =core/profile-composition/=; =src/scenario/composition-syntax.ss=, =profile-root.ss= | Core owns Profile selection, =use-module=, and ProfileBundle algebra; Scenario owns =user-composition= and root projection |

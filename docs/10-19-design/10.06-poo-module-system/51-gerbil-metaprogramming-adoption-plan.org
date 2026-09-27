@@ -103,7 +103,7 @@ Macro ownership follows the layer whose code is generated:
   projection rows, plus graph topology, Funflow functional-DAG, sandbox profile,
   sandbox resource contract validation, module object-validation, and
   module field/type validation projection rows.
-- =src/module-system/declaration/config-syntax.ss= owns repeated module config
+- =src/authoring/module-config-syntax.ss= owns repeated module config
   POO prototype declarations, kind-slot predicates, and mechanical
   prototype-to-constructor converters for public config prototype objects. It
   must not generate catalog fallback, manifest projection, graph derivation, or
@@ -592,7 +592,7 @@ Phase 4: broaden runtime projection generation carefully.
   =modules/session/receipt-syntax.ss= and
   =modules/session/policy-syntax.ss=.
 - Completed module config prototype slice:
-  =src/module-system/declaration/config-syntax.ss= now declares POO config
+  =src/authoring/module-config-syntax.ss= now declares POO config
   prototype objects, kind predicates, and mechanical prototype converters.
   =modules/tool-core/config.ss= and
   =modules/memory-core/config.ss= use it for their public =tool-spec=,

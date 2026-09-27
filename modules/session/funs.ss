@@ -9,7 +9,7 @@
 (import
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/declaration/config-syntax)
+        :poo-flow/src/authoring/module-config-syntax)
 
 (export +poo-flow-session-core-config-kind+
         session-config

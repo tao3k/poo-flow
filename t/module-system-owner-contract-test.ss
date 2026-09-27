@@ -21,7 +21,7 @@
         :poo-flow/src/authoring/module-interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/descriptor/syntax
+        :poo-flow/src/user-interface/module-authoring-syntax
         :poo-flow/src/authoring/module-option-projection
         :poo-flow/src/user-interface/module-runtime-presentation
         :poo-flow/src/user-interface/module-value-catalog

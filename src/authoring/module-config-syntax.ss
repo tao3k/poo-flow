@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: hygienic macros for module config POO prototype declarations.
+;;; Boundary: product module config authoring and POO prototype declarations.
 ;;; Invariant: generated forms are ordinary POO objects and predicates; public
 ;;; config authoring remains prototype composition plus named conversion helpers.
 

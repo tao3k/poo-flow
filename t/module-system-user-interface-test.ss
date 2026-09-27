@@ -36,7 +36,7 @@
         :core/module-system/funs
         :poo-flow/src/module-system/loader/resolver
         :core/module-system/catalog/objects
-        :poo-flow/src/module-system/descriptor/syntax
+        :poo-flow/src/user-interface/module-authoring-syntax
         :poo-flow/src/user-interface/facade)
 
 (export module-system-user-interface-test)

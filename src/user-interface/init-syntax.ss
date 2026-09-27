@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .o object<-alist)
         :poo-flow/src/authoring/fragment-syntax
-        :poo-flow/src/module-system/declaration/config-syntax
+        :poo-flow/src/authoring/module-config-syntax
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)

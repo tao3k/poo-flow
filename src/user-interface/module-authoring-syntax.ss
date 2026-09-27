@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: user-facing Gerbil module-system authoring forms.
+;;; Boundary: user-facing Gerbil module authoring and catalog forms.
 ;;; Invariant: macros expand to hygienic Gerbil bindings and POO values.
 ;;; Intent: borrow Doom-style compactness without inventing an alist/record DSL.
 ;;; Parser policy should treat this file as syntax over the public POO API.

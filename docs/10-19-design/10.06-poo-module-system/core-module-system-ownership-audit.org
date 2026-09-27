@@ -37,10 +37,8 @@ at that boundary and remove the old file after its consumers migrate.
 | Current source | Target owner | Separation required |
 |-
 | =authoring/contracts.ss= | Core admission + =src/authoring/= | Split generic Contracts from source-form and repair vocabulary. |
-| =declaration/config-syntax.ss= | Core declaration syntax | Retain only hygienic syntax that expands to POO values. |
 | =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + =src/user-interface/= | Separate generic selection from user categories and settings. |
 | =descriptor/interface.ss= | Core descriptor + product contribution owner | Keep Task/Flow registry payloads in POO Flow. |
-| =descriptor/syntax.ss= | Core syntax + =src/user-interface/= | Split hygienic constructor syntax from product catalog syntax. |
 | =loader/collection.ss= | Core LoadPath + product source adapter | Core owns ordered composition; POO Flow owns filesystem discovery and role admission. |
 | =loader/resolver.ss= | Core lookup + product activation | Keep typed failure, Doctor, and RunConfig lowering in POO Flow; user-bundle selection lives in =src/user-interface/module-source-selection.ss=. |
 | =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
@@ -56,7 +54,11 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 9 Scheme files and this README. Shared final projection and runtime
+contains 7 Scheme files and this README. Product module config authoring now
+lives in =src/authoring/module-config-syntax.ss=; user-facing module and catalog
+syntax lives in =src/user-interface/module-authoring-syntax.ss=. Neither is a
+separate Core mechanism: the generated forms are POO values, while their public
+vocabulary and contract lowering remain POO Flow-owned. Shared final projection and runtime
 receipt syntax now live in =src/utilities/=, while POO Flow identity and default
 Interface policy live in =src/authoring/module-interface.ss=. Its deletion
 is still the closure condition, not a completed claim.
