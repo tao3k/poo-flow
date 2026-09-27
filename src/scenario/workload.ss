@@ -6,9 +6,8 @@
 ;;; Boundary: immutable Scenario multiplicity and workload values.
 ;;; Invariant: ordinal lookup follows ordered launch ranges.
 
-(import (only-in :clan/poo/object .o .ref))
-
-(import :poo-flow/src/utilities/functional)
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :std/list/list fold))
 
 (export poo-flow-scenario-case-multiplicity
         poo-flow-scenario-case-launch-range
@@ -46,7 +45,7 @@
   (unless (and (list? multiplicities) (pair? multiplicities))
     (error "POO Flow composition workload requires at least one multiplicity"))
   (let* ((state
-          (poo-flow-fold-left
+          (fold
            (lambda (multiplicity state)
              (unless (eq? (.ref multiplicity 'kind)
                           'poo-flow.scenario.multiplicity.v1)
