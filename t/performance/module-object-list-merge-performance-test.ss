@@ -17,7 +17,7 @@
         "../support/performance"
         (only-in :core/extension-graph/interface
                  poo-flow-module-extension-node-slots)
-        (only-in :core/module-schema/interface
+        (only-in :core/module-system/schema/interface
                  PooFlowModuleListType
                  poo-flow-module-config-merge-result-root
                  poo-flow-module-field-contract

@@ -164,8 +164,8 @@ This RFC adds no public macro.
 
 The repository already contains:
 
-- =core/module-schema/interface.ss=; and
-- =core/module-schema/support/contracts.ss=.
+- =core/module-system/schema/interface.ss=; and
+- =core/module-system/schema/support/contracts.ss=.
 
 Those owners prove that project object and contract concerns already exist below
 Module.  They do not prove the Type and Contract prototype algebra defined here.

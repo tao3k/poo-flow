@@ -8,7 +8,7 @@
         (only-in :clan/poo/object .all-slots .o .ref .slot?)
         (only-in :core/observability/slot-presentation
                  poo-flow-slot-presentation)
-        (only-in :core/module-schema/relations poo-flow-semantic-identity)
+        (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-semantic-module)
         :poo-flow/src/module-system/profile-composition/profile-bundle)

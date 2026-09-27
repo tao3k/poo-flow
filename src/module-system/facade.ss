@@ -11,10 +11,10 @@
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
-        :core/module-context/queries
+        :core/module-system/funs
         :poo-flow/src/module-system/loader/registry
         :poo-flow/src/module-system/loader/resolver
-        :core/module-catalog/objects
+        :core/module-system/catalog/objects
         :poo-flow/src/module-system/loader/interface
         :poo-flow/src/module-system/descriptor/syntax
         :poo-flow/src/module-system/projection/interface)
@@ -23,10 +23,10 @@
         (import: :poo-flow/src/module-system/loader/source)
         (import: :poo-flow/src/module-system/declaration/interface)
         (import: :poo-flow/src/module-system/descriptor/interface)
-        (import: :core/module-context/queries)
+        (import: :core/module-system/funs)
         (import: :poo-flow/src/module-system/loader/registry)
         (import: :poo-flow/src/module-system/loader/resolver)
-        (import: :core/module-catalog/objects)
+        (import: :core/module-system/catalog/objects)
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :poo-flow/src/module-system/descriptor/syntax)
         (import: :poo-flow/src/module-system/projection/interface))

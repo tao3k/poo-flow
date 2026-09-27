@@ -221,7 +221,7 @@
          (if objects-fragment?
            (syntax
             (begin
-              (import :core/module-schema/interface)
+              (import :core/module-system/schema/interface)
               ;; : Any
               (def binding
                 (begin (include fragment-source)))

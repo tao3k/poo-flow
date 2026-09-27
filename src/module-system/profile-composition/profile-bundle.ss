@@ -13,7 +13,7 @@
         (only-in :std/list/list append-map delete-duplicates/hash every filter-map)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  SemanticModuleContract)
-        (only-in :core/module-schema/relations poo-flow-empty-profiles)
+        (only-in :core/module-system/schema/relations poo-flow-empty-profiles)
         (only-in :poo-flow/src/module-system/profile-composition/builders
                  poo-flow-scenario-module-binding
                  poo-flow-scenario-profile-binding)

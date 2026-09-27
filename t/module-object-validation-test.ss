@@ -10,8 +10,8 @@
         (only-in :std/test test-suite check-equal? check-exception)
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
-        :core/module-schema/interface
-        :core/module-schema/validation)
+        :core/module-system/schema/interface
+        :core/module-system/schema/validation)
 
 (export module-object-validation-test)
 

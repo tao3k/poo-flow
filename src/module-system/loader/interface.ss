@@ -6,7 +6,7 @@
 ;;; Boundary: public facade for module loader source declarations.
 ;;; Invariant: backend receipts and tree/catalog declarations live in leaf owners.
 
-(import :core/module-loader/backend
+(import :core/module-system/loader/objects
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/official-contributions
         :poo-flow/src/module-system/loader/selection

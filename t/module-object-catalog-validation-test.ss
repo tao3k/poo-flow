@@ -11,8 +11,8 @@
         (only-in :std/test
                  test-suite
                  check-equal?)
-        :core/module-schema/interface
-        :core/module-schema/validation
+        :core/module-system/schema/interface
+        :core/module-system/schema/validation
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/user-interface/root-objects

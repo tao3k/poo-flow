@@ -358,8 +358,8 @@ flowchart LR
   M -->|"becomes an immutable semantic input after Module admission"| D["DispatchEvaluation"]
 #+end_src
 
-The repository already contains =core/module-schema/interface.ss= and
-=core/module-schema/support/contracts.ss= as generic implementation
+The repository already contains =core/module-system/schema/interface.ss= and
+=core/module-system/schema/support/contracts.ss= as generic implementation
 evidence below the Module layer.  The Sandbox-specific object belongs to
 =modules/sandbox-core/shared-object.ss=, not the generic Type foundation.
 The current contract helpers do not by

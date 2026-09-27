@@ -6,7 +6,7 @@
 ;;; Boundary: module-system POO objects for downstream user declarations.
 ;;; Invariant: root user-interface files never own object contracts.
 
-(import :core/module-schema/interface
+(import :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object)
 
 (export poo-flow-user-interface-shared-sandbox-object

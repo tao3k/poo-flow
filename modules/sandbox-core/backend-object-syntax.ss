@@ -6,7 +6,7 @@
 ;;; Boundary: hygienic macros for repeated sandbox backend module object families.
 ;;; Invariant: macros expand to ordinary POO module objects and field contracts.
 
-(import :core/module-schema/interface
+(import :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/objects)
 

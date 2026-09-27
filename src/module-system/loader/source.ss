@@ -20,7 +20,7 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/module-system/interface
-        :core/module-source/objects)
+        :core/module-system/source/objects)
 
 (export poo-flow-module-source-ref-prototype
         make-poo-flow-module-source-ref

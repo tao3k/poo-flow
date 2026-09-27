@@ -16,9 +16,9 @@
         "../support/poo-performance-fixtures"
         "../support/poo-performance-object-scenarios"
         "../support/poo-performance"
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :core/extension-graph/interface
-        :core/module-schema/validation)
+        :core/module-system/schema/validation)
 
 (export extensions-test)
 

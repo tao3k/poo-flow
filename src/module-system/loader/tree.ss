@@ -20,9 +20,9 @@
         :poo-flow/src/module-system/loader/collection
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/resolver
-        :core/module-catalog/objects
+        :core/module-system/catalog/objects
         :core/extension-graph/interface
-        :core/module-loader/backend
+        :core/module-system/loader/objects
         :poo-flow/src/module-system/loader/registry)
 
 (export (import: :poo-flow/src/module-system/loader/registry)

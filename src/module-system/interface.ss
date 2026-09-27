@@ -6,7 +6,7 @@
 ;;; POO Flow identity and default authoring policy for the Core Module Interface.
 ;;; Schema indexing, option vocabulary, and native construction live in Core.
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        :core/module-interface/objects
+        :core/module-system/config
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-default-module-authoring-profile))
 
@@ -26,7 +26,7 @@
         poo-flow-module-interface-prototype
         poo-flow-module-interface
         poo-flow-module-interface?
-        (import: :core/module-interface/objects))
+        (import: :core/module-system/config))
 
 (def poo-flow-brand-name "poo-flow")
 (def poo-flow-brand-group 'poo-flow)

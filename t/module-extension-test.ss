@@ -19,7 +19,7 @@
                  test-suite)
         :poo-flow/src/user-interface/facade
         :core/extension-graph/interface
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/nono-sandbox/objects
         :poo-flow/modules/cubeSandbox/objects)

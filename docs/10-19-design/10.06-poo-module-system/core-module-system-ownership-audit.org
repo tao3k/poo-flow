@@ -16,7 +16,7 @@ compatibility import aliases: consumers import the single owner directly.
 
 This audit records parent commit =deca0fb= and Core gitlink =3c42394=.
 =src/module-system/= currently has 49 Scheme files (9,925 lines).  Core already
-owns =module-schema/=, =object-family/=, =extension-graph/=, =contribution/=,
+owns =module-system/schema/=, =object-family/=, =extension-graph/=, =contribution/=,
 =composition/lineage.ss=, generic =observability/=, and =poo-clos/=.
 No current Core Scheme source imports =:poo-flow/=.  Twelve checked-out
 Lambda-episteme Scheme files directly import the current module-system path;
@@ -81,20 +81,20 @@ at that boundary and remove the old file after its consumers migrate.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:
 host-trusted verification and semantic Module Contracts/construction moved
-to =core/contribution/verification.ss= and top-level =core/semantic-module/=.
-The same Core branch now also owns generic =module-interface/= schema indexing,
+to =core/contribution/verification.ss= and =core/module-system/=.
+The same Core branch now also owns generic =core/module-system/config.ss= schema indexing,
 option policy, and construction; POO Flow retains its brand, receipt kinds,
 and default authoring Profile.  Generic ordered inline closure and missing
-import findings now live in =core/module-graph/closure.ss=; POO Flow supplies
+import findings now live in =core/module-system/graph/funs.ss=; POO Flow supplies
 descriptor accessors.  Inert SourceRef identity and inspection now live in
-=core/module-source/objects.ss=; product import forms remain in POO Flow.
+=core/module-system/source/objects.ss=; product import forms remain in POO Flow.
 =src/module-system/loader/context.ss= has been removed: its pure queries live
-in =core/module-context/queries.ss=, while product =active?= admission lives
+in =core/module-system/funs.ss=, while product =active?= admission lives
 with the POO Flow descriptor.
-The full Backend mechanism now lives in =core/module-loader/backend.ss=; the
+The full Backend mechanism now lives in =core/module-system/loader/objects.ss=; the
 product Loader imports it directly and the old Backend file is removed.
 Immutable Catalog objects, first-match SourceRef lookup, and inspection now
-live in =core/module-catalog/objects.ss=.  POO Flow's resolver retains typed
+live in =core/module-system/catalog/objects.ss=.  POO Flow's resolver retains typed
 missing-source failure, Doctor, and Task/Flow activation.  Product internals
 import Core Catalog directly; the product resolver no longer reexports its
 generic bindings.
@@ -106,7 +106,7 @@ not completed features.
    =src/core/{task,flow,config,failure}=.  Move or parameterize generic
    contracts first.  Core must not import the POO Flow Task/Flow registries.
 2. *Establish one Core Module model.* Compose existing Core
-   =module-schema/relations.ss= with the extracted interface, semantic Module,
+   =core/module-system/schema/relations.ss= with the extracted interface, semantic Module,
    descriptor, source-ref, and declaration objects.  Do not recreate the
    relation Contracts under a second name or add path compatibility aliases.
 3. *Move the pure engine as a unit.* Migrate lazy backend, collection algebra,
@@ -144,8 +144,8 @@ filesystem/process effects remain behind explicit host/runtime handoffs.
   remaining =:poo-flow/src/module-system/= import after cutover.  The
   exact post-push Ubuntu jobs, not an earlier green head, are the PR gate.
 
-Core is a separate Git repository and source-owned submodule.  At this audit
-snapshot it has no open PR.  Parent PR #57 cannot itself publish a new Core
+Core is a separate Git repository and source-owned submodule. Core PR #16
+owns these migrations. Parent PR #57 cannot itself publish a new Core
 commit: the Core change must be published and admitted in its own repository
 before #57 pins its commit.  Do not push unreviewed Core changes directly to
 =main= or silently open another PR against the user's one-PR instruction.

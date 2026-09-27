@@ -9,7 +9,7 @@
         :gerbil/core
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :core/extension-graph/interface
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/agent-sandbox/profile-validation

@@ -13,9 +13,9 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/interface
-        (only-in :core/module-graph/closure
+        (only-in :core/module-system/graph/funs
                  module-closure module-missing-imports)
-        (only-in :core/module-context/queries
+        (only-in :core/module-system/funs
                  poo-flow-module-flags-enabled?)
         (only-in :core/object-family/syntax
                  defpoo-object-family)

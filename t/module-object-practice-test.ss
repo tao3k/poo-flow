@@ -20,7 +20,7 @@
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
         :core/extension-graph/interface
-        :core/module-schema/interface)
+        :core/module-system/schema/interface)
 
 (export module-object-practice-test)
 

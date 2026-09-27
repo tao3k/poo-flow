@@ -576,7 +576,7 @@ Phase 4: broaden runtime projection generation carefully.
   functional code.
 - Superseded module validation projection slices: the old ASP Harness/TypeSpec
   adapter and its =->alist= receipts have been removed. Core now owns native
-  POO Type/C4 validation in =core/module-schema/validation.ss=, with static
+  POO Type/C4 validation in =core/module-system/schema/validation.ss=, with static
   receipt shapes constructed using =.o=. No duplicate final-projection macro
   is needed at this boundary.
 - Completed final projection batch helper slice:

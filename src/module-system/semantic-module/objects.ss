@@ -6,9 +6,9 @@
 ;;; Boundary: construct values from prototypes owned by explicit Type declarations.
 (import (only-in :clan/poo/object .o .mix .ref)
         (only-in :clan/poo/mop validate)
-        :core/module-schema/relations
-        :core/semantic-module/types
-        (only-in :core/semantic-module/objects
+        :core/module-system/schema/relations
+        :core/module-system/types
+        (only-in :core/module-system/objects
                  SemanticModule. ModuleSourceRole. ModuleAuthoringProfile.
                  make-semantic-module))
 (export SemanticModule. ModuleSourceRole.

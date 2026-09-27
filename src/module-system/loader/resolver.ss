@@ -21,7 +21,7 @@
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/observability/module-diagnostics
-        :core/module-catalog/objects
+        :core/module-system/catalog/objects
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)

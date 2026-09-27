@@ -20,9 +20,9 @@
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
         :poo-flow/src/module-system/loader/source
-        :core/module-context/queries
+        :core/module-system/funs
         :poo-flow/src/module-system/loader/resolver
-        :core/module-catalog/objects
+        :core/module-system/catalog/objects
         :poo-flow/src/user-interface/presentation
         :poo-flow/src/user-interface/facade)
 

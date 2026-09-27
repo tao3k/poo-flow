@@ -31,7 +31,7 @@
                  poo-flow-observability-diagnostic-record)
         (only-in :core/types
                  poo-flow-contract-admit poo-flow-predicate-contract)
-        (only-in :core/module-schema/relations
+        (only-in :core/module-system/schema/relations
                  SemanticImports. poo-flow-semantic-identity
                  poo-flow-empty-imports poo-flow-empty-capabilities
                  poo-flow-empty-profiles)

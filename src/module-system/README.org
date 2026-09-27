@@ -33,7 +33,7 @@ not by the generic module system.
 | loader | =loader/interface.ss= | discovery, resolution, lazy loading |
 | projection | =projection/interface.ss= | option and receipt projection |
 | profile composition | =profile-composition/interface.ss= | functional composition values |
-| object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
+| object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
 | semantic module policy | =semantic-module/objects.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
 | observability | =observability/source-authoring.ss=, =source-admission.ss=, =module-diagnostics.ss=, =doctor-presentation.ss= | POO Flow-specific adapters consume Core observation primitives directly; no local aggregate interface |

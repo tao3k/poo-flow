@@ -11,7 +11,7 @@
                  check-eq?
                  check-equal?
                  test-suite)
-        :core/module-schema/interface
+        :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/modules/sandbox-core/profile-support/policy
         :poo-flow/modules/nono-sandbox/objects

@@ -22,9 +22,9 @@
         :poo-flow/src/module-system/observability/module-diagnostics
         :poo-flow/src/module-system/observability/doctor-presentation
         :poo-flow/src/module-system/loader/source
-        :core/module-context/queries
+        :core/module-system/funs
         :poo-flow/src/module-system/loader/resolver
-        :core/module-catalog/objects
+        :core/module-system/catalog/objects
         :poo-flow/src/module-system/descriptor/syntax
         :poo-flow/src/user-interface/facade)
 

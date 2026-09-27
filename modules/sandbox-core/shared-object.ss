@@ -5,7 +5,7 @@
 
 ;;; Boundary: shared sandbox object owned by the sandbox module family.
 
-(import :core/module-schema/interface)
+(import :core/module-system/schema/interface)
 
 (export poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
