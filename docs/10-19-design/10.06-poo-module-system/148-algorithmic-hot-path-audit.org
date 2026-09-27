@@ -129,7 +129,7 @@ native Gerbil import closure discovers their dependencies without an aggregate
 Module System API or =all-gerbil-modules= enumeration.
 
 This correction invalidates the former 1.95-second root comparison: that build
-only reached the metadata-only =src/module-system/interface.ss= and omitted the
+only reached the metadata-only =src/authoring/module-interface.ss= and omitted the
 public subsystem closure. The first corrected isolated build compiled the full
 closure successfully; two warm runs emitted zero compile jobs but took 21.71
 and 34.90 seconds. Dependency admission also found that =gerbil.pkg= requests

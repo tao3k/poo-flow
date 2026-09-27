@@ -18,7 +18,7 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/descriptor/syntax

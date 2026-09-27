@@ -9,7 +9,7 @@
 ;;; Intent: keep the downstream surface focused on POO Flow module activation.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/utilities/final-projection-syntax

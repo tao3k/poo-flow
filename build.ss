@@ -57,6 +57,7 @@
     "src/module-system/loader/collection.ss"
     "src/building/official-contributions.ss"
     "src/module-system/loader/selection.ss"
+    "src/module-system/loader/tree.ss"
     "src/authoring/source-authoring.ss"
     "src/testing/source-admission.ss"
     "src/user-interface/module-diagnostics.ss"

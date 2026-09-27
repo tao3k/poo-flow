@@ -13,7 +13,7 @@
         :core/module-system/loader/load-path
         (only-in :poo-flow/src/authoring/import-policy
                  poo-flow-module-owner-import-file-observations)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface)
         (only-in :poo-flow/src/module-system/authoring/contracts
                  poo-flow-module-authoring-admit-port

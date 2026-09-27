@@ -13,7 +13,7 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface
                  poo-flow-module-interface-schema-spec)
         (only-in :poo-flow/src/module-system/descriptor/interface

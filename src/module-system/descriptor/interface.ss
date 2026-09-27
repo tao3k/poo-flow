@@ -12,7 +12,7 @@
         :poo-flow/src/core/object-syntax
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         (only-in :core/module-system/graph/funs
                  module-closure module-missing-imports)
         (only-in :core/module-system/funs

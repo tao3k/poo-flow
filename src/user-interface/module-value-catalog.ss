@@ -7,7 +7,7 @@
 ;;; Invariant: catalog construction never evaluates modules or loads runtimes.
 
 (import (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/interface)
+        :poo-flow/src/authoring/module-interface)
 
 (export poo-flow-module-catalog
         pooFlowModuleCatalog)

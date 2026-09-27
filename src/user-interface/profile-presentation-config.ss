@@ -7,7 +7,7 @@
 ;;; Invariant: presentation is shallow inspection data and does not activate modules.
 
 (import (only-in :clan/poo/object .ref object<-alist)
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/entrypoints
         :poo-flow/modules/sandbox-core/profile-catalog

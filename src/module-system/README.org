@@ -11,7 +11,8 @@ The complete Core migration and deletion of this directory are audited in
 [[file:../../docs/10-19-design/10.06-poo-module-system/core-module-system-ownership-audit.org][Core Module System ownership and migration audit]].
 
 =src/module-system= currently houses the remaining POO Flow module adapters
-and mechanisms awaiting Core migration.  Its root contains product entrypoints;
+and mechanisms awaiting Core migration. Product entrypoints are moving to
+their feature owners;
 Core owns the shared, parser-safe POO contracts and is becoming the sole
 Module System mechanism owner.  The
 dependency direction is POO Flow Core -> gerbil-parser -> POO Flow; Core

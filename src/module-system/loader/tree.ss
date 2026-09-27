@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .o)
         :poo-flow/src/core/failure
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface)
         (only-in :poo-flow/src/module-system/authoring/contracts
                  poo-flow-module-authoring-admit-port

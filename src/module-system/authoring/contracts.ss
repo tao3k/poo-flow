@@ -12,7 +12,7 @@
         (only-in :poo-flow/src/core/funcs
                  poo-flow-read-datums/append-map
                  poo-flow-scheme-datum-find)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface-prototype
                  poo-flow-module-interface?
                  poo-flow-module-interface-id

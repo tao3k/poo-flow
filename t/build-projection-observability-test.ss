@@ -62,7 +62,7 @@
                                  "\"src/module-system/descriptor/interface.ss\"")
                       #t)
         (check-equal? (contains? source
-                                 "\"src/module-system/interface.ss\"")
+                                 "\"src/authoring/module-interface.ss\"")
                       #f)
         (check-equal? (contains? source
                                  "\"src/feature-system/interface.ss\"")

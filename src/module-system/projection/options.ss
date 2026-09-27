@@ -10,7 +10,7 @@
 ;; | PooModuleOptionValidationReceiptCandidate = Value
 
 (import (only-in :clan/poo/object .all-slots .ref .slot?)
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         :poo-flow/src/module-system/descriptor/interface
         :core/module-system/projection/option-objects
         :core/module-system/projection/option-validation)

@@ -9,7 +9,7 @@
 ;;; Parser policy should treat this file as the module-system observation edge.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface

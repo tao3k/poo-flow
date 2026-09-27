@@ -23,7 +23,7 @@
                  poo-flow-poo-slot-authoring-diagnostics)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-directory-files-recursive)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface
                  poo-flow-module-interface-authoring
                  poo-flow-module-interface-prototype)

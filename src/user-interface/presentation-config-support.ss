@@ -33,7 +33,7 @@
                  poo-flow-sandbox-profile-backend-ref
                  poo-flow-sandbox-profile-metadata)
         :poo-flow/modules/workflow/interface
-        :poo-flow/src/module-system/interface
+        :poo-flow/src/authoring/module-interface
         :poo-flow/src/module-system/declaration/interface
         (only-in :poo-flow/modules/workflow/cicd-runtime-command-config
                  poo-flow-user-alist-ref)
