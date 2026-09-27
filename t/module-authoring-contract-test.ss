@@ -444,12 +444,12 @@
         "src/module-system/authoring/contracts.ss"))
       '()))
 
-   (poo-flow-test-case "effective-object presentation blocks lazy self-reference regression"
+   (poo-flow-test-case "Core slot presentation blocks lazy self-reference regression"
      (check-equal?
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations
-        'effective-object-presentation
-        "src/module-system/observability/effective-object.ss"))
+        'core-slot-presentation
+        "core/observability/slot-presentation.ss"))
       '()))
 
    (poo-flow-test-case "profile composition conflict receipts have no lazy self-reference"

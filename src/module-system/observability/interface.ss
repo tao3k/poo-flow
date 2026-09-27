@@ -25,9 +25,6 @@
                  poo-flow-admit-build-package-spec!
                  poo-flow-observe-build-projection-start
                  poo-flow-observe-build-projection)
-        (only-in "effective-object.ss"
-                 poo-flow-native-slot-view
-                 poo-flow-native-slot-presentation)
         "source-authoring.ss"
         "source-admission.ss"
         :core/observability/debug)
@@ -45,8 +42,6 @@
         poo-flow-admit-build-package-spec!
         poo-flow-observe-build-projection-start
         poo-flow-observe-build-projection
-        poo-flow-native-slot-view
-        poo-flow-native-slot-presentation
         (import: "source-authoring.ss")
         (import: "source-admission.ss")
         (import: :core/observability/debug))
