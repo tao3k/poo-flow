@@ -296,6 +296,11 @@ test-ascent-performance:
     cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-rule-clauses/scenario.ss
     cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-indexed-joins/scenario.ss
     cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-eqrel/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-binary-program/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-reachability-closure/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-shortest-candidates/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression/scenario.ss
+    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression-membership/scenario.ss
 
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
