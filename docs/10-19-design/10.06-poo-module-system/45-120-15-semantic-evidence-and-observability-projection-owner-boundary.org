@@ -162,11 +162,11 @@ fixed-point foundation.
 
 For the current implementation task, the user explicitly authorized =rg= / =fd=
 exploration while the ASP parser route is unavailable. Local source and caller
-inspection identified the already-existing =src/module-system/observability/types.ss= and
-=src/module-system/observability/objects.ss= as the native Diagnostic/Receipt owner. Its
+inspection identified the native =core/observability/types.ss= and
+=core/observability/objects.ss= as the Diagnostic/Receipt owner. Its
 existing consumers include =src/contract/json-schema-receipt.ss= and
 =src/contract/boundary-namespace.ss=, with executable feedback scenarios in
-=t/observability-feedback-test.ss=.
+=core/t/observability-feedback-test.ss=.
 
 The first framework slice extends that owner rather than creating a parallel
 observation package:

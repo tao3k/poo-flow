@@ -6,7 +6,7 @@
 
 * Scope
 
-This package extends the existing Observability owner. Existing Diagnostic and
+This package extends the Core Observability owner. Existing Diagnostic and
 Receipt APIs remain available to JSON Schema and feedback consumers. The new
 Contract-admission observation family is native POO, not an alist facade or a
 second tracer.
@@ -19,17 +19,17 @@ authorized recovery, Profile policy, or production telemetry.
 
 | File | Responsibility |
 |------+----------------|
-| =types.ss= | Explicit upstream =define-type= declarations and native responsibility Contracts. |
-| =func.ss= | Pure bounded inspection of source admission receipts, explanation, and aggregate projections. |
-| =objects.ss= | Native observation construction and upstream slot-dispatched =.explain= / =.summary=. |
-| =interface.ss= | Pure framework interface; it does not import a runtime logger. |
-| =debug.ss= | Explicit development output and bounded call tracing through upstream =DDT= / =trace-poo= / =traced-function=. |
-| =slot-debug.ss= | Opt-in lazy-slot admission proxy, receiver-qualified cycle/depth guard, and redacted typed receipts. |
+| =core/observability/types.ss= | Native responsibility Contracts. |
+| =core/observability/funcs.ss= | Pure bounded admission explanation and aggregate projections. |
+| =core/observability/objects.ss= | Native observation construction and slot-dispatched =.explain= / =.summary=. |
+| =src/module-system/observability/interface.ss= | POO Flow source admission and build observation composition. |
+| =core/observability/debug.ss= | Explicit development output and bounded call tracing. |
+| =core/observability/slot-debug.ss= | Opt-in lazy-slot admission proxy and redacted typed receipts. |
 
 =src/module-system/observability/module-presentation.ss= remains a separate strict presentation
 owner. Its structs and terminal alists are neither replaced nor promoted into
 authoritative observation evidence. The pre-existing metadata catalog in
-=objects.ss= is not the new observation-family dispatch registry.
+=core/observability/objects.ss= is not the new observation-family dispatch registry.
 
 * Running a real example
 

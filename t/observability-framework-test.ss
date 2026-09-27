@@ -19,7 +19,7 @@
         (only-in :core/observability/types
                  PooFlowObservabilityDiagnosticContract
                  PooFlowDebugDurationReceiptContract)
-        (only-in :poo-flow/src/module-system/observability/objects
+        (only-in :core/observability/objects
                  poo-flow-observability-diagnostic-record)
         (only-in :core/types
                  poo-flow-contract-admit poo-flow-predicate-contract)

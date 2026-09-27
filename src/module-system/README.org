@@ -53,6 +53,7 @@ copy them back into =src/module-system= or import them through a POO Flow alias.
 | CLOS pure model | =poo-clos/model.ss= | validate ordinary POO values against effective class slots without lifecycle allocation |
 | composition lineage | =composition/lineage.ss= | pure cycle and productive-recursion analysis |
 | core observability | =observability/debug.ss= | reusable POO/debug observation contracts |
+| observation objects | =observability/objects.ss= | native Diagnostic, Receipt, and Contract-admission evidence construction |
 | slot presentation | =observability/slot-presentation.ss= | read-only POO slot value and prototype-source views |
 | testing Case profile | =core/observability/testing-case.ss= | POO-native Case policy around the native test runner; consumers import Core directly |
 

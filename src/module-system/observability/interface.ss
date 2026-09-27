@@ -11,7 +11,7 @@
                  PooFlowObservationContextContract PooFlowObservationContract
                  PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
                  PooFlowObservationSummaryContract)
-        (only-in "objects.ss"
+        (only-in :core/observability/objects
                  poo-flow-admission-observation-prototype
                  poo-flow-observation-identity poo-flow-observation-provenance
                  poo-flow-observation-context poo-flow-observe-admission-evidence
