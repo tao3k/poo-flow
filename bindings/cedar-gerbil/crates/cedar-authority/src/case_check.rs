@@ -8,7 +8,7 @@ use crate::authority::Authority;
 use crate::canonical;
 use crate::projection::{Bootstrap, PolicySource, Proposal};
 use crate::runtime::{Deployment, HOST_READY_SCHEMA, RuntimeReady};
-use crate::wire::{CEDAR_VERSION, LEAN_REVISION};
+use crate::wire::{CEDAR_VERSION, LEAN_REVISION, Outcome};
 use cedar_policy::PolicySet;
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -70,6 +70,17 @@ fn read_policy_file(path: &Path) -> Result<(PolicySource, usize), String> {
         },
         count,
     ))
+}
+
+fn require_error_free_decision(name: &str, outcome: &Outcome) -> Result<(), String> {
+    if outcome.erroring_policies.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            "{name}: Cedar evaluation error in policies {:?}",
+            outcome.erroring_policies
+        ))
+    }
 }
 
 fn start_host(path: &Path) -> Result<Host, String> {
@@ -201,6 +212,7 @@ pub fn run_cli() -> Result<(), String> {
         let result = authority
             .issue(case.proposal.clone())
             .map_err(|error| format!("{}: {error}", case.name))?;
+        require_error_free_decision(&case.name, &result.receipt.payload.rust.payload.outcome)?;
         if result.status != case.expected_status
             || !result
                 .receipt
@@ -237,4 +249,29 @@ pub fn run_cli() -> Result<(), String> {
         started.elapsed().as_millis()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::require_error_free_decision;
+    use crate::wire::Outcome;
+
+    #[test]
+    fn a_denied_case_cannot_hide_a_matching_engine_error() {
+        let mut outcome = Outcome {
+            schema_id: "poo-flow.cedar-engine-outcome.v1".into(),
+            engine_id: "cedar-rust".into(),
+            semantic_revision: "test".into(),
+            decision: "deny".into(),
+            determining_policies: vec![],
+            erroring_policies: vec!["policy-with-error".into()],
+        };
+        assert!(
+            require_error_free_decision("expected-deny", &outcome)
+                .unwrap_err()
+                .contains("policy-with-error")
+        );
+        outcome.erroring_policies.clear();
+        require_error_free_decision("expected-deny", &outcome).unwrap();
+    }
 }

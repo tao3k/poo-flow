@@ -72,7 +72,9 @@ and a nonempty =cases= array. Each case contains =name=, =proposal=, and
 =expected_status= (=authorized= or =denied=). The command parses the Cedar file
 with Cedar's official policy-set parser, admits its static policies into the
 existing authority boundary, and compares every case with both independent
-Runtime Host engines. No industry-specific Rust test is required. The command
+Runtime Host engines. An expected =denied= result must be an error-free Cedar
+decision: a policy evaluation error fails the case even when Rust and Lean
+agree on =deny=. No industry-specific Rust test is required. The command
 does not confer governance admission: the manifest supplies that claim, which
 must be verified by the application host before production publication.
 Use =just inspect-cedar-file POLICY.cedar= to parse and count a multi-policy
