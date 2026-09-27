@@ -6,8 +6,8 @@
 (import (only-in :poo-flow/src/module-system/observability/testing-case poo-flow-test-case)
          (only-in :std/test test-suite check-equal? check-exception)
         (only-in :clan/poo/object .all-slots .o .ref .slot?)
-        (only-in :poo-flow/src/module-system/observability/interface
-                 poo-flow-native-slot-presentation)
+        (only-in :core/observability/slot-presentation
+                 poo-flow-slot-presentation)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-semantic-identity
                  poo-flow-semantic-module)
@@ -211,9 +211,9 @@
                               source-path: "t/profile-bundle-test.ss"
                               source-line: 120)))
             (ordinary
-             (poo-flow-native-slot-presentation effective-stages 'triage))
+             (poo-flow-slot-presentation effective-stages 'triage))
             (detailed
-             (poo-flow-native-slot-presentation
+             (poo-flow-slot-presentation
               effective-stages 'triage 'source sources)))
        (check-equal? (.all-slots ordinary) '(effective-value))
        (check-equal? (.ref ordinary 'effective-value) 'human-review)
@@ -224,7 +224,7 @@
              (.ref detailed 'composition-chain))
         '(replacement replacement))
        (check-equal? (map (lambda (entry) (.ref entry 'label))
-                          (.ref detailed 'native-precedence))
+                          (.ref detailed 'prototype-precedence))
                      '(effective base refined))
        (check-equal? (.ref (car (.ref detailed 'source-declarations))
                            'source-line)

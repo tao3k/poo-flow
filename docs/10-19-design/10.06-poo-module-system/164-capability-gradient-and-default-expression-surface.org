@@ -431,10 +431,10 @@ For example, a user first sees that =retries= is =5=.  The next view explains
 that =ProductionProfile= overrides =BaseProfile=.  Only an explicit advanced
 view exposes the C4 precedence or the source-level POO form.
 
-The public =poo-flow-native-slot-presentation= follows that order with
+The public =poo-flow-slot-presentation= follows that order with
 =default=, =provenance=, =composition=, =advanced= and =source= levels.  The
-default level needs only the effective native POO object and slot name; it
-uses upstream =.ref= and does not require source metadata.  Detailed levels
+default level needs only the POO object and slot name; it reads the effective
+value through =clan/poo/object= =.ref= and does not require source metadata. Detailed levels
 require a maintainer-authored POO source registry keyed by stable labels.
 Each entry binds the actual prototype object to =source-path= and
 =source-line=; duplicate objects, missing ancestors and malformed locations
@@ -507,7 +507,7 @@ policy MUST be syntax-aware; a regex ban on names is insufficient.
 - Native slot-algebra fixtures prove that noun-valued collection slots retain
   inherited named declarations, override only matching identities and never
   mutate their parents.  The focused executable owner is
-  =t/poo-native-slot-algebra-test.ss=.
+  =t/poo-slot-algebra-test.ss=.
 - Extension fixtures prove that slot dispatch and Provider/Profile CLOS consume
   the same POO values used by the default fixture.
 - Runtime fixtures prove that an ABI or proof projection cannot become an
@@ -596,10 +596,10 @@ Migration MUST retain semantic and performance evidence:
   Profiles with captured =self= governance methods still require an explicit
   rebinding contract before this split is applied to them.
 - [X] Add Effective Object and provenance-first presentation evidence.  The
-  public =poo-flow-native-slot-presentation= reads the effective value through
-  upstream POO and reveals identity-checked declaration lineage, native slot
-  shape, precedence and declared source location only on request.  The native
-  =t/poo-native-slot-algebra-test.ss= and =t/profile-bundle-test.ss= cover
+  public =poo-flow-slot-presentation= reads the effective value through
+  =clan/poo/object= =.ref= and reveals identity-checked declaration lineage,
+  slot shape, prototype precedence and declared source location only on request.
+  =t/poo-slot-algebra-test.ss= and =t/profile-bundle-test.ss= cover
   inheritance, closed Scenario Case projection and invalid source registries;
   =t/module-authoring-contract-test.ss= guards this owner's lazy-slot
   self-reference regression.  Authored source locations remain claims, not
