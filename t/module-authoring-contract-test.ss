@@ -7,7 +7,7 @@
          (only-in :clan/poo/object .cc .o .ref)
         (only-in :clan/poo/mop TypeError?)
         (only-in :std/test check-equal? check-exception test-suite)
-        :poo-flow/src/module-system/authoring/interface
+        :poo-flow/src/module-system/authoring/contracts
         (only-in :core/poo-clos/interface
                  poo-clos-call
                  poo-clos-call-next-method

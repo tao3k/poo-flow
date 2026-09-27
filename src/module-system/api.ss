@@ -8,21 +8,23 @@
 ;;; public import closure consumed by users and the ASP build API.
 
 (import :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/authoring/interface
+        :poo-flow/src/module-system/authoring/contracts
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/loader/interface
         :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/module-system/projection/interface
-        :poo-flow/src/module-system/semantic-module/interface)
+        :poo-flow/src/module-system/semantic-module/types
+        :poo-flow/src/module-system/semantic-module/objects)
 
 (export (import: :poo-flow/src/module-system/interface)
-        (import: :poo-flow/src/module-system/authoring/interface)
+        (import: :poo-flow/src/module-system/authoring/contracts)
         (import: :poo-flow/src/module-system/contribution/interface)
         (import: :poo-flow/src/module-system/declaration/interface)
         (import: :poo-flow/src/module-system/descriptor/interface)
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :poo-flow/src/module-system/profile-composition/interface)
         (import: :poo-flow/src/module-system/projection/interface)
-        (import: :poo-flow/src/module-system/semantic-module/interface))
+        (import: :poo-flow/src/module-system/semantic-module/types)
+        (import: :poo-flow/src/module-system/semantic-module/objects))

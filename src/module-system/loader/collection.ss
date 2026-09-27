@@ -17,7 +17,7 @@
                  poo-flow-module-owner-import-file-observations)
         (only-in :poo-flow/src/module-system/interface
                  poo-flow-module-interface)
-        (only-in :poo-flow/src/module-system/authoring/interface
+        (only-in :poo-flow/src/module-system/authoring/contracts
                  poo-flow-module-authoring-admit-port
                  poo-flow-module-authoring-admission-accepted?
                  poo-flow-module-authoring-admission-diagnostics)
