@@ -7,9 +7,11 @@
 ;;; Invariant: implementation logic stays in focused projection leaf owners.
 
 (import :poo-flow/src/module-system/projection/catalog
+        :core/module-system/projection/option-objects
         :poo-flow/src/module-system/projection/options
         :poo-flow/src/module-system/projection/runtime)
 
 (export (import: :poo-flow/src/module-system/projection/catalog)
+        (import: :core/module-system/projection/option-objects)
         (import: :poo-flow/src/module-system/projection/options)
         (import: :poo-flow/src/module-system/projection/runtime))

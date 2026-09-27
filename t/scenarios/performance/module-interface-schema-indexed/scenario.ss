@@ -18,10 +18,11 @@
                  poo-flow-module-interface-schema-spec)
         (only-in :poo-flow/src/module-system/descriptor/interface
                  poo-flow-modules)
+        (only-in :core/module-system/projection/option-objects
+                 poo-flow-module-option-schema-id
+                 poo-flow-module-option-schema-value)
         (only-in :poo-flow/src/module-system/projection/options
                  poo-flow-module-option-schemas
-                 poo-flow-module-option-schema-id
-                 poo-flow-module-option-schema-value
                  poo-flow-module-find-schema))
 
 (def +schema-count+ 1000)
