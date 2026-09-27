@@ -13,6 +13,8 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/interface
+        (only-in :core/module-graph/closure
+                 module-closure module-missing-imports)
         (only-in :core/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/loader/source)
@@ -470,99 +472,22 @@
 (def (poo-flow-module-import-configs imports)
   (reverse (poo-flow-module-import-configs/rev imports '())))
 
-;;; Boundary: only direct names are missing imports; inline profiles are closure members.
-;;; Boundary: module missing imports for name is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> Symbol ModuleImportList HashTable [MissingModuleImport])
-(def (poo-flow-module-missing-imports-for-name module-name imports available-index)
-  (cond
-   ((null? imports) '())
-   ((not (poo-flow-module-named-import? (car imports)))
-    (poo-flow-module-missing-imports-for-name
-     module-name
-     (cdr imports)
-     available-index))
-   ((hash-key? available-index
-               (poo-flow-module-import-name (car imports)))
-    (poo-flow-module-missing-imports-for-name
-     module-name
-     (cdr imports)
-     available-index))
-   (else
-    (cons (list (cons 'module module-name)
-                (cons 'import (poo-flow-module-import-name (car imports))))
-          (poo-flow-module-missing-imports-for-name
-           module-name
-           (cdr imports)
-           available-index)))))
-
-;;; Boundary: inline profiles join activation closure before name validation.
-;;; Intent: prefab-style imports behave like concrete module values, not missing names.
-;;; A shared native hash index admits each module name once across the complete
-;;; traversal. Pending sibling lists are explicit DFS frames, preserving root,
-;;; inline-import, then sibling order without rebuilding intermediate lists.
-;; : (-> [[PooModuleDescriptor]] HashTable [PooModuleDescriptor] [PooModuleDescriptor])
-(def (poo-flow-module-closure/frames frames seen modules-rev)
-  (cond
-   ((null? frames) (reverse modules-rev))
-   ((null? (car frames))
-    (poo-flow-module-closure/frames (cdr frames) seen modules-rev))
-   (else
-    (let* ((siblings (car frames))
-           (module (car siblings))
-           (module-name (poo-flow-module-name module))
-           (remaining-frames (cons (cdr siblings) (cdr frames))))
-      (if (hash-key? seen module-name)
-        (poo-flow-module-closure/frames remaining-frames seen modules-rev)
-        (begin
-          (hash-put! seen module-name #t)
-          (poo-flow-module-closure/frames
-           (cons
-            ;; Only import specs carrying descriptor profiles expand closure.
-            (poo-flow-module-import-configs (poo-flow-module-imports module))
-            remaining-frames)
-           seen
-           (cons module modules-rev))))))))
-
-;;; Boundary: public closure owns one shared admission index per traversal.
-;; : (-> [PooModuleDescriptor] [PooModuleDescriptor])
+;;; Core owns the ordered DFS and closed-world lookup. POO Flow supplies only
+;;; descriptor projections and source import interpretation.
 (def (poo-flow-module-closure modules)
-  (poo-flow-module-closure/frames
-   (list modules)
-   (make-hash-table)
-   '()))
+  (module-closure
+   modules
+   poo-flow-module-name
+   (lambda (module)
+     (poo-flow-module-import-configs (poo-flow-module-imports module)))))
 
-;;; Boundary: per-module missing import details preserve module/import pairs.
-;; : (-> PooModuleDescriptor HashTable [MissingModuleImport])
-(def (poo-flow-module-missing-imports-for descriptor available-index)
-  (poo-flow-module-missing-imports-for-name
-   (poo-flow-module-name descriptor)
-   (poo-flow-module-imports descriptor)
-   available-index))
-
-;;; Boundary: module missing imports from is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> [PooModuleDescriptor] HashTable [MissingModuleImport])
-(def (poo-flow-module-missing-imports-from modules available-index)
-  (foldr append
-         '()
-         (map (lambda (module)
-                (poo-flow-module-missing-imports-for module available-index))
-              modules)))
-
-;;; Boundary: missing import checks run over the same closure activation uses.
-;; : (-> [PooModuleDescriptor] [MissingModuleImport])
 (def (poo-flow-module-missing-imports modules)
-  (let* ((closed-modules (poo-flow-module-closure modules))
-         (available-index (make-hash-table)))
-    (for-each (lambda (module-name)
-                (hash-put! available-index module-name #t))
-              (poo-flow-module-names closed-modules))
-    (poo-flow-module-missing-imports-from
-     closed-modules
-     available-index)))
+  (module-missing-imports
+   (poo-flow-module-closure modules)
+   poo-flow-module-name
+   poo-flow-module-imports
+   poo-flow-module-named-import?
+   poo-flow-module-import-name))
 
 ;;; Boundary: activation may only proceed after closed-world imports validate.
 ;; : (-> [PooModuleDescriptor] Boolean)

@@ -42,7 +42,8 @@ at that boundary and remove the old file after its consumers migrate.
 | =authoring/contracts.ss= | Core authoring admission + POO Flow source policy | Generic role/Contract execution belongs in Core; source-form inspection and POO Flow repair vocabulary remain an adapter. |
 | =contribution/verification.ss= | Core contribution governance | Host-trusted issuance, admission, revocation, and private identity storage are generic. |
 | =contribution/interface.ss= | Retire | Import Core contribution/governance and Core Profile composition directly; do not reexport unrelated POO and utility helpers. |
-| =declaration/flags.ss=, =declaration/config-syntax.ss= | Core Module declaration | Generic flag algebra and hygienic POO declarations. |
+| =declaration/flags.ss= | POO Flow user interface | Ordered user-selection flag patching is product declaration policy, not generic Core flag algebra. |
+| =declaration/config-syntax.ss= | Core declaration syntax after macro review | Retain only hygienic POO constructor syntax that is independent of POO Flow user categories. |
 | =declaration/contract.ss=, =declaration/interface.ss= | Core declaration + POO Flow policy | Separate generic selection/validation from product category names, user settings, and presentation. |
 | =descriptor/interface.ss= | Core descriptor + POO Flow contribution adapter | Generic identity/import/phase/option descriptor belongs in Core; Task/Flow registry payloads remain product contributions. |
 | =descriptor/syntax.ss= | Core declaration syntax + POO Flow UI | Keep only hygienic mechanism syntax in Core; product-facing catalog syntax belongs with its user interface. |
@@ -61,9 +62,11 @@ at that boundary and remove the old file after its consumers migrate.
 | =observability/doctor-presentation.ss= | POO Flow observability | User-facing aggregation over Core diagnostics and product load receipts. |
 | =observability/source-authoring.ss=, =observability/source-admission.ss= | POO Flow observability | Product source admission and logging. |
 | =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
-| =profile-composition/accessors.ss=, =builders.ss=, =funcs.ss=, =profile-bundle.ss= | Core Profile composition | POO-native selection and pure ProfileBundle algebra; no product module registry. |
+| =profile-composition/profile-bundle.ss= | Core Profile composition after source split | POO-native selection and pure ProfileBundle algebra; product Scenario root projection remains outside Core. |
+| =profile-composition/funcs.ss= | Core utility or standard library | First check whether the leftmost-index helper is already available; do not promote a duplicate collection algorithm. |
+| =profile-composition/accessors.ss=, =builders.ss= | POO Flow Scenario | These inspect/build Scenario Case, module bindings, multiplicity, workload, and launch ranges, not generic Module contracts. |
 | =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
-| =profile-composition/plan-projection.ss= | Core pure projection + POO Flow execution adapter | Core may describe composition; the product execution-plan and runtime handoff stay outside Core. |
+| =profile-composition/plan-projection.ss= | POO Flow Scenario/plan adapter | It lowers a closed Scenario Case into the product execution plan; move only a demonstrably reusable pure kernel to Core. |
 | =profile-composition/scenario-case.ss= | POO Flow Scenario/Session | Fresh Session state and vertical Case construction are not the generic Module System. |
 | =profile-composition/interface.ss= | Retire | Consumers import Core composition and POO Flow Scenario separately. |
 | =projection/catalog.ss=, =projection/options.ss= | Core Module projection | Generic catalog, schema/option validation, and inspectable receipts. |
@@ -79,8 +82,10 @@ host-trusted verification and semantic Module Contracts/construction moved
 to =core/contribution/verification.ss= and top-level =core/semantic-module/=.
 The same Core branch now also owns generic =module-interface/= schema indexing,
 option policy, and construction; POO Flow retains its brand, receipt kinds,
-and default authoring Profile.  The remaining rows above are still migration
-work, not completed features.
+and default authoring Profile.  Generic ordered inline closure and missing
+import findings now live in =core/module-graph/closure.ss=; POO Flow supplies
+descriptor accessors.  The remaining rows above are still migration work,
+not completed features.
 
 1. *Separate Core-safe contracts.* =descriptor/interface.ss= imports
    =src/core/{task,flow,failure,roles,object-syntax}=; =resolver.ss= imports
