@@ -31,6 +31,10 @@ required-features = ["native-runtime-host-qualification"]
 name = "authorization"
 required-features = ["native-runtime-host-qualification"]
 
+[[test]]
+name = "case_check"
+required-features = ["native-runtime-host-qualification"]
+
 [dependencies]
 cedar-policy.workspace = true
 ed25519-dalek.workspace = true

@@ -11,6 +11,7 @@
 pub mod aot_host;
 pub mod authority;
 pub mod canonical;
+pub mod case_check;
 pub mod projection;
 pub mod runtime;
 pub mod wire;

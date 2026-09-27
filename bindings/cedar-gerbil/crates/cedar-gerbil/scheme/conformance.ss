@@ -6,6 +6,7 @@
 (import (only-in :std/ffi C-ffi-macrology)
         (only-in :std/encoding/json json->string)
         (only-in :clan/poo/object .o)
+        (only-in :std/misc/ports read-all-as-string)
         :poo-flow/modules/authorization/providers/cedar/objects
         (only-in :gerbil-scheme-rust/scheme/native gerbil-rs-root-string))
 (export main)
@@ -28,9 +29,12 @@
      (digest #\1) (digest #\3) (digest #\4) (digest #\5)
      (digest #\a) (digest #\b)
      ["PooFlowProof.Runtime.CedarNative" "PooFlowProof.Runtime.CedarRuntimeHost"])
-   [(poo-flow-cedar-policy "permit-run"
-      "permit(principal == User::\"alice\", action == Action::\"run\", resource == Job::\"demo\") when { context.approved };")
-    (poo-flow-cedar-policy "forbid-blocked" "forbid(principal, action, resource) when { context.blocked };")]
+   [(poo-flow-cedar-policy
+     "native-atomic-bundle"
+     (call-with-input-file
+      (getenv "POO_FLOW_CEDAR_POLICY_FILE"
+              "../../fixtures/atomic-case/policies.cedar")
+      read-all-as-string))]
    (poo-flow-cedar-schema schema-document)
    (poo-flow-cedar-entities "[]")
    [(poo-flow-cedar-runtime-capability "Action::\"run\"" 1)]))

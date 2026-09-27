@@ -1429,6 +1429,7 @@ dependencies = [
  "gerbil-scheme-sys",
  "poo-flow-cedar-authority",
  "serde",
+ "tempfile",
 ]
 
 [[package]]
