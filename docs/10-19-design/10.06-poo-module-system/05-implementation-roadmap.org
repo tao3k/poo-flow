@@ -16,7 +16,7 @@ Status: implemented.
 
 Files:
 - =src/module-system.ss=
-- =src/module-system/observability/module-presentation.ss=
+- =src/user-interface/module-presentation.ss=
 - =t/module-system-test.ss=
 - =t/module-system-observability-test.ss=
 - =build.ss=
@@ -72,7 +72,7 @@ Add a command or helper surface that can explain:
 - config requirements introduced by modules.
 This is the =poo-flow= equivalent of borrowing Doom's =doctor= idea without borrowing Doom's implementation.
 Implemented first-pass behavior:
-- added the user-facing Doctor projection, now owned by =src/module-system/observability/doctor-presentation.ss=;
+- added the user-facing Doctor projection, now owned by =src/user-interface/doctor-presentation.ss=;
 - added =pooModuleDoctorPresentation= for value catalogs;
 - added =pooModuleSourceDoctorPresentation= for loader receipts plus module doctor summary;
 - included module ids, import graph, contribution counts, diagnostic status, validation count, merge status, and merged option summary;

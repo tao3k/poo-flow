@@ -70,7 +70,7 @@ The new architecture extends and qualifies these owners. It does not pretend the
 
 ** Existing Authoring, Policy, Receipt, And Proof Owners
 - =src/user-interface/init-syntax.ss= owns the current =session-case= authoring path.
-- =src/module-system/profile-composition/profile-bundle.ss= and =binding-syntax.ss= own Profile composition; =src/scenario/= owns Case accessors and execution projection.
+- =core/profile-composition/= owns Profile selection, =use-module= syntax, and bundle composition; =src/scenario/= owns =user-composition= syntax, the root, Case accessors, and execution projection.
 - =modules/session/policy-syntax.ss= and policy-validation modules own session-policy declarations and checks.
 - =src/core/receipt.ss=, =modules/session/policy-validation-receipt.ss=, and =src/proof/proof-gate-receipts.ss= own existing receipt families.
 - =modules/session/lifecycle-gate.ss= and the Lean PooC4 lifecycle/policy modules own existing proof gates.

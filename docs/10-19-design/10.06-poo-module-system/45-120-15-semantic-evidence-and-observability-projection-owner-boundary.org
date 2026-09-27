@@ -19,7 +19,7 @@ inspect safely while a lazy POO projection is failing.
 
 These are different responsibilities.
 
-The existing =src/module-system/observability/module-presentation.ss= owner provides strict
+The existing =src/user-interface/module-presentation.ss= owner provides strict
 observation structs, presentation traces, and terminal alist projections.  Its
 values are deliberately outside lazy POO evaluation and do not execute runtime
 behavior.  That makes the owner suitable for safe presentation, but not for
@@ -33,7 +33,7 @@ owners.
 - =ObservationEvent= is a POO-native immutable semantic evidence value.
 - =RecoveryDecision= is a pure POO-native decision derived from visible
   evidence and bounded authority.
-- =src/module-system/observability/module-presentation.ss= remains the strict read-only projection
+- =src/user-interface/module-presentation.ss= remains the strict read-only projection
   owner for doctor, CLI, serialization, and presentation consumers.
 - Runtime telemetry consumes redacted projections.  It does not own semantic
   evidence and cannot reconstruct authority.
@@ -108,7 +108,7 @@ coordinator.
 
 ** Strict observability projection
 
-=src/module-system/observability/module-presentation.ss= owns:
+=src/user-interface/module-presentation.ss= owns:
 
 - strict observation structs that remain inspectable during lazy projection
   failure;
@@ -181,14 +181,14 @@ observation package:
 - =debug.ss= explicitly consumes upstream =DDT= / =trace-poo= at the
   development-output boundary.
 
-The strict =src/module-system/observability/module-presentation.ss= owner is unchanged. Existing
+The strict =src/user-interface/module-presentation.ss= owner is unchanged. Existing
 Diagnostic/Receipt callers remain on their original API. The new admission
 observation does not use the legacy family catalog as a dispatch registry.
 
 This task-specific exploration authorization is not a parser receipt or a
 global relaxation of source-owner governance. Parser-owned confirmation and
 full qualification remain open. The concrete usage and limitations are
-recorded in =src/module-system/observability/README.org=.
+recorded in =docs/10-19-design/10.06-poo-module-system/observability-ownership.org=.
 
 * Conformance checklist
 
@@ -205,7 +205,7 @@ recorded in =src/module-system/observability/README.org=.
 
 * Non-goals
 
-- Replacing =src/module-system/observability/module-presentation.ss=.
+- Replacing =src/user-interface/module-presentation.ss=.
 - Treating strict structs or alists as the public composition interface.
 - Designing a second generic POO, type, contract, debug, or fixed-point library.
 - Storing or replaying raw continuations.

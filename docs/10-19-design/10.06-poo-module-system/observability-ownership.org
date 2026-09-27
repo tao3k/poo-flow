@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+title: Upstream-based POO Observability Framework
+#+title: POO Flow Observability
 
 * Scope
 
-This package extends the Core Observability owner. Existing Diagnostic and
+This design records the Core Observability owner. Existing Diagnostic and
 Receipt APIs remain available to JSON Schema and feedback consumers. The new
 Contract-admission observation family is native POO, not an alist facade or a
 second tracer.
@@ -15,8 +15,9 @@ Generic observation Contracts, objects, debug tracing, and slot inspection
 belong to the =core/observability/= package.  The POO Flow source-admission
 observer and ASP PackageSpec build observer are integration adapters: they
 consume ASP-owned testing/build APIs and must not make Core depend on ASP.
-The build adapter is therefore in =src/observability/= rather than under the
-module-system mechanism or in Core.
+The product adapters remain with their actual owners under =src/user-interface/=,
+=src/authoring/=, =src/testing/=, and =src/building/=. They consume Core
+Observability but do not form a second Observability package.
 
 This is a development/semantic-inspection foundation, not an implementation of
 the complete public =inspect/explain/diff/simulate= DebugDemand evaluator,
@@ -29,16 +30,16 @@ authorized recovery, Profile policy, or production telemetry.
 | =core/observability/types.ss= | Native responsibility Contracts. |
 | =core/observability/funcs.ss= | Pure bounded admission explanation and aggregate projections. |
 | =core/observability/objects.ss= | Native observation construction and slot-dispatched =.explain= / =.summary=. |
-| =src/module-system/observability/source-authoring.ss= and =source-admission.ss= | POO Flow source admission and module authoring observation. |
+| =src/authoring/source-authoring.ss= and =src/testing/source-admission.ss= | POO Flow source authoring and test-time admission adapters. |
 | =core/module-system/observability/diagnostics.ss= | Native POO Diagnostic and DoctorReport values plus source-neutral status aggregation. |
-| =src/module-system/observability/module-diagnostics.ss= | Product Task/Flow/Option findings, Doctor decision, and final alist projections. |
-| =src/module-system/observability/doctor-presentation.ss= | Doctor projection over diagnostic and loader receipts. |
-| =src/observability/build-config.ss= and =build-projection.ss= | Product build observation policy and ASP PackageSpec handoff. |
-| =src/observability/output.ss= | Shared bounded observation output. |
+| =src/user-interface/module-diagnostics.ss= | Product Task/Flow/Option findings, Doctor decision, and final alist projections. |
+| =src/user-interface/doctor-presentation.ss= | Doctor projection over diagnostic and loader receipts. |
+| =src/building/build-config.ss= and =build-projection.ss= | Product build observation policy and ASP PackageSpec handoff. |
+| =core/observability/output.ss= | Shared bounded observation output. |
 | =core/observability/debug.ss= | Explicit development output and bounded call tracing. |
 | =core/observability/slot-debug.ss= | Opt-in lazy-slot admission proxy and redacted typed receipts. |
 
-=src/module-system/observability/module-presentation.ss= remains a separate strict presentation
+=src/user-interface/module-presentation.ss= remains a separate strict presentation
 owner. Its structs and terminal alists are neither replaced nor promoted into
 authoritative observation evidence. The pre-existing metadata catalog in
 =core/observability/objects.ss= is not the new observation-family dispatch registry.
@@ -174,7 +175,7 @@ This API is opt-in and does not patch upstream =.ref=, install a global hook,
 or recursively wrap POO values returned by slots.  A nested object that needs
 the same diagnosis must be wrapped explicitly.  The design and upstream
 source evidence are recorded in
-[[file:../../docs/10-19-design/10.06-poo-module-system/158-poo-lazy-slot-resolution-observability.org][POO Lazy Slot Resolution Observability]].
+[[file:158-poo-lazy-slot-resolution-observability.org][POO Lazy Slot Resolution Observability]].
 
 These development aggregates are not declared universally public: even counts
 can be sensitive. Production publication still needs an admitted audience,

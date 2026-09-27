@@ -18,7 +18,7 @@
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
         :poo-flow/src/module-system/api
-        :poo-flow/src/module-system/observability/module-diagnostics
+        :poo-flow/src/user-interface/module-diagnostics
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/loader/resolver
         :core/module-system/catalog/objects)

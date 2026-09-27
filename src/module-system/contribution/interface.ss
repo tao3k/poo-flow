@@ -4,8 +4,8 @@
 
 ;;; POO Flow contribution verification and Profile composition boundary.
 (import :clan/poo/object
-        (only-in :poo-flow/src/module-system/profile-composition/binding-syntax
-                 use-module user-composition)
+        (only-in :core/profile-composition/selection-syntax use-module)
+        (only-in :poo-flow/src/scenario/composition-syntax user-composition)
         (only-in :poo-flow/src/scenario/accessors
                  poo-flow-scenario-case-profiles)
         :poo-flow/src/utilities/functional

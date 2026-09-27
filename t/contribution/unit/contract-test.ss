@@ -6,7 +6,7 @@
          :std/test
         (only-in :clan/poo/object .o .ref)
         :core/contribution/objects
-        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+        (only-in :core/profile-composition/profile-bundle
                  compose profiles))
 (export contract-test)
 

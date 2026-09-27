@@ -11,8 +11,9 @@
         :poo-flow/src/core/plan
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
         :poo-flow/src/module-system/semantic-module/objects
-        :poo-flow/src/module-system/profile-composition/binding-syntax
-        :poo-flow/src/module-system/profile-composition/profile-bundle
+        :core/profile-composition/selection-syntax
+        :poo-flow/src/scenario/composition-syntax
+        :core/profile-composition/profile-bundle
         :poo-flow/src/feature-system/bundle-v1-composition-writer
         :poo-flow/src/feature-system/bundle-v1-lowering)
 

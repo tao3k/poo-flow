@@ -10,7 +10,7 @@
         (only-in :std/list/list any)
         (only-in :poo-flow/src/core/funcs
                  poo-flow-read-datums/append-map)
-        (only-in "module-presentation.ss"
+        (only-in :poo-flow/src/user-interface/module-presentation
                  poo-flow-poo-slot-authoring-datum-bindings))
 
 (export poo-flow-scheme-lexical-call-shadow-observation-kind

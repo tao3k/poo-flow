@@ -18,7 +18,7 @@
                  poo-clos-method-bundle
                  poo-clos-prototype-specializer
                  poo-clos-any-specializer)
-        (only-in :poo-flow/src/module-system/observability/module-presentation
+        (only-in :poo-flow/src/user-interface/module-presentation
                  poo-flow-poo-slot-authoring-file-observations
                  poo-flow-poo-slot-authoring-diagnostics)
         (only-in :poo-flow/src/core/funcs
@@ -457,5 +457,5 @@
       (poo-flow-poo-slot-authoring-diagnostics
        (poo-flow-poo-slot-authoring-file-observations
         'profile-composition
-        "src/module-system/profile-composition/profile-bundle.ss"))
+        "core/profile-composition/profile-bundle.ss"))
       '()))))

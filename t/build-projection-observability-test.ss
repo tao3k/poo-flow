@@ -7,13 +7,13 @@
          (only-in :std/test test-suite check-equal?)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .o)
-        (only-in :poo-flow/src/observability/build-config
+        (only-in :poo-flow/src/building/build-config
                  poo-flow-default-build-observability-policy)
-        (only-in :poo-flow/src/observability/build-projection
+        (only-in :poo-flow/src/building/build-projection
                  poo-flow-make-observed-package-spec-projector
                  poo-flow-observe-build-projection
                  poo-flow-build-elapsed-milliseconds)
-        (only-in :poo-flow/src/observability/output
+        (only-in :core/observability/output
                  poo-flow-write-observation-line!))
 
 (export build-projection-observability-test)

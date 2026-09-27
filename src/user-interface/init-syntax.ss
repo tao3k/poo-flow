@@ -12,7 +12,7 @@
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
-        :poo-flow/src/module-system/observability/module-presentation
+        :poo-flow/src/user-interface/module-presentation
         :poo-flow/modules/memory-core/interface
         :poo-flow/modules/cubeSandbox/config
         :poo-flow/modules/cubeSandbox/profile-interface
@@ -103,7 +103,7 @@
         loop-engine-observability-policy-extension
         loop-engine-safety-policy-extension
         (import: :poo-flow/modules/nono-sandbox/profile-interface)
-        (import: :poo-flow/src/module-system/observability/module-presentation)
+        (import: :poo-flow/src/user-interface/module-presentation)
         (import: :poo-flow/modules/sandbox-core/profile-interface))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays

@@ -18,8 +18,9 @@ dependency direction is POO Flow Core -> gerbil-parser -> POO Flow; Core
 must not import POO Flow or a maintained product module.
 
 Maintained product modules live in =modules/<module>/=.  In particular,
-workflow implementation belongs to =modules/workflow/=.  Loader
-observability and POO Flow module admission live here; POO-native CLOS,
+workflow implementation belongs to =modules/workflow/=.  Product module
+observability contracts live in =core/observability/=; product UI, authoring,
+testing, and build adapters live with their respective features. POO-native CLOS,
 extension-graph operations, and module-schema contracts belong to Core.
 The shared Sandbox object is owned by =modules/sandbox-core/shared-object.ss=,
 not by the generic module system.
@@ -32,11 +33,11 @@ not by the generic module system.
 | descriptor | =descriptor/interface.ss= | module descriptor contracts |
 | loader | =core/module-system/loader/objects.ss=, =core/module-system/loader/load-path.ss=, =loader/collection.ss=, =loader/selection.ss=, =loader/tree.ss= | Core lazy receipts and ordered LoadPath; product discovery, selection, and source policy |
 | projection | =core/module-system/projection/option-objects.ss=, =option-validation.ss=; =projection/catalog.ss=, =options.ss=, =runtime.ss= | Core option values and validation; product catalog, descriptor and runtime projection |
-| profile composition | =profile-composition/profile-bundle.ss=, =binding-syntax.ss=, =bindings.ss= | functional Profile selection and binding values; Scenario Case/workload live in =src/scenario/= |
+| profile composition | =core/profile-composition/=; =src/scenario/composition-syntax.ss=, =profile-root.ss= | Core owns Profile selection, =use-module=, and ProfileBundle algebra; Scenario owns =user-composition= and root projection |
 | object validation | =core/module-system/schema/validation.ss= | native POO Type/C4 contract evidence |
 | contribution presentation | =contribution/interface.ss= | temporary product-facing composition surface; verification implementation is in Core |
 | semantic module policy | =semantic-module/objects.ss= | POO Flow default authoring roles over Core semantic Module Contracts |
-| observability | =observability/source-authoring.ss=, =source-admission.ss=, =module-diagnostics.ss=, =doctor-presentation.ss= | POO Flow-specific adapters consume Core observation primitives directly; no local aggregate interface |
+| observability | =core/observability/= | Core owns reusable observation primitives; feature adapters consume them directly |
 
 The shared factors below are owned once by the =core/= Git submodule and
 installed under the =core= Gerbil package namespace.  Do not

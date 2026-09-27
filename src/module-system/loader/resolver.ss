@@ -20,7 +20,7 @@
         :poo-flow/src/core/config
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/observability/module-diagnostics
+        :poo-flow/src/user-interface/module-diagnostics
         :core/module-system/catalog/objects
         (only-in :core/object-family/syntax
                  defpoo-object-family)

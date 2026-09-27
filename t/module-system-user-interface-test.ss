@@ -19,8 +19,8 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
         :poo-flow/src/module-system/api
-        :poo-flow/src/module-system/observability/module-diagnostics
-        :poo-flow/src/module-system/observability/doctor-presentation
+        :poo-flow/src/user-interface/module-diagnostics
+        :poo-flow/src/user-interface/doctor-presentation
         :poo-flow/src/module-system/loader/source
         :core/module-system/funs
         :poo-flow/src/module-system/loader/resolver

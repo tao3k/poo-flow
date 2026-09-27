@@ -58,7 +58,7 @@ current owners:
 | Concern | Confirmed current owner set |
 |-
 | POO-native authoring and =session-case= | =src/user-interface/init-syntax.ss= |
-| Profile composition | =src/module-system/profile-composition/profile-bundle.ss=, =binding-syntax.ss=, and =bindings.ss=; Scenario Case accessors now live in =src/scenario/= |
+| Profile composition | =core/profile-composition/= owns ProfileBundle, bindings, and selection syntax; =src/scenario/= owns product composition syntax and Scenario root/accessors |
 | Policy | =src/core/policy.ss=, =modules/session/policy.ss=, =policy-syntax.ss=, and =policy-validation*.ss= |
 | Receipts | Core/runner receipts, session receipt syntax and validation receipt, contract receipt, loop-engine extension receipt, and proof-gate receipts |
 | Semantic and contract namespaces | =src/semantic/boundary-namespace.ss= and =src/contract/boundary-namespace.ss= |

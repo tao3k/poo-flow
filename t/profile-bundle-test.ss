@@ -11,7 +11,9 @@
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-semantic-module)
-        :poo-flow/src/module-system/profile-composition/profile-bundle)
+        :core/profile-composition/profile-bundle
+        (only-in :poo-flow/src/scenario/profile-root
+                 poo-flow-profile-bundle-root))
 
 (export profile-bundle-test)
 
@@ -202,7 +204,7 @@
             (effective-stages (.ref case-value 'stages))
             (sources
              (.o effective: (.o prototype: effective-stages
-                                source-path: "src/module-system/profile-composition/profile-bundle.ss"
+                                source-path: "core/profile-composition/profile-bundle.ss"
                                 source-line: 236)
                  base: (.o prototype: base-stages
                            source-path: "t/profile-bundle-test.ss"

@@ -39,8 +39,8 @@ Parser-owned ASP discovery currently identifies:
 
 - =use-composition= as a macro owner in
   =src/module-system/profile-composition/use-syntax.ss=;
-- =poo-flow-composition-module-binding= as an internal helper owner in
-  =src/module-system/profile-composition/bindings.ss=;
+- the historical =poo-flow-composition-module-binding= helper (the current
+  inert binding owner is =core/profile-composition/bindings.ss=);
 - composition accessors and builders as internal implementation surfaces;
 - no emitted owner for =defmodule=, =define-module=, or =module!=.
 

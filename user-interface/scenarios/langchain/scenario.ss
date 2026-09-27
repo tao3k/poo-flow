@@ -4,9 +4,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :clan/poo/object .def .o)
-        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+        (only-in :core/profile-composition/profile-bundle
                  profiles compose)
-        :poo-flow/src/module-system/profile-composition/binding-syntax
+        :core/profile-composition/selection-syntax
+        :poo-flow/src/scenario/composition-syntax
         :poo-flow/user-interface/profiles/langchain)
 (export LangChainProductionProfile langchain-scenario)
 

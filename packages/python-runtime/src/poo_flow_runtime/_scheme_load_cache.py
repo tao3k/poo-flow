@@ -13,15 +13,17 @@ from typing import Any
 
 from ._scheme_datum import SchemeRows
 
-_SCHEME_LOAD_CACHE_RUNNER_VERSION = 2
+_SCHEME_LOAD_CACHE_RUNNER_VERSION = 3
 _SCHEME_LOAD_CACHE_LOCK = threading.RLock()
 _SCHEME_LOAD_CACHE: dict[tuple[Any, ...], SchemeRows] = {}
 _SCHEME_LOAD_DEPENDENCIES = (
     Path("src/user-interface/init-syntax.ss"),
     Path("modules/funflow/runtime-load-projection.ss"),
-    Path("src/module-system/profile-composition/binding-syntax.ss"),
-    Path("src/module-system/profile-composition/profile-bundle.ss"),
-    Path("src/module-system/profile-composition/bindings.ss"),
+    Path("core/profile-composition/selection-syntax.ss"),
+    Path("src/scenario/composition-syntax.ss"),
+    Path("core/profile-composition/profile-bundle.ss"),
+    Path("core/profile-composition/bindings.ss"),
+    Path("src/scenario/profile-root.ss"),
     Path("src/scenario/case.ss"),
     Path("src/scenario/accessors.ss"),
     Path("modules/funflow/config.ss"),

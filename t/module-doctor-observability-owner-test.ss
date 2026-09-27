@@ -6,10 +6,10 @@
 ;;; Doctor is an Observability projection, not a separate UI/module package.
 (import (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :std/test test-suite check-equal?)
-        (only-in :poo-flow/src/module-system/observability/module-diagnostics
+        (only-in :poo-flow/src/user-interface/module-diagnostics
                  poo-flow-module-doctor
                  poo-flow-module-doctor-report-status)
-        (only-in :poo-flow/src/module-system/observability/doctor-presentation
+        (only-in :poo-flow/src/user-interface/doctor-presentation
                  poo-flow-module-doctor-presentation-kind))
 
 (export module-doctor-observability-owner-test)

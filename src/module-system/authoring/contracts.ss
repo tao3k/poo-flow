@@ -17,7 +17,7 @@
                  poo-flow-module-interface?
                  poo-flow-module-interface-id
                  poo-flow-module-interface-authoring)
-        (only-in :poo-flow/src/module-system/observability/module-presentation
+        (only-in :poo-flow/src/user-interface/module-presentation
                  poo-flow-poo-slot-authoring-datum-bindings
                  poo-flow-poo-slot-authoring-self-reference?)
         :core/poo-clos/interface

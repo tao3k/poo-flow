@@ -86,7 +86,7 @@ def test_scheme_projection_cache_tracks_direct_profile_owner(tmp_path) -> None:
     projection = tmp_path / "modules" / "funflow" / "runtime-load-projection.ss"
     _runtime_projection_fixture(tmp_path)
     source = _source_fixture(tmp_path)
-    owner = tmp_path / "src" / "module-system" / "profile-composition" / "profile-bundle.ss"
+    owner = tmp_path / "core" / "profile-composition" / "profile-bundle.ss"
     owner.parent.mkdir(parents=True)
     owner.write_text(";; first\n", encoding="utf-8")
 

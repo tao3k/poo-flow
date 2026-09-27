@@ -17,10 +17,12 @@
         :poo-flow/src/module-system/loader/official-contributions
         :poo-flow/src/module-system/loader/selection
         :poo-flow/src/module-system/loader/tree
-        :poo-flow/src/module-system/profile-composition/binding-syntax
-        :poo-flow/src/module-system/profile-composition/profile-bundle
-        :poo-flow/src/module-system/profile-composition/bindings
+        :core/profile-composition/selection-syntax
+        :poo-flow/src/scenario/composition-syntax
+        :core/profile-composition/profile-bundle
+        :core/profile-composition/bindings
         :poo-flow/src/scenario/case
+        :poo-flow/src/scenario/profile-root
         :poo-flow/src/scenario/accessors
         :poo-flow/src/scenario/workload
         :poo-flow/src/scenario/plan-projection
@@ -42,10 +44,12 @@
         (import: :poo-flow/src/module-system/loader/official-contributions)
         (import: :poo-flow/src/module-system/loader/selection)
         (import: :poo-flow/src/module-system/loader/tree)
-        (import: :poo-flow/src/module-system/profile-composition/binding-syntax)
-        (import: :poo-flow/src/module-system/profile-composition/profile-bundle)
-        (import: :poo-flow/src/module-system/profile-composition/bindings)
+        (import: :core/profile-composition/selection-syntax)
+        (import: :poo-flow/src/scenario/composition-syntax)
+        (import: :core/profile-composition/profile-bundle)
+        (import: :core/profile-composition/bindings)
         (import: :poo-flow/src/scenario/case)
+        (import: :poo-flow/src/scenario/profile-root)
         (import: :poo-flow/src/scenario/accessors)
         (import: :poo-flow/src/scenario/workload)
         (import: :poo-flow/src/scenario/plan-projection)

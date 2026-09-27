@@ -9,7 +9,7 @@
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
         (only-in :poo-flow/src/module-system/semantic-module/objects
                  poo-flow-semantic-module)
-        (only-in :poo-flow/src/module-system/profile-composition/profile-bundle
+        (only-in :core/profile-composition/profile-bundle
                  poo-flow-profile-export
                  poo-flow-module-profiles))
 (export langgraph LangGraphModule)

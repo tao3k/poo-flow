@@ -64,10 +64,10 @@ at that boundary and remove the old file after its consumers migrate.
 | =observability/doctor-presentation.ss= | POO Flow observability | User-facing aggregation over Core diagnostics and product load receipts. |
 | =observability/source-authoring.ss=, =observability/source-admission.ss= | POO Flow observability | Product source admission and logging. |
 | =observability/testing-extension.ss= | POO Flow observability/ASP adapter | ASP test-runner extension and process transport are not Core Module semantics. |
-| =profile-composition/profile-bundle.ss= | Core Profile composition after source split | POO-native selection and pure ProfileBundle algebra; product Scenario root projection remains outside Core. |
+| =profile-composition/profile-bundle.ss= | Core Profile composition | POO-native selection and pure ProfileBundle algebra now live in =core/profile-composition/=; product Scenario root projection remains in =src/scenario/profile-root.ss=. |
 | =profile-composition/funcs.ss= | Retired | The Plan owner uses Gerbil =list->hash-table-eq= directly; no duplicate public indexing utility remains. |
-| =profile-composition/accessors.ss=, =builders.ss= | Scenario owner + Profile bindings | Case accessors and workload are now =src/scenario/accessors.ss= and =workload.ss=; =profile-composition/bindings.ss= retains only Profile slot and binding values. |
-| =profile-composition/binding-syntax.ss= | Core Profile syntax | Keep only the reviewed hygienic binding surface, expanding to ordinary POO/function code. |
+| =profile-composition/accessors.ss=, =builders.ss= | Scenario owner + Core Profile bindings | Case accessors and workload are now =src/scenario/accessors.ss= and =workload.ss=; inert binding values are =core/profile-composition/bindings.ss=. |
+| Profile binding syntax | Split by owner | Core =selection-syntax.ss= owns =use-module=; Scenario =composition-syntax.ss= owns =user-composition=. The old mixed module is removed. |
 | =profile-composition/plan-projection.ss= | =src/scenario/plan-projection.ss= | Moved the Scenario Case to product ExecutionPlan projection; it depends on the POO Flow Plan and is not a generic Core Module mechanism. |
 | =profile-composition/scenario-case.ss= | =src/scenario/case.ss= | Moved fresh Session state and Scenario Case construction to the product Scenario owner. |
 | =profile-composition/interface.ss= | Retired | Consumers now import Profile binding syntax, ProfileBundle and bindings, or Scenario Case/workload/Plan owners directly. |
@@ -78,6 +78,15 @@ at that boundary and remove the old file after its consumers migrate.
 | =semantic-module/types.ss=, =semantic-module/objects.ss= | Core semantic Module + POO Flow authoring defaults | Identity/import/capability/Profile/authoring Contracts in Core; user-root defaults and product role policy outside Core. |
 
 * Dependency blockers and required order
+
+The current cut removes the old =profile-composition/= and =observability/=
+subdirectories from =src/module-system/=. Core owns Profile selection,
+ProfileBundle algebra, and generic observation output. Scenario owns its root
+syntax/projection. Product observation inputs and presentation are placed with
+Authoring, Testing, Building, and User Interface rather than recreating a
+second =src/observability/= owner. The remaining =src/module-system/= tree
+contains 27 Scheme files plus one include file and this README; its deletion
+is still the closure condition, not a completed claim.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:
 host-trusted verification and semantic Module Contracts/construction moved

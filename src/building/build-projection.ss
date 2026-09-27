@@ -10,7 +10,7 @@
 ;;; and std/make retain projection and execution ownership.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
-        (only-in "output.ss" poo-flow-write-observation-line!))
+        (only-in :core/observability/output poo-flow-write-observation-line!))
 
 (export poo-flow-build-elapsed-milliseconds
         poo-flow-make-observed-package-spec-projector
