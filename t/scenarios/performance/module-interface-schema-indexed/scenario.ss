@@ -22,7 +22,8 @@
                  poo-flow-module-option-schema-id
                  poo-flow-module-option-schema-value)
         (only-in :poo-flow/src/module-system/projection/options
-                 poo-flow-module-option-schemas
+                 poo-flow-module-option-schemas)
+        (only-in :core/module-system/projection/option-validation
                  poo-flow-module-find-schema))
 
 (def +schema-count+ 1000)

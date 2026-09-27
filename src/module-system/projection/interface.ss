@@ -8,10 +8,12 @@
 
 (import :poo-flow/src/module-system/projection/catalog
         :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation
         :poo-flow/src/module-system/projection/options
         :poo-flow/src/module-system/projection/runtime)
 
 (export (import: :poo-flow/src/module-system/projection/catalog)
         (import: :core/module-system/projection/option-objects)
+        (import: :core/module-system/projection/option-validation)
         (import: :poo-flow/src/module-system/projection/options)
         (import: :poo-flow/src/module-system/projection/runtime))

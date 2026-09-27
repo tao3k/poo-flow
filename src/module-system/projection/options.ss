@@ -12,12 +12,11 @@
 (import (only-in :clan/poo/object .all-slots .ref .slot?)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
-        :core/module-system/projection/option-objects)
+        :core/module-system/projection/option-objects
+        :core/module-system/projection/option-validation)
 
 (export poo-flow-module-option-configs
         poo-flow-module-option-schemas
-        poo-flow-module-find-schema
-        poo-flow-module-missing-schema-receipt
         poo-flow-module-option-validation-receipts
         poo-flow-module-validation-receipts)
 
@@ -173,72 +172,6 @@
         '()))
       '())))
 
-;;; Boundary: schema lookup matches projected option ids exactly.
-;; : (-> [PooModuleOptionSchema] OptionId MaybePooModuleOptionSchema)
-(def (poo-flow-module-find-schema schemas option-id-value)
-  (find (lambda (schema)
-          (poo-flow-module-kind=? (poo-flow-module-option-schema-id schema)
-                                  option-id-value))
-        schemas))
-
-;;; Boundary: missing-schema receipts keep validation non-throwing.
-;; : (-> PooModuleOptionConfig PooModuleOptionValidationReceipt)
-(def (poo-flow-module-missing-schema-receipt config)
-  (make-poo-flow-module-option-validation-receipt
-   (poo-flow-module-option-config-id config)
-   (poo-flow-module-option-config-source-module config)
-   #f
-   'missing-schema
-   '("option schema is not declared")
-   '()))
-
-;;; Boundary: this slice validates constants and records other schema rules.
-;; : (-> PooModuleOptionSchema PooModuleOptionConfig Boolean)
-(def (poo-flow-module-option-schema-valid? schema config)
-  (cond
-   ((eq? (poo-flow-module-option-schema-rule schema) 'constant)
-    (equal? (poo-flow-module-option-config-value config)
-            (poo-flow-module-option-schema-value schema)))
-   (else #t)))
-
-;;; Boundary: validation receipts carry outcome, not exceptions.
-;; : (-> PooModuleOptionSchema PooModuleOptionConfig PooModuleOptionValidationReceipt)
-(def (poo-flow-module-option-schema-validation-receipt schema config)
-  (if (poo-flow-module-option-schema-valid? schema config)
-    (make-poo-flow-module-option-validation-receipt
-     (poo-flow-module-option-config-id config)
-     (poo-flow-module-option-config-source-module config)
-     #t
-     'ok
-     '()
-     (poo-flow-module-option-schema-metadata schema))
-    (make-poo-flow-module-option-validation-receipt
-     (poo-flow-module-option-config-id config)
-     (poo-flow-module-option-config-source-module config)
-     #f
-     'constant-mismatch
-     '("option value does not match constant schema")
-     (poo-flow-module-option-schema-metadata schema))))
-
-;;; Boundary: per-module receipts validate declared option configs only.
-;; : (-> (-> OptionId MaybePooModuleOptionSchema) [PooModuleOptionConfig] [PooModuleOptionValidationReceipt] [PooModuleOptionValidationReceipt])
-(def (poo-flow-module-option-validation-receipts/rev
-      schema-ref
-      configs
-      receipts-rev)
-  (if (null? configs)
-    receipts-rev
-    (let* ((config (car configs))
-           (schema
-            (schema-ref (poo-flow-module-option-config-id config))))
-      (poo-flow-module-option-validation-receipts/rev
-       schema-ref
-       (cdr configs)
-       (cons (if schema
-               (poo-flow-module-option-schema-validation-receipt schema config)
-               (poo-flow-module-missing-schema-receipt config))
-             receipts-rev)))))
-
 ;; : (-> PooModuleDescriptor [PooModuleOptionValidationReceipt])
 (def (poo-flow-module-option-validation-receipts module)
   (let* ((interface (poo-flow-module-interface-object module))
@@ -262,11 +195,9 @@
                             schema))
                schemas)
               (lambda (option-id) (hash-get index option-id))))))
-    (reverse
-     (poo-flow-module-option-validation-receipts/rev
-      schema-ref
-      (poo-flow-module-option-configs module)
-      '()))))
+    (poo-flow-module-options-validate
+     schema-ref
+     (poo-flow-module-option-configs module))))
 
 ;;; Boundary: module validation stays recursive over inline import profiles.
 ;; : (-> PooModuleDescriptor [PooModuleOptionValidationReceipt])
