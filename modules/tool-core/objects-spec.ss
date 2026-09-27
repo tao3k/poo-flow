@@ -6,7 +6,7 @@
 ;;; POO-native tool specification owner and runtime-boundary projection.
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/policy
         :poo-flow/modules/tool-core/objects-support)
@@ -101,7 +101,7 @@
 (def (poo-flow-tool-spec-sandbox-profile-ref spec)
   (.ref spec 'sandbox-profile-ref))
 
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-tool-spec->alist (spec)
   (bindings ((checked-spec
               (poo-flow-session-require
@@ -123,7 +123,7 @@
            (runtime-executed (.ref checked-spec 'runtime-executed))
            (metadata (.ref checked-spec 'metadata)))))
 
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-tool-specs->alists (specs)
   (projector poo-flow-tool-spec->alist)
   (error-message "tool spec serialization requires a list"))

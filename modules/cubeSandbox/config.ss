@@ -9,7 +9,7 @@
 (import :poo-flow/modules/cubeSandbox/objects
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-cubeSandbox-module-bundles
         poo-flow-cubeSandbox-config-flags

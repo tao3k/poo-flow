@@ -12,7 +12,7 @@
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-stable-duplicates)
         :core/module-system/observability/diagnostics
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-module-diagnostic-prototype
         make-poo-flow-module-diagnostic
@@ -35,7 +35,7 @@
         poo-flow-module-doctor-report->alist)
 
 ;; : (-> PooModuleDiagnostic Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-module-diagnostic->alist (diagnostic)
   (bindings ())
   (fields ((severity (poo-flow-module-diagnostic-severity diagnostic))
@@ -212,7 +212,7 @@
 
 ;;; Boundary: alist conversion is reserved for CLI/agent presentation edges.
 ;; : (-> PooModuleDoctorReport Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-module-doctor-report->alist (report)
   (bindings ((diagnostics
               (map poo-flow-module-diagnostic->alist

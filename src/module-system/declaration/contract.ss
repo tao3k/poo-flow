@@ -8,7 +8,7 @@
 ;;; concrete module selections rather than category aliases or loose data.
 
 (import :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-use-module-contract-validation-kind
         poo-flow-use-module-contract-validation-schema

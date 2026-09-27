@@ -25,7 +25,7 @@
         :core/module-system/catalog/objects
         (only-in :core/object-family/syntax
                  defpoo-object-family)
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export resolve-poo-flow-module-source
         resolve-poo-flow-module-sources

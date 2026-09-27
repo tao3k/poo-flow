@@ -57,7 +57,7 @@ landed or released baseline.
 |------+---------------+-------------------|
 | Profile and Scenario expression | Direct =poo-flow.scenario-case.v1= values, cached ExecutionPlan and 1,000/5,000 Profile receipts exist | finish directory discovery and user-facing config roles |
 | Session policy generation | =modules/session/policy-syntax.ss= exists | verify family coverage and reduce remaining large owners |
-| Runtime projection generation | =src/module-system/projection/runtime-syntax.ss= exists | separate receipt/request/envelope/manifest/snapshot owners |
+| Runtime projection generation | =src/utilities/runtime-receipt-syntax.ss= exists | separate receipt/request/envelope/manifest/snapshot owners |
 | Loop intent | =runtime-intent.ss= exists but remains a large mixed owner | make =runtime.ss= a small orchestrator |
 | Standards | RFC 163 M0--M4 are implemented in the working tree | land the core and preserve contribution ownership |
 | Sources Lock | POO Feature, generated module writer and indexed verification exist | canonical generation, scale and Provider gates |

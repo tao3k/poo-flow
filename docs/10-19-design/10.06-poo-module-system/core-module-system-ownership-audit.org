@@ -46,7 +46,6 @@ at that boundary and remove the old file after its consumers migrate.
 | =loader/resolver.ss=, =loader/selection.ss= | Core lookup + product activation | Keep typed failure, Doctor, user-bundle selection and RunConfig lowering in POO Flow. |
 | =loader/tree.ss= | Core lazy graph + product root assembly | Keep maintained/user roots outside Core. |
 | =projection/options.ss= | Core option validation + product descriptor projection | Product descriptors decide schema discovery. |
-| =projection/runtime-syntax.ss=, =projection/syntax.ss= | Core syntax + product boundary | Keep only necessary hygienic macros, with final receipts at the boundary. |
 | =projection/runtime.ss= | Core evaluation + product runtime presentation | Keep agent-harness vocabulary and runtime manifest outside Core. |
 
 * Dependency blockers and required order
@@ -60,7 +59,8 @@ ProfileBundle algebra, and generic observation output. Scenario owns its root
 syntax/projection. Product observation inputs and presentation are placed with
 Authoring, Testing, Building, and User Interface rather than recreating a
 second =src/observability/= owner. The remaining =src/module-system/= tree
-contains 15 Scheme files and this README; its deletion
+contains 13 Scheme files and this README. Shared final projection and runtime
+receipt syntax now live in =src/utilities/=; the old imports were removed. Its deletion
 is still the closure condition, not a completed claim.
 
 The first Core owner cut is tracked in =poo-flow-core#16= at =ceb5fe5=:

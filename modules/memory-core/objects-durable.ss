@@ -6,7 +6,7 @@
 ;;; Boundary: durable memory job validation and receipts.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/memory-core/durable/policy
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/transform
@@ -435,7 +435,7 @@
          maybe-options))
 
 ;; : (-> PooMemoryDurableJobReceipt Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-memory-durable-job-receipt->alist (receipt)
   (bindings ((checked-receipt
               (poo-flow-session-require
@@ -517,7 +517,7 @@
              checked-receipt)))))
 
 ;; : (-> [PooMemoryDurableJobReceipt] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-memory-durable-job-receipts->alists (receipts)
   (projector poo-flow-memory-durable-job-receipt->alist)
   (error-message "memory durable job receipt serialization requires a list"))

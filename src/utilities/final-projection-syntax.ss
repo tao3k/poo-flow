@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: hygienic macros for module-system final alist projections.
+;;; Boundary: shared hygienic macros for final alist projections.
 ;;; Invariant: generated functions are inspection, receipt, or presentation
 ;;; boundaries only; module activation and resolver logic stay explicit.
 
@@ -13,12 +13,12 @@
         poo-flow-product-rows-into/rev
         poo-flow-product-field-rows
         poo-flow-product-field-rows/tail
-        defpoo-module-final-projection
-        defpoo-module-final-projection-batch)
+        defpoo-final-projection
+        defpoo-final-projection-batch)
 
-;; defpoo-module-final-projection
+;; defpoo-final-projection
 ;;   : (-> ProjectionDeclaration Syntax)
-;;   | contract: generate one fixed module-system alist projection function
+;;   | contract: generate one fixed alist projection function
 ;;   | doc m%
 ;;       Rows are explicit and ordered at the call site. Field keys are fixed
 ;;       symbols, not dynamic expressions. Guarded rows provide an explicit
@@ -27,13 +27,13 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (defpoo-module-final-projection module->alist (module)
+;;       (defpoo-final-projection module->alist (module)
 ;;         (bindings ())
 ;;         (fields ((kind 'module))))
 ;;       ;; => defines module->alist
 ;;       ```
 ;;     %
-(defrules defpoo-module-final-projection
+(defrules defpoo-final-projection
   (guard bindings fields)
   ((_ constructor (argument ...)
       (guard guard-expr fallback-expr)
@@ -51,7 +51,7 @@
      (let* ((binding-name binding-expr) ...)
        (list (cons 'field-key field-expr) ...)))))
 
-;; defpoo-module-final-projection-batch
+;; defpoo-final-projection-batch
 ;;   : (-> ProjectionBatchDeclaration Syntax)
 ;;   | contract: generate a guarded map projection over a list of values
 ;;   | doc m%
@@ -61,13 +61,13 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (defpoo-module-final-projection-batch modules->alist (items)
+;;       (defpoo-final-projection-batch modules->alist (items)
 ;;         (projector module->alist)
 ;;         (error-message "expected modules"))
 ;;       ;; => defines modules->alist
 ;;       ```
 ;;     %
-(defrules defpoo-module-final-projection-batch
+(defrules defpoo-final-projection-batch
   (projector error-message)
   ((_ constructor (items)
       (projector projector-expr)

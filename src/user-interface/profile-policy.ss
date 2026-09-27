@@ -24,8 +24,8 @@
                  poo-flow-user-profile-modules
                  poo-flow-user-profile-settings
                  poo-flow-user-profile-setting-keys)
-        (only-in :poo-flow/src/module-system/projection/syntax
-                 defpoo-module-final-projection)
+        (only-in :poo-flow/src/utilities/final-projection-syntax
+                 defpoo-final-projection)
         (only-in :poo-flow/src/utilities/functional
                  poo-flow-stable-duplicates))
 
@@ -67,7 +67,7 @@
 
 ;;; Profile diagnostics are plain alists so policy receipts stay cheap.
 ;; : (-> Symbol Symbol Symbol Alist Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-user-profile-diagnostic (severity code target detail)
   (bindings ())
   (fields ((kind poo-flow-user-profile-diagnostic-kind)

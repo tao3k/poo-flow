@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object
                  .all-slots .cc .o .ref .slot? object? object<-alist)
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export #t)
 
@@ -193,7 +193,7 @@
   (.ref node 'metadata))
 
 ;; : (-> PooFlowGraphNode Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-graph-node->alist (node)
   (bindings ((checked-node
               (poo-flow-graph-require
@@ -208,7 +208,7 @@
            (runtime-executed (.ref checked-node 'runtime-executed)))))
 
 ;; : (-> [PooFlowGraphNode] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-graph-nodes->alists (nodes)
   (projector poo-flow-graph-node->alist)
   (error-message "graph node projection requires a list"))
@@ -269,7 +269,7 @@
   (.ref edge 'metadata))
 
 ;; : (-> PooFlowGraphEdge Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-graph-edge->alist (edge)
   (bindings ((checked-edge
               (poo-flow-graph-require
@@ -285,7 +285,7 @@
            (runtime-executed (.ref checked-edge 'runtime-executed)))))
 
 ;; : (-> [PooFlowGraphEdge] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-graph-edges->alists (edges)
   (projector poo-flow-graph-edge->alist)
   (error-message "graph edge projection requires a list"))
@@ -335,7 +335,7 @@
   (.ref graph-value 'metadata))
 
 ;; : (-> PooFlowGraph Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-graph->alist (graph-value)
   (bindings ((checked-graph
               (poo-flow-graph-require
@@ -437,7 +437,7 @@
             +poo-flow-graph-loop-analysis-prototype-kind+)))
 
 ;; : (-> PooFlowGraphLoopAnalysis Alist)
-(defpoo-module-final-projection poo-flow-graph-loop-analysis->alist
+(defpoo-final-projection poo-flow-graph-loop-analysis->alist
   (analysis)
   (bindings
    ((checked-analysis
@@ -469,7 +469,7 @@
       (list? value)))
 
 ;; : (-> PooFlowGraphAnalysis Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-graph-analysis->alist (analysis)
   (bindings ((checked-analysis
               (poo-flow-graph-require

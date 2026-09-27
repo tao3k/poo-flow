@@ -13,7 +13,7 @@
         :poo-flow/modules/sandbox-core/profile-catalog
         (only-in :poo-flow/src/user-interface/presentation
                  pooFlowUserConfigPresentation)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/src/user-interface/profile-core)
 
 (export pooFlowUserProfilePresentation
@@ -29,7 +29,7 @@
 
 ;;; Profile summaries avoid embedding POO profile objects in presentations.
 ;; : (-> PooUserProfile Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-user-profile-summary->alist (profile)
   (bindings ((modules (poo-flow-user-profile-modules profile))))
   (fields ((profile-name (poo-flow-user-profile-name profile))

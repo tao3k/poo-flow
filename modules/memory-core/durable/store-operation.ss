@@ -11,7 +11,7 @@
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
                  runtime-command-fields->manifest)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/memory-core/durable/store-backend)
 
 (export +poo-flow-durable-runtime-store-operation-receipt-kind+
@@ -234,7 +234,7 @@
          +poo-flow-durable-runtime-store-operation-specs+)))
 
 ;; : (-> PooDurableRuntimeStoreOperationReceipt Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-runtime-store-operation-receipt->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-runtime-store-operation-receipt-diagnostics
@@ -302,7 +302,7 @@
              rows)))
 
 ;; : (-> [PooDurableRuntimeStoreOperationReceipt] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-runtime-store-operation-receipts->alists (receipts)
   (projector poo-flow-durable-runtime-store-operation-receipt->alist)
   (error-message

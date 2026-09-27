@@ -12,7 +12,7 @@
         :poo-flow/modules/agent-sandbox/profile-native-contract
         :poo-flow/modules/agent-sandbox/projection-syntax
         :poo-flow/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-sandbox-profile-kind PooFlowSandboxProfileContract
         poo-flow-sandbox-profile-contract-admission poo-flow-sandbox-profile-contract-admitted?
@@ -325,7 +325,7 @@
 ;;; Alist conversion is presentation-only. Keeping it separate from the POO
 ;;; recipe avoids flattening the extension point that nono/cubeSandbox can use.
 ;; : (-> PooSandboxProfile Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-sandbox-profile->alist (profile)
   (bindings ())
   (fields ((kind poo-flow-sandbox-profile-kind)
@@ -538,7 +538,7 @@
 ;;; Alist lists are presentation receipts only; runtime bridges consume
 ;;; descriptors or profile objects instead.
 ;; : (-> [PooSandboxProfile] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-sandbox-profile-alists (profile-list)
   (projector poo-flow-sandbox-profile->alist)
   (error-message "sandbox profile alist presentation requires a list"))

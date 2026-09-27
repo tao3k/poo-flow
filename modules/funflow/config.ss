@@ -9,7 +9,7 @@
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/declaration/config-syntax
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         (only-in :poo-flow/modules/workflow/cicd-funs
                  poo-flow-cicd-alist-ref
                  poo-flow-cicd-symbol-member?)
@@ -228,7 +228,7 @@
     (cons 'runtime-executed #f))))
 
 ;; : (-> PooFlowFunflowDagEdge Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-funflow-dag-edge->alist (edge)
   (bindings ((_guard
               (poo-flow-funflow-require
@@ -243,13 +243,13 @@
            (runtime-executed (.ref edge 'runtime-executed)))))
 
 ;; : (-> [PooFlowFunflowDagEdge] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-funflow-dag-edges->alists (edges)
   (projector poo-flow-funflow-dag-edge->alist)
   (error-message "funflow DAG edge projection requires a list"))
 
 ;; : (-> PooFlowFunflowCompositionStep Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-funflow-composition-step->alist (step)
   (bindings ((_guard
               (poo-flow-funflow-require
@@ -267,7 +267,7 @@
            (runtime-executed (.ref step 'runtime-executed)))))
 
 ;; : (-> [PooFlowFunflowCompositionStep] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-funflow-composition-steps->alists (steps)
   (projector poo-flow-funflow-composition-step->alist)
   (error-message "funflow composition step projection requires a list"))
@@ -365,7 +365,7 @@
     (poo-flow-funflow-node-composition-steps/rev nodes '()))))
 
 ;; : (-> PooFlowFunflowFunctionalDag Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-funflow-functional-dag->alist (dag)
   (bindings ((_guard
               (poo-flow-funflow-require
@@ -399,7 +399,7 @@
            (runtime-executed (.ref dag 'runtime-executed)))))
 
 ;; : (-> PooFlowFunflowNormalizedFlow Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-funflow-normalized-flow->alist (flow)
   (bindings ((_guard
               (poo-flow-funflow-require
@@ -422,7 +422,7 @@
            (runtime-executed (.ref flow 'runtime-executed)))))
 
 ;; : (-> PooFlowFunflowPlan Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-funflow-plan->alist (plan)
   (bindings ((_guard
               (poo-flow-funflow-require

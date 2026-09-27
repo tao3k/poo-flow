@@ -12,7 +12,7 @@
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
                  runtime-command-fields->manifest)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/memory-core/durable/store)
 
 (export +poo-flow-durable-runtime-store-backend-kind+
@@ -438,7 +438,7 @@
                                             '()))))
 
 ;; : (-> PooDurableRuntimeStoreBackendReceipt Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-runtime-store-backend-receipt->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-runtime-store-backend-receipt-diagnostics
@@ -688,7 +688,7 @@
      #f)))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-runtime-store-negotiation-receipt->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-runtime-store-negotiation-receipt-diagnostics
@@ -855,7 +855,7 @@
      (cons 'scheme-manufactures-runtime-handlers #f))))
 
 ;; : (-> [PooDurableRuntimeStoreNegotiationReceipt] [Alist])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-runtime-store-negotiations->alists (receipts)
   (projector poo-flow-durable-runtime-store-negotiation-receipt->alist)
   (error-message "durable runtime store negotiation serialization requires a list"))

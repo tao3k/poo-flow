@@ -15,7 +15,7 @@
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         "core.ss"
         "runtime-base.ss"
-        :poo-flow/src/module-system/projection/runtime-syntax
+        :poo-flow/src/utilities/runtime-receipt-syntax
         :poo-flow/src/utilities/functional)
 
 (export make-loop-engine-capability-receipt

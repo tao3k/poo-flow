@@ -22,7 +22,7 @@
                  poo-flow-user-profile-name)
         (only-in :poo-flow/src/profiles/kernel/interface
                  poo-flow-kernel-profile)
-        (only-in :poo-flow/src/module-system/projection/syntax
+        (only-in :poo-flow/src/utilities/final-projection-syntax
                  poo-flow-product-field-rows/tail)
         (only-in :poo-flow/modules/memory-core/durable/artifact-policy
                  artifact-module

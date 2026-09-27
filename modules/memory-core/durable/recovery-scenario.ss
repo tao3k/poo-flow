@@ -7,7 +7,7 @@
 ;;; Invariant: Scheme composes bounded handoff rows only; Rust/Marlin owns
 ;;; event persistence, replay, repair jobs, leases, and side effects.
 
-(import :poo-flow/src/module-system/projection/syntax
+(import :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/memory-core/durable/recovery-support)
 
 (export +poo-flow-durable-recovery-scenario-kind+
@@ -201,7 +201,7 @@
      #f)))
 
 ;; : (-> PooDurableRecoveryScenarioReceipt PooDurableRecoveryScenarioReceiptRow)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-recovery-scenario->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-recovery-scenario-receipt-diagnostics
@@ -276,7 +276,7 @@
              receipt)))))
 
 ;; : (-> [PooDurableRecoveryScenarioReceipt] [PooDurableRecoveryScenarioReceiptRow])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-recovery-scenarios->alists (receipts)
   (projector poo-flow-durable-recovery-scenario->alist)
   (error-message "durable recovery scenario serialization requires a list"))

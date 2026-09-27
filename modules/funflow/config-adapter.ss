@@ -6,7 +6,7 @@
 ;;; Invariant: adapters reuse module contracts and do not execute workflow effects.
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/declaration/interface
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/workflow/types
         :poo-flow/modules/workflow/objects
         :poo-flow/modules/funflow/config-prototypes

@@ -14,7 +14,7 @@
         :core/module-system/source/objects
         :poo-flow/src/module-system/descriptor/interface
         "module-diagnostics.ss"
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         (only-in :core/module-system/projection/option-objects
                  poo-flow-module-option-validation-receipt-id
                  poo-flow-module-option-validation-receipt-source-module
@@ -46,7 +46,7 @@
 
 ;;; Boundary: validation receipt projection stays local to the doctor edge.
 ;; : (-> PooModuleOptionValidationReceipt Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-module-validation-receipt->alist (receipt)
   (bindings ())
   (fields ((id (poo-flow-module-option-validation-receipt-id receipt))

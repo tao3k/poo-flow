@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
         :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export +poo-flow-durable-runtime-store-contract-kind+
         +poo-flow-durable-runtime-store-contract-schema+
@@ -588,7 +588,7 @@
       '()))))
 
 ;; : (-> PooDurableRuntimeStoreContractReceipt PooDurableRuntimeStoreContractReceiptRow)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-durable-runtime-store-contract-receipt->alist (receipt)
   (bindings ((diagnostics
               (poo-flow-durable-runtime-store-contract-receipt-diagnostics
@@ -668,7 +668,7 @@
            contracts))))
 
 ;; : (-> [PooDurableRuntimeStoreContractReceipt] [PooDurableRuntimeStoreContractReceiptRow])
-(defpoo-module-final-projection-batch
+(defpoo-final-projection-batch
   poo-flow-durable-runtime-store-contract-receipts->alists (receipts)
   (projector poo-flow-durable-runtime-store-contract-receipt->alist)
   (error-message

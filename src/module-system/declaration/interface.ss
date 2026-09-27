@@ -12,7 +12,7 @@
         :poo-flow/src/module-system/interface
         (only-in :core/object-family/syntax
                  defpoo-object-family)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/src/authoring/module-imports
         :core/module-system/source/objects
         :poo-flow/src/user-interface/selection-flags)
@@ -433,7 +433,7 @@
 ;;; and doctor output. The index is explanatory metadata only; resolver and
 ;;; loader code remain responsible for any later execution ordering.
 ;; : (-> PooUserModuleSelection MaybeInteger Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-user-module-selection-feature-fact/index (selection index)
   (bindings ())
   (fields ((declaration-index index)
@@ -491,7 +491,7 @@
 ;;; Selection presentation keeps hot-plug choices inspectable without resolving
 ;;; them into descriptors or touching upstream catalogs.
 ;; : (-> PooUserModuleSelection Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-user-module-selection->alist (selection)
   (bindings ())
   (fields ((group (.ref selection 'user-group))

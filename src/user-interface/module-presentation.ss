@@ -13,7 +13,7 @@
                  poo-flow-scheme-datum-find)
         (only-in :core/object-family/syntax
                  defpoo-object-family)
-        :poo-flow/src/module-system/projection/syntax)
+        :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-module-observation-kind
         poo-flow-module-observation-prototype
@@ -140,7 +140,7 @@
 
 ;;; Alist projection is the safe edge for user-interface and doctor outputs.
 ;; : (-> PooFlowModuleObservation Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-module-observation->alist (observation)
   (bindings ())
   (fields ((kind poo-flow-module-observation-kind)
@@ -300,7 +300,7 @@
    #f))
 
 ;; : (-> PooFlowPooSlotAuthoringObservation Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-poo-slot-authoring-observation->alist (observation)
   (bindings ())
   (fields ((kind poo-flow-poo-slot-authoring-observation-kind)
@@ -502,7 +502,7 @@
                observations)))
 
 ;; : (-> Symbol [Alist] Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-poo-slot-authoring-summary (scope observations)
   (bindings ((diagnostics
               (poo-flow-poo-slot-authoring-diagnostics observations))))

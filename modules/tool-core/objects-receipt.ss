@@ -6,7 +6,7 @@
 ;;; Boundary: POO-native policy-catalog validation receipts.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/policy
         :poo-flow/modules/tool-core/objects-catalog
@@ -93,7 +93,7 @@
 (def (poo-flow-tool-policy-catalog-validation-receipt-diagnostics receipt)
   (.ref receipt 'diagnostics))
 
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-tool-policy-catalog-validation-receipt->alist (receipt)
   (bindings ((checked-receipt
               (poo-flow-session-require
