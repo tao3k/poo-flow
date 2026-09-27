@@ -11,6 +11,13 @@ Receipt APIs remain available to JSON Schema and feedback consumers. The new
 Contract-admission observation family is native POO, not an alist facade or a
 second tracer.
 
+Generic observation Contracts, objects, debug tracing, and slot inspection
+belong to the =core/observability/= package.  The POO Flow source-admission
+observer and ASP PackageSpec build observer are integration adapters: they
+consume ASP-owned testing/build APIs and must not make Core depend on ASP.
+The build adapter is therefore in =src/observability/= rather than under the
+module-system mechanism or in Core.
+
 This is a development/semantic-inspection foundation, not an implementation of
 the complete public =inspect/explain/diff/simulate= DebugDemand evaluator,
 authorized recovery, Profile policy, or production telemetry.
@@ -22,7 +29,9 @@ authorized recovery, Profile policy, or production telemetry.
 | =core/observability/types.ss= | Native responsibility Contracts. |
 | =core/observability/funcs.ss= | Pure bounded admission explanation and aggregate projections. |
 | =core/observability/objects.ss= | Native observation construction and slot-dispatched =.explain= / =.summary=. |
-| =src/module-system/observability/interface.ss= | POO Flow source admission and build observation composition. |
+| =src/module-system/observability/interface.ss= | POO Flow source admission and module authoring observation. |
+| =src/observability/build-config.ss= and =build-projection.ss= | Product build observation policy and ASP PackageSpec handoff. |
+| =src/observability/output.ss= | Shared bounded observation output. |
 | =core/observability/debug.ss= | Explicit development output and bounded call tracing. |
 | =core/observability/slot-debug.ss= | Opt-in lazy-slot admission proxy and redacted typed receipts. |
 

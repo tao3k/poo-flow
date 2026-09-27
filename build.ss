@@ -56,6 +56,8 @@
     "src/module-system/load.ss"
     "src/module-system/loader/module-source-interface.ss"
     "src/module-system/observability/interface.ss"
+    "src/observability/build-projection.ss"
+    "src/proof/composition-facts.ss"
     "src/module-system/profile-composition/interface.ss"
     "src/user-interface/profile-core.ss"
     "src/user-interface/init-declaration-syntax.ss"

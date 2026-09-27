@@ -30,11 +30,10 @@ not by the generic module system.
 | projection | =projection/interface.ss= | option and receipt projection |
 | profile composition | =profile-composition/interface.ss= | functional composition values |
 | object validation | =core/module-schema/validation.ss= | native POO Type/C4 contract evidence |
-| composition | =composition/interface.ss= | public re-export of Core lineage and local proof facts |
 | contribution verification | =contribution/interface.ss= | host-trusted verification and Profile composition; not pure contribution admission |
 | diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
 | semantic module | =semantic-module/interface.ss= | semantic Module admission and authoring roles over Core relations |
-| observability | =observability/interface.ss= | module authoring and observation |
+| observability | =observability/interface.ss= | module authoring and source admission; build observation belongs to =src/observability/= |
 
 The shared factors below are owned once by the =core/= Git submodule and
 installed under the =core= Gerbil package namespace.  Do not
@@ -62,7 +61,7 @@ A source file is not eligible merely because it has no =:poo-flow/= import:
 its exported semantics, source-owner qualifications, build targets, and tests
 must also move atomically.  The shared lineage analysis is qualified in
 Core; the POO Flow RFC45 test remains a consumer test.  In contrast,
-=composition/proof-facts.ss= describes a POO Flow proof receipt and
+=src/proof/composition-facts.ss= describes a POO Flow proof receipt and
 =semantic-module/= defines POO Flow admission and authoring roles on Core-owned
 relations. The relation Contracts and constructors have one implementation in
 Core; consumers import them directly beside the POO Flow semantic Module policy.

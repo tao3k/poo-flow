@@ -14,7 +14,7 @@
                  duration-micros monotonic-micros)
         (only-in :clan/poo/object
                  .o .ref .slot? object? make-object $constant-slot-spec)
-        (only-in "build-projection.ss"
+        (only-in :poo-flow/src/observability/output
                  poo-flow-write-observation-line!)
         (only-in "module-presentation.ss"
                  poo-flow-poo-slot-authoring-file-observations

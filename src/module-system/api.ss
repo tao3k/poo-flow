@@ -9,7 +9,7 @@
 
 (import :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/authoring/interface
-        :poo-flow/src/module-system/composition/interface
+        :core/composition/lineage
         :poo-flow/src/module-system/contribution/interface
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/module-system/descriptor/interface
@@ -28,7 +28,7 @@
 
 (export (import: :poo-flow/src/module-system/interface)
         (import: :poo-flow/src/module-system/authoring/interface)
-        (import: :poo-flow/src/module-system/composition/interface)
+        (import: :core/composition/lineage)
         (import: :poo-flow/src/module-system/contribution/interface)
         (import: :poo-flow/src/module-system/declaration/interface)
         (import: :poo-flow/src/module-system/descriptor/interface)

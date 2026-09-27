@@ -13,7 +13,7 @@
                  testing-interface-add-profile
                  testing-interface-call-with-operation)
         (only-in :std/string/path path-expand)
-        (only-in "build-projection.ss"
+        (only-in :poo-flow/src/observability/output
                  poo-flow-write-observation-line!)
         (only-in :core/observability/debug
                  poo-flow-debug-call-policy

@@ -17,14 +17,6 @@
                  poo-flow-observation-context poo-flow-observe-admission-evidence
                  poo-flow-observe-contract-admission poo-flow-observation-explain
                  poo-flow-observation-summary)
-        (only-in "config.ss"
-                 poo-flow-build-observability-policy-prototype
-                 poo-flow-default-build-observability-policy)
-        (only-in "build-projection.ss"
-                 poo-flow-make-observed-package-spec-projector
-                 poo-flow-admit-build-package-spec!
-                 poo-flow-observe-build-projection-start
-                 poo-flow-observe-build-projection)
         "source-authoring.ss"
         "source-admission.ss"
         :core/observability/debug)
@@ -36,12 +28,6 @@
         poo-flow-observation-context poo-flow-observe-admission-evidence
         poo-flow-observe-contract-admission poo-flow-observation-explain
         poo-flow-observation-summary
-        poo-flow-build-observability-policy-prototype
-        poo-flow-default-build-observability-policy
-        poo-flow-make-observed-package-spec-projector
-        poo-flow-admit-build-package-spec!
-        poo-flow-observe-build-projection-start
-        poo-flow-observe-build-projection
         (import: "source-authoring.ss")
         (import: "source-admission.ss")
         (import: :core/observability/debug))

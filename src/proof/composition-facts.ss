@@ -2,7 +2,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Composition proof fact projection for module-system contracts.
+;;; Composition proof fact projection owned by the Proof boundary.
 ;;; - Keep bounded proof rows separate from module execution and runtime handoff.
 
 (export poo-flow-composition-contract->proof-facts)

@@ -10,24 +10,14 @@
 ;;; and std/make retain projection and execution ownership.
 
 (import (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :gerbil/core write-substring)
-        (only-in :std/format format))
+        (only-in "output.ss" poo-flow-write-observation-line!))
 
-(export poo-flow-write-observation-line!
-        poo-flow-build-elapsed-milliseconds
+(export poo-flow-build-elapsed-milliseconds
         poo-flow-make-observed-package-spec-projector
         poo-flow-admit-build-package-spec!
         poo-flow-observe-build-projection-start
         poo-flow-observe-build-projection
         poo-flow-observe-build-executor-handoff)
-
-;;; Materialize a complete receipt before it reaches the shared native port.
-(def (poo-flow-write-observation-line! template . values)
-  (let* ((line (apply format template values))
-         (record (string-append "\n" line "\n"))
-         (port (current-output-port)))
-    (write-substring record 0 (string-length record) port)
-    (force-output port)))
 
 (def (poo-flow-build-elapsed-milliseconds started-jiffy)
   (quotient (* (- (current-jiffy) started-jiffy) 1000)
@@ -91,7 +81,7 @@
 (def (poo-flow-build-budget-exceeded! policy reason observed budget action)
   (let (profile-name (poo-flow-build-policy-ref policy 'profile))
     (poo-flow-write-observation-line!
-     "[poo-flow] phase=spec-budget-exceeded profile=%a reason=%a observed=%a budget=%a action=%a policy=%a owner=module-system/observability executor=asp-build-api/std-make"
+     "[poo-flow] phase=spec-budget-exceeded profile=%a reason=%a observed=%a budget=%a action=%a policy=%a owner=observability/build executor=asp-build-api/std-make"
      profile-name reason observed budget action
      (poo-flow-build-policy-ref policy 'id))
     (when (eq? action 'reject)
@@ -102,7 +92,7 @@
   (when (poo-flow-build-policy-ref policy 'enabled?)
     (let (profile-name (poo-flow-build-policy-ref policy 'profile))
       (poo-flow-write-observation-line!
-       "[poo-flow] phase=spec-start profile=%a policy=%a owner=module-system/observability executor=asp-build-api/std-make"
+       "[poo-flow] phase=spec-start profile=%a policy=%a owner=observability/build executor=asp-build-api/std-make"
        profile-name (poo-flow-build-policy-ref policy 'id)))))
 
 (def (poo-flow-observe-build-projection policy target-count elapsed-ms)
@@ -116,7 +106,7 @@
           (poo-flow-build-budget-action policy 'projection-budget-action)))
     (when (poo-flow-build-policy-ref policy 'enabled?)
       (poo-flow-write-observation-line!
-       "[poo-flow] phase=spec-projected profile=%a target-count=%a elapsedMs=%a policy=%a owner=module-system/observability executor=asp-build-api/std-make"
+       "[poo-flow] phase=spec-projected profile=%a target-count=%a elapsedMs=%a policy=%a owner=observability/build executor=asp-build-api/std-make"
        profile-name target-count elapsed-ms
        (poo-flow-build-policy-ref policy 'id)))
     (when (and target-budget (> target-count target-budget))
@@ -140,6 +130,6 @@
       ;; and terminates its heartbeat with dynamic-wind; this edge records the
       ;; handoff exactly once and then returns control to the native executor.
       (poo-flow-write-observation-line!
-       "[poo-flow] phase=executor-handoff profile=%a boundary=std/make/source-import-currentness-or-compile target-count=%a policy=%a owner=module-system/observability executor=asp-build-api/std-make"
+       "[poo-flow] phase=executor-handoff profile=%a boundary=std/make/source-import-currentness-or-compile target-count=%a policy=%a owner=observability/build executor=asp-build-api/std-make"
        (poo-flow-build-policy-ref policy 'profile)
        target-count (poo-flow-build-policy-ref policy 'id)))))

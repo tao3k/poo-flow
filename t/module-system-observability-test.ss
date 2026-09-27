@@ -121,7 +121,7 @@
               (poo-flow-authoring-build-bootstrap-import-port-observations
                'build.ss
                (open-input-string
-                "(import (only-in \"./src/module-system/observability/config.ss\" policy))")))
+                "(import (only-in \"./src/observability/build-config.ss\" policy))")))
              (observation (car observations)))
         (check-equal? (.ref observation 'phase) 'build-bootstrap-admission)
         (check-equal? (.ref observation 'status)
