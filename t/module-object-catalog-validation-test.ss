@@ -13,7 +13,7 @@
                  check-equal?)
         :core/module-schema/interface
         :core/module-schema/validation
-        :poo-flow/src/module-system/objects
+        :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/user-interface/root-objects
         :poo-flow/modules/nono-sandbox/objects

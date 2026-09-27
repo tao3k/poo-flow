@@ -10,7 +10,7 @@
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :core/extension-graph/interface
         :core/module-schema/interface
-        :poo-flow/src/module-system/objects
+        :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/agent-sandbox/config
         (only-in :poo-flow/modules/agent-sandbox/profile-validation
                  agent-sandbox-profile-resource-policy-filesystem-entry?

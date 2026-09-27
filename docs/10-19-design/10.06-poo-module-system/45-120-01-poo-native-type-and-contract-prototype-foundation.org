@@ -164,12 +164,13 @@ This RFC adds no public macro.
 
 The repository already contains:
 
-- =src/module-system/objects.ss=;
 - =core/module-schema/interface.ss=; and
 - =core/module-schema/support/contracts.ss=.
 
 Those owners prove that project object and contract concerns already exist below
 Module.  They do not prove the Type and Contract prototype algebra defined here.
+The Sandbox-specific object belongs to =modules/sandbox-core/shared-object.ss=
+and is not generic Type evidence.
 Existing alist predicates, merge helpers, or diagnostics are implementation
 evidence only.  This new architecture makes no compatibility or migration
 commitment to those representations.

@@ -7,7 +7,7 @@
 ;;; Invariant: macros expand to ordinary POO module objects and field contracts.
 
 (import :core/module-schema/interface
-        :poo-flow/src/module-system/objects
+        :poo-flow/modules/sandbox-core/shared-object
         :poo-flow/modules/sandbox-core/objects)
 
 (export defpoo-sandbox-backend-object-family)

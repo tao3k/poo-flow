@@ -358,10 +358,11 @@ flowchart LR
   M -->|"becomes an immutable semantic input after Module admission"| D["DispatchEvaluation"]
 #+end_src
 
-The repository already contains =src/module-system/objects.ss=,
-=core/module-schema/interface.ss=, and
-=core/module-schema/support/contracts.ss=.  They are implementation
-evidence below the Module layer.  The current contract helpers do not by
+The repository already contains =core/module-schema/interface.ss= and
+=core/module-schema/support/contracts.ss= as generic implementation
+evidence below the Module layer.  The Sandbox-specific object belongs to
+=modules/sandbox-core/shared-object.ss=, not the generic Type foundation.
+The current contract helpers do not by
 themselves admit the intended POO-native type foundation: the exact owner
 =src/module-system/types.ss= is still missing.
 
