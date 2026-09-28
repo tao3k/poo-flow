@@ -4,7 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
-         (only-in :std/test check test-suite)
+         (only-in :std/test check check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         :poo-flow/modules/query/interface)
@@ -103,6 +103,44 @@
        "MATCH (s:Scenario)-[:HAS_CASE]->(c:Case)-[:HAS_EFFECTIVE_PROFILE]->(p:Profile)\n"
        "WHERE s.identity = 'healthcare'\n"
        "RETURN s.identity, c.id, p.identity\n")))
+
+   (poo-flow-test-case "selects POO nodes with the Scheme GQL syntax slice"
+     (let* ((scheme-program
+             (.o (:: @ PooFlowGqlQueryProgram.)
+                 identity: 'signal-selection
+                 match:
+                 (.o (:: @ GqlQueryPath.)
+                     start: (.o (:: @ GqlQueryNode.)
+                                binding: 'signal label: 'Signal))
+                 project:
+                 (.o (:: @ GqlQueryProjection.)
+                     expression:
+                     (.o (:: @ GqlQueryProperty.)
+                         binding: 'signal property: 'identity))))
+            (scheme-query
+             (.o (:: @ Query)
+                 language: PooFlowSchemeGqlQueryLanguage.
+                 program: scheme-program))
+            (result
+             (poo-flow-query-select-scheme-nodes
+              scheme-query
+              (list (.o label: 'Signal identity: 'record)
+                    (.o label: 'Other identity: 'ignored)))))
+       (check (.ref result 'rows) => '((record)))
+       (check (.ref result 'executed-in-scheme?) => #t)
+       (check (.ref result 'external-provenance-verified?) => #f)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ Query)
+             language: PooFlowSchemeGqlQueryLanguage.)
+         (list (.o label: 'Scenario identity: "healthcare")))
+        true)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ scheme-query) result-bound: 1)
+         (list (.o label: 'Signal identity: 'first)
+               (.o label: 'Signal identity: 'second)))
+        true)))
 
    (poo-flow-test-case "escapes GQL string literals without transferring parser ownership"
      (let (escaped

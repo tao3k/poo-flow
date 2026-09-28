@@ -38,6 +38,7 @@
 (export PooFlowQuery.
         PooFlowQueryLanguage.
         PooFlowGqlQueryLanguage.
+        PooFlowSchemeGqlQueryLanguage.
         PooFlowQueryProgram.
         GqlQueryNode.
         GqlQueryStep.
@@ -137,6 +138,11 @@
       parser-owner: 'gerbil-parser
       syntax-contract: "iso-iec-39075-2024.opengql-1.9.0-syntax.v1"
       .program?: poo-flow-gql-query-program?))
+
+(def PooFlowSchemeGqlQueryLanguage.
+  (.o (:: @ PooFlowGqlQueryLanguage.)
+      execution-boundary: 'pure-control-plane
+      runtime-owner: 'poo-flow))
 
 (def PooFlowQuery.
   (.o kind: poo-flow-query-kind
