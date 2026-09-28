@@ -13,7 +13,8 @@
                  ascent gerbil-ascent-evaluate-program))
 
 (export poo-flow-reverse-inference-evaluate
-        poo-flow-inference-hypothesis-result)
+        poo-flow-inference-hypothesis-result
+        poo-flow-reverse-inference-explore)
 
 (def (poo-flow-inference-hypothesis-result receipt hypothesis-id)
   (let (result
@@ -22,6 +23,18 @@
               (.ref receipt 'hypothesis-results)))
     (or result (error "unknown reverse inference hypothesis" hypothesis-id))))
 
+(def (evidence-reference? reference source)
+  (and (object? reference)
+       (eq? (.ref reference 'kind)
+            'poo-flow.reverse-inference.evidence-reference)
+       (eq? (.ref reference 'source) source)
+       (string? (.ref reference 'uri))
+       (> (string-length (.ref reference 'uri)) 0)
+       (symbol? (.ref reference 'independence-group))
+       (let (digest (.ref reference 'content-digest))
+         (or (not digest)
+             (and (string? digest) (> (string-length digest) 0))))))
+
 (def (claim? value allowed)
   (and (object? value)
        (eq? (.ref value 'kind) 'poo-flow.reverse-inference.claim)
@@ -29,7 +42,31 @@
        (memq (.ref value 'identity) allowed)
        (symbol? (.ref value 'value))
        (not (eq? (.ref value 'value) 'absent))
-       (symbol? (.ref value 'source))))
+       (symbol? (.ref value 'source))
+       (let (reference (.ref value 'evidence-reference))
+         (or (not reference)
+             (evidence-reference? reference (.ref value 'source))))))
+
+;;; Return one bounded path of actual supported step rows, not merely a
+;;; transitive reachability assertion. The visited set cuts candidate cycles.
+(def (shortest-witness-path origin destination supported-steps)
+  (let loop ((frontier (list (list origin '()))) (visited (list origin)))
+    (if (null? frontier) '()
+      (let* ((entry (car frontier))
+             (node (car entry))
+             (path (cadr entry)))
+        (if (eq? node destination) (reverse path)
+          (let* ((next-steps
+                  (filter (lambda (step)
+                            (and (eq? (car step) node)
+                                 (not (memq (cadr step) visited))))
+                          supported-steps))
+                 (next-entries
+                  (map (lambda (step)
+                         (list (cadr step) (cons step path)))
+                       next-steps)))
+            (loop (append (cdr frontier) next-entries)
+                  (append visited (map car next-entries)))))))))
 
 (def (step? value allowed)
   (and (object? value)
@@ -46,6 +83,7 @@
        (symbol? (.ref value 'identity))
        (symbol? (.ref value 'from))
        (symbol? (.ref value 'to))
+       (not (eq? (.ref value 'from) (.ref value 'to)))
        (list? (.ref value 'required-claims))
        (every (lambda (claim) (memq claim allowed))
               (.ref value 'required-claims))))
@@ -152,6 +190,7 @@
               (bounds 64 256 512))))
            (rows-of (.ref result 'rows-of))
            (reach (rows-of 'reverse-reach))
+           (supported-steps (rows-of 'supported-step))
            (mismatches (rows-of 'mismatch))
            (conflicts (rows-of 'conflict))
            (consistent? (and (null? mismatches) (null? conflicts)))
@@ -184,6 +223,12 @@
                      identity: (.ref hypothesis 'identity)
                      status: result-status
                      reachable?: route-reachable?
+                     witness-path:
+                     (if route-reachable?
+                       (shortest-witness-path
+                        (.ref hypothesis 'from) (.ref hypothesis 'to)
+                        supported-steps)
+                       '())
                      missing-claims: absent
                      equality-mismatches: relevant-mismatches
                      value-conflicts: relevant-conflicts)))
@@ -192,7 +237,22 @@
           query-selected-claims: selected
           query-source-identity: (.ref query-result 'query-source-identity)
           query-executed-in-scheme?: #t
-          supported-inference-steps: (rows-of 'supported-step)
+          evidence-references:
+          (filter-map
+           (lambda (claim)
+             (let (reference (.ref claim 'evidence-reference))
+               (and reference
+                    (list (.ref claim 'identity) reference))))
+           claims)
+          evidence-without-content-digest:
+          (map (lambda (claim) (.ref claim 'identity))
+               (filter
+                (lambda (claim)
+                  (let (reference (.ref claim 'evidence-reference))
+                    (not (and reference
+                              (.ref reference 'content-digest)))))
+                claims))
+          supported-inference-steps: supported-steps
           reachable-candidates: reach
           missing-claims: (rows-of 'missing)
           equality-mismatches: mismatches
@@ -203,3 +263,92 @@
           historical-attribution-verified?: #f
           source-authenticity-verified?: #f
           action-authority?: #f))))
+
+;;; Agents and investigators author competing branches. Each branch can add
+;;; possible claims or withhold a contested source. The engine evaluates
+;;; every branch and every hypothesis without choosing a winner or action.
+(def (inference-branch? branch-value allowed)
+  (and (object? branch-value)
+       (eq? (.ref branch-value 'kind)
+            'poo-flow.reverse-inference.branch)
+       (symbol? (.ref branch-value 'identity))
+       (symbol? (.ref branch-value 'reason))
+       (let ((proposed (.ref branch-value 'proposed-claims))
+             (withheld (.ref branch-value 'withheld-claims)))
+         (and (list? proposed) (<= (length proposed) 4)
+              (every (lambda (claim) (claim? claim allowed)) proposed)
+              (list? withheld) (<= (length withheld) 4)
+              (every (lambda (id) (and (symbol? id) (memq id allowed)))
+                     withheld)
+              (or (pair? proposed) (pair? withheld))))))
+
+(def (unique-branch-identities? branches)
+  (let loop ((pending branches) (seen '()))
+    (or (null? pending)
+        (let (id (.ref (car pending) 'identity))
+          (and (not (memq id seen))
+               (loop (cdr pending) (cons id seen)))))))
+
+(def (poo-flow-reverse-inference-explore case-value branch-values)
+  (let (allowed (.ref (.ref case-value 'query)
+                      'selected-element-identities))
+    (unless (and (list? branch-values) (pair? branch-values)
+                 (<= (length branch-values) 8)
+                 (every (lambda (branch-value)
+                          (inference-branch? branch-value allowed))
+                        branch-values)
+                 (unique-branch-identities? branch-values))
+      (error "invalid bounded reverse inference branches" branch-values)))
+  (let* ((baseline (poo-flow-reverse-inference-evaluate case-value))
+         (explored
+          (map
+           (lambda (branch-value)
+             (let* ((withheld (.ref branch-value 'withheld-claims))
+                    (remaining
+                     (filter
+                      (lambda (claim)
+                        (not (memq (.ref claim 'identity) withheld)))
+                      (.ref case-value 'claims)))
+                    (branch-receipt
+                     (poo-flow-reverse-inference-evaluate
+                      (.o (:: @ case-value)
+                          claims:
+                          (append remaining
+                                  (.ref branch-value 'proposed-claims)))))
+                    (transitions
+                     (map
+                      (lambda (old-result)
+                        (let* ((id (.ref old-result 'identity))
+                               (new-result
+                                (poo-flow-inference-hypothesis-result
+                                 branch-receipt id))
+                               (old-status (.ref old-result 'status))
+                               (new-status (.ref new-result 'status)))
+                          (.o kind:
+                              'poo-flow.reverse-inference.branch-transition
+                              hypothesis: id
+                              before-status: old-status
+                              after-status: new-status
+                              changed?: (not (eq? old-status new-status))
+                              witness-path: (.ref new-result 'witness-path)
+                              missing-claims: (.ref new-result
+                                                    'missing-claims))))
+                      (.ref baseline 'hypothesis-results))))
+               (.o kind: 'poo-flow.reverse-inference.branch-result
+                   identity: (.ref branch-value 'identity)
+                   reason: (.ref branch-value 'reason)
+                   proposed-claims: (.ref branch-value 'proposed-claims)
+                   withheld-claims: withheld
+                   hypothesis-transitions: transitions
+                   evidence-consistent?:
+                   (.ref branch-receipt 'evidence-consistent?)
+                   receipt: branch-receipt
+                   hypothetical?: #t
+                   action-authority?: #f)))
+           branch-values)))
+    (.o kind: 'poo-flow.reverse-inference.exploration
+        baseline-receipt: baseline
+        branch-results: explored
+        historical-attribution-verified?: #f
+        source-authenticity-verified?: #f
+        action-authority?: #f)))

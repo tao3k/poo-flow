@@ -4,7 +4,7 @@
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :std/test test-suite check check-exception)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .ref .slot?)
         (only-in :poo-flow/modules/query/interface
                  PooFlowQuery. PooFlowGqlQueryProgram.
                  PooFlowSchemeGqlQueryLanguage.
@@ -12,11 +12,14 @@
                  GqlQueryProjection. poo-flow-query-result-contract)
         (only-in :poo-flow/modules/reverse-inference/interface
                  PooFlowReverseInferenceCase.
+                 poo-flow-inference-evidence-reference
                  poo-flow-inference-claim
                  poo-flow-inference-step
                  poo-flow-inference-hypothesis
+                 poo-flow-inference-branch
                  poo-flow-reverse-inference-evaluate
-                 poo-flow-inference-hypothesis-result))
+                 poo-flow-inference-hypothesis-result
+                 poo-flow-reverse-inference-explore))
 
 (export reverse-inference-core-test)
 
@@ -64,7 +67,11 @@
       query: ClaimQuery
       claims:
       (list (poo-flow-inference-claim 'outcome 'present 'source-a)
-            (poo-flow-inference-claim 'target-a 'destination-1 'source-b)
+            (poo-flow-inference-claim
+             'target-a 'destination-1 'source-b
+             (poo-flow-inference-evidence-reference
+              'source-b "fixture://independent-source-b" 'owner-b
+              "sha256:fixture-content-b"))
             (poo-flow-inference-claim 'target-b 'destination-1 'source-c))
       steps:
       (list (poo-flow-inference-step
@@ -93,7 +100,44 @@
         (check (result-status receipt 'matched-source) => 'supported)
         (check (result-status receipt 'alternative-source)
                => 'needs-evidence)
+        (check
+         (length
+          (.ref (poo-flow-inference-hypothesis-result
+                 receipt 'matched-source) 'witness-path))
+         => 2)
+        (check (length (.ref receipt 'evidence-references)) => 1)
+        (check (.ref receipt 'evidence-without-content-digest)
+               => '(outcome target-b))
         (check (.ref receipt 'source-authenticity-verified?) => #f)))
+    (poo-flow-test-case "multiple proposed directions retain every hypothesis"
+      (let* ((exploration
+              (poo-flow-reverse-inference-explore
+               CoreCase.
+               (list
+                (poo-flow-inference-branch
+                 'support-alternative
+                 (list (poo-flow-inference-claim
+                        'alternate 'present 'source-x))
+                 '() 'test-competing-origin)
+                (poo-flow-inference-branch
+                 'contradict-target
+                 (list (poo-flow-inference-claim
+                        'target-b 'destination-2 'source-d))
+                 '() 'test-value-conflict)
+                (poo-flow-inference-branch
+                 'withhold-source '() '(target-a)
+                 'test-source-dependence))))
+             (branches (.ref exploration 'branch-results))
+             (support (.ref (car branches) 'hypothesis-transitions))
+             (contradict (.ref (cadr branches) 'hypothesis-transitions))
+             (withhold (.ref (caddr branches) 'hypothesis-transitions)))
+        (check (length branches) => 3)
+        (check (.ref (cadr support) 'after-status) => 'supported)
+        (check (.ref (car contradict) 'after-status) => 'conflicted)
+        (check (.ref (car withhold) 'after-status) => 'needs-evidence)
+        (check (.slot? exploration 'recommended-branch) => #f)
+        (check (.ref exploration 'historical-attribution-verified?) => #f)
+        (check (.ref exploration 'action-authority?) => #f)))
     (poo-flow-test-case "a conflicting source defeats the matching pair"
       (let* ((case-value
               (.o (:: @ CoreCase.)
@@ -123,4 +167,25 @@
         (.o (:: @ CoreCase.)
             claims: (list (poo-flow-inference-claim
                            'outcome 'absent 'source-a))))
-       true))))
+       true))
+    (poo-flow-test-case "a source reference cannot impersonate another claim"
+      (check-exception
+       (poo-flow-reverse-inference-evaluate
+        (.o (:: @ CoreCase.)
+            claims:
+            (list (poo-flow-inference-claim
+                   'outcome 'present 'source-a
+                   (poo-flow-inference-evidence-reference
+                    'source-b "fixture://wrong-source" 'owner-b)))))
+       true))
+    (poo-flow-test-case "agent branches require distinct bounded identities"
+      (let (branch-value
+            (poo-flow-inference-branch
+             'same-direction
+             (list (poo-flow-inference-claim
+                    'alternate 'present 'source-x))
+             '() 'test-alternative))
+        (check-exception
+         (poo-flow-reverse-inference-explore
+          CoreCase. (list branch-value branch-value))
+         true)))))
