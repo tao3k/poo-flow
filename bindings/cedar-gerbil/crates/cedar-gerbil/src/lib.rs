@@ -7,6 +7,8 @@
 //! Application callers construct Gerbil POO objects. Only their explicit
 //! runtime projection is encoded; there is no JSON RPC server or gxi fallback.
 
+pub mod artifact;
+
 use gerbil_scheme::{GerbilRuntime, LinkedStringExport};
 use poo_flow_cedar_authority::authority::{
     Authority, AuthorityInfo, AuthorizationResult, ConsumedHandoff, Grant, Signed,
