@@ -147,13 +147,17 @@ jobs:
       - name: Build native Gerbil package
         run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
+      - name: Check out pinned ASCENT for reverse inference tests
+        run: git submodule update --init packages/gerbil-ascent
+
       - name: Run the single native unit-test entrypoint
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/packages/gerbil-ascent:${{ github.workspace }}/.gerbil/lib
         run: gerbil env ./unit-tests.ss
 
       - name: Run pinned ASCENT submodule integration
         if: runner.os == 'Linux'
         run: |
-          git submodule update --init packages/gerbil-ascent
           cargo install just --version 1.56.0 --locked
           gerbil env just test-ascent-integration
 
