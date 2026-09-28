@@ -161,6 +161,24 @@
        (check (.ref receipt 'mutation-authority?) => #f)
        (check (.ref receipt 'action-authority?) => #f)))
 
+   (poo-flow-test-case "does not reuse another Query's admission receipt"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (wrong-admission
+             (.o (:: @ admission) query-identity: 'other-query))
+            (candidate
+             (poo-flow-query-execution-candidate
+              'mrr 'healthcare/case-profile-relations "1"
+              "sha256:space-v1"
+              (poo-flow-query-source-content-identity Query)
+              'gerbil-parser "sha256:provenance-v1"
+              "sha256:result-v1" 3 #t))
+            (receipt
+             (poo-flow-query-bind-execution-receipt
+              MrrGqlQueryProvider Query wrong-admission candidate)))
+       (check (.ref receipt 'admitted?) => #f)
+       (check (.ref receipt 'diagnostics)
+              => '((query-admission-identity-mismatch)))))
+
    (poo-flow-test-case "rejects drifted or over-bound Provider evidence"
      (let* ((admission (poo-flow-query-admit Query QuerySpace))
             (candidate
