@@ -19,13 +19,11 @@ gerbil-scheme.workspace = true
 gerbil-scheme-sys.workspace = true
 poo-flow-cedar-authority.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 tempfile.workspace = true
 
 [build-dependencies]
 gerbil-scheme-native-build.workspace = true
-
-[dev-dependencies]
-serde_json.workspace = true
 
 [[test]]
 name = "native_authorization"
