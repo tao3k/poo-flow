@@ -287,27 +287,6 @@ test-ascent-integration:
     test -f packages/gerbil-ascent/core/binary-program.ss
     GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
 
-# Gate the selected pinned ASCENT SS scenarios under the native Linux job.
-[group('test')]
-test-ascent-performance:
-    test -f packages/gerbil-ascent/t/scenarios/performance/ascent-byods-trrel/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-session-update/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-nonpositive-session-update/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-rule-clauses/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-var-points-to/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-upstream-examples/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-product-session/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-mutual-recursive-heads/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-derived-aggregate/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-indexed-joins/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-eqrel/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil env just test-file t/performance/ascent-binary-program-performance-test.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-reachability-closure/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression-membership/scenario.ss
-    cd packages/gerbil-ascent && GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" gerbil env just test-file t/performance/ascent-shortest-candidates-performance-test.ss
-
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
 [group('test')]
