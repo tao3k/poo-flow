@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Reverse Inference
+
+* Boundary
+
+=ReverseInference= is a bounded candidate engine over source-labelled POO
+claims. A caller declares claim objects, inference-step objects, hypothesis
+objects, and one immutable Scheme GQL Query. The engine selects claim nodes
+through the supported single-node GQL slice and uses Ascent to derive
+source-linked steps, reachability, missing claims, and equality conflicts.
+
+No domain incident, intrusion route, or policy decision is built into this
+module. A result states that supplied claims support a candidate under the
+declared steps. It does not authenticate a source, infer a historical
+attribution, authorize an action, or assign a calibrated probability.
+
+* Public values
+
+[[file:objects.ss][objects.ss]] exports =PooFlowReverseInferenceCase.= and the
+=poo-flow-inference-claim=, =poo-flow-inference-step=, and
+=poo-flow-inference-hypothesis= constructors. An inference step has either
+=presence= or =equal-value= join semantics. A hypothesis names its outcome,
+candidate origin, and required claims. The first value is an observed
+outcome; the second is an explanatory candidate.
+
+[[file:funs.ss][funs.ss]] exports =poo-flow-reverse-inference-evaluate= and
+=poo-flow-inference-hypothesis-result=. Each hypothesis result is one of
+=supported=, =needs-evidence=, or =conflicted=. Missing claims identify
+possible next evidence requests. Equality mismatches and conflicting values
+are attached to the affected hypotheses; an unrelated hypothesis retains
+its own status.
+
+The Case is declarative. The private GQL and Ascent tuples are projections
+of its POO values. The consumer must keep a source-authenticity and Host
+admission boundary outside this engine.
+
+* Qualification
+
+Run =just test-file t/reverse-inference-core-test.ss=. The focused test checks
+GQL selection, two competing hypotheses, a matching pair, a conflicting
+source that cannot be hidden by a matching pair, and rejection of a negative
+claim posed as positive evidence. A cyclic candidate graph reaches a finite
+fixed point under Ascent's explicit input, derivation, and output bounds.
