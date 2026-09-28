@@ -203,7 +203,9 @@
           (lambda (parent-identity)
             (let (parent (hash-get event-index parent-identity))
               (if parent
-                (when (> (causal-event-position parent) event-position)
+                ;; A causal parent must precede its child. Equal positions
+                ;; also admit same-time cycles, so they cannot be qualified.
+                (when (>= (causal-event-position parent) event-position)
                   (set! violations-reverse
                         (cons (list parent-identity event-identity)
                               violations-reverse)))

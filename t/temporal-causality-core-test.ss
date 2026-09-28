@@ -263,4 +263,21 @@
               => '(("late-parent" "early-child")))
        (check (.ref cut 'complete?) => #f)
        (check (.ref receipt 'status) => 'invalid-causal-cut)
-       (check (.ref receipt 'assurance-closed?) => #f)))))
+       (check (.ref receipt 'assurance-closed?) => #f)))
+
+   (poo-flow-test-case "same-time causal cycle cannot qualify as complete"
+     (let* ((event
+             (lambda (identity parent)
+               (poo-flow-causal-event
+                identity "cycle-probe" 'proposed-event
+                (poo-flow-temporal-observation
+                 (string-append identity "/time")
+                 'logical-version 1 "cycle-probe")
+                identity (list parent) 'counterfactual #f)))
+            (graph
+             (poo-flow-causal-event-graph
+              "cycle-probe"
+              (list (event "a" "b") (event "b" "a")))))
+       (check (.ref graph 'complete?) => #f)
+       (check (.ref graph 'temporal-order-violations)
+              => '(("b" "a") ("a" "b")))))))
