@@ -119,6 +119,7 @@ from .stores import (
 )
 from .subgraphs import RuntimeGraphSubgraph
 from .tools import RuntimeGraphTool, RuntimeGraphToolError, RuntimeGraphToolNode
+from .mrr_snapshot_resource import MrrReceipt, MrrResourceError, MrrSnapshotResource
 
 __all__ = (
     "RuntimeGraphBindings",
@@ -166,6 +167,9 @@ __all__ = (
     "RuntimeGraphTool",
     "RuntimeGraphToolError",
     "RuntimeGraphToolNode",
+    "MrrReceipt",
+    "MrrResourceError",
+    "MrrSnapshotResource",
     "add_messages",
     "ai_message",
     "create_tool_call_loop",
