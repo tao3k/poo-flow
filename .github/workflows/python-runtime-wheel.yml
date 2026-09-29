@@ -144,7 +144,8 @@ jobs:
         run: |
           set -euo pipefail
           uv run --project packages/python-runtime pytest \
-            packages/python-runtime/tests/unit/test_native_runtime_v0.py
+            packages/python-runtime/tests/unit/test_native_runtime_v0.py \
+            packages/python-runtime/tests/test_mrr_snapshot_resource.py
 
       - name: Build wheel
         run: |
