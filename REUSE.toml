@@ -10,6 +10,8 @@ path = [
   "**/LICENSE",
   "LICENSES/**",
   ".bazelversion",
+  "core/.github/workflows/ci.yml",
+  "core/.gitignore",
   "VERSION",
   "ORG_ZHIXING_REV",
   "*.lock",

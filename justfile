@@ -83,7 +83,7 @@ build:
     just build-core
     GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
 
-# Compile the shared Core from the pinned submodule, not a second archive.
+# Compile the shared Core from the pinned subtree.
 [group('build')]
 build-core:
     cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
@@ -262,7 +262,7 @@ test-profile:
 benchmark-poo-clos-native-c4:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c4/scenario.ss
 
-# Keep the Core submodule's qualification under its own Justfile.
+# Keep Core qualification under its own Justfile.
 [group('test')]
 test-core:
     cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" just test
@@ -281,11 +281,10 @@ test-file path:
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
 
-# Check the pinned ASCENT submodule through POO Flow's Observability Case.
+# Check the declared ASCENT package through POO Flow's Observability Case.
 [group('test')]
 test-ascent-integration:
-    test -f packages/gerbil-ascent/core/binary-program.ss
-    GERBIL_LOADPATH="{{ justfile_directory() }}/packages/gerbil-ascent:{{ justfile_directory() }}:{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
+    GERBIL_LOADPATH="{{ poo_flow_library_path }}" just test-file t/qualification/ascent-integration/guarded-test.ss
 
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.

@@ -40,7 +40,6 @@
       +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("t/qualification/ascent-integration"
-                                "packages/gerbil-ascent"
                                 "packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "core"
