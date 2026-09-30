@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GERBIL_PACKAGE = ROOT / "gerbil.pkg"
 BAZEL_SOURCES = ROOT / "gerbil-dependencies.MODULE.bazel"
 BAZEL_LOCK = ROOT / "MODULE.bazel.lock"
-REVISION = re.compile(r"[0-9a-f]{40}")
+REVISION = re.compile(r"(?:[0-9a-f]{40}|v\d+(?:\.\d+)+)")
 EXTENSION_ID = "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil"
 SOURCE_PACKAGE_RULE = (
     "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository"
@@ -45,7 +45,7 @@ def parse_package_pins(text: str) -> dict[str, tuple[str, str]]:
     pins: dict[str, tuple[str, str]] = {}
     pattern = re.compile(
         r'"(?P<repository>github\.com/[^/@\s]+/(?P<package>[^/@\s]+))'
-        r'@(?P<revision>[0-9a-f]{40})"'
+        r'@(?P<revision>[0-9a-f]{40}|v\d+(?:\.\d+)+)"'
     )
     for match in pattern.finditer(text):
         package = match.group("package")
@@ -94,11 +94,12 @@ def field(body: str, name: str) -> str:
 
 def expected_projection(repository: str, package: str, revision: str) -> dict[str, object]:
     canonical_uri = f"https://{repository}"
+    archive_revision = revision[1:] if revision.startswith("v") else revision
     return {
         "canonical_uri": canonical_uri,
         "package": package,
         "revision": revision,
-        "strip_prefix": f"{package}-{revision}",
+        "strip_prefix": f"{package}-{archive_revision}",
         "urls": [f"{canonical_uri}/archive/{revision}.tar.gz"],
     }
 
@@ -193,7 +194,7 @@ def replace_field(body: str, name: str, value: str) -> str:
 
 def project_pin(package: str, revision: str, root: Path = ROOT) -> None:
     if REVISION.fullmatch(revision) is None:
-        raise ValueError("revision must be a full lowercase 40-character Git object ID")
+        raise ValueError("revision must be a full Git object ID or v-prefixed version tag")
 
     package_path = root / "gerbil.pkg"
     sources_path = root / "gerbil-dependencies.MODULE.bazel"
