@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+[package]
+name = "poo-flow-mrr-property-consumer"
+description = "POO Flow handoff from original GQL to MRR Query and MRR Data physical execution"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+publish = false
+
+[dependencies]
+meta-relational-reasoning = { git = "https://github.com/tao3k/meta-relational-reasoning.git", rev = "e9f87c3744b0d38709c479edc1b2143ef5ec9bbd" }
+mrr-property-source = { git = "https://github.com/tao3k/meta-relational-reasoning.git", rev = "e9f87c3744b0d38709c479edc1b2143ef5ec9bbd" }
+mrr-data-content = { git = "https://github.com/tao3k/mrr-data.git", rev = "a79be8ff535ea5fe004429fb5c9546fa16925426", features = ["transfer", "property-snapshot"], default-features = false }
+mrr-data-datafusion = { git = "https://github.com/tao3k/mrr-data.git", rev = "a79be8ff535ea5fe004429fb5c9546fa16925426" }
+
+[dev-dependencies]
+cid = "=0.11.3"
+mrr-data-core = { git = "https://github.com/tao3k/mrr-data.git", rev = "a79be8ff535ea5fe004429fb5c9546fa16925426", features = ["content-identity"], default-features = false }
+tokio = { version = "=1.53.1", features = ["macros", "rt-multi-thread"] }
