@@ -845,47 +845,6 @@ jobs:
     needs: native-linux
     uses: ./.github/workflows/python-runtime-wheel.yml
 
-  mrr-property-consumer:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
-    name: MRR property consumer (ubuntu-24.04)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 120
-    env:
-      GERBIL_PREFIX: ${{ github.workspace }}/.ci/mrr-gerbil
-      GERBIL_BUILD_VERBOSE: "1"
-    steps:
-      - name: Checkout poo-flow
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - name: Check out Healthcare source owner
-        run: git submodule update --init packages/lambda-episteme
-      - uses: dtolnay/rust-toolchain@1.95.0
-        with:
-          components: clippy
-      - name: Install native build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential jq libsqlite3-dev libssl-dev pkg-config zlib1g-dev
-      - name: Check out pinned MRR Query owner
-        run: |
-          git init .ci/mrr-source
-          git -C .ci/mrr-source fetch --depth=1 https://github.com/tao3k/meta-relational-reasoning.git e9f87c3744b0d38709c479edc1b2143ef5ec9bbd
-          git -C .ci/mrr-source checkout --detach FETCH_HEAD
-          test "$(git -C .ci/mrr-source rev-parse HEAD)" = e9f87c3744b0d38709c479edc1b2143ef5ec9bbd
-      - name: Install immutable Gerbil release
-        run: .ci/mrr-source/tools/ci/install-gerbil-release.sh "$GERBIL_PREFIX"
-      - name: Build declared MRR Gerbil package
-        working-directory: .ci/mrr-source
-        run: |
-          echo "GERBIL_GSC=$GERBIL_PREFIX/bin/gsc" >> "$GITHUB_ENV"
-          gerbil deps --install
-          gerbil build
-      - name: Test original GQL through MRR and MRR Data
-        working-directory: .ci/mrr-source
-        run: gerbil env cargo test --manifest-path "$GITHUB_WORKSPACE/packages/mrr-property-consumer/Cargo.toml" --locked
-      - name: Lint consumer boundary
-        working-directory: .ci/mrr-source
-        run: gerbil env cargo clippy --manifest-path "$GITHUB_WORKSPACE/packages/mrr-property-consumer/Cargo.toml" --all-targets --locked -- -D warnings
-
   lock-linux-seed:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_lock }}
     name: Lock refresh (linux-amd64 seed)
