@@ -9,8 +9,7 @@
         (only-in :poo-flow/modules/temporal-causality/time/types
                  poo-flow-temporal-instant? poo-flow-temporal-interval?))
 
-(export poo-flow-temporal-compare poo-flow-temporal-interval-contains?
-        poo-flow-temporal-interval-extent-relation)
+(export poo-flow-temporal-compare poo-flow-temporal-interval-contains?)
 
 (def (poo-flow-temporal-compare left right)
   (unless (and (poo-flow-temporal-instant? left)
@@ -44,45 +43,3 @@
                (<= lower position) (< lower position))
              (if (.ref interval 'end-closed?)
                (<= position upper) (< position upper))))))))
-
-;;; Allen's thirteen endpoint relations apply only to proper, observed
-;;; intervals. Endpoint closure is a separate membership concern. A point or
-;;; empty interval has no Allen extent and is reported as 'degenerate.
-(def (poo-flow-temporal-interval-extent-relation left right)
-  (unless (and (poo-flow-temporal-interval? left)
-               (poo-flow-temporal-interval? right))
-    (error "interval relation requires two intervals"))
-  (let* ((left-start (.ref left 'start))
-         (left-end (.ref left 'end))
-         (right-start (.ref right 'start))
-         (right-end (.ref right 'end)))
-    (cond
-     ((not (equal? (.ref left-start 'domain-identity)
-                   (.ref right-start 'domain-identity))) 'incomparable)
-     ((not (and (eq? (.ref left-start 'modality) 'observed)
-                (eq? (.ref left-end 'modality) 'observed)
-                (eq? (.ref right-start 'modality) 'observed)
-                (eq? (.ref right-end 'modality) 'observed))) 'unknown)
-     (else
-      (let ((a (.ref left-start 'coordinate))
-            (b (.ref left-end 'coordinate))
-            (c (.ref right-start 'coordinate))
-            (d (.ref right-end 'coordinate)))
-        (cond
-         ((or (= a b) (= c d)) 'degenerate)
-         ((< a c)
-          (cond ((< b c) 'before)
-                ((= b c) 'meets)
-                ((< b d) 'overlaps)
-                ((= b d) 'finished-by)
-                (else 'contains)))
-         ((= a c)
-          (cond ((< b d) 'starts)
-                ((= b d) 'equal)
-                (else 'started-by)))
-         (else
-          (cond ((> a d) 'after)
-                ((= a d) 'met-by)
-                ((< b d) 'during)
-                ((= b d) 'finishes)
-                (else 'overlapped-by)))))))))

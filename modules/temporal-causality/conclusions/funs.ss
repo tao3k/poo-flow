@@ -14,8 +14,7 @@
         (only-in :poo-flow/modules/temporal-causality/conclusions/types
                  poo-flow-temporal-conclusion-revision?
                  poo-flow-temporal-conclusion-journal?
-                 poo-flow-temporal-selection-observation?
-                 poo-flow-temporal-selection-plan?)
+                 poo-flow-temporal-selection-observation?)
         (only-in :poo-flow/modules/temporal-causality/conclusions/objects
                  poo-flow-temporal-conclusion-revision-value
                  poo-flow-temporal-conclusion-journal-value
@@ -24,10 +23,8 @@
 (export poo-flow-temporal-conclusion-root
         poo-flow-temporal-conclusion-change
         poo-flow-temporal-conclusion-journal
-        poo-flow-temporal-conclusion-journal-replay
         poo-flow-temporal-conclusion-journal-extend
-        poo-flow-temporal-selection-prepare
-        poo-flow-temporal-selection-plan-replay)
+        poo-flow-temporal-selection-prepare)
 
 (def (text? value)
   (and (string? value) (> (string-length value) 0)))
@@ -140,27 +137,12 @@
                      identity (map revision-row canonical)))
        canonical))))
 
-;;; Check the complete graph and digest again at the point of use. A POO
-;;; journal value can be copied across a boundary or reconstructed by a caller;
-;;; its type shape alone does not bind its digest to its rows.
-(def (poo-flow-temporal-conclusion-journal-replay journal)
-  (unless (poo-flow-temporal-conclusion-journal? journal)
-    (error "invalid temporal conclusion journal"))
-  (let (canonical
-        (poo-flow-temporal-conclusion-journal
-         (.ref journal 'identity) (.ref journal 'revisions)))
-    (unless (equal? (.ref canonical 'semantic-digest)
-                    (.ref journal 'semantic-digest))
-      (error "temporal conclusion journal digest mismatch"))
-    canonical))
-
 ;;; Preserve every old row when admitting a new set of revision envelopes.
 (def (poo-flow-temporal-conclusion-journal-extend journal additions)
   (unless (and (poo-flow-temporal-conclusion-journal? journal)
                (list? additions) (pair? additions)
                (every poo-flow-temporal-conclusion-revision? additions))
     (error "invalid temporal conclusion journal extension"))
-  (poo-flow-temporal-conclusion-journal-replay journal)
   (poo-flow-temporal-conclusion-journal
    (.ref journal 'identity)
    (append (.ref journal 'revisions) additions)))
@@ -179,7 +161,6 @@
                (equal? (.ref proposed 'scope-identity)
                        (.ref observation 'scope-identity)))
     (error "invalid temporal active-selection request"))
-  (poo-flow-temporal-conclusion-journal-replay journal)
   (let (stored
         (find (lambda (entry)
                 (equal? (.ref entry 'identity) (.ref proposed 'identity)))
@@ -199,26 +180,3 @@
      (.ref observation 'selected-revision-identity)
      (.ref proposed 'identity) (.ref proposed 'proof-identity)
      (if ready? 'cas-ready 'conflict))))
-
-;;; A runtime consumer can replay the whole proposal against fresh, explicit
-;;; inputs before attempting its own authorized atomic compare-and-swap.
-;;; Replay does not establish authority or commit the pointer.
-(def (selection-plan-row plan)
-  (map (lambda (slot) (.ref plan slot))
-       '(journal-digest observation-identity subject-identity scope-identity
-         expected-version expected-revision-identity proposed-version
-         observed-version observed-revision-identity
-         proposed-revision-identity change-proof-identity status
-         requires-atomic-cas? runtime-executed?)))
-
-(def (poo-flow-temporal-selection-plan-replay
-      plan journal proposed observation)
-  (unless (poo-flow-temporal-selection-plan? plan)
-    (error "invalid temporal selection plan"))
-  (let (canonical
-        (poo-flow-temporal-selection-prepare
-         journal proposed observation (.ref plan 'expected-version)))
-    (unless (equal? (selection-plan-row canonical)
-                    (selection-plan-row plan))
-      (error "temporal selection plan differs from its inputs"))
-    canonical))

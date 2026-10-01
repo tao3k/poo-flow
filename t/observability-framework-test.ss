@@ -58,21 +58,27 @@
 (def +framework-timeout-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/framework-timeout
-      sample-interval-milliseconds: 1
+      memory-policy:
+      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
+           sample-interval-milliseconds: 1)
       max-duration-milliseconds: 20))
 
 (def +framework-memory-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/framework-memory
-      heap-limit-bytes: 0
-      sample-interval-milliseconds: 1))
+      memory-policy:
+      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
+           heap-limit-bytes: 0
+           sample-interval-milliseconds: 1)))
 
 (def +framework-retained-allocation-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/retained-allocation
-      live-growth-limit-bytes: 8388608
-      sample-interval-milliseconds: 10
-      collect-before-sample?: #t
+      memory-policy:
+      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
+           live-growth-limit-bytes: 8388608
+           sample-interval-milliseconds: 10
+           collect-before-sample?: #t)
       max-duration-milliseconds: 2000))
 
 (def observability-framework-test

@@ -421,14 +421,6 @@ The implementation must distinguish at least:
 
 * Implementation checklist
 
-The domain-neutral Temporal Module now has a partial executable foundation:
-=modules/temporal-causality/time/= contains bounded immutable observations,
-same-domain conservative comparisons, proper-interval endpoint relations and
-monotonic duration bounds.  =just check-temporal-time= qualifies this slice.
-The observation's named acquisition and attestation receipts are structural
-metadata; external clock authentication, policy proof, budget delegation and
-runtime fencing remain open, so the broader checklist stays unchecked.
-
 - [ ] Define wall, monotonic, logical, and authoritative clock-domain
       identities.
 - [ ] Define immutable time observations with uncertainty intervals.

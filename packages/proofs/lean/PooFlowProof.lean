@@ -35,7 +35,6 @@ import PooFlowProof.PooC4.ExplicitTemporalObservations
 import PooFlowProof.PooC4.ExplicitEntropyDerivation
 import PooFlowProof.PooC4.EventIngressCausalCut
 import PooFlowProof.PooC4.TemporalCausality
-import PooFlowProof.PooC4.TemporalBoundedTime
 import PooFlowProof.PooC4.TemporalEvidenceRevision
 import PooFlowProof.Vertical.Healthcare.PrescriptionCausalityRefinement
 import PooFlowProof.Vertical.Healthcare.StandardMigrationRefinement

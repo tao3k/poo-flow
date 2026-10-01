@@ -66,8 +66,11 @@
       (let* ((profile
               (.o (:: @ poo-flow-testing-case-profile-prototype)
                   identity: 'testing/shared-memory-rejection
-                  heap-limit-bytes: 0
-                  sample-interval-milliseconds: 1))
+                  memory-policy:
+                  (.cc (.ref poo-flow-default-testing-case-profile
+                             'memory-policy)
+                       heap-limit-bytes: 0
+                       sample-interval-milliseconds: 1)))
              (captured #f))
         (with-catch
          (lambda (failure) (set! captured failure))

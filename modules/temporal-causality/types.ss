@@ -484,7 +484,7 @@
 (def (temporal-model-value-shape? value)
   (and (temporal-model-shape? value poo-flow-temporal-model-kind
                               '(identity semantic-digest domains observations
-                                hypotheses family-complete? family-semantics))
+                                hypotheses family-complete?))
        (every temporal-causality-text?
               (list (.ref value 'identity) (.ref value 'semantic-digest)))
        (list? (.ref value 'domains))
@@ -494,10 +494,7 @@
        (list? (.ref value 'hypotheses))
        (pair? (.ref value 'hypotheses))
        (every poo-flow-temporal-hypothesis? (.ref value 'hypotheses))
-       (boolean? (.ref value 'family-complete?))
-       (memq (.ref value 'family-semantics)
-             '(exclusive-explanations overlapping-mechanisms))
-       #t))
+       (boolean? (.ref value 'family-complete?))))
 (define-type (PooFlowTemporalModel @ Type.)
   .element?: temporal-model-value-shape?)
 (def (poo-flow-temporal-model? value)
@@ -532,10 +529,7 @@
                 unknown-hypothesis-ids unexplored-hypothesis-ids))
        (boolean? (.ref value 'exhausted?))
        (boolean? (.ref value 'family-complete?))
-       (memq (.ref value 'assumption)
-             '(exclusive-explanations overlapping-mechanisms))
-       (or (not (eq? (.ref value 'classification) 'necessary))
-           (eq? (.ref value 'assumption) 'exclusive-explanations))
+       (eq? (.ref value 'assumption) 'exclusive-explanations)
        (eq? (.ref value 'runtime-executed?) #f)))
 (define-type (PooFlowTemporalModelReceipt @ Type.)
   .element?: temporal-model-receipt-shape?)

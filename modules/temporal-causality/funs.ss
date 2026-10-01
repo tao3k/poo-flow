@@ -43,8 +43,6 @@
         poo-flow-causal-cut
         poo-flow-temporal-causal-classify
         poo-flow-temporal-model
-        poo-flow-temporal-overlapping-model
-        poo-flow-temporal-model-replay
         poo-flow-temporal-model-classify)
 
 (def (temporal-causality-unique? values)
@@ -155,22 +153,10 @@
      (string->utf8
       (call-with-output-string (lambda (port) (write value port))))))))
 
-;;; A model is one finite family of candidate explanations for the same
-;;; effect. Input order does not change its semantic identity. Family
-;;; semantics are explicit because a unique surviving candidate only implies
-;;; necessity under an exclusive, complete explanation vocabulary.
+;;; A model is one finite, exclusive family of candidate explanations for the
+;;; same effect. Input order does not change its semantic identity.
 (def (poo-flow-temporal-model
       identity domains observations hypotheses family-complete?)
-  (temporal-model-build identity domains observations hypotheses
-                        family-complete? 'exclusive-explanations))
-
-(def (poo-flow-temporal-overlapping-model
-      identity domains observations hypotheses family-complete?)
-  (temporal-model-build identity domains observations hypotheses
-                        family-complete? 'overlapping-mechanisms))
-
-(def (temporal-model-build
-      identity domains observations hypotheses family-complete? semantics)
   (unless (and (string? identity) (> (string-length identity) 0)
                (list? domains) (pair? domains)
                (every poo-flow-temporal-clock-domain? domains)
@@ -213,8 +199,8 @@
                  (list-sort by-id (.ref hypothesis 'constraints)))))
          (digest
           (temporal-causality-digest
-           (list 'poo-flow.temporal-causality.model.v2
-                 identity family-complete? semantics
+           (list 'poo-flow.temporal-causality.model.v1
+                 identity family-complete?
                  (map (lambda (domain)
                         (list (.ref domain 'identity)
                               (.ref domain 'clock-role)))
@@ -237,20 +223,7 @@
      (list-sort by-id domains)
      (list-sort by-id observations)
      (list-sort by-id hypotheses)
-     family-complete? semantics)))
-
-(def (poo-flow-temporal-model-replay model)
-  (unless (poo-flow-temporal-model? model)
-    (error "invalid temporal model"))
-  (let (canonical
-        (temporal-model-build
-         (.ref model 'identity) (.ref model 'domains)
-         (.ref model 'observations) (.ref model 'hypotheses)
-         (.ref model 'family-complete?) (.ref model 'family-semantics)))
-    (unless (equal? (.ref canonical 'semantic-digest)
-                    (.ref model 'semantic-digest))
-      (error "temporal model digest mismatch"))
-    canonical))
+     family-complete?)))
 
 (def (temporal-model-order-status left-id right-id relation observations)
   (let ((left (hash-get observations left-id))
@@ -286,14 +259,12 @@
           ((memq 'unknown statuses) 'unknown)
           (else 'admitted))))
 
-;;; Classification evaluates only the declared candidate family. Unknown and
-;;; unexplored members prevent necessity; overlapping mechanisms never imply
-;;; necessity even if just one member survives the finite check.
+;;; Classification quantifies over the declared, exclusive candidate worlds.
+;;; Unknown and unexplored worlds prevent a necessary claim.
 (def (poo-flow-temporal-model-classify model query)
   (unless (and (poo-flow-temporal-model? model)
                (poo-flow-temporal-query? query))
     (error "temporal model classification requires a model and query"))
-  (poo-flow-temporal-model-replay model)
   (let* ((hypotheses (.ref model 'hypotheses))
          (target (.ref query 'hypothesis-identity))
          (observations (make-hash-table)))
@@ -319,8 +290,6 @@
                  ((member target admitted)
                   (if (and exhausted?
                            (.ref model 'family-complete?)
-                           (eq? (.ref model 'family-semantics)
-                                'exclusive-explanations)
                            (null? unknown)
                            (= (length admitted) 1))
                     'necessary 'possible))

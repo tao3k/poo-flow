@@ -205,7 +205,7 @@ settled by an executable source-to-POO fixture before freezing the public API.
 | Stage | Owner and current state | Required evidence for dynamic models |
 |-------+-------------------------+--------------------------------------|
 | POO composition | =modules/temporal-causality/{types,objects,funs}.ss= currently owns events, cuts and classification | admit immutable model instances, hypothesis families, time domains and obligations with stable identity; preserve rejected and unknown frontiers |
-| TLA+ source admission | =modules/tla-plus/interface.ss= parses source and exposes the parser-owned CST; =checked-source-{types,objects,funs}.ss= binds an exact source/config and parser-owned TLC run to an inert POO receipt | map the admitted behavior subset to POO transitions and prove or differentially check its interpretation; source roundtrip and finite TLC checking do not establish that refinement |
+| TLA+ source admission | =modules/tla-plus/interface.ss= currently parses source and exposes the parser-owned CST | map the admitted semantic subset of one =.tla/.cfg= model to POO objects, bind source and semantic-model digests, then run TLC over an explicit finite scope; source roundtrip is only syntax evidence |
 | Optional TLA+ emission | no dynamic source emitter exists | emit a composed POO model as native =.tla/.cfg= only after defining source-to-POO-to-source semantic preservation and parser/TLC checks |
 | Optional Lean correspondence | =packages/proofs/lean/PooFlowProof/PooC4/TemporalCausality.lean= currently proves event/cut laws | later prove a generic interpretation/projection or trace refinement law; Lean is not required to build, query or model-check a TemporalModel instance |
 | Provider binding | =packages/lambda-episteme/user-interface/scenarios/healthcare/formal-assurance-projection.ss= binds vertical receipts | retain POO model identity, admitted TLA+ source identity and TLC scope/result as distinct fields in a generic projection; optional Lean evidence has its own field; Healthcare remains a vertical consumer |
@@ -244,15 +244,13 @@ First executable slice, in dependency order:
    and runtime behavior as separate evidence.
 
 The first core slice is now executable in =modules/temporal-causality/=: a
-finite hypothesis family has POO clock domains, observations,
+finite, exclusive hypothesis family has POO clock domains, observations,
 explicit order constraints, candidate causes, a bounded query and an
-identity-bound receipt.  The family explicitly chooses exclusive explanations
-or overlapping mechanisms.  It distinguishes admissible, refuted, unknown and
-unexplored candidates; only an exhausted, caller-declared complete exclusive
-family can yield =necessary= relative to that family.  =t/temporal-model-test.ss=
+identity-bound receipt.  It distinguishes admissible, refuted, unknown and
+unexplored candidates; only an exhausted, caller-declared complete family
+can yield =necessary= relative to that family.  =t/temporal-model-test.ss=
 exercises distinct medication and software-release vocabularies, changed
-evidence, overlapping mechanisms, incomparable clocks, incomplete families
-and finite bounds.  This
+evidence, incomparable clocks, incomplete families and finite bounds.  This
 slice does not infer causal mechanisms, compare different clock domains,
 interpret a TLA+ action formula or claim TLC exhaustion.  Stage 3 now has a
 first source-to-POO subset: =packages/proofs/tla/temporal-causality/TemporalHypothesisFamily.tla=
