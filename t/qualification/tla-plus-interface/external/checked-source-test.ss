@@ -69,8 +69,77 @@
       (check (.ref checked 'states-left) => 0)
       (check (.ref checked 'semantic-refinement?) => #f))))
 
+(def (generated-family-source source-a source-b result)
+  (string-append
+   "---- MODULE TemporalHypothesisFamily ----\n"
+   "ClockDomains == {<<\"timeline\", \"logical-version\">>}\n"
+   "Observations == {<<\"source-a\", \"timeline\", "
+   (number->string source-a) ", \"ledger\", \"observed\">>, "
+   "<<\"source-b\", \"timeline\", "
+   (number->string source-b) ", \"ledger\", \"observed\">>, "
+   "<<\"result\", \"timeline\", "
+   (number->string result) ", \"ledger\", \"observed\">>}\n"
+   "Hypotheses == {<<\"via-a\", \"source-a\", \"result\">>, "
+   "<<\"via-b\", \"source-b\", \"result\">>}\n"
+   "Constraints == {}\nFamilyComplete == TRUE\n====\n"))
+
+(def (generated-family-config classification)
+  (string-append
+   "SPECIFICATION FairSpec\n"
+   "CONSTANTS ExplorationLimit = 0\n"
+   "          Target = \"via-a\"\n"
+   "          ExpectedClassifications = {\""
+   (symbol->string classification) "\"}\n"
+   "INVARIANT InputInvariant\n"
+   "INVARIANT PartitionInvariant\n"
+   "INVARIANT StatusInvariant\n"
+   "INVARIANT BoundInvariant\n"
+   "INVARIANT TerminalAgreement\n"
+   "PROPERTY EventuallyTerminal\n"
+   "CHECK_DEADLOCK FALSE\n"))
+
+(def (check-generated-family source-a source-b result expected)
+  (let (directory (string-trim-eol (run-process ["mktemp" "-d"])))
+    (unwind-protect
+      (let* ((root "packages/proofs/tla/temporal-causality")
+             (spec-path (path-expand "TemporalFamilyCase.tla" directory))
+             (data-path (path-expand "TemporalHypothesisFamily.tla" directory))
+             (cfg-path (path-expand "TemporalFamilyCase.cfg" directory)))
+        (for-each
+         (lambda (name)
+           (write-text
+            (path-expand name directory)
+            (call-with-input-file (path-expand name root) read-all-as-string)))
+         '("TemporalFamilyCase.tla" "TemporalFamilyExplorer.tla"
+           "TemporalFamilySemantics.tla" "TemporalOrder.tla"))
+        (write-text data-path
+                    (generated-family-source source-a source-b result))
+        (let* ((projection
+                (poo-flow-tla-project-temporal-model
+                 (poo-flow-tla-parse-source
+                  (call-with-input-file data-path read-all-as-string))))
+               (native
+                (poo-flow-temporal-model-classify
+                 (.ref projection 'model)
+                 (poo-flow-temporal-query "generated-family-check" "via-a" #f))))
+          (check (.ref native 'classification) => expected)
+          (write-text cfg-path
+                      (generated-family-config (.ref native 'classification)))
+          (let (checked
+                (poo-flow-tla-check-source!
+                 (poo-flow-tla-parse-source
+                  (call-with-input-file spec-path read-all-as-string))
+                 spec-path cfg-path workers: 1))
+            (check (.ref checked 'source-checked?) => #t)
+            (check (.ref checked 'states-left) => 0))))
+      (delete-file-or-directory directory #t))))
+
 (def tla-checked-source-test
   (test-suite "typed checked TLA+ source receipt"
+    (poo-flow-test-case "generated finite families agree across native and TLC"
+      (check-generated-family 1 2 3 'possible)
+      (check-generated-family 1 4 3 'necessary)
+      (check-generated-family 4 1 3 'refuted))
     (poo-flow-test-case "projected finite family agrees with both TLC cases"
       (check-family-agreement "TemporalHypothesisFamily" "TemporalFamilyCase")
       (check-family-agreement "TemporalDiscriminatingFamily"

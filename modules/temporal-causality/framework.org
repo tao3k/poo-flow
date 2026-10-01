@@ -445,9 +445,13 @@ The focused checked-source gate also projects the two maintained finite
 hypothesis-family data modules through the parser-owned POO projection,
 classifies each with unbounded native traversal, verifies that its matching
 TLC configuration names that exact classification, and runs TLC on both
-cases.  This is differential evidence for those two source instances only;
-it does not establish a general native/TLA+ refinement theorem or cover
-bounded exploration order, overlapping families or interventions.
+cases.  The same gate also generates three small same-domain families with
+two admissible causes, one refuted alternative and a refuted target.  It
+derives each TLC expectation from the projected POO classification and checks
+the independently interpreted TLA+ case.  This is finite differential
+evidence for those five inputs only; it does not establish a general
+native/TLA+ refinement theorem or cover bounded exploration order,
+overlapping families or interventions.
 Progress needs explicit fairness and environmental assumptions.  Lean can
 eventually establish generic laws across admitted models; current Lean
 temporal theorems concern a narrower event/cut model and do not discharge
