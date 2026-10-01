@@ -45,6 +45,7 @@ class SchemeChecker:
 
     def __init__(self, ascent_root: Path | None = None) -> None:
         env = os.environ.copy()
+        env.pop("DEEPSEEK_API_KEY", None)
         if ascent_root is not None:
             env["GERBIL_LOADPATH"] = str(ascent_root) + (
                 ":" + env["GERBIL_LOADPATH"] if env.get("GERBIL_LOADPATH") else ""
