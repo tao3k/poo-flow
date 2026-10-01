@@ -464,6 +464,11 @@ check-temporal-invalidation-tlc:
 check-temporal-time:
     GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-time-test.ss
 
+# Replay immutable conclusion journals before forming a CAS proposal.
+[group('check')]
+check-temporal-conclusions:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-conclusions-test.ss
+
 # Verify Trajectory independently of the consuming Impact module.
 [group('check')]
 check-temporal-trajectory:
