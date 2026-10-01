@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "types.ss" "objects.ss" "funs.ss" "gql.ss" "mrr.ss")
+(import "types.ss" "objects.ss" "funs.ss" "gql.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
-        (import: "funs.ss" "gql.ss" "mrr.ss"))
+        (import: "funs.ss" "gql.ss"))

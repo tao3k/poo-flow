@@ -33,11 +33,12 @@ and rows.  Its digest is length-framed SHA-256 over MRR's CBOR encoding under
 =mrr.query-result-admission.v1=.  MRR supports graph values, nulls and lists
 and checks static types and query-specific result constraints.  The Scheme
 scalar row digest does not claim equivalence to the MRR digest, and no live
-conversion is implemented.  The POO Flow =MrrGqlQueryProvider= currently
-binds caller-supplied execution metadata without transporting the admitted
-MRR rows or native result receipt.  The [[file:../providers/mrr/result-model.org][MRR result projection]] preserves the
-native identity fields as declared POO metadata and deliberately marks its
-Temporal candidate incomplete.
+conversion is implemented.  The MRR-owned =MrrGqlQueryProvider= binds caller-supplied execution metadata
+without transporting admitted MRR rows or a native result receipt.  The MRR
+repository documents its result projection in
+=docs/architecture/0033-poo-query-provider.org=.  It preserves native
+identity fields as declared POO metadata and marks its Temporal candidate
+incomplete.
 
 #+name: query-scalar-result-limits
 #+caption: Meaning of the local row check.

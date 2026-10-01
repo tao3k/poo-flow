@@ -5,12 +5,11 @@
 
 (import "types.ss" "objects.ss" "gql.ss" "funs.ss" "contracts.ss"
         "results/interface.ss"
-        "providers/mrr/interface.ss" "config.ss")
+        "config.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "gql.ss")
         (import: "funs.ss")
         (import: "contracts.ss")
         (import: "results/interface.ss")
-        (import: "providers/mrr/interface.ss")
         (import: "config.ss"))

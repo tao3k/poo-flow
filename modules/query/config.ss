@@ -17,8 +17,7 @@
                  PooFlowQueryResultSet.)
         (only-in "results/funs.ss"
                  poo-flow-query-result-cell poo-flow-query-result-row
-                 poo-flow-query-result-set)
-        (only-in "providers/mrr/config.ss" MrrGqlQueryProvider))
+                 poo-flow-query-result-set))
 
 (export PooFlowQueryModule.)
 
@@ -33,7 +32,7 @@
       result-cell: PooFlowQueryResultCell.
       result-row: PooFlowQueryResultRow.
       result-set: PooFlowQueryResultSet.
-      providers: (.o mrr: MrrGqlQueryProvider)
+      providers: (.o)
       .admit-query: poo-flow-query-admit
       .project-gql: poo-flow-query->gql
       .bind-execution-receipt: poo-flow-query-bind-execution-receipt

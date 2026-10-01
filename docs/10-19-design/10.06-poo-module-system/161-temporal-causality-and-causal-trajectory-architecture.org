@@ -440,11 +440,11 @@ finite scalar [[file:../../../modules/query/results/model.org][result-row contra
 check compares those rows with the candidate digest, count and completion
 bit.  This scalar digest has a distinct =poo-flow.query.scalar-row-v1:= label.
 MRR already has a richer typed =QueryResultAdmissionReceipt= with a native
-CBOR-based digest; the POO Flow Provider still has no live transport of
+CBOR-based digest; the MRR-owned Provider still has no live transport of
 that receipt or its rows.  An end-to-end adapter must preserve MRR's query
 binding, generation, catalog and snapshot identities and establish their
 mapping to the POO Query and Temporal cut.  The new
-[[file:../../../modules/query/providers/mrr/result-model.org][MRR result projection]] structurally retains those identities and forces
+MRR-owned result projection structurally retains those identities and forces
 the Temporal candidate to stay incomplete.  It is a declared POO projection,
 not a verified native exporter.  The local scalar row check cannot establish
 execution or verifier authority.
