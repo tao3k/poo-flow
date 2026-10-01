@@ -9,6 +9,8 @@
         (only-in :std/misc/process run-process)
         (only-in :std/string/misc string-trim-eol)
         :std/test
+        (only-in :poo-flow/modules/temporal-causality/interface
+                 poo-flow-temporal-query poo-flow-temporal-model-classify)
         (only-in :poo-flow/modules/tla-plus/checked-source-objects
                  poo-flow-tla-checked-source-value)
         :poo-flow/modules/tla-plus/interface)
@@ -37,8 +39,42 @@
      "TemporalConclusionSelection.tla"
      "TemporalConclusionSelectionCase.cfg")))
 
+(def (check-family-agreement data-name case-name)
+  ;; The data module is projected through the parser-owned source contract.
+  ;; TLC explores the matching case with its expected terminal classification.
+  (let* ((root "packages/proofs/tla/temporal-causality")
+         (source (path-expand (string-append data-name ".tla") root))
+         (spec-path (path-expand (string-append case-name ".tla") root))
+         (cfg-path (path-expand (string-append case-name ".cfg") root))
+         (projection
+          (poo-flow-tla-project-temporal-model
+           (poo-flow-tla-parse-source
+            (call-with-input-file source read-all-as-string))))
+         (native
+          (poo-flow-temporal-model-classify
+           (.ref projection 'model)
+           (poo-flow-temporal-query "finite-family-check" "via-a" #f)))
+         (expected
+          (string-append "ExpectedClassifications = {\""
+                         (symbol->string (.ref native 'classification)) "\"}"))
+         (cfg-source (call-with-input-file cfg-path read-all-as-string)))
+    (check (and (string-contains cfg-source expected) #t) => #t)
+    (check (.ref native 'exhausted?) => #t)
+    (let (checked
+          (poo-flow-tla-check-source!
+           (poo-flow-tla-parse-source
+            (call-with-input-file spec-path read-all-as-string))
+           spec-path cfg-path workers: 1))
+      (check (.ref checked 'source-checked?) => #t)
+      (check (.ref checked 'states-left) => 0)
+      (check (.ref checked 'semantic-refinement?) => #f))))
+
 (def tla-checked-source-test
   (test-suite "typed checked TLA+ source receipt"
+    (poo-flow-test-case "projected finite family agrees with both TLC cases"
+      (check-family-agreement "TemporalHypothesisFamily" "TemporalFamilyCase")
+      (check-family-agreement "TemporalDiscriminatingFamily"
+                              "TemporalDiscriminatingCase"))
     (poo-flow-test-case "exact parsed source and TLC output are bound"
       (let* ((document (source-document))
              (receipt (poo-flow-tla-check-source!
