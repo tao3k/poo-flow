@@ -64,7 +64,7 @@ def collect_errors(root: Path = ROOT) -> list[str]:
         toml_versions = (
             ("bindings/cedar-gerbil/Cargo.toml", ("workspace", "package", "version")),
             ("bindings/rust-ir/Cargo.toml", ("package", "version")),
-            ("packages/proof/python/pyproject.toml", ("project", "version")),
+            ("packages/proofs/python/pyproject.toml", ("project", "version")),
             ("packages/python-runtime/pyproject.toml", ("project", "version")),
         )
         for relative, keys in toml_versions:

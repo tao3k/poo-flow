@@ -29,7 +29,7 @@ It does not discharge their new proof obligations.
 
 | Surface | Identity |
 |---------+----------|
-| Python environment | uv project at =packages/proof/python= |
+| Python environment | uv project at =packages/proofs/python= |
 | AXLE distribution | =axiom-axle= |
 | AXLE version | =1.4.0= |
 | AXLE environment | =lean-4.31.0= |
@@ -41,15 +41,15 @@ It does not discharge their new proof obligations.
 * Commands and results
 
 #+begin_src text
-cd packages/proof/python
+cd packages/proofs/python
 uv run pytest -q tests/test_axle_verify.py
 # 1 passed in 0.02s
 
-cd packages/proof/lean
+cd packages/proofs/lean
 lake build PooFlowProof.PooC4.Enterprise
 # Build completed successfully: 177 jobs
 
-cd packages/proof/python
+cd packages/proofs/python
 uv run python -m poo_flow_proof.axle_verify \
   ../lean/PooFlowProof/PooC4/Enterprise/<leaf>.lean
 # 14 leaf inputs: 7 verified, 7 rejected before verify

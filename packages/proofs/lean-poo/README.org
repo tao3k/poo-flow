@@ -1,0 +1,25 @@
+#+TITLE: Temporal LeanPoo Proof Boundary
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+This independent Lean 4.34 Lake package pins [[https://github.com/tao3k/lean-poo][LeanPoo]] at the revision
+recorded in =lake-manifest.json=.  POO Flow's Cedar-bound proof package uses
+Lean 4.31, so its existing proof graph remains separate.
+
+=PooFlowTemporalPooProof.TruthMaintenance= interprets a temporal cut as a
+=LeanPoo.Proof.ProofObject= and a changed premise footprint as a =Patch=.
+It proves that an old obligation depending on a changed key enters
+=pending=, that an unaffected old obligation is excluded unless explicitly
+reintroduced, and reuses LeanPoo's =closePending= theorem to certify the revised
+object once that frontier is discharged.  It does not prove that the Scheme
+index emits the same frontier.  The required projection is recorded in
+=modules/temporal-causality/framework.org=.
+
+=PooFlowTemporalPooProof.ConclusionSelection= proves the abstract safety law
+that a successful version increment makes another proposal against the old
+version stale.  It does not prove the external pointer store is atomic.
+
+Run =just check-temporal-poo-lean= from the repository root.

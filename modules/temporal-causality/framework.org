@@ -1,0 +1,451 @@
+#+TITLE: Temporal Causality Framework: Semantic Contract and Research Programme
+#+AUTHOR: tao3k team and Contributors
+#+OPTIONS: toc:3
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Abstract
+
+Temporal Causality is a domain-neutral POO Flow Module for asking what is
+known, possible, necessary *relative to declared assumptions*, refuted, or
+still unknown about events and their causal explanations over time.  The
+framework must support partial order, multiple clock roles, intervals,
+late/corrected evidence, open candidate hypotheses, bounded exploration and
+formal assurance without turning time order into actual causation.  Scheme
+owns the POO semantic model and pure queries; TLA+ checks finite behaviors;
+Lean can prove reusable semantic and projection laws; GQL and ASCENT can
+propose structural candidates.  A vertical Lambda supplies its own vocabulary
+and authority rules.
+
+This is a research and implementation contract.  The status table below
+distinguishes executable slices from proof obligations; the checked finite
+model does not constitute the whole framework.
+
+* Semantic questions
+
+The framework must admit questions of the following forms without changing
+the public type surface for each domain:
+
+1. Which observations are committed before an explicit cut, and which future
+   events are only planned, declared, or counterfactual?
+2. What temporal relations are established, contradicted, incomparable, or
+   unresolved across clock domains and incomplete evidence?
+3. Which causal hypotheses remain possible under explicit structural and
+   temporal constraints?  Which observation would distinguish them?
+4. How do late events, corrections, retractions and watermark changes alter
+   earlier conclusions while preserving the earlier receipt's identity?
+5. What finite behaviors violate safety or reachability obligations, and
+   under which fairness assumptions is progress established?
+
+These are separate query families.  A one-number exploration cap, one
+prewritten transition graph, or one healthcare action vocabulary cannot
+define their semantics.
+
+* Temporal type algebra
+
+All public values are Gerbil POO objects or pure functional compositions of
+them.  No raw alist or macro DSL is the normal user interface.  Each value has
+an identity suitable for immutable evidence and replay.
+
+| Type family | Mathematical role | Admission rule | Current owner/status |
+|-------------+-------------------+----------------+----------------------|
+| Clock domain | Coordinate space with role and provenance | Roles are open symbols; compare inside a domain, while cross-domain conversion requires explicit evidence | =types.ss= has clock-domain POO value; conversion evidence open |
+| Instant | Clock-indexed coordinate with observation modality | Modalities are open symbols; only =observed= is currently admissible as known, with no ambient clock reads | =time/{types,objects,funs}.ss= executable |
+| Interval | Ordered endpoints with explicit closure | Same-domain endpoints; empty interval is representable | =time/{types,objects,funs}.ss= executable |
+| Temporal relation | Partial comparison, not a Boolean total order | =before/equal/after/unknown/incomparable= for instants | =time/funs.ss= executable, Allen interval relations open |
+| Multi-time observation | Event, ingress and processing times plus provenance | Never silently coerce one role to another | =time/{types,objects}.ss= has optional distinct axes; watermark semantics remain open |
+| Evidence revision | Immutable assertion, correction or retraction with valid interval and admission instant | Predecessors must be same-subject, earlier on one declared admission domain; branches remain visible | =revisions/{types,objects,funs}.ss= executable |
+| As-of evidence cut | Beliefs admitted by one explicit transaction-time cut, optionally filtered at a valid-time instant | Conflicting heads, unknown validity and incomparable clocks are distinct outcomes | =revisions/funs.ss= executable |
+| Reverse dependency plan | Cut-bound derivations with subject and conclusion premises | Complete inventory is an explicit scoped assertion; a partial index cannot certify unaffected conclusions | =truth-maintenance/{types,objects,funs}.ss= executable scheduler |
+| Conclusion revision | Immutable assertion, correction or retraction with proof identity, cut and supersession | A change requires a scoped-complete affected frontier and a distinct revised cut; proof semantics remain evaluator-owned | =conclusions/{types,objects,funs}.ss= executable provenance envelope |
+| Active selection | Versioned observation and pure CAS preparation | Observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= executable planner; runtime handoff open |
+| Causal event and cut | Committed event graph and as-of projection | Future/counterfactual elements cannot enter the committed cut | =types/objects/funs.ss= executable first slice |
+| Candidate hypothesis | Proposed cause, effect and constraints | Temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
+| Candidate exchange | Exact cut/provider receipt and separate checker assertion | Reviewable requires current, complete, checked required providers; it never grants admission | =candidates/{types,objects,funs}.ss= executable; [[file:candidates/model.org][module-local model]] |
+| Temporal query | Target, assumptions, evidence snapshot and optional operational scope | Resource limits belong to query execution, not model truth | current query supports candidate limit or =#f= for full finite family |
+| Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; TLC correspondence open |
+
+The type relations are intentionally partial.  For instants =a= and =b=,
+=compare(a,b)= is =incomparable= if their domains differ without conversion
+evidence; it is =unknown= if the relevant coordinate is merely declared;
+otherwise it is the ordinary coordinate order.  The distinction prevents
+missing data from being mistaken for concurrent events.  Interval membership
+returns the same uncertainty states and respects open or closed endpoints.
+An elapsed duration requires monotonic clocks and cannot be inferred from a
+wall-clock or logical-version coordinate alone.
+
+* Model and query separation
+
+A =TemporalModel= denotes an immutable evidence snapshot, candidate universe,
+constraints and assumptions.  It does not contain a TLC work budget.  A query
+selects a target and may request an operational exploration limit.  =#f=
+means exhaust the *finite declared family*.  A positive limit permits an
+unexplored frontier; it must not silently upgrade a result to =necessary=.
+The old =MaxWorlds= name was misleading: the finite example selects candidate
+identities, not complete possible worlds or counterfactual histories.  The
+TLA+ configuration now calls this =ExplorationLimit= and treats it as a
+checking scope: =0= derives the effective bound from the candidate set,
+while a positive number requests an early stop.  Full possible-world semantics requires a separate behavior
+model with explicit interventions, environment actions and observation map.
+
+Classification is relative to the declared hypothesis family.  For target
+=h=, =refuted= means a known constraint fails; =possible= means the candidate
+passes known constraints; =unknown= means it has not been explored or its
+evidence is insufficient.  =Necessary= is available only after exhaustive
+inspection of a caller-declared complete exclusive family, with one admitted
+candidate and no unknowns.  This is a restricted uniqueness judgment, not an
+actual-cause theorem.  The model does not invent mechanisms without a
+hypothesis vocabulary.
+
+* Composition and ownership
+
+#+begin_src text
+Domain Lambda ──> POO observations / hypotheses / obligations
+                       │
+                       v
+   time/  ──> temporal-causality model / event graph / query
+                       │                    │
+                       v                    v
+               TLA+ source projection    GQL / ASCENT candidate inputs
+                       │
+                       v
+               TLC finite behavioral receipt
+                       │
+                       v
+               optional Lean correspondence
+#+end_src
+
+=time/= owns clock-indexed primitives.  The Temporal Module owns model
+admission, event/cut semantics, uncertainty and receipts.  =packages/proofs/tla/temporal-causality/= owns the
+finite formal projection and checks; =modules/tla-plus/= owns the parser CST
+boundary and supported source-to-POO mapping.  GQL/ASCENT results may supply
+candidate edges or proofs of structural reachability; they do not admit a
+causal conclusion by themselves.  Runtime or Marlin handoff owns effects and
+authority.  Healthcare, software release and other vocabularies belong in
+their own Lambda/Feature, not this core.
+
+** Bitemporal evidence revision
+
+The framework distinguishes a fact's *valid interval* from the *admission
+instant* at which the system accepted a belief about that fact.  This follows
+the valid-time/transaction-time distinction of Jensen and Snodgrass, but the
+current Module calls the second axis admission time to avoid equating raw
+network ingress with an admitted belief.  One journal declares an admission
+clock domain; comparing its coordinates is a caller-supplied ordering
+assumption, not a proof of clock-source trust.
+
+A revision =r= contains identity, subject, operation, predecessor, admission
+instant, optional valid interval and optional content identity.  An assertion
+is a root.  A correction or retraction points to an earlier same-subject,
+non-retracted predecessor.  A retraction has no valid interval or content.
+The journal retains every revision.  No update overwrites earlier evidence.
+Branches are admitted as facts about disagreement: at an as-of cut, two
+visible maximal revisions for a subject yield =conflicted=, with no arbitrary
+latest-value winner.  A single retraction head yields =retracted=.  A single
+assertion/correction head is active only if its valid interval contains the
+requested valid-time instant; declared endpoint evidence yields =uncertain=
+and a different valid-time domain yields =incomparable=.
+
+For journal =J= and admission cut =a=, define =V(J,a)= as revisions whose
+admission coordinate is at or before =a=.  The *cut digest* binds =a= and
+canonicalized =V=, while the journal digest binds all of =J=.  For valid-time
+query =v=, the *projection digest* separately binds the cut digest, the
+full =v= instant row (or its absence), and the active/retracted/conflicted/
+outside/uncertain/incomparable result buckets.  The valid-time instant
+digest uses the complete row, so reusing an identity with a different
+coordinate cannot silently reuse a projection.  In notation, the semantic
+keys are =C(J,a)=(a,V(J,a))= and
+=P(J,a,v)=(C(J,a),v,Result(J,a,v))=.  SHA-256 encodes these keys in Scheme;
+the Lean theorem concerns the structural key, not a proof of hash
+injectivity.
+
+Appending a revision after =a= changes the journal digest but preserves
+both the earlier cut digest and the same valid-time projection digest.
+Changing =v= can leave the cut digest unchanged while changing the
+projection and its answer.  The regression test checks both cases.  The
+revision layer alone does not locate derived conclusions.  The separate
+=truth-maintenance/= slice schedules dependency-based reevaluation; runtime
+selection and compensation still require evaluator provenance and authority.
+
+* Cut-bound reverse dependency planning
+
+A =TemporalDerivation= is a POO object with immutable conclusion identity,
+source cut and valid-time projection digests, policy identity, subject-premise
+identities and conclusion-premise identities.  A =TemporalDependencyIndex=
+binds both source identities,
+validates unique conclusion identities and resolvable conclusion premises,
+canonicalizes entry order, and computes a semantic digest from all declared
+edges and the caller's completeness assertion.  The index's completeness is
+*relative to an explicitly supplied derivation inventory*.  No algorithm can
+infer that the caller supplied every hidden derivation or every policy
+dependency; absence of an edge is not proof of independence.
+
+For changed subject set =S=, let =D(S)= be conclusions with a direct subject
+edge from =S=.  Let =succ(X)= be conclusions whose declared conclusion premise
+is in =X=.  The affected set is the least fixed point
+=A = μX.(D(S) ∪ succ(X))=.  The Scheme implementation builds reverse indexes
+in one pass and traverses each conclusion once.  Dependency cycles therefore
+terminate.  Its sorted result is independent of derivation order.  The plan
+records the old and revised cut and projection digests, changed subjects,
+index digest,
+affected conclusion identities and an identical reevaluation schedule.  It
+does not mutate historical conclusions, claim that reevaluation succeeded,
+publish an active winner, or execute an effect.
+
+=scoped-complete= means the caller asserted a complete derivation inventory
+for this cut and dependency class.  =partial= means affected conclusions are
+a lower bound; an empty affected set is not an unaffectedness certificate.
+The lower-level planner accepts an explicit changed-subject assertion.  The
+=plan-from-cuts= entrypoint instead accepts one journal, two admission
+instants and one shared valid-time instant.  It replays both snapshots from
+the journal, binds the index to the replayed prior cut *and projection*, and
+computes changed subjects from per-subject visible revision identities.  It
+marks a newly visible branch even if selected head or conflict status is
+unchanged.  =plan-from-projections= similarly accepts one admission instant
+and two valid-time instants and replays both projections itself.  Neither
+public entrypoint accepts a caller-supplied snapshot as evidence.  Each
+as-of query reconstructs the canonical journal and checks its digest against
+the revisions before projection.  This is an in-process replay check; it
+does not authenticate externally supplied data or prove a signed receipt.
+Time-bound, watermark,
+absence, resource and policy dependencies need their own declared premise
+keys before they may use this index for complete invalidation.
+
+* Valid-time reprojection
+
+The two query dimensions need different invalidation rules.  For a fixed
+valid-time query, an admission-cut advance uses changed visible subjects and
+their reverse dependency closure.  For a fixed admission cut and a changed
+valid-time query, =plan-from-projections= schedules *every indexed
+derivation*.  The current derivation contract does not attest that any proof
+is independent of the valid-time parameter.  Equal selected revision
+buckets therefore do not make an old proof's projection key reusable.
+
+The plan's =trigger= distinguishes =premise-delta= from
+=valid-time-reprojection=.  An empty changed-subject list in the latter
+means that the cause was query scope, not that the projections are
+equivalent.  A complete schedule remains relative to the declared inventory;
+an incomplete inventory gives only a lower bound.  In notation, for an index
+=I= bound to =P(J,a,v₁)= and =v₁ ≠ v₂=, this slice sets
+=Affected(I,v₁→v₂)= to every identity in =I=.  The plan neither infers a
+new conclusion value nor publishes an active pointer.  Selective reuse would
+require a checked time-parameter independence contract for each derivation,
+including policy and absence premises.
+
+Jensen and Snodgrass's bitemporal distinction
+(https://www.cs.arizona.edu/~rts/pubs/TRmerged.pdf) motivates keeping
+admission and valid-time axes separate.  Full-inventory invalidation is this
+project's conservative proof-scope rule, not a claim made by that source.
+
+The TLA+ submodel in =packages/proofs/tla/temporal-causality/TemporalInvalidationExplorer.tla= checks a finite
+subject/conclusion graph.  =Direct= is the changed-subject frontier, =Step=
+adds one-hop conclusion dependents, and =Closure= applies =Step= at most
+=|Conclusions|= times.  The explorer schedules any enabled dependent, so
+its action relation admits multiple traversal orders.  TLC checks that every
+scheduled conclusion belongs to =Closure= and that terminal states equal
+=Closure=.  Under weak fairness of =Advance=, it checks eventual completion
+for the finite fixture with a branch, a cycle and one unaffected conclusion.
+This is bounded model checking of the abstract graph, not a refinement proof
+of the Scheme hash-table implementation.
+
+The independent Lean 4.34 target in =packages/proofs/lean-poo/= uses
+[[https://github.com/tao3k/lean-poo][LeanPoo.Proof]] =ProofObject=, =Patch=,
+=pending= and =closePending=.  It proves that an old obligation with a
+declared changed key enters the reevaluation frontier, that an unaffected old
+obligation is excluded unless explicitly reintroduced, and that discharging
+the selected frontier yields a revised certificate while LeanPoo reuses
+unaffected obligations.  This proof is about a typed POO proof object; a
+future projection theorem must connect concrete Scheme index rows and patch
+footprints to those Lean obligations.  The target uses a separate Lean
+toolchain because the existing Cedar-bound POO Flow proof package uses Lean
+4.31 and LeanPoo currently uses Lean 4.34.
+
+This design follows the explicit justification dependency idea of
+[[https://www.ijcai.org/Proceedings/79-1/Papers/004.pdf][Doyle's
+truth-maintenance system]] and the affected-fact propagation principle in
+[[https://doi.org/10.1145/170036.170066][DRed]].  The current implementation
+is a reevaluation scheduler, not a DRed algorithm for recursive deletions or
+a complete justification-based belief revision system.
+
+* Conclusion revisions and active selection
+
+The =conclusions/= layer separates three values.  A
+=TemporalConclusionRevision= binds a subject/scope, cut, projection,
+policy/generation,
+result or retraction, proof identity and predecessor.  A
+=TemporalConclusionJournal= is a canonical immutable inventory that rejects
+duplicate IDs, missing or cyclic supersession, cross-subject edges and a
+change that reuses both the predecessor's cut and projection.  Two corrections of one predecessor
+remain distinct branches.  A retraction is a tombstone revision with a proof
+identity; it does not delete the prior result.  The journal's digest binds
+all rows, so input order cannot select a winner.  The =journal-extend=
+function constructs a new journal with every old row retained; the prior
+journal remains a replayable value.
+
+The change constructor requires an old conclusion in a =scoped-complete=
+invalidation plan's affected set, exact old/new cut and projection binding,
+and a new opaque
+proof identity.  The reverse index proves only *which conclusions require
+reevaluation*.  The supplied proof identity is a reference to evaluator-owned
+evidence, not a theorem checked by this constructor.  Monotonicity, closed
+absence, SCC stabilization and retraction validity must be admitted before
+an external runtime treats the revision as publishable.
+
+An active-pointer observation is =(subject, scope, version, selected,
+observation-id)=.  =selection-prepare= checks that the proposed revision is
+exactly the journal row, then compares the observation's version and selected
+revision with the caller's expected version and the proposed revision's
+predecessor.  A match produces a =cas-ready= plan with version =v+1=;
+otherwise it produces =conflict= with no proposed version.  Both outcomes
+are inert POO values.  A runtime must recheck capability and perform an
+atomic compare-and-swap against its current pointer.  A plan prepared from
+an observation can lose a race before commit.  After retraction, the pointer
+may select the tombstone revision; current applicability must interpret its
+=retract= operation as no active result.
+
+The finite TLA+ model in =packages/proofs/tla/temporal-causality/TemporalConclusionSelection.tla= represents
+two proposals against the same predecessor and expected version.  Its
+abstract atomic =Commit= increments the version; the other proposal then
+enters =Conflict=.  TLC checks at-most-one commit, version accounting,
+selection membership and completed conflict classification across both
+proposal orders.  Weak fairness of =ResolveAny= is an explicit model
+assumption.  This does not prove a concrete runtime CAS implementation,
+authorization check or effect compensation.  The Scheme test covers the
+same bounded branch and stale-observation cases without claiming a general
+Scheme/TLA refinement.  The separate LeanPoo 4.34 target proves for all
+natural versions that, after one abstract version increment, a second
+proposal against the old expected version is stale.  It does not prove that
+the runtime's durable store implements that abstract atomic step.
+
+[[https://www.ijcai.org/Proceedings/79-1/Papers/004.pdf][Doyle's
+justification-based truth maintenance]] motivates retaining the reasons for
+nonmonotone changes; [[https://doi.org/10.1016/0004-3702(86)90080-9][de
+Kleer's assumption-based TMS]] shows why alternative assumption contexts
+need distinct identities.  This slice retains correction branches but does
+not implement full assumption-set labeling or belief revision.
+
+* Formal programme
+
+The current =packages/proofs/tla/temporal-causality/model.org= gives one finite instance, state machine,
+invariants, liveness assumption and TLC commands.  The general obligations
+are broader:
+
+- *Temporal soundness*: every admitted native comparison follows from
+  observed coordinates in one domain or validated conversion evidence.
+- *Uncertainty preservation*: absent, declared, retracted or incomparable
+  evidence cannot become a positive causal or authority claim.
+- *Cut monotonicity under append-only evidence*: an unchanged evidence prefix
+  yields the same as-of cut.  Correction/retraction needs revision semantics,
+  so this law does not apply without an unchanged prefix assumption.
+- *Future-append replay*: for an admission cut =c=, appending only revisions
+  with admission position greater than =c= preserves the visible list at =c=.
+  =PooFlowProof.PooC4.TemporalEvidenceRevision= proves this abstract list law
+  and preservation of a fixed valid-time projection key; it also proves that
+  distinct valid-time parameters give distinct structural projection keys.
+  The Scheme test checks digest behavior for concrete instances.  Neither is a general
+  implementation refinement proof.
+- *Model/query separation*: changing a checking budget changes only the
+  explored frontier and perhaps the answer's certainty, not the model digest.
+- *Source projection*: accepted TLA+ literal values and native POO values
+  have the same admitted interpretation; unsupported syntax fails closed.
+- *Behavior refinement*: a future observable map relates native state changes
+  to TLA+ traces, including stutter steps and environment assumptions.
+- *Proof/receipt binding*: Lean theorems, TLC executions and native runtime
+  receipts retain their own identities and scopes.  One is not substituted
+  for another.
+
+Finite TLC state exploration is an executable counterexample search.  It
+supports a claim only for an exact source, configuration and finite scope.
+Progress needs explicit fairness and environmental assumptions.  Lean can
+eventually establish generic laws across admitted models; current Lean
+temporal theorems concern a narrower event/cut model and do not discharge
+the new projection/refinement obligations.
+
+* Work remaining for a complete framework
+
+1. Extend the temporal type layer with verified clock conversions,
+   watermark and completeness semantics over the existing
+   event/ingress/processing axes, durations, interval relations, and
+   partial-order constraints.  Align it with RFC 45-70 and 45-72.
+2. Bind reevaluation proof admission to immutable conclusion revisions and
+   an authorized runtime active-pointer transition under RFC 45-73.  The
+   evidence journal, as-of cuts, reverse index, conclusion journal and pure
+   CAS plan are executable; proof admission, signed observations, atomic
+   publication and effect receipts remain open.
+3. Generalize hypothesis families to overlapping mechanisms, interventions
+   and behavior spaces.  Keep candidate generation, assumption admission and
+   causal attribution distinct.
+4. Define property and query objects for safety, reachability and progress;
+   generate or interpret TLA+ transitions from the semantic model rather than
+   exposing a caller-authored =Next= API.
+5. Bind checked TLA+ source/configuration and TLC outputs to typed POO
+   receipts; prove or differentially check the native/TLA+ projection.
+6. Extend Lean proofs from event/cut facts to generic temporal relations,
+   source projection and trace refinement.  The abstract future-append cut
+   lemma is now in the Temporal proof target; retain bounded TLC as separate
+   executable evidence.
+
+* Trajectory, Impact and 2026 research
+:PROPERTIES:
+:CUSTOM_ID: temporal-dynamic-impact
+:END:
+
+The POO [[file:trajectory/model.org][Trajectory module]] owns canonical, exact outcome series and
+their time and evidence identities.  The separate =impact/= module consumes
+two comparable series.  It computes pointwise level and interval-rate
+differences, and a candidate intervention-window audit checks pre-onset
+agreement and computes a trapezoidal score on the existing grid.
+An =ImpactScope= additionally binds direct targets and explicitly protected
+negative-control measurements across a supplied multivariate inventory;
+its audit reports =violated=, =unknown= or
+=consistent-with-declaration= relative to that inventory.
+Trajectory now produces an immutable coordinate delta between versions.
+Impact replays both source deltas and the historical contrast, then reuses,
+recomputes or blocks a revised contrast according to source identity, evidence
+scope and grid alignment.  The historical receipt remains available.
+Neither module grants causal-impact admission.  The paper map, target
+estimands, negative controls and reproducibility gates are in
+[[file:impact/research.org][Dynamic Time, Trajectory, and Impact Research Contract]], especially
+[[file:impact/research.org::#dynamic-impact-claim-ladder][the claim ladder]].
+
+The 2026 DoFlow, CLEF, HEDRA, LMTP and treatment-persistence sources are also
+mapped to repository owners in the named source table of the architecture
+document.  None is currently reproduced by this module.  Future model
+Providers must retain graph, intervention, onset, affected variables, target
+estimand, horizon, support and uncertainty evidence before presenting a
+causal trajectory claim.
+
+* Evidence relations across search and research
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-lineage
+:END:
+
+The engine also asks a distinct AI-facing question: which evidence was
+found, which was used for each claim, which use has a separate assessment,
+and which downstream artifacts may depend on a changed premise?  The
+[[file:evidence/model.org][Evidence relation model]] owns this POO-native relation layer and
+its finite TLA+ exploration.  It is shared by short answers, extended
+search, long-running work and autonomous research.  None of those scenario
+names is a public engine type.  Relation reachability gives a potential
+invalidation frontier, not actual influence or claim truth.
+
+* Research and project references
+
+- Lamport, [[https://lamport.azurewebsites.net/pubs/time-clocks.pdf][Time, Clocks, and the Ordering of Events in a Distributed System]]:
+  event order is partial and a clock representation needs stated assumptions.
+- Lamport, [[https://lamport.azurewebsites.net/tla/high-level-view.html][A High-Level View of TLA+]] and
+  [[https://lamport.azurewebsites.net/tla/hiding-and-refinement.pdf][Hiding, Refinement, and Auxiliary Variables]]:
+  possible behaviors, internal state and observable refinement.
+- Halpern and Pearl, [[https://www.cs.cornell.edu/home/halpern/papers/actcaus.pdf][Causes and Explanations: A Structural-Model Approach]]:
+  actual-cause claims require more than temporal precedence.
+- Jensen and Snodgrass, [[https://www.cs.arizona.edu/~rts/pubs/TRmerged.pdf][Bitemporal Interval]]:
+  valid time and transaction time are distinct axes of a belief history.
+- Allen, [[https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf][Maintaining Knowledge about Temporal Intervals]]:
+  interval relation algebra motivates a future typed relation layer; the
+  current interval membership operator is deliberately narrower.
+- Repository architecture: =docs/10-19-design/10.06-poo-module-system/161-temporal-causality-and-causal-trajectory-architecture.org=.
+- Temporal observation and revision contracts: RFC 45-70, 45-72 and 45-73
+  in the same design directory.

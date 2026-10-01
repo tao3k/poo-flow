@@ -206,8 +206,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
           restore-keys: |
             lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-
 
@@ -220,11 +220,11 @@ jobs:
               | sh -s -- -y --default-toolchain none
           fi
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-          cd packages/proof/lean
+          cd packages/proofs/lean
           "$HOME/.elan/bin/lake" --version
 
       - name: Build native Lean module library
-        working-directory: packages/proof/lean
+        working-directory: packages/proofs/lean
         shell: bash
         run: |
           set -euo pipefail
@@ -232,7 +232,7 @@ jobs:
 
       - name: Build and run the independent Lean FFI smoke
         if: matrix.ffi
-        working-directory: packages/proof/lean
+        working-directory: packages/proofs/lean
         shell: bash
         run: |
           set -euo pipefail
@@ -245,8 +245,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
 
   cedar-rust-runtime-host:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -264,8 +264,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
           restore-keys: |
             lean-proof-${{ runner.os }}-${{ runner.arch }}-
 

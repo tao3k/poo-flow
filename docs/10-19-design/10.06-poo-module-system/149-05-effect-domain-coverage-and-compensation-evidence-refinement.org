@@ -127,7 +127,7 @@ unresolved or committed outcome according to the owning protocol.
 The proof owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   EffectDomainCoverage.lean
 #+end_src
 

@@ -342,8 +342,8 @@ ASR-005 reports independent assurance stages rather than one synthetic
 
 The prototype verifier is:
 
-- =packages/proof/python/tools/ai_security_mapping_replay.py=
-- =packages/proof/python/tools/test_ai_security_mapping_replay.py=
+- =packages/proofs/python/tools/ai_security_mapping_replay.py=
+- =packages/proofs/python/tools/test_ai_security_mapping_replay.py=
 
 Both Python owners are visible to parser-owned ASP search.  Runtime verification
 is still blocked by =deny-unbounded-structured-projection= /
@@ -372,7 +372,7 @@ This receipt closes only when:
 - receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
 - receipt id: =EASE-CHANGE-REOPENING-007=;
 - claim id: =EASE-004=;
-- owning repository/package: =poo-flow/packages/proof/lean=;
+- owning repository/package: =poo-flow/packages/proofs/lean=;
 - formal owner:
   =PooFlowProof.Enterprise.AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure=;
 - owner source digest:
@@ -394,7 +394,7 @@ No duplicate evidence type, axiom, or elapsed-time assumption is introduced.
 ** Exact replay and observed closure
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure.lean
 lake build PooFlowProof.Enterprise
 #+end_src
@@ -428,7 +428,7 @@ still does not claim empirical closure.
 - receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
 - receipt id: =EASE-PROVIDER-NON-AUTHORITY-008=;
 - claim id: =EASE-005=;
-- owning repository/package: =poo-flow/packages/proof=;
+- owning repository/package: =poo-flow/packages/proofs=;
 - formal owner:
   =PooFlowProof.Enterprise.AISecurityEmbodiedAIProviderNonAuthorityClosure=;
 - formal owner source digest:
@@ -464,7 +464,7 @@ repaired boundary without granting authority to a provider declaration.
 ** Exact replay and observed closure
 
 #+begin_src sh
-cd packages/proof/python
+cd packages/proofs/python
 uv run pytest tests/test_embodied_ai_provider_non_authority.py tests/test_embodied_ai_provider_non_authority_replay.py -q
 uv run ruff check src/poo_flow_proof/embodied_ai_provider_non_authority.py src/poo_flow_proof/embodied_ai_provider_non_authority_replay.py tests/test_embodied_ai_provider_non_authority.py tests/test_embodied_ai_provider_non_authority_replay.py
 uv run python -m poo_flow_proof.embodied_ai_provider_non_authority_replay
@@ -500,7 +500,7 @@ obligation rather than a fabricated success.
 - receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
 - receipt id: =EASE-AUTHORITY-DECLARATION-009=;
 - claim id: =EASE-002=;
-- owning repository/package: =poo-flow/packages/proof/lean=;
+- owning repository/package: =poo-flow/packages/proofs/lean=;
 - formal owner:
   =PooFlowProof.Enterprise.AISecurityEmbodiedAuthorityBearingDeclarationClosure=;
 - owner source digest:
@@ -528,7 +528,7 @@ subject-mismatch, and invalid-receipt rejection.
 ** Exact replay and closure state
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedAuthorityBearingDeclarationClosure.lean
 lake build PooFlowProof.Enterprise
 #+end_src
@@ -564,7 +564,7 @@ This owner reuses =PooFlowProof.PooC4.authorizedEffectL1=,
 and =EffectDomainCoverage.coveredRollbackAgreesOnEveryPlanEffect=.
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedConstrainedSystemEffectClosure.lean
 lake build PooFlowProof.Enterprise
 #+end_src
@@ -621,7 +621,7 @@ DSL and no boolean-only invalidation side channel.
 ** Exact replay and observed closure
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedTypedRelationGraphClosure.lean
 lake build PooFlowProof.Enterprise
 
@@ -684,7 +684,7 @@ is not the admitted transition and is not an ordinary public API.
 ** Exact replay and closure state
 
 #+begin_src sh
-cd packages/proof/python
+cd packages/proofs/python
 uv run pytest tests/test_embodied_ai_constrained_effect.py tests/test_embodied_ai_constrained_effect_replay.py -q
 uv run ruff check src/poo_flow_proof/embodied_ai_constrained_effect.py src/poo_flow_proof/embodied_ai_constrained_effect_replay.py tests/test_embodied_ai_constrained_effect.py tests/test_embodied_ai_constrained_effect_replay.py
 uv run python -m poo_flow_proof.embodied_ai_constrained_effect_replay
@@ -741,7 +741,7 @@ issue authority-bearing declarations.
 ** Exact replay and closure state
 
 #+begin_src sh
-cd packages/proof/python
+cd packages/proofs/python
 uv run pytest tests/test_embodied_ai_authority_declaration.py tests/test_embodied_ai_authority_declaration_replay.py -q
 uv run ruff check src/poo_flow_proof/embodied_ai_authority_declaration.py src/poo_flow_proof/embodied_ai_authority_declaration_replay.py tests/test_embodied_ai_authority_declaration.py tests/test_embodied_ai_authority_declaration_replay.py
 uv run python -m poo_flow_proof.embodied_ai_authority_declaration_replay

@@ -27,7 +27,7 @@ def main() -> int:
         parser.error("POO_FLOW_CEDAR_BUILD_PROFILE must be dev or release")
 
     workspace = ROOT / "bindings/cedar-gerbil"
-    proof = ROOT / "packages/proof/lean"
+    proof = ROOT / "packages/proofs/lean"
     cargo_target = Path(os.environ.get("CARGO_TARGET_DIR", workspace / "target"))
     cargo_args = [
         "cargo", "build", "--locked", "--manifest-path", str(workspace / "Cargo.toml"),

@@ -37,7 +37,7 @@ These are evidence and accountability defects, not serialization details.
 Proof owner:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC4/Enterprise/BundleOwnership.lean
+packages/proofs/lean/PooFlowProof/PooC4/Enterprise/BundleOwnership.lean
 #+end_src
 
 The compiled theorems establish:
@@ -185,7 +185,7 @@ flowchart LR
 * Verification receipt
 
 #+begin_src text
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/PooC4/Enterprise/BundleOwnership.lean
 exit-code: 0
 warnings: 0

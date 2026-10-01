@@ -23,7 +23,8 @@ path = [
   "**/fixtures/**",
   "**/generated/**",
   "**/static/**",
-  "packages/proof/lean/lean-toolchain",
+  "packages/proofs/lean/lean-toolchain",
+  "packages/proofs/lean-poo/lean-toolchain",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"

@@ -4,10 +4,15 @@
 
 ;;; POO-native language and qualification prototypes. gerbil-parser alone owns
 ;;; the lossless TLA+ syntax tree; this module defines no parallel AST.
-(import (only-in :clan/poo/object .o)
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/mop validate)
         (only-in :gerbil-parser/languages/tla-plus/v1/parser
-                 +tla-plus-syntax-contract+))
-(export PooFlowTlaLanguage. PooFlowTlaDocument.)
+                 +tla-plus-syntax-contract+)
+        (only-in "types.ss"
+                 PooFlowTlaModelOutline PooFlowTlaTemporalProjection))
+(export PooFlowTlaLanguage. PooFlowTlaDocument.
+        poo-flow-tla-model-outline-value
+        poo-flow-tla-temporal-projection-value)
 
 (def PooFlowTlaLanguage.
   (.o identity: 'tla-plus
@@ -26,3 +31,30 @@
       exact-roundtrip?: #f
       semantic-validation?: #f
       model-checking?: #f))
+
+(def (poo-flow-tla-model-outline-value
+      document-value module-name variables constants operators)
+  (validate
+   PooFlowTlaModelOutline
+   (.o kind: 'poo-flow.tla-plus.model-outline
+       document: document-value
+       source-digest: (.ref document-value 'source-digest)
+       grammar-digest: (.ref document-value 'grammar-digest)
+       module-identity: module-name
+       variable-identities: variables
+       constant-identities: constants
+       operator-identities: operators
+       semantic-validation?: #f
+       model-checking?: #f)))
+
+(def (poo-flow-tla-temporal-projection-value document-value model-value)
+  (validate
+   PooFlowTlaTemporalProjection
+   (.o kind: 'poo-flow.tla-plus.temporal-projection
+       document: document-value
+       model: model-value
+       source-digest: (.ref document-value 'source-digest)
+       grammar-digest: (.ref document-value 'grammar-digest)
+       semantic-digest: (.ref model-value 'semantic-digest)
+       semantic-subset: 'poo-flow.tla-plus.literal-hypothesis-family.v1
+       model-checking?: #f)))

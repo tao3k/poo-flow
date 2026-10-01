@@ -351,13 +351,13 @@ flowchart LR
 * Proof files
 
 - Independent model:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditModel.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditModel.lean=
 - Actual closure:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditClosure.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditClosure.lean=
 - Canonical lightweight audit algebra:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCore.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCore.lean=
 - Strengthened native contracts:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerDeferralAdmissionContractClosure.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerDeferralAdmissionContractClosure.lean=
 
 * Verification receipts
 

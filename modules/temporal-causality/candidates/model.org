@@ -1,0 +1,120 @@
+#+title: Candidate Exchange Across Temporal, GQL, and ASCENT
+#+date: [2026-10-01]
+#+options: toc:3 num:t
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Scope and semantic owner
+:PROPERTIES:
+:CUSTOM_ID: temporal-candidate-exchange-owner
+:END:
+
+=candidates/= records a POO-native handoff among an exact Temporal evidence
+cut, a provider result receipt, and a separate check of that receipt.  It is
+domain-neutral: candidate identities may denote a graph path, relation row,
+proposed explanation, or artifact dependency.  The contract does not choose
+the candidate universe, evaluate GQL, run ASCENT, validate source authority,
+or admit a causal conclusion.
+
+The source cut is a pair =S=(cut digest, generation).  A coverage receipt
+digest may accompany it; =#f= means no coverage declaration is available.
+The required-provider set =P= is explicit and finite.  A provider receipt
+=r= binds candidate, =S=, provider, request digest, provider receipt digest,
+result digest/count, and completion bit.  A check =v= binds the *exact*
+receipt digest, verifier identity, verdict and basis digest.  Thus changing
+any of those fields gives a different replayed POO value.
+
+#+name: temporal-candidate-exchange-relations
+#+caption: Data relations and what they establish.
+| POO value | Required identity | Establishes | Does not establish |
+|-----------+-------------------+-------------+--------------------|
+| =CandidateScope= | cut digest, generation, provider set, optional coverage digest | Declared comparison universe | Authenticity or completeness of source inventory |
+| =CandidateReceipt= | scope, candidate, provider, request and result digests, count, completion | Exact provider assertion under that scope | Result-row bytes, derivation proof or causal meaning |
+| =CandidateCheck= | exact receipt digest, verifier, verdict, basis | A distinct checking assertion | Correctness or authority of the named verifier |
+| =CandidateExchange= | canonical scope/receipt/check digests | Pure readiness audit and blockers | Temporal admission, action permit or publication |
+
+* Reviewability rule
+:PROPERTIES:
+:CUSTOM_ID: temporal-candidate-exchange-rule
+:END:
+
+Let =R_p(S,c)= be the current receipts for provider =p= and candidate =c=,
+and =V(r)= be the verdicts bound to the exact digest of =r=.  The pure
+exchange status is =reviewable= only if:
+
+1. a coverage receipt digest is declared for =S=;
+2. each required provider has exactly one current =r= in =R_p(S,c)=;
+3. each such =r= is complete and has at least one =valid= check;
+4. no current =r= has an =invalid= or =unknown= check; and
+5. no supplied receipt is stale, foreign, or outside the required set.
+
+Conflicting valid/invalid checks or multiple current receipts for one
+provider yield =contested=.  An invalid check without conflict yields
+=rejected=.  Missing coverage, a missing provider, an incomplete receipt,
+an absent/unknown check, or an old cut yields =pending=.  These four statuses
+describe exchange *reviewability*, not truth.  Even =reviewable= has
+=admitted?= =#f=.  The later Temporal admission owner must verify source
+coverage, provider row materialization and checker authority before selecting
+a conclusion revision.
+
+The construction replays every typed object and its semantic digest.  A
+check naming a missing or revised receipt is rejected.  Receipt and check
+order are canonicalized before the exchange digest, so input permutation
+cannot change the receipt identity.  This is integrity within the supplied
+POO values; it is not a signature or a proof that an external provider
+produced the stated bytes.
+
+* TLA+ lifecycle model
+:PROPERTIES:
+:CUSTOM_ID: temporal-candidate-exchange-tla
+:END:
+
+[[file:../../../packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla][CandidateExchangeExplorer]]
+lets GQL and ASCENT choose complete/incomplete outcomes and independent
+valid/invalid checks in either order.  The finite case uses one candidate,
+two cuts and generations 0–1; absence of a check represents an unknown
+verdict.  A revision may retain the same cut bytes yet increments generation,
+retains historical receipts, and atomically retires coverage and reviewability.
+
+#+name: temporal-candidate-exchange-invariants
+| Invariant | Model obligation | Executable counterpart |
+|-----------+------------------+------------------------|
+| Type | Every state value stays in its finite domain | POO type predicates and constructor validation |
+| Reviewability | Current cut, coverage, complete required receipts and valid checks | =poo-flow-candidate-exchange= status calculation |
+| Coverage | No coverage declaration implies no reviewable candidate | =source-coverage-digest= =#f= gives =pending= |
+| Uniqueness | First receipt/check is unique at its key; a later conflict revokes reviewability | Multiple POO receipts or conflicting checks are =contested= |
+| Dispute | =contested= and =reviewable= stay disjoint | Exchange recomputation gives =contested= priority |
+
+The TLA+ conflict actions abstract a second receipt or contradictory check
+to one contested bit and atomically withdraw reviewability.  Scheme retains
+both concrete assertions.  A future conformance test must define that
+abstraction map; TLC does not establish it.  The model has no fairness
+claim, no proof of provider semantics, and no runtime CAS.
+
+=just check-temporal-candidate-exchange= passed with =MODULE-OK=,
+=HARNESS-OK= and =OK=.  =CandidateExchangeCase.cfg= explored 19,305 distinct
+TLC states with no invariant violation (one candidate, two cuts,
+generation 0–1).  These are bounded local checks, not a general refinement
+theorem.
+
+* Next adapter obligations
+:PROPERTIES:
+:CUSTOM_ID: temporal-candidate-exchange-adapters
+:END:
+
+The existing GQL =SourceQueryReceipt= carries query/source/parser identity,
+result digest/count and completeness, but no shared materialized row value.
+An adapter must bind its exact query and ElementSpace to the Temporal cut,
+then verify result rows against the provider's result digest.  Copying that
+digest string into =CandidateReceipt= alone does not perform this check.
+
+ASCENT owns positive-rule Why/Why-Not proof generation and replay for a
+finite relation snapshot.  Its adapter must require the native result to
+complete, run the independent proof checker on the exact snapshot/program,
+and pass the verifier basis into =CandidateCheck=.  A bounded or unsupported
+proof cannot be recorded as a valid proof check.  Temporal then separately
+checks source coverage, current revision and premise admission.  No such
+live provider adapter exists in this slice.

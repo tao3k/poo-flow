@@ -16,7 +16,7 @@
             (poo-flow-performance-matrix-verify
              "bindings/runtime-c/benchmarks/receipts/runtime_v0_batch_macos_arm64.receipt"
              "bindings/runtime-c/benchmarks/receipts/proof_case_v1_macos_arm64.receipt"
-             "packages/proof/python/benchmarks/receipts/proof_case_cffi_wheel_macos_arm64.receipt"))
+             "packages/proofs/python/benchmarks/receipts/proof_case_cffi_wheel_macos_arm64.receipt"))
         (check (.ref receipt 'accepted?) => #t)
         (check (.ref receipt 'runtime-block-count) => 140)
         (check (.ref receipt 'batch-sizes) => '(1 8 32 128 1024))

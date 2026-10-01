@@ -86,7 +86,7 @@
    '(src/semantic/organization-bundle.ss
      src/contract/runtime-v0-abi-schema.ss
      src/proof/generated/proof-case-vector-v1.ss
-     packages/proof/proof-case-vector-v1.toml
+     packages/proofs/proof-case-vector-v1.toml
      src/contract/release-assurance-manifest.ss)
    #f))
 

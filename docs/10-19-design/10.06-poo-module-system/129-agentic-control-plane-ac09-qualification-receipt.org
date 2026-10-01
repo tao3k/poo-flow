@@ -118,7 +118,7 @@ thresholds:
 - Native receipt:
   =bindings/runtime-c/benchmarks/receipts/proof_case_v1_macos_arm64.receipt=.
 - Installed-wheel CFFI receipt:
-  =packages/proof/python/benchmarks/receipts/proof_case_cffi_wheel_macos_arm64.receipt=.
+  =packages/proofs/python/benchmarks/receipts/proof_case_cffi_wheel_macos_arm64.receipt=.
 - Native batches 1, 8, 32, 128, and 1024 exercise the real Strict/Batched
   caller-owned whole-vector path.
 - Python steady state performs three crossings per item after one layout

@@ -7,12 +7,18 @@
 ;;; neither semantic validation nor model-checking authority.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type element?)
-        (only-in :std/list/list every))
+        (only-in :std/list/list every)
+        (only-in :poo-flow/modules/temporal-causality/types
+                 poo-flow-temporal-model?))
 
 (export PooFlowTlaLanguage
         PooFlowTlaDocument
+        PooFlowTlaModelOutline
+        PooFlowTlaTemporalProjection
         poo-flow-tla-language?
-        poo-flow-tla-document?)
+        poo-flow-tla-document?
+        poo-flow-tla-model-outline?
+        poo-flow-tla-temporal-projection?)
 
 (def (tla-has-slots? value slots)
   (and (object? value)
@@ -58,3 +64,56 @@
 
 (def (poo-flow-tla-document? value)
   (element? PooFlowTlaDocument value))
+
+;;; A declaration index over the parser-owned CST, not a second TLA+ AST or
+;;; semantic admission. Duplicate names remain visible for later semantic checks.
+(def (tla-name-list? value)
+  (and (list? value)
+       (every tla-nonempty-string? value)))
+
+(def (tla-model-outline-shape? value)
+  (and (tla-has-slots?
+        value '(kind document source-digest grammar-digest module-identity
+                     variable-identities constant-identities
+                     operator-identities semantic-validation? model-checking?))
+       (eq? (.ref value 'kind) 'poo-flow.tla-plus.model-outline)
+       (poo-flow-tla-document? (.ref value 'document))
+       (equal? (.ref value 'source-digest)
+               (.ref (.ref value 'document) 'source-digest))
+       (equal? (.ref value 'grammar-digest)
+               (.ref (.ref value 'document) 'grammar-digest))
+       (tla-nonempty-string? (.ref value 'module-identity))
+       (tla-name-list? (.ref value 'variable-identities))
+       (tla-name-list? (.ref value 'constant-identities))
+       (tla-name-list? (.ref value 'operator-identities))
+       (eq? (.ref value 'semantic-validation?) #f)
+       (eq? (.ref value 'model-checking?) #f)))
+
+(define-type (PooFlowTlaModelOutline @ Type.)
+  .element?: tla-model-outline-shape?)
+
+(def (poo-flow-tla-model-outline? value)
+  (element? PooFlowTlaModelOutline value))
+
+(def (tla-temporal-projection-shape? value)
+  (and (tla-has-slots?
+        value '(kind document model source-digest grammar-digest
+                     semantic-digest semantic-subset model-checking?))
+       (eq? (.ref value 'kind) 'poo-flow.tla-plus.temporal-projection)
+       (poo-flow-tla-document? (.ref value 'document))
+       (poo-flow-temporal-model? (.ref value 'model))
+       (equal? (.ref value 'source-digest)
+               (.ref (.ref value 'document) 'source-digest))
+       (equal? (.ref value 'grammar-digest)
+               (.ref (.ref value 'document) 'grammar-digest))
+       (equal? (.ref value 'semantic-digest)
+               (.ref (.ref value 'model) 'semantic-digest))
+       (eq? (.ref value 'semantic-subset)
+            'poo-flow.tla-plus.literal-hypothesis-family.v1)
+       (eq? (.ref value 'model-checking?) #f)))
+
+(define-type (PooFlowTlaTemporalProjection @ Type.)
+  .element?: tla-temporal-projection-shape?)
+
+(def (poo-flow-tla-temporal-projection? value)
+  (element? PooFlowTlaTemporalProjection value))

@@ -1,0 +1,358 @@
+#+title: Evidence, Use, and Artifact Lineage in the Temporal Engine
+#+date: [2026-10-01]
+#+options: toc:3 num:t
+#+property: header-args:sh :results output :exports both
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Research question and owner
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-question
+:END:
+
+How can one engine retain the difference between finding evidence, using it
+for a claim, checking that use, and propagating a changed premise through
+derived artifacts?  Search, a short answer, an extended task and autonomous
+research all instantiate these relations.  Their task labels and activity
+types are *not* public engine primitives.  =evidence/= owns immutable
+POO-native relation values and pure graph queries; =revisions/= owns
+admission/valid-time evidence history; =truth-maintenance/= owns cut-bound
+reevaluation scheduling.  A runtime or research Provider owns retrieval,
+source inspection, semantic checking and publication effects.
+
+The present relation model does not infer that a retrieved document is
+relevant, that an assessment is correct, that a claim is true, or that a
+reachable downstream claim actually changed.  Those are separate,
+evidence-bearing judgments.
+
+** AI research mapped to falsifiable engine questions
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-papers
+:END:
+
+#+name: temporal-evidence-research-map
+#+caption: Primary research sources, what they motivate, and the current executable boundary.
+| Source | Question for this engine | Current relation / open validation |
+|--------+--------------------------+------------------------------------|
+| Liu et al., [[https://arxiv.org/abs/2608.01913][Diagnosing Search Behavior and Failure Modes in Long-Horizon Search Agents]] (2026 preprint) | Was useful evidence found, and was found evidence used well? Search count alone is weak evidence of answer quality. | =EvidenceRetrieval= and =EvidenceUse= remain separate. The audit detects unused retrieval and unreviewed use; it does not measure document relevance or answer quality. |
+| Ma et al., [[https://arxiv.org/abs/2608.01964][LongHorizon-Harness]] (2026 preprint) | How does an extended execution retain independently verified task state instead of promoting self-assessment? | Source and assessment digests are distinct. A Provider must independently verify them; the present constructor only retains a caller's attestation. |
+| Jin et al., [[https://www.microsoft.com/en-us/research/publication/toward-generalist-autonomous-research-via-hypothesis-tree-refinement/][Toward Generalist Autonomous Research via Hypothesis-Tree Refinement]] (2026 preprint) | How are hypotheses, artifacts, evidence and lessons carried across an autonomous research horizon? | Explicit evidence-to-claim use and claim-to-claim dependency; future work needs hypothesis revision, branch comparison and independently admitted improvement. |
+| [[https://arxiv.org/abs/2506.11763][DeepResearch Bench]] (2025 preprint) | Are retrieval and report quality measured separately in multistep research? | A future evaluation must score evidence retrieval, use support and report claims separately on a frozen benchmark. No benchmark result is claimed here. |
+| Jia et al., [[https://aclanthology.org/2025.acl-long.1435/][The Task Shield]] (ACL 2025) | Can external instructions or tool data divert a specific user objective? | This is one adversarial stress case for source provenance and use checking; there is no task-specific instruction classifier in the core. |
+| Su et al., [[https://arxiv.org/abs/2407.12883][BRIGHT]] (2024 preprint) | Does a retrieval need reasoning beyond surface query overlap? | A query-to-evidence relation records the candidate; a future retrieval Provider must validate relevance on reasoning-intensive cases. |
+| Gao et al., [[https://aclanthology.org/2023.emnlp-main.398/][Enabling Large Language Models to Generate Text with Citations]] (EMNLP 2023) | Are answer correctness and citation quality both measured? | =EvidenceUse= names a claim and source version; a distinct =EvidenceAssessment= names its exact use, assessor, method, verdict and basis. Neither is a correctness metric by itself. |
+| [[https://arxiv.org/abs/2607.17291][DRNOISE]] (2026 preprint) | Can a research system reconcile misleading, answer-like sources against direct records? | Conflicting assessments remain contested; a future evaluator must inspect source content and adjudicate the conflict. |
+| [[https://arxiv.org/abs/2607.08700][Citation verifier benchmark]] (2026 preprint) | How stable are model judgments of source attribution on hard disagreements? | Assessment method and assessor identity are recorded; calibration, independence and human adjudication are open evaluation work. |
+
+The cited papers provide problem evidence and evaluation designs.  Their
+reported results are not reproduced by this module.[fn:scope]
+
+* Semantic contract
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-contract
+:END:
+
+Let =Q= name queries or research questions, =E= immutable evidence versions,
+=C= claims or artifact nodes, and =R ⊆ Q×E= be retrieval receipts.  Let
+=U ⊆ E×C= be declared uses, each binding a source digest and *claim
+content digest*.  Let =A ⊆ U×Assessor×Method×Verdict×Basis= be separately
+supplied assessments and =D ⊆ C×C= be declared derivation edges.  Verdicts
+are =supports=, =refutes= or =uncertain=.  Every assessment binds the exact
+semantic digest of an existing use; revising a source or claim cannot reuse
+the former assessment.  Evidence identity maps to one source digest and
+claim identity to one claim digest in a lineage.  A changed version requires
+a new identity or an explicit revision.  Relations and
+lineage are immutable and content-bound.  The ordinary construction path is
+POO objects, not raw tuple lists.
+
+#+name: temporal-evidence-judgment-levels
+#+caption: Do not promote a weaker statement to a stronger one.
+| Level | Required evidence | What the current module says |
+|-------+-------------------+------------------------------|
+| Retrieved | =R(q,e)= and source digest | A candidate source was recorded for a question. |
+| Used | =U(e,c)= with source and claim digests | A particular claim version cites or relies on a particular evidence version. |
+| Attested | Separate =A(u,assessor,method,verdict,basis)= | A named judgment was supplied for that exact use; its content and independence are not verified here. |
+| Admitted claim | Verified assessment policy, version-consistent proof and runtime selection | Outside this module. |
+| Actual impact | Recomputed downstream results with semantic comparison and causal assumptions where needed | Outside this module; reachability is only a potential impact frontier. |
+
+For changed evidence =e=, the potential frontier is the least fixed point
+
+\[F_e = \mu X.\bigl(\{c\mid U(e,c)\}\cup
+                     \{c'\mid \exists c\in X:D(c,c')\}\bigr).\]
+
+The Scheme implementation builds reverse claim dependencies and visits each
+reachable claim at most once, so cycles terminate.  =F_e= is relative to
+the supplied edge inventory.  Missing uses or derivation edges make the
+frontier incomplete; this module does not assert global dependency
+completeness.  The use audit reports retrieved-but-unused evidence,
+cited-but-unretrieved evidence, unreviewed uses, attested support,
+refutation, uncertainty and conflict.  If at least one assessment supports
+and another refutes the same use, it is =contested=; uncertainty also blocks
+the aggregate =declared-reviewed= status.  This is a classification of
+attestation records, not a vote on truth.
+An empty bucket is a statement about the supplied inventory only.  An unused
+retrieval is a normal exploratory outcome and does not alone make the
+aggregate audit =needs-review=; it stays visible for a caller's relevance or
+stopping policy.
+
+* TLA+ behavioral model
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-tla
+:END:
+
+=packages/proofs/tla/temporal-causality/evidence/EvidenceLineageSemantics.tla= defines the pure finite candidate-use and
+dependency relations and their bounded closure.  The internal relation in
+=packages/proofs/tla/temporal-causality/evidence/EvidenceLineageExplorer.tla= permits any enabled order of retrieval,
+citation, use checking, claim admission and evidence correction.  The
+finite fixture is =packages/proofs/tla/temporal-causality/evidence/EvidenceLineageCase.tla/.cfg=.  This =Next=-equivalent
+exploration relation is a model-checker mechanism, not the public POO API or
+a prediction of the model's next action.
+
+The fixture contains two candidate evidence-to-finding uses and a report
+dependent on the finding.  The initial relation =soundUses= ranges over
+*every subset* of those candidate uses, so TLC checks four possible
+validity worlds as well as their operation interleavings.  A checked use may support
+admission only while its source has not been corrected.  Citation added
+*after* admission invalidates the cited claim and its descendants, because
+the old verification did not cover the expanded evidence set.  Correction
+invalidates checked uses of the corrected evidence and every active claim
+reachable from a *cited* use of it.  Candidate-but-never-cited evidence does
+not invalidate a claim.  TLC exposed both rules while exploring orderings;
+they are explicit transitions now.
+
+#+name: temporal-evidence-tla-properties
+#+caption: Finite safety obligations checked by TLC for the declared fixture.
+| Property | Meaning |
+|----------+---------|
+| =TypeInvariant= | State sets remain inside finite declared universes. |
+| =UsePartitionInvariant= | One use is not both checked and rejected. |
+| =CheckedUseInvariant= | Every checked use belongs to the selected possible world's sound-use relation and has an uncorrected source. |
+| =ActiveSupportInvariant= | Every active claim has checked local use or an active declared parent; cited local uses are all checked. |
+| =CorrectionInvariant= | No active claim lies in the cited-use dependency closure of corrected evidence. |
+
+The checker assumes a perfect use-checking oracle *within each possible
+world*.  The second finite model,
+=packages/proofs/tla/temporal-causality/evidence/EvidenceAssessmentExplorer.tla=, explicitly permits two reviewers to
+produce any of =supports/refutes/uncertain= in either order.  A new review
+invalidates the cited claim and its descendants before any fresh admission;
+source withdrawal does the same.  Its safety properties retain an active
+claim only while every cited use has a non-conflicted support classification
+or an active declared parent.  This checks the lifecycle of *attestations*,
+including disagreement, without treating reviewers as perfect.  The
+production system cannot know soundness from a string identity or digest;
+evaluator error and correlated assessment failures remain open.
+The model checks atomic invalidation; actual concurrent runtime publication
+would require a corresponding atomic state transition or versioned CAS and a
+refinement argument.  No general Scheme-to-TLA correspondence theorem,
+liveness guarantee, fairness assumption, complete source universe, or claim
+truth theorem is asserted.
+
+** Candidate exchange with GQL and ASCENT
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-candidate-exchange
+:END:
+
+The [[file:../../../docs/10-19-design/10.06-poo-module-system/161-temporal-causality-and-causal-trajectory-architecture.org::#temporal-candidate-exchange][architecture contract]] places a finite candidate exchange at the
+Temporal boundary.  GQL locates source and path candidates; ASCENT derives
+candidate relations over a frozen finite snapshot; Temporal retains source
+versions, verification, revision and conclusion admission.  A GQL
+=SourceQueryReceipt= already records parser/source identity, result digest,
+count and completeness.  It has no shared row value that can yet be checked
+against ASCENT output.  An adapter must bind materialized rows to the result
+digest and the exact Temporal cut before either engine's candidates can be
+joined.  No such adapter is claimed by this model.
+
+The abstract =packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla= tests a necessary safety
+condition for that adapter: candidate identities may be reported in either
+order, with complete or incomplete receipts and on old or current revision
+generations.  Each candidate declares a nonempty required-provider set;
+a publication attempt requires current-generation complete receipts from
+every provider in that set.  A generation revision atomically
+clears publication, while old receipts remain visible as historical data.
+One candidate/provider/generation has one immutable receipt in the model;
+a retry with different completeness needs a new generation or receipt
+identity in a richer protocol.
+
+#+name: temporal-candidate-exchange-properties
+#+caption: Scope of the finite candidate exchange model.
+| Property | Meaning | Excluded obligation |
+|----------+---------+---------------------|
+| =TypeInvariant= | Finite receipt and publication sets stay within declared universes. | No parser or relation evaluation. |
+| =ReceiptUniquenessInvariant= | One candidate/provider/generation does not acquire conflicting completion records. | No source row authentication. |
+| =PublicationInvariant= | Published candidates have complete receipts from their declared providers in the current generation. | No truth, causal admission, or real runtime atomicity. |
+
+The TLC fixture has two abstract candidate identities and two generations:
+one candidate requires both sources, the other only ASCENT.
+It explores interleavings and stale completions; it does not prove the
+Scheme runtime refines these transitions.  Candidate agreement is only a
+reason to inspect provenance and evidence use, not a semantic verdict.
+
+** Why/Why-Not provenance ownership
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-provenance-owner
+:END:
+
+The term /proof chain/ has two different meanings here.  A *deductive
+derivation* explains how a result follows from a fixed finite input
+relation and a fixed program.  An *admission justification* explains why
+the inputs and their interpretations are acceptable for a particular
+Temporal conclusion.  Conflating them would let a correct derivation from
+untrusted or obsolete premises masquerade as an accepted conclusion.
+
+#+name: temporal-proof-chain-owner
+#+caption: Owner and minimum checkable evidence for each proof-chain layer.
+| Layer | Semantic owner | Minimum receipt | Current status |
+|-------+----------------+-----------------+----------------|
+| GQL query/path | GQL Query Provider | Query and parser identity, graph revision, materialized result-row digest and bounded witness | Current receipt has digest/count/completeness but no shared materialized row contract. |
+| ASCENT Why | ASCENT evaluator | Program/rule identity, input fact identities, derivation nodes, exact snapshot, completion and budget | Local ASCENT commit =5fbaba6= adds independently replayable positive atom-rule DAGs with bounded status; non-positive rules remain unsupported. |
+| ASCENT Why-Not | ASCENT evaluator under a declared finite domain | Ground query tuple, source/candidate facts, rule-closed relation set, exact snapshot/program identity and result status | ASCENT local commit =6993dc8= generates and independently checks bounded positive-rule nonmembership certificates; non-positive and non-ground cases remain unsupported. |
+| Premise meaning and admission | POO Flow Temporal | Evidence cut, source revision, assessment of exact use, authority policy and selected conclusion revision | =candidates/= now binds declared cut/provider/check digests with an inert reviewability audit; no cross-engine row binding or Temporal proof-admission adapter exists. |
+| Lifecycle safety | TLA+ projection owned by Temporal | Generation, required-provider set, complete receipt, atomic invalidation | Finite abstract protocol checked; no runtime refinement proof. |
+
+Positive relational provenance can be represented algebraically over
+annotated inputs as in Green, Karvounarakis and Tannen's
+[[https://www.cs.ucdavis.edu/~green/papers/pods07.pdf][provenance semirings]].  Why-Not is a separate semantic problem: a
+missing tuple requires a query, a candidate domain and an input-completeness
+assumption, as illustrated by [[https://arxiv.org/abs/1309.2655][first-order provenance games]].  An
+incomplete search or a budget-exhausted closure yields =unknown= or
+=bounded=, never an unconditional proof of absence.
+
+Putting the rule-level proof DAG into Temporal would duplicate ASCENT's
+evaluator and make Temporal responsible for its fixpoint and update
+semantics.  Putting Temporal admission into ASCENT would mistake a valid
+deduction for source trust, citation support, user authority or current
+revision.  The shared contract therefore carries *references* across the
+boundary, while the component that knows each semantics produces and
+checks its own evidence.  A source correction retires the old Temporal
+scope and forces any ASCENT proof bound to that scope to be re-evaluated;
+it does not erase the historical explanation.
+
+The new ASCENT =candidate/provenance.ss= API produces =complete=, =bounded=
+or =unsupported= independently of the native query status.  Its positive
+proof records source, hypothetical candidate and rule nodes with ordered
+input-node identities, query roots, snapshot identity/generation/digest,
+candidate digest and work budget.  =candidate-verify-positive-proof=
+replays the nodes against the inspected program and native rows.  The
+normal =reasoning-attempt= receipt has a separate =proof= field and an
+optional proof-work budget.  It accepts multi-relation joins and recursion
+within the pure positive atom subset.  Empty results and rules using
+negation, =where=, =compute= or =reduce= remain =unsupported= for this
+generic proof, even if the native query itself completed.  The earlier
+special graph witness/cut remains a separate narrow evidence kind.
+
+The ASCENT positive Why change =5fbaba6= was sent to PR #1 by its owning
+thread.  Its later local =6993dc8= adds finite positive-rule Why-Not,
+independent verification and bounded test progress; that commit had not
+been pushed when this record was written.  =just build= and the 29-module
+local Scheme qualification passed.  The abstract Lean theorem and finite
+TLC session model passed their focused gate.  Remote CI remains a separate
+gate.  These checks do not establish cross-system integration.  Temporal
+must still bind
+the exact evidence cut to the ASCENT snapshot, require both native and
+proof status =complete=, replay the proof, and inspect source assessments
+and authority before admitting a conclusion.  A locally implemented
+positive-rule Why-Not certificate is described below; non-positive rule
+proof and a cross-GQL row/authority adapter remain open.  The
+[[file:../candidates/model.org][candidate exchange model]] now records the exact cut,
+provider receipt and separate check as POO values, with =reviewable=
+explicitly distinct from admission.
+
+*** Conditional Why-Not certificate contract
+:PROPERTIES:
+:CUSTOM_ID: temporal-why-not-certificate
+:END:
+
+For a fixed finite relation snapshot =D=, candidate facts =H= and
+positive rule program =P=, let =T_P= be its immediate-consequence
+operator.  A ground target tuple =q= is absent *relative to that exact
+program and snapshot* if the evaluator completes and computes a finite
+closed set =C= such that
+
+\[D\cup H\subseteq C,\qquad T_P(C)\subseteq C,\qquad q\notin C.\]
+
+By monotonicity, the least fixed point is contained in =C=, so =q= is not
+derivable from those premises.  An independent verifier must replay
+source/candidate rows, every supported rule instance or a complete rule
+closure check, the ground query and the source/program digests.  The
+certificate is invalidated for current use when the Temporal evidence cut
+or program changes, while remaining a historical result for the old cut.
+This is the mathematical contract for ASCENT's separate, locally
+implemented =candidate/nonmembership.ss=; it is not produced by the
+positive Why DAG.  The generator and checker each have a work budget.
+The checker recomputes the inspected-program fingerprint and binds
+snapshot identity/generation/digest, candidate digest and the native
+complete/empty result.  It checks every supported rule instance against
+=C= and the absence of the ground target.  A bounded run never returns
+a complete certificate.
+
+Temporal must additionally declare whether the source inventory covers
+the intended question.  A closed relation snapshot may still omit a
+document, retrieval result or observed event; the certificate then says
+only that =q= is absent from the supplied finite model.  Budget exhaustion,
+non-ground questions and unsupported constructs return =bounded= or
+=unsupported=.  Negation, aggregation and arithmetic require separate
+semantics before their absence can be treated in this way.
+
+*** Formal-model division
+:PROPERTIES:
+:CUSTOM_ID: temporal-why-not-formal-division
+:END:
+
+The ASCENT owner should prove the finite positive-rule closure argument
+as an abstract Lean theorem, then state separately what its Scheme
+verifier checks at runtime.  A successful Lean compilation proves the
+theorem under the encoded assumptions; it does not prove that the Gerbil
+interpreter implements the encoding.  ASCENT's TLA+ model should check
+snapshot replacement, proof computation and publication order, so an
+old-generation proof cannot be installed as the current answer and a
+bounded or unsupported result cannot be promoted.  This is distinct
+from the mathematical closure theorem.
+
+POO Flow's TLA+ obligation begins at the *cross-system* boundary:
+GQL/ASCENT result identity, evidence cut and source-completeness policy
+must match the conclusion revision that consumes them.  Its current
+=CandidateExchangeExplorer= checks only generation and declared-provider
+completeness in a finite abstract model.  A proof-aware receipt adapter,
+source-coverage check and runtime refinement test remain open.  Keeping
+these claims separate avoids counting two abstract models as an
+end-to-end conformance proof.
+
+* Executable evidence and next checks
+:PROPERTIES:
+:CUSTOM_ID: temporal-evidence-gates
+:END:
+
+#+name: check-temporal-evidence
+#+begin_src sh
+just check-temporal-evidence
+#+end_src
+
+#+name: check-temporal-evidence-tlc
+#+begin_src sh
+just check-temporal-evidence-tlc
+#+end_src
+
+The focused Scheme test checks relation canonicalization, distinct
+retrieval/use buckets, exact assessment binding, conflicting judgments,
+source/claim-version consistency and cycle-safe potential impact.  TLC
+explores all four sound-use configurations of the first fixture, and
+reviewer-order/conflict paths in the second.  These are local
+structural and finite-behavior receipts; they do not reproduce any paper's
+benchmark or establish end-to-end research quality.
+
+The next evaluation should freeze a search corpus and record, per question:
+relevant evidence available, evidence retrieved, evidence actually used,
+assessment verdict and basis, claim support, correction-induced frontier,
+and final artifact quality.  Report retrieval gaps separately from
+utilization gaps, as in the long-horizon search study.  Include short
+answers, extended search and autonomous research as scenarios using the
+same relation model; compare against human-adjudicated relevance and claim
+support rather than treating the number of tool calls as success.
+
+[fn:scope] Publication date and paper status are recorded as of 2026-10-01.
+The 2026 arXiv sources are preprints; the links identify the version whose
+abstract was reviewed.  The module does not implement the papers' agents,
+benchmarks or reported quality metrics.

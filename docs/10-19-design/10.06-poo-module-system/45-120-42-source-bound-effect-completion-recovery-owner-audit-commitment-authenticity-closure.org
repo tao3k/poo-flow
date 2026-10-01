@@ -308,11 +308,11 @@ flowchart LR
 * Proof files
 
 - Independent model:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentModel.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentModel.lean=
 - Canonical lightweight core:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentCore.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentCore.lean=
 - Actual trace-level closure:
-  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentClosure.lean=
+  =packages/proofs/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCommitmentClosure.lean=
 
 * AXLE verification receipts
 

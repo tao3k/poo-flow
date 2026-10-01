@@ -55,7 +55,7 @@ If this plan conflicts with an RFC, the RFC wins until an explicit RFC amendment
 - =src/semantic/= exists and currently contains a boundary-namespace owner.
 - =src/contract/= owns typed contract, JSON Schema IR, normalization, validation, and receipt machinery.
 - =src/proof/= owns proof fact wire, proof FFI bridge, proof-gate bundle, decision, and receipts.
-- =packages/proof/lean/= owns Lean proof artifacts.
+- =packages/proofs/lean/= owns Lean proof artifacts.
 
 These areas are reused. The plan does not create a parallel top-level semantic universe.
 
@@ -169,7 +169,7 @@ The following allocation is proposed. AC-00 must confirm each path with ASP owne
 | public C symbols and probe/harness | =bindings/runtime-c/= | installed headers, probe receipts |
 | Python production runtime | =packages/python-runtime/= | Python typed API and wheel artifacts |
 | authorization and evidence | existing policy/receipt owners plus bounded new modules | =src/contract/evidence-chain*.ss= |
-| Lean-linked proof | =src/proof/= and =packages/proof/lean/= | proof manifests and receipts |
+| Lean-linked proof | =src/proof/= and =packages/proofs/lean/= | proof manifests and receipts |
 | scenario acceptance | =user-interface/cases/= and =t/scenarios/= | 10.06.96 matrix |
 
 No proposed path is a public API merely because it appears in this plan.
@@ -383,7 +383,7 @@ Close bounded formal links without substituting proof for runtime conformance.
 
 ** Validation
 #+begin_src sh
-(cd packages/proof/lean && lake build)
+(cd packages/proofs/lean && lake build)
 gxtest t/scenarios/proof-ffi-bridge-test.ss
 gxtest t/scenarios/proof-gate-bundle-test.ss
 gxtest t/scenarios/proof-gate-decision-test.ss
@@ -484,7 +484,7 @@ uv run --project packages/python-runtime poo-flow-runtime-program-probe
 
 ** Lean
 #+begin_src sh
-(cd packages/proof/lean && lake build)
+(cd packages/proofs/lean && lake build)
 #+end_src
 
 ** Repository Hygiene
