@@ -9,8 +9,6 @@ import argparse
 import json
 import os
 import re
-import select
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,8 +16,13 @@ from pathlib import Path
 from openai import OpenAI
 from poo_flow_runtime import RuntimeGraphExecutor, linear_plan
 
-HERE = Path(__file__).resolve().parent
-ALLOWED = re.compile(r"[A-Za-z0-9_?+*<>=!()\s-]+\Z", re.ASCII)
+from candidate import SchemeChecker, candidate_text, scheme_attempt
+
+
+def terminal_write(value: str) -> None:
+    """Emit one bounded experiment message through the terminal surface."""
+    sys.stdout.write(value)
+    sys.stdout.flush()
 
 
 def key_from_file(path: Path) -> str:
@@ -33,104 +36,6 @@ def key_from_file(path: Path) -> str:
     raise ValueError("DEEPSEEK_API_KEY is absent from the selected env file")
 
 
-def candidate_text(output: str) -> str | None:
-    text = output.strip()
-    if text.startswith("```") and text.endswith("```"):
-        lines = text.splitlines()
-        if len(lines) >= 3 and lines[0] in ("```", "```scheme", "```gerbil"):
-            text = "\n".join(lines[1:-1]).strip()
-    if not text.startswith("(candidate "):
-        if not text.startswith("(candidate\n"):
-            return None
-    if len(text) > 16384 or not ALLOWED.fullmatch(text):
-        return None
-    depth = 0
-    for index, char in enumerate(text):
-        if char == "(":
-            depth += 1
-        elif char == ")":
-            depth -= 1
-        if depth < 0 or depth > 128:
-            return None
-        if depth == 0 and text[index + 1:].strip():
-            return None
-    return text if depth == 0 else None
-
-
-class SchemeChecker:
-    """One temporary Gerbil worker per experiment conversation."""
-
-    def __init__(self, ascent_root: Path | None = None) -> None:
-        env = os.environ.copy()
-        if ascent_root is not None:
-            env["GERBIL_LOADPATH"] = str(ascent_root) + (
-                ":" + env["GERBIL_LOADPATH"] if env.get("GERBIL_LOADPATH") else ""
-            )
-        self.process = subprocess.Popen(
-            ["gerbil", "-:max-heap=1G,debug=q", "env", "gxi",
-             str(HERE / "attempt.ss")],
-            cwd=ascent_root or HERE, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL, env=env,
-        )
-        self.pending = b""
-
-    def attempt(self, candidate: str) -> dict[str, str]:
-        if self.process.stdin is None or self.process.stdout is None:
-            raise RuntimeError("Scheme worker pipes are unavailable")
-        self.process.stdin.write((candidate + "\n").encode("ascii"))
-        self.process.stdin.flush()
-        deadline = time.monotonic() + 45
-        lines = []
-        while True:
-            if b"\n" in self.pending:
-                raw, self.pending = self.pending.split(b"\n", 1)
-                line = raw.decode("utf-8")
-                if line == "END":
-                    break
-                lines.append(line)
-                continue
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                self.process.kill()
-                raise RuntimeError("Scheme worker exceeded 45 seconds")
-            ready, _, _ = select.select([self.process.stdout], [], [], remaining)
-            if not ready:
-                continue
-            chunk = os.read(self.process.stdout.fileno(), 4096)
-            if not chunk:
-                raise RuntimeError("Scheme worker exited before its receipt")
-            self.pending += chunk
-        fields = dict(line.split("\t", 1) for line in lines)
-        required = {"status", "rows", "bound", "snapshot-digest",
-                    "candidate-digest", "diagnostics", "after-status",
-                    "after-rows", "after-bound", "after-snapshot-digest"}
-        if set(fields) != required:
-            raise RuntimeError("Scheme worker returned an incomplete receipt")
-        return fields
-
-    def close(self) -> None:
-        if self.process.stdin:
-            try:
-                self.process.stdin.close()
-            except BrokenPipeError:
-                pass
-        try:
-            self.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            self.process.kill()
-            self.process.wait()
-        if self.process.stdout:
-            self.process.stdout.close()
-
-
-def scheme_attempt(candidate: str, ascent_root: Path | None = None) -> dict[str, str]:
-    checker = SchemeChecker(ascent_root)
-    try:
-        return checker.attempt(candidate)
-    finally:
-        checker.close()
-
-
 def build_graph(client: OpenAI, model: str, checker=scheme_attempt) -> RuntimeGraphExecutor:
     """The downstream adapter owns model and Scheme nodes, not graph semantics."""
 
@@ -140,7 +45,7 @@ def build_graph(client: OpenAI, model: str, checker=scheme_attempt) -> RuntimeGr
             model=model, input=state["messages"], max_output_tokens=4096,
             reasoning={"effort": "none"}, stream=True,
         )
-        print("model> ", end="", flush=True)
+        terminal_write("model> ")
         chunks: list[str] = []
         response = None
         first_token_seconds = None
@@ -149,11 +54,11 @@ def build_graph(client: OpenAI, model: str, checker=scheme_attempt) -> RuntimeGr
                 if first_token_seconds is None:
                     first_token_seconds = round(time.perf_counter() - started, 3)
                 chunks.append(event.delta)
-                print(event.delta, end="", flush=True)
+                terminal_write(event.delta)
             elif event.type in ("response.completed", "response.incomplete",
                                 "response.failed"):
                 response = event.response
-        print(flush=True)
+        terminal_write("\n")
         if response is None:
             raise RuntimeError("DeepSeek stream ended without a final response")
         if response.status != "completed":
@@ -185,9 +90,9 @@ def converse(api_key: str, model: str, transcript: Path | None,
     checker = SchemeChecker(ascent_root)
     graph = build_graph(client, model, checker.attempt)
     messages: list[dict[str, str]] = []
-    print("DeepSeek interactive session. No initial prompt or instructions are sent.")
-    print("Type /quit to end. Scheme sample source: edge/2 = {(0,1), (1,2)};")
-    print("a second snapshot withdraws (1,2). Exact candidate data is checked locally.")
+    terminal_write("DeepSeek interactive session. No initial prompt or instructions are sent.\n")
+    terminal_write("Type /quit to end. Scheme sample source: edge/2 = {(0,1), (1,2)};\n")
+    terminal_write("a second snapshot withdraws (1,2). Exact candidate data is checked locally.\n")
     while True:
         try:
             user = input("you> ")
@@ -202,7 +107,7 @@ def converse(api_key: str, model: str, transcript: Path | None,
             result, trace = graph.invoke_with_trace({"messages": list(messages)})
         except Exception as error:
             messages.pop()
-            print("turn failed> " + type(error).__name__)
+            terminal_write("turn failed> " + type(error).__name__ + "\n")
             continue
         raw = result["output"]
         event: dict = {"user": user, "model": raw,
@@ -212,11 +117,13 @@ def converse(api_key: str, model: str, transcript: Path | None,
                        "first_token_seconds": result["first_token_seconds"],
                        "scheme_seconds": result["scheme_seconds"]}
         messages.append({"role": "assistant", "content": raw})
-        print("timing> first token", result["first_token_seconds"],
-              "s; model", result["model_seconds"], "s; Scheme",
-              result["scheme_seconds"], "s")
+        terminal_write("timing> first token " + str(result["first_token_seconds"])
+                       + " s; model " + str(result["model_seconds"])
+                       + " s; Scheme " + str(result["scheme_seconds"]) + " s\n")
         if result["receipt"] is not None:
-            print("Scheme receipt> " + json.dumps(result["receipt"], ensure_ascii=False))
+            terminal_write("Scheme receipt> "
+                           + json.dumps(result["receipt"], ensure_ascii=False)
+                           + "\n")
             event["receipt"] = result["receipt"]
         if transcript is not None:
             with transcript.open("a", encoding="utf-8") as file:

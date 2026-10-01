@@ -10,23 +10,23 @@
         (only-in :poo-flow/modules/query/scheme-select
                  poo-flow-query-select-scheme-nodes)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-evaluate-program))
+                 relational-program gerbil-ascent-evaluate-program))
 
-(export poo-flow-reverse-inference-evaluate
-        poo-flow-inference-hypothesis-result
-        poo-flow-reverse-inference-explore)
+(export poo-flow-evidence-assessment-evaluate
+        poo-flow-evidence-hypothesis-result
+        poo-flow-evidence-assessment-explore)
 
-(def (poo-flow-inference-hypothesis-result receipt hypothesis-id)
+(def (poo-flow-evidence-hypothesis-result receipt hypothesis-id)
   (let (result
         (find (lambda (item)
                 (eq? (.ref item 'identity) hypothesis-id))
               (.ref receipt 'hypothesis-results)))
-    (or result (error "unknown reverse inference hypothesis" hypothesis-id))))
+    (or result (error "unknown evidence assessment hypothesis" hypothesis-id))))
 
 (def (evidence-reference? reference source)
   (and (object? reference)
        (eq? (.ref reference 'kind)
-            'poo-flow.reverse-inference.evidence-reference)
+            'poo-flow.evidence-assessment.evidence-reference)
        (eq? (.ref reference 'source) source)
        (string? (.ref reference 'uri))
        (> (string-length (.ref reference 'uri)) 0)
@@ -37,7 +37,7 @@
 
 (def (claim? value allowed)
   (and (object? value)
-       (eq? (.ref value 'kind) 'poo-flow.reverse-inference.claim)
+       (eq? (.ref value 'kind) 'poo-flow.evidence-assessment.claim)
        (symbol? (.ref value 'identity))
        (memq (.ref value 'identity) allowed)
        (symbol? (.ref value 'value))
@@ -70,7 +70,7 @@
 
 (def (step? value allowed)
   (and (object? value)
-       (eq? (.ref value 'kind) 'poo-flow.reverse-inference.step)
+       (eq? (.ref value 'kind) 'poo-flow.evidence-assessment.step)
        (symbol? (.ref value 'from))
        (symbol? (.ref value 'to))
        (memq (.ref value 'first) allowed)
@@ -79,7 +79,7 @@
 
 (def (hypothesis? value allowed)
   (and (object? value)
-       (eq? (.ref value 'kind) 'poo-flow.reverse-inference.hypothesis)
+       (eq? (.ref value 'kind) 'poo-flow.evidence-assessment.hypothesis)
        (symbol? (.ref value 'identity))
        (symbol? (.ref value 'from))
        (symbol? (.ref value 'to))
@@ -88,10 +88,10 @@
        (every (lambda (claim) (memq claim allowed))
               (.ref value 'required-claims))))
 
-(def (poo-flow-reverse-inference-evaluate case-value)
+(def (poo-flow-evidence-assessment-evaluate case-value)
   (unless (and (object? case-value)
                (eq? (.ref case-value 'kind)
-                    'poo-flow.reverse-inference.case))
+                    'poo-flow.evidence-assessment.case))
     (error "reverse evidence requires a POO Case" case-value))
   (let* ((claims (.ref case-value 'claims))
          (steps (.ref case-value 'steps))
@@ -132,13 +132,18 @@
             (map list
                  (append (map caddr equal-steps)
                          (map cadddr equal-steps))))
+           ;; Equality is a finite source, so mismatch rules use checked
+           ;; negation without passing a host predicate into Ascent.
+           (equal-values
+            (map (lambda (row) (list (cadr row) (cadr row))) selected))
            (result
             (gerbil-ascent-evaluate-program
-             (ascent
+             (relational-program
               (relation claim (name value source) selected)
               (relation step (from to first second) presence-steps)
               (relation equal-step (from to first second) equal-steps)
               (relation equal-claim (name) equal-claim-kinds)
+              (relation equal-value (first second) equal-values)
               (relation required (name))
               (relation seen (name))
               (relation missing (name))
@@ -150,44 +155,42 @@
               (relation supported-step
                 (from to first first-source second second-source))
               (relation reverse-reach (from to))
-              ((required first) <-- (step from to first second))
-              ((required second) <-- (step from to first second))
-              ((required first) <-- (equal-step from to first second))
-              ((required second) <-- (equal-step from to first second))
-              ((seen name) <-- (claim name value source))
-              ((missing name) <-- (required name) (not (seen name)))
-              ((mismatch first first-value first-source
-                         second second-value second-source)
-               <-- (equal-step from to first second)
-                   (claim first first-value first-source)
-                   (claim second second-value second-source)
-                   (guard (first-value second-value)
-                          (lambda (left right) (not (equal? left right)))))
-              ((conflict name first-value first-source
-                         second-value second-source)
-               <-- (equal-claim name)
-                   (claim name first-value first-source)
-                   (claim name second-value second-source)
-                   (guard (first-value second-value)
-                          (lambda (left right) (not (equal? left right)))))
-              ((supported-step from to first first-source
-                               second second-source)
-               <-- (step from to first second)
-                   (claim first first-value first-source)
-                   (claim second second-value second-source))
-              ((supported-step from to first first-source
-                               second second-source)
-               <-- (equal-step from to first second)
-                   (claim first value first-source)
-                   (claim second value second-source))
-              ((reverse-reach from to)
-               <-- (supported-step from to first first-source
-                                   second second-source))
-              ((reverse-reach from end)
-               <-- (reverse-reach from middle)
-                   (supported-step middle end first first-source
-                                   second second-source))
-              (bounds 64 256 512))))
+              (rule (required ?first) (step ?from ?to ?first ?second))
+              (rule (required ?second) (step ?from ?to ?first ?second))
+              (rule (required ?first) (equal-step ?from ?to ?first ?second))
+              (rule (required ?second) (equal-step ?from ?to ?first ?second))
+              (rule (seen ?name) (claim ?name ?value ?source))
+              (rule (missing ?name) (required ?name) (not (seen ?name)))
+              (rule (mismatch ?first ?first-value ?first-source
+                              ?second ?second-value ?second-source)
+                    (equal-step ?from ?to ?first ?second)
+                    (claim ?first ?first-value ?first-source)
+                    (claim ?second ?second-value ?second-source)
+                    (not (equal-value ?first-value ?second-value)))
+              (rule (conflict ?name ?first-value ?first-source
+                              ?second-value ?second-source)
+                    (equal-claim ?name)
+                    (claim ?name ?first-value ?first-source)
+                    (claim ?name ?second-value ?second-source)
+                    (not (equal-value ?first-value ?second-value)))
+              (rule (supported-step ?from ?to ?first ?first-source
+                                    ?second ?second-source)
+                    (step ?from ?to ?first ?second)
+                    (claim ?first ?first-value ?first-source)
+                    (claim ?second ?second-value ?second-source))
+              (rule (supported-step ?from ?to ?first ?first-source
+                                    ?second ?second-source)
+                    (equal-step ?from ?to ?first ?second)
+                    (claim ?first ?value ?first-source)
+                    (claim ?second ?value ?second-source))
+              (rule (reverse-reach ?from ?to)
+                    (supported-step ?from ?to ?first ?first-source
+                                    ?second ?second-source))
+              (rule (reverse-reach ?from ?end)
+                    (reverse-reach ?from ?middle)
+                    (supported-step ?middle ?end ?first ?first-source
+                                    ?second ?second-source))
+              (limits 384 256 512))))
            (rows-of (.ref result 'rows-of))
            (reach (rows-of 'reverse-reach))
            (supported-steps (rows-of 'supported-step))
@@ -219,7 +222,7 @@
                                   (pair? relevant-conflicts)) 'conflicted)
                              ((and route-reachable? (null? absent)) 'supported)
                              (else 'needs-evidence))))
-                 (.o kind: 'poo-flow.reverse-inference.hypothesis-result
+                 (.o kind: 'poo-flow.evidence-assessment.hypothesis-result
                      identity: (.ref hypothesis 'identity)
                      status: result-status
                      reachable?: route-reachable?
@@ -233,7 +236,7 @@
                      equality-mismatches: relevant-mismatches
                      value-conflicts: relevant-conflicts)))
              hypotheses)))
-      (.o kind: 'poo-flow.reverse-inference.receipt
+      (.o kind: 'poo-flow.evidence-assessment.receipt
           query-selected-claims: selected
           query-source-identity: (.ref query-result 'query-source-identity)
           query-executed-in-scheme?: #t
@@ -270,7 +273,7 @@
 (def (inference-branch? branch-value allowed)
   (and (object? branch-value)
        (eq? (.ref branch-value 'kind)
-            'poo-flow.reverse-inference.branch)
+            'poo-flow.evidence-assessment.branch)
        (symbol? (.ref branch-value 'identity))
        (symbol? (.ref branch-value 'reason))
        (let ((proposed (.ref branch-value 'proposed-claims))
@@ -289,7 +292,7 @@
           (and (not (memq id seen))
                (loop (cdr pending) (cons id seen)))))))
 
-(def (poo-flow-reverse-inference-explore case-value branch-values)
+(def (poo-flow-evidence-assessment-explore case-value branch-values)
   (let (allowed (.ref (.ref case-value 'query)
                       'selected-element-identities))
     (unless (and (list? branch-values) (pair? branch-values)
@@ -298,8 +301,8 @@
                           (inference-branch? branch-value allowed))
                         branch-values)
                  (unique-branch-identities? branch-values))
-      (error "invalid bounded reverse inference branches" branch-values)))
-  (let* ((baseline (poo-flow-reverse-inference-evaluate case-value))
+      (error "invalid bounded evidence assessment branches" branch-values)))
+  (let* ((baseline (poo-flow-evidence-assessment-evaluate case-value))
          (explored
           (map
            (lambda (branch-value)
@@ -310,7 +313,7 @@
                         (not (memq (.ref claim 'identity) withheld)))
                       (.ref case-value 'claims)))
                     (branch-receipt
-                     (poo-flow-reverse-inference-evaluate
+                     (poo-flow-evidence-assessment-evaluate
                       (.o (:: @ case-value)
                           claims:
                           (append remaining
@@ -320,12 +323,12 @@
                       (lambda (old-result)
                         (let* ((id (.ref old-result 'identity))
                                (new-result
-                                (poo-flow-inference-hypothesis-result
+                                (poo-flow-evidence-hypothesis-result
                                  branch-receipt id))
                                (old-status (.ref old-result 'status))
                                (new-status (.ref new-result 'status)))
                           (.o kind:
-                              'poo-flow.reverse-inference.branch-transition
+                              'poo-flow.evidence-assessment.branch-transition
                               hypothesis: id
                               before-status: old-status
                               after-status: new-status
@@ -334,7 +337,7 @@
                               missing-claims: (.ref new-result
                                                     'missing-claims))))
                       (.ref baseline 'hypothesis-results))))
-               (.o kind: 'poo-flow.reverse-inference.branch-result
+               (.o kind: 'poo-flow.evidence-assessment.branch-result
                    identity: (.ref branch-value 'identity)
                    reason: (.ref branch-value 'reason)
                    proposed-claims: (.ref branch-value 'proposed-claims)
@@ -346,7 +349,7 @@
                    hypothetical?: #t
                    action-authority?: #f)))
            branch-values)))
-    (.o kind: 'poo-flow.reverse-inference.exploration
+    (.o kind: 'poo-flow.evidence-assessment.exploration
         baseline-receipt: baseline
         branch-results: explored
         historical-attribution-verified?: #f

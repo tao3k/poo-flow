@@ -8,10 +8,12 @@ from __future__ import annotations
 import importlib.util
 import os
 import re
+import sys
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 spec = importlib.util.spec_from_file_location("reasoning_live", Path(__file__).with_name("run.py"))
 assert spec and spec.loader
 live = importlib.util.module_from_spec(spec)

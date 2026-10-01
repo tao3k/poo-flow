@@ -10,22 +10,22 @@
                  PooFlowSchemeGqlQueryLanguage.
                  GqlQueryNode. GqlQueryPath. GqlQueryProperty.
                  GqlQueryProjection. poo-flow-query-result-contract)
-        (only-in :poo-flow/modules/reverse-inference/interface
-                 PooFlowReverseInferenceCase.
-                 poo-flow-inference-evidence-reference
-                 poo-flow-inference-claim
-                 poo-flow-inference-step
-                 poo-flow-inference-hypothesis
-                 poo-flow-inference-branch
-                 poo-flow-reverse-inference-evaluate
-                 poo-flow-inference-hypothesis-result
-                 poo-flow-reverse-inference-explore))
+        (only-in :poo-flow/modules/evidence-assessment/interface
+                 PooFlowEvidenceAssessmentCase.
+                 poo-flow-evidence-reference
+                 poo-flow-evidence-claim
+                 poo-flow-evidence-step
+                 poo-flow-evidence-hypothesis
+                 poo-flow-evidence-branch
+                 poo-flow-evidence-assessment-evaluate
+                 poo-flow-evidence-hypothesis-result
+                 poo-flow-evidence-assessment-explore))
 
-(export reverse-inference-core-test)
+(export evidence-assessment-core-test)
 
 (def ClaimProgram
   (.o (:: @ PooFlowGqlQueryProgram.)
-      identity: 'reverse-inference-core-claims
+      identity: 'evidence-assessment-core-claims
       match:
       (.o (:: @ GqlQueryPath.)
           start: (.o (:: @ GqlQueryNode.)
@@ -46,10 +46,10 @@
 
 (def ClaimQuery
   (.o (:: @ PooFlowQuery.)
-      identity: 'reverse-inference-core-claims
+      identity: 'evidence-assessment-core-claims
       version: "1"
-      semantic-revision: "sha256:reverse-inference-core"
-      element-space-identity: 'test/reverse-inference
+      semantic-revision: "sha256:evidence-assessment-core"
+      element-space-identity: 'test/evidence-assessment
       selected-element-identities: '(outcome target-a target-b alternate)
       language: PooFlowSchemeGqlQueryLanguage.
       program: ClaimProgram
@@ -59,50 +59,50 @@
       '(source-content-identity provenance-root result-digest)
       result-contract:
       (poo-flow-query-result-contract
-       'test/reverse-inference-rows 'relation-row
+       'test/evidence-assessment-rows 'relation-row
        '(claim value evidenceSource) 16)))
 
 (def CoreCase.
-  (.o (:: @ PooFlowReverseInferenceCase.)
+  (.o (:: @ PooFlowEvidenceAssessmentCase.)
       query: ClaimQuery
       claims:
-      (list (poo-flow-inference-claim 'outcome 'present 'source-a)
-            (poo-flow-inference-claim
+      (list (poo-flow-evidence-claim 'outcome 'present 'source-a)
+            (poo-flow-evidence-claim
              'target-a 'destination-1 'source-b
-             (poo-flow-inference-evidence-reference
+             (poo-flow-evidence-reference
               'source-b "fixture://independent-source-b" 'owner-b
               "sha256:fixture-content-b"))
-            (poo-flow-inference-claim 'target-b 'destination-1 'source-c))
+            (poo-flow-evidence-claim 'target-b 'destination-1 'source-c))
       steps:
-      (list (poo-flow-inference-step
+      (list (poo-flow-evidence-step
              'result 'candidate 'outcome 'target-a)
-            (poo-flow-inference-step
+            (poo-flow-evidence-step
              'candidate 'origin 'target-a 'target-b 'equal-value)
-            (poo-flow-inference-step
+            (poo-flow-evidence-step
              'result 'alternative 'outcome 'alternate))
       hypotheses:
-      (list (poo-flow-inference-hypothesis
+      (list (poo-flow-evidence-hypothesis
              'matched-source 'result 'origin
              '(outcome target-a target-b))
-            (poo-flow-inference-hypothesis
+            (poo-flow-evidence-hypothesis
              'alternative-source 'result 'alternative
              '(outcome alternate)))))
 
 (def (result-status receipt hypothesis-id)
-  (.ref (poo-flow-inference-hypothesis-result receipt hypothesis-id)
+  (.ref (poo-flow-evidence-hypothesis-result receipt hypothesis-id)
         'status))
 
-(def reverse-inference-core-test
-  (test-suite "generic reverse inference over POO evidence"
+(def evidence-assessment-core-test
+  (test-suite "generic evidence assessment over POO evidence"
     (poo-flow-test-case "matching sources support one candidate only"
-      (let (receipt (poo-flow-reverse-inference-evaluate CoreCase.))
+      (let (receipt (poo-flow-evidence-assessment-evaluate CoreCase.))
         (check (.ref receipt 'query-executed-in-scheme?) => #t)
         (check (result-status receipt 'matched-source) => 'supported)
         (check (result-status receipt 'alternative-source)
                => 'needs-evidence)
         (check
          (length
-          (.ref (poo-flow-inference-hypothesis-result
+          (.ref (poo-flow-evidence-hypothesis-result
                  receipt 'matched-source) 'witness-path))
          => 2)
         (check (length (.ref receipt 'evidence-references)) => 1)
@@ -111,20 +111,20 @@
         (check (.ref receipt 'source-authenticity-verified?) => #f)))
     (poo-flow-test-case "multiple proposed directions retain every hypothesis"
       (let* ((exploration
-              (poo-flow-reverse-inference-explore
+              (poo-flow-evidence-assessment-explore
                CoreCase.
                (list
-                (poo-flow-inference-branch
+                (poo-flow-evidence-branch
                  'support-alternative
-                 (list (poo-flow-inference-claim
+                 (list (poo-flow-evidence-claim
                         'alternate 'present 'source-x))
                  '() 'test-competing-origin)
-                (poo-flow-inference-branch
+                (poo-flow-evidence-branch
                  'contradict-target
-                 (list (poo-flow-inference-claim
+                 (list (poo-flow-evidence-claim
                         'target-b 'destination-2 'source-d))
                  '() 'test-value-conflict)
-                (poo-flow-inference-branch
+                (poo-flow-evidence-branch
                  'withhold-source '() '(target-a)
                  'test-source-dependence))))
              (branches (.ref exploration 'branch-results))
@@ -142,10 +142,10 @@
       (let* ((case-value
               (.o (:: @ CoreCase.)
                   claims:
-                  (cons (poo-flow-inference-claim
+                  (cons (poo-flow-evidence-claim
                          'target-b 'destination-2 'source-d)
                         (.ref CoreCase. 'claims))))
-             (receipt (poo-flow-reverse-inference-evaluate case-value)))
+             (receipt (poo-flow-evidence-assessment-evaluate case-value)))
         (check (.ref receipt 'evidence-consistent?) => #f)
         (check (result-status receipt 'matched-source) => 'conflicted)
         (check (result-status receipt 'alternative-source)
@@ -154,38 +154,38 @@
       (let* ((case-value
               (.o (:: @ CoreCase.)
                   steps:
-                  (cons (poo-flow-inference-step
+                  (cons (poo-flow-evidence-step
                          'origin 'result 'target-a 'target-b 'equal-value)
                         (.ref CoreCase. 'steps))))
-             (receipt (poo-flow-reverse-inference-evaluate case-value)))
+             (receipt (poo-flow-evidence-assessment-evaluate case-value)))
         (check (result-status receipt 'matched-source) => 'supported)
         (check (< (length (.ref receipt 'reachable-candidates)) 16)
                => #t)))
     (poo-flow-test-case "negative claims are rejected"
       (check-exception
-       (poo-flow-reverse-inference-evaluate
+       (poo-flow-evidence-assessment-evaluate
         (.o (:: @ CoreCase.)
-            claims: (list (poo-flow-inference-claim
+            claims: (list (poo-flow-evidence-claim
                            'outcome 'absent 'source-a))))
        true))
     (poo-flow-test-case "a source reference cannot impersonate another claim"
       (check-exception
-       (poo-flow-reverse-inference-evaluate
+       (poo-flow-evidence-assessment-evaluate
         (.o (:: @ CoreCase.)
             claims:
-            (list (poo-flow-inference-claim
+            (list (poo-flow-evidence-claim
                    'outcome 'present 'source-a
-                   (poo-flow-inference-evidence-reference
+                   (poo-flow-evidence-reference
                     'source-b "fixture://wrong-source" 'owner-b)))))
        true))
     (poo-flow-test-case "agent branches require distinct bounded identities"
       (let (branch-value
-            (poo-flow-inference-branch
+            (poo-flow-evidence-branch
              'same-direction
-             (list (poo-flow-inference-claim
+             (list (poo-flow-evidence-claim
                     'alternate 'present 'source-x))
              '() 'test-alternative))
         (check-exception
-         (poo-flow-reverse-inference-explore
+         (poo-flow-evidence-assessment-explore
           CoreCase. (list branch-value branch-value))
          true)))))
