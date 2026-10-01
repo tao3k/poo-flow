@@ -3,12 +3,23 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 # Gerbil package dependency revisions are generated from gerbil.pkg by
-# `just pin-gerbil-dependency`. Core is compiled directly from the Git
-# submodule, so it has no external source-package projection here.
+# `just pin-gerbil-dependency`. The Git submodule supplies parent builds;
+# downstream Gerbil package installs resolve the same Core revision.
 
 gerbil_dependency_sources = use_extension(
     "@gerbil_bazel//gerbil:extensions.bzl",
     "gerbil",
+)
+gerbil_dependency_sources.source_package(
+    name = "poo_flow_core_sources",
+    canonical_uri = "https://github.com/tao3k/poo-flow-core",
+    package = "poo-flow-core",
+    revision = "57a3efac4c419b57850918fb66f14fc0aed137ac",
+    sha256 = "33c69a7bdf72bf8076481562469fbf2c2e90201386350701921ff589e5bbdf98",
+    strip_prefix = "poo-flow-core-57a3efac4c419b57850918fb66f14fc0aed137ac",
+    urls = [
+        "https://github.com/tao3k/poo-flow-core/archive/57a3efac4c419b57850918fb66f14fc0aed137ac.tar.gz",
+    ],
 )
 gerbil_dependency_sources.source_package(
     name = "gerbil_poo_sources",
@@ -60,4 +71,5 @@ use_repo(
     "gerbil_parser_sources",
     "gerbil_poo_sources",
     "orgize_sources",
+    "poo_flow_core_sources",
 )
