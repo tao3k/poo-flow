@@ -154,6 +154,12 @@ jobs:
         run: |
           cargo install just --version 1.56.0 --locked
           gerbil env just test-ascent-integration
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case ascent.source-withdrawal
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case evidence-ascent.hypothesis-status
 
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'

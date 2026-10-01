@@ -146,6 +146,14 @@ jobs:
           uv run --project packages/python-runtime pytest \
             packages/python-runtime/tests/unit/test_native_runtime_v0.py
 
+      - name: Test Python module case catalog
+        run: |
+          set -euo pipefail
+          uv run --locked --project packages/python-testing --group dev pytest -q \
+            packages/python-testing/tests/unit
+          uv run --locked --project packages/python-testing poo-flow-test-cases \
+            coverage > .ci/python-testing-coverage.tsv
+
       - name: Build wheel
         run: |
           set -euo pipefail

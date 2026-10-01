@@ -12,11 +12,9 @@ import re
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
-from openai import OpenAI
-from poo_flow_runtime import RuntimeGraphExecutor, linear_plan
-
-from candidate import SchemeChecker, candidate_text, scheme_attempt
+from .candidate import SchemeChecker, candidate_text, scheme_attempt
 
 
 def terminal_write(value: str) -> None:
@@ -36,8 +34,9 @@ def key_from_file(path: Path) -> str:
     raise ValueError("DEEPSEEK_API_KEY is absent from the selected env file")
 
 
-def build_graph(client: OpenAI, model: str, checker=scheme_attempt) -> RuntimeGraphExecutor:
+def build_graph(client: Any, model: str, checker=scheme_attempt) -> Any:
     """The downstream adapter owns model and Scheme nodes, not graph semantics."""
+    from poo_flow_runtime import RuntimeGraphExecutor, linear_plan
 
     def model_turn(state: dict) -> dict:
         started = time.perf_counter()
@@ -85,6 +84,8 @@ def build_graph(client: OpenAI, model: str, checker=scheme_attempt) -> RuntimeGr
 
 def converse(api_key: str, model: str, transcript: Path | None,
              ascent_root: Path | None) -> None:
+    from openai import OpenAI  # optional live-model dependency
+
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com",
                     max_retries=0, timeout=90.0)
     checker = SchemeChecker(ascent_root)

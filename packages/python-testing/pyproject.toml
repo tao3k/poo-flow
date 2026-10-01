@@ -3,22 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 [project]
-name = "poo-flow-runtime"
+name = "poo-flow-testing"
 version = "0.1.0"
-description = "Python runtime consumer for the POO Flow C ABI."
+description = "Module and cross-module case testing for POO Flow."
 license = "Apache-2.0 AND LGPL-2.1-or-later"
 license-files = ["LICENSE"]
 readme = { file = "README.org", content-type = "text/plain" }
 requires-python = ">=3.11"
-dependencies = [
-    "anyio>=4.14.1",
-    "cffi>=2.0.0",
-    "pyturso>=0.6.1",
-]
+dependencies = []
+
+[project.optional-dependencies]
+live = ["openai>=2.29,<3"]
+runtime = ["poo-flow-runtime==0.1.0"]
 
 [project.scripts]
-poo-flow-build-profile = "poo_flow_runtime.build_profile:main"
-poo-flow-jsonschema-contract = "poo_flow_runtime.json_schema_contract:main"
+poo-flow-test-cases = "poo_flow_testing.cli:main"
 
 [dependency-groups]
 dev = [
@@ -27,7 +26,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=75", "wheel", "cffi>=2.0.0"]
+requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -38,16 +37,13 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-poo_flow_runtime = [
-  "_native/lib/*",
-  "projections/*.ss",
-  "projections/*.sexp",
-]
+"poo_flow_testing.ascent" = ["attempt.ss"]
 
 [tool.pytest.ini_options]
 addopts = ["--python-project-harness"]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "../python-runtime/src"]
 
 [tool.uv.sources]
+poo-flow-runtime = { path = "../python-runtime" }
 python-lang-project-harness = { git = "https://github.com/tao3k/python-lang-project-harness" }
