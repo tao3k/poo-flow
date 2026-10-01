@@ -469,6 +469,11 @@ check-temporal-time:
 check-temporal-conclusions:
     GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-conclusions-test.ss
 
+# Check exclusive and overlapping finite hypothesis-family semantics.
+[group('check')]
+check-temporal-model:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-model-test.ss
+
 # Verify Trajectory independently of the consuming Impact module.
 [group('check')]
 check-temporal-trajectory:

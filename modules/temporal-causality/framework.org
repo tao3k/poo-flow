@@ -66,7 +66,7 @@ an identity suitable for immutable evidence and replay.
 | Conclusion revision | Immutable assertion, correction or retraction with proof identity, cut and supersession | A change requires a scoped-complete affected frontier and a distinct revised cut; proof semantics remain evaluator-owned | =conclusions/{types,objects,funs}.ss= executable provenance envelope |
 | Active selection | Versioned observation and pure CAS preparation | Journal graph/digest and plan inputs replay; observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= executable planner; runtime handoff open |
 | Causal event and cut | Committed event graph and as-of projection | Future/counterfactual elements cannot enter the committed cut | =types/objects/funs.ss= executable first slice |
-| Candidate hypothesis | Proposed cause, effect and constraints | Temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
+| Candidate hypothesis | Proposed cause, effect and constraints | Explicit exclusive or overlapping family semantics; temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
 | Candidate exchange | Exact cut/provider receipt and separate checker assertion | Reviewable requires current, complete, checked required providers; it never grants admission | =candidates/{types,objects,funs}.ss= executable; [[file:candidates/model.org][module-local model]] |
 | Temporal query | Target, assumptions, evidence snapshot and optional operational scope | Resource limits belong to query execution, not model truth | current query supports candidate limit or =#f= for full finite family |
 | Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; TLC correspondence open |
@@ -148,14 +148,19 @@ checking scope: =0= derives the effective bound from the candidate set,
 while a positive number requests an early stop.  Full possible-world semantics requires a separate behavior
 model with explicit interventions, environment actions and observation map.
 
-Classification is relative to the declared hypothesis family.  For target
+Classification is relative to the declared hypothesis family.  The
+=poo-flow-temporal-model= constructor declares exclusive explanations;
+=poo-flow-temporal-overlapping-model= declares potentially coexisting
+mechanisms.  Both use the same finite constraint checker, and the family mode
+enters the model digest and classification receipt.  For target
 =h=, =refuted= means a known constraint fails; =possible= means the candidate
 passes known constraints; =unknown= means it has not been explored or its
 evidence is insufficient.  =Necessary= is available only after exhaustive
 inspection of a caller-declared complete exclusive family, with one admitted
 candidate and no unknowns.  This is a restricted uniqueness judgment, not an
 actual-cause theorem.  The model does not invent mechanisms without a
-hypothesis vocabulary.
+hypothesis vocabulary.  The TLA+ hypothesis exploration currently checks the
+exclusive mode; an overlapping behavior-space projection remains open.
 
 * Composition and ownership
 
@@ -439,9 +444,9 @@ the new projection/refinement obligations.
    evidence journal, as-of cuts, reverse index, conclusion journal and pure
    CAS plan are executable; proof admission, signed observations, atomic
    publication and effect receipts remain open.
-3. Generalize hypothesis families to overlapping mechanisms, interventions
-   and behavior spaces.  Keep candidate generation, assumption admission and
-   causal attribution distinct.
+3. Extend the now-explicit overlapping hypothesis-family mode with actual
+   interventions and behavior spaces.  Keep candidate generation, assumption
+   admission and causal attribution distinct.
 4. Define property and query objects for safety, reachability and progress;
    generate or interpret TLA+ transitions from the semantic model rather than
    exposing a caller-authored =Next= API.

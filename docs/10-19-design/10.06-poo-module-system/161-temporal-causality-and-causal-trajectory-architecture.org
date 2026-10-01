@@ -244,13 +244,15 @@ First executable slice, in dependency order:
    and runtime behavior as separate evidence.
 
 The first core slice is now executable in =modules/temporal-causality/=: a
-finite, exclusive hypothesis family has POO clock domains, observations,
+finite hypothesis family has POO clock domains, observations,
 explicit order constraints, candidate causes, a bounded query and an
-identity-bound receipt.  It distinguishes admissible, refuted, unknown and
-unexplored candidates; only an exhausted, caller-declared complete family
-can yield =necessary= relative to that family.  =t/temporal-model-test.ss=
+identity-bound receipt.  The family explicitly chooses exclusive explanations
+or overlapping mechanisms.  It distinguishes admissible, refuted, unknown and
+unexplored candidates; only an exhausted, caller-declared complete exclusive
+family can yield =necessary= relative to that family.  =t/temporal-model-test.ss=
 exercises distinct medication and software-release vocabularies, changed
-evidence, incomparable clocks, incomplete families and finite bounds.  This
+evidence, overlapping mechanisms, incomparable clocks, incomplete families
+and finite bounds.  This
 slice does not infer causal mechanisms, compare different clock domains,
 interpret a TLA+ action formula or claim TLC exhaustion.  Stage 3 now has a
 first source-to-POO subset: =packages/proofs/tla/temporal-causality/TemporalHypothesisFamily.tla=

@@ -69,6 +69,64 @@
         (check (.ref receipt 'model-digest)
                => (.ref after 'semantic-digest))))
 
+    (poo-flow-test-case "overlapping mechanisms do not imply exclusive necessity"
+      (let* ((domains (list clock))
+             (observations
+              (list (observation "source-a" "revision-clock" 1)
+                    (observation "source-b" "revision-clock" 4)
+                    (observation "result" "revision-clock" 3)))
+             (hypotheses
+              (list (candidate "via-a" "source-a" "result")
+                    (candidate "via-b" "source-b" "result")))
+             (exclusive
+              (poo-flow-temporal-model
+               "same-vocabulary" domains observations hypotheses #t))
+             (overlapping
+              (poo-flow-temporal-overlapping-model
+               "same-vocabulary" domains observations hypotheses #t))
+             (receipt
+              (poo-flow-temporal-model-classify
+               overlapping (poo-flow-temporal-query "why" "via-a" #f))))
+        (check (.ref receipt 'assumption) => 'overlapping-mechanisms)
+        (check (.ref receipt 'admissible-hypothesis-ids) => '("via-a"))
+        (check (.ref receipt 'refuted-hypothesis-ids) => '("via-b"))
+        (check (.ref receipt 'classification) => 'possible)
+        (check (equal? (.ref exclusive 'semantic-digest)
+                       (.ref overlapping 'semantic-digest)) => #f)
+        (check (.ref (poo-flow-temporal-model-replay overlapping)
+                     'semantic-digest)
+               => (.ref overlapping 'semantic-digest))
+        (let (forged
+              (poo-flow-temporal-model-value
+               "same-vocabulary" (.ref exclusive 'semantic-digest)
+               (.ref overlapping 'domains) (.ref overlapping 'observations)
+               (.ref overlapping 'hypotheses)
+               #t 'overlapping-mechanisms))
+          (check (poo-flow-temporal-model? forged) => #t)
+          (check-exception (poo-flow-temporal-model-replay forged) true)
+          (check-exception
+           (poo-flow-temporal-model-classify
+            forged (poo-flow-temporal-query "why" "via-a" #f)) true))
+        (check (.ref (poo-flow-temporal-model-classify
+                      exclusive (poo-flow-temporal-query "why" "via-a" #f))
+                     'classification) => 'necessary)))
+
+    (poo-flow-test-case "coexisting mechanisms remain possible together"
+      (let* ((model
+              (poo-flow-temporal-overlapping-model
+               "coexisting" (list clock)
+               (list (observation "source-a" "revision-clock" 1)
+                     (observation "source-b" "revision-clock" 2)
+                     (observation "result" "revision-clock" 3))
+               (list (candidate "via-a" "source-a" "result")
+                     (candidate "via-b" "source-b" "result")) #t))
+             (receipt
+              (poo-flow-temporal-model-classify
+               model (poo-flow-temporal-query "why" "via-a" #f))))
+        (check (.ref receipt 'admissible-hypothesis-ids)
+               => '("via-a" "via-b"))
+        (check (.ref receipt 'classification) => 'possible)))
+
     (poo-flow-test-case "software release vocabulary uses the same POO API"
       (let* ((domain (poo-flow-temporal-clock-domain
                       "build-sequence" 'logical-version))
