@@ -105,11 +105,21 @@ theorem.
 :CUSTOM_ID: temporal-candidate-exchange-adapters
 :END:
 
-The existing GQL =SourceQueryReceipt= carries query/source/parser identity,
-result digest/count and completeness, but no shared materialized row value.
-An adapter must bind its exact query and ElementSpace to the Temporal cut,
-then verify result rows against the provider's result digest.  Copying that
-digest string into =CandidateReceipt= alone does not perform this check.
+The =poo-flow-gql-candidate-receipt= bridge now accepts a canonical Query,
+ElementSpace, GQL Provider and =SourceQueryReceipt=.  It requires the
+ElementSpace semantic revision to equal the Temporal cut digest, recomputes
+Query admission, rebinds the Provider candidate through the Query method,
+and compares every declared source-receipt field before producing a
+=CandidateReceipt=.  Its output has no =CandidateCheck= and therefore stays
+pending in an exchange until separately checked.  This is a structural
+snapshot and receipt binding; the ElementSpace revision is still a declared
+identifier, not authenticated source bytes.
+
+GQL still has no shared materialized row value or provider-defined row digest
+algorithm.  A later adapter must verify actual rows against the provider's
+result digest.  Copying that digest string into =CandidateReceipt= alone does
+not perform this check.  The current bridge deliberately does not produce a
+=valid= check or claim row, provenance, or execution authenticity.
 
 ASCENT owns positive-rule Why/Why-Not proof generation and replay for a
 finite relation snapshot.  Its adapter must require the native result to

@@ -4,10 +4,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
-         (only-in :std/test check test-suite)
+         (only-in :std/test check check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        :poo-flow/modules/query/interface)
+        :poo-flow/modules/query/interface
+        (only-in :poo-flow/modules/temporal-causality/candidates/interface
+                 poo-flow-candidate-scope poo-flow-candidate-exchange
+                 poo-flow-gql-candidate-receipt))
 
 (export query-core-test)
 
@@ -186,6 +189,53 @@
                    query-result-bound-exceeded
                    incomplete-query-result))
        (check (.ref receipt 'action-authority?) => #f)))
+
+   (poo-flow-test-case "GQL receipt binds one Temporal cut but supplies no check"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (provider-candidate
+             (poo-flow-query-execution-candidate
+              'mrr 'healthcare/case-profile-relations "1" "sha256:space-v1"
+              (poo-flow-query-source-content-identity Query)
+              'gerbil-parser "sha256:provenance-v1" "sha256:result-v1"
+              3 #t))
+            (source-receipt
+             (poo-flow-query-bind-execution-receipt
+              MrrGqlQueryProvider Query admission provider-candidate))
+            (scope
+             (poo-flow-candidate-scope
+              "scope" "sha256:space-v1" 0 "sha256:coverage"
+              '(gql ascent)))
+            (gql-receipt
+             (poo-flow-gql-candidate-receipt
+              "gql-receipt" "candidate" scope Query QuerySpace
+              MrrGqlQueryProvider
+              source-receipt))
+            (exchange
+             (poo-flow-candidate-exchange
+              "exchange" "candidate" scope (list gql-receipt) '())))
+       (check (.ref gql-receipt 'provider-identity) => 'gql)
+       (check (.ref gql-receipt 'result-digest) => "sha256:result-v1")
+       (check (.ref gql-receipt 'result-count) => 3)
+       (check (.ref exchange 'status) => 'pending)
+       (check (.ref exchange 'missing-providers) => '(ascent))
+       (check (.ref exchange 'unchecked-receipts) => '("gql-receipt"))
+       (check (.ref exchange 'admitted?) => #f)
+       (check-exception
+        (poo-flow-gql-candidate-receipt
+         "stale" "candidate"
+         (poo-flow-candidate-scope
+          "scope" "sha256:space-v2" 1 "sha256:coverage" '(gql ascent))
+         Query QuerySpace MrrGqlQueryProvider source-receipt)
+        true)
+       (check-exception
+        (poo-flow-gql-candidate-receipt
+         "forged" "candidate" scope Query QuerySpace
+         MrrGqlQueryProvider
+         (validate PooFlowSourceQueryReceipt
+                   (.o (:: @ source-receipt)
+                       result-digest: "sha256:other"
+                       source-content-identity: "sha256:other-source")))
+        true)))
 
    (poo-flow-test-case "rejects undeclared Elements without widening the space"
      (let* ((query
