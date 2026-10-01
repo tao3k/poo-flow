@@ -160,6 +160,9 @@ jobs:
           PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
             gerbil env python3 -m poo_flow_testing run \
               --case evidence-ascent.hypothesis-status
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case model-study.native-fixtures
 
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'

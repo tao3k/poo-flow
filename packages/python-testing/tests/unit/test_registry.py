@@ -18,7 +18,8 @@ def test_catalog_selects_single_part_and_cross_module_cases() -> None:
     }
     cross = catalog.select(composition="cross")
     assert {case.spec.identity for case in cross} == {
-        "runtime-ascent.candidate-graph", "evidence-ascent.hypothesis-status"
+        "runtime-ascent.candidate-graph", "evidence-ascent.hypothesis-status",
+        "model-study.native-fixtures",
     }
     assert all(len({target.module for target in case.spec.targets}) > 1 for case in cross)
     assert catalog.select(identity="ascent.source-withdrawal")[0].spec.mode == "native"
