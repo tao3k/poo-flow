@@ -10,13 +10,14 @@
 (export poo-flow-tla-checked-source-value)
 
 (def (poo-flow-tla-checked-source-value
-      identity-value digest-value source-value config-value schema-value
+      identity-value digest-value source-value source-set-value config-value schema-value
       contract-value tool-value version-value output-value workers-value
       generated-value distinct-value left-value depth-value)
   (validate PooFlowTlaCheckedSource
-    (.o kind: 'poo-flow.tla-plus.checked-source.v1
+    (.o kind: 'poo-flow.tla-plus.checked-source.v2
         identity: identity-value semantic-digest: digest-value
-        source-digest: source-value config-digest: config-value
+        source-digest: source-value source-set-digest: source-set-value
+        config-digest: config-value
         qualification-schema: schema-value syntax-contract: contract-value
         tool-digest: tool-value tlc-version: version-value
         output-digest: output-value workers: workers-value

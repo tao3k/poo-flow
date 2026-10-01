@@ -6,7 +6,9 @@
 ;;; Explicit runtime handoff: invoke parser-owned qualification and TLC, then
 ;;; bind its checked source/config/output to an inert POO evidence value.
 (import (only-in :clan/poo/object .ref)
+        (only-in :std/list/list filter)
         (only-in :std/misc/ports read-all-as-string)
+        (only-in :std/string/misc string-suffix?)
         (only-in :gerbil-parser/src/runtime/artifact sha256-text)
         (only-in :gerbil-parser/languages/tla-plus/v1/qualification
                  qualify-tla-plus-model
@@ -26,12 +28,33 @@
     (and entry (cdr entry))))
 (def (file-digest path)
   (sha256-text (call-with-input-file path read-all-as-string)))
-(def (digest-fields source config schema contract tool version output
+(def (local-source-set-digest spec-path)
+  ;; TLC resolves sibling modules from this directory. Bind the whole local
+  ;; source inventory so a changed or newly added sibling cannot reuse a run.
+  (let* ((directory (path-directory (path-normalize spec-path)))
+         (root (path-strip-directory spec-path))
+         (names
+          (list-sort
+           string<?
+           (filter (lambda (name) (string-suffix? ".tla" name))
+                   (directory-files directory)))))
+    (unless (member root names)
+      (error "TLA+ root source absent from local module inventory" root))
+    (sha256-text
+     (call-with-output-string
+      (lambda (port)
+        (write
+         (list 'poo-flow.tla-plus.local-source-set.v1
+               (map (lambda (name)
+                      (cons name (file-digest (path-expand name directory))))
+                    names))
+         port))))))
+(def (digest-fields source source-set config schema contract tool version output
                     workers generated distinct left depth)
   (sha256-text
    (call-with-output-string
     (lambda (port)
-      (write (list 'poo-flow.tla-plus.checked-source.v1 source config
+      (write (list 'poo-flow.tla-plus.checked-source.v2 source source-set config
                    schema contract tool version output workers generated
                    distinct left depth) port)))))
 
@@ -43,7 +66,8 @@
     (error "TLA+ checked source differs from parsed document"))
   (let (expected
         (digest-fields
-         (.ref receipt 'source-digest) (.ref receipt 'config-digest)
+         (.ref receipt 'source-digest) (.ref receipt 'source-set-digest)
+         (.ref receipt 'config-digest)
          (.ref receipt 'qualification-schema)
          (.ref receipt 'syntax-contract) (.ref receipt 'tool-digest)
          (.ref receipt 'tlc-version) (.ref receipt 'output-digest)
@@ -62,6 +86,7 @@
                (exact-integer? workers) (> workers 0))
     (error "invalid TLA+ source check request"))
   (let ((source-before (file-digest spec-path))
+        (source-set-before (local-source-set-digest spec-path))
         (config-before (file-digest config-path)))
     (unless (equal? source-before (.ref document 'source-digest))
       (error "TLA+ source differs from parsed document"))
@@ -74,6 +99,8 @@
                    (equal? (field row 'source-digest) source-before)
                    (equal? (field row 'config-digest) config-before)
                    (equal? (file-digest spec-path) source-before)
+                   (equal? (local-source-set-digest spec-path)
+                           source-set-before)
                    (equal? (file-digest config-path) config-before)
                    (equal? (field row 'output-digest)
                            (sha256-text (tla-plus-model-receipt-output native)))
@@ -81,7 +108,7 @@
         (error "TLA+ source qualification or identity check failed" row))
       (let* ((semantic
               (digest-fields
-               source-before config-before
+               source-before source-set-before config-before
                (field row 'schema) (field row 'syntax-contract)
                (field row 'tool-digest) (field row 'tlc-version)
                (field row 'output-digest) workers
@@ -89,7 +116,7 @@
                (field row 'states-left) (field row 'graph-depth)))
              (receipt
               (poo-flow-tla-checked-source-value
-               semantic semantic source-before config-before
+               semantic semantic source-before source-set-before config-before
                (field row 'schema) (field row 'syntax-contract)
                (field row 'tool-digest) (field row 'tlc-version)
                (field row 'output-digest) workers

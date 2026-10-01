@@ -123,8 +123,7 @@ count and completion bit with the =CandidateReceipt=.  A mismatch is
 is =valid= *for this local row-consistency claim*.  The bridge itself does
 not issue this check.  The MRR-owned Provider has no live row transport.
 The MRR repository already owns a typed =QueryResultAdmissionReceipt= with a
-different MRR-owned CBOR digest.  The new
-The MRR-owned result projection retains its binding, generation, catalog,
+different MRR-owned CBOR digest.  Its result projection retains binding, generation, catalog,
 snapshot, digest and count fields.  The Temporal MRR bridge checks cut and
 generation, then emits an *incomplete* candidate receipt; it does not treat
 the native digest as a scalar row digest.  A future native exporter must

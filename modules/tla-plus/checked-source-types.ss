@@ -18,16 +18,18 @@
 (def (shape? value)
   (and (object? value)
        (every (lambda (slot) (.slot? value slot))
-              '(kind identity semantic-digest source-digest config-digest
+              '(kind identity semantic-digest source-digest source-set-digest
+                     config-digest
                      qualification-schema syntax-contract tool-digest
                      tlc-version output-digest workers states-generated
                      distinct-states states-left graph-depth
                      source-checked? semantic-refinement?
                      action-authorized?))
-       (eq? (.ref value 'kind) 'poo-flow.tla-plus.checked-source.v1)
+       (eq? (.ref value 'kind) 'poo-flow.tla-plus.checked-source.v2)
        (every text?
               (map (lambda (slot) (.ref value slot))
-                   '(identity semantic-digest source-digest config-digest
+                   '(identity semantic-digest source-digest source-set-digest
+                     config-digest
                      qualification-schema syntax-contract tool-digest
                      tlc-version output-digest)))
        (every natural?

@@ -430,9 +430,14 @@ supports a claim only for an exact source, configuration and finite scope.
 =modules/tla-plus/checked-source-{types,objects,funs}.ss= now wraps the
 parser-owned TLC qualification in a POO receipt.  It checks the parsed root
 source digest, config digest, TLC launcher and output digests, final state
-counts and empty queue; it rechecks root source/config bytes around the run.
-Imported TLA+ modules and the full TLC toolchain remain outside this digest
-binding.  The receipt
+counts and empty queue.  Its v2 digest also binds the sorted names and bytes
+of every local =.tla= file in the root source directory, checking that
+inventory before and after TLC.  This conservatively includes sibling
+imports; the focused regression changes an imported module while keeping the
+root source unchanged.  External =TLA_LIBRARY= modules, standard modules in
+the TLC distribution, and the full toolchain artifact remain outside this
+receipt's source-set binding.  CI separately verifies the pinned TLC JAR's
+SHA-256.  The receipt
 states =semantic-refinement? #f= and =action-authorized? #f=.  It cannot prove
 that the checked behavior model refines the POO model, or guard against a
 hostile concurrent rewrite of the same source path during TLC execution.
@@ -459,9 +464,10 @@ the new projection/refinement obligations.
 4. Define property and query objects for safety, reachability and progress;
    generate or interpret TLA+ transitions from the semantic model rather than
    exposing a caller-authored =Next= API.
-5. Extend the new typed checked-source receipt to a proved or differentially
-   checked native/TLA+ projection.  The receipt currently binds TLC's own
-   finite run, not the POO state-transition interpretation.
+5. Extend the typed checked-source receipt from its local source-set binding
+   to a proved or differentially checked native/TLA+ projection.  The receipt
+   currently binds TLC's own finite run, not the POO state-transition
+   interpretation.
 6. Extend Lean proofs from event/cut facts to generic temporal relations,
    source projection and trace refinement.  The abstract future-append cut
    lemma is now in the Temporal proof target; retain bounded TLC as separate
