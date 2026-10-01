@@ -459,6 +459,11 @@ check-temporal-invalidation-tlc:
     cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalInvalidationCase.cfg TemporalInvalidationCase.tla
     cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalReprojectionCase.cfg TemporalInvalidationCase.tla
 
+# Check explicit clock domains and conservative interval observations.
+[group('check')]
+check-temporal-time:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-time-test.ss
+
 # Verify Trajectory independently of the consuming Impact module.
 [group('check')]
 check-temporal-trajectory:
