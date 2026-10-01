@@ -28,13 +28,13 @@ poo-flow-axle-verify = poo_flow_proof.axle_verify:main
 The existing binary selects Lean-owned closure verification through flags:
 
 #+begin_src sh
-uv run --project packages/proof/python \
+uv run --project packages/proofs/python \
   poo-flow-axle-verify \
   --environment lean-4.31.0 \
-  --lean-root packages/proof/lean \
-  --root-module PooFlowProof.PooC3.Enterprise.Core \
+  --lean-root packages/proofs/lean \
+  --root-module PooFlowProof.PooC4.Enterprise.Core \
   --root-declaration \
-    PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence \
+    PooFlowProof.PooC4.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence \
   --closure-output /private/tmp/poo-flow-enterprise-core-exact-closure.json
 #+end_src
 
@@ -61,7 +61,7 @@ parsed by AXLE from the owner sources, and =pi: C -> D= the longest
 source-owner projection. Generated constants such as structure constructors,
 projections, and recursors therefore map to their source declaration.
 
-#+begin_src typst
+#+begin_src text
 $ S_0 = pi(C) $
 
 $ F(S) = S union
@@ -323,16 +323,16 @@ flowchart LR
 
 * Files
 
-- =packages/proof/lean/PooFlowProof/Export/DeclarationClosure.lean=
-- =packages/proof/python/src/poo_flow_proof/lean_declaration_closure.py=
-- =packages/proof/python/src/poo_flow_proof/axle_exact_closure.py=
-- =packages/proof/python/src/poo_flow_proof/axle_closure_verify.py=
-- =packages/proof/python/src/poo_flow_proof/independent_bundle_projection.py=
-- =packages/proof/python/src/poo_flow_proof/axle_verify.py=
-- =packages/proof/python/tests/test_lean_declaration_closure.py=
-- =packages/proof/python/tests/test_axle_exact_closure.py=
-- =packages/proof/python/tests/test_axle_closure_verify.py=
-- =packages/proof/python/tests/test_independent_bundle_projection.py=
+- =packages/proofs/lean/PooFlowProof/Export/DeclarationClosure.lean=
+- =packages/proofs/python/src/poo_flow_proof/lean_declaration_closure.py=
+- =packages/proofs/python/src/poo_flow_proof/axle_exact_closure.py=
+- =packages/proofs/python/src/poo_flow_proof/axle_closure_verify.py=
+- =packages/proofs/python/src/poo_flow_proof/independent_bundle_projection.py=
+- =packages/proofs/python/src/poo_flow_proof/axle_verify.py=
+- =packages/proofs/python/tests/test_lean_declaration_closure.py=
+- =packages/proofs/python/tests/test_axle_exact_closure.py=
+- =packages/proofs/python/tests/test_axle_closure_verify.py=
+- =packages/proofs/python/tests/test_independent_bundle_projection.py=
 
 * Verification receipt
 
@@ -340,13 +340,13 @@ flowchart LR
 
 #+begin_src text
 root-module:
-  PooFlowProof.PooC3.Enterprise.Core
+  PooFlowProof.PooC4.Enterprise.Core
 root-declaration:
-  PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence
+  PooFlowProof.PooC4.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence
 owner-modules:
-  PooFlowProof.PooC3.ScaleParametricModuleGraph
-  PooFlowProof.PooC3.ContributorRepositoryQualification
-  PooFlowProof.PooC3.Enterprise.Core
+  PooFlowProof.PooC4.ScaleParametricModuleGraph
+  PooFlowProof.PooC4.ContributorRepositoryQualification
+  PooFlowProof.PooC4.Enterprise.Core
 lean-constant-count: 22
 axle-source-declaration-count: 10
 lean-closure-digest:
@@ -376,16 +376,16 @@ determinism:
 ** Local gates
 
 #+begin_src text
-uv run --project packages/proof/python pytest -q packages/proof/python/tests
+uv run --project packages/proofs/python pytest -q packages/proofs/python/tests
 72 passed
 
-uv run --project packages/proof/python ruff check packages/proof/python
+uv run --project packages/proofs/python ruff check packages/proofs/python
 All checks passed!
 
-uv run --project packages/proof/python poo-flow-axle-verify --help
+uv run --project packages/proofs/python poo-flow-axle-verify --help
 exit-code: 0
 
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Export/DeclarationClosure.lean
 exit-code: 0
 #+end_src

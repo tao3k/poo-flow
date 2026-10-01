@@ -19,7 +19,7 @@
 ;;; Policy evidence: tests assert schemas, envelopes, receipts, and manifests.
 
 (import :poo-flow/src/core/failure
-        (only-in :poo-flow/src/modules/loop-engine/core
+        (only-in :poo-flow/modules/loop-engine/core
                  +poo-flow-user-loop-engine-handoff-contracts+
                  +poo-flow-user-loop-engine-receipt-contracts+
                  +poo-flow-user-loop-engine-runtime-command-arguments+

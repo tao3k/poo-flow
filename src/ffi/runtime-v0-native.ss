@@ -24,9 +24,9 @@
                  poo-flow-runtime-language-admission-receipt-failures
                  poo-flow-contract-artifact-projection-receipt
                  poo-flow-contract-artifact-projection-receipt-failures)
-        (only-in ../modules/query/objects
+        (only-in :poo-flow/modules/query/objects
                  poo-flow-query-execution-candidate)
-        (only-in ../modules/query/types
+        (only-in :poo-flow/modules/query/types
                  poo-flow-query-execution-candidate?))
 
 (export native-abi-version

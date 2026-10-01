@@ -139,7 +139,7 @@ shared action/evidence envelope through provider-specific adapters.
 
 Implemented in:
 
-- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityDataKnowledgeGuaranteeClosure.lean=
+- =packages/proofs/lean/PooFlowProof/Enterprise/AISecurityDataKnowledgeGuaranteeClosure.lean=
 
 The proof unit closes:
 

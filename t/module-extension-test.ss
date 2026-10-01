@@ -6,7 +6,8 @@
 ;;; Boundary: generic module extension tests keep POO resolution semantics out
 ;;; of feature-specific workflow code.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,15 +15,14 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/user-interface/facade
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/object-core/interface
-        :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects)
+        :core/extension-graph/interface
+        :core/module-system/schema/interface
+        :poo-flow/modules/sandbox-core/shared-object
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects)
 
 (export module-extension-test)
 
@@ -36,7 +36,7 @@
 ;; : TestSuite
 (def module-extension-resolution-test
   (test-suite "poo-flow module extension resolution"
-    (test-case "applies slot and child-node operations to a stable object graph"
+    (poo-flow-test-case "applies slot and child-node operations to a stable object graph"
       (let* ((build-node
               (poo-flow-module-extension-node
                'workflow/pipeline/default/task/build
@@ -106,7 +106,7 @@
         (check-equal? (slot-value resolved-build 'env) '(CI))
         (check-equal? (slot-value resolved-build 'artifacts) '("dist"))))
 
-    (test-case "merges module config contributions through POO field contracts"
+    (poo-flow-test-case "merges module config contributions through POO field contracts"
       (let* ((needs-field
               (poo-flow-module-field-contract
                'needs PooFlowModuleListType 'append '() '((domain . workflow))))
@@ -123,7 +123,7 @@
                  (features . (ci)))
                '()))
              (result
-              (poo-flow-module-config-mk-merge
+              (poo-flow-module-field-contributions-resolve
                root-node
                (list
                 (poo-flow-module-field-contribution
@@ -136,7 +136,7 @@
                  'workflow/pipeline/default run-field
                  "gxi build.ss --optimized"))))
              (resolved-root
-              (poo-flow-module-config-merge-result-root result)))
+              (poo-flow-module-field-resolution-result-root result)))
         (check-equal? (poo-flow-module-field-contract? needs-field) #t)
         (check-equal? (poo-flow-module-field-contract-accepts?
                        needs-field '(lint))
@@ -144,20 +144,20 @@
         (check-equal? (poo-flow-module-field-contract-accepts?
                        needs-field 'lint)
                       #f)
-        (check-equal? (poo-flow-module-config-merge-result? result) #t)
-        (check-equal? (poo-flow-module-config-merge-result-stable? result) #t)
-        (check-equal? (poo-flow-module-config-merge-result-iterations result) 1)
+        (check-equal? (poo-flow-module-field-resolution-result? result) #t)
+        (check-equal? (poo-flow-module-field-resolution-result-stable? result) #t)
+        (check-equal? (poo-flow-module-field-resolution-result-iterations result) 1)
         (check-equal? (slot-value resolved-root 'needs) '(test lint))
         (check-equal? (slot-value resolved-root 'features) '(sandbox ci))
         (check-equal? (slot-value resolved-root 'run)
                       "gxi build.ss --optimized")))))
 
-;;; This suite keeps object inheritance and C3 precedence separate from the
+;;; This suite keeps object inheritance and C4 precedence separate from the
 ;;; slot-level resolution tests above.
 ;; : TestSuite
 (def module-extension-object-inheritance-test
   (test-suite "poo-flow module object inheritance"
-    (test-case "inherits shared sandbox module objects for nono and cube"
+    (poo-flow-test-case "inherits shared sandbox module objects for nono and cube"
       (let* ((shared-sandbox-object
               (poo-flow-module-object
                'sandbox/shared
@@ -198,7 +198,7 @@
                 (poo-flow-module-object-node nono-sandbox-object '() '())
                 (poo-flow-module-object-node cube-sandbox-object '() '()))))
              (result
-              (poo-flow-module-config-mk-merge
+              (poo-flow-module-field-contributions-resolve
                root-node
                (append
                 (poo-flow-module-object-contributions
@@ -212,7 +212,7 @@
                    (runtime-args . ("--trace-cube"))
                    (profile . strict))))))
              (resolved-root
-              (poo-flow-module-config-merge-result-root result))
+              (poo-flow-module-field-resolution-result-root result))
              (resolved-nono
               (poo-flow-module-extension-child-ref
                (poo-flow-module-extension-node-children resolved-root)
@@ -237,7 +237,7 @@
                       '("--trace-cube"))
         (check-equal? (slot-value resolved-cube 'profile) 'strict)))
 
-    (test-case "resolves module object fields through gerbil-poo C3 precedence"
+    (poo-flow-test-case "resolves module object fields through gerbil-poo C4 precedence"
       (let* ((root-object
               (poo-flow-module-object
                'object/root
@@ -298,7 +298,7 @@
 ;; : TestSuite
 (def module-extension-object-merge-test
   (test-suite "poo-flow module object merge"
-    (test-case "rejects inconsistent gerbil-poo C3 module object graphs"
+    (poo-flow-test-case "rejects inconsistent gerbil-poo C4 module object graphs"
       (let* ((root-object
               (poo-flow-module-object
                'object/root
@@ -344,13 +344,13 @@
                              broken-object)))))
         (check-equal? (not (not failure)) #t)))
 
-    (test-case "merges real module objects under the objects namespace"
+    (poo-flow-test-case "merges real module objects under the objects namespace"
       (let* ((objects
               (append poo-flow-shared-module-objects
                       poo-flow-nono-sandbox-module-objects
                       poo-flow-cubeSandbox-module-objects))
              (result
-              (poo-flow-module-objects-mk-merge
+              (poo-flow-module-objects-resolve-contributions
                objects
                (append
                 (poo-flow-module-object-contributions
@@ -364,7 +364,7 @@
                    (runtime-args . ("--trace-cube"))
                    (profile . strict))))))
              (resolved-objects
-              (poo-flow-module-config-merge-result-root result))
+              (poo-flow-module-field-resolution-result-root result))
              (resolved-shared
               (poo-flow-module-objects-ref
                resolved-objects

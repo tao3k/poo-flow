@@ -22,7 +22,7 @@ Gerbil hygienic macros can remove that mechanical repetition.  They must not
 become an alternative object model, configuration DSL, recovery language, or
 hidden semantic owner.
 
-The current =defpoo-module-final-projection= declaration delegates to
+The current =defpoo-final-projection= declaration delegates to
 =defpoo-static-receipt-projection=.  The lower macro validates duplicate
 arguments, bindings, and field keys at expansion time and produces an ordinary
 Gerbil procedure.  This is an admissible bounded projection use of macros.

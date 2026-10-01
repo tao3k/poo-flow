@@ -23,7 +23,7 @@ The accepted decision is:
 3. The Bundle contains five typed semantic facets sharing one identity universe, manifest, version lineage, and provenance chain.
 4. The facets are Organization, Authority, Context, Protocol, and Evidence.
 5. Each facet has its own composition algebra and validation rules.
-6. C3 linearization resolves definition lookup order only; it grants no authority, relaxes no context restriction, changes no protocol obligation, and removes no evidence obligation.
+6. C4 linearization resolves definition lookup order only; it grants no authority, relaxes no context restriction, changes no protocol obligation, and removes no evidence obligation.
 7. Cross-facet validation is mandatory before activation or projection to the C Runtime Interface, Cedar, Lean, or evidence contracts.
 8. Dynamic reorganization creates an immutable epoch linked to its parent; it never mutates an active Bundle in place.
 9. Ambiguous or unsafe composition is a typed compilation error. Last-writer-wins behavior is forbidden.
@@ -45,7 +45,7 @@ The Bundle MUST be deterministic, typed, immutable, digest-addressed, and runtim
 #+begin_src mermaid
 flowchart TB
     P["Gerbil POO Objects<br/>Functional Combinators"]
-    L["C3 Definition Resolution"]
+    L["C4 Definition Resolution"]
     N["Typed Elaboration and<br/>Facet-specific Normalization"]
     subgraph B["Canonical Organization Bundle"]
         M["Manifest<br/>schema / epoch / parent / provenance / digest"]
@@ -145,7 +145,7 @@ The Organization facet defines agents, roles, role occupancy, responsibilities, 
 
 Organizational seniority, parenthood, ownership, or proximity MUST NOT imply authority. Such rights require explicit Authority declarations and, where applicable, Context or Protocol declarations.
 
-Organization composition MAY combine compatible responsibilities and topology. It MUST reject incompatible unique owners, contradictory role occupancy, forbidden cycles, unresolved responsibility conflicts, and implicit choices among competing definitions. Multiplicity MUST be explicit. C3 lookup MUST NOT hide a semantic ownership conflict.
+Organization composition MAY combine compatible responsibilities and topology. It MUST reject incompatible unique owners, contradictory role occupancy, forbidden cycles, unresolved responsibility conflicts, and implicit choices among competing definitions. Multiplicity MUST be explicit. C4 lookup MUST NOT hide a semantic ownership conflict.
 
 ** Authority
 
@@ -153,7 +153,7 @@ The Authority facet defines principals, capabilities, grants, issuers, delegatio
 
 Within a delegation chain, effective authority MUST be no broader than the delegator's authority after attenuation, lease, and revocation constraints. Independent grants MAY contribute authority only while each retains a valid issuer and grant chain. Any expansion requires a new explicit authorized issuer grant.
 
-Composition MUST reject unauthorized widening, excess delegation, invalid leases or revocations, unresolved grant conflicts, and capabilities lacking typed principal/action/resource meaning. C3 MUST NOT act as permit-overrides, deny-overrides, or policy precedence.
+Composition MUST reject unauthorized widening, excess delegation, invalid leases or revocations, unresolved grant conflicts, and capabilities lacking typed principal/action/resource meaning. C4 MUST NOT act as permit-overrides, deny-overrides, or policy precedence.
 
 ** Context
 
@@ -161,7 +161,7 @@ The Context facet defines visibility, information labels, provenance, context le
 
 Composition follows an information-flow lattice or equivalent restriction model. When constraints combine, the result MUST be at least as restrictive as every input; for permitted readers or flows this is their intersection. Provenance MUST survive composition.
 
-Declassification requires an explicit operation, principal, authority, source and target label or flow class, and Evidence obligation. Composition MUST reject unauthorized widening, missing labels or provenance, invalid leases, unresolved redaction conflicts, and declassification lacking Authority and Evidence links. C3 MUST NOT replace a stricter inherited constraint with a weaker one.
+Declassification requires an explicit operation, principal, authority, source and target label or flow class, and Evidence obligation. Composition MUST reject unauthorized widening, missing labels or provenance, invalid leases, unresolved redaction conflicts, and declassification lacking Authority and Evidence links. C4 MUST NOT replace a stricter inherited constraint with a weaker one.
 
 ** Protocol
 
@@ -169,7 +169,7 @@ The Protocol facet defines lifecycle states, messages, transitions, effect inten
 
 Protocol composition is refinement, not graph overlay. A refinement MAY restrict behavior, add internal structure, strengthen preconditions, make outcomes more precise, add obligations, or implement an abstract transition.
 
-A refinement MUST NOT silently remove a required lifecycle or failure path, weaken a safety precondition, introduce an external effect without a typed intent and Authority/Evidence links, make cancellation/recovery/checkpoint semantics ambiguous, or incompatibly reinterpret a stable state or message. Incompatible transitions require explicit refinement or disambiguation; C3 order cannot make them valid.
+A refinement MUST NOT silently remove a required lifecycle or failure path, weaken a safety precondition, introduce an external effect without a typed intent and Authority/Evidence links, make cancellation/recovery/checkpoint semantics ambiguous, or incompatibly reinterpret a stable state or message. Incompatible transitions require explicit refinement or disambiguation; C4 order cannot make them valid.
 
 ** Evidence
 
@@ -177,7 +177,7 @@ The Evidence facet defines obligations, receipts, witnesses, causal relations, v
 
 Evidence obligations accumulate monotonically. Composition takes the union of applicable obligations while retaining identity and provenance. Discharge MUST explicitly identify the obligation, typed receipt/witness/verifier/proof artifact, Bundle digest and epoch, and verification rule.
 
-A discharge does not erase the obligation or history. Composition MUST reject silent removal, unmatched discharge, wrong evidence kind, missing verifier, invalid causal endpoint, or unmarked cross-epoch evidence. C3 MUST NOT override obligations.
+A discharge does not erase the obligation or history. Composition MUST reject silent removal, unmatched discharge, wrong evidence kind, missing verifier, invalid causal endpoint, or unmarked cross-epoch evidence. C4 MUST NOT override obligations.
 
 * Facet-Specific Composition
 
@@ -191,14 +191,14 @@ There is no universal merge function:
 
 A generic map merge, edge union, last-writer-wins overlay, or untyped patch is non-conforming. When more than one semantic resolution remains possible, the author MUST supply a named POO-native or functional resolution. That resolution enters normalized provenance and affects the digest.
 
-C3 answers only which inherited definition is examined first and how compatible POO definitions are collected. Each facet algebra decides semantic compatibility afterward.
+C4 answers only which inherited definition is examined first and how compatible POO definitions are collected. Each facet algebra decides semantic compatibility afterward.
 
 * Compilation Pipeline
 
 The normative pipeline is:
 
 1. Collect Gerbil POO definitions, prototype composition, slot declarations, and functional combinator values from the declared closure.
-2. Apply C3 where deterministic inherited-definition lookup is required.
+2. Apply C4 where deterministic inherited-definition lookup is required.
 3. Elaborate declarations into typed entities and facet declarations.
 4. Build and validate the shared identity universe.
 5. Normalize each facet with its own algebra.
@@ -309,7 +309,7 @@ Each mutation MUST either change the expected digest or fail validation. No case
 - *Five independent graphs rejected:* they permit identity, policy, and epoch drift; the accepted design is one indivisible Bundle.
 - *One generic graph rejected:* responsibility conflict, delegation attenuation, information-flow restriction, protocol refinement, and evidence monotonicity require distinct algebras.
 - *Runtime object model rejected as canonical:* Python, Rust, TypeScript, C, and Gerbil layouts serve different implementation needs.
-- *C3 security precedence rejected:* refactoring order cannot become a security boundary.
+- *C4 security precedence rejected:* refactoring order cannot become a security boundary.
 - *Last-writer-wins rejected:* it hides conflicts and can silently widen authority or information flow.
 - *Mutable reorganization rejected:* immutable parent-linked epochs provide stable referents, atomic activation, history, and explicit rollback.
 - *Projection-owned semantics rejected:* Cedar, Lean, C ABI, and evidence consumers derive meaning from the Bundle rather than inventing it.
@@ -321,7 +321,7 @@ This RFC is implemented when:
 1. Public Gerbil POO and functional authoring compiles to one Canonical Organization Bundle.
 2. The Bundle contains one manifest, one typed identity universe, and all five facets.
 3. Each facet uses and validates its distinct composition algebra.
-4. C3 remains definition resolution only.
+4. C4 remains definition resolution only.
 5. Every cross-facet invariant is enforced.
 6. Invalid or ambiguous input produces typed errors and no activatable partial Bundle.
 7. Identical normalized input and compiler closure produce identical bytes and digest.

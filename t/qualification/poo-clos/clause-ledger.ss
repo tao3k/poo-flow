@@ -52,7 +52,7 @@
    (closed-clause 'C434-inheritance 'poo-clos 'classes
            'diamond-inheritance 'duplicate-direct-superclass)
    (closed-clause 'C435-class-precedence 'poo-clos 'classes
-           'native-c3-order 'inconsistent-c3)
+           'native-c4-order 'inconsistent-c4)
    (closed-clause 'C436-class-redefinition 'poo-clos 'evolution
            'identity-preserved-generation 'invalid-class-redefinition)
    (closed-clause 'C436-dependent-propagation 'poo-clos 'evolution
@@ -137,21 +137,21 @@
 
 (def poo-clos-evidence-suites
   (list
-   (evidence-suite 'dispatch "t/poo-clos-dispatch-test.ss"
+   (evidence-suite 'dispatch "core/t/poo-clos-dispatch-test.ss"
                    'poo-clos-dispatch-test 12)
-   (evidence-suite 'lifecycle "t/poo-clos-lifecycle-test.ss"
-                   'poo-clos-lifecycle-test 14)
-   (evidence-suite 'syntax "t/poo-clos-syntax-test.ss"
+   (evidence-suite 'lifecycle "core/t/poo-clos-lifecycle-test.ss"
+                   'poo-clos-lifecycle-test 15)
+   (evidence-suite 'syntax "core/t/poo-clos-syntax-test.ss"
                    'poo-clos-syntax-test 10)
    (evidence-suite 'method-combination
-                   "t/poo-clos-method-combination-test.ss"
+                   "core/t/poo-clos-method-combination-test.ss"
                    'poo-clos-method-combination-test 13)
-   (evidence-suite 'evolution "t/poo-clos-evolution-test.ss"
-                   'poo-clos-evolution-test 7)
+   (evidence-suite 'evolution "core/t/poo-clos-evolution-test.ss"
+                   'poo-clos-evolution-test 8)
    (evidence-suite 'generic-evolution
-                   "t/poo-clos-generic-evolution-test.ss"
+                   "core/t/poo-clos-generic-evolution-test.ss"
                    'poo-clos-generic-evolution-test 3)
-   (evidence-suite 'load-form "t/poo-clos-load-form-test.ss"
+   (evidence-suite 'load-form "core/t/poo-clos-load-form-test.ss"
                    'poo-clos-load-form-test 5)))
 
 (def (poo-clos-evidence-suite id)

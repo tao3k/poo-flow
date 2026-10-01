@@ -56,7 +56,7 @@
    (supers flow-role)))
 
 ;;; Strand supers follow the same pair-tree convention as flow descriptors so
-;;; extension-owned strand descriptors can use gerbil-poo C3 composition.
+;;; extension-owned strand descriptors can use gerbil-poo C4 composition.
 ;; : (-> [Role] [Role])
 (def (flow-strand-descriptor-supers role-supers)
   (cons flow-strand-descriptor-prototype role-supers))

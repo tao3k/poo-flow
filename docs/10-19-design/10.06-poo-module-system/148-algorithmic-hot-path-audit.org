@@ -25,14 +25,14 @@ first choice when it already owns the algorithm: this pass uses
 | Organization shadow | current and bundle facts were cross-scanned | each side and the profile are indexed once |
 | Flow memoization | cache hit used =assoc= over every earlier input | =core/funcs.ss= owns a hash-backed memoizer, including correct cached =#f= behavior |
 | Indexed object family | its slot index was an alist and every lens lookup used =assoc= | =object-family/funcs.ss= builds a leftmost identity-to-position hash |
-| CLOS effective slots | every effective slot rescanned every owner's direct slot declarations | =poo-clos/funcs.ss= builds one leftmost direct-slot index per native C3 owner; C3 and declaration order remain authoritative |
-| CLOS effective slot access | every slot operation linearly searched the class effective-slot list | construction and redefinition publish one identity index beside the canonical effective-slot value; lookup remains a projection of native C3-derived slots |
+| CLOS effective slots | every effective slot rescanned every owner's direct slot declarations | =poo-clos/funcs.ss= builds one leftmost direct-slot index per native C4 owner; C4 and declaration order remain authoritative |
+| CLOS effective slot access | every slot operation linearly searched the class effective-slot list | construction and redefinition publish one identity index beside the canonical effective-slot value; lookup remains a projection of native C4-derived slots |
 | CLOS applicability ordering | every stable-sort comparison used =list-ref= over required-argument distances | each admitted method stores one distance vector and comparison uses constant-time =vector-ref= in the generic's argument-precedence order |
 | CLOS protocol customization | hook output rescanned the generic method list and recomputed applicability distances | one leftmost identity index projects hook-selected methods from the already validated ranked set |
-| CLOS dependent evolution | diamond reachability used =memq= against the growing result list | one =make-hash-table-eq= visited set admits each class generation once before Gerbil =stable-sort= orders it by native C3 depth |
+| CLOS dependent evolution | diamond reachability used =memq= against the growing result list | one =make-hash-table-eq= visited set admits each class generation once before Gerbil =stable-sort= orders it by native C4 depth |
 | JSON Schema fast validation | every declared property rescanned all candidate rows at every recursive object node | one candidate identity index per node changes property admission from properties times rows to properties plus rows |
 | Runner DAG execution | each dependency edge used =assoc= against prior values and every node rescanned the complete plan to reconstruct its frontier | =core/funcs.ss= owns structural-id values plus an incremental dependency-count frontier; receipts retain canonical plan order and stored =#f= values |
-| Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =profile-composition/funcs.ss= builds leftmost target, stage, and binding indexes once per owning scope |
+| Profile composition lowering | every target and explicit edge rescanned stage targets, stages, or bindings | =src/scenario/plan-projection.ss= builds leftmost target, stage, and binding indexes once per owning scope with Gerbil =list->hash-table-eq= |
 | Set-shaped contract checks | each required value rescanned the complete observed/allowed list | =utilities/functional.ss= builds one hash membership index and preserves the existing list-shaped public contract |
 
 * Native product and type expression
@@ -58,8 +58,8 @@ and method-key projection with SRFI-1 =append-map=.  The change removes the
 intermediate list of lists while leaving order, duplicate resolution, and the
 POO-owned public values unchanged.
 
-The POO CLOS runtime remains outside =src/module-system/api.ss= and is loaded
-only through its explicit module owner.  Its metadata-only =config.ss= is the
+The POO CLOS runtime is loaded only through its explicit Core module owner.
+Its metadata-only =config.ss= is the
 kernel profile entrypoint; selecting the module does not pull dispatch,
 lifecycle, or declaration syntax into ASP's mandatory build closure.
 
@@ -124,14 +124,12 @@ host contention.
 
 * Build boundary
 
-The root and contributor scripts declare public entry modules. The root now
-uses =src/module-system/api.ss=, which composes the subsystem-owned public
-=interface.ss= files. ASP's native Gerbil import closure therefore discovers
-CLOS, profile composition, contribution, loader, and the other public Module
-System sources without =all-gerbil-modules= or implementation-file enumeration.
+The root and contributor scripts declare precise public entry modules. ASP's
+native Gerbil import closure discovers their dependencies without an aggregate
+Module System API or =all-gerbil-modules= enumeration.
 
 This correction invalidates the former 1.95-second root comparison: that build
-only reached the metadata-only =src/module-system/interface.ss= and omitted the
+only reached the metadata-only =src/authoring/module-interface.ss= and omitted the
 public subsystem closure. The first corrected isolated build compiled the full
 closure successfully; two warm runs emitted zero compile jobs but took 21.71
 and 34.90 seconds. Dependency admission also found that =gerbil.pkg= requests

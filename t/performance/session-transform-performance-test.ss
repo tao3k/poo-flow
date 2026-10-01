@@ -5,17 +5,17 @@
 
 ;;; Boundary: performance gates for session transform POO row boundaries.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/transform)
+        :poo-flow/modules/session/objects
+        :poo-flow/modules/session/transform)
 
 (export session-transform-performance-test)
 
@@ -96,7 +96,7 @@
 ;; : TestSuite
 (def session-transform-performance-test
   (test-suite "poo-flow session transform POO performance"
-    (test-case "keeps memory-intent transform receipts inside row boundary"
+    (poo-flow-test-case "keeps memory-intent transform receipts inside row boundary"
       (let (receipt
             (benchmark-run
              session-transform-memory-intent-fixture

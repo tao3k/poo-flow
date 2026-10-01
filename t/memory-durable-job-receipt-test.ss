@@ -7,14 +7,14 @@
 ;;; Invariant: Scheme validates and projects memory jobs only; it never recalls,
 ;;; commits, consolidates, persists, or repairs memory stores.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/session/config
+        :poo-flow/modules/memory-core/config)
 
 (export memory-durable-job-receipt-test)
 
@@ -34,7 +34,7 @@
 ;; : TestSuite
 (def memory-durable-job-receipt-test
   (test-suite "poo-flow memory durable job receipts"
-    (test-case "projects recall, write, consolidation, stale, and repair jobs"
+    (poo-flow-test-case "projects recall, write, consolidation, stale, and repair jobs"
       (let* ((durable-policy
               (poo-flow-durable-policy
                'durable/memory
@@ -151,7 +151,7 @@
         (check-equal? (test-ref repair-row 'job-state) 'repair-required)
         (check-equal? (test-ref repair-row 'runtime-executed) #f)))
 
-    (test-case "rejects fake durable memory jobs without durable store policy"
+    (poo-flow-test-case "rejects fake durable memory jobs without durable store policy"
       (let* ((local-intent
               (poo-flow-session-memory-intent
                'memory/local-fake

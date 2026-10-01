@@ -14,9 +14,9 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
+        (only-in :poo-flow/testing-api poo-flow-test-case)
         :poo-flow/src/core/api)
 
 (export functional-flow-kernel-test)
@@ -101,7 +101,7 @@
 ;; : TestSuite
 (def functional-flow-kernel-test
   (test-suite "functional flow kernel"
-    (test-case "exposes a POO category object for flow arrows"
+    (poo-flow-test-case "exposes a POO category object for flow arrows"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category
                                      'inc
@@ -113,7 +113,7 @@
         (check-equal? (flow-category-arrow category) 'flow)
         (check-equal? (flow-category-domain category inc) 'number)
         (check-equal? (flow-category-codomain category inc) 'number)))
-    (test-case "exposes Funflow-style required strands as POO metadata"
+    (poo-flow-test-case "exposes Funflow-style required strands as POO metadata"
       (let* ((category default-flow-category)
              (registry (flow-category-strand-registry category))
              (simple (flow-strand-for-kind-in registry 'simple))
@@ -140,7 +140,7 @@
                         io-lift
                         caching
                         runtime-handoff))))
-    (test-case "extends flow strands with POO override semantics"
+    (poo-flow-test-case "extends flow strands with POO override semantics"
       (let* ((word-count
               (make-flow-strand-descriptor
                'word-count
@@ -179,7 +179,7 @@
                         io-continuation
                         local-kleisli
                         extension-hook))))
-    (test-case "exposes Arrow first and second through the category object"
+    (poo-flow-test-case "exposes Arrow first and second through the category object"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category
                                      'inc
@@ -190,7 +190,7 @@
              (second (flow-category-second category 'second-inc inc 'symbol)))
         (check-equal? (kernel-run first '(3 tag)) '(4 tag))
         (check-equal? (kernel-run second '(tag 3)) '(tag 4))))
-    (test-case "composes category arrows and identity without execution side effects"
+    (poo-flow-test-case "composes category arrows and identity without execution side effects"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category
                                      'inc
@@ -210,7 +210,7 @@
                         identity)))
         (check-equal? (flow-step-count pipeline) 3)
         (check-equal? (kernel-run pipeline 3) 8)))
-    (test-case "observes category identity and associativity laws"
+    (poo-flow-test-case "observes category identity and associativity laws"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category
                                      'inc
@@ -246,7 +246,7 @@
         (check-equal? (kernel-run right-identity 3) (kernel-run inc 3))
         (check-equal? (kernel-run assoc-left 3) (kernel-run assoc-right 3))
         (check-equal? (flow-step-count assoc-left) (flow-step-count assoc-right))))
-    (test-case "maps flow output as functional composition"
+    (poo-flow-test-case "maps flow output as functional composition"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (mapped (flow-category-map default-flow-category
                                         'mapped
@@ -255,7 +255,7 @@
                                         'number)))
         (check-equal? (flow-step-count mapped) 2)
         (check-equal? (kernel-run mapped 4) 50)))
-    (test-case "fans out two arrows with branch declaration semantics"
+    (poo-flow-test-case "fans out two arrows with branch declaration semantics"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (double (flow-arr 'double (lambda (x) (* x 2)) 'number 'number))
              (fanout (flow-category-fanout default-flow-category
@@ -264,7 +264,7 @@
                                            double)))
         (check-equal? (flow-branch-declaration? fanout) #t)
         (check-equal? (kernel-run fanout 3) '(4 6))))
-    (test-case "projects Arrow fanout into a report-only DAG receipt"
+    (poo-flow-test-case "projects Arrow fanout into a report-only DAG receipt"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (double (flow-arr 'double (lambda (x) (* x 2)) 'number 'number))
              (fanout (flow-category-fanout default-flow-category
@@ -286,7 +286,7 @@
         (check-equal? (functional-flow-alist-value 'strategy-facing receipt) #t)
         (check-equal? (functional-flow-alist-value 'runtime-executed receipt) #f)
         (check-equal? plan-receipt receipt)))
-    (test-case "publishes Arrow DAG runtime manifest for Marlin discovery"
+    (poo-flow-test-case "publishes Arrow DAG runtime manifest for Marlin discovery"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (double (flow-arr 'double (lambda (x) (* x 2)) 'number 'number))
              (fanout (flow-category-fanout default-flow-category
@@ -319,7 +319,7 @@
         (check-equal? (functional-flow-alist-value 'runtime-executed receipt)
                       #f)
         (check-equal? plan-manifest manifest)))
-    (test-case "authors user-facing functional DAG flow artifacts"
+    (poo-flow-test-case "authors user-facing functional DAG flow artifacts"
       (check-equal? (flow-name macro-dag) 'macro-dag)
       (check-equal? (flow-branch-declaration? macro-dag) #t)
       (check-equal? (kernel-run macro-dag 3) '(4 6))
@@ -336,13 +336,13 @@
       (check-equal? (functional-flow-alist-value 'runtime-executed
                                                  macro-dag-manifest)
                     #f))
-    (test-case "applies first and second arrows over pair-shaped values"
+    (poo-flow-test-case "applies first and second arrows over pair-shaped values"
       (let* ((inc (flow-arr 'inc (lambda (x) (+ x 1)) 'number 'number))
              (first (flow-first 'first-inc inc 'symbol))
              (second (flow-second 'second-inc inc 'symbol)))
         (check-equal? (kernel-run first '(3 tag)) '(4 tag))
         (check-equal? (kernel-run second '(tag 3)) '(tag 4))))
-    (test-case "authors functional flows with hygienic Gerbil macros"
+    (poo-flow-test-case "authors functional flows with hygienic Gerbil macros"
       (check-equal? (flow-name macro-inc) 'macro-inc)
       (check-equal? (flow-name macro-pipeline) 'macro-pipeline)
       (check-equal? (kernel-run macro-pipeline 3) 8)

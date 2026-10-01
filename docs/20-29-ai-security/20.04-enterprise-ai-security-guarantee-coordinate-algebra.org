@@ -360,7 +360,7 @@ contained, observed, recovered, or replayable.
 
 The first coordinate-algebra proof unit is implemented at:
 
-- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityGuaranteeCoordinateAlgebraClosure.lean=
+- =packages/proofs/lean/PooFlowProof/Enterprise/AISecurityGuaranteeCoordinateAlgebraClosure.lean=
 
 It closes the eight obligations named above:
 

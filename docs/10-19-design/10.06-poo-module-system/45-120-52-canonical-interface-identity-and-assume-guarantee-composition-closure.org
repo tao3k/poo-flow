@@ -21,7 +21,7 @@ mathematical proof of canonical interface equality.
 A digest function may collide.  In the smallest countermodel, the digest type
 has one value while the interface type has two values.
 
-#+begin_src typst
+#+begin_src text
 #let H = $cal(H)$
 #let C = $cal(C)$
 

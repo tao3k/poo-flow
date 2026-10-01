@@ -7,12 +7,12 @@
 ;;; Invariant: registry receipts index declared sessions; they are not live
 ;;; runtime stores.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-registry"
@@ -35,7 +35,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-registry-test
   (test-suite "poo-flow custom user-interface session-registry case"
-    (test-case "projects custom session registry receipt"
+    (poo-flow-test-case "projects custom session registry receipt"
       (let* ((selection
               (car poo-flow-custom-my-module-session-registry-case))
              (rows

@@ -47,7 +47,7 @@ flowchart TD
 #+end_src
 
 Each capability is a parameterized POO parent prototype and owns a disjoint
-slot set.  Domain objects use multiple parents through C3-backed =.mix= via the
+slot set.  Domain objects use multiple parents through C4-backed =.mix= via the
 project's =poo-core-role-object= macro.  Existing accessors continue to resolve
 slots through =.ref=, so callers do not learn where a slot is inherited.
 
@@ -113,10 +113,10 @@ flowchart LR
 The component list is the single semantic lineage.  No object, type, contract,
 policy, strategy, or projection implementation may silently substitute a
 different parent list.  Each dimension still uses its own correct algebra:
-C3 linearizes object behavior; type refinement follows subtype rules; contracts
+C4 linearizes object behavior; type refinement follows subtype rules; contracts
 follow implication and invariant rules; policies use named functional policy
 algebras; strategies use named combinators; projections are explicitly
-selected.  C3 does not decide authorization, contract compatibility, or wire
+selected.  C4 does not decide authorization, contract compatibility, or wire
 shape.
 
 * Component kinds
@@ -126,7 +126,7 @@ pretending that all axes are ordinary inheritance:
 
 | Component kind | Object contribution | Type and contract contribution | Composition rule |
 |----------------+---------------------+--------------------------------+------------------|
-| Capability | slots and reusable operations | capability membership and invariant | C3 plus disjoint ownership |
+| Capability | slots and reusable operations | capability membership and invariant | C4 plus disjoint ownership |
 | Role | behavior defaults and required capabilities | delegation, communication, and result obligations | role refinement plus requirement satisfaction |
 | Policy | immutable POO policy value | input domain, decision range, and safety properties | named algebra such as deny-overrides or intersection |
 | Strategy | functional combinator value | input/output types and pre/postconditions | explicit sequencing, choice, or routing combinator |
@@ -134,14 +134,14 @@ pretending that all axes are ordinary inheritance:
 
 Policy and strategy values remain functional.  Making them CaseComponents binds
 their type and contract to the object family that selects them; it does not turn
-policy decisions or strategy execution into C3 method precedence.
+policy decisions or strategy execution into C4 method precedence.
 
 * Case closure rules
 
 Closure MUST reject an unresolved composition before a DomainCase is cached or
 instantiated.
 
-1. Compute one ordered component identity list and C3-linearize its object
+1. Compute one ordered component identity list and C4-linearize its object
    prototypes.
 2. Union required slots.  A same-name slot is legal only when ownership is the
    same and type, default, mutability, and merge semantics are compatible, or
@@ -276,7 +276,7 @@ It must exercise Agent fleets while reporting =N= and =U= separately.
 
 | Scenario | N Agents | U DomainCases | Required observation |
 |----------+----------+---------------+----------------------|
-| Homogeneous fleet | 100, 500, 1000 | 1 | one closed case, isolated instances, no per-Agent C3 reconstruction |
+| Homogeneous fleet | 100, 500, 1000 | 1 | one closed case, isolated instances, no per-Agent C4 reconstruction |
 | Role-stratified fleet | 1000 | 4, 8, 16 | shared role cases and valid organization topology |
 | Policy/strategy variants | 1000 | 16, 32, 64 | only declared cases materialize; no Cartesian expansion |
 | Adversarial declarations | 0 instances | 100+ invalid cases | all ownership/type/contract/policy/projection conflicts reject before cache insertion |
@@ -290,7 +290,7 @@ Every scale receipt records:
 - =N=, =U=, component-reference count, and invalid-case count;
 - DomainCase cache hit ratio and instance-to-case reuse ratio;
 - successful per-instance dynamic =.mix= count, reported separately from =U=
-  closure count until the zero-per-Agent-C3 target is implemented;
+  closure count until the zero-per-Agent-C4 target is implemented;
 - cold closure and warm lookup latency;
 - construct, validate, policy/strategy resolve, and project p50/p95/p99;
 - allocation count, generated form count, peak RSS, and retained cache size;
@@ -322,9 +322,9 @@ The initial internal closure phase has one explicit open performance gap.
 currently proven POO API still uses dynamic =.mix= to overlay each Agent's local
 role on its computed shared prototype.  The Phase 1 scale fixture may prove
 correct sharing, key reuse, isolation, and bounded memory; it MUST NOT claim the
-zero-per-Agent-C3 target.  That target remains open until a repository-owned
+zero-per-Agent-C4 target.  That target remains open until a repository-owned
 overlay/extension primitive proves local precedence and prototype reuse without
-full C3 recomposition, with a benchmark showing the actual hot-path reduction.
+full C4 recomposition, with a benchmark showing the actual hot-path reduction.
 
 * Design simulations
 
@@ -333,7 +333,7 @@ executable Scenario fixtures:
 
 1. =Versioned + RevisionBound= closes because slot ownership, types, and
    invariants are orthogonal.
-2. Two components owning =status= as Boolean and Symbol reject even if C3 could
+2. Two components owning =status= as Boolean and Symbol reject even if C4 could
    select one value.
 3. An override that accepts fewer inputs than its inherited method rejects; a
    stronger result guarantee remains admissible.
@@ -421,7 +421,7 @@ A local Scheme-side qualification rerun after the functional refactor on
 time with a maximum resident set of 173932544 bytes and peak memory footprint
 of 161415672 bytes.  This is an observability receipt under the declared 512
 MiB =gxi= profile, not a portable latency/RSS benchmark gate; repeatable CI
-distributions and the zero-C3 hot-path gate remain future qualification work.
+distributions and the zero-C4 hot-path gate remain future qualification work.
 
 * Phase 2 declarative module authoring
 
@@ -466,7 +466,7 @@ projection execution.  It does not change the per-instance dynamic =.mix= gap.
   competing =validate= method override is introduced.
 - Local domain slots may intentionally override an inherited default, and the
   override must be covered by a focused test.
-- C3 is a reuse and dispatch mechanism, not an authorization boundary.
+- C4 is a reuse and dispatch mechanism, not an authorization boundary.
 - Prototype metadata and parent order never enter JSON, ABI, digest, or receipt
   projections.
 
@@ -550,11 +550,11 @@ flowchart LR
     WRAP --> THUNK["One thunk per visible slot key"]
     THUNK --> LOOKUP["One owner-table decision then source .ref"]
     SAFE -->|"no: self/computed/super"| MIX["Native role-compose/.mix fallback"]
-    MIX --> C3["Per-instance C3 with exact POO semantics"]
+    MIX --> C4["Per-instance C4 with exact POO semantics"]
 #+end_src
 
 Let =K= be the visible slot-key count of the shared case and =L= the visible
-marker/local slot count.  The fast lane removes full per-Agent C3
+marker/local slot count.  The fast lane removes full per-Agent C4
 linearization, but =object<-fun= still materializes one thunk slot per supplied
 key.  Construction is therefore =O(K + L)= time and storage, not =O(1)=.  The
 owner index contains only marker/local overrides; every other key falls through
@@ -597,7 +597,7 @@ JSON/receipt/canonical digest equality.
 The next independent performance slice must address the measured per-instance
 =role-compose= boundary.  It may replace that boundary only after a
 repository-owned overlay primitive proves local precedence, instance isolation,
-and prototype reuse without full C3 recomposition; the declaration macros do
+and prototype reuse without full C4 recomposition; the declaration macros do
 not conceal or solve that runtime cost.
 
 Review repeated behavior in other object families only when object structure,

@@ -101,7 +101,7 @@ flowchart LR
 - [X] A committed intent cannot transition back to handoff.
 - [X] A reconciled intent is terminal.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.EffectIntentHandoff=.
+  =PooFlowProof.PooC4.EffectIntentHandoff=.
 - [ ] A later implementation-refinement proof must bind native POO effect
   intents and the runtime/Marlin handoff receipt to this bridge.
 

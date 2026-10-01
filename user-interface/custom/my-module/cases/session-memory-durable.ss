@@ -7,8 +7,8 @@
 ;;; Invariant: this is durable job handoff data only; Scheme does not recall,
 ;;; commit, consolidate, persist, or repair memory stores.
 
-(import :poo-flow/src/modules/session/syntax
-        :poo-flow/src/modules/memory-core/config)
+(import :poo-flow/modules/session/syntax
+        :poo-flow/modules/memory-core/config)
 
 (export poo-flow-custom-my-module-session-memory-durable-case)
 

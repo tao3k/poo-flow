@@ -7,8 +7,8 @@
 =session-core= is the upstream module-system row for POO Flow session work. It makes session lineage, placement, handoff, graph, transform, and doctor intent visible in module presentation without realizing a runtime descriptor.
 This keeps the OpenRath-inspired session-first direction concrete while preserving POO Flow's boundary: Scheme owns POO objects, functional composition, validation, strategy, and receipts; Marlin or another runtime owns execution.
 ** 10.06.37.20 Delivered Code Owners
-- =src/modules/session-core/config.ss= owns the built-in module bundle.
-- =src/modules/session-core/presentation.ss= owns report-only intent rows.
+- =modules/session-core/config.ss= owns the built-in module bundle.
+- =modules/session-core/presentation.ss= owns report-only intent rows.
 - =src/user-interface/presentation.ss= projects config-level session-core rows.
 - =src/user-interface/profile-presentation.ss= forwards profile and doctor rows.
 - =src/user-interface/declaration-case.ss= records the root declaration contract.
@@ -54,7 +54,7 @@ This row is part of =pooFlowUserConfigPresentation= and
 =pooFlowUserProfilePresentation=.  Testing Policy admission is a separate POO
 slot and does not own another presentation.
 ** 10.06.37.50 POO Boundary
-=session-core= does not introduce a second session model. It enables the existing POO session value layer in =src/modules/session/config.ss= and keeps extension on prototype/mixin paths:
+=session-core= does not introduce a second session model. It enables the existing POO session value layer in =modules/session/config.ss= and keeps extension on prototype/mixin paths:
 - session chunks remain cheap receipt rows;
 - lineage and placement remain POO composition facts;
 - session transforms derive new session values and handoff intents without provider execution;
@@ -63,8 +63,8 @@ slot and does not own another presentation.
 ** 10.06.37.60 Verification
 Focused package-context gates:
 #+begin_src sh
-gxpkg env gxc src/modules/session/transform.ss src/modules/session/config.ss
-gxpkg env gxc src/modules/session-core/config.ss src/modules/session-core/presentation.ss
+gxpkg env gxc modules/session/transform.ss modules/session/config.ss
+gxpkg env gxc modules/session-core/config.ss modules/session-core/presentation.ss
 gxpkg env gxc src/user-interface/presentation.ss src/user-interface/profile-presentation.ss
 gxtest t/session-transform-test.ss
 gxtest t/user-interface-presentation-test.ss

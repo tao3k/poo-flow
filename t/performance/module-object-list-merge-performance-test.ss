@@ -6,24 +6,24 @@
 ;;; Boundary: module object performance gates cover sparse List slot merging.
 ;;; Invariant: object merges stay descriptor data and never execute runtime work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/extension/interface
+        (only-in :core/extension-graph/interface
                  poo-flow-module-extension-node-slots)
-        (only-in :poo-flow/src/module-system/object-core/interface
+        (only-in :core/module-system/schema/interface
                  PooFlowModuleListType
-                 poo-flow-module-config-merge-result-root
+                 poo-flow-module-field-resolution-result-root
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
                  poo-flow-module-object
-                 poo-flow-module-objects-mk-merge/node
+                 poo-flow-module-objects-resolve-contributions/node
                  poo-flow-module-objects-node
                  poo-flow-module-objects-ref))
 
@@ -98,10 +98,10 @@
 ;; : (-> [PooModuleFieldContribution] Alist)
 (def (module-object-list-merge-summary/from-contributions contributions)
   (let* ((result
-          (poo-flow-module-objects-mk-merge/node
+          (poo-flow-module-objects-resolve-contributions/node
            module-object-list-merge-objects-node
            contributions))
-         (root (poo-flow-module-config-merge-result-root result))
+         (root (poo-flow-module-field-resolution-result-root result))
          (node (poo-flow-module-objects-ref root 'large.module.object))
          (slots (poo-flow-module-extension-node-slots node))
          (capabilities
@@ -122,7 +122,7 @@
 ;; : TestSuite
 (def module-object-list-merge-performance-test
   (test-suite "module object list merge performance"
-    (test-case "keeps repeated sparse list appends inside benchmark contract"
+    (poo-flow-test-case "keeps repeated sparse list appends inside benchmark contract"
       (let* ((batch-count 240)
              (batch-size 48)
              (overlap-step 24)

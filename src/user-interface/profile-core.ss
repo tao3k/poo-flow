@@ -7,8 +7,8 @@
 ;;; Invariant: profile objects are declarative and do not realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/declaration/interface)
+        :poo-flow/src/authoring/module-interface
+        :poo-flow/src/user-interface/module-selection)
 
 (export poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind

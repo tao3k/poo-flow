@@ -168,7 +168,7 @@ P1 determinism and identity gates pass.
 - Compare current and Bundle-derived policy, lifecycle, context, composition, and receipt results.
 
 ** Exit Gate
-- C3 affects only definition lookup and cannot widen authority or information flow.
+- C4 affects only definition lookup and cannot widen authority or information flow.
 - Every external effect closes Protocol–Authority–Evidence relationships.
 - Every context transfer closes Context–Protocol–Evidence relationships.
 - Differential tests explain every difference as either an accepted correction or a defect.
@@ -424,7 +424,7 @@ POO Flow does not grant assurance merely because a downstream adapter links succ
 | A monolithic rewrite hides semantic drift | Shadow Bundle and phase-specific differential receipts |
 | C ABI freezes implementation accidents | Bundle-first ordering and ABI freeze gate |
 | Python becomes a private semantic owner | Public installed-ABI-only build and tests |
-| C3 precedence widens security semantics | Facet-specific algebra and negative fixtures |
+| C4 precedence widens security semantics | Facet-specific algebra and negative fixtures |
 | High-performance views create second semantics | One generated schema and native/canonical differential validation |
 | Zero-copy introduces lifetime or TOCTOU defects | Explicit leases, freeze rules, ownership tags, and mutation tests |
 | Cedar allow is treated as total safety | Claim discipline and evidence closure |

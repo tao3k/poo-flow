@@ -3,16 +3,14 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: sandbox resource POO prototypes use harness-backed typed contracts.
+;;; Boundary: sandbox resource POO prototypes use native typed contracts.
 
-(import (only-in :clan/poo/object .def)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .def .o .ref object?)
         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
-        (only-in :poo-flow/src/type-facts/objects
-                 poo-flow-type-validation-receipt-harness-validation)
-        :poo-flow/src/modules/sandbox-core/resource-contract)
+        :poo-flow/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
 
@@ -33,6 +31,14 @@
   cpu: 2
   memory: "4Gi")
 
+;; : PooSandboxResourcesPrototype
+(.def unreadable-optional-resources-prototype
+  filesystem: poo-flow-runtime-volume-filesystem-prototype
+  ports: =>.+ '((scope . runtime))
+  cpu: 2
+  memory: "4Gi"
+  timeout-ms: =>.+ 1000)
+
 ;; : PooSandboxFilesystemPrototype
 (.def unstructured-filesystem-prototype
   scope: 'volume)
@@ -51,10 +57,6 @@
   cpu: 2
   memory: "4Gi")
 
-;; : (-> HashTable Symbol Value)
-(def (receipt-ref receipt key)
-  (hash-get receipt key))
-
 ;; : (-> Alist Symbol Object Object)
 (def (alist-ref/default entries key default-value)
   (let (entry (assoc key entries))
@@ -62,8 +64,8 @@
 
 ;; : (-> Object Object)
 (def (diagnostic-code diagnostic)
-  (if (list? diagnostic)
-    (alist-ref/default diagnostic 'code #f)
+  (if (object? diagnostic)
+    (.ref diagnostic 'code)
     #f))
 
 ;; diagnostic-codes
@@ -96,7 +98,7 @@
 ;; : TestSuite
 (def sandbox-core-resource-contract-test
   (test-suite "sandbox-core resource prototype typed contracts"
-    (test-case "projects shared filesystem fragments to resource policies"
+    (poo-flow-test-case "projects shared filesystem fragments to resource policies"
       (check-equal?
        (poo-flow-sandbox-filesystem-prototype->resource-entry
         poo-flow-runtime-filesystem-prototype)
@@ -117,7 +119,7 @@
        '(filesystem
          (scope . snapshot)
          (snapshot . clone))))
-    (test-case "projects shared resources with ports, cpu, and memory"
+    (poo-flow-test-case "projects shared resources with ports, cpu, and memory"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               runtime-volume-ports-resources-prototype)))
@@ -137,13 +139,10 @@
             (published-by . runtime))
            (cpu . 2)
            (memory . "4Gi")))))
-    (test-case "validates runtime volume resources through harness facade"
+    (poo-flow-test-case "validates runtime volume resources with native POO contracts"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                poo-flow-runtime-volume-resources-prototype))
-             (harness-validation
-              (poo-flow-type-validation-receipt-harness-validation
-               validation))
              (summary
               (poo-flow-sandbox-resources-prototype-contract-validation->alist
                validation)))
@@ -155,16 +154,28 @@
          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
           validation)
          '())
-        (check-equal? (receipt-ref harness-validation 'kind)
-                      "poo-object-contract-validation")
-        (check-equal? (alist-ref/default summary 'harness-valid #f) #t)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          validation)
+         #t)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          poo-flow-runtime-volume-resources-prototype)
+         #f)
+        (check-equal? (not (not (member 'native-poo-slot-types
+                                        (alist-ref/default summary
+                                                           'checked-signals '()))))
+                      #t)
         (check-equal? (alist-ref/default summary 'diagnostic-count #f) 0)))
-    (test-case "reports typed cpu contract failures from harness diagnostics"
+    (poo-flow-test-case "reports typed cpu contract failures natively"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                invalid-cpu-resources-prototype))
              (diagnostics
               (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+               validation))
+             (summary
+              (poo-flow-sandbox-resources-prototype-contract-validation->alist
                validation)))
         (check-equal?
          (poo-flow-sandbox-resources-prototype-contract-validation-valid?
@@ -172,16 +183,20 @@
          #f)
         (check-equal?
          (diagnostic-member?
-          "field:cpu:default-not-compatible-with-type:Number"
-          diagnostics)
+          'slot-contract-failed
+          (diagnostic-codes diagnostics))
          #t)
+        (check-equal?
+         (map (lambda (entry) (alist-ref/default entry 'code #f))
+              (alist-ref/default summary 'diagnostics '()))
+         '(slot-contract-failed))
         (check-equal?
          (contract-error?
           (lambda ()
             (poo-flow-require-sandbox-resources-prototype-contract!
              invalid-cpu-resources-prototype)))
          #t)))
-    (test-case "reports missing filesystem as sandbox-core structure failure"
+    (poo-flow-test-case "reports missing filesystem as sandbox-core structure failure"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               missing-filesystem-resources-prototype)))
@@ -194,7 +209,7 @@
           (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
            validation))
          '(missing-filesystem-slot))))
-    (test-case "reports root resource mixins without parent slot"
+    (poo-flow-test-case "reports root resource mixins without parent slot"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               unreadable-root-mixin-resources-prototype)))
@@ -207,7 +222,35 @@
           (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
            validation))
          '(unreadable-filesystem-slot))))
-    (test-case "reports unstructured filesystem projection"
+    (poo-flow-test-case "reports present but unreadable optional slots"
+      (let ((validation
+             (poo-flow-sandbox-resources-prototype-contract-validation
+              unreadable-optional-resources-prototype)))
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+          validation)
+         #f)
+        (check-equal?
+         (diagnostic-codes
+          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+           validation))
+         '(unreadable-ports-slot unreadable-timeout-slot))))
+    (poo-flow-test-case "rejects incomplete validation receipts safely"
+      (let* ((complete
+              (poo-flow-sandbox-resources-prototype-contract-validation
+               poo-flow-runtime-volume-resources-prototype))
+             (incomplete
+              (.o kind: (.ref complete 'kind)
+                  schema: (.ref complete 'schema))))
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation?
+          incomplete)
+         #f)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+          incomplete)
+         #f)))
+    (poo-flow-test-case "reports unstructured filesystem projection"
       (let ((validation
              (poo-flow-sandbox-resources-prototype-contract-validation
               unstructured-filesystem-resources-prototype)))

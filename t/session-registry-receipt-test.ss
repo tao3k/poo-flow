@@ -7,12 +7,12 @@
 ;;; Invariant: registry receipts index declared sessions; they are not runtime
 ;;; stores and never retain live execution state.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-registry-receipt-test)
 
@@ -40,7 +40,7 @@
 ;; : TestSuite
 (def session-registry-receipt-test
   (test-suite "poo-flow session registry receipts"
-    (test-case "projects root and child sessions into registry entries"
+    (poo-flow-test-case "projects root and child sessions into registry entries"
       (let* ((isolation
               (poo-flow-session-isolation-policy
                'policy/child-isolation

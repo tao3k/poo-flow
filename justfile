@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", "12")
+export GERBIL_BUILD_CORES := env_var_or_default("GERBIL_BUILD_CORES", `getconf _NPROCESSORS_ONLN`)
 
 # Test processes are bounded before any Scheme profile module can load. The
 # ASP POO Testing profile remains the policy and receipt owner inside the
@@ -14,8 +14,8 @@ gerbil_test_debug := env_var_or_default("GERBIL_TEST_DEBUG", "q")
 gerbil_test_runtime_options := "-:max-heap=" + gerbil_test_max_heap + ",debug=" + gerbil_test_debug
 
 bazel := env_var_or_default("BAZEL", "bazelisk")
-gerbil_compile := "//gerbil:compile"
-gerbil_dev_compile := "//gerbil:dev_compile"
+gerbil_compile := "//:compile"
+gerbil_dev_compile := "//:dev_compile"
 gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"
 module_system_owner_tests := "//t/qualification/module-system:owner_map_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
@@ -28,7 +28,7 @@ gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
 aitia_native_library := justfile_directory() + "/.gerbil/native/libpoo_flow_aitia.dylib"
 aitia_python_dir := contribution_source_root + "/lambda-aitia/bindings/python"
-python_runtime_test_environment := "//gerbil:python_runtime_test_environment"
+python_runtime_test_environment := "//:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
 cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 contribution_test_path := justfile_directory() + "/.gerbil/contributions/lambda-episteme/module-test"
@@ -53,19 +53,21 @@ gerbil_parser_dir := poo_flow_gerbil_path + "/pkg/github.com/tao3k/gerbil-parser
 gerbil_parser_path := poo_flow_gerbil_path
 gerbil_parser_library_path := poo_flow_library_path + ":" + gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory()
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
-governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
-governance_tlc_config := justfile_directory() + "/packages/proof/tla/GovernanceCore.cfg"
+governance_tla := justfile_directory() + "/packages/proofs/tla/GovernanceCore.tla"
+governance_tlc_config := justfile_directory() + "/packages/proofs/tla/GovernanceCore.cfg"
 governance_tlc_receipt := justfile_directory() + "/.ci/governance/tlc-receipt.ss"
-semantic_query_tla := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.tla"
-semantic_query_tlc_config := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.cfg"
+semantic_query_tla := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.tla"
+semantic_query_tlc_config := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.cfg"
 semantic_query_tlc_receipt := justfile_directory() + "/.ci/native-semantic-query/tlc-receipt.ss"
-healthcare_temporal_tla := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.tla"
-healthcare_temporal_tlc_config := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.cfg"
-healthcare_migration_tla := justfile_directory() + "/packages/proof/tla/HealthcareStandardMigration.tla"
-healthcare_migration_tlc_config := justfile_directory() + "/packages/proof/tla/HealthcareStandardMigration.cfg"
+healthcare_temporal_tla := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.tla"
+healthcare_temporal_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.cfg"
+healthcare_migration_tla := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.tla"
+healthcare_migration_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.cfg"
 healthcare_migration_tlc_receipt := justfile_directory() + "/.ci/healthcare-standard-migration/tlc-receipt.ss"
 healthcare_temporal_tlc_receipt := justfile_directory() + "/.ci/healthcare-temporal/tlc-receipt.ss"
-lean_proof_dir := justfile_directory() + "/packages/proof/lean"
+temporal_family_tla_dir := justfile_directory() + "/packages/proofs/tla/temporal-causality"
+lean_proof_dir := justfile_directory() + "/packages/proofs/lean"
+temporal_poo_proof_dir := justfile_directory() + "/packages/proofs/lean-poo"
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -80,7 +82,13 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
+    just build-core
     GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
+
+# Compile the shared Core from the pinned submodule, not a second archive.
+[group('build')]
+build-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" GERBIL_BUILD_VERBOSE=1 {{ gerbil_darwin_env }} gerbil build
 
 # Build one packaged contribution inside POO Flow's package environment.
 [group('build')]
@@ -232,7 +240,7 @@ build-bundle-v1:
 # Build the single Lean-linked Cedar Runtime Host at an explicit output path (Nix: $out/bin/cedarRuntimeHost).
 [group('build')]
 build-cedar-runtime-host out:
-    tools/ci/build-cedar-runtime-host "{{ out }}"
+    python3 packages/automation/build_cedar_runtime_host.py "{{ out }}"
 
 # Show the registered Gerbil implementation selected for the host platform.
 [group('build')]
@@ -242,8 +250,38 @@ toolchain:
 # Run the package's single native Scheme test entrypoint.
 [group('test')]
 test:
+    just test-core
     @echo "[poo-flow-test-runtime] maxHeap={{ gerbil_test_max_heap }} debug={{ gerbil_test_debug }} scope=worker-process"
     gerbil {{ gerbil_test_runtime_options }} env ./unit-tests.ss
+
+# Keep ASP's per-phase test receipts and add process wall/user/system timing.
+[group('test')]
+test-profile:
+    time just test
+
+# Run the existing C4 identity/performance witness under the test heap fence.
+[group('test')]
+benchmark-poo-clos-native-c4:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/scenarios/performance/poo-clos-native-c4/scenario.ss
+
+# Keep the Core submodule's qualification under its own Justfile.
+[group('test')]
+test-core:
+    cd "{{ justfile_directory() }}/core" && GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}" just test
+
+# Run one root-owned Scheme test with the same pre-import heap fence.
+[group('test')]
+test-file path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -f "{{ path }}"
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -F 'MODULE-OK {{ path }}' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null
 
 # Run wall-clock performance scenarios through the native ASP scheduler,
 # outside the ordinary unit-test batches.
@@ -288,7 +326,22 @@ test-bundle-v1:
 # Qualify an explicitly supplied Cedar Runtime Host artifact.
 [group('test')]
 test-cedar-runtime-host host:
-    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --features native-runtime-host-qualification --test runtime_host --test authorization
+    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --features native-runtime-host-qualification --test runtime_host --test authorization --test case_check
+
+# Qualify the Scheme POO -> native authority -> AOT Host path with one Cedar artifact.
+[group('test')]
+test-cedar-native host:
+    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-gerbil --features conformance --test native_authorization
+
+# Replay one data-only case manifest against exported Cedar files and both Host engines.
+[group('test')]
+test-cedar-case manifest host policy:
+    cargo run --locked --quiet --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --bin cedar-case-check -- "{{ manifest }}" "{{ host }}" "{{ policy }}"
+
+# Parse an exported policy set without starting the Runtime Host.
+[group('test')]
+inspect-cedar-file policy:
+    cargo run --locked --quiet --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --bin cedar-case-check -- inspect "{{ policy }}"
 
 # Run the focused composition-lifecycle Python gate.
 [group('test')]
@@ -331,7 +384,7 @@ check-tla-interface: _prepare-gerbil-parser
 # Lambda stays independent of gerbil-parser; parser acceptance is not execution.
 [group('check')]
 check-healthcare-gql: _prepare-gerbil-parser
-    cd "{{ contribution_source_root }}/lambda-episteme" && GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ gerbil_parser_library_path }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) (only-in :poo-flow/src/modules/query/gql poo-flow-query->gql) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance healthcare-case-qualification-gql-paths) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/reasoning HealthcareCaseProfileRelationsQuery HealthcareProfileImpactQuery HealthcarePrescriptionCausalTrajectoryQuery) (only-in :gerbil-parser/languages/gql/iso-39075-2024/parser +gql-syntax-contract+ parse-gql-iso-39075-2024) (only-in :gerbil-parser/src/runtime/artifact parse-artifact-ref parse-artifact-success? parse-artifact-valid? parse-artifact-roundtrip)) (let loop ((queries (list HealthcareCaseProfileRelationsQuery HealthcareProfileImpactQuery HealthcarePrescriptionCausalTrajectoryQuery)) (paths (healthcare-case-qualification-gql-paths)) (receipts (quote ()))) (if (null? paths) (begin (for-each displayln (reverse receipts)) (exit 0)) (let* ((query (car queries)) (path (car paths)) (expected (call-with-input-file path read-all-as-string)) (source (poo-flow-query->gql query)) (artifact (parse-gql-iso-39075-2024 source)) (accepted? (and (equal? source expected) (parse-artifact-success? artifact) (parse-artifact-valid? artifact) (equal? source (parse-artifact-roundtrip artifact))))) (unless accepted? (displayln (list (cons (quote source) path) (cons (quote exact-projection) (equal? source expected)) (cons (quote accepted) #f))) (exit 1)) (loop (cdr queries) (cdr paths) (cons (list (cons (quote source) path) (cons (quote parser) (quote gerbil-parser)) (cons (quote syntax-contract) +gql-syntax-contract+) (cons (quote source-content-id) (parse-artifact-ref artifact (quote sourceDigest))) (cons (quote grammar-content-id) (parse-artifact-ref artifact (quote grammarDigest))) (cons (quote exact-projection) #t) (cons (quote accepted) #t) (cons (quote roundtrip) #t)) receipts))))))'
+    cd "{{ contribution_source_root }}/lambda-episteme" && GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ gerbil_parser_library_path }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) (only-in :poo-flow/modules/query/gql poo-flow-query->gql) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance healthcare-case-qualification-gql-paths) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/reasoning HealthcareCaseProfileRelationsQuery HealthcareProfileImpactQuery HealthcarePrescriptionCausalTrajectoryQuery) (only-in :gerbil-parser/languages/gql/iso-39075-2024/parser +gql-syntax-contract+ parse-gql-iso-39075-2024) (only-in :gerbil-parser/src/runtime/artifact parse-artifact-ref parse-artifact-success? parse-artifact-valid? parse-artifact-roundtrip)) (let loop ((queries (list HealthcareCaseProfileRelationsQuery HealthcareProfileImpactQuery HealthcarePrescriptionCausalTrajectoryQuery)) (paths (healthcare-case-qualification-gql-paths)) (receipts (quote ()))) (if (null? paths) (begin (for-each displayln (reverse receipts)) (exit 0)) (let* ((query (car queries)) (path (car paths)) (expected (call-with-input-file path read-all-as-string)) (source (poo-flow-query->gql query)) (artifact (parse-gql-iso-39075-2024 source)) (accepted? (and (equal? source expected) (parse-artifact-success? artifact) (parse-artifact-valid? artifact) (equal? source (parse-artifact-roundtrip artifact))))) (unless accepted? (displayln (list (cons (quote source) path) (cons (quote exact-projection) (equal? source expected)) (cons (quote accepted) #f))) (exit 1)) (loop (cdr queries) (cdr paths) (cons (list (cons (quote source) path) (cons (quote parser) (quote gerbil-parser)) (cons (quote syntax-contract) +gql-syntax-contract+) (cons (quote source-content-id) (parse-artifact-ref artifact (quote sourceDigest))) (cons (quote grammar-content-id) (parse-artifact-ref artifact (quote grammarDigest))) (cons (quote exact-projection) #t) (cons (quote accepted) #t) (cons (quote roundtrip) #t)) receipts))))))'
 
 # Parse the domain-owned legacy message through the parser source owner, then
 # require exact equality with Lambda's retained projection.
@@ -373,7 +426,7 @@ check-governance-lean:
 # traversing the repository-wide Lean aggregate.
 [group('check')]
 check-native-semantic-query-lean:
-    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC3.NativeSemanticQueryModel
+    cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC4.NativeSemanticQueryModel
 
 # Parser admission and TLC remain separate evidence over the same model.
 [group('check')]
@@ -385,6 +438,63 @@ check-native-semantic-query-tla: _prepare-gerbil-parser
 [group('check')]
 check-native-semantic-query-tlc:
     cd "$(dirname "{{ semantic_query_tla }}")" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" tlc -config "{{ semantic_query_tlc_config }}" "{{ semantic_query_tla }}"
+
+# Explore the module-owned hypothesis family both to exhaustion and under a
+# tighter bound. Each configuration checks every candidate selection order.
+[group('check')]
+check-temporal-family-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyCase.cfg TemporalFamilyCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyBounded.cfg TemporalFamilyCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalDiscriminatingCase.cfg TemporalDiscriminatingCase.tla
+
+# Model-check append-only temporal evidence revisions and stable as-of cuts.
+[group('check')]
+check-temporal-revisions-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalRevisionCase.cfg TemporalRevisionCase.tla
+
+# Check the finite reverse-dependency model and the separate LeanPoo 4.34
+# certificate target without changing the Cedar-bound Lean 4.31 project.
+[group('check')]
+check-temporal-invalidation-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalInvalidationCase.cfg TemporalInvalidationCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalReprojectionCase.cfg TemporalInvalidationCase.tla
+
+# Verify Trajectory independently of the consuming Impact module.
+[group('check')]
+check-temporal-trajectory:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-trajectory-test.ss
+
+# Verify exact irregular-grid Impact arithmetic without claiming a
+# trained forecaster, statistical estimator or causal effect.
+[group('check')]
+check-temporal-impact:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-impact-test.ss
+
+# Check domain-neutral retrieval/use lineage and finite interleavings.
+[group('check')]
+check-temporal-evidence:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-evidence-test.ss
+
+# Audit exact cut/provider receipts as inert candidate review material.
+[group('check')]
+check-temporal-candidate-exchange:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-candidate-exchange-test.ss
+
+[group('check')]
+check-temporal-evidence-tlc:
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceLineageCase.cfg EvidenceLineageCase.tla
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceAssessmentCase.cfg EvidenceAssessmentCase.tla
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config CandidateExchangeCase.cfg CandidateExchangeExplorer.tla
+
+# Explore both orders of competing conclusion-selection proposals. The
+# checked transition is an abstract atomic CAS, not a runtime pointer write.
+[group('check')]
+check-temporal-conclusion-selection-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalConclusionSelectionCase.cfg TemporalConclusionSelectionCase.tla
+
+[group('check')]
+check-temporal-poo-lean:
+    cd "{{ temporal_poo_proof_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 120s lake build PooFlowTemporalPooProof
 
 [group('check')]
 check-native-semantic-query-model: check-native-semantic-query-lean check-native-semantic-query-tla
@@ -463,18 +573,18 @@ check-healthcare-case-assurance: build-contribute check-healthcare-gql check-hea
 # Validate the repository and published-package license contract.
 [group('check')]
 check-license-contract:
-    python3 scripts/check_license_contract.py
-    python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+    python3 packages/automation/check_license_contract.py
+    python3 -m unittest discover -s packages/automation/tests -p 'test_*.py'
 
 # Validate every first-party manifest and Runtime ABI projection against VERSION.
 [group('check')]
 check-version-contract:
-    python3 scripts/check_version_contract.py
+    python3 packages/automation/check_version_contract.py
 
 # Validate that gerbil.pkg direct pins and every Bazel projection agree.
 [group('check')]
 check-gerbil-dependency-contract:
-    python3 scripts/gerbil_dependency_pin.py check
+    python3 packages/automation/gerbil_dependency_pin.py check
 
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]
@@ -490,10 +600,10 @@ bazel-update:
 # source archive digest and both platform lock projections are derived.
 [group('dependency')]
 pin-gerbil-dependency package revision:
-    python3 scripts/gerbil_dependency_pin.py pin "{{ package }}" "{{ revision }}"
+    python3 packages/automation/gerbil_dependency_pin.py pin "{{ package }}" "{{ revision }}"
     {{ bazel }} mod deps --lockfile_mode=update
-    python3 scripts/gerbil_dependency_pin.py sync-lock
-    python3 scripts/gerbil_dependency_pin.py check
+    python3 packages/automation/gerbil_dependency_pin.py sync-lock
+    python3 packages/automation/gerbil_dependency_pin.py check
 
 # Normalize MODULE.bazel declarations while explicitly updating the lock.
 [group('dependency')]

@@ -6,18 +6,18 @@
 ;;; Boundary: module object validation gates cover inheritance chain projection.
 ;;; Invariant: validation metadata projection stays descriptor-only.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/object-core/interface
+        (only-in :core/module-system/schema/interface
                  poo-flow-module-object)
-        (only-in :poo-flow/src/module-system/object-validation/interface
+        (only-in :core/module-system/schema/validation
                  poo-flow-module-object-inheritance-chain))
 
 (export module-object-inheritance-chain-performance-test)
@@ -74,7 +74,7 @@
 ;; : TestSuite
 (def module-object-inheritance-chain-performance-test
   (test-suite "module object inheritance chain performance"
-    (test-case "keeps large inheritance chain projection inside benchmark contract"
+    (poo-flow-test-case "keeps large inheritance chain projection inside benchmark contract"
       (let* ((object-count 1600)
              (object (module-object-inheritance-chain-build object-count))
              (receipt

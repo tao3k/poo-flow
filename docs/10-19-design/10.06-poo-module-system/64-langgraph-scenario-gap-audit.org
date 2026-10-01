@@ -155,7 +155,7 @@ Scenario code must stay thin:
 - reusable primitives go in =src=;
 - reusable community profiles go in =user-interface/profiles=;
 - scenario compositions go in =user-interface/cases=;
-- proof models and generated facts go in =packages/proof/lean=;
+- proof models and generated facts go in =packages/proofs/lean=;
 - runtime execution remains outside Scheme, behind handoff receipts.
 
 * First Gaps To Close
@@ -204,7 +204,7 @@ The first P0-P2 pass added a general =src= intent surface:
 - =t/scenarios/langgraph-scenario-gap-intent-test.ss= proves these primitives
   can be collected into one ordinary scenario gap plan without adding
   LangGraph-specific runtime code to =user-interface=.
-- =packages/proof/lean/PooFlowProof/PooC3/ScenarioGap.lean= gives the Lean-side
+- =packages/proofs/lean/PooFlowProof/PooC4/ScenarioGap.lean= gives the Lean-side
   fact shape and boundary theorems:
   - P0 belongs to Scheme =src= platform capabilities.
   - P1 is runtime-owned but Scheme-declared.
@@ -240,7 +240,7 @@ check stable:
   - all required intent kinds are present in =accepted-kinds=.
 - Lean models this as =ScenarioRuntimeRowFacts= and proves that
   =planOk ∧ rejectionsOk ∧ acceptedOk= implies the row matches the plan.
-- =packages/proof/lean/PooFlowProof/Generated/ScenarioGapRuntimeRow.lean= is a
+- =packages/proofs/lean/PooFlowProof/Generated/ScenarioGapRuntimeRow.lean= is a
   checked-in generated module for the valid row case, so the receipt boundary is
   part of the regular Lean build instead of only a Scheme string rendering
   smoke test.

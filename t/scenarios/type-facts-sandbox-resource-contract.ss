@@ -3,12 +3,11 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: scenario test for structured type-fact validation receipts.
+;;; Boundary: scenario test for native POO resource validation receipts.
 
 (import (only-in :clan/poo/object .o))
 
-(eval '(import "./src/type-facts/objects.ss"))
-(eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+(eval '(import "./modules/sandbox-core/resource-contract.ss"))
 
 ;; : (-> PooFlowTypeFactsSandboxScenarioExpr PooFlowTypeFactsSandboxScenarioValue)
 (def (type-facts-sandbox-scenario-eval expr)
@@ -19,8 +18,9 @@
   '(let (valid-validation
          (poo-flow-sandbox-resources-prototype-contract-validation
           poo-flow-runtime-volume-resources-prototype))
-     (poo-flow-type-validation-receipt? valid-validation)))
-  (error "sandbox resource validation should return a type validation receipt"))
+     (poo-flow-sandbox-resources-prototype-contract-validation?
+      valid-validation)))
+  (error "sandbox resource validation should return a native POO receipt"))
 
 (unless
  (type-facts-sandbox-scenario-eval

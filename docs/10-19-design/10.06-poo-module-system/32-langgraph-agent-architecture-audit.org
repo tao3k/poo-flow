@@ -167,7 +167,7 @@ LangGraph is useful precisely where it exposes clean engineering boundaries:
 The =poo-flow= translation should be:
 - module-owned POO objects express strategy, policy fragments, workflow roles, session identity, route intent, and human gates.
 - Doom Emacs-style module selection remains the public engineering boundary; package or backend splits are implementation evidence, not the user-facing architecture.
-- C3 determines deterministic composition order, but validators decide whether the final object is legal.
+- C4 determines deterministic composition order, but validators decide whether the final object is legal.
 - safety gates, denylist union, permission narrowing, budget tightening, and human-gate monotonicity remain hard validator rules.
 - runtime projection produces Marlin handoff descriptors with =runtime-executed = #f= in Scheme receipts.
 - checkpoint and resume requirements are validated before any human-audit or resumable loop is accepted.

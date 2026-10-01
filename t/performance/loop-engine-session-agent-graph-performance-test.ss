@@ -7,17 +7,17 @@
 ;;; Invariant: projection stays report-only and does not duplicate topology
 ;;; outside the session module graph owner.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :poo-flow/src/modules/loop-engine/runtime-agent
+        (only-in :poo-flow/modules/loop-engine/runtime-agent
                  poo-flow-user-loop-engine-intent-session-agent-topology-trace)
-        (only-in :poo-flow/src/modules/loop-engine/session-agent-graph
+        (only-in :poo-flow/modules/loop-engine/session-agent-graph
                  poo-flow-user-loop-engine-intent-session-agent-graph))
 
 (export loop-engine-session-agent-graph-performance-test)
@@ -125,7 +125,7 @@
 
 (def loop-engine-session-agent-graph-performance-test
   (test-suite "loop-engine session-agent graph performance"
-    (test-case "keeps loop-engine topology projection inside benchmark contract"
+    (poo-flow-test-case "keeps loop-engine topology projection inside benchmark contract"
       (let-values (((receipt summary)
                     (benchmark-run/result
                      loop-engine-session-agent-graph-performance-fixture

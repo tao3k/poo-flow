@@ -1,0 +1,90 @@
+{
+  "bootstrap": {
+    "schema_id": "poo-flow.cedar-authority-snapshot.v1",
+    "producer": "poo-flow.scheme-control",
+    "source": "modules/authorization/providers/cedar/objects.ss",
+    "object_kind": "cedar-authority-snapshot",
+    "provenance": {
+      "composition_identity": "generic-atomic-case",
+      "profile_identities": [
+        "poo-flow/cedar/atomic-case"
+      ],
+      "profile_origin_digest": "sha256:0101010101010101010101010101010101010101010101010101010101010101",
+      "governance_assessment_digest": "sha256:0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+      "subject_snapshot_digest": "sha256:0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "governance_admitted": true,
+      "certification_names": [
+        "PooFlowProof.Runtime.CedarNative",
+        "PooFlowProof.Runtime.CedarRuntimeHost"
+      ]
+    },
+    "authority_id": "generic.atomic.authority",
+    "runtime_context_id": "generic.atomic.runtime",
+    "runtime_generation": 1,
+    "bundle_epoch": 1,
+    "runtime_bundle_digest": "sha256:0202020202020202020202020202020202020202020202020202020202020202",
+    "profile_bundle_digest": "sha256:0303030303030303030303030303030303030303030303030303030303030303",
+    "independent_bundle_digest": "sha256:0404040404040404040404040404040404040404040404040404040404040404",
+    "capability_contract_digest": "sha256:0505050505050505050505050505050505050505050505050505050505050505",
+    "policy_revision": 1,
+    "revocation_epoch": 0,
+    "schema_json": "{\"\":{\"entityTypes\":{\"User\":{},\"Job\":{}},\"actions\":{\"run\":{\"appliesTo\":{\"principalTypes\":[\"User\"],\"resourceTypes\":[\"Job\"],\"context\":{\"type\":\"Record\",\"attributes\":{\"approved\":{\"type\":\"Boolean\"},\"blocked\":{\"type\":\"Boolean\"}}}}}}}}",
+    "policies": [],
+    "entities_json": "[]",
+    "capabilities": [
+      {
+        "action": "Action::\"run\"",
+        "event_kind": 1,
+        "source_admission_required": false
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "base-permit",
+      "expected_status": "authorized",
+      "proposal": {
+        "schema_id": "poo-flow.cedar-authorization-request.v1",
+        "principal": "User::\"alice\"",
+        "action": "Action::\"run\"",
+        "resource": "Job::\"demo\"",
+        "context": {
+          "approved": true,
+          "blocked": false
+        },
+        "intent_digest": "sha256:0606060606060606060606060606060606060606060606060606060606060606",
+        "handoff": {
+          "sequence": 1,
+          "payload_hex": "76656869636c65206d616e6966657374206578616d706c65",
+          "semantic_root": "sha256:0707070707070707070707070707070707070707070707070707070707070707",
+          "before_execution_root": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "after_execution_root": "sha256:0808080808080808080808080808080808080808080808080808080808080808",
+          "observation_digest": "sha256:0909090909090909090909090909090909090909090909090909090909090909"
+        }
+      }
+    },
+    {
+      "name": "forbid-overrides-permit",
+      "expected_status": "denied",
+      "proposal": {
+        "schema_id": "poo-flow.cedar-authorization-request.v1",
+        "principal": "User::\"alice\"",
+        "action": "Action::\"run\"",
+        "resource": "Job::\"demo\"",
+        "context": {
+          "approved": true,
+          "blocked": true
+        },
+        "intent_digest": "sha256:0606060606060606060606060606060606060606060606060606060606060606",
+        "handoff": {
+          "sequence": 2,
+          "payload_hex": "76656869636c65206d616e6966657374206578616d706c65",
+          "semantic_root": "sha256:0707070707070707070707070707070707070707070707070707070707070707",
+          "before_execution_root": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "after_execution_root": "sha256:0808080808080808080808080808080808080808080808080808080808080808",
+          "observation_digest": "sha256:0909090909090909090909090909090909090909090909090909090909090909"
+        }
+      }
+    }
+  ]
+}

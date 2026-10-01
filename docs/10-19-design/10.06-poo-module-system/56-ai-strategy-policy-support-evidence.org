@@ -30,7 +30,7 @@ $
 #+end_src
 
 This distinction matters because POO Flow is designed for complex composition:
-shared profiles, POO/C3 linearized policy objects, session lifecycle links,
+shared profiles, POO/C4 linearized policy objects, session lifecycle links,
 sandbox capability scopes, loop policies, subagent dispatch, workflow
 dependencies, and runtime handoff.  That is exactly the area where generated
 configuration can look plausible while violating a hidden global condition.
@@ -82,7 +82,7 @@ strategy/policy rigor problem.
 
 | System class | Strength | Missing default guarantee for POO Flow |
 |--------------+----------+----------------------------------------|
-| Codex/Claude-style coding agents | Generate code, inspect files, run tools, iterate with feedback. | They can produce policy text, but the text is not automatically a typed proof about POO/C3 order, session lineage, sandbox scope, or loop invariants. |
+| Codex/Claude-style coding agents | Generate code, inspect files, run tools, iterate with feedback. | They can produce policy text, but the text is not automatically a typed proof about POO/C4 order, session lineage, sandbox scope, or loop invariants. |
 | ReAct-style agents | Interleave reasoning traces and actions. | A trace is inspectable, but it is not a machine-checked theorem. |
 | Reflexion-style agents | Use verbal feedback and memory to improve later attempts. | Reflection improves search behavior, but it does not certify that a strategy preserves invariants. |
 | Pi/Flue-style harnesses | Provide durable sessions, tools, skills, sandbox runtime, and deployment harness. | Durability and harness structure do not prove that a generated policy is semantically safe. |
@@ -351,7 +351,7 @@ abstract safety slogans; they are proof targets.
 | Tool observation becomes instruction | AgentDojo prompt injection | untrusted observation cannot become policy instruction without Scheme owner projection |
 | Loop starts without readiness | POO Flow workflow/session cases | transition preconditions are satisfied before start |
 | Retry loses invariant | Reflexion-style feedback loops | retry transition preserves invariant or emits rejected obligation |
-| Profile override broadens policy | POO/C3 composition | linearized override cannot expand forbidden parent capability |
+| Profile override broadens policy | POO/C4 composition | linearized override cannot expand forbidden parent capability |
 | Selector chooses unsafe branch | OpenRATH selector/runtime routing | selected branch must satisfy policy guard and dependency facts |
 | Runtime handoff overclaims execution | Flue/Pi-style harness boundary | Scheme may emit descriptor, but execution claim belongs to runtime receipt |
 | External framework treated as truth | OpenRATH/Flue reference misuse | external observation can only become candidate case, never proof fact |
@@ -422,7 +422,7 @@ fail theorem discharge.
 | ToolCallAllowed | every tool call has a sandbox fact and an allowed tool proof |
 | LoopProgress | every nonterminal transition either advances a measure or emits a rejection |
 | LoopInvariant | retry and resume preserve required session/sandbox facts |
-| ProfileLinearization | POO/C3 order is deterministic and override provenance is visible |
+| ProfileLinearization | POO/C4 order is deterministic and override provenance is visible |
 | NoPolicyBroadening | profile or selector override cannot broaden forbidden capability |
 | DependencyStart | module start requires all dependency facts |
 | RuntimeHandoffTruth | Scheme handoff descriptor is not runtime execution evidence |

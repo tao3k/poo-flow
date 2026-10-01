@@ -57,10 +57,10 @@ changing the POO Flow theorem vocabulary.
 * Stable aggregate interface
 
 #+begin_src lean
-import PooFlowProof.PooC3.Enterprise.TenantOrganization
+import PooFlowProof.PooC4.Enterprise.TenantOrganization
 #+end_src
 
-The root =PooFlowProof.PooC3.Enterprise= import also re-exports this subfamily
+The root =PooFlowProof.PooC4.Enterprise= import also re-exports this subfamily
 through =Enterprise.Assurance=.
 
 * Module topology
@@ -245,16 +245,16 @@ redefine them or create a global organization owner.
 * Local build receipts
 
 #+begin_src text
-rtk lake build PooFlowProof.PooC3.Enterprise.TenantOrganization.CedarEntityClosure
+rtk lake build PooFlowProof.PooC4.Enterprise.TenantOrganization.CedarEntityClosure
 Build completed successfully (162 jobs).
 
-rtk lake build PooFlowProof.PooC3.Enterprise.TenantOrganization.CedarAdapterRefinement
+rtk lake build PooFlowProof.PooC4.Enterprise.TenantOrganization.CedarAdapterRefinement
 Build completed successfully (164 jobs).
 
-rtk lake build PooFlowProof.PooC3.Enterprise.TenantOrganization
+rtk lake build PooFlowProof.PooC4.Enterprise.TenantOrganization
 Build completed successfully (173 jobs).
 
-rtk lake build PooFlowProof.PooC3.Enterprise
+rtk lake build PooFlowProof.PooC4.Enterprise
 Build completed successfully (177 jobs).
 
 rtk lake build

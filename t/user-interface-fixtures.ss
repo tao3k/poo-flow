@@ -7,10 +7,10 @@
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/declaration/interface
-        (only-in :poo-flow/src/module-system/load
+        :poo-flow/src/user-interface/module-selection
+        (only-in :poo-flow/src/user-interface/module-selection-syntax
                  poo-flow-modules!)
-        :poo-flow/src/modules/loop-engine/config
+        :poo-flow/modules/loop-engine/config
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/profiles/kernel/interface)
 

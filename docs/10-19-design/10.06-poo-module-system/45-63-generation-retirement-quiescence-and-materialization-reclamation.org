@@ -33,7 +33,7 @@ Retirement, quiescence, and reclamation are three distinct evidence
 boundaries.  Retirement installs a fence after an authoritative active-head
 observation proves that the generation no longer receives ordinary new work.
 
-#+begin_src typst
+#+begin_src text
 $ H = ActiveHeadObservation(scope, selected-generation, version, receipt) $
 $ R = RetirementFence(retiring-generation, H, fence-id, retirement-receipt) $
 
@@ -52,7 +52,7 @@ Quiescence proves the absence of live use pins and outstanding obligations.
 Reclamation additionally proves ownership of every physical materialization
 being released.  It preserves the immutable semantic generation record.
 
-#+begin_src typst
+#+begin_src text
 $ Q = QuiescenceWitness(R, live-pins, obligations, quiescence-receipt) $
 $ Quiescent(Q)
   := Q.live-pins = emptyset and Q.obligations = emptyset $

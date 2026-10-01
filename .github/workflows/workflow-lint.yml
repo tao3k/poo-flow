@@ -6,6 +6,8 @@ name: workflow lint
 
 on:
   push:
+    branches:
+      - main
     paths:
       - .github/workflows/**
   pull_request:

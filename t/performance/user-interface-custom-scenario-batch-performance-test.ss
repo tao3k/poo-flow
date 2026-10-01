@@ -6,19 +6,19 @@
 ;;; Boundary: custom user-interface scenarios keep a real performance fixture.
 ;;; Invariant: user modules stay POO-native; benchmark contracts live under t/.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection?
                  poo-flow-user-module-selection-flag-entry)
-        :poo-flow/src/modules/session/config
+        :poo-flow/modules/session/config
         (only-in "../../user-interface/custom/my-module/cases/cicd"
                  poo-flow-custom-my-module-cicd-case)
         (only-in "../../user-interface/custom/my-module/cases/loop-engine-owner"
@@ -223,7 +223,7 @@
 ;; : TestSuite
 (def user-interface-custom-scenario-batch-performance-test
   (test-suite "custom user-interface scenario batch performance"
-    (test-case "keeps custom scenario aggregation inside benchmark contract"
+    (poo-flow-test-case "keeps custom scenario aggregation inside benchmark contract"
       (let* ((summary (custom-user-interface-scenario-batch-summary))
              (receipt
               (benchmark-run
@@ -245,7 +245,7 @@
          #f)
         (custom-scenario-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))
-    (test-case "ignores dotted selection-count rows as runtime flags"
+    (poo-flow-test-case "ignores dotted selection-count rows as runtime flags"
       (check-equal?
        (custom-scenario-runtime-flags '((memory/project) . 1))
        '()))))

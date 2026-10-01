@@ -52,14 +52,14 @@ borrow another layer's edge semantics.
 | FeatureDescriptor | feature id plus schema version | dependency, conflict, option schema | immutable |
 | FeatureProfile | profile id plus canonical selections | selection and resolution graph | immutable |
 | FeatureActivationPlan | plan key plus receipt schema | ordered runtime handoff | explicit adapter boundary |
-| CaseComponent / DomainCase | component ids and canonical case key | POO C3 plus independent type/contract algebras | bounded cache and instance counters |
+| CaseComponent / DomainCase | component ids and canonical case key | POO C4 plus independent type/contract algebras | bounded cache and instance counters |
 
 * Non-equivalence laws
 
 1. =import FeatureOwner= does not select the Feature exported by
    =FeatureOwner=.
 2. Selecting a Feature never mutates or re-instantiates its Gerbil module.
-3. Feature dependency edges are not POO supers and never participate in C3.
+3. Feature dependency edges are not POO supers and never participate in C4.
 4. Gerbil import edges are code availability edges and are not Feature
    dependency declarations.
 5. A Feature conflict is a profile-resolution diagnostic, not a module loader
@@ -357,7 +357,7 @@ owner exists, the same checks remain deterministic resolver diagnostics.
 Phase 2 is split across three Gerbil modules: =model.ss= owns immutable POO
 values and named functional fragments, =resolver.ss= owns graph validation and
 ordering, and =interface.ss= is the explicit import/export facade.  POO object
-construction uses constant-slot instance overlays; it does not run C3 for every
+construction uses constant-slot instance overlays; it does not run C4 for every
 FeatureDescriptor, FeatureSelection, FeatureProfile, or Agent instance.
 
 1. Land this vocabulary and layering decision; reduce the old =use-module=

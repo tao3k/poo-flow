@@ -19,7 +19,7 @@ A late event never mutates an old proof into an error.  The old conclusion
 remains historical evidence for its immutable causal cut; reevaluation creates
 a new cut and, when the conclusion changes, a new conclusion identity.
 
-#+begin_src typst
+#+begin_src text
 #let conclusion-id(cut, policy) = (cut, policy)
 
 $ late-event(event, old-cut)
@@ -41,7 +41,7 @@ derivation explicitly invalidates every affected conclusion and selects one
 eligible active revision.  Retraction marks a conclusion inactive but does not
 delete its proof or effect receipts.
 
-#+begin_src typst
+#+begin_src text
 $ monotone(policy)
   ==> reachable(old-cut) subset.eq reachable(new-cut) $
 
@@ -102,7 +102,7 @@ flowchart LR
 - [ ] Project truth-maintenance policy through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.IncrementalTruthMaintenance=.  It
+The Lean anchor is =PooFlowProof.PooC4.IncrementalTruthMaintenance=.  It
 imports RFC 45-72 directly, so correction starts from an admitted new causal
 cut rather than mutating transport arrivals or historical evidence in place.
 
@@ -423,6 +423,13 @@ The implementation must distinguish at least:
 15. Public truth-maintenance policy extension remains POO-native.
 
 * Implementation checklist
+
+The Temporal Module now has a bounded first slice for immutable evidence
+cuts, cut-bound reverse-dependency scheduling, conclusion revision journals
+and inert versioned CAS plans.  See
+=modules/temporal-causality/framework.org=.  The checklist below remains
+open where it requires proof admission, complete policy provenance, an
+authorized atomic runtime transition, or effect handling.
 
 - [ ] Define derived-conclusion identities and provenance schemas.
 - [ ] Define monotonicity proofs for exact policy domains.

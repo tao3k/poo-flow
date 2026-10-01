@@ -21,7 +21,7 @@ a capability only when every binding check still holds for the exact proposal,
 evidence cut, quorum, separation of duties, scope, target version, policy, and
 time observation.
 
-#+begin_src typst
+#+begin_src text
 #let governance-checks(decision, current) = (
   decision.proposal == current.proposal
   and decision.evidence-cut == current.evidence-cut
@@ -49,7 +49,7 @@ decision identity.  Break-glass remains an explicit policy path with narrow
 scope, expiry, reason, receipt, and mandatory post-action review; it never
 creates global approval state.
 
-#+begin_src typst
+#+begin_src text
 #let decision-id(proposal, cut, scope, policy) = (
   proposal,
   cut,
@@ -118,7 +118,7 @@ flowchart LR
 - [ ] Project governance policy and receipts through native =gerbil-poo=.
 - [ ] Replay the synchronized declarations through external AXLE verification.
 
-The Lean anchor is =PooFlowProof.PooC3.GovernanceDecisionAuthority=.  It
+The Lean anchor is =PooFlowProof.PooC4.GovernanceDecisionAuthority=.  It
 imports RFC 45-73 so governance actions bind to immutable conclusion and
 evidence revisions rather than mutable approval state.
 

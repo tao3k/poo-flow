@@ -17,7 +17,7 @@
                  loop-governor-human-node-role
                  loop-governor-node->contract
                  loop-governor-validation-errors)
-        (only-in "../module-system/descriptor/contracts.ss"
+        (only-in :core/module-system/schema/slot-contracts
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type
@@ -88,7 +88,7 @@
     (executes-runtime . #f)))
 
 ;;; Boundary: human audit is a governor-derived node in the governance chain.
-;;; It reuses POO/C3 governor policy shape while marking the node as human.
+;;; It reuses POO/C4 governor policy shape while marking the node as human.
 ;; : (-> Unit Role)
 (def loop-human-governor-node-role
   (.o (:: @ loop-governor-human-node-role)

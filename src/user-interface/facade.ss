@@ -9,8 +9,8 @@
 
 (import :poo-flow/src/user-interface/entrypoints
         :poo-flow/src/user-interface/presentation
-        :poo-flow/src/module-system/observability/module-presentation)
+        :poo-flow/src/user-interface/module-presentation)
 
 (export (import: :poo-flow/src/user-interface/entrypoints)
         (import: :poo-flow/src/user-interface/presentation)
-        (import: :poo-flow/src/module-system/observability/module-presentation))
+        (import: :poo-flow/src/user-interface/module-presentation))

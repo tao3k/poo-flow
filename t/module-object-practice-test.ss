@@ -5,7 +5,8 @@
 
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import :gerbil/runtime/gambit
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :gerbil/runtime/gambit
         (only-in :std/test
                  check
                  check-eq?
@@ -14,13 +15,12 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/object-core/interface)
+        :core/extension-graph/interface
+        :core/module-system/schema/interface)
 
 (export module-object-practice-test)
 
@@ -59,7 +59,7 @@
 ;;; downstream module authors.
 ;; : TestCase
 (def (module-object-practice-projection-case)
-  (test-case "projects object-owned field contracts into the extension graph"
+  (poo-flow-test-case "projects object-owned field contracts into the extension graph"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
@@ -93,9 +93,10 @@
                (extension-contributions
                 (poo-flow-module-field-contributions->extensions contributions))
                (merge-result
-                (poo-flow-module-config-mk-merge base-node contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node contributions))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
+                (poo-flow-module-field-resolution-result-root merge-result)))
           (check-equal? (poo-flow-module-object? practice-object) #t)
           (check-equal? (map poo-flow-module-field-contract-identity
                              (poo-flow-module-object-resolved-fields
@@ -106,11 +107,11 @@
           (check-equal? (map poo-flow-module-extension-contribution?
                              extension-contributions)
                         '(#t #t))
-          (check-equal? (poo-flow-module-config-merge-result? merge-result) #t)
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+          (check-equal? (poo-flow-module-field-resolution-result? merge-result) #t)
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
-          (check-equal? (poo-flow-module-config-merge-result-contributions
+          (check-equal? (poo-flow-module-field-resolution-result-contributions
                          merge-result)
                         contributions)
           (check-equal? (slot-value resolved-node 'capabilities)
@@ -120,7 +121,7 @@
 
 ;; : TestCase
 (def (module-object-practice-contribution-performance-case)
-  (test-case "keeps large object contribution projection linear"
+  (poo-flow-test-case "keeps large object contribution projection linear"
         (let* ((field-count 1000)
                (fields
                 (poo-flow-performance-build-list field-count large-object-field))
@@ -162,7 +163,7 @@
 
 ;; : TestCase
 (def (module-object-practice-merge-performance-case)
-  (test-case "keeps large object slot config merge bounded"
+  (poo-flow-test-case "keeps large object slot config merge bounded"
         (let* ((field-count 1000)
                (fields
                 (poo-flow-performance-build-list
@@ -197,7 +198,8 @@
                                                       base-entries))
                (start-jiffy (current-jiffy))
                (merge-result
-                (poo-flow-module-config-mk-merge base-node contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node contributions))
                (elapsed-ms
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
@@ -205,18 +207,20 @@
                 (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
-                   (poo-flow-module-config-mk-merge base-node contributions))))
+                   (poo-flow-module-field-contributions-resolve
+                    base-node contributions))))
                (noop-best-ms
                 (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
-                   (poo-flow-module-config-mk-merge base-node
+                   (poo-flow-module-field-contributions-resolve base-node
                                                     noop-contributions))))
                (noop-result
-                (poo-flow-module-config-mk-merge base-node noop-contributions))
+                (poo-flow-module-field-contributions-resolve
+                 base-node noop-contributions))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+                (poo-flow-module-field-resolution-result-root merge-result)))
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
           (check-equal? (length (poo-flow-module-extension-node-slots
@@ -224,7 +228,7 @@
                         field-count)
           (check-equal? (slot-value resolved-node 'field-0)
                         '(0 1000))
-          (check-equal? (poo-flow-module-config-merge-result-iterations
+          (check-equal? (poo-flow-module-field-resolution-result-iterations
                          noop-result)
                         0)
           (check-equal? (< elapsed-ms 1000) #t)
@@ -233,7 +237,7 @@
 
 ;; : TestCase
 (def (module-object-practice-transformer-case)
-  (test-case "wraps standard list and map transformers as object contracts"
+  (poo-flow-test-case "wraps standard list and map transformers as object contracts"
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
@@ -279,13 +283,13 @@
                  '((stage . build)
                    (owner . object-core))))
                (merge-result
-                (poo-flow-module-config-mk-merge
+                (poo-flow-module-field-contributions-resolve
                  base-node
                  (list append-contribution
                        remove-contribution
                        map-set-contribution)))
                (resolved-node
-                (poo-flow-module-config-merge-result-root merge-result)))
+                (poo-flow-module-field-resolution-result-root merge-result)))
           (check-equal? (poo-flow-module-transformer-contract?
                          poo-flow-module-transformer-list-append-contract)
                         #t)
@@ -319,7 +323,7 @@
                          capabilities-field
                          'process-run)
                         '("transformer:list.remove:argument-kind-mismatch"))
-          (check-equal? (poo-flow-module-config-merge-result-stable?
+          (check-equal? (poo-flow-module-field-resolution-result-stable?
                          merge-result)
                         #t)
           (check-equal? (slot-value resolved-node 'capabilities)

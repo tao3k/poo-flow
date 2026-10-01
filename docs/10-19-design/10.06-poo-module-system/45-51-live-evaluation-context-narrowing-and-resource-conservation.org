@@ -93,7 +93,7 @@ flowchart TD
 - [X] Parent cancellation propagates to the child.
 - [X] Child admission implies parent admission.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.EvaluationContextNarrowing=.
+  =PooFlowProof.PooC4.EvaluationContextNarrowing=.
 - [ ] A later implementation-refinement proof must connect admitted
   =gerbil-poo= narrowing proposals and affine runtime resources to this
   preorder.

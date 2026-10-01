@@ -6,17 +6,17 @@
 ;;; Boundary: focused tests for loop-engine sandbox handoff agreement receipts.
 ;;; Invariant: sandbox agreement projection is report-only and never starts runtime.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  pooFlowUserConfig
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules
                  poo-flow-user-module-selection)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
+        (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-config)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
@@ -120,7 +120,7 @@
 ;;; intent, runtime manifest, and public presentation slots unchanged.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-sandbox-case)
-  (test-case "resolves sandbox profile summaries into loop-engine manifest"
+  (poo-flow-test-case "resolves sandbox profile summaries into loop-engine manifest"
     (let* ((presentation
             (custom-loop-presentation/bundles
              (list custom-loop-sandbox-profile-module
@@ -187,7 +187,7 @@
 ;;; sandbox shapes without throwing from the handoff summary path.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-sandbox-case)
-  (test-case "diagnoses invalid sandbox profile agreement"
+  (poo-flow-test-case "diagnoses invalid sandbox profile agreement"
     (let* ((presentation
             (custom-loop-presentation/bundles
              (list custom-loop-invalid-sandbox-profile-module

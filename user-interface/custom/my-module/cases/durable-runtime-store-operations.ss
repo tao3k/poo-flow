@@ -7,10 +7,10 @@
 ;;; Invariant: this declares operation receipts only; Marlin owns all durable
 ;;; store side effects.
 
-(import :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/store-backend
-        :poo-flow/src/modules/memory-core/durable/store-operation)
+(import :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/store-backend
+        :poo-flow/modules/memory-core/durable/store-operation)
 
 (export poo-flow-custom-my-module-durable-runtime-store-operations-case)
 

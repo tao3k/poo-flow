@@ -3,9 +3,10 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check test-case test-suite)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check test-suite)
         (only-in :std/misc/ports read-all-as-string)
-        (only-in :poo-flow/src/modules/query/rust-ir
+        (only-in :poo-flow/modules/query/rust-ir
                  poo-flow-query-execution-candidate-transport-diagnostic
                  poo-flow-query-execution-candidate-transport-ir-json))
 
@@ -15,7 +16,7 @@
   (test-suite
    "Query Scheme to Rust IR"
 
-   (test-case "Scheme transport contract fails closed on the first missing identity"
+   (poo-flow-test-case "Scheme transport contract fails closed on the first missing identity"
      (check
       (poo-flow-query-execution-candidate-transport-diagnostic
        "" "query" "1" "revision" "source" "parser" "provenance"
@@ -27,7 +28,7 @@
        "digest" 0 #f)
       => ""))
 
-   (test-case "checked-in Rust IR is the canonical Scheme projection"
+   (poo-flow-test-case "checked-in Rust IR is the canonical Scheme projection"
      (check
       (poo-flow-query-execution-candidate-transport-ir-json)
       =>

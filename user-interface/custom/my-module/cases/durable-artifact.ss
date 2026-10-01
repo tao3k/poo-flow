@@ -8,7 +8,7 @@
 ;;; Invariant: this declares artifact policy validation data only; Scheme does
 ;;; not store, publish, index, or retain artifacts at runtime.
 
-(import :poo-flow/src/modules/memory-core/durable/artifact-policy)
+(import :poo-flow/modules/memory-core/durable/artifact-policy)
 
 (export poo-flow-custom-my-module-durable-artifact-case)
 

@@ -7,15 +7,15 @@
 ;;; Invariant: transform rows are report-only handoff receipts; Scheme never
 ;;; invokes a provider, memory backend, sandbox runtime, or tool.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
-        :poo-flow/src/modules/session/config
+        :poo-flow/modules/session/config
         (only-in "../user-interface/custom/my-module/cases/session-transform"
                  poo-flow-custom-my-module-session-transform-case))
 
@@ -36,7 +36,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-transform-test
   (test-suite "poo-flow custom user-interface session-transform case"
-    (test-case "projects transform declarations through session-owned syntax"
+    (poo-flow-test-case "projects transform declarations through session-owned syntax"
       (let* ((selection
               (car poo-flow-custom-my-module-session-transform-case))
              (rows

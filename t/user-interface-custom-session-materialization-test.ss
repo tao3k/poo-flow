@@ -7,11 +7,11 @@
 ;;; Invariant: materialization receipts are handoff state only; Scheme never
 ;;; waits on futures, opens sandboxes, or replays IO.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-materialization"
@@ -34,7 +34,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-materialization-test
   (test-suite "poo-flow custom user-interface session-materialization case"
-    (test-case "projects custom materialization receipts without runtime work"
+    (poo-flow-test-case "projects custom materialization receipts without runtime work"
       (let* ((selection
               (car poo-flow-custom-my-module-session-materialization-case))
              (rows

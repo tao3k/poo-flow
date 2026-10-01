@@ -7,7 +7,7 @@
 ;;; Invariant: registry rows describe project/root/child address space only;
 ;;; Scheme does not retain live runtime state.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-registry-case)
 

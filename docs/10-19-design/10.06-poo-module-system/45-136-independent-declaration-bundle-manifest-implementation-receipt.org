@@ -20,8 +20,8 @@ the =14/14= enterprise final-source target is complete.
 
 | Owner | Responsibility |
 |-------+----------------|
-| =packages/proof/python/src/poo_flow_proof/independent_bundle.py= | Immutable manifest identities, validation, canonicalization, and digest |
-| =packages/proof/python/tests/test_independent_bundle.py= | Determinism and fail-closed counterexamples |
+| =packages/proofs/python/src/poo_flow_proof/independent_bundle.py= | Immutable manifest identities, validation, canonicalization, and digest |
+| =packages/proofs/python/tests/test_independent_bundle.py= | Determinism and fail-closed counterexamples |
 
 The existing =axle_verify.py= owner was not modified.  Its parser-owned Python
 source envelope remained unpublished, so blind integration was rejected.
@@ -109,7 +109,7 @@ flowchart LR
 * Tests
 
 #+begin_src text
-cd packages/proof/python
+cd packages/proofs/python
 
 uv run pytest -q tests/test_independent_bundle.py
 # 10 passed in 0.04s

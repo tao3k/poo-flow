@@ -18,7 +18,7 @@
                  poo-flow-json-schema-contract-artifact-normalization)
         (only-in :poo-flow/src/contract/json-schema-valid
                  poo-flow-json-schema-node-valid?)
-        (only-in :poo-flow/src/modules/funflow/github-ci-contract
+        (only-in :poo-flow/modules/funflow/github-ci-contract
                  poo-flow-funflow-github-ci-contract-artifact
                  poo-flow-funflow-github-ci-validate-workflow->alist))
 

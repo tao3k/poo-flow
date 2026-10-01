@@ -7,18 +7,18 @@
 ;;; Invariant: POO policy authoring projects to bounded validation receipts
 ;;; without executing tools, hooks, providers, sandboxes, or communication.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/tool-core/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/session/config
+        :poo-flow/modules/tool-core/config
+        :poo-flow/modules/memory-core/config)
 
 (export session-policy-validation-performance-test)
 
@@ -396,7 +396,7 @@
 ;; : TestSuite
 (def session-policy-validation-performance-test
   (test-suite "session policy validation performance"
-    (test-case "keeps multi-agent policy validation inside benchmark contract"
+    (poo-flow-test-case "keeps multi-agent policy validation inside benchmark contract"
       (let* ((attempt-count 240)
              (context (session-policy-validation-performance-context))
              (summary

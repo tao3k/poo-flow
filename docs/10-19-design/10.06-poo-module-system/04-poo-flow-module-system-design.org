@@ -4,6 +4,11 @@
 
 #+title: 10.06.04 poo-flow Module System Design
 
+This document records the original module-system design and its historical
+API names. The maintained ownership and import paths are documented in
+[[file:core-module-system-ownership-audit.org][Core Module System ownership and migration audit]]; new code imports Core,
+=src/authoring/=, or =src/user-interface/= directly.
+
 * 10.06.04 poo-flow Module System Design
 ** 10.06.04.05 Current Implementation Delta
 The module system now includes the Marlin-style facade in =src/module-system.ss= while preserving the existing descriptor/catalog/activation API.
@@ -68,10 +73,10 @@ dependencies express ordering, while profiles independently select defaults.
 The ownership split is explicit: =src/module-system/= is the source-neutral
 loader mechanism, while maintained, contributor and user collections all enter
 through =poo-flow-load-modules=.  It discovers direct module directories and
-projects only =src/modules/<module>/interface.ss=; no maintained init file or
+projects only =modules/<module>/interface.ss=; no maintained init file or
 parallel list repeats module roots or role filenames.
 
-No Scheme file is permitted directly under =src/modules/=. Every concrete
+No Scheme file is permitted directly under =modules/=. Every concrete
 maintained module owns a directory and supplies =types.ss=, =objects.ss=,
 =funs.ss=, =config.ss= and =interface.ss=. Optional =syntax.ss= and focused
 implementation files may extend that shell.  =interface.ss= imports and
@@ -274,7 +279,7 @@ not read files, query package managers, or evaluate Scheme code.
 
 This keeps the boundary explicit:
 - loading belongs to a later source-loader layer;
-- resolving belongs to =src/module-system/loader/resolver.ss=;
+- resolving belongs to =src/user-interface/module-activation.ss=;
 - activation receives descriptor values only.
 
 ** 10.06.04.40 Activation Rules
@@ -313,17 +318,17 @@ activation, and source-ref drift when filesystem or package loading is added.
 The implementation is now split under =src/module-system/= instead of being held in core or mixed with concrete modules:
 - =interface.ss= owns Marlin-style interfaces, schema helpers, and object helpers;
 - =source.ss= owns source refs and structured imports;
-- =descriptor.ss= owns C3 role data, descriptors, imports, metadata slots, and closed-world import validation;
+- =descriptor.ss= owns C4 role data, descriptors, imports, metadata slots, and closed-world import validation;
 - =context.ss= owns Doom-style flags, hook lookup, active checks, and phase-order projections;
 - =diagnostics.ss= owns doctor reports;
 - =resolver.ss= owns source catalog lookup, activation, and run-config lowering;
 - =loader.ss= owns pure source-ref loader backends and load receipts;
 - =projection.ss= owns schemas, validation receipts, runtime projections, value catalogs, presentation receipts, and Nix-style option merge receipts;
-- =doctor.ss= owns user-facing module doctor and source doctor presentations;
+- =src/user-interface/module-diagnostics.ss= and =doctor-presentation.ss= own POO Flow-specific module diagnostics and their Doctor projection; shared observation primitives are imported directly from Core;
 - =descriptor-syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
 - =src/module-system.ss= remains a thin facade that re-exports the leaf owners.
 
-The Doom/C3 interface additions are data-only:
+The Doom/C4 interface additions are data-only:
 - descriptor slots now include =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
 - =poo-module-active?= and =poo-flow-module-value-catalog-active?= provide explicit flag checks;
 - =poo-module-option-merge-receipts= keeps append, override, conflict, constant, required, and missing-schema findings inspectable before runtime;
@@ -354,13 +359,13 @@ The directory models the thin handoff that downstream users see:
 - =init.ss= chooses hot-plug module groups, module ids, flags, and custom module entrypoints;
 - =custom/*/config.ss= is the downstream-owned custom module authoring space;
 - =src/module-system/user-profile.ss= projects those root declarations into the canonical profile/config objects.
-This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/module-system= or concrete =src/modules/<domain>= owners. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
+This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/module-system= or concrete =modules/<domain>= owners. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
 ** 10.06.04.90 Doom And Nix Design Boundary
 The detailed design principles are in [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]].
 
 The short version:
 - learn Doom's authoring experience, not its hidden runtime effects;
 - learn Nix's option and merge semantics, not its syntax;
-- keep Gerbil POO and C3 as the implementation substrate;
+- keep Gerbil POO and C4 as the implementation substrate;
 - add macro sugar only after the data API and user-interface tests exist;
 - require user-facing tests to import =:poo-flow/src/module-system= only.

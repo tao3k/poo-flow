@@ -453,11 +453,11 @@ the existing structured =Conflict= object; source order, parser order, hash-map
 iteration order, and module loading order are not tie breakers.
 
 Authority intersection and domain qualification occur before priority
-comparison.  Native prototype precedence and C3 method resolution occur in
+comparison.  Native prototype precedence and C4 method resolution occur in
 their own structural plane as specified by
 [[file:45-102-native-prototype-precedence-and-typed-relation-conflict-resolution-bridge.org][Native
 Prototype Precedence and Typed Relation Conflict Resolution Bridge]].  Numeric
-priority cannot reorder a prototype list, synthesize a C3 position, or create a
+priority cannot reorder a prototype list, synthesize a C4 position, or create a
 third precedence axis.
 
 #+begin_src mermaid
@@ -469,8 +469,8 @@ flowchart LR
   Priority -->|"equal priorities recursively compose POO values"| Equal["Equal-priority composition"]
   Equal -->|"compatible values preserve one semantic result"| Selected
   Equal -->|"incompatible values emit structured evidence"| Conflict["Conflict object"]
-  Graph["Immutable prototype graph"] -->|"orders behavior through native precedence"| C3["C3 method resolution"]
-  Priority -.->|"never reorders prototype ancestry"| C3
+  Graph["Immutable prototype graph"] -->|"orders behavior through native precedence"| C4["C4 method resolution"]
+  Priority -.->|"never reorders prototype ancestry"| C4
 #+end_src
 
 *** Priority conformance checklist
@@ -487,7 +487,7 @@ flowchart LR
 - [ ] Prove source order and module loading order cannot resolve a tie.
 - [ ] Prove priority cannot widen capabilities or erase independent
       requirements.
-- [ ] Prove numeric priority cannot alter native prototype or C3 precedence.
+- [ ] Prove numeric priority cannot alter native prototype or C4 precedence.
 
 Native POO prototype precedence resolves object ancestry.
 

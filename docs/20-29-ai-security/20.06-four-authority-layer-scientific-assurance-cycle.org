@@ -252,7 +252,7 @@ effect, authority, relation, change, or provider-non-authority semantics.
   =sha256:34a7088bce66839fdd7c0f8abbde5143bf07c9a6dea8252606aad138653ae0d8=
 - Trace schema/root :: =poo-flow.ai-security.ease001-replay-receipt.v1= /
   =sha256:d519efdc9cd22e189ce990bb329c14f3f26f38b7cb93c948dbafc7440753ef63=
-- Reused owners :: =PooFlowProof.PooC3.authorizedEffectL1=,
+- Reused owners :: =PooFlowProof.PooC4.authorizedEffectL1=,
   =PromotionTransactionRecovery.closedDuplicateRequiresPriorCommit=,
   =PromotionTransactionRecovery.closedRollbackRestoresCompleteEffectObservation=,
   and =EffectDomainCoverage.coveredRollbackAgreesOnEveryPlanEffect=

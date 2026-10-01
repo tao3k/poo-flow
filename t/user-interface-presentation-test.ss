@@ -6,15 +6,15 @@
 ;;; Boundary: tests verify user-interface presentation receipts.
 ;;; Invariant: presentations stay report-only and never realize descriptors.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-brand-group
                  poo-flow-brand-name)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config-presentation-kind)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
@@ -63,7 +63,7 @@
 ;;; switches, CI/CD handoff rows, loop-engine rows, and ownership boundaries.
 ;; : (-> Unit TestSuite)
 (def (user-interface-config-presentation-test)
-  (test-case "presents downstream config without descriptor realization"
+  (poo-flow-test-case "presents downstream config without descriptor realization"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                test-poo-flow-user-config
@@ -85,17 +85,16 @@
              (settings (.ref presentation 'settings)))
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'module-count) 8)
+        (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'module-keys)
-                      '((core . poo-clos)
-                        (flow . funflow)
+                      '((flow . funflow)
                         (session . session-core)
                         (loop . governor)
                         (sandbox . nono-sandbox)
                         (sandbox . cubeSandbox)
                         (sandbox . docker-sandbox)
                         (flow . loop-engine)))
-        (check-equal? (.ref presentation 'feature-count) 8)
+        (check-equal? (.ref presentation 'feature-count) 7)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
@@ -124,7 +123,7 @@
                                    (car feature-facts))
                       'init-selection)
         (check-equal? (alist-value 'key (car feature-facts))
-                      '(core . poo-clos))
+                      '(flow . funflow))
         (check-equal? (alist-value 'dependency-installation?
                                    (car feature-facts))
                       #f)
@@ -133,7 +132,13 @@
                       #f)
         (check-equal? (.ref presentation 'setting-count) 7)
         (check-equal? (alist-value 'flags (car modules))
-                      '(+native))
+                      '(+functional +dag +typed-receipts +runtime-manifest
+                        (+cicd
+                         (checks +parallel +typed-receipts)
+                         (artifacts +export)
+                         (release +manual-gate)
+                         (webhook +server)
+                         (runtime +manifest-handoff))))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (alist-value 'checks cicd-intent)
                       '(+parallel +typed-receipts))
@@ -255,18 +260,18 @@
 ;;; higher-level Doom-style profile fields users inspect.
 ;; : (-> Unit TestSuite)
 (def (user-interface-profile-presentation-case-test)
-  (test-case "presents profile without descriptor realization"
+  (poo-flow-test-case "presents profile without descriptor realization"
       (let* ((presentation
               (pooFlowUserProfilePresentation test-poo-flow-user-profile)))
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-profile-presentation-kind)
         (check-equal? (.ref presentation 'profile-name) 'developer)
-        (check-equal? (.ref presentation 'module-bundle-count) 8)
-        (check-equal? (.ref presentation 'module-count) 8)
+        (check-equal? (.ref presentation 'module-bundle-count) 7)
+        (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'config-presentation-kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'config-module-count) 8)
-        (check-equal? (.ref presentation 'feature-count) 8)
+        (check-equal? (.ref presentation 'config-module-count) 7)
+        (check-equal? (.ref presentation 'feature-count) 7)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
@@ -318,7 +323,7 @@
                       0)
         (check-equal? (alist-value 'key
                                    (car (.ref presentation 'feature-facts)))
-                      '(core . poo-clos))
+                      '(flow . funflow))
         (check-equal? (not
                        (not
                         (member "poo-flow-profile"

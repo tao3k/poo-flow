@@ -241,14 +241,14 @@ and trace validity relations.
 The proof owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   CompositionalEffectUniverse.lean
   SourceBoundCompositionalEffectClosure.lean
 #+end_src
 
 The top-level =PooFlowProof.Enterprise= namespace owns enterprise
-semantics.  It may import generic =PooFlowProof.PooC3= theorems without
-making the enterprise model a child of =PooC3=.
+semantics.  It may import generic =PooFlowProof.PooC4= theorems without
+making the enterprise model a child of =PooC4=.
 
 * Mathematical model
 

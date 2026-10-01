@@ -279,7 +279,7 @@ Key declarations:
 - full Lean build completed successfully with 277 jobs;
 - the core module imports no JSON library and derives no JSON instances;
 - the existing UV-managed audit transport is owned under
-  =packages/proof/python= and exposed as =uv run poo-flow-axle-verify=;
+  =packages/proofs/python= and exposed as =uv run poo-flow-axle-verify=;
 - Python audit transport gates: =76 passed in 11.62s= and
   =uv run ruff check .= reported =All checks passed!=;
 - Org parser: 7 Typst blocks and 1 Mermaid block;

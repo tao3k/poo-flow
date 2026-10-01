@@ -6,14 +6,14 @@
 ;;; Boundary: workflow CI/CD check maps are inert POO control-plane data.
 ;;; Invariant: tests prove receipts and runtime readiness without execution.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?
                  )
         (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-check-map-test)
 
@@ -103,7 +103,7 @@
 ;; : TestSuite
 (def workflow-cicd-check-map-test
   (test-suite "workflow cicd check map"
-    (test-case "constructs named POO checks and check maps"
+    (poo-flow-test-case "constructs named POO checks and check maps"
       (let* ((check-map (cicd-test-check-map))
              (checks (poo-flow-cicd-check-map-checks check-map))
              (build-check (car checks))
@@ -125,7 +125,7 @@
         (check-equal? (poo-flow-cicd-check-dependency-refs test-check)
                       '(build))
         (check-equal? (.ref check-map 'runtime-executed) #f)))
-    (test-case "projects check receipts without running runtime work"
+    (poo-flow-test-case "projects check receipts without running runtime work"
       (let* ((check-map (cicd-test-check-map))
              (receipts (poo-flow-cicd-check-map->receipts check-map))
              (build-receipt (car receipts))
@@ -173,7 +173,7 @@
                       '(ci/build))
         (check-equal? (cicd-test-alist-ref runtime-ready 'argv)
                       '("gerbil" "build"))))
-    (test-case "resolves sandbox profile summaries when catalog is provided"
+    (poo-flow-test-case "resolves sandbox profile summaries when catalog is provided"
       (let* ((check-map (cicd-test-check-map))
              (receipts
               (poo-flow-cicd-check-map->receipts

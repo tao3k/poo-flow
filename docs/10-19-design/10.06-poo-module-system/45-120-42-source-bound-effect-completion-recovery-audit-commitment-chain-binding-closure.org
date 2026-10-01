@@ -69,7 +69,7 @@ $
 
 They satisfy the existing =Adjacent= relation, while:
 
-#+begin_src typst
+#+begin_src text
 $
   before(w_1) != after(w_0)
 $

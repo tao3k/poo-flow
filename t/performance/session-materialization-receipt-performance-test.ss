@@ -6,16 +6,16 @@
 ;;; Boundary: runtime materialization receipt performance gate.
 ;;; Invariant: defstruct receipts project to bounded ABI rows in one pass.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-materialization-receipt-performance-test)
 
@@ -175,7 +175,7 @@
 ;; : TestSuite
 (def session-materialization-receipt-performance-test
   (test-suite "session materialization receipt performance"
-    (test-case "keeps materialization receipt batch projection inside benchmark contract"
+    (poo-flow-test-case "keeps materialization receipt batch projection inside benchmark contract"
       (let* ((receipt-count 300)
              (summary (materialization-performance-summary receipt-count))
              (receipt

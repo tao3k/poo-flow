@@ -6,11 +6,11 @@
 ;;; Boundary: report-only session communication receipts.
 ;;; Invariant: receipts describe routed intent; Scheme never delivers messages.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-communication-receipt-test)
 
@@ -22,7 +22,7 @@
 ;; : TestSuite
 (def session-communication-receipt-test
   (test-suite "poo-flow session communication receipts"
-    (test-case "names parent, child, sibling, and cross-root routing edges"
+    (poo-flow-test-case "names parent, child, sibling, and cross-root routing edges"
       (let* ((parent-child-channel
               (poo-flow-session-communication-channel-receipt
                'project/session

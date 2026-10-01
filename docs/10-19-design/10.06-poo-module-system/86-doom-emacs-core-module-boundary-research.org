@@ -254,7 +254,7 @@ functional values.  It is not the owner of the runtime.
 | Package declaration/sync | Runtime/package/backend projection lanes | Reconcile external effects through explicit operations and receipts. |
 | =doom doctor= / =doom sync= | Testing Policy slots, projection receipts, scenario diagnostics | Diagnostics are first-class operations, not afterthoughts. |
 | Profiles | Higher-level composition profiles | Profiles select modules/factors/plugins; they do not replace module kernels. |
-| Built-in modules | =src/modules/<domain>= module owners | Concrete modules live under domain owners, not under the core module-system mechanics. |
+| Built-in modules | =modules/<domain>= module owners | Concrete modules live under domain owners, not under the core module-system mechanics. |
 | Macro helpers | Gerbil declarative/procedural macros | Macros compress authoring and expand into normal POO/functional values. |
 
 ** 10.06.86.90 Agent Decision Procedure
@@ -262,7 +262,7 @@ When an Agent changes =poo-flow= module semantics, use this procedure:
 
 1. Identify the module owner.
    If the change is generic mechanics, the owner is =src/module-system/*=.  If
-   the change is a concrete domain feature, the owner is =src/modules/<domain>/*=.
+   the change is a concrete domain feature, the owner is =modules/<domain>/*=.
 
 2. Classify the change.
    It must be one of:
@@ -372,9 +372,9 @@ modules such as =(:flow . funflow)=:
 - =config.ss= owns only module interface, descriptor, selection, depth, and the
   canonical entrypoint, without importing runtime factors;
 - =types.ss=, =objects.ss=, =classes.ss=, and =dispatch.ss= extend the native
-  Gerbil POO MOP and C3;
+  Gerbil POO MOP and C4;
 - =interface.ss= is the explicit opt-in runtime factor;
-- =t/scenarios/performance/poo-clos-native-c3/= proves native precedence and
+- =t/scenarios/performance/poo-clos-native-c4/= proves native precedence and
   exact metaobject identity.
 
 The kernel profile declares =(:core . poo-clos)= and the registry resolves its

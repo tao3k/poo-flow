@@ -6,7 +6,8 @@
 ;;; Boundary: lazy loader tests cover deferred source loading only.
 ;;; Invariant: lazy plans never call loader handlers until explicitly forced.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -15,7 +16,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         "./support/performance"
@@ -23,12 +23,16 @@
         (only-in :poo-flow/src/core/failure
                  execution-failure?
                  execution-failure-code)
-        (only-in :poo-flow/src/module-system/load poo-flow-modules!)
-        :poo-flow/src/module-system/loader/source
-        :poo-flow/src/module-system/descriptor/interface
-        :poo-flow/src/module-system/extension/interface
-        :poo-flow/src/module-system/loader/interface
-        :poo-flow/src/module-system/loader/tree)
+        (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
+        :poo-flow/src/authoring/module-imports
+        :core/module-system/source/objects
+        :poo-flow/src/authoring/module-descriptor
+        :core/extension-graph/interface
+        :core/module-system/loader/objects
+        :poo-flow/src/authoring/module-source-collection
+        :poo-flow/src/building/official-contributions
+        :poo-flow/src/user-interface/module-source-selection
+        :poo-flow/src/user-interface/module-source-tree)
 
 (export module-system-lazy-loader-test)
 
@@ -111,14 +115,14 @@
 ;; : TestSuite
 ;; : TestCase
 (def (module-system-lazy-loader-large-registry-case)
-  (test-case "expands large module registry manifests without loading modules"
+  (poo-flow-test-case "expands large module registry manifests without loading modules"
         (for-each
          (lambda (module-count)
            (let* ((module-roots
                    (poo-flow-performance-build-list
                     module-count
                     (lambda (index)
-                      (string-append "src/modules/generated-"
+                      (string-append "modules/generated-"
                                      (number->string index)))))
                   (source-refs
                    (lazy-loader-module-tree-source-refs module-roots))
@@ -129,7 +133,7 @@
                       (lazy-loader-module-tree-source-refs module-roots)))))
              (check-equal? (length source-refs) module-count)
              (check-equal? (poo-flow-module-source-ref-value (car source-refs))
-                           "src/modules/generated-0/interface.ss")
+                           "modules/generated-0/interface.ss")
              ;; Emit the scale receipt without embedding a machine-specific
              ;; timing threshold in this semantic unit test. Performance
              ;; admission belongs to a selected Observability profile.
@@ -141,7 +145,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-deferred-standard-library-case)
-  (test-case "defers standard-library module loading until forced"
+  (poo-flow-test-case "defers standard-library module loading until forced"
         (set! lazy-loader-call-count 0)
         (let* ((backends (list user-standard-library-loader))
                (deferred
@@ -183,9 +187,9 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-module-tree-case)
-  (test-case "projects the public interface entrypoint from a module tree"
+  (poo-flow-test-case "projects the public interface entrypoint from a module tree"
         (set! lazy-loader-call-count 0)
-        (let* ((module-root "src/modules/nono-sandbox")
+        (let* ((module-root "modules/nono-sandbox")
                (source-refs
                 (poo-flow-module-tree-source-refs module-root))
                (interface-source (car source-refs))
@@ -199,7 +203,7 @@
           (check-equal? (length source-refs) 1)
           (check-equal? (poo-flow-module-source-ref-kind interface-source) 'local)
           (check-equal? (poo-flow-module-source-ref-value interface-source)
-                        "src/modules/nono-sandbox/interface.ss")
+                        "modules/nono-sandbox/interface.ss")
           (check-equal? (cdr (assoc 'entrypoint-role interface-metadata))
                         'interface)
           (check-equal? (length plans) 1)
@@ -211,7 +215,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-src-modules-case)
-  (test-case "projects canonical src/modules interfaces as lazy load plans"
+  (poo-flow-test-case "projects canonical modules interfaces as lazy load plans"
         (set! lazy-loader-call-count 0)
         (let* ((plans
                 (poo-flow-src-modules-lazy-load-plans
@@ -232,24 +236,18 @@
                (poo-flow-load-modules poo-flow-maintained-module-source))
               (length (poo-flow-module-system-source-refs))))
           (check-equal? (car source-values)
-                        "src/modules/agent-sandbox/interface.ss")
-          (check-equal?
-           (if (member "src/module-system/poo-clos/config.ss"
-                       source-values)
-             #t
-             #f)
-           #t)
-          (check-equal? (if (member "src/modules/sandbox-core/interface.ss"
+                        "modules/agent-sandbox/interface.ss")
+          (check-equal? (if (member "modules/sandbox-core/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/nono-sandbox/interface.ss"
+          (check-equal? (if (member "modules/nono-sandbox/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/standards/interface.ss"
+          (check-equal? (if (member "modules/standards/interface.ss"
                                     source-values)
                           #t
                           #f)
@@ -274,14 +272,14 @@
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/workflow/interface.ss"
+          (check-equal? (if (member "modules/workflow/interface.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
           ;; The former workflow binding macros duplicated public constructors;
           ;; discovery must not resurrect that removed DSL surface.
-          (check-equal? (if (member "src/modules/workflow/syntax.ss"
+          (check-equal? (if (member "modules/workflow/syntax.ss"
                                     source-values)
                           #t
                           #f)
@@ -293,7 +291,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-user-root-case)
-  (test-case "projects only the Doom-style init and config roots"
+  (poo-flow-test-case "projects only the Doom-style init and config roots"
         (set! lazy-loader-call-count 0)
         (let* ((user-root "user-interface")
                (source-refs
@@ -367,7 +365,7 @@
 
 ;; : TestCase
 (def (module-system-user-root-authoring-contract-case)
-  (test-case "admits value composition and rejects advanced root mechanisms"
+  (poo-flow-test-case "admits value composition and rejects advanced root mechanisms"
     (check-equal?
      (begin
        (poo-flow-user-tree-config-authoring-validate! "user-interface")
@@ -394,7 +392,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
-  (test-case "official contribution sources are optional and resolve by checkout identity"
+  (poo-flow-test-case "official contribution sources are optional and resolve by checkout identity"
     (check-equal?
      (map poo-flow-module-source-collection-identity
           poo-flow-official-contribution-sources)
@@ -422,7 +420,7 @@
 
 ;; : TestCase
 (def (module-system-lazy-loader-auto-import-removal-case)
-  (test-case "removes auto-imported entrypoints through POO extension"
+  (poo-flow-test-case "removes auto-imported entrypoints through POO extension"
         (set! lazy-loader-call-count 0)
         (let* ((source-refs
                 (poo-flow-user-tree-source-refs "user-interface"))
@@ -433,7 +431,7 @@
                   (poo-flow-module-extension-node-remove
                    "user-interface/config.ss"))))
                (result
-                (poo-flow-module-auto-imports-mk-merge
+                (poo-flow-module-auto-imports-resolve
                  source-refs
                  (list disable-config)))
                (resolved-source-values

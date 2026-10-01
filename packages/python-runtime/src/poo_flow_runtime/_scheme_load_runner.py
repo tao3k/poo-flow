@@ -36,8 +36,11 @@ def runner_source(module_path: Path, projection_path: Path) -> str:
     source_path = scheme_string(str(module_path))
     projection_source_path = scheme_string(str(projection_path))
     return (
-        "(import :poo-flow/src/module-system/profile-composition/interface\n"
-        "        :poo-flow/src/modules/funflow/profile-library)\n"
+        "(import :core/profile-composition/selection-syntax\n"
+        "        :poo-flow/src/scenario/composition-syntax\n"
+        "        :core/profile-composition/profile-bundle\n"
+        "        :poo-flow/src/scenario/profile-root\n"
+        "        :poo-flow/modules/funflow/profile-library)\n"
         f"(include {projection_source_path})\n"
         "(poo-flow-runtime-load-write!\n"
         f" (let () (include {source_path})))\n"
@@ -48,8 +51,11 @@ def aot_runner_source(module_path: Path, projection_path: Path) -> str:
     source_path = scheme_string(str(module_path))
     projection_source_path = scheme_string(str(projection_path))
     return (
-        "(import :poo-flow/src/module-system/profile-composition/interface\n"
-        "        :poo-flow/src/modules/funflow/profile-library)\n"
+        "(import :core/profile-composition/selection-syntax\n"
+        "        :poo-flow/src/scenario/composition-syntax\n"
+        "        :core/profile-composition/profile-bundle\n"
+        "        :poo-flow/src/scenario/profile-root\n"
+        "        :poo-flow/modules/funflow/profile-library)\n"
         f"(include {projection_source_path})\n"
         "(export main)\n"
         "(def (main . args)\n"
@@ -62,12 +68,12 @@ def runtime_projection_source(workdir: Path) -> Path:
     candidate = find_runtime_projection_source(workdir)
     if candidate is not None:
         return candidate
-    relative_path = Path("src/modules/funflow/runtime-load-projection.ss")
+    relative_path = Path("modules/funflow/runtime-load-projection.ss")
     raise FileNotFoundError(f"cannot find Scheme runtime load projection: {relative_path}")
 
 
 def find_runtime_projection_source(workdir: Path) -> Path | None:
-    relative_path = Path("src/modules/funflow/runtime-load-projection.ss")
+    relative_path = Path("modules/funflow/runtime-load-projection.ss")
     candidates = (
         workdir / relative_path,
         Path(__file__).resolve().parents[4] / relative_path,

@@ -6,16 +6,16 @@
 ;;; Boundary: crash/replay/repair scenario receipts for durable policy.
 ;;; Invariant: tests validate scenario projection only; no runtime recovery runs.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/recovery-scenario
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/recovery-scenario
+        :poo-flow/modules/session/config
+        :poo-flow/modules/memory-core/config)
 
 (export durable-recovery-scenario-test)
 
@@ -97,7 +97,7 @@
 ;; : TestSuite
 (def durable-recovery-scenario-test
   (test-suite "poo-flow durable recovery scenario"
-    (test-case "projects crash replay recovery with observability stages"
+    (poo-flow-test-case "projects crash replay recovery with observability stages"
       (let* ((receipt
               (poo-flow-durable-recovery-scenario
                'recovery-scenario/build-audit
@@ -142,7 +142,7 @@
                       '(#f #f #f #f #f #f))
         (check-equal? (test-ref row 'runtime-executed) #f)))
 
-    (test-case "rejects unsafe replay without memory durable jobs"
+    (poo-flow-test-case "rejects unsafe replay without memory durable jobs"
       (let* ((unsafe-task-rows
               '(((kind . poo-flow.workflow.cicd.check-receipt)
                  (check . release)
@@ -186,7 +186,7 @@
          (diagnostic-code-present? diagnostics 'unresolved-sandbox-ref)
          #t)))
 
-    (test-case "reports invalid durable memory job rows"
+    (poo-flow-test-case "reports invalid durable memory job rows"
       (let* ((invalid-memory-rows
               '(((kind . poo-flow.memory-core.durable-job-receipt)
                  (job-id . memory-job/fake)

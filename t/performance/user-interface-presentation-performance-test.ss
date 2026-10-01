@@ -7,9 +7,9 @@
 ;;; Invariant: public authoring remains POO-native; generated runtime receipts
 ;;; are fixed structs until Marlin ABI handoff serialization.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
@@ -17,13 +17,13 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules
                  pooFlowUserConfig)
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/src/modules/loop-engine/runtime
+        (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
         (only-in "../../user-interface/custom/my-module/cases/loop-engine-owner"
                  poo-flow-custom-my-module-loop-engine-case))
@@ -39,7 +39,7 @@
   (call-with-input-file user-interface-presentation-fixture-path read))
 
 ;; : Integer
-(def user-interface-presentation-module-count 8)
+(def user-interface-presentation-module-count 7)
 
 ;; : (-> UserInterfacePresentationRow UserInterfacePresentationKey UserInterfacePresentationValue)
 (def (user-interface-presentation-ref value key)
@@ -126,7 +126,7 @@
 ;; : TestSuite
 (def user-interface-presentation-performance-test
   (test-suite "user-interface presentation performance"
-    (test-case "keeps batch presentation projection inside benchmark contract"
+    (poo-flow-test-case "keeps batch presentation projection inside benchmark contract"
       (let-values (((receipt summary)
                     (benchmark-run/result
                      user-interface-presentation-fixture

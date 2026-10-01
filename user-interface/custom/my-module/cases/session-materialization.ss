@@ -7,7 +7,7 @@
 ;;; Invariant: this is runtime handoff data only; no synchronize, sandbox open,
 ;;; provider call, or IO replay happens in Scheme.
 
-(import :poo-flow/src/modules/session/syntax)
+(import :poo-flow/modules/session/syntax)
 
 (export poo-flow-custom-my-module-session-materialization-case)
 

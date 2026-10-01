@@ -36,7 +36,7 @@ implementation files as "user interface" components.
 =poo-flow= should keep three namespaces distinct:
 - =src/module-system/*= for module-system mechanics, root profile projection
   helpers, loader/doctor/projection owners, and shared POO object contracts.
-- =src/modules/<domain>/*= for developer-owned built-in modules such as
+- =modules/<domain>/*= for developer-owned built-in modules such as
   =nono-sandbox=, =cubeSandbox=, =docker-sandbox=, =funflow=, and
   =loop-governor=.
 - =user-interface/*= for downstream/user practice files such as =init.ss=,
@@ -46,36 +46,13 @@ The top-level =user-interface= directory can remain because it is the downstream
 practice surface. Core implementation paths for module-system components should
 not live under =src/modules= or use =user-interface= as a mechanism namespace.
 
-** 10.06.22.40 Applied Rename
-This audit validates the following final source move:
-- =src/modules/module-system.ss= -> =src/module-system/facade.ss=
-- =src/modules/modules-system-base.ss= -> =src/module-system/declaration/interface.ss=
-- =src/modules/modules-system/user-profile.ss= -> =src/user-interface/root-profile.ss=
-- =src/modules/modules-system/root-objects.ss= -> =src/user-interface/root-objects.ss=
-- =src/modules/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
-  -> =src/module-system/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
-- =src/modules/{object-core,object-validation,objects,extension}.ss=
-  -> =src/module-system/{object-core,object-validation,objects,extension}.ss=
-- =src/modules/user-config.ss= -> =src/user-interface/profile-config.ss=
-- =src/modules/user-config-syntax.ss= -> =src/user-interface/init-syntax.ss=
-- =src/modules/user-interface-case.ss= -> =src/user-interface/declaration-case.ss=
-- =src/testing/user-interface-live-case*.ss=
-  -> =src/testing/module-system-live-case*.ss=
+** 10.06.22.40 Current ownership
 
-The move removes the misleading intermediate =modules-system= owner name and
-separates module-system mechanics from concrete built-in modules under
-=src/modules/<domain>/*=.
-
-** 10.06.22.50 Current Public Surface
-Source-level mechanics use root/declaration/module-system names:
-- =src/module-system/facade.ss= is the explicit public re-export surface.
-- =src/user-interface/root-profile.ss= owns the root declaration projection
-  helpers.
-- =src/user-interface/profile-config.ss= owns profile/config data APIs.
-- =src/user-interface/init-syntax.ss= owns Doom-style declaration macros.
-- =src/user-interface/declaration-case.ss= owns upstream case contracts.
-- =src/testing/module-system-live-case*.ss= owns the generic live-case
-  framework.
+Core owns generic Module contracts, source identities, Catalog lookup, and
+lazy-load values under =core/module-system/=. POO Flow product policy lives
+with its Authoring, User Interface, Testing, and runtime owners. Consumers
+import those modules directly; there is no aggregate Module System facade.
+Concrete built-in modules live under =modules/<domain>/=.
 
 =user-interface= is reserved for concrete downstream examples, user-root
 directories, and documentation prose. Domain object names such as
@@ -83,15 +60,13 @@ directories, and documentation prose. Domain object names such as
 than a source namespace.
 
 ** 10.06.22.60 Rules
-- Do not create compatibility modules at the old =src/modules/user-interface/*=
+- Do not create compatibility modules at the old =modules/user-interface/*=
   paths.
 - Do not place core loaders, root profile projection, or shared object contracts
-  under =src/modules/user-interface=.
+  under =modules/user-interface=.
 - Do not name source owners or framework APIs =user-interface= when the owner is
   the module system.
-- Do not recreate =src/module-system.ss=; it collides with the
-  =src/module-system/= owner directory. Use =src/module-system/facade.ss= for
-  aggregate imports.
+- Do not add an aggregate Module System import surface; use direct owners.
 - Do not make =init.ss= load config bodies; =init.ss= remains the Doom-style
   category/module/feature switchboard.
 - Use =load!= from config/profile/case files when a downstream user fragment

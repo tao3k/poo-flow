@@ -6,12 +6,12 @@
 ;;; Boundary: tests inspect Funflow CI/CD pipeline run/result presentation.
 ;;; Invariant: pipeline results are handoff-readiness data, not execution output.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/presentation-config
         :poo-flow/src/user-interface/init-syntax
         (only-in "../user-interface/custom/my-module/cases/cicd-owner"
@@ -157,7 +157,7 @@
 ;; : TestSuite
 (def user-interface-cicd-pipeline-run-test
   (test-suite "poo-flow user interface cicd pipeline run"
-    (test-case "projects Funflow pipeline into handoff-ready run/result"
+    (poo-flow-test-case "projects Funflow pipeline into handoff-ready run/result"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                (pipeline-run-test-config)))
@@ -194,7 +194,7 @@
         (check-equal? (pipeline-run-test-ref result 'status) 'handoff-ready)
         (check-equal? (pipeline-run-test-ref result 'valid?) #t)
         (check-equal? (pipeline-run-test-ref result 'runtime-executed) #f)))
-    (test-case "blocks invalid pipelines with stable diagnostics"
+    (poo-flow-test-case "blocks invalid pipelines with stable diagnostics"
       (let* ((duplicate-presentation
               (pipeline-run-test-presentation
                pipeline-run-test-duplicate-case))

@@ -13,15 +13,17 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/authoring/module-interface
                  poo-flow-module-interface
                  poo-flow-module-interface-schema-spec)
-        (only-in :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/authoring/module-descriptor
                  poo-flow-modules)
-        (only-in :poo-flow/src/module-system/projection/options
-                 poo-flow-module-option-schemas
+        (only-in :core/module-system/projection/option-objects
                  poo-flow-module-option-schema-id
-                 poo-flow-module-option-schema-value
+                 poo-flow-module-option-schema-value)
+        (only-in :poo-flow/src/authoring/module-option-projection
+                 poo-flow-module-option-schemas)
+        (only-in :core/module-system/projection/option-validation
                  poo-flow-module-find-schema))
 
 (def +schema-count+ 1000)

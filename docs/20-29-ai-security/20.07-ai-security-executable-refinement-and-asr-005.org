@@ -151,6 +151,6 @@ correctness chain.
 
 - =src/policy/ai-security-executable-refinement.ss=
 - =t/ai-security-executable-refinement-test.ss=
-- =packages/proof/python/src/poo_flow_proof/ai_security_executable_refinement.py=
-- =packages/proof/python/tests/test_ai_security_executable_refinement.py=
-- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityExecutableRefinementImplementationClosure.lean=
+- =packages/proofs/python/src/poo_flow_proof/ai_security_executable_refinement.py=
+- =packages/proofs/python/tests/test_ai_security_executable_refinement.py=
+- =packages/proofs/lean/PooFlowProof/Enterprise/AISecurityExecutableRefinementImplementationClosure.lean=

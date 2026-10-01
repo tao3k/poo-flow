@@ -3,12 +3,13 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal?)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test test-suite check-equal?)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
-                 poo-flow-semantic-identity
+        (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
+        (only-in :poo-flow/src/authoring/semantic-module
                  poo-flow-semantic-module)
-        :poo-flow/src/module-system/profile-composition/profile-bundle)
+        :core/profile-composition/profile-bundle)
 
 (export profile-bundle-algebra-performance-test)
 
@@ -69,6 +70,6 @@
 (def profile-bundle-algebra-performance-test
   (test-suite
    "ProfileBundle indexed selection and idempotent composition performance"
-   (test-case "1000 and 5000 Profile values stay within the hard gate"
+   (poo-flow-test-case "1000 and 5000 Profile values stay within the hard gate"
      (for-each profile-bundle-performance-case
                +profile-bundle-performance-counts+))))

@@ -65,7 +65,7 @@ joined with itself and presented as dual-engine evidence.
 Proof owner:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/CedarDualEngineAuthorization.lean
+packages/proofs/lean/PooFlowProof/Enterprise/CedarDualEngineAuthorization.lean
 #+end_src
 
 The compiled theorems establish:
@@ -88,7 +88,7 @@ The compiled theorems establish:
 
 * Mathematical model
 
-#+begin_src typst
+#+begin_src text
 $ "AuthSubject" = (
   "request-digest",
   "policy-set-digest",
@@ -246,7 +246,7 @@ The promotion coordinator must reject:
 * Verification receipt
 
 #+begin_src text
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/CedarDualEngineAuthorization.lean
 exit-code: 0
 warnings: 0

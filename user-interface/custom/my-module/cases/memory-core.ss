@@ -7,9 +7,9 @@
 ;;; Invariant: this declares memory store specs and validation receipts only;
 ;;; no memory backend recall or commit is executed.
 
-(import :poo-flow/src/modules/session/syntax
-        :poo-flow/src/modules/memory-core/config
-        (only-in :poo-flow/src/module-system/declaration/interface
+(import :poo-flow/modules/session/syntax
+        :poo-flow/modules/memory-core/config
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist))
 

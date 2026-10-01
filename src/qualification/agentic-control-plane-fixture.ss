@@ -14,7 +14,7 @@
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch
         :poo-flow/src/policy/authorized-effect-token
-        :poo-flow/src/modules/authorization/providers/cedar/decision
+        :poo-flow/modules/authorization/providers/cedar/decision
         :poo-flow/src/policy/strict-mediation
         :poo-flow/src/proof/proof-case-projection
         :poo-flow/src/proof/proof-case-vector

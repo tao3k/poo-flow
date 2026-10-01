@@ -46,7 +46,7 @@
    (supers flow-role)))
 
 ;;; Descriptor supers are a pair-tree on purpose: gerbil-poo flattens supers
-;;; before C3 linearization, so extension descriptors can add role parents
+;;; before C4 linearization, so extension descriptors can add role parents
 ;;; without this module reimplementing inheritance order.
 ;; : (-> [Role] [Role])
 (def (flow-declaration-descriptor-supers role-supers)

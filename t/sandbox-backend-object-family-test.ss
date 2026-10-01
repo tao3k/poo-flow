@@ -6,17 +6,17 @@
 ;;; Boundary: sandbox backend object-family macro contracts.
 ;;; Invariant: generated backend objects stay POO-native and runtime-free.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-eq?
                  check-equal?
-                 test-case
                  test-suite)
-        :poo-flow/src/module-system/object-core/interface
-        :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects
-        :poo-flow/src/modules/docker-sandbox/objects)
+        :core/module-system/schema/interface
+        :poo-flow/modules/sandbox-core/objects
+        :poo-flow/modules/sandbox-core/profile-support/policy
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects
+        :poo-flow/modules/docker-sandbox/objects)
 
 ;; : (-> Symbol Alist MaybeValue)
 (def (alist-ref/default key entries default)
@@ -59,7 +59,7 @@
 
 (def sandbox-backend-object-family-test
  (test-suite "sandbox backend object family macro contracts"
-   (test-case "generates backend object identities and metadata"
+   (poo-flow-test-case "generates backend object identities and metadata"
      (check-equal? (poo-flow-module-object? poo-flow-nono-sandbox-object) #t)
      (check-equal? (poo-flow-module-object? poo-flow-cubeSandbox-object) #t)
      (check-equal? (poo-flow-module-object? poo-flow-docker-sandbox-object) #t)
@@ -84,7 +84,7 @@
                   poo-flow-docker-sandbox-object)
                  #f)
                 'objects.docker-sandbox))
-   (test-case "generates backend field contracts"
+   (poo-flow-test-case "generates backend field contracts"
      (check-eq? (field-value-kind poo-flow-nono-sandbox-object 'backend)
                 'Symbol)
      (check-eq? (field-default poo-flow-nono-sandbox-object 'backend)
@@ -102,7 +102,7 @@
                     poo-flow-docker-sandbox-object
                     'backend-ref)
                    #f))
-   (test-case "generates profile object inheritance and resolved fields"
+   (poo-flow-test-case "generates profile object inheritance and resolved fields"
      (check-equal? (poo-flow-module-object?
                     poo-flow-nono-sandbox-profile-object)
                    #t)
@@ -141,7 +141,7 @@
                    '((filesystem
                       (scope . snapshot)
                       (snapshot . clone)))))
-   (test-case "generates backend capability registries"
+   (poo-flow-test-case "generates backend capability registries"
      (check-backend-registry
       poo-flow-nono-sandbox-backend-capability-registry
       'nono

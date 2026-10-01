@@ -1,0 +1,243 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Dynamic Time, Trajectory, and Impact Research Contract
+#+date: [2026-10-01]
+#+options: toc:3 num:t
+#+property: header-args:shell :results output :exports both :eval never-export
+
+* Scope and evidence date
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-scope
+:END:
+
+This record was checked on 2026-10-01.  It covers research available through
+that date; papers published after 2026 are future work.  Conference pages
+establish publication and author claims, not independent replication.  The
+2026-09 treatment-persistence item is an arXiv preprint.  None of the
+external model-training results below has been reproduced in POO Flow.[fn:cutoff]
+
+* Research map
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-sources
+:END:
+
+#+name: dynamic-impact-source-map
+#+caption: 2026 primary sources, checked scope, semantic owner and claim boundary.
+| Primary source | Verified contribution | POO Flow use | Claim boundary |
+|----------------+-----------------------+--------------+----------------|
+| Wu, Qiu and Xie, [[https://proceedings.iclr.cc/paper_files/paper/2026/hash/f2affea1fddbdf2e7b5542dac3614640-Abstract-Conference.html][DoFlow]], ICLR 2026 | A causal-DAG generative model answers observational, interventional and counterfactual time-series queries; its recovery result has assumptions. | A future model Provider may propose distributions of candidate trajectories with model, graph and intervention identities. | A generated path is not an observed causal edge or an identified effect in this core.  Known or justified DAG assumptions must be explicit. |
+| Li et al., [[https://proceedings.iclr.cc/paper_files/paper/2026/hash/17af43527227c5c96db0f8d4c6aadc4e-Abstract-Conference.html][CLEF]], ICLR 2026 | Conditional sequence editing targets when an intervention begins and which variables it affects; paper evaluates immediate and delayed edits. | Carry intervention onset, affected-variable scope and untouched-variable checks in later candidate-trajectory receipts. | Editing accuracy and plausible counterfactual sequences do not by themselves identify causal impact. |
+| Chen, Zhang and Chen, [[https://proceedings.iclr.cc/paper_files/paper/2026/hash/cafcbf5d00a961a05bd5875c17ef0fe7-Abstract-Conference.html][HEDRA]], ICLR 2026 | Event-level temporal-KG representation separates dynamic and static causal signals for prediction. | Candidate event paths can rank hypotheses before POO temporal admission. | Predictive representation quality does not certify an individual causal path. |
+| Shahu et al., [[https://pmc.ncbi.nlm.nih.gov/articles/PMC13370197/][LMTP effects on rates of change]], Statistics in Medicine 2026 | Defines intervention-specific counterfactual outcome trajectories and contrasts of their changes, with identification and inference assumptions. | The research target for a future identified, population-level trajectory-effect Provider and simultaneous uncertainty receipt. | Its discrete visit grid is equally spaced.  The exact irregular-grid difference quotient in this module is a descriptive arithmetic kernel, not that paper's EIF estimator or causal estimand. |
+| Gaiotti et al., [[https://arxiv.org/abs/2609.04940][treatment persistence simulation]], arXiv 2026-09 preprint | Simulations show that treatment persistence changes baseline-versus-longitudinal estimand alignment and practical support for regimes. | Require an estimand identity and support diagnostics before comparing longitudinal impact estimates. | The reported estimator performance is simulation- and regime-specific, not a universal transfer guarantee. |
+
+** Assumption audit from full texts
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-assumption-audit
+:END:
+
+The rows below distinguish an author's stated result from an independently
+checked result.  =Text checked= means that the cited paper section was read;
+it does not mean that its experiments or theorem proofs were reproduced.
+
+#+name: dynamic-impact-assumption-audit-table
+#+caption: Source-local assumptions and falsifiable POO Flow gates (reviewed 2026-10-01).
+| Source passage | Assumption or observation in the paper | Consequence for this module | Verification status |
+|----------------+----------------------------------------+-----------------------------+---------------------|
+| [[https://proceedings.iclr.cc/paper_files/paper/2026/file/f2affea1fddbdf2e7b5542dac3614640-Paper-Conference.pdf][DoFlow PDF]], §§2.1, 4 and App. B.1 | A fixed, correctly specified DAG; at least one-step causal lag; independent exogenous noise.  Counterfactual recovery further uses Assumption 4.1, including noise independence, monotone continuous SCM in noise, and an independent encoded latent; App. B.1 excludes latent common causes. | A proposed model-backed =Impact= receipt must record graph version, lag, noise/confounding assumptions and factual-abduction evidence.  An unknown or revised DAG keeps the result a candidate. | Text checked; no model or recovery theorem reproduced. |
+| [[https://proceedings.iclr.cc/paper_files/paper/2026/file/17af43527227c5c96db0f8d4c6aadc4e-Paper-Conference.pdf][CLEF PDF]], §3.3 and §5.3 | The counterfactual extension is conditional on Assumption 3.4 about the learned conditional mean.  Adding intermediate predictions compounded autoregressive error on irregularly sampled patient series. | Carry intervention onset and variable scope; test irregular gaps and horizon sensitivity.  A plausible edited path is still a candidate until the conditional-mean and causal assumptions are checked. | Text checked; no trained model or benchmark reproduced. |
+| [[https://pmc.ncbi.nlm.nih.gov/articles/PMC13370197/][LMTP rates paper]], §2 | Its discrete visit intervals are assumed regular and equally spaced, and its causal rate target is policy-specific. | The exact =Δvalue/Δtime= arithmetic below is a different, irregular-grid descriptive quantity.  Promotion needs an explicit target estimand, identification assumptions, and interval inference. | Text checked; no EIF estimator or coverage study reproduced. |
+
+This audit is deliberately asymmetric: it records decisive assumptions from
+full texts where they constrain the implemented boundary.  The [[dynamic-impact-source-map][research map]]
+retains HEDRA and the persistence preprint as design inputs, without claiming
+that the present arithmetic validates either model.
+
+* Five distinct claims
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-claim-ladder
+:END:
+
+1. *Structural reachability* asks whether a graph contains a path.  The
+   existing structural Impact receipt answers this only for its selected
+   relation inventory and does not establish temporal or causal effects.
+2. *Temporal possibility* asks whether a candidate path respects admitted
+   time constraints within a finite hypothesis family.  The Temporal model
+   receipt records possible, necessary, refuted or unknown relative to its
+   assumptions and exploration bound.
+3. *Trajectory contrast* computes the pointwise difference of two supplied
+   outcome series.  [[file:../trajectory/model.org][Trajectory]] owns the series; =impact/= implements the
+   contrast arithmetic on
+   an aligned, possibly irregular grid.  It preserves subject, outcome, unit,
+   admission-cut and valid-time-projection identities.  Its status is
+   =descriptive-contrast= or =candidate-contrast=; causal admission is false.
+4. *Interventional effect* compares outcomes under specified intervention
+   policies in a model that justifies the intervention semantics.  It needs
+   explicit intervention, outcome, graph/model, horizon, support and
+   uncertainty identities.  This module has no such estimator or proof.
+5. *Counterfactual effect* additionally conditions on the factual history
+   and needs a defensible abduction or identification step.  A generated
+   alternative path alone cannot discharge that obligation.
+
+#+name: dynamic-impact-claim-gates
+#+caption: Minimum evidence required before promoting a result to the next semantic level.
+| Level | Required receipt | Current status |
+|-------+------------------+----------------|
+| Structural path | Bound graph, relation inventory and witness | Executable structural Impact only |
+| Temporal possibility | Clock assumptions, family bound and explored frontier | Executable finite classifier and TLC fixtures |
+| Trajectory contrast | Aligned clock grid, subject/outcome/unit and evidence scope | Executable exact arithmetic in =impact/= |
+| Candidate intervention window | Onset and end on the supplied grid, observed baseline, pre-onset agreement status | Executable exact trapezoidal score and time mean; no causal admission |
+| Interventional effect | Intervention model, estimand, support and uncertainty | Open |
+| Counterfactual effect | Factual-history abduction plus intervention and prediction evidence | Open |
+
+For series values =L(tᵢ)= and =R(tᵢ)= on the same ordered clock domain, the
+implemented descriptive contrast is =Dᵢ=L(tᵢ)-R(tᵢ)= and the interval rate
+contrast is =(Dᵢ-Dᵢ₋₁)/(tᵢ-tᵢ₋₁)= for =i>0=.  Coordinates and outcomes are
+exact, times are strictly increasing, and no resampling is implicit.  A grid
+mismatch fails closed.  The formula is an arithmetic identity, not causal
+identification; the LMTP paper's equal-interval contrast does not validate
+irregular-time interpolation or an EIF for this kernel.
+
+For a candidate intervention with onset =a= and end =b= on that grid, the
+window audit reports whether supplied candidate and observed baseline agree
+strictly before =a=: =consistent=, =diverged=, or =unobserved= if there is no
+earlier sample.  It computes a signed trapezoidal score
+=Σᵢ (Dᵢ₋₁+Dᵢ)(tᵢ-tᵢ₋₁)/2= for intervals within =[a,b]= and the time mean
+=score/(b-a)=.  Both endpoints must be sampled.  This finite-grid functional
+is not a verified continuous-time integral: changing the sampling grid can
+change the score.  The code neither fills gaps nor estimates an intervention
+effect.  A matching supplied prefix is an
+arithmetic check, not factual-history abduction or a no-confounding test.
+
+** Declared multivariate scope and negative controls
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-scope-audit
+:END:
+
+The POO =ImpactScope= declares a nonempty set of directly edited measurement
+identities =T= and an optional disjoint set of protected negative-control
+measurements =P=.  It binds intervention identity, subject, admission cut,
+valid-time projection, clock domain, onset and end.  Both sets are canonical
+and digest-bound.  The audit receives one candidate and one observed series
+per supplied measurement; inventories must have identical unique identities
+and include every declared =T ∪ P=.  Each candidate/observed pair is compared
+on its own aligned grid, with both window endpoints sampled.  Different
+measurements need not share a sampling grid.  Candidate and baseline each
+have one scenario identity, and those identities must differ.
+
+#+name: dynamic-impact-scope-laws
+#+caption: Finite-grid obligations for the supplied inventory, not causal identification.
+| Obligation | Executable condition | Failure or unknown result |
+|------------+----------------------+---------------------------|
+| Factual prefix | For each supplied measurement \(v\) and sampled \(t<a\), \(C_v(t)=B_v(t)\) | Difference gives =diverged=; no prefix sample gives =unobserved=. |
+| Protected output | For each declared \(v\in P\) and sampled \(a\leq t\leq b\), \(C_v(t)=B_v(t)\) | Difference gives =diverged=; empty =P= gives =unobserved=. |
+| Direct target | Each =v∈T= is present in both inventories | Absence rejects the audit; no nonzero change is required. |
+| Evidence scope | All series share subject, cut, projection and clock domain with the declaration | Mismatch rejects the audit. |
+
+The aggregate =status= is =violated= if either checked obligation diverges,
+=unknown= if neither diverges but an obligation is unobserved, and
+=consistent-with-declaration= otherwise.  It is conditional on the *supplied*
+inventory and the caller's chosen =P=; it is not a completeness certificate.
+In particular, a measurement outside =T= is not automatically protected:
+causal descendants of a direct target may change.  The audit does not
+establish that a caller-designated negative control is truly unaffected;
+that requires a separate causal model.  This interpretation takes the
+onset/scope idea from [[https://proceedings.iclr.cc/paper_files/paper/2026/file/17af43527227c5c96db0f8d4c6aadc4e-Paper-Conference.pdf][CLEF]] without adopting its
+conditional-mean assumption or claiming to reproduce its editor.  The
+=causal-impact-admitted?= flag remains false for every audit.
+
+** Refresh after a Trajectory revision
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-refresh
+:END:
+
+An =ImpactRefresh= receives the historical contrast and one
+[[file:../trajectory/model.org::#temporal-trajectory-version-delta][TrajectoryDelta]] per side.  It replays both deltas and the historical
+contrast, rejecting mismatched source digests.  It then takes the following
+pure branch; no runtime action or causal-effect assertion follows.
+
+#+name: dynamic-impact-refresh-actions
+#+caption: Historical output is retained in every branch; the revised output is a separate POO receipt when available.
+| Condition on revised series | Action | Revised contrast |
+|-----------------------------+--------+------------------|
+| Both deltas =unchanged= | =reused= | Historical contrast, with identical source digests |
+| Cut, projection or other comparison scope differs between sides | =blocked=, =scope-mismatch= | None |
+| Sample coordinates differ between sides | =blocked=, =grid-mismatch= | None |
+| Compatible series with either version changed | =recomputed= | New contrast with a new identity |
+
+An identity-only, cut-only or valid-time-projection-only change still takes
+the =recomputed= branch, because the Impact receipt binds series identity
+and evidence scope.  A blocked branch does not silently reuse an obsolete
+contrast.  This implements a narrow dependency update: it does not emit
+streaming retractions, maintain every downstream query, or claim complete
+lineage.  Those broader mechanisms remain with Temporal truth maintenance.
+The distinct AI-research question of how evidence is retrieved, used and
+related to claims belongs to [[file:../evidence/model.org][the Evidence relation model]].
+
+* Paper-grade validation protocol
+:PROPERTIES:
+:CUSTOM_ID: dynamic-impact-validation
+:END:
+
+The next research claim must name its level above and publish a table with
+source version, data or simulator, time-axis semantics, graph assumptions,
+intervention policy, target estimand, identification assumptions, split rule,
+metrics, seeds, confidence procedure and runtime.  A method comparison must
+use the same estimand and horizon; otherwise it is a question comparison.
+
+The executable suite should include:
+
+- Known-truth synthetic SCMs with confounding, switching/persistence and
+  delayed interventions; evaluate bias, interval coverage and calibration
+  against the declared intervention-specific target.
+- Unequal sampling gaps and late/corrected evidence; verify that the same
+  admission cut under a different valid-time query does not reuse a receipt.
+- Dynamic graph changes and hidden-parent stress tests; report candidate-path
+  recall separately from causal identification.
+- Timing and scope negative controls: move intervention onset, change only an
+  unaffected variable, and swap candidate labels.  A supposed causal effect
+  must not be inferred from a mere generated-trajectory difference.
+- Ablations for known versus learned causal DAG, support/positivity diagnostics,
+  and generated versus observed trajectories.  Report failure and unknown
+  cases, including incomplete inventory and unobserved counterfactuals.
+
+Current local receipts are the exact-arithmetic tests in
+=t/temporal-impact-test.ss= and the existing Temporal model/TLC/Lean
+gates.  They establish only their stated local invariants.  Reproduction of
+DoFlow, CLEF, HEDRA, LMTP or the treatment-persistence simulation is open.
+
+** Executable arithmetic receipt
+
+The following named Org Babel block is a reproducible local gate.  Its test
+cases cover nonuniform intervals, constant-offset rate invariance, input
+permutation, candidate modality, grid mismatch, forged series digests,
+pre-onset divergence, off-grid intervention onset, protected-variable
+divergence, missing declared measurements, a changed source version,
+unchanged reuse and blocked scope/grid refresh.
+The command evaluates source code under the repository's heap-fenced Gerbil
+entrypoint; it does not execute any paper's training or estimation method.
+
+#+name: check-temporal-impact
+#+begin_src shell
+just check-temporal-impact
+#+end_src
+
+#+name: dynamic-impact-local-receipt
+#+caption: Marker excerpt from the local gate on 2026-10-01; this is not a paper reproduction.
+#+begin_example
+MODULE-OK t/temporal-impact-test.ss
+HARNESS-OK ("t/temporal-impact-test.ss")
+OK
+#+end_example
+
+The accepted receipt requires =MODULE-OK=, =HARNESS-OK= and final =OK= with
+no =ERROR CASE= or overflow marker.  A process exit code alone is insufficient
+for the Gerbil test harness.  The current source-level and finite-model
+evidence boundaries are summarized in [[dynamic-impact-claim-gates]].
+
+[fn:cutoff] The review date is a source-discovery boundary.  Any future paper
+or revised preprint requires a new record with its version, publication
+status and an explicit delta from this table; it cannot be cited as if it
+had already been verified on 2026-10-01.

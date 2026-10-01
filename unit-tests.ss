@@ -9,6 +9,7 @@
         (only-in :std/cli/multicall call-entry-point)
         (only-in :asp-gerbil-scheme/testing-api
                  +testing-discovery-profile+
+                 +testing-process-isolation-profile+
                  +testing-serial-resource-profile+
                  testing-test-selector
                  testing-interface-add-profile
@@ -22,13 +23,15 @@
   (map (lambda (fragment) (testing-test-selector 'contains fragment))
        '("module-object-practice-test.ss"
          "module-system-lazy-loader-test.ss"
-         "module-system-observability-test.ss"
-         ;; This suite deliberately drives a non-returning lazy POO slot until
-         ;; the memory monitor contains it.  Give it a fresh native process so
-         ;; its heap budget is independent of earlier batch allocations.
-         "observability-framework-test.ss")))
+         "module-system-observability-test.ss")))
 
-(def +poo-flow-project-testing-interface+
+;; This suite deliberately drives a non-returning lazy POO slot and a bounded
+;; retained-allocation Case. Its heap budget must be independent of earlier
+;; files, while ordinary tests still share their native worker processes.
+(def +poo-flow-isolated-test-selectors+
+  (list (testing-test-selector 'contains "observability-framework-test.ss")))
+
+(def +poo-flow-serial-testing-interface+
   (foldl
     (lambda (selector testing)
       (testing-interface-map-profile
@@ -38,6 +41,7 @@
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("packages/lambda-episteme"
                                 "packages/lambda-aitia"
+                                "core"
                                 "t/performance"
                                 ;; This external qualification requires the
                                 ;; explicitly pinned FHIR Validator JAR and is
@@ -53,6 +57,14 @@
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
     +poo-flow-serial-test-selectors+))
+
+(def +poo-flow-project-testing-interface+
+  (foldl
+   (lambda (selector testing)
+     (testing-interface-map-profile
+      testing selector +testing-process-isolation-profile+))
+   +poo-flow-serial-testing-interface+
+   +poo-flow-isolated-test-selectors+))
 
 (init-profiled-test-environment! +poo-flow-project-testing-interface+)
 

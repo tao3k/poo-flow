@@ -7,10 +7,11 @@
 ;;; Invariant: fixtures are constructed before timing; samples measure only
 ;;; Scheme control-plane graph analysis and never execute workflow commands.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-elapsed-us)
         "../support/performance"
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-graph-performance-test)
 
@@ -84,7 +85,7 @@
 (def workflow-cicd-graph-performance-test
   (test-suite
    "workflow cicd indexed graph performance"
-   (test-case
+   (poo-flow-test-case
     "2000-node chain remains bounded and scales below quadratic growth"
     (let* ((small-count 1000)
            (large-count 2000)

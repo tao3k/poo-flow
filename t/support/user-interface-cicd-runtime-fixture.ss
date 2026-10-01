@@ -7,11 +7,11 @@
 ;;; Invariant: construct only the profiles required by the real downstream
 ;;; Funflow case; do not import the aggregate custom-profile owner.
 
-(import (only-in :poo-flow/src/module-system/declaration/interface
+(import (only-in :poo-flow/src/user-interface/module-selection
                  pooFlowUserConfig
                  poo-flow-settings
                  poo-flow-user-module-selection)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
+        (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-config)
         (only-in "../../user-interface/custom/my-module/cases/funflow-cicd"
                  poo-flow-custom-my-module-funflow-cicd-case))

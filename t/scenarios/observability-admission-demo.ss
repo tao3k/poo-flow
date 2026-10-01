@@ -6,17 +6,17 @@
 ;;; Run: gerbil env gerbil interactive t/scenarios/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)
-        (only-in :poo-flow/src/module-system/observability/interface
+        (only-in :core/observability/objects
                  poo-flow-observation-identity
                  poo-flow-observation-context
                  poo-flow-observation-provenance
                  poo-flow-observe-contract-admission
                  poo-flow-observation-explain)
-        (only-in :poo-flow/src/module-system/observability/debug
+        (only-in :core/observability/debug
                  poo-flow-observation-debug)
-        (only-in :poo-flow/src/module-system/semantic-module/objects
+        (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
+        (only-in :poo-flow/src/authoring/semantic-module
                  SemanticModuleContract
-                 poo-flow-semantic-identity
                  poo-flow-semantic-module))
 
 (export main)

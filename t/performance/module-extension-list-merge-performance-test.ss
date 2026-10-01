@@ -6,16 +6,16 @@
 ;;; Boundary: module extension performance gates cover List slot operation merge.
 ;;; Invariant: extension operations stay graph data and never execute runtime work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/module-system/extension/interface
+        (only-in :core/extension-graph/interface
                  poo-flow-module-extension-contribution
                  poo-flow-module-extension-resolve
                  poo-flow-module-extension-node
@@ -97,7 +97,7 @@
 ;; : TestSuite
 (def module-extension-list-merge-performance-test
   (test-suite "module extension list merge performance"
-    (test-case "keeps repeated extension list appends inside benchmark contract"
+    (poo-flow-test-case "keeps repeated extension list appends inside benchmark contract"
       (let* ((batch-count 180)
              (batch-size 48)
              (overlap-step 24)

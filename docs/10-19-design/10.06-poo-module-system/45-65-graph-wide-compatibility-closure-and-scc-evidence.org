@@ -50,7 +50,7 @@ Compatibility closure is a proof over one exact semantic cut.  The input binds
 the canonical root, selected revisions, resolved POO graph, immutable
 observation cut, and policy identity.  It is not a permanent package property.
 
-#+begin_src typst
+#+begin_src text
 $ I = (
   canonical-root,
   selected-revisions,
@@ -76,7 +76,7 @@ Each strongly connected component is proven as one closure unit.  Its required
 edges carry RFC 45-64 directional evidence.  Missing evidence suspends the
 decision; it is neither a proof nor a compatibility violation.
 
-#+begin_src typst
+#+begin_src text
 $ SCCEvidence(S)
   := ClosureRelation(S.nodes, S.internal-edges)
   and forall edge in S.required-edges:

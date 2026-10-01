@@ -11,7 +11,7 @@
         (only-in :std/test test-suite test-case check-equal?)
         (only-in :std/misc/process run-process)
         "./module-system-live-case-object"
-        (only-in :poo-flow/src/modules/agent-sandbox/api
+        (only-in :poo-flow/modules/agent-sandbox/api
                  agent-sandbox-profile-backend-kind
                  agent-sandbox-profile-metadata
                  agent-sandbox-profile-network-policy
@@ -24,9 +24,9 @@
                  mounts
                  resource-policy
                  workdir)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
+        (only-in :poo-flow/modules/agent-sandbox/config
                  poo-flow-sandbox-profile->profile)
-        (only-in :poo-flow/src/modules/nono-sandbox/c-binding
+        (only-in :poo-flow/modules/nono-sandbox/c-binding
                  +nono-c-binding-live-test-receipt-schema+
                  nono-c-binding-dry-run
                  nono-c-binding-live-test))

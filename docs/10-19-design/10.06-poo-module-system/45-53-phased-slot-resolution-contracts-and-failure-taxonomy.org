@@ -41,7 +41,7 @@ Each phase produces the only witness accepted by the following phase.  A phase
 number alone is insufficient because it could be forged without carrying the
 required prior evidence.
 
-#+begin_src typst
+#+begin_src text
 $
   S_0 & = "StructuralProjection"("Metadata") \
   S_1 & = "SemanticAdmission"(S_0, "AdmittedViewIdentity") \
@@ -116,7 +116,7 @@ flowchart LR
 - [X] Every typed failure is disjoint from =MissingValue=.
 - [X] Structural and runtime-authorization failures are not semantic conflicts.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.PhasedSlotResolution=.
+  =PooFlowProof.PooC4.PhasedSlotResolution=.
 - [ ] A later implementation-refinement proof must bind actual POO evaluator
   transitions, effect-boundary authorization, and condition receipts to these
   typed witnesses.

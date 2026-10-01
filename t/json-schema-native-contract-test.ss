@@ -5,7 +5,8 @@
 
 ;;; Contract: JSON Schema emits and validates native POO Contracts directly.
 
-(import :std/test)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 (def (json-schema-native-eval expr)
   (eval expr))
@@ -14,10 +15,10 @@
 
 (def json-schema-native-contract-test
   (test-suite "json-schema-native-contract-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import "./src/contract/json-schema-receipt.ss"))
       (eval '(import "./src/contract/json-schema-validate.ss"))
-      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import :core/module-system/schema/slot-contracts))
       (eval '(import "./src/type-facts/objects.ss"))
       (eval '(import :clan/poo/mop))
       (json-schema-native-eval

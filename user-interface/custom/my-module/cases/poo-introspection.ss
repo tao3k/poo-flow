@@ -6,7 +6,7 @@
 ;;; Boundary: downstream Funflow CI/CD POO authoring gate configuration.
 ;;; Invariant: formal POO-native use-module config only; no runtime work.
 
-(import :poo-flow/src/modules/funflow/config)
+(import :poo-flow/modules/funflow/config)
 
 (export poo-flow-custom-my-module-poo-introspection-case)
 

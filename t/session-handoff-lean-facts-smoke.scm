@@ -6,8 +6,8 @@
 ;;; Invariant: Scheme manufactures proof facts only; runtime execution stays
 ;;; behind the Marlin handoff boundary.
 (import (only-in :clan/poo/object .o)
-        :poo-flow/src/modules/loop-engine/session-agent-graph
-        :poo-flow/src/modules/session/objects-handoff)
+        :poo-flow/modules/loop-engine/session-agent-graph
+        :poo-flow/modules/session/objects-handoff)
 
 ;; : (-> Alist Symbol Object)
 (def (fact-ref facts key)

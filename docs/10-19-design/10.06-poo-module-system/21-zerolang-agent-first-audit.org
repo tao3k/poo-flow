@@ -130,7 +130,7 @@ Gerbil POO object graph:
 - loop governor objects declare agent and multi-agent governance facts;
 - human audit loops own real human review, approval, escalation, and sign-off.
 
-This matters because Gerbil POO/C3 gives us deterministic role composition.
+This matters because Gerbil POO/C4 gives us deterministic role composition.
 The agent should not reason over scattered Scheme text or ad hoc alists. It
 should reason over composed object facts:
 - which profile is selected;
@@ -162,7 +162,7 @@ roles such as:
   act as auditor, another as verifier, and another as governor; they can judge
   each other before a handoff leaves the control plane.
 - =human-audit= owns human intervention as a governor-derived human node. It
-  inherits the governor policy shape through POO/C3, consumes governor facts
+  inherits the governor policy shape through POO/C4, consumes governor facts
   and manifests, and records decisions as human decisions rather than agent
   judge decisions.
 
@@ -177,7 +177,7 @@ alist fields:
 - =audit-node= projects the human audit object through the same node contract.
 
 This is where =poo-flow= differs from Zero. Zero uses graph patches to make
-program edits safer. =poo-flow= uses POO/C3-composed loop and policy objects to
+program edits safer. =poo-flow= uses POO/C4-composed loop and policy objects to
 make agent operation safer and more reusable.
 
 ** 10.06.21.46 Config Layer And Human Loop
@@ -236,7 +236,7 @@ Layer 3, governance and human loop:
 
 This audit reframes Zero as contrast evidence. Zero proves the value of
 agent-oriented fact authority and review boundaries. =poo-flow= implements that
-value with Gerbil POO/C3 roles, validated Scheme configuration, and explicit
+value with Gerbil POO/C4 roles, validated Scheme configuration, and explicit
 human audit loop objects.
 
 ** 10.06.21.48 Code Landing
@@ -268,7 +268,7 @@ Zerolang docs do not start with compiler architecture. They start with:
 
 =poo-flow= documentation should keep the same split:
 - a task-first guide for users and agents;
-- a concept reference for POO, C3 roles, profile sets, descriptors, receipts,
+- a concept reference for POO, C4 roles, profile sets, descriptors, receipts,
   runtime manifests, and adapters;
 - a diagnostics guide where every warning is a repair contract.
 

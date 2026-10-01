@@ -6,6 +6,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
     inputs:
@@ -34,10 +36,10 @@ jobs:
 
       - name: Validate repository license, version, and dependency contracts
         run: |
-          python3 scripts/check_license_contract.py
-          python3 scripts/check_version_contract.py
-          python3 scripts/gerbil_dependency_pin.py check
-          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+          python3 packages/automation/check_license_contract.py
+          python3 packages/automation/check_version_contract.py
+          python3 packages/automation/gerbil_dependency_pin.py check
+          python3 -m unittest discover -s packages/automation/tests -p 'test_*.py'
 
   native-gerbil-tests:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -57,6 +59,9 @@ jobs:
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Check out Core source owner
+        run: git submodule update --init core
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -99,7 +104,7 @@ jobs:
 
       - name: Install immutable Gerbil v0.19 release
         shell: bash
-        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+        run: python3 packages/automation/install_gerbil_release.py "$GERBIL_RELEASE_ROOT"
 
       - name: Restore native Gerbil package cache
         id: native-gerbil-pkg-cache
@@ -124,9 +129,9 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # gerbil-parser currently consumes POO Flow's public module contracts.
-          # Its pinned package may leave older same-namespace artifacts behind;
-          # clean the root package through gxpkg before compiling this checkout.
+          # The Core gitlink owns this checkout's shared POO modules.
+          (cd core && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/core:$GITHUB_WORKSPACE/.gerbil/lib" GERBIL_BUILD_VERBOSE=1 gerbil build)
+          # Clean only POO Flow outputs; its build spec excludes Core.
           gerbil clean
 
       - name: Save native Gerbil package cache
@@ -201,8 +206,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
           restore-keys: |
             lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-
 
@@ -215,11 +220,11 @@ jobs:
               | sh -s -- -y --default-toolchain none
           fi
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-          cd packages/proof/lean
+          cd packages/proofs/lean
           "$HOME/.elan/bin/lake" --version
 
       - name: Build native Lean module library
-        working-directory: packages/proof/lean
+        working-directory: packages/proofs/lean
         shell: bash
         run: |
           set -euo pipefail
@@ -227,7 +232,7 @@ jobs:
 
       - name: Build and run the independent Lean FFI smoke
         if: matrix.ffi
-        working-directory: packages/proof/lean
+        working-directory: packages/proofs/lean
         shell: bash
         run: |
           set -euo pipefail
@@ -240,8 +245,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
 
   cedar-rust-runtime-host:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -259,8 +264,8 @@ jobs:
         with:
           path: |
             ~/.elan
-            packages/proof/lean/.lake
-          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+            packages/proofs/lean/.lake
+          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proofs/lean/lean-toolchain', 'packages/proofs/lean/lakefile.lean', 'packages/proofs/lean/lake-manifest.json') }}
           restore-keys: |
             lean-proof-${{ runner.os }}-${{ runner.arch }}-
 
@@ -282,7 +287,7 @@ jobs:
           set -euo pipefail
           host="$RUNNER_TEMP/cedarRuntimeHost"
           POO_FLOW_CEDAR_BUILD_PROFILE=dev \
-            tools/ci/build-cedar-runtime-host "$host"
+            python3 packages/automation/build_cedar_runtime_host.py "$host"
           echo "POO_FLOW_CEDAR_RUNTIME_HOST=$host" >> "$GITHUB_ENV"
 
       - name: Run Cedar Rust Runtime Host tests
@@ -294,7 +299,19 @@ jobs:
             -p poo-flow-cedar-authority \
             --features native-runtime-host-qualification \
             --test runtime_host \
-            --test authorization
+            --test authorization \
+            --test case_check
+
+      - name: Replay generic Cedar artifact cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked --quiet \
+            --manifest-path bindings/cedar-gerbil/Cargo.toml \
+            -p poo-flow-cedar-authority --bin cedar-case-check -- \
+            bindings/cedar-gerbil/fixtures/atomic-case/manifest.json \
+            "$POO_FLOW_CEDAR_RUNTIME_HOST" \
+            bindings/cedar-gerbil/fixtures/atomic-case/policies.cedar
 
   external-module-linux-full:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -304,6 +321,9 @@ jobs:
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Check out Core source owner
+        run: git submodule update --init core
 
       - name: Install Linux build dependencies
         run: |
@@ -374,6 +394,9 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Check out Core source owner
+        run: git submodule update --init core
+
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -412,7 +435,7 @@ jobs:
 
       - name: Install immutable Gerbil v0.19 release
         if: matrix.gerbil-install == 'release'
-        run: bash tools/ci/install-gerbil-v19-release.sh "$GITHUB_WORKSPACE/.ci/gerbil-release/${{ matrix.gerbil-label }}"
+        run: python3 packages/automation/install_gerbil_release.py "$GITHUB_WORKSPACE/.ci/gerbil-release/${{ matrix.gerbil-label }}"
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
@@ -485,7 +508,7 @@ jobs:
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel build //gerbil:dependency_packages
+        run: bazel build //:dependency_packages
 
       - name: Validate shared Gerbil provider
         run: bazel test --test_output=errors //t/qualification/gerbil-bazel:tests
@@ -509,12 +532,12 @@ jobs:
           bazel build \
             --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
             --profile="$profile" \
-            //gerbil:compile
+            //:compile
           build_status=$?
           set -e
 
           elapsed_seconds=$((SECONDS - start_seconds))
-          gerbil_receipt="bazel-bin/gerbil/compile.receipt.json"
+          gerbil_receipt="bazel-bin/compile.receipt.json"
           jq -n \
             --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
@@ -542,8 +565,8 @@ jobs:
           path: |
             ${{ steps.scheme-compile.outputs.ci-receipt }}
             ${{ steps.scheme-compile.outputs.profile }}
-            bazel-bin/gerbil/compile.receipt.json
-            bazel-bin/gerbil/compile.log
+            bazel-bin/compile.receipt.json
+            bazel-bin/compile.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -552,7 +575,7 @@ jobs:
         id: wheel-scheme-projection
         timeout-minutes: 2
         env:
-          PROJECTION_ARTIFACT: bazel-bin/gerbil/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_ARTIFACT: bazel-bin/wheel_smoke.ss.poo-flow-projection.sexp
           PROJECTION_BUDGET_SECONDS: 120
         shell: bash
         run: |
@@ -566,7 +589,7 @@ jobs:
           set +e
           bazel build \
             --profile="$profile" \
-            //gerbil:wheel_smoke_projection_artifact
+            //:wheel_smoke_projection_artifact
           build_status=$?
           set -e
 
@@ -581,8 +604,8 @@ jobs:
           jq -n \
             --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
           --arg producerJob "native-linux" \
-          --arg action "//gerbil:wheel_smoke_projection_artifact" \
-          --arg compileOwner "//gerbil:compile" \
+          --arg action "//:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//:compile" \
           --arg currentHeadSha "$GITHUB_SHA" \
           --arg artifactDigest "$artifact_digest" \
             --argjson status "$build_status" \

@@ -6,11 +6,11 @@
 ;;; Boundary: tests verify loop-engine memory-policy declaration contracts.
 ;;; Invariant: malformed memory policy rows fail before runtime projection.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax)
 
@@ -70,7 +70,7 @@
 ;;; contract before receipts are emitted for Marlin.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-duplicate-memory-policy-case)
-  (test-case "rejects duplicate loop-engine memory-policies"
+  (poo-flow-test-case "rejects duplicate loop-engine memory-policies"
     (check-equal?
      (with-catch
       (lambda (_) #t)
@@ -84,7 +84,7 @@
 ;;; use-case names do not become inert but misleading runtime handoff data.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-unmatched-memory-policy-case)
-  (test-case "rejects loop-engine memory-policy for undeclared use-case"
+  (poo-flow-test-case "rejects loop-engine memory-policy for undeclared use-case"
     (check-equal?
      (with-catch
       (lambda (_) #t)

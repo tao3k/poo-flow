@@ -40,7 +40,7 @@ selected.  A pure proposal and an authorized intent remain declarative values
 until the runtime conditionally commits them against current authoritative
 head evidence.
 
-#+begin_src typst
+#+begin_src text
 #let head-observation(scope, generation, version, fence, adapter, receipt) = (
   scope: scope,
   generation: generation,
@@ -72,7 +72,7 @@ precondition.  The version and fence prevent concurrent writers from silently
 overwriting one another.  A reversion chooses an earlier known generation but
 preserves the generation and effect histories.
 
-#+begin_src typst
+#+begin_src text
 $ ConditionalCommit(I, H_before, H_after) := $
 $ quad H_before.scope = I.expected-scope $
 $ and H_before.generation = I.expected-generation $

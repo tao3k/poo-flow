@@ -5,7 +5,8 @@
 
 ;;; Contract: sandbox resources expose native POO Type/Contract descriptors.
 
-(import :std/test)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 ;; : (-> PooFlowSandboxResourceExpr PooFlowSandboxResourceValue)
 (def (sandbox-resource-eval expr)
@@ -20,10 +21,10 @@
 
 (def sandbox-resource-native-type-contract-test
   (test-suite "sandbox-resource-native-type-contract-test"
-    (test-case "validates the native contract"
+    (poo-flow-test-case "validates the native contract"
       (eval '(import (only-in :clan/poo/object .o)))
       (eval '(import (only-in :clan/poo/mop Type element?)))
-      (eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+      (eval '(import "./modules/sandbox-core/resource-contract.ss"))
       (let* ((row
         (sandbox-resource-eval
          '(poo-flow-sandbox-resources-prototype-type-contract->alist)))

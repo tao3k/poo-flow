@@ -7,9 +7,9 @@
 ;;; Invariant: this declares backend negotiation data only; Marlin owns the
 ;;; store implementation and all durable side effects.
 
-(import :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/store
-        :poo-flow/src/modules/memory-core/durable/store-backend)
+(import :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/store
+        :poo-flow/modules/memory-core/durable/store-backend)
 
 (export poo-flow-custom-my-module-durable-runtime-store-handoff-case)
 

@@ -6,12 +6,12 @@
 ;;; Boundary: workflow CI/CD dependency graphs report topology only.
 ;;; Invariant: tests inspect graph diagnostics without scheduling work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?
                  )
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-dependency-graph-test)
 
@@ -44,7 +44,7 @@
 ;; : TestSuite
 (def workflow-cicd-dependency-graph-test
   (test-suite "workflow cicd dependency graph"
-    (test-case "reports topology diagnostics without scheduling"
+    (poo-flow-test-case "reports topology diagnostics without scheduling"
       (let* ((valid-graph
               (poo-flow-cicd-check-map->dependency-graph
                (poo-flow-cicd-check-map

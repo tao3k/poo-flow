@@ -6,16 +6,16 @@
 ;;; Boundary: session communication receipt performance gate.
 ;;; Invariant: communication projection stays bounded and report-only.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-communication-receipt-performance-test)
 
@@ -108,7 +108,7 @@
 ;; : TestSuite
 (def session-communication-receipt-performance-test
   (test-suite "session communication receipt performance"
-    (test-case "keeps communication receipt batch projection inside benchmark contract"
+    (poo-flow-test-case "keeps communication receipt batch projection inside benchmark contract"
       (let* ((receipt-count 320)
              (summary (communication-performance-summary receipt-count))
              (receipt

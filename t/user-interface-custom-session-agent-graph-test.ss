@@ -7,15 +7,15 @@
 ;;; Invariant: graph, registry, and communication receipts are declarative;
 ;;; Scheme never delivers messages or starts agents.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/modules/session/config
+        :poo-flow/modules/session/config
         (only-in "../user-interface/custom/my-module/cases/session-agent-graph"
                  poo-flow-custom-my-module-session-agent-graph-case))
 
@@ -49,7 +49,7 @@
 ;; : TestSuite
 (def user-interface-custom-session-agent-graph-test
   (test-suite "poo-flow custom user-interface session-agent-graph case"
-    (test-case "projects custom session graph and communication receipts"
+    (poo-flow-test-case "projects custom session graph and communication receipts"
       (let* ((selection
               (car poo-flow-custom-my-module-session-agent-graph-case))
              (rows

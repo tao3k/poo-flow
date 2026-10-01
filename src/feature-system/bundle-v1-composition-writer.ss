@@ -11,7 +11,8 @@
 (import (only-in :std/format format)
         (only-in :clan/poo/object .ref .slot?)
         :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/scenario/plan-projection
+                 poo-flow-scenario-case->execution-plan)
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/bundle-v1-foreign-arena)
 

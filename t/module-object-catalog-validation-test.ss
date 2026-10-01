@@ -6,19 +6,19 @@
 ;;; Boundary: real module object catalog validation stays out of the unit root.
 ;;; Invariant: catalog checks load backend object sets but never realize runtime.
 
-(import (only-in :clan/poo/object .ref object?)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?)
-        :poo-flow/src/module-system/object-core/interface
-        :poo-flow/src/module-system/object-validation/interface
-        :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/sandbox-core/objects
+        :core/module-system/schema/interface
+        :core/module-system/schema/validation
+        :poo-flow/modules/sandbox-core/shared-object
+        :poo-flow/modules/sandbox-core/objects
         :poo-flow/src/user-interface/root-objects
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects
-        :poo-flow/src/modules/docker-sandbox/objects)
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/cubeSandbox/objects
+        :poo-flow/modules/docker-sandbox/objects)
 
 (export module-object-catalog-validation-test)
 
@@ -29,7 +29,7 @@
 ;; : TestSuite
 (def module-object-catalog-validation-test
   (test-suite "poo-flow module object catalog validation"
-    (test-case "validates real module object sets"
+    (poo-flow-test-case "validates real module object sets"
       (let* ((objects
               (append poo-flow-shared-module-objects
                       poo-flow-sandbox-core-module-objects
@@ -70,22 +70,12 @@
                         '(objects.shared.sandbox))
           (check-equal? (length (receipt-ref summary 'field-origins)) 9)
           (check-equal? (length (receipt-ref summary 'validation-phases)) 9)
-          (check-equal? (not (not (member
-                                   'object-catalog-debug-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-field-origin-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-phase-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
+          (check-equal? (receipt-ref summary 'checkedSignals)
+                        '(native-poo-catalog-validation))
           (check-equal? (receipt-ref summary 'descriptor-realized?) #f)
           (check-equal? (receipt-ref summary 'runtime-executed) #f))))
 
-    (test-case "pins nono sandbox object binding to native FFI"
+    (poo-flow-test-case "pins nono sandbox object binding to native FFI"
       (let ((binding-field
              (poo-flow-module-object-field poo-flow-nono-sandbox-object
                                            'binding)))

@@ -173,7 +173,7 @@ Runtime ABI minor version 3 adds these capability bits:
 A runtime may accept a request only when its advertised capabilities dominate
 the request's required set.
 
-#+begin_src typst
+#+begin_src text
 $ Accept(r, p) => Required(p) subset.eq Supported(r) $
 #+end_src
 
@@ -183,7 +183,7 @@ The ABI request repeats all four epochs already checked by POO Flow.  The
 runtime compares them again immediately before committing an effect.  This is
 an execution-time fence, not a second policy decision.
 
-#+begin_src typst
+#+begin_src text
 $ Commit(r, p, w) =>
   p.bundle-epoch = w.bundle-epoch and
   p.authority-epoch = w.authority-epoch and
@@ -206,7 +206,7 @@ For one idempotency identity, at most one receipt may claim a committed
 injection.  Replay receipts refer to the original causal receipt and do not
 constitute a second commit.
 
-#+begin_src typst
+#+begin_src text
 $ forall k: card({r | r.key = k and r.outcome = "injected"}) <= 1 $
 
 $ Active(k) <=> card({r | r.key = k and r.outcome = "injected"}) = 1 $
@@ -215,7 +215,7 @@ $ Active(k) <=> card({r | r.key = k and r.outcome = "injected"}) = 1 $
 An =injected= receipt is complete only when it includes both the materialized
 content digest and the injection receipt digest.
 
-#+begin_src typst
+#+begin_src text
 $ Complete(r) <=>
   r.outcome = "injected" =>
   r.materialization-digest != none and
@@ -259,7 +259,7 @@ the canonical vector.
 
 For any conforming implementations =a= and =b=:
 
-#+begin_src typst
+#+begin_src text
 $ Qualifies(a) and Qualifies(b) =>
   Normalize(a(p)).semantic = Normalize(b(p)).semantic $
 #+end_src
@@ -489,7 +489,7 @@ two projection chains again.
 
 ** Typst admission equations
 
-#+begin_src typst
+#+begin_src text
 $
 Q(q) := id_s(q) and ver_s(q) and id_p(q) and ver_p(q)
         and id_query(q) and nodes(q) != emptyset

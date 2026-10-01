@@ -183,13 +183,13 @@ The project invariants remain binding:
 - raw alist DSLs, record DSLs, patch languages, and raw =(lambda (self super) ...)= hooks are not ordinary public APIs;
 - Gerbil declarative macros, procedural macros, and bounded compile-time metaprogramming may generate repeated internal object families, manifests, and projections when the expansion remains ordinary POO-native or functional code.
 
-C3 linearization resolves definition lookup. It is not an authorization, information-flow, protocol, or evidence policy.
+C4 linearization resolves definition lookup. It is not an authorization, information-flow, protocol, or evidence policy.
 
 * Top-Level Data Flow
 The normative data flow is:
 
 1. Collect public POO objects and functional values.
-2. Resolve inherited definitions with C3 where applicable.
+2. Resolve inherited definitions with C4 where applicable.
 3. Elaborate typed entities and facet contributions.
 4. Normalize each facet under its own composition algebra.
 5. validate local and cross-facet invariants.
@@ -214,7 +214,7 @@ POO Flow SHALL use narrow claims:
 The phrase “provable Agentic OS” MUST NOT be used as an undifferentiated blanket safety claim.
 
 * Security Considerations
-- Organization hierarchy and C3 lookup MUST NOT imply authority.
+- Organization hierarchy and C4 lookup MUST NOT imply authority.
 - Context composition MUST NOT widen visibility through ordinary precedence.
 - Projection drift is prevented by Bundle, projector, policy, proof, and execution-root binding.
 - A conforming runtime is not automatically a mediated runtime; bypass claims require the L3 boundary defined by RFC 93.
@@ -272,11 +272,11 @@ This RFC suite consolidates rather than replaces the following accepted directio
 
 - [[file:44-current-project-programming-style.org][current project programming style]];
 - [[file:54-lean-c-ffi-proof-bridge-rfc.org][typed Lean C FFI proof bridge]];
-- [[file:55-pooc3-proof-architecture.org][POO C3 proof architecture]];
-- [[file:56-pooc3-formal-semantics.org][POO C3 formal semantics]];
-- [[file:58-pooc3-session-lifecycle-proof-link.org][session lifecycle proof link]];
+- [[file:55-pooc4-proof-architecture.org][POO C4 proof architecture]];
+- [[file:56-pooc4-formal-semantics.org][POO C4 formal semantics]];
+- [[file:58-pooc4-session-lifecycle-proof-link.org][session lifecycle proof link]];
 - [[file:59-agent-lifecycle-proof-gate.org][agent lifecycle proof gate]];
-- [[file:60-pooc3-policy-composition-proof.org][policy composition proof]];
+- [[file:60-pooc4-policy-composition-proof.org][policy composition proof]];
 - [[file:62-poo-flow-composition-interface.org][POO Flow composition interface]];
 - [[file:63-scheme-marlin-runtime-boundary.org][Scheme and runtime boundary]];
 - [[file:67-control-plane-handoff-proof.org][control-plane handoff proof]];

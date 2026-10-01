@@ -3,10 +3,11 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :std/test
         (only-in :std/misc/ports read-all-as-string)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/standards/interface
+        :poo-flow/modules/standards/interface
         :poo-flow/lambda-episteme/modules/healthcare/standards/interface
         :poo-flow/lambda-episteme/modules/ontology/interface
         (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/cases/au-legacy-interface-fhir-migration/case
@@ -63,7 +64,7 @@
 
 (def healthcare-hl7v2-parser-receipt-test
   (test-suite "Healthcare HL7v2 parser receipt qualification"
-    (test-case "parser-owned projection exactly binds the Lambda migration Case"
+    (poo-flow-test-case "parser-owned projection exactly binds the Lambda migration Case"
       (let* ((source (call-with-input-file fixture-path read-all-as-string))
              (artifact (parse-hl7v2 source))
              (projection (hl7v2-adt-a08-patient-projection artifact)))

@@ -7,13 +7,13 @@
 ;;; Invariant: presentation is shallow inspection data and does not activate modules.
 
 (import (only-in :clan/poo/object .ref object<-alist)
-        :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/authoring/module-interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/entrypoints
-        :poo-flow/src/modules/sandbox-core/profile-catalog
+        :poo-flow/modules/sandbox-core/profile-catalog
         (only-in :poo-flow/src/user-interface/presentation
                  pooFlowUserConfigPresentation)
-        :poo-flow/src/module-system/projection/syntax
+        :poo-flow/src/utilities/final-projection-syntax
         :poo-flow/src/user-interface/profile-core)
 
 (export pooFlowUserProfilePresentation
@@ -29,7 +29,7 @@
 
 ;;; Profile summaries avoid embedding POO profile objects in presentations.
 ;; : (-> PooUserProfile Alist)
-(defpoo-module-final-projection
+(defpoo-final-projection
   poo-flow-user-profile-summary->alist (profile)
   (bindings ((modules (poo-flow-user-profile-modules profile))))
   (fields ((profile-name (poo-flow-user-profile-name profile))

@@ -6,7 +6,8 @@
 ;;; Boundary: descriptor tests cover facade-level task family and accessors.
 ;;; Invariant: backend profile and bridge envelope behavior live in sibling tests.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -14,12 +15,11 @@
                  check-not-equal?
                  check-output
                  check-true
-                 test-case
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/agent-sandbox/api
-        :poo-flow/src/modules/agent-sandbox/nono)
+        :poo-flow/modules/agent-sandbox/api
+        :poo-flow/modules/agent-sandbox/nono)
 
 (export agent-sandbox-descriptor-test)
 
@@ -42,7 +42,7 @@
 ;; : TestSuite
 (def agent-sandbox-descriptor-test
   (test-suite "agent sandbox task descriptor"
-    (test-case "declares adapter-routed task family policy"
+    (poo-flow-test-case "declares adapter-routed task family policy"
       (let* ((registry (make-agent-sandbox-task-family-registry))
              (task (make-agent-sandbox-task
                     'agent-run
@@ -71,7 +71,7 @@
         (check-equal? (task-capability-in registry task) 'agent-sandbox)
         (check-equal? (task-route-in registry task) 'adapter)
         (check-equal? (task-adapter-operation-in registry task) 'submit)))
-    (test-case "adds explicit strategy and adapter capability"
+    (poo-flow-test-case "adds explicit strategy and adapter capability"
       (let ((strategy (make-agent-sandbox-enabled-strategy))
             (adapter (make-agent-sandbox-enabled-adapter
                       (make-request-only-adapter))))
@@ -80,7 +80,7 @@
                            #t)
                       #t)
         (check-equal? (adapter-supports? adapter 'agent-sandbox) #t)))
-    (test-case "exposes request field accessors"
+    (poo-flow-test-case "exposes request field accessors"
       (let ((task (make-agent-sandbox-task
                    'cube-agent
                    'cube

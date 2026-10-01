@@ -7,18 +7,18 @@
 ;;; Invariant: capability backends name registry backend-kind values, never
 ;;; runtime owners.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/presentation-config
-        (only-in :poo-flow/src/modules/loop-engine/runtime
+        (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
         :poo-flow/src/user-interface/init-syntax)
@@ -109,7 +109,7 @@
 ;;; capability value.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-capability-case)
-  (test-case "diagnoses invalid loop-engine capability backend"
+  (poo-flow-test-case "diagnoses invalid loop-engine capability backend"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-capability-module))
            (intent
@@ -145,7 +145,7 @@
 
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-capability-performance-case)
-  (test-case "keeps invalid capability presentation inside benchmark contract"
+  (poo-flow-test-case "keeps invalid capability presentation inside benchmark contract"
     (let* ((summary
             (custom-loop-invalid-capability-summary))
            (receipt

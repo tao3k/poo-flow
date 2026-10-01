@@ -6,9 +6,9 @@
 ;;; Boundary: session graph performance gates cover indexed lineage traversal.
 ;;; Invariant: graph presentation stays report-only and never executes runtime work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
@@ -16,7 +16,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        (only-in :poo-flow/src/modules/session/objects
+        (only-in :poo-flow/modules/session/objects
                  poo-flow-session-chunk
                  poo-flow-session-lineage
                  poo-flow-session-placement
@@ -79,7 +79,7 @@
 ;; : TestSuite
 (def session-graph-performance-test
   (test-suite "session graph performance"
-    (test-case "keeps large lineage presentation inside benchmark contract"
+    (poo-flow-test-case "keeps large lineage presentation inside benchmark contract"
       (let* ((session-count 1200)
              (sessions (session-graph-performance-sessions session-count))
              (summary

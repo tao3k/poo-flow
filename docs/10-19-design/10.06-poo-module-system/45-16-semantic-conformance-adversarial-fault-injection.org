@@ -156,7 +156,7 @@ before, during, and after terminal proof:
 flowchart TD
   A["Before provider invocation"] -->|"inject cancellation or capacity loss"| C1["Expected: no external attempt"]
   B["After invocation, before terminal receipt"] -->|"lose worker or response"| C2["Expected: indeterminate barrier"]
-  C["After commit proof, before reinjection"] -->|"resume continuation repeatedly"| C3["Expected: one realized value and no duplicate effect"]
+  C["After commit proof, before reinjection"] -->|"resume continuation repeatedly"| C4["Expected: one realized value and no duplicate effect"]
   D["During resource release"] -->|"lose release receipt"| C4["Expected: indeterminate lease"]
   E["During parent cancellation"] -->|"child or sibling stalls"| C5["Expected: containment-scoped evidence"]
   F["During replay"] -->|"remove or contradict predecessor receipt"| C6["Expected: first divergence or missing evidence"]

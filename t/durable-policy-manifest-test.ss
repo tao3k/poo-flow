@@ -2,9 +2,10 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
-        :poo-flow/src/modules/memory-core/durable/policy
-        :poo-flow/src/modules/memory-core/durable/policy-manifest)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :std/test
+        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/memory-core/durable/policy-manifest)
 
 (export durable-policy-manifest-test)
 
@@ -16,7 +17,7 @@
 ;; : TestSuite
 (def durable-policy-manifest-test
   (test-suite "poo-flow durable policy runtime manifest"
-    (test-case "projects Scheme durable policy receipt into runtime manifest"
+    (poo-flow-test-case "projects Scheme durable policy receipt into runtime manifest"
       (let ((manifest
              (poo-flow-durable-policy-runtime-manifest-alist
               poo-flow-durable-policy/default)))
@@ -40,7 +41,7 @@
                       +poo-flow-durable-policy-kind+)
         (check-equal? (test-ref manifest 'receipt-valid) #t)
         (check-equal? (test-ref manifest 'receipt-diagnostic-count) 0)))
-    (test-case "emits byte carrier for FFI runtime adapters"
+    (poo-flow-test-case "emits byte carrier for FFI runtime adapters"
       (let* ((policy (poo-flow-durable-policy 'durable/runtime 'shared))
              (manifest
               (poo-flow-durable-policy-runtime-manifest-alist policy))

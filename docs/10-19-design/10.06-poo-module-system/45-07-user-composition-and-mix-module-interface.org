@@ -571,8 +571,8 @@ flowchart TD
     B3 -->|"normalize once"| BP["State 3P: ordered Profile lineage"]
     C -->|"append root"| C1["wendao root"]
     C1 -->|"case order: research first"| C2["+research Mix refinement"]
-    C2 -->|"case order: observability second"| C3["+observability Mix refinement"]
-    C3 -->|"normalize once"| CP["State 3M: ordered wendao Mix lineage"]
+    C2 -->|"case order: observability second"| C4["+observability Mix refinement"]
+    C4 -->|"normalize once"| CP["State 3M: ordered wendao Mix lineage"]
     D -->|"append scoped refinement"| D1["+observability capability refinement"]
     D1 -->|"normalize once"| DP["State 3C: ordered capability lineage"]
 #+end_export
@@ -1519,13 +1519,13 @@ identities and logical module/declaration identities; it does not record host
 installation paths or temporary output bases.
 
 - Focused Lean:
-  =cd packages/proof/lean && direnv exec . lake env lean PooFlowProof/Enterprise/UseCompositionSyntaxClosure.lean=
+  =cd packages/proofs/lean && direnv exec . lake env lean PooFlowProof/Enterprise/UseCompositionSyntaxClosure.lean=
   returned exit =0= with zero diagnostics.
 - Enterprise aggregate:
-  =cd packages/proof/lean && direnv exec . lake build PooFlowProof.Enterprise=
+  =cd packages/proofs/lean && direnv exec . lake build PooFlowProof.Enterprise=
   returned exit =0= for =483= jobs.
 - Full Lean aggregate:
-  =cd packages/proof/lean && direnv exec . lake build= returned exit =0= for
+  =cd packages/proofs/lean && direnv exec . lake build= returned exit =0= for
   =555= jobs.  Its only warning is the pre-existing =unnecessarySimpa= warning
   owned by =AgentRedTeamProofRegressionClosure.lean=.
 - Focused Scheme owner (historical execution): the predecessor owner-map
@@ -1534,7 +1534,7 @@ installation paths or temporary output bases.
   =//t/qualification/module-system:owner_map_tests=; it must be executed anew
   for current acceptance.
 - AXLE closure mode:
-  =cd packages/proof/python && uv run --extra axle poo-flow-axle-verify=
+  =cd packages/proofs/python && uv run --extra axle poo-flow-axle-verify=
   with the repository-relative Lean root, module
   =PooFlowProof.Enterprise.UseCompositionSyntaxClosure=, and the five root
   declarations named above returned exit =0= and =status: accepted=.
@@ -1715,10 +1715,10 @@ flowchart LR
 *** Cedar grant Lean and AXLE receipt
 
 - Pure mathematical model Lean:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarCapabilityGrantModel=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarCapabilityGrantModel=
   returned exit =0= for =2= jobs with zero warnings.
 - Real Cedar bridge Lean:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarCapabilityGrantClosure=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarCapabilityGrantClosure=
   returned exit =0= for =117= jobs with zero warnings.
 - Enterprise aggregate returned exit =0= for =498= jobs.  Full Lean returned
   exit =0= for =570= jobs.  Both emitted only the pre-existing
@@ -1874,10 +1874,10 @@ flowchart LR
 *** Input-identity Lean and AXLE receipt
 
 - Pure content-identity model:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarInputIdentityRefinementModel=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarInputIdentityRefinementModel=
   returned exit =0= for =2= jobs with zero warnings.
 - Real Cedar input refinement:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarInputIdentityRefinementClosure=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarInputIdentityRefinementClosure=
   returned exit =0= for =404= jobs with zero warnings.
 - AXLE verified all seven public roots in
   =UseCompositionCedarInputIdentityRefinementModel.lean=: =40= declarations,
@@ -4081,10 +4081,10 @@ flowchart LR
 *** Full-registry Lean and AXLE receipt
 
 - Pure registry-join model:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleRegistryJoinModel=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleRegistryJoinModel=
   returned exit =0= for =2= jobs with zero warnings.
 - Real full lifecycle registry join:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarFullLifecycleRegistryJoinClosure=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarFullLifecycleRegistryJoinClosure=
   returned exit =0= for =402= jobs with zero warnings.
 - AXLE verified all four public roots in
   =UseCompositionCedarLifecycleRegistryJoinModel.lean=: =43= declarations,
@@ -4208,10 +4208,10 @@ flowchart LR
 *** Lifecycle join Lean and AXLE receipt
 
 - Pure lifecycle-join model:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleJoinModel=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleJoinModel=
   returned exit =0= for =2= jobs with zero warnings.
 - Real lifecycle join:
-  =cd packages/proof/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleJoinClosure=
+  =cd packages/proofs/lean && lake build PooFlowProof.Enterprise.UseCompositionCedarLifecycleJoinClosure=
   returned exit =0= for =120= jobs with zero warnings.
 - AXLE verified all seven public roots in
   =UseCompositionCedarLifecycleJoinModel.lean=: =55= declarations, =16=

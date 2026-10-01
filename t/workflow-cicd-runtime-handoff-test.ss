@@ -6,16 +6,16 @@
 ;;; Boundary: CI/CD runtime handoff stays inert Scheme control-plane data.
 ;;; Invariant: manifest and ABI projections never execute sandbox work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  test-suite
-                 test-case
                  check-equal?
                  )
         (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-command-descriptor-schema+
                  +runtime-request-schema+)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/interface)
 
 (export workflow-cicd-runtime-handoff-test)
 
@@ -111,7 +111,7 @@
 ;; : TestSuite
 (def workflow-cicd-runtime-handoff-test
   (test-suite "workflow cicd runtime handoff"
-    (test-case "projects check-map runtime manifest readiness"
+    (poo-flow-test-case "projects check-map runtime manifest readiness"
       (let* ((check-map (cicd-runtime-test-check-map))
              (readiness
               (poo-flow-cicd-check-map->runtime-manifest-readiness check-map))
@@ -163,7 +163,7 @@
                       '(ci/check))
         (check-equal? (cicd-runtime-test-alist-ref test-entry 'result)
                       '(read :lines))))
-    (test-case "projects runtime command manifests from readiness"
+    (poo-flow-test-case "projects runtime command manifests from readiness"
       (let* ((check-map (cicd-runtime-test-check-map))
              (manifest-map
               (poo-flow-cicd-check-map->runtime-command-manifests
@@ -241,7 +241,7 @@
         (check-equal? (cicd-runtime-test-alist-ref test-metadata
                                                   'runtime-executed)
                       #f)))
-    (test-case "exports Marlin runtime handoff ABI without execution"
+    (poo-flow-test-case "exports Marlin runtime handoff ABI without execution"
       (let* ((check-map (cicd-runtime-test-check-map))
              (abi (poo-flow-cicd-check-map->marlin-runtime-handoff-abi
                    check-map
@@ -335,7 +335,7 @@
                        test-entry
                        'scheme-manufactures-runtime-handlers)
                       #f)))
-    (test-case "rejects unsafe fake check shapes"
+    (poo-flow-test-case "rejects unsafe fake check shapes"
       (check-equal?
        (cicd-runtime-test-error?
         (lambda ()

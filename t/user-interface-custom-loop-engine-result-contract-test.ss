@@ -6,12 +6,12 @@
 ;;; Boundary: focused user-interface loop-engine result contract diagnostics.
 ;;; Invariant: invalid result contracts are reported, never executed.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax)
 
@@ -72,7 +72,7 @@
 ;;; runtime manifests surface diagnostics, but no runtime work is executed.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-invalid-result-case)
-  (test-case "diagnoses invalid loop-engine result contract"
+  (poo-flow-test-case "diagnoses invalid loop-engine result contract"
     (let* ((presentation
             (custom-loop-presentation custom-loop-invalid-result-module))
            (intent

@@ -6,9 +6,9 @@
 ;;; Boundary: core cases exercise the thin declarative user-interface surface.
 ;;; These checks intentionally stop before sandbox realization or runtime work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
@@ -20,7 +20,7 @@
         (only-in :poo-flow/testing-api
                  +poo-flow-testing-interface+
                  poo-flow-testing-admit-user-profile!)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config?
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
@@ -29,7 +29,7 @@
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-entrypoint
                  poo-flow-user-module-selection-source-ref)
-        (only-in :poo-flow/src/module-system/loader/source
+        (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-kind
                  poo-flow-module-source-ref-value))
 
@@ -37,8 +37,7 @@
 
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
-  '((core . poo-clos)
-    (flow . funflow)
+  '((flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
@@ -69,17 +68,17 @@
 ;;; surface exposed to downstream users.
 (def user-interface-config-core-case-test
   (test-suite "poo-flow user interface core config"
-    (test-case "keeps user practice config thin and inspectable"
+    (poo-flow-test-case "keeps user practice config thin and inspectable"
       (check-equal? (poo-flow-user-profile? test-poo-flow-user-profile) #t)
       (check-equal? (poo-flow-user-profile-name test-poo-flow-user-profile)
                     'developer)
       (check-equal? (length (poo-flow-user-profile-module-bundles
                              test-poo-flow-user-profile))
-                    8)
+                    7)
       (check-equal? (poo-flow-user-config? test-poo-flow-user-config) #t)
       (check-equal? (poo-flow-user-config-module-keys test-poo-flow-user-config)
                     expected-poo-flow-core-module-keys))
-    (test-case "loads custom module bundles through init-style declarations"
+    (poo-flow-test-case "loads custom module bundles through init-style declarations"
       (let* ((custom-config
               (pooFlowUserConfigFromProfile test-poo-flow-user-custom-profile))
              (custom-modules
@@ -94,7 +93,7 @@
                                    '(custom . my-module)))
              (custom-source
               (poo-flow-user-module-selection-source-ref custom-module)))
-        (check-equal? (length custom-modules) 8)
+        (check-equal? (length custom-modules) 7)
         (check-equal? (poo-flow-user-module-selection-key custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-flags custom-module)
@@ -107,7 +106,7 @@
         (check-equal? (alist-value 'entrypoint custom-fact)
                       "./custom/my-module/interface.ss")
         (check-equal? (alist-value 'declaration-index custom-fact)
-                      7)
+                      6)
         (check-equal? (alist-value 'declaration-phase custom-fact)
                       'init-selection)
         (check-equal? (alist-value 'package-management? custom-fact)

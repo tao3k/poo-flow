@@ -204,7 +204,7 @@ the reusable profile fragments to the composition macro, creates graph facts,
 checks the graph-control receipt metadata, runs the pure graph runtime receipt
 executor, and checks the generated Lean fact rows.
 
-The Lean owner is =PooFlowProof.PooC3.LangChainLangGraph=. It proves chain
+The Lean owner is =PooFlowProof.PooC4.LangChainLangGraph=. It proves chain
 progression, guarded graph safety, runtime production gates, and lane
 containment.
 
@@ -233,7 +233,7 @@ gxpkg env gxi build.ss test scenario-poo-flow-composition
 Lean proof synchronization:
 
 #+begin_src sh
-(cd packages/proof/lean && lake build)
+(cd packages/proofs/lean && lake build)
 #+end_src
 
 Build/cache health should still be checked with the project develop build:

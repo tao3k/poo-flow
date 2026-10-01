@@ -3,17 +3,17 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: sandbox-core profile derivation follows module-system POO merge.
+;;; Boundary: sandbox-core profile derivation follows native POO extension.
 ;;; Invariant: derived profiles are inert recipes; no backend runtime executes.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/config
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/sandbox-core/profile)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/nono-sandbox/config
+        :poo-flow/modules/nono-sandbox/objects
+        :poo-flow/modules/sandbox-core/profile)
 
 ;;; Fixture alist reads stay local to the derivation receipt assertions so the
 ;;; test does not depend on profile projection internals for metadata lookup.
@@ -47,7 +47,7 @@
 
 (def sandbox-core-profile-derivation-test
  (test-suite "sandbox-core profile derivation"
-   (test-case "derives session and task profiles through POO row merges"
+   (poo-flow-test-case "derives session and task profiles through POO extensions"
      (let* ((project-profile
              (poo-flow-nono-sandbox-profile-config
               'project/dev
@@ -93,7 +93,7 @@
                      'build)
        (check-equal? (derivation-test-alist-ref metadata 'runtime-executed #t)
                      #f)))
-   (test-case "rejects backend rows during derivation"
+   (poo-flow-test-case "rejects backend rows during derivation"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -107,7 +107,7 @@
             'session/bad
             '((backend docker)))))
         #t)))
-   (test-case "rejects non-symbol names before profile resolution"
+   (poo-flow-test-case "rejects non-symbol names before profile resolution"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -128,7 +128,7 @@
             "project/bad"
             '((metadata (project . bad))))))
         #t)))
-   (test-case "rejects non-profile parents during derivation"
+   (poo-flow-test-case "rejects non-profile parents during derivation"
      (check-equal?
       (derivation-test-error?
        (lambda ()
@@ -138,7 +138,7 @@
           'session/bad-parent
           '((metadata (session . bad-parent))))))
       #t))
-   (test-case "rejects unknown rows through POO field validation"
+   (poo-flow-test-case "rejects unknown rows through POO field validation"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev
@@ -152,7 +152,7 @@
             'session/unknown-row
             '((unknown-row value)))))
         #t)))
-   (test-case "rejects unsafe filesystem resources before runtime handoff"
+   (poo-flow-test-case "rejects unsafe filesystem resources before runtime handoff"
      (let (project-profile
            (poo-flow-nono-sandbox-profile-config
             'project/dev

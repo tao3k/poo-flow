@@ -7,7 +7,7 @@
 
 (import (only-in :std/test check-equal?)
         (only-in :clan/poo/object object?)
-        (only-in :poo-flow/src/modules/loop-engine/runtime
+        (only-in :poo-flow/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
         "./fixtures")
 

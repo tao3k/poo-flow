@@ -5,12 +5,13 @@
 
 ;;; Boundary: downstream-shaped Funflow POO config lowers to readiness facts.
 
-(import (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/module-system/declaration/interface
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/modules/workflow/interface)
+        :poo-flow/modules/agent-sandbox/config
+        :poo-flow/modules/workflow/interface)
 
 (export funflow-config-pipeline-downstream-test)
 
@@ -182,5 +183,5 @@
 
 (def funflow-config-pipeline-downstream-test
   (test-suite "poo-flow Funflow downstream config pipeline"
-    (test-case "lowers downstream Funflow POO config to readiness facts"
+    (poo-flow-test-case "lowers downstream Funflow POO config to readiness facts"
       (check-equal? (run-funflow-config-pipeline-downstream-checks) 'ok))))

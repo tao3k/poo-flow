@@ -13,7 +13,7 @@ artifact contains both evaluator graphs and pins a private copy for each
 isolated worker invocation; this document does not declare native Gerbil
 authorization qualified.
 
-=packages/proof/lean/PooFlowProof/Runtime/CedarNative.lean= owns the one Lean
+=packages/proofs/lean/PooFlowProof/Runtime/CedarNative.lean= owns the one Lean
 outcome projection. The diagnostic native probe and the AOT Host call that same
 exported function; it decodes the upstream protobuf and calls
 =Cedar.Spec.isAuthorized=. Rust's existing =wire::evaluate_rust= evaluates

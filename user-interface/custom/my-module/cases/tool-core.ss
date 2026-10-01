@@ -7,9 +7,9 @@
 ;;; Invariant: this declares tool specs and policy validation receipts only;
 ;;; no shell, filesystem, or MCP runtime is started.
 
-(import :poo-flow/src/modules/session/syntax
-        :poo-flow/src/modules/tool-core/config
-        (only-in :poo-flow/src/module-system/declaration/interface
+(import :poo-flow/modules/session/syntax
+        :poo-flow/modules/tool-core/config
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist))
 

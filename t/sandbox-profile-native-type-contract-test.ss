@@ -6,7 +6,8 @@
 ;;; Contract: sandbox profile recipes are admitted by one native POO Contract.
 ;;; This root is self-contained; unrelated test sources are not runfile inputs.
 
-(import :std/test)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         :std/test)
 
 (def (sandbox-profile-contract-eval expression)
   (eval expression))
@@ -19,8 +20,8 @@
 
 (def sandbox-profile-native-type-contract-test
   (test-suite "sandbox-profile-native-type-contract-test"
-    (test-case "validates the native contract"
-      (eval '(import "./src/modules/agent-sandbox/config.ss"))
+    (poo-flow-test-case "validates the native contract"
+      (eval '(import "./modules/agent-sandbox/config.ss"))
       (eval '(import :clan/poo/mop :clan/poo/object))
       (let (contract-row
       (sandbox-profile-contract-eval

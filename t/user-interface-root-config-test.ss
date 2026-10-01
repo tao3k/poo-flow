@@ -6,7 +6,8 @@
 ;;; Boundary: top-level root profile and modules-directory facade.
 ;;; Invariant: root config stays declarative and does not load test fixtures.
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)
         (only-in :poo-flow/src/user-interface/profile-core
@@ -20,7 +21,7 @@
                  poo-flow-testing-admit-user-profile!)
         (only-in :poo-flow/src/user-interface/root-profile
                  pooFlowRootProfile)
-        (only-in :poo-flow/src/module-system/declaration/interface
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
                  poo-flow-user-module-selection-key
@@ -36,8 +37,7 @@
   (pooFlowUserConfigFromProfile root-config-profile))
 
 (def root-config-expected-module-keys
-  '((core . poo-clos)
-    (flow . funflow)
+  '((flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
@@ -56,7 +56,7 @@
 
 (def user-interface-root-config-test
   (test-suite "poo-flow user interface root config"
-    (test-case "loads modules directory facade through top-level config"
+    (poo-flow-test-case "loads modules directory facade through top-level config"
       (let* ((root-modules (poo-flow-user-config-modules root-config))
              (root-flow-module
               (root-config-module-selection-by-key root-modules
@@ -74,9 +74,9 @@
          #t)
         (check-equal? (length (poo-flow-user-profile-module-bundles
                                root-config-profile))
-                      9)
+                      8)
         (check-equal? (length poo-flow-user-module-bundles) 5)
-        (check-equal? (length root-modules) 9)
+        (check-equal? (length root-modules) 8)
         (check-equal? (poo-flow-user-config-module-keys root-config)
                       root-config-expected-module-keys)
         (check-equal? (poo-flow-user-module-selection-flags root-flow-module)

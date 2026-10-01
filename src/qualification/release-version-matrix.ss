@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family/syntax
+        :core/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes
         (only-in :poo-flow/src/semantic/organization-bundle
                  +poo-flow-organization-bundle-schema+)
@@ -86,7 +86,7 @@
    '(src/semantic/organization-bundle.ss
      src/contract/runtime-v0-abi-schema.ss
      src/proof/generated/proof-case-vector-v1.ss
-     packages/proof/proof-case-vector-v1.toml
+     packages/proofs/proof-case-vector-v1.toml
      src/contract/release-assurance-manifest.ss)
    #f))
 

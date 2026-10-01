@@ -59,6 +59,10 @@ def _export_tracked_tree(repo_root: Path, destination: Path) -> None:
         target = destination / relative
         if source.is_dir() and not source.is_symlink():
             target.mkdir(parents=True, exist_ok=True)
+            if relative == Path("core"):
+                if not (source / ".git").exists():
+                    raise ExternalModuleError("Core submodule is not initialized")
+                _export_tracked_tree(source, target)
             continue
         if not source.exists() and not source.is_symlink():
             # A local qualification run projects the current working tree, so
@@ -138,7 +142,7 @@ def run_external_module(
             consumer,
             bazel_tmp,
             [f"--output_user_root={test_root / 'bazel-no-root-override'}"],
-            ["query", "--lockfile_mode=off", "@poo_flow//gerbil:compile"],
+            ["query", "--lockfile_mode=off", "@poo_flow//:compile"],
             capture_output=True,
         )
         if missing_override.returncode == 0:
@@ -152,7 +156,7 @@ def run_external_module(
 
         _write_consumer_module(consumer, exported, include_override=True)
         (consumer / "BUILD.bazel").write_text(
-            'alias(\n    name = "poo_flow_compile",\n    actual = "@poo_flow//gerbil:compile",\n)\n',
+            'alias(\n    name = "poo_flow_compile",\n    actual = "@poo_flow//:compile",\n)\n',
             encoding="utf-8",
         )
         output_args = (
@@ -165,7 +169,7 @@ def run_external_module(
             consumer,
             bazel_tmp,
             output_args,
-            ["query", "--lockfile_mode=off", "@poo_flow//gerbil:compile"],
+            ["query", "--lockfile_mode=off", "@poo_flow//:compile"],
         )
         if query.returncode != 0:
             raise ExternalModuleError(

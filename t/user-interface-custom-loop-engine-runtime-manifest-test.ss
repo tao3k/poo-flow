@@ -6,20 +6,20 @@
 ;;; Boundary: tests verify concrete loop-engine runtime manifest projection.
 ;;; Invariant: manifest rows are inert Marlin handoff data, not execution.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/src/loops/governor-marlin
                  +loop-governor-marlin-loop-engine-discovery-schema+
                  loop-governor-marlin-loop-engine-discovery)
-        (only-in :poo-flow/src/modules/cubeSandbox/config
+        (only-in :poo-flow/modules/cubeSandbox/config
                  poo-flow-cubeSandbox-module-bundles)
-        (only-in :poo-flow/src/modules/nono-sandbox/config
+        (only-in :poo-flow/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
         (only-in "./support/loop-engine-runtime-manifest-receipts"
                  check-custom-loop-runtime-manifest-request-receipts)
@@ -575,7 +575,7 @@
 ;;; guessing the loop-engine entrypoint or request shape.
 ;; : TestCase
 (def (user-interface-custom-loop-engine-runtime-manifest-case)
-  (test-case "projects custom loop-engine runtime manifest"
+  (poo-flow-test-case "projects custom loop-engine runtime manifest"
     (let* ((presentation
             (custom-loop-presentation
              poo-flow-custom-my-module-loop-engine-case))

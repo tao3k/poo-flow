@@ -19,15 +19,15 @@ The current module syntax boundary is thin and upstream-owned:
 - =use-module= handles sandbox POO =.def= profile forms and a generic live-case
   row with =:inherits=, =:isolation=, =:environment=, =:command=, and =:nono=.
 - There is no =funflow :config (pipeline ...)= branch yet.
-- =src/module-system/declaration/interface.ss= owns the =use-module= declaration contract gate
+- =src/user-interface/module-selection.ss= owns the =use-module= declaration contract gate
   so category symbols such as =workflow= cannot silently become custom modules.
 - =load!= wraps downstream fragments so user files can keep declarations pure.
 
 The current CI/CD implementation is split into intent and concrete control-plane
 objects:
 
-- =src/modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
-- =src/modules/workflow/objects.ss= owns inert POO check and check-map objects.
+- =modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
+- =modules/workflow/objects.ss= owns inert POO check and check-map objects.
 - =t/workflow-cicd-check-map-test.ss= proves receipt and runtime-manifest
   readiness projection without execution.
 - =t/user-interface-cicd-test.ss= still proves the older user intent payload and
@@ -49,7 +49,7 @@ The interface principles document fixes the macro contract:
 - macros must not become a separate alist or record DSL;
 - macros must not resolve catalogs, activate modules, run tasks, or execute
   flows;
-- Gerbil POO and C3 stay the core object composition mechanism.
+- Gerbil POO and C4 stay the core object composition mechanism.
 
 * 10.06.26.30 Rejected Route
 
@@ -116,15 +116,15 @@ The public downstream shape should be:
 
 The macro expansion should construct a =poo-flow-cicd-check-map= through a new
 Funflow config helper. The helper should live beside the module owner, not in
-=module-system/declaration/interface.ss=:
+=user-interface/module-selection.ss=:
 
-- =src/modules/funflow/config.ss= owns the public POO prototypes:
+- =modules/funflow/config.ss= owns the public POO prototypes:
   =funflow-check= and =funflow-pipeline=.
-- =src/modules/workflow/{objects,funs}.ss= keep the shared workflow-domain POO
+- =modules/workflow/{objects,funs}.ss= keep the shared workflow-domain POO
   check-map object and projections until or unless it becomes Funflow-specific.
 - =src/user-interface/init-syntax.ss= only recognizes the syntax and calls the
   Funflow config helper.
-- =src/modules/funflow/config.ss= keeps the default =+cicd= feature payload.
+- =modules/funflow/config.ss= keeps the default =+cicd= feature payload.
 
 The branch should produce a normal =(flow . funflow)= module selection whose
 flags carry the POO check-map object, for example under =:config= or
@@ -156,7 +156,7 @@ profile refs:
 
 The workflow check-map should preserve the declared supers as object/reference
 data. It should not materialize sandbox descriptors in the macro. Later object
-resolution can use C3 composition and existing sandbox-core validation to merge
+resolution can use C4 composition and existing sandbox-core validation to merge
 or reject the final profile shape.
 
 Slot operations should stay object-local. If a check needs object extension, the
@@ -182,7 +182,7 @@ Superseded note: the row-style Funflow config branch described below has been
 removed. Current implementation uses native POO =.def= declarations with
 =funflow-check= and =funflow-pipeline= prototypes.
 
-1. Extend =src/modules/funflow/config.ss= with helpers that turn pipeline/check
+1. Extend =modules/funflow/config.ss= with helpers that turn pipeline/check
    clauses into =poo-flow-cicd-check-map= objects.
 2. Import that helper from =src/user-interface/init-syntax.ss= and add only the
    =funflow :config (pipeline ...)= syntax branch.
@@ -216,7 +216,7 @@ Legacy =:config= pipeline rows are no longer accepted.
   check-map object data;
 - =:inherits= preserves single or multiple supers as profile refs or objects;
 - receipts and runtime-manifest readiness remain available through
-  =src/modules/workflow/interface.ss= projections;
+  =modules/workflow/interface.ss= projections;
 - Scheme does not execute commands, activate sandboxes, or resolve runtime
   adapters;
 - focused tests pass through native =gxtest= and the package build remains

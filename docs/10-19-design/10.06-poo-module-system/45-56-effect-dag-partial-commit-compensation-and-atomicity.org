@@ -104,7 +104,7 @@ flowchart LR
 - [X] Compensation preserves the original committed-history fact.
 - [X] An atomicity claim requires a whole-group runtime guarantee.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.EffectDagAtomicity=.
+  =PooFlowProof.PooC4.EffectDagAtomicity=.
 - [ ] A later implementation-refinement proof must bind the POO effect plan,
   observed predecessor receipts, conflict scopes, runtime scheduler, and
   compensation receipts to this abstract model.

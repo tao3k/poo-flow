@@ -26,7 +26,7 @@ This RFC owns:
 
 It does not own:
 
-- upstream POO dispatch, slot, prototype, or C3 implementation;
+- upstream POO dispatch, slot, prototype, or C4 implementation;
 - the four-slot Module semantic contract;
 - Type and Contract prototype construction;
 - Module-local pure domain transformations;
@@ -107,7 +107,7 @@ Dispatch observation may derive:
 
 - receiver and responsibility identities;
 - instance, type, and prototype candidate sources;
-- candidate enumeration and C3 precedence;
+- candidate enumeration and C4 precedence;
 - the selected candidate and inherited =next= relation;
 - dispatch budget consumption;
 - cycle and cache identity;
@@ -140,7 +140,7 @@ Capability closure observation may derive:
 - requirement and provision identities;
 - attenuation paths;
 - withdrawal, denial, incompatibility, conflict, or absence evidence;
-- contribution-admission priority distinct from C3 dispatch precedence;
+- contribution-admission priority distinct from C4 dispatch precedence;
 - reachable closure provenance; and
 - closure outcome and explanation.
 
@@ -215,7 +215,7 @@ Three continuation concepts remain distinct:
 
 | Concept | Owner | Meaning |
 |---------+-------+---------|
-| POO inherited continuation | Upstream POO dispatch | Continue through C3 ancestry with =next= or =super=. |
+| POO inherited continuation | Upstream POO dispatch | Continue through C4 ancestry with =next= or =super=. |
 | Fixed-point resumption | Evaluation coordinator | Continue refinement from an immutable generation. |
 | Recovery continuation | Debug coordinator | Resume control suspended by a continuable condition. |
 
@@ -340,11 +340,11 @@ The core owners are:
 
 | Owner | Responsibility |
 |-------+----------------|
-| =src/module-system/observability/module-presentation.ss= | Pure ObservationEvent construction, projection, lineage, and explanation. |
+| =src/user-interface/module-presentation.ss= | Pure ObservationEvent construction, projection, lineage, and explanation. |
 | =src/module-system/debug.ss= | Condition, RecoveryDecision, coordinator, and bounded resumption policy. |
 | Runtime observability adapter | Redaction, runtime measurement, publication, and receipt effects. |
 
-The existing =src/module-system/observability/module-presentation.ss= is implementation evidence
+The existing =src/user-interface/module-presentation.ss= is implementation evidence
 for presentation-trace projections.  It does not by itself admit the POO-native
 ObservationEvent and three-plane contract defined here.  This new architecture
 makes no compatibility or migration commitment to presentation alists.
@@ -391,7 +391,7 @@ already admitted POO responsibility.  It cannot receive:
 
 * Ownership
 
-- Upstream =gerbil-poo= owns prototype, dispatch, C3, and inherited continuation
+- Upstream =gerbil-poo= owns prototype, dispatch, C4, and inherited continuation
   mechanics.
 - =poo-flow-core= owns ObservationEvent, condition, RecoveryDecision, semantic
   budgets, and coordinator contracts.
@@ -583,7 +583,7 @@ gate in RFC 45-120-15; this section does not invent their implementation path.
 On 2026-09-08 the normal ASP Search command could not supply that gate:
 
 #+begin_src sh
-./.devenv/devenv-profile-exec asp search playbook --languages gerbil-scheme --rg 'poo-flow-classification-evidence|poo-flow-module-observation' src/module-system/types.ss src/module-system/observability/module-presentation.ss
+./.devenv/devenv-profile-exec asp search playbook --languages gerbil-scheme --rg 'poo-flow-classification-evidence|poo-flow-module-observation' src/module-system/types.ss src/user-interface/module-presentation.ss
 #+end_src
 
 The sandboxed call returned =host-operation-not-permitted=. The exact command
@@ -598,9 +598,9 @@ for that evidence.
 ** Current native framework slice
 
 The user subsequently authorized temporary =rg= / =fd= owner exploration.
-That exploration located the existing native =src/module-system/observability/= package,
-including its Diagnostic/Receipt Contracts and JSON Schema consumers. The
-framework now extends that owner as documented in RFC 45-120-15; no parallel
+That exploration located native Diagnostic/Receipt Contracts and JSON Schema
+consumers; their reusable owner is now =core/observability/=. The framework
+extends that owner as documented in RFC 45-120-15; no parallel
 tracer or strict-struct replacement is introduced. The parser checks below
 remain unclosed rather than being inferred from local text discovery.
 
@@ -636,7 +636,7 @@ source-shaped pre-realization form.
 The executable example is =t/scenarios/observability-admission-demo.ss=. The focused
 gate is =//scheme:observability_framework_test=; existing feedback, strict
 presentation, shared foundation, native debug, and Module tests are retained.
-See =src/module-system/observability/README.org= for the exact commands and native extension
+See =docs/10-19-design/10.06-poo-module-system/observability-ownership.org= for the exact commands and native extension
 contract.
 
 The focused native command recorded there passed six suites and 174 checks
@@ -692,4 +692,4 @@ is not counted as compile acceptance.
 - [[file:45-127-higher-order-capability-materialization-poo-lifecycle-object-and-runtime-policy-prototype-algebra.org][Capability materialization lifecycle object]]
 - [[file:44-current-project-programming-style.org][Current project programming style]]
 - [[file:29-gerbil-poo-programming-guidelines.org][Gerbil POO programming guidelines]]
-- =src/module-system/observability/module-presentation.ss=
+- =src/user-interface/module-presentation.ss=

@@ -6,7 +6,9 @@ mod support;
 
 use poo_flow_cedar_authority::authority::{Authority, ConsumeRequest, verify_signature};
 use poo_flow_cedar_authority::canonical;
-use poo_flow_cedar_authority::projection::{Bootstrap, HandoffInput, Proposal, Snapshot};
+use poo_flow_cedar_authority::projection::{
+    Bootstrap, HandoffInput, PolicySource, Proposal, Snapshot,
+};
 use poo_flow_cedar_authority::runtime::Deployment;
 use poo_flow_cedar_authority::wire::{CEDAR_VERSION, LEAN_REVISION};
 use serde_json::json;
@@ -26,7 +28,7 @@ fn bootstrap() -> Bootstrap {
     }}}}});
     serde_json::from_value(json!({
         "schema_id": "poo-flow.cedar-authority-snapshot.v1", "producer": "poo-flow.scheme-control",
-        "source": "src/modules/authorization/providers/cedar/objects.ss", "object_kind": "cedar-authority-snapshot",
+        "source": "modules/authorization/providers/cedar/objects.ss", "object_kind": "cedar-authority-snapshot",
         "provenance": {"composition_identity": "example.composition",
             "profile_identities": ["example.profile"], "profile_origin_digest": digest(1),
             "governance_assessment_digest": digest(10), "subject_snapshot_digest": digest(11),
@@ -64,6 +66,22 @@ fn proposal() -> Proposal {
     }
 }
 
+#[test]
+fn one_poo_source_can_carry_an_exported_cedar_policy_set() {
+    let mut input = bootstrap();
+    let source = input
+        .policies
+        .iter()
+        .map(|policy| policy.source.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    input.policies = vec![PolicySource {
+        identity: "generic-bundle".into(),
+        source,
+    }];
+    Snapshot::new(input).unwrap().prepare(&proposal()).unwrap();
+}
+
 fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstrap {
     let entities = json!([
         {"uid": {"type": "Healthcare::Provider", "id": "provider-1"}, "attrs": {}, "parents": []},
@@ -82,7 +100,7 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
     serde_json::from_value(json!({
         "schema_id": "poo-flow.cedar-authority-snapshot.v1",
         "producer": "poo-flow.scheme-control",
-        "source": "src/modules/authorization/providers/cedar/objects.ss",
+        "source": "modules/authorization/providers/cedar/objects.ss",
         "object_kind": "cedar-authority-snapshot",
         "provenance": {
             "composition_identity": "post-operative-healing",
@@ -99,7 +117,7 @@ fn healthcare_bootstrap(reconciliation_observed: bool, revoked: bool) -> Bootstr
             "governance_admitted": true,
             "certification_names": [
                 "PooFlowProof.Enterprise.GovernanceThreatAssuranceClosure",
-                "PooFlowProof.PooC3.CedarDualEngineArbitration"
+                "PooFlowProof.PooC4.CedarDualEngineArbitration"
             ]
         },
         "authority_id": "healthcare.authority",

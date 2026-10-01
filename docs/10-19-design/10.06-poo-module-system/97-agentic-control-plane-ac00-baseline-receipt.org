@@ -58,13 +58,13 @@ current owners:
 | Concern | Confirmed current owner set |
 |-
 | POO-native authoring and =session-case= | =src/user-interface/init-syntax.ss= |
-| Profile composition | =src/module-system/profile-composition/interface.ss=, =profile-composition-accessors.ss=, and the =main/profile/use/clause= syntax owners |
-| Policy | =src/core/policy.ss=, =src/modules/session/policy.ss=, =policy-syntax.ss=, and =policy-validation*.ss= |
+| Profile composition | =core/profile-composition/= owns ProfileBundle, bindings, and selection syntax; =src/scenario/= owns product composition syntax and Scenario root/accessors |
+| Policy | =src/core/policy.ss=, =modules/session/policy.ss=, =policy-syntax.ss=, and =policy-validation*.ss= |
 | Receipts | Core/runner receipts, session receipt syntax and validation receipt, contract receipt, loop-engine extension receipt, and proof-gate receipts |
 | Semantic and contract namespaces | =src/semantic/boundary-namespace.ss= and =src/contract/boundary-namespace.ss= |
 | C ABI | =bindings/runtime-c/include/poo_flow_runtime_abi.h= and =bindings/runtime-c/probe/poo_flow_runtime_abi_probe.c= |
 | Python runtime | =packages/python-runtime/=, including CFFI, C/CFFI ABI tests, probe tests, and C ABI benchmark owners |
-| Proof | =src/proof/= proof fact/gate/FFI owners and =packages/proof/lean/= |
+| Proof | =src/proof/= proof fact/gate/FFI owners and =packages/proofs/lean/= |
 | Scenarios | CrewAI, LangChain/LangGraph, lifecycle, proof gate/FFI, tool-calling, and policy observability owners |
 
 Gerbil parser-owned item selectors remain unavailable for some existing paths;
@@ -129,7 +129,7 @@ CFFI production cutover is complete.
 ** Lean
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake build
 #+end_src
 

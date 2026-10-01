@@ -6,15 +6,16 @@
 ;;; Boundary: module-selection syntax and declaration-contract admission.
 ;;; Invariant: contract qualification does not load profiles or root config.
 
-(import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :poo-flow/src/module-system/declaration/interface
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test check-equal? test-suite)
+        (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection
                  poo-flow-user-module-selection-flags
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection->alist
                  poo-flow-user-module-when
                  poo-flow-modules-system-use-module)
-        (only-in :poo-flow/src/module-system/declaration/contract
+        (only-in :poo-flow/src/user-interface/module-selection-contract
                  poo-flow-require-use-module-contract!
                  poo-flow-use-module-contract-validation
                  poo-flow-use-module-contract-validation-valid?))
@@ -27,13 +28,13 @@
 
 (def user-interface-config-syntax-contract-test
   (test-suite "poo-flow user interface config syntax contract"
-    (test-case "builds module selections and conditional gates"
+    (poo-flow-test-case "builds module selections and conditional gates"
       (let ((nono-selections
              (poo-flow-modules-system-use-module
               'nono-sandbox
               '(+nono +doctor)))
-            (core-selection
-             (poo-flow-user-module-selection 'core 'poo-clos '(+native))))
+            (flow-selection
+             (poo-flow-user-module-selection 'flow 'funflow '(+dag))))
         (check-equal? (poo-flow-user-module-selection-key
                        (car nono-selections))
                       '(sandbox . nono-sandbox))
@@ -43,15 +44,15 @@
         (check-equal? (poo-flow-user-module-when #f
                        (sandbox cubeSandbox +doctor))
                       '())
-        (check-equal? (poo-flow-user-module-selection->alist core-selection)
-                      '((group . core)
-                        (module . poo-clos)
-                        (key core . poo-clos)
+        (check-equal? (poo-flow-user-module-selection->alist flow-selection)
+                      '((group . flow)
+                        (module . funflow)
+                        (key flow . funflow)
                         (source-ref . #f)
                         (entrypoint . #f)
-                        (flags +native)
+                        (flags +dag)
                         (enabled? . #t)))))
-    (test-case "validates use-module declarations before projection"
+    (poo-flow-test-case "validates use-module declarations before projection"
       (let* ((valid-selections
               (poo-flow-modules-system-use-module
                'nono-sandbox

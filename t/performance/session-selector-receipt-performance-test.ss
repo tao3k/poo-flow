@@ -6,16 +6,16 @@
 ;;; Boundary: selector receipt performance gate.
 ;;; Invariant: selector candidate projection stays bounded and report-only.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-selector-receipt-performance-test)
 
@@ -154,7 +154,7 @@
 ;; : TestSuite
 (def session-selector-receipt-performance-test
   (test-suite "session selector receipt performance"
-    (test-case "keeps selector candidate projection inside benchmark contract"
+    (poo-flow-test-case "keeps selector candidate projection inside benchmark contract"
       (let* ((candidate-count 300)
              (summary (selector-performance-summary candidate-count))
              (receipt

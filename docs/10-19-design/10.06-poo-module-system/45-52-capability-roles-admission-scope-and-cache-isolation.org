@@ -108,7 +108,7 @@ flowchart LR
 - [X] Changing a live proof cannot split the business-result cache.
 - [X] Changing an admission receipt cannot split the business-result cache.
 - [X] Lean witness:
-  =PooFlowProof.PooC3.CapabilityRoleIsolation=.
+  =PooFlowProof.PooC4.CapabilityRoleIsolation=.
 - [ ] A later implementation-refinement proof must bind native =gerbil-poo=
   capability objects, attenuation, validation, and affine token consumption to
   these artifact types.

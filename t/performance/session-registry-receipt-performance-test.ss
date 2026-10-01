@@ -7,16 +7,16 @@
 ;;; Invariant: registry projection is a bounded address-space receipt, not a
 ;;; live runtime store.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config)
+        :poo-flow/modules/session/config)
 
 (export session-registry-receipt-performance-test)
 
@@ -114,7 +114,7 @@
 ;; : TestSuite
 (def session-registry-receipt-performance-test
   (test-suite "session registry receipt performance"
-    (test-case "keeps registry receipt projection inside benchmark contract"
+    (poo-flow-test-case "keeps registry receipt projection inside benchmark contract"
       (let* ((entry-count 240)
              (summary (registry-performance-summary entry-count))
              (receipt

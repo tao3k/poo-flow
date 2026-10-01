@@ -25,10 +25,10 @@ The execution programme is maintained separately in
 
 | Source RFC | Formalized concern | Lean owner |
 |---+---+---|
-| =45-03-runtime-context-and-recovery.org= | realization identity, admission, portable payload, context separation | =PooC3/RealizationAdmission.lean= |
-| =45-04-observability-and-debugging.org= | observable disposition and barrier distinctions | =PooC3/RealizationAdmission.lean= |
-| =45-07-user-composition-and-mix-module-interface.org= | lexical/runtime/content identity separation and derived receipts | =PooC3/CompositionIdentity.lean= |
-| =45-08-effect-boundary-commit-reconciliation.org= | commit proof, indeterminate barrier, reconciliation, continuation re-entry | =PooC3/EffectBoundary.lean= |
+| =45-03-runtime-context-and-recovery.org= | realization identity, admission, portable payload, context separation | =PooC4/RealizationAdmission.lean= |
+| =45-04-observability-and-debugging.org= | observable disposition and barrier distinctions | =PooC4/RealizationAdmission.lean= |
+| =45-07-user-composition-and-mix-module-interface.org= | lexical/runtime/content identity separation and derived receipts | =PooC4/CompositionIdentity.lean= |
+| =45-08-effect-boundary-commit-reconciliation.org= | commit proof, indeterminate barrier, reconciliation, continuation re-entry | =PooC4/EffectBoundary.lean= |
 
 The existing =AuthorizedEffectEvidence.lean= proves Boolean qualification
 levels.  The new modules add algebraic data types and impossible-transition
@@ -61,7 +61,7 @@ from concrete runtime qualification.
 
 The concrete correspondence type is:
 
-#+begin_src typst
+#+begin_src text
 #let runtime_correspondence(r) = $ RuntimeArbitrationReceipt(r)
   arrow.r
   AtomicCommitArbitration(
@@ -77,7 +77,7 @@ AXLE:
 
 | Owner | Result | Receipt |
 |-
-| =PooFlowProof/PooC3/EffectBoundary.lean= | 0 failed declarations, 0 errors, 0 warnings | =f7dd396f-d644-4fcc-a39d-07f130f8a4f1= |
+| =PooFlowProof/PooC4/EffectBoundary.lean= | 0 failed declarations, 0 errors, 0 warnings | =f7dd396f-d644-4fcc-a39d-07f130f8a4f1= |
 
 The receipt proves the model and the refinement consequence. It does not prove
 that the concrete Marlin runtime has emitted a receipt satisfying the premise.
@@ -112,7 +112,7 @@ runtime operation.
 
 =EFF-006= is the structural retry-causality proposition:
 
-#+begin_src typst
+#+begin_src text
 #let EFF_006(operation, prior, authorization, target) = (
   authorization.operation == operation
   and authorization.prior_attempt == prior
@@ -127,7 +127,7 @@ fresh.
 
 =EFF-007= is the reconciliation-barrier proposition:
 
-#+begin_src typst
+#+begin_src text
 #let EFF_007(operation, attempt, events, authorization) = (
   policy_retry(authorization) in events
   and trace(indeterminate(operation, attempt), events)
@@ -165,7 +165,7 @@ field in the Lean carrier.
 
 The approved internal model distinguishes:
 
-#+begin_src typst
+#+begin_src text
 #let RecoveryAuthorizationModel = (
   policy: RecoveryPolicy,
   decision: RecoveryDecision,
@@ -176,7 +176,7 @@ The approved internal model distinguishes:
 
 The construction chain is:
 
-#+begin_src typst
+#+begin_src text
 #let decide(policy, condition, restarts, observation) = decision
 
 #let commit(cell, decision) = receipt
@@ -188,7 +188,7 @@ The construction chain is:
 
 subject to:
 
-#+begin_src typst
+#+begin_src text
 #let ValidRetryCapability(receipt, capability) = (
   receipt.outcome == committed
   and receipt.selected_decision.permits_retry
@@ -203,7 +203,7 @@ subject to:
 
 The authority separation theorem obligations are:
 
-#+begin_src typst
+#+begin_src text
 #let ReceiptCannotRetry = forall(receipt,
   not has_retry_authority(receipt)
 )
@@ -247,7 +247,7 @@ flowchart TD
 
 The raw field counterexample is:
 
-#+begin_src typst
+#+begin_src text
 #let bare_policy_evidence_insufficient = (
   exists(left, right,
     left.policy_evidence == right.policy_evidence
@@ -258,7 +258,7 @@ The raw field counterexample is:
 
 Therefore policy authority is represented by a proof-carrying product:
 
-#+begin_src typst
+#+begin_src text
 #let PolicyAuthorizedRetry = (
   authorization: RetryAuthorization,
   receipt: RecoveryDecisionReceipt,
@@ -286,7 +286,7 @@ Typst object below MUST map to one exact RFC claim and Lean declaration, and
 each proof claim MUST report local Lean and AXLE status independently. This
 mapping prevents presentation drift; it cannot discharge an authoritative-layer obligation.
 
-#+begin_src typst
+#+begin_src text
 #let RecoveryDecisionOutcome = (
   committed: "committed",
   rejected: "rejected",
@@ -341,7 +341,7 @@ mapping prevents presentation drift; it cannot discharge an authoritative-layer 
 )
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 #let RetryCapabilityCarriesCommittedRetryDecision(capability) = (
   capability.evidence.receipt.outcome
     == RecoveryDecisionOutcome.committed
@@ -366,7 +366,7 @@ mapping prevents presentation drift; it cannot discharge an authoritative-layer 
 )
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 #let RecoveryDecisionObservation = (
   receipt: RecoveryDecisionReceipt,
 )
@@ -399,7 +399,7 @@ mapping prevents presentation drift; it cannot discharge an authoritative-layer 
 )
 #+end_src
 
-#+begin_src typst
+#+begin_src text
 #let ProjectRetryCapability(receipt, token, authority) = (
   receipt.outcome == RecoveryDecisionOutcome.committed
   and receipt.selectedDecision.permitsRetry == true
@@ -451,7 +451,7 @@ The synchronization rule is bidirectional:
   these exact names rather than to an informal analogue.
 
 The Lean owner is
-=PooFlowProof/PooC3/RecoveryPolicyAuthorization.lean=.
+=PooFlowProof/PooC4/RecoveryPolicyAuthorization.lean=.
 
 | Lean declaration | Result |
 |-

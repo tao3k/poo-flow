@@ -240,7 +240,7 @@ Each policy:
 - cannot widen authorization through =super=.
 
 Contribution admission finalizes the policy graph before lifecycle dispatch.
-C3 then orders behavior inside the finalized graph.
+C4 then orders behavior inside the finalized graph.
 
 * Pure control and effect handoff
 
@@ -576,7 +576,7 @@ runtime adapter boundaries.
   secret, cancellation, revocation, cleanup, recovery, and receipt policies.
 - [X] Require explicit EffectIntent handoff for external operations.
 - [X] Prevent policy prototypes from widening runtime authority.
-- [X] Separate contribution admission from C3 lifecycle dispatch.
+- [X] Separate contribution admission from C4 lifecycle dispatch.
 - [ ] Define exact internal policy prototype identities after adapter admission.
 
 ** Lifecycle and events
@@ -627,7 +627,7 @@ runtime adapter boundaries.
 - Rewriting ambiguous predecessors after recovery.
 - Treating cancellation as removal of cleanup obligations.
 - Exposing secrets, handles, or raw continuations in events or receipts.
-- Contribution priority replacing C3 policy dispatch.
+- Contribution priority replacing C4 policy dispatch.
 - A public materialization lifecycle DSL.
 
 * Successor contract

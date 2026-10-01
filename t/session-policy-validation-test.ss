@@ -7,14 +7,14 @@
 ;;; Invariant: validation inspects composed POO policies and bounded attempts;
 ;;; it does not run tools, hooks, providers, sandboxes, or communication.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/tool-core/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/session/config
+        :poo-flow/modules/tool-core/config
+        :poo-flow/modules/memory-core/config)
 
 (export session-policy-validation-test)
 
@@ -267,7 +267,7 @@
 ;; : TestSuite
 (def session-policy-validation-test
   (test-suite "poo-flow session policy validation"
-    (test-case "validates effective policy and reports denied session edges"
+    (poo-flow-test-case "validates effective policy and reports denied session edges"
       (let* ((context (make-session-policy-validation-context))
              (receipt
               (poo-flow-session-policy-validation-receipt

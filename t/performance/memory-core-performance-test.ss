@@ -7,9 +7,9 @@
 ;;; Invariant: validation resolves POO memory specs and intent refs without
 ;;; runtime recall, commit, or backend startup.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api
@@ -17,8 +17,8 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         "../support/performance"
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/modules/session/config
+        :poo-flow/modules/memory-core/config)
 
 (export memory-core-performance-test)
 
@@ -97,7 +97,7 @@
 
 (def memory-core-performance-test
   (test-suite "memory-core performance"
-    (test-case "keeps catalog policy validation inside benchmark contract"
+    (poo-flow-test-case "keeps catalog policy validation inside benchmark contract"
       (let* ((summary
               (memory-core-performance-summary memory-core-performance-count))
              (receipt

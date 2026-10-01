@@ -6,15 +6,15 @@
 ;;; Boundary: tests the public CI/CD POO authoring gate user config.
 ;;; Invariant: assertions inspect formal use-module data, not runtime work.
 
-(import (only-in :std/test
+(import (only-in :core/observability/testing-case poo-flow-test-case)
+         (only-in :std/test
                  check-equal?
-                 test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/user-interface/facade
         :poo-flow/src/user-interface/init-syntax
-        :poo-flow/src/modules/workflow/interface
+        :poo-flow/modules/workflow/interface
         (only-in "../user-interface/custom/my-module/cases/poo-introspection"
                  poo-flow-custom-my-module-poo-introspection-case))
 
@@ -38,7 +38,7 @@
 ;; : TestSuite
 (def user-interface-poo-introspection-case-test
   (test-suite "poo-flow user interface POO authoring gate case"
-    (test-case "loads as a formal funflow module configuration"
+    (poo-flow-test-case "loads as a formal funflow module configuration"
       (let* ((selection (car poo-flow-custom-my-module-poo-introspection-case))
              (flags (poo-flow-user-module-selection-flags selection))
              (pipeline
@@ -64,7 +64,7 @@
         (check-equal? (poo-flow-cicd-check-profile
                        funflow-readiness-check)
                       'ci/check)))
-    (test-case "keeps POO authoring observability on check metadata"
+    (poo-flow-test-case "keeps POO authoring observability on check metadata"
       (let* ((selection (car poo-flow-custom-my-module-poo-introspection-case))
              (flags (poo-flow-user-module-selection-flags selection))
              (pipeline

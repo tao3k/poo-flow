@@ -111,7 +111,7 @@
       (loop-policy-slot 'handoff)))
 
 ;;; Boundary: plan slots are policy data for selecting loop descriptors.
-;;; Intent: C3/POO composes strategy roles before Marlin receives a contract.
+;;; Intent: C4/POO composes strategy roles before Marlin receives a contract.
 ;; : (-> Unit LoopStrategyPlanPrototype)
 (def loop-strategy-plan-prototype
   (poo-core-role-object
@@ -156,7 +156,7 @@
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-strategy-plan-prototype)))
 
-;;; Boundary: predicate accepts C3-composed strategy objects by kind slot.
+;;; Boundary: predicate accepts C4-composed strategy objects by kind slot.
 ;; : (-> LoopStrategyPlanCandidate Boolean)
 (def (loop-strategy-plan? plan)
   (and (object? plan)

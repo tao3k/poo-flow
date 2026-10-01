@@ -48,7 +48,7 @@ roles therefore do not establish enterprise accountability.
 Proof owner:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/HumanAuthorityAccountability.lean
+packages/proofs/lean/PooFlowProof/Enterprise/HumanAuthorityAccountability.lean
 #+end_src
 
 The compiled theorems establish:
@@ -243,7 +243,7 @@ The promotion coordinator must reject:
 * Verification receipt
 
 #+begin_src text
-cd packages/proof/lean
+cd packages/proofs/lean
 lake env lean PooFlowProof/Enterprise/HumanAuthorityAccountability.lean
 exit-code: 0
 warnings: 0
