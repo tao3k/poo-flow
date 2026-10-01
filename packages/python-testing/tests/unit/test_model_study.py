@@ -8,6 +8,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from poo_flow_testing.model_study.runner import build_graph, corpus, grade
+from poo_flow_testing.model_study.v2 import typed_observation
 
 
 def test_frozen_corpus_and_strict_score() -> None:
@@ -50,3 +51,22 @@ def test_model_arms_share_prompt_and_tool_arm_adds_only_observation() -> None:
         assert call["reasoning"] == {"effort": "none"}
         assert call["max_output_tokens"] == 512
         assert "instructions" not in call
+
+
+def test_typed_observation_preserves_boolean_and_scope() -> None:
+    ascent = typed_observation("ascent.wrong-join", {"status": "complete"})
+    assert ascent == {
+        "status": "complete",
+        "evidence_scope": "candidate_on_named_finite_snapshot",
+        "intent_verified": False,
+    }
+    temporal = typed_observation("temporal.closed-cut", {
+        "status": "bounded-temporal-classification",
+        "release-authorized?": "#f",
+    })
+    assert temporal == {
+        "status": "bounded-temporal-classification",
+        "release_authorized": False,
+        "causation_proven": False,
+        "evidence_scope": "temporal_classification_only",
+    }
