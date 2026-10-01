@@ -18,11 +18,15 @@
                  poo-flow-query-bind-execution-receipt)
         (only-in :poo-flow/modules/query/objects
                  poo-flow-query-execution-candidate)
+        (only-in :poo-flow/modules/query/results/types
+                 poo-flow-query-result-set?)
+        (only-in :poo-flow/modules/query/results/funs
+                 poo-flow-query-result-set-replay)
         (only-in :poo-flow/modules/temporal-causality/candidates/types
-                 poo-flow-candidate-scope?)
+                 poo-flow-candidate-scope? poo-flow-candidate-receipt?)
         (only-in :poo-flow/modules/temporal-causality/candidates/funs
-                 poo-flow-candidate-receipt))
-(export poo-flow-gql-candidate-receipt)
+                 poo-flow-candidate-receipt poo-flow-candidate-check))
+(export poo-flow-gql-candidate-receipt poo-flow-gql-candidate-row-check)
 
 (def (receipt-digest receipt)
   (string-append
@@ -83,3 +87,36 @@
      (.ref source-receipt 'result-digest)
      (.ref source-receipt 'result-count)
      (.ref source-receipt 'complete?))))
+
+;;; Only checks the supplied scalar rows against a declared result digest.
+;;; It cannot attest that a Provider produced either the rows or the digest.
+(def (poo-flow-gql-candidate-row-check id candidate-receipt query result-set)
+  (unless (and (poo-flow-candidate-receipt? candidate-receipt)
+               (poo-flow-query? query)
+               (poo-flow-query-result-set? result-set))
+    (error "invalid GQL candidate row-check input"))
+  (let (result-set
+        (poo-flow-query-result-set-replay
+         result-set (.ref query 'result-contract)))
+    (unless (and (eq? (.ref candidate-receipt 'provider-identity) 'gql)
+                 (equal? (.ref candidate-receipt 'request-digest)
+                         (poo-flow-query-source-content-identity query))
+                 (equal? (.ref result-set 'query-identity)
+                         (.ref query 'identity))
+                 (equal? (.ref result-set 'query-version)
+                         (.ref query 'version))
+                 (equal? (.ref result-set 'semantic-revision)
+                         (.ref query 'semantic-revision)))
+      (error "GQL result set does not match candidate Query"))
+    (poo-flow-candidate-check
+     id candidate-receipt "poo-flow/query/scalar-row-check-v1"
+     (cond ((or (not (equal? (.ref candidate-receipt 'result-digest)
+                             (.ref result-set 'result-digest)))
+                (not (= (.ref candidate-receipt 'result-count)
+                        (.ref result-set 'result-count)))
+                (not (eq? (.ref candidate-receipt 'complete?)
+                          (.ref result-set 'complete?))))
+            'invalid)
+           ((not (.ref result-set 'complete?)) 'unknown)
+           (else 'valid))
+     (.ref result-set 'semantic-digest))))

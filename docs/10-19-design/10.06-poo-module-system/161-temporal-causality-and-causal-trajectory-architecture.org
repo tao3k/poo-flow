@@ -410,7 +410,7 @@ truth, action authority, or publication authority.
 |----------+-------------------------------+----------------|
 | Temporal → GQL | cut/projection/generation, graph inventory, query identity, budget | Freeze input universe and expected semantic revision. |
 | Temporal → ASCENT | same cut/projection/generation, finite typed relations, program identity, budget | Bind each relation source to that universe and record completeness. |
-| GQL → Temporal | =poo-flow-gql-candidate-receipt= binds existing =SourceQueryReceipt=; materialized row contract remains open | Recompute Query admission and Provider binding at the same ElementSpace revision/cut; result digest/count alone cannot authenticate unseen rows. |
+| GQL → Temporal | =poo-flow-gql-candidate-receipt= binds =SourceQueryReceipt=; the finite scalar row profile can be checked separately | Recompute Query admission and Provider binding at the same ElementSpace revision/cut; compare supplied rows to result digest/count/completeness. |
 | ASCENT → Temporal | snapshot/program/source digests, completion/diagnostics, candidate rows and bounded support | Match the exact relation snapshot and program; incomplete or diagnostic runs remain candidates. |
 | Temporal join | the providers declared for this query, their exact scopes and witness identities | Inspect provenance and content; no automatic admission from intersection or agreement. |
 
@@ -435,11 +435,13 @@ specified in the [[file:../../../modules/temporal-causality/candidates/model.org
 The GQL bridge now checks an admitted Query, complete ElementSpace, Provider
 method and source receipt against the exact Temporal cut before making an
 unchecked =CandidateReceipt=.  It replays the Query admission and Provider
-binding, including the Query source hash and result bounds.  GQL still has
-no row transport shared with ASCENT.  An end-to-end adapter must add an
-explicit row/result digest contract and authenticated source-snapshot
-mapping; copying a provider-supplied digest string into a candidate receipt
-cannot establish that mapping or verifier authority.
+binding, including the Query source hash and result bounds.  A new POO-native
+finite scalar [[file:../../../modules/query/results/model.org][result-row contract]] canonicalizes materialized rows.  A separate local
+check compares those rows with the candidate digest, count and completion
+bit.  GQL still has no *live Provider row transport* shared with ASCENT, and
+the MRR Provider has not implemented the canonical row digest.  An end-to-end
+adapter must add that conformance and authenticated source-snapshot mapping;
+the local row check alone cannot establish execution or verifier authority.
 
 =packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla=
 checks the abstract handoff lifecycle.  GQL and ASCENT may report complete

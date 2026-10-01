@@ -115,11 +115,16 @@ pending in an exchange until separately checked.  This is a structural
 snapshot and receipt binding; the ElementSpace revision is still a declared
 identifier, not authenticated source bytes.
 
-GQL still has no shared materialized row value or provider-defined row digest
-algorithm.  A later adapter must verify actual rows against the provider's
-result digest.  Copying that digest string into =CandidateReceipt= alone does
-not perform this check.  The current bridge deliberately does not produce a
-=valid= check or claim row, provenance, or execution authenticity.
+The Query owner now has a finite [[file:../../query/results/model.org][scalar result-row profile]]: POO cells,
+rows and a set with a versioned canonical digest.  The separate
+=poo-flow-gql-candidate-row-check= replays that set and compares its digest,
+count and completion bit with the =CandidateReceipt=.  A mismatch is
+=invalid=; a matching incomplete set is =unknown=; a matching complete set
+is =valid= *for this local row-consistency claim*.  The bridge itself does
+not issue this check.  The current MRR Provider has no live row transport or
+demonstrated implementation of this digest algorithm, so even a local
+=valid= check does not attest Provider execution, source authenticity or
+provenance semantics.
 
 ASCENT owns positive-rule Why/Why-Not proof generation and replay for a
 finite relation snapshot.  Its adapter must require the native result to
