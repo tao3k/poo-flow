@@ -41,6 +41,7 @@ lean_lib PooFlowModuleGovernanceProof where
 lean_lib PooFlowModuleTemporalCausalityProof where
   roots := #[
     `PooFlowProof.PooC4.TemporalCausality,
+    `PooFlowProof.PooC4.TemporalBoundedTime,
     `PooFlowProof.PooC4.TemporalEvidenceRevision
   ]
 

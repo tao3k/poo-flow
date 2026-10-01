@@ -392,6 +392,12 @@ are broader:
 
 - *Temporal soundness*: every admitted native comparison follows from
   observed coordinates in one domain or validated conversion evidence.
+- *Bounded-time arithmetic*: =PooFlowProof.PooC4.TemporalBoundedTime= proves
+  that a definite-before or definite-after judgment holds for every coordinate
+  inside the stated interval, a crossing boundary permits neither definite
+  judgment, and a watermark lower bound at or beyond a cut bounds every
+  possible watermark coordinate.  This is an abstract numeric proof, not
+  Scheme refinement or source receipt authentication.
 - *Uncertainty preservation*: absent, declared, retracted or incomparable
   evidence cannot become a positive causal or authority claim.
 - *Cut monotonicity under append-only evidence*: an unchanged evidence prefix
