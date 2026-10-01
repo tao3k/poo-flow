@@ -383,7 +383,7 @@ _prepare-gerbil-parser:
 # separate semantic gate; no source acceptance is presented as model checking.
 [group('check')]
 check-tla-interface: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 4 t/qualification/tla-plus-interface/interface-test.ss
+    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} just test-file t/qualification/tla-plus-interface/interface-test.ss
 
 # Bind one parser-owned TLC run to an exact parsed TLA+ source and config.
 [group('check')]
@@ -472,38 +472,38 @@ check-temporal-invalidation-tlc:
 # Check explicit clock domains and conservative interval observations.
 [group('check')]
 check-temporal-time:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-time-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-time-test.ss
 
 # Replay immutable conclusion journals before forming a CAS proposal.
 [group('check')]
 check-temporal-conclusions:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-conclusions-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-conclusions-test.ss
 
 # Check exclusive and overlapping finite hypothesis-family semantics.
 [group('check')]
 check-temporal-model:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-model-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-model-test.ss
 
 # Verify Trajectory independently of the consuming Impact module.
 [group('check')]
 check-temporal-trajectory:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-trajectory-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-trajectory-test.ss
 
 # Verify exact irregular-grid Impact arithmetic without claiming a
 # trained forecaster, statistical estimator or causal effect.
 [group('check')]
 check-temporal-impact:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-impact-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-impact-test.ss
 
 # Check domain-neutral retrieval/use lineage and finite interleavings.
 [group('check')]
 check-temporal-evidence:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-evidence-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-evidence-test.ss
 
 # Audit exact cut/provider receipts as inert candidate review material.
 [group('check')]
 check-temporal-candidate-exchange:
-    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-candidate-exchange-test.ss
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-candidate-exchange-test.ss
 
 [group('check')]
 check-temporal-evidence-tlc:

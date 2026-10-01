@@ -70,6 +70,7 @@ jobs:
             git \
             libsqlite3-dev \
             libssl-dev \
+            openjdk-17-jre-headless \
             openssl \
             pkg-config \
             sqlite3 \
@@ -163,6 +164,31 @@ jobs:
           PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
             gerbil env python3 -m poo_flow_testing run \
               --case model-study.native-fixtures
+
+      - name: Check exact Temporal TLA source and finite models
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          tlc_root="$RUNNER_TEMP/tlaplus-1.7.4"
+          mkdir -p "$tlc_root/bin"
+          curl --fail --location --retry 3 \
+            https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar \
+            --output "$tlc_root/tla2tools.jar"
+          echo "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88  $tlc_root/tla2tools.jar" \
+            | sha256sum --check --status
+          cat > "$tlc_root/bin/tlc" <<'SH'
+          #!/usr/bin/env bash
+          exec java -XX:+UseParallelGC -cp "$RUNNER_TEMP/tlaplus-1.7.4/tla2tools.jar" tlc2.TLC "$@"
+          SH
+          chmod +x "$tlc_root/bin/tlc"
+          export PATH="$tlc_root/bin:$PATH"
+          gerbil env just check-tla-interface
+          gerbil env just check-tla-checked-source
+          gerbil env just check-temporal-family-tlc
+          gerbil env just check-temporal-revisions-tlc
+          gerbil env just check-temporal-invalidation-tlc
+          gerbil env just check-temporal-evidence-tlc
+          gerbil env just check-temporal-conclusion-selection-tlc
 
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'
