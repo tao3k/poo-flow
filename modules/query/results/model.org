@@ -1,0 +1,70 @@
+#+title: Finite Scalar Query Result Rows
+#+date: [2026-10-01]
+#+options: toc:2 num:t
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Contract
+:PROPERTIES:
+:CUSTOM_ID: query-scalar-result-contract
+:END:
+
+The Query owner exposes POO-native =ResultCell=, =ResultRow= and =ResultSet=
+values.  This first profile admits strings, symbols, booleans and exact
+numbers as cell values.  Rich graph nodes, paths, null semantics and
+provider-specific values require a later typed profile; callers must not
+coerce those values into this profile without an explicit mapping.
+
+Each row has one identity and unique field symbols.  A set replays all cell
+and row digests, requires every contract field in each row, rejects duplicate
+row identities and enforces the contract's result bound.  Cell order and row
+order are canonicalized.  The versioned result digest covers Query identity,
+version, semantic revision, contract identity, completion bit and sorted row
+digests.  Its label is =poo-flow.query.scalar-row-v1:sha256:=.  A Provider
+claiming this profile must compute exactly that digest over the same rows.
+
+MRR already owns a *different* typed result-admission contract:
+=QueryResultAdmissionReceipt= binds a catalog-bound query digest, generation,
+relation and entity catalog digests, semantic snapshot, ordered typed columns
+and rows.  Its digest is length-framed SHA-256 over MRR's CBOR encoding under
+=mrr.query-result-admission.v1=.  MRR supports graph values, nulls and lists
+and checks static types and query-specific result constraints.  The Scheme
+scalar row digest does not claim equivalence to the MRR digest, and no live
+conversion is implemented.  The MRR-owned =MrrGqlQueryProvider= binds caller-supplied execution metadata
+without transporting admitted MRR rows or a native result receipt.  The MRR
+repository documents its result projection in
+=docs/architecture/0033-poo-query-provider.org=.  It preserves native
+identity fields as declared POO metadata and marks its Temporal candidate
+incomplete.
+
+#+name: query-scalar-result-limits
+#+caption: Meaning of the local row check.
+| Observation | Established locally | Still open |
+|-------------+---------------------+------------|
+| =valid= | Supplied POO rows replay and match the candidate result digest, count and completeness | External Provider execution or source authenticity |
+| =invalid= | Supplied rows disagree with the candidate result metadata | Which of the two assertions is correct |
+| =unknown= | Supplied rows match an incomplete result | Exhaustive nonmembership or complete source coverage |
+
+The Temporal bridge's =poo-flow-gql-candidate-row-check= binds the exact
+Query source hash, Query identity/version/revision and result contract before
+issuing a separate =CandidateCheck=.  Even with a =valid= row check, the
+exchange may only become =reviewable=, and its =admitted?= slot remains =#f=.
+No signature, runtime attestation or source snapshot authentication is
+produced by this check.  A future MRR bridge must preserve its native
+receipt's five identity components and typed result semantics, then establish
+an explicit mapping to the POO Query and Temporal cut.  Replacing its digest
+with the scalar profile would discard MRR's stronger admission evidence.
+
+* Executable receipt
+:PROPERTIES:
+:CUSTOM_ID: query-scalar-result-receipt
+:END:
+
+The focused =t/query-core-test.ss= case exercises row permutation, field
+requirements, digest disagreement and the GQL-to-Temporal check.  It passed
+with =MODULE-OK=, =HARNESS-OK= and =OK= under the heap-fenced Gerbil test
+runner.  This is a local scalar-profile check, not a live MRR execution or
+an exhaustive proof of the normalization algorithm.

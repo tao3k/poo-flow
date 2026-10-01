@@ -66,7 +66,7 @@ Implemented in this slice:
 - stable mathematical obligation identifiers =PP-M01= through =PP-M07=;
 - Typst presentation of the promotion equations;
 - the initial Lean definitions and safety theorems in
-  =packages/proof/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean=;
+  =packages/proofs/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean=;
 - root-module import through =PooFlowProof.lean=.
 
 Scheme/POO candidate implemented in the current working tree:
@@ -292,13 +292,13 @@ definition/theorem and the proof receipt binds the RFC and theorem-set identitie
 The initial theorem owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean
+packages/proofs/lean/PooFlowProof/PooC4/ProtocolPersonPromotion.lean
 #+end_src
 
 The root proof package imports that owner through:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof.lean
+packages/proofs/lean/PooFlowProof.lean
 #+end_src
 
 The current proof is deliberately narrow.  It proves the stated transition

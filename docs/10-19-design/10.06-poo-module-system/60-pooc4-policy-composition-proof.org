@@ -10,17 +10,17 @@
 This document records the typed proof surface for POO policy object composition
 in PooC4. It is not a work plan. The implementation lives in:
 
-- =packages/proof/lean/PooFlowProof/PooC4/StartGate.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyComposition.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyBundle.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyStartContract.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyRefinement.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyProgression.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/PolicyTrace.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/ControlPlane.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/ReferenceBoundary.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/ReferenceAudit.lean=
-- =packages/proof/lean/PooFlowProof/PooC4/SessionControlLink.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/StartGate.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyComposition.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyBundle.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyStartContract.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyRefinement.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyProgression.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/PolicyTrace.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/ControlPlane.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/ReferenceBoundary.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/ReferenceAudit.lean=
+- =packages/proofs/lean/PooFlowProof/PooC4/SessionControlLink.lean=
 
 The proof carrier is Lean code. JSON is not used as the proof manifest here.
 

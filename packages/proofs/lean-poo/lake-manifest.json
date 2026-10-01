@@ -1,0 +1,16 @@
+{"version": "1.2.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"url": "https://github.com/tao3k/lean-poo.git",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "71609603d45bead8eec6375471991a4f76dbb430",
+   "name": "LeanPoo",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "71609603d45bead8eec6375471991a4f76dbb430",
+   "inherited": false,
+   "configFile": "lakefile.toml"}],
+ "name": "«poo-flow-temporal-poo-proof»",
+ "lakeDir": ".lake",
+ "fixedToolchain": false}

@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Temporal Trajectory Model
+#+date: [2026-10-01]
+#+options: toc:2 num:t
+
+* Owner and invariant
+:PROPERTIES:
+:CUSTOM_ID: temporal-trajectory-owner
+:END:
+
+=trajectory/= owns POO-native samples and series.  A series identifies a
+subject, scenario, outcome, unit, admission cut, valid-time projection, clock
+domain and modality.  Its samples are canonicalized by exact clock coordinate;
+coordinates and instant identities are unique, and every sample belongs to
+the same clock domain.  The semantic digest binds each instant's identity,
+domain, coordinate, provenance and modality together with its exact outcome.
+
+#+name: temporal-trajectory-owner-table
+#+caption: Separation of reusable data from a question asked of those data.
+| Owner | Inputs | Output | Must not infer |
+|-------+--------+--------+----------------|
+| =trajectory/= | One supplied outcome series | Canonical, identity-bound POO series | Effects, intervention validity or missing values |
+| =impact/= | Two comparable series and optional window | Descriptive or candidate contrast/audit | Identified causal effect or factual abduction |
+
+The [[file:../impact/research.org::#dynamic-impact-claim-ladder][Impact claim ladder]] records the evidence needed to move beyond a supplied
+series.  Trajectory performs no resampling, interpolation or model prediction;
+those require separately named providers with their own evidence receipts.
+
+* Checkable properties
+:PROPERTIES:
+:CUSTOM_ID: temporal-trajectory-properties
+:END:
+
+1. Permuting supplied samples does not change a series digest.
+2. Changing a time coordinate, instant provenance, modality, outcome or
+   evidence projection changes the digest.
+3. Duplicate coordinates, duplicate instant identities, mixed domains and
+   inexact outcome values are rejected.
+4. A series may be observed, predicted or counterfactual; that modality is
+   retained as source data and does not itself grant causal authority.
+
+These properties are exercised by =t/temporal-trajectory-test.ss= and
+=t/temporal-impact-test.ss=.  The standalone gate is
+=just check-temporal-trajectory=.  The module boundary is executable:
+=trajectory/interface.ss= imports no =impact/= module.
+
+* Version delta under corrections and late evidence
+:PROPERTIES:
+:CUSTOM_ID: temporal-trajectory-version-delta
+:END:
+
+A =TrajectoryDelta= compares two immutable series for the same subject,
+scenario, outcome, unit, clock domain and modality.  Both series are replayed
+through the canonical constructor before comparison.  Their admission-cut and
+valid-time-projection digests may differ; changing either is a scope change
+even if every sampled value is equal.  One series identity cannot name two
+different semantic digests.  The old series remains present in the delta.
+
+#+name: temporal-trajectory-delta-sets
+#+caption: Coordinate-wise comparison after sorting; equality at a shared coordinate includes instant identity, provenance, modality and exact outcome.
+| Set | Definition | Meaning |
+|-----+------------+---------|
+| Added | \(A=\operatorname{coords}(new)\setminus\operatorname{coords}(old)\) | New sampled coordinate |
+| Removed | \(R=\operatorname{coords}(old)\setminus\operatorname{coords}(new)\) | Previously sampled coordinate absent from the new version |
+| Changed | \(C=\{t\in old\cap new\mid row_{old}(t)\ne row_{new}(t)\}\) | Same coordinate, changed sample row |
+
+The merge walk takes time linear in the two already canonical sample lists.
+=unchanged= requires identical series digests; =identity-only= records a new
+series identity with identical samples and evidence scope; =scope-change=,
+=sample-change= and =sample-and-scope-change= keep those causes distinct.
+An Impact consumer must refresh for every status except =unchanged=.
+
+This is a local immutable delta, not a streaming execution or a retraction
+message.  Its two evidence identities follow
+the framework's separate admission-cut and valid-time-projection contract.
+The names =previous= and =revised= express caller-supplied comparison order;
+this constructor does not prove that one cut descends from the other.  A
+journal-bound ancestry or branch-conflict check must precede any such claim.

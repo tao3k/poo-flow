@@ -15,7 +15,7 @@ RFC 45-120-23.
 The proof owner is the top-level enterprise scope:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   CompositionalFixedPointClosure.lean
   SourceBoundCompositionalFixedPointClosure.lean
   SourceBoundCycleObservationClosure.lean

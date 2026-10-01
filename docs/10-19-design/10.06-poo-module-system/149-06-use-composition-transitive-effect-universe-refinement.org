@@ -241,7 +241,7 @@ and trace validity relations.
 The proof owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   CompositionalEffectUniverse.lean
   SourceBoundCompositionalEffectClosure.lean
 #+end_src

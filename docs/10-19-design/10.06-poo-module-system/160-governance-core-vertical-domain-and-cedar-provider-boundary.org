@@ -145,7 +145,7 @@ remain owned by the upstream Cedar specification and its Lean proof.
 
 * TLA+ transition model and parser authority
 
-=packages/proof/tla/GovernanceCore.tla= models the temporal boundary from
+=packages/proofs/tla/GovernanceCore.tla= models the temporal boundary from
 pre-threat observation through assessment, Governance admission, enterprise
 evidence closure and Provider handoff.  Its invariants require evidence for an
 observed precondition, closed enterprise assurance before handoff, explicit

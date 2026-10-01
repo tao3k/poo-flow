@@ -155,7 +155,7 @@ The closure retains independent =TransactionRegistryValid=,
 The proof owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   PromotionTransactionRecovery.lean
 #+end_src
 

@@ -28,13 +28,13 @@ The proof source is a typed projection path:
 Use a typed C FFI bridge as the integration boundary between Gerbil Scheme and
 Lean.
 
-The proof package under =packages/proof= owns the first scaffold:
+The proof package under =packages/proofs= owns the first scaffold:
 
 | Package path | Responsibility |
 |--------------+----------------|
-| =packages/proof/lean= | Lean typed model, C FFI wrapper, proof theorems |
-| =packages/proof/lean/native= | C header and C ABI smoke surface for proof facts |
-| =packages/proof/python= | =uv= based Lean artifact generator |
+| =packages/proofs/lean= | Lean typed model, C FFI wrapper, proof theorems |
+| =packages/proofs/lean/native= | C header and C ABI smoke surface for proof facts |
+| =packages/proofs/python= | =uv= based Lean artifact generator |
 
 The Python package is a generator and bridge, not a proof kernel. The Lean
 package is the proof owner.
@@ -193,13 +193,13 @@ runner only.
 Current validation commands for this RFC line:
 
 #+begin_src sh
-cd packages/proof/python
+cd packages/proofs/python
 uv run pytest
 uv run ruff check .
 #+end_src
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake build
 lake build ffiSmoke
 .lake/build/bin/ffiSmoke

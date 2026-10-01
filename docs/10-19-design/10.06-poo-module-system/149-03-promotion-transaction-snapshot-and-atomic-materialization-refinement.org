@@ -93,7 +93,7 @@ transaction must end at the exact requested target state.
 The proof owner is:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/Enterprise/
+packages/proofs/lean/PooFlowProof/Enterprise/
   PromotionTransactionAtomicity.lean
 #+end_src
 

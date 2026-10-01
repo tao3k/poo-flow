@@ -89,7 +89,7 @@ flowchart LR
 The Lean implementation lives in:
 
 #+begin_src text
-packages/proof/lean/PooFlowProof/PooC4/SessionLifecycle.lean
+packages/proofs/lean/PooFlowProof/PooC4/SessionLifecycle.lean
 #+end_src
 
 The module defines:
@@ -724,7 +724,7 @@ $
 The current implementation is validated by:
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake build
 lake build ffiSmoke && .lake/build/bin/ffiSmoke
 cd ../..

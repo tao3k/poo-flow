@@ -53,19 +53,21 @@ gerbil_parser_dir := poo_flow_gerbil_path + "/pkg/github.com/tao3k/gerbil-parser
 gerbil_parser_path := poo_flow_gerbil_path
 gerbil_parser_library_path := poo_flow_library_path + ":" + gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory()
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
-governance_tla := justfile_directory() + "/packages/proof/tla/GovernanceCore.tla"
-governance_tlc_config := justfile_directory() + "/packages/proof/tla/GovernanceCore.cfg"
+governance_tla := justfile_directory() + "/packages/proofs/tla/GovernanceCore.tla"
+governance_tlc_config := justfile_directory() + "/packages/proofs/tla/GovernanceCore.cfg"
 governance_tlc_receipt := justfile_directory() + "/.ci/governance/tlc-receipt.ss"
-semantic_query_tla := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.tla"
-semantic_query_tlc_config := justfile_directory() + "/packages/proof/tla/NativeSemanticQuery.cfg"
+semantic_query_tla := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.tla"
+semantic_query_tlc_config := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.cfg"
 semantic_query_tlc_receipt := justfile_directory() + "/.ci/native-semantic-query/tlc-receipt.ss"
-healthcare_temporal_tla := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.tla"
-healthcare_temporal_tlc_config := justfile_directory() + "/packages/proof/tla/HealthcarePrescriptionCausality.cfg"
-healthcare_migration_tla := justfile_directory() + "/packages/proof/tla/HealthcareStandardMigration.tla"
-healthcare_migration_tlc_config := justfile_directory() + "/packages/proof/tla/HealthcareStandardMigration.cfg"
+healthcare_temporal_tla := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.tla"
+healthcare_temporal_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.cfg"
+healthcare_migration_tla := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.tla"
+healthcare_migration_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.cfg"
 healthcare_migration_tlc_receipt := justfile_directory() + "/.ci/healthcare-standard-migration/tlc-receipt.ss"
 healthcare_temporal_tlc_receipt := justfile_directory() + "/.ci/healthcare-temporal/tlc-receipt.ss"
-lean_proof_dir := justfile_directory() + "/packages/proof/lean"
+temporal_family_tla_dir := justfile_directory() + "/packages/proofs/tla/temporal-causality"
+lean_proof_dir := justfile_directory() + "/packages/proofs/lean"
+temporal_poo_proof_dir := justfile_directory() + "/packages/proofs/lean-poo"
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -441,6 +443,63 @@ check-native-semantic-query-tla: _prepare-gerbil-parser
 [group('check')]
 check-native-semantic-query-tlc:
     cd "$(dirname "{{ semantic_query_tla }}")" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" tlc -config "{{ semantic_query_tlc_config }}" "{{ semantic_query_tla }}"
+
+# Explore the module-owned hypothesis family both to exhaustion and under a
+# tighter bound. Each configuration checks every candidate selection order.
+[group('check')]
+check-temporal-family-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyCase.cfg TemporalFamilyCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyBounded.cfg TemporalFamilyCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalDiscriminatingCase.cfg TemporalDiscriminatingCase.tla
+
+# Model-check append-only temporal evidence revisions and stable as-of cuts.
+[group('check')]
+check-temporal-revisions-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalRevisionCase.cfg TemporalRevisionCase.tla
+
+# Check the finite reverse-dependency model and the separate LeanPoo 4.34
+# certificate target without changing the Cedar-bound Lean 4.31 project.
+[group('check')]
+check-temporal-invalidation-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalInvalidationCase.cfg TemporalInvalidationCase.tla
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalReprojectionCase.cfg TemporalInvalidationCase.tla
+
+# Verify Trajectory independently of the consuming Impact module.
+[group('check')]
+check-temporal-trajectory:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-trajectory-test.ss
+
+# Verify exact irregular-grid Impact arithmetic without claiming a
+# trained forecaster, statistical estimator or causal effect.
+[group('check')]
+check-temporal-impact:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-impact-test.ss
+
+# Check domain-neutral retrieval/use lineage and finite interleavings.
+[group('check')]
+check-temporal-evidence:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-evidence-test.ss
+
+# Audit exact cut/provider receipts as inert candidate review material.
+[group('check')]
+check-temporal-candidate-exchange:
+    GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q timeout 90s gerbil test -v 3 t/temporal-candidate-exchange-test.ss
+
+[group('check')]
+check-temporal-evidence-tlc:
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceLineageCase.cfg EvidenceLineageCase.tla
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceAssessmentCase.cfg EvidenceAssessmentCase.tla
+    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config CandidateExchangeCase.cfg CandidateExchangeExplorer.tla
+
+# Explore both orders of competing conclusion-selection proposals. The
+# checked transition is an abstract atomic CAS, not a runtime pointer write.
+[group('check')]
+check-temporal-conclusion-selection-tlc:
+    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalConclusionSelectionCase.cfg TemporalConclusionSelectionCase.tla
+
+[group('check')]
+check-temporal-poo-lean:
+    cd "{{ temporal_poo_proof_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 120s lake build PooFlowTemporalPooProof
 
 [group('check')]
 check-native-semantic-query-model: check-native-semantic-query-lean check-native-semantic-query-tla

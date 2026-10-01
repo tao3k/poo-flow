@@ -7,7 +7,7 @@
 ;;; Invariant: structural reachability is never temporal proof or authority.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop define-type Type. element?)
-        (only-in :std/list/list every)
+        (only-in :std/list/list every delete-duplicates/hash)
         (only-in :poo-flow/src/graph/types poo-flow-graph-id?))
 
 (export poo-flow-relation-trajectory-witness-kind
@@ -19,6 +19,13 @@
         poo-flow-causal-trajectory-assessment-kind
         poo-flow-causal-cut-kind
         poo-flow-temporal-classification-receipt-kind
+        poo-flow-temporal-clock-domain-kind
+        poo-flow-temporal-model-observation-kind
+        poo-flow-temporal-constraint-kind
+        poo-flow-temporal-hypothesis-kind
+        poo-flow-temporal-model-kind
+        poo-flow-temporal-query-kind
+        poo-flow-temporal-model-receipt-kind
         PooFlowRelationTrajectoryWitness
         PooFlowStructuralImpactReceipt
         PooFlowTemporalObservation
@@ -28,6 +35,13 @@
         PooFlowCausalTrajectoryAssessment
         PooFlowCausalCut
         PooFlowTemporalClassificationReceipt
+        PooFlowTemporalClockDomain
+        PooFlowTemporalModelObservation
+        PooFlowTemporalConstraint
+        PooFlowTemporalHypothesis
+        PooFlowTemporalModel
+        PooFlowTemporalQuery
+        PooFlowTemporalModelReceipt
         poo-flow-relation-trajectory-witness?
         poo-flow-structural-impact-receipt?
         poo-flow-temporal-observation?
@@ -36,7 +50,14 @@
         poo-flow-causal-trajectory-contract?
         poo-flow-causal-trajectory-assessment?
         poo-flow-causal-cut?
-        poo-flow-temporal-classification-receipt?)
+        poo-flow-temporal-classification-receipt?
+        poo-flow-temporal-clock-domain?
+        poo-flow-temporal-model-observation?
+        poo-flow-temporal-constraint?
+        poo-flow-temporal-hypothesis?
+        poo-flow-temporal-model?
+        poo-flow-temporal-query?
+        poo-flow-temporal-model-receipt?)
 
 (def poo-flow-relation-trajectory-witness-kind
   'poo-flow.temporal-causality.relation-trajectory-witness)
@@ -132,13 +153,7 @@
   (and (exact-integer? value) (>= value 0)))
 
 (def (temporal-causality-unique? values)
-  (let (seen (make-hash-table))
-    (every
-     (lambda (value)
-       (if (hash-get seen value)
-         #f
-         (begin (hash-put! seen value #t) #t)))
-     values)))
+  (= (length values) (length (delete-duplicates/hash values))))
 
 (def (temporal-observation-shape? value)
   (and (temporal-causality-has-slots?
@@ -385,3 +400,138 @@
 
 (def (poo-flow-temporal-classification-receipt? value)
   (element? PooFlowTemporalClassificationReceipt value))
+
+;;; These contracts describe a finite family of candidate explanations. They
+;;; do not convert temporal order into an observed causal edge.
+(def poo-flow-temporal-clock-domain-kind
+  'poo-flow.temporal-causality.clock-domain)
+(def poo-flow-temporal-model-observation-kind
+  'poo-flow.temporal-causality.model-observation)
+(def poo-flow-temporal-constraint-kind
+  'poo-flow.temporal-causality.constraint)
+(def poo-flow-temporal-hypothesis-kind
+  'poo-flow.temporal-causality.hypothesis)
+(def poo-flow-temporal-model-kind
+  'poo-flow.temporal-causality.model)
+(def poo-flow-temporal-query-kind
+  'poo-flow.temporal-causality.query)
+(def poo-flow-temporal-model-receipt-kind
+  'poo-flow.temporal-causality.model-receipt)
+
+(def (temporal-model-shape? value kind slots)
+  (and (temporal-causality-has-slots? value (cons 'kind slots))
+       (eq? (.ref value 'kind) kind)))
+
+(def (temporal-model-id-list? values)
+  (and (list? values)
+       (every temporal-causality-text? values)
+       (= (length values) (length (delete-duplicates/hash values)))))
+
+(def (temporal-clock-domain-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-clock-domain-kind
+                              '(identity clock-role))
+       (temporal-causality-text? (.ref value 'identity))
+       (symbol? (.ref value 'clock-role))))
+(define-type (PooFlowTemporalClockDomain @ Type.)
+  .element?: temporal-clock-domain-shape?)
+(def (poo-flow-temporal-clock-domain? value)
+  (element? PooFlowTemporalClockDomain value))
+
+(def (temporal-model-observation-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-model-observation-kind
+                              '(identity domain-identity logical-position
+                                provenance-identity modality))
+       (temporal-causality-text? (.ref value 'identity))
+       (temporal-causality-text? (.ref value 'domain-identity))
+       (temporal-causality-position? (.ref value 'logical-position))
+       (temporal-causality-text? (.ref value 'provenance-identity))
+       (symbol? (.ref value 'modality))))
+(define-type (PooFlowTemporalModelObservation @ Type.)
+  .element?: temporal-model-observation-shape?)
+(def (poo-flow-temporal-model-observation? value)
+  (element? PooFlowTemporalModelObservation value))
+
+(def (temporal-constraint-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-constraint-kind
+                              '(identity relation left-observation-id
+                                right-observation-id))
+       (temporal-causality-text? (.ref value 'identity))
+       (memq (.ref value 'relation) '(before not-after))
+       (temporal-causality-text? (.ref value 'left-observation-id))
+       (temporal-causality-text? (.ref value 'right-observation-id))))
+(define-type (PooFlowTemporalConstraint @ Type.)
+  .element?: temporal-constraint-shape?)
+(def (poo-flow-temporal-constraint? value)
+  (element? PooFlowTemporalConstraint value))
+
+(def (temporal-hypothesis-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-hypothesis-kind
+                              '(identity cause-observation-id
+                                effect-observation-id constraints))
+       (temporal-causality-text? (.ref value 'identity))
+       (temporal-causality-text? (.ref value 'cause-observation-id))
+       (temporal-causality-text? (.ref value 'effect-observation-id))
+       (list? (.ref value 'constraints))
+       (every poo-flow-temporal-constraint? (.ref value 'constraints))
+       (temporal-model-id-list?
+        (map (lambda (constraint) (.ref constraint 'identity))
+             (.ref value 'constraints)))))
+(define-type (PooFlowTemporalHypothesis @ Type.)
+  .element?: temporal-hypothesis-shape?)
+(def (poo-flow-temporal-hypothesis? value)
+  (element? PooFlowTemporalHypothesis value))
+
+(def (temporal-model-value-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-model-kind
+                              '(identity semantic-digest domains observations
+                                hypotheses family-complete?))
+       (every temporal-causality-text?
+              (list (.ref value 'identity) (.ref value 'semantic-digest)))
+       (list? (.ref value 'domains))
+       (every poo-flow-temporal-clock-domain? (.ref value 'domains))
+       (list? (.ref value 'observations))
+       (every poo-flow-temporal-model-observation? (.ref value 'observations))
+       (list? (.ref value 'hypotheses))
+       (pair? (.ref value 'hypotheses))
+       (every poo-flow-temporal-hypothesis? (.ref value 'hypotheses))
+       (boolean? (.ref value 'family-complete?))))
+(define-type (PooFlowTemporalModel @ Type.)
+  .element?: temporal-model-value-shape?)
+(def (poo-flow-temporal-model? value)
+  (element? PooFlowTemporalModel value))
+
+(def (temporal-query-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-query-kind
+                              '(identity hypothesis-identity exploration-limit))
+       (temporal-causality-text? (.ref value 'identity))
+       (temporal-causality-text? (.ref value 'hypothesis-identity))
+       (or (not (.ref value 'exploration-limit))
+           (and (exact-integer? (.ref value 'exploration-limit))
+                (> (.ref value 'exploration-limit) 0)))))
+(define-type (PooFlowTemporalQuery @ Type.)
+  .element?: temporal-query-shape?)
+(def (poo-flow-temporal-query? value)
+  (element? PooFlowTemporalQuery value))
+
+(def (temporal-model-receipt-shape? value)
+  (and (temporal-model-shape? value poo-flow-temporal-model-receipt-kind
+                              '(model-digest query-identity classification
+                                admissible-hypothesis-ids refuted-hypothesis-ids
+                                unknown-hypothesis-ids unexplored-hypothesis-ids
+                                exhausted? family-complete? assumption
+                                runtime-executed?))
+       (every temporal-causality-text?
+              (list (.ref value 'model-digest) (.ref value 'query-identity)))
+       (memq (.ref value 'classification)
+             '(possible necessary refuted unknown))
+       (every (lambda (slot) (temporal-model-id-list? (.ref value slot)))
+              '(admissible-hypothesis-ids refuted-hypothesis-ids
+                unknown-hypothesis-ids unexplored-hypothesis-ids))
+       (boolean? (.ref value 'exhausted?))
+       (boolean? (.ref value 'family-complete?))
+       (eq? (.ref value 'assumption) 'exclusive-explanations)
+       (eq? (.ref value 'runtime-executed?) #f)))
+(define-type (PooFlowTemporalModelReceipt @ Type.)
+  .element?: temporal-model-receipt-shape?)
+(def (poo-flow-temporal-model-receipt? value)
+  (element? PooFlowTemporalModelReceipt value))

@@ -64,7 +64,7 @@ current owners:
 | Semantic and contract namespaces | =src/semantic/boundary-namespace.ss= and =src/contract/boundary-namespace.ss= |
 | C ABI | =bindings/runtime-c/include/poo_flow_runtime_abi.h= and =bindings/runtime-c/probe/poo_flow_runtime_abi_probe.c= |
 | Python runtime | =packages/python-runtime/=, including CFFI, C/CFFI ABI tests, probe tests, and C ABI benchmark owners |
-| Proof | =src/proof/= proof fact/gate/FFI owners and =packages/proof/lean/= |
+| Proof | =src/proof/= proof fact/gate/FFI owners and =packages/proofs/lean/= |
 | Scenarios | CrewAI, LangChain/LangGraph, lifecycle, proof gate/FFI, tool-calling, and policy observability owners |
 
 Gerbil parser-owned item selectors remain unavailable for some existing paths;
@@ -129,7 +129,7 @@ CFFI production cutover is complete.
 ** Lean
 
 #+begin_src sh
-cd packages/proof/lean
+cd packages/proofs/lean
 lake build
 #+end_src
 

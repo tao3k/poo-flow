@@ -21,7 +21,7 @@ surface.
 
 * Step 1 — Canonical Proof Manifest
 
-Create one machine-readable ProofCaseVector v1 manifest under =packages/proof=
+Create one machine-readable ProofCaseVector v1 manifest under =packages/proofs=
 that owns field order, widths, tags, obligation bits, endianness, alignment,
 reserved space, and schema fingerprint inputs.
 

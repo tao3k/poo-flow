@@ -26,7 +26,7 @@ SIDECAR_FILES = (Path("REUSE.toml"),)
 PUBLISHED_LICENSE_COPIES = (
     Path("bindings/runtime-ts/LICENSE"),
     Path("bindings/runtime-wasm/LICENSE"),
-    Path("packages/proof/python/LICENSE"),
+    Path("packages/proofs/python/LICENSE"),
     Path("packages/python-runtime/LICENSE"),
 )
 

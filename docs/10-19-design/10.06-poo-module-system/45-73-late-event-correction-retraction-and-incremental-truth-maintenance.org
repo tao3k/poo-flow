@@ -424,6 +424,13 @@ The implementation must distinguish at least:
 
 * Implementation checklist
 
+The Temporal Module now has a bounded first slice for immutable evidence
+cuts, cut-bound reverse-dependency scheduling, conclusion revision journals
+and inert versioned CAS plans.  See
+=modules/temporal-causality/framework.org=.  The checklist below remains
+open where it requires proof admission, complete policy provenance, an
+authorized atomic runtime transition, or effect handling.
+
 - [ ] Define derived-conclusion identities and provenance schemas.
 - [ ] Define monotonicity proofs for exact policy domains.
 - [ ] Define non-monotone correction and retraction policy objects.

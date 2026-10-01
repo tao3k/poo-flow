@@ -8,7 +8,7 @@
 ;;; and never promoted to temporal causality or action authority.
 (import (only-in :clan/poo/object .ref)
         (only-in :std/crypto/digest sha256)
-        (only-in :std/list/list every filter find)
+        (only-in :std/list/list every filter find delete-duplicates/hash)
         (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/src/graph/types
                  poo-flow-graph poo-flow-graph-edge poo-flow-graph-node
@@ -22,28 +22,31 @@
                  poo-flow-causal-event-graph-value
                  poo-flow-causal-trajectory-assessment
                  poo-flow-causal-cut-value
-                 poo-flow-temporal-classification-receipt)
+                 poo-flow-temporal-classification-receipt
+                 poo-flow-temporal-model-value
+                 poo-flow-temporal-model-receipt)
         (only-in :poo-flow/modules/temporal-causality/types
                  poo-flow-causal-event? poo-flow-causal-event-graph?
                  poo-flow-causal-trajectory-contract?
                  poo-flow-causal-trajectory-assessment?
-                 poo-flow-causal-cut?))
+                 poo-flow-causal-cut?
+                 poo-flow-temporal-clock-domain?
+                 poo-flow-temporal-model-observation?
+                 poo-flow-temporal-hypothesis?
+                 poo-flow-temporal-model?
+                 poo-flow-temporal-query?))
 
 (export poo-flow-structural-impact-analyze
         poo-flow-causal-event-graph
         poo-flow-causal-trajectory-assess
         poo-flow-causal-trajectory-assessment-digest
         poo-flow-causal-cut
-        poo-flow-temporal-causal-classify)
+        poo-flow-temporal-causal-classify
+        poo-flow-temporal-model
+        poo-flow-temporal-model-classify)
 
 (def (temporal-causality-unique? values)
-  (let (seen (make-hash-table))
-    (every
-     (lambda (value)
-       (if (hash-get seen value)
-         #f
-         (begin (hash-put! seen value #t) #t)))
-     values)))
+  (= (length values) (length (delete-duplicates/hash values))))
 
 (def (poo-flow-structural-impact-analyze
       graph changed-node-ids selected-relations direction inventory-complete?)
@@ -149,6 +152,162 @@
     (sha256
      (string->utf8
       (call-with-output-string (lambda (port) (write value port))))))))
+
+;;; A model is one finite, exclusive family of candidate explanations for the
+;;; same effect. Input order does not change its semantic identity.
+(def (poo-flow-temporal-model
+      identity domains observations hypotheses family-complete?)
+  (unless (and (string? identity) (> (string-length identity) 0)
+               (list? domains) (pair? domains)
+               (every poo-flow-temporal-clock-domain? domains)
+               (list? observations)
+               (every poo-flow-temporal-model-observation? observations)
+               (list? hypotheses) (pair? hypotheses)
+               (every poo-flow-temporal-hypothesis? hypotheses)
+               (boolean? family-complete?))
+    (error "invalid temporal model inventory" identity))
+  (def (identities values)
+    (map (lambda (value) (.ref value 'identity)) values))
+  (unless (and (temporal-causality-unique? (identities domains))
+               (temporal-causality-unique? (identities observations))
+               (temporal-causality-unique? (identities hypotheses)))
+    (error "duplicate temporal model identity" identity))
+  (let ((domain-index (make-hash-table))
+        (effect-id (.ref (car hypotheses) 'effect-observation-id)))
+    (for-each (lambda (domain)
+                (hash-put! domain-index (.ref domain 'identity) #t))
+              domains)
+    (for-each
+     (lambda (observation)
+       (unless (hash-get domain-index (.ref observation 'domain-identity))
+         (error "temporal observation has unknown clock domain"
+                (.ref observation 'identity))))
+     observations)
+    (unless (every (lambda (hypothesis)
+                     (equal? (.ref hypothesis 'effect-observation-id) effect-id))
+                   hypotheses)
+      (error "temporal hypothesis family has multiple effects" identity)))
+  (let* ((by-id (lambda (left right)
+                  (string<? (.ref left 'identity) (.ref right 'identity))))
+         (canonical-constraints
+          (lambda (hypothesis)
+            (map (lambda (constraint)
+                   (list (.ref constraint 'identity)
+                         (.ref constraint 'relation)
+                         (.ref constraint 'left-observation-id)
+                         (.ref constraint 'right-observation-id)))
+                 (list-sort by-id (.ref hypothesis 'constraints)))))
+         (digest
+          (temporal-causality-digest
+           (list 'poo-flow.temporal-causality.model.v1
+                 identity family-complete?
+                 (map (lambda (domain)
+                        (list (.ref domain 'identity)
+                              (.ref domain 'clock-role)))
+                      (list-sort by-id domains))
+                 (map (lambda (observation)
+                        (list (.ref observation 'identity)
+                              (.ref observation 'domain-identity)
+                              (.ref observation 'logical-position)
+                              (.ref observation 'provenance-identity)
+                              (.ref observation 'modality)))
+                      (list-sort by-id observations))
+                 (map (lambda (hypothesis)
+                        (list (.ref hypothesis 'identity)
+                              (.ref hypothesis 'cause-observation-id)
+                              (.ref hypothesis 'effect-observation-id)
+                              (canonical-constraints hypothesis)))
+                      (list-sort by-id hypotheses))))))
+    (poo-flow-temporal-model-value
+     identity digest
+     (list-sort by-id domains)
+     (list-sort by-id observations)
+     (list-sort by-id hypotheses)
+     family-complete?)))
+
+(def (temporal-model-order-status left-id right-id relation observations)
+  (let ((left (hash-get observations left-id))
+        (right (hash-get observations right-id)))
+    (cond
+     ((not (and left right)) 'unknown)
+     ((not (and (eq? (.ref left 'modality) 'observed)
+                (eq? (.ref right 'modality) 'observed))) 'unknown)
+     ((not (equal? (.ref left 'domain-identity)
+                   (.ref right 'domain-identity))) 'unknown)
+     ((case relation
+        ((before) (< (.ref left 'logical-position)
+                     (.ref right 'logical-position)))
+        ((not-after) (<= (.ref left 'logical-position)
+                         (.ref right 'logical-position)))
+        (else #f)) 'admitted)
+     (else 'refuted))))
+
+(def (temporal-model-hypothesis-status hypothesis observations)
+  (let (statuses
+        (cons
+         (temporal-model-order-status
+          (.ref hypothesis 'cause-observation-id)
+          (.ref hypothesis 'effect-observation-id)
+          'before observations)
+         (map (lambda (constraint)
+                (temporal-model-order-status
+                 (.ref constraint 'left-observation-id)
+                 (.ref constraint 'right-observation-id)
+                 (.ref constraint 'relation) observations))
+              (.ref hypothesis 'constraints))))
+    (cond ((memq 'refuted statuses) 'refuted)
+          ((memq 'unknown statuses) 'unknown)
+          (else 'admitted))))
+
+;;; Classification quantifies over the declared, exclusive candidate worlds.
+;;; Unknown and unexplored worlds prevent a necessary claim.
+(def (poo-flow-temporal-model-classify model query)
+  (unless (and (poo-flow-temporal-model? model)
+               (poo-flow-temporal-query? query))
+    (error "temporal model classification requires a model and query"))
+  (let* ((hypotheses (.ref model 'hypotheses))
+         (target (.ref query 'hypothesis-identity))
+         (observations (make-hash-table)))
+    (unless (find (lambda (hypothesis)
+                    (equal? (.ref hypothesis 'identity) target)) hypotheses)
+      (error "query hypothesis is absent from temporal model" target))
+    (for-each (lambda (observation)
+                (hash-put! observations (.ref observation 'identity)
+                           observation))
+              (.ref model 'observations))
+    (let loop ((remaining hypotheses) (fuel (.ref query 'exploration-limit))
+               (admitted '()) (refuted '()) (unknown '()))
+      (if (or (null? remaining) (and fuel (= fuel 0)))
+        (let* ((admitted (reverse admitted))
+               (refuted (reverse refuted))
+               (unknown (reverse unknown))
+               (unexplored (map (lambda (hypothesis)
+                                  (.ref hypothesis 'identity)) remaining))
+               (exhausted? (null? remaining))
+               (classification
+                (cond
+                 ((member target refuted) 'refuted)
+                 ((member target admitted)
+                  (if (and exhausted?
+                           (.ref model 'family-complete?)
+                           (null? unknown)
+                           (= (length admitted) 1))
+                    'necessary 'possible))
+                 (else 'unknown))))
+          (poo-flow-temporal-model-receipt
+           model query classification admitted refuted unknown unexplored
+           exhausted?))
+        (let* ((hypothesis (car remaining))
+               (id (.ref hypothesis 'identity))
+               (status (temporal-model-hypothesis-status
+                        hypothesis observations)))
+          (case status
+            ((admitted) (loop (cdr remaining) (and fuel (- fuel 1))
+                              (cons id admitted) refuted unknown))
+            ((refuted) (loop (cdr remaining) (and fuel (- fuel 1))
+                             admitted (cons id refuted) unknown))
+            (else (loop (cdr remaining) (and fuel (- fuel 1))
+                        admitted refuted (cons id unknown)))))))))
 
 (def (causal-event-position event)
   (.ref (.ref event 'observation) 'logical-position))

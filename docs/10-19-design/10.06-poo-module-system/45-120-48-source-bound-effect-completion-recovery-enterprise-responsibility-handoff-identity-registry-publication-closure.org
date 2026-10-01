@@ -462,7 +462,7 @@ All paths are repository-relative.  No host installation path or temporary
 output base is part of this receipt.
 
 - Focused Lean:
-  =cd packages/proof/lean && direnv exec . lake env lean PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryCedarAuthorizationResponsibilityHandoffBindingClosure.lean=
+  =cd packages/proofs/lean && direnv exec . lake env lean PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryCedarAuthorizationResponsibilityHandoffBindingClosure.lean=
   returned exit =0= with no Lean diagnostic.
 - AXLE closure mode verified seven root declarations and returned exit =0=,
   =status: accepted=, and zero failed declarations.

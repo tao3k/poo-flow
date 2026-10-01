@@ -13,7 +13,12 @@
         (only-in "gql.ss" poo-flow-query->gql)
         (only-in "contracts.ss" poo-flow-query-bind-execution-receipt)
         (only-in "scheme-select.ss" poo-flow-query-select-scheme-nodes)
-        (only-in "providers/mrr/config.ss" MrrGqlQueryProvider))
+        (only-in "results/objects.ss"
+                 PooFlowQueryResultCell. PooFlowQueryResultRow.
+                 PooFlowQueryResultSet.)
+        (only-in "results/funs.ss"
+                 poo-flow-query-result-cell poo-flow-query-result-row
+                 poo-flow-query-result-set))
 
 (export PooFlowQueryModule.)
 
@@ -26,8 +31,14 @@
           scheme-gql: PooFlowSchemeGqlQueryLanguage.)
       element-space: PooFlowQueryElementSpace.
       result-contract: PooFlowQueryResultContract.
-      providers: (.o mrr: MrrGqlQueryProvider)
+      result-cell: PooFlowQueryResultCell.
+      result-row: PooFlowQueryResultRow.
+      result-set: PooFlowQueryResultSet.
+      providers: (.o)
       .admit-query: poo-flow-query-admit
       .project-gql: poo-flow-query->gql
       .bind-execution-receipt: poo-flow-query-bind-execution-receipt
-      .select-scheme-nodes: poo-flow-query-select-scheme-nodes))
+      .select-scheme-nodes: poo-flow-query-select-scheme-nodes
+      .result-cell: poo-flow-query-result-cell
+      .result-row: poo-flow-query-result-row
+      .result-set: poo-flow-query-result-set))

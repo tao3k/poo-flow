@@ -16,6 +16,13 @@
                  poo-flow-causal-trajectory-assessment-kind
                  poo-flow-causal-cut-kind
                  poo-flow-temporal-classification-receipt-kind
+                 poo-flow-temporal-clock-domain-kind
+                 poo-flow-temporal-model-observation-kind
+                 poo-flow-temporal-constraint-kind
+                 poo-flow-temporal-hypothesis-kind
+                 poo-flow-temporal-model-kind
+                 poo-flow-temporal-query-kind
+                 poo-flow-temporal-model-receipt-kind
                  PooFlowRelationTrajectoryWitness
                  PooFlowStructuralImpactReceipt
                  PooFlowTemporalObservation
@@ -24,7 +31,14 @@
                  PooFlowCausalTrajectoryContract
                  PooFlowCausalTrajectoryAssessment
                  PooFlowCausalCut
-                 PooFlowTemporalClassificationReceipt))
+                 PooFlowTemporalClassificationReceipt
+                 PooFlowTemporalClockDomain
+                 PooFlowTemporalModelObservation
+                 PooFlowTemporalConstraint
+                 PooFlowTemporalHypothesis
+                 PooFlowTemporalModel
+                 PooFlowTemporalQuery
+                 PooFlowTemporalModelReceipt))
 
 (export poo-flow-relation-trajectory-witness
         poo-flow-structural-impact-receipt
@@ -34,7 +48,14 @@
         poo-flow-causal-trajectory-contract
         poo-flow-causal-trajectory-assessment
         poo-flow-causal-cut-value
-        poo-flow-temporal-classification-receipt)
+        poo-flow-temporal-classification-receipt
+        poo-flow-temporal-clock-domain
+        poo-flow-temporal-model-observation
+        poo-flow-temporal-constraint
+        poo-flow-temporal-hypothesis
+        poo-flow-temporal-model-value
+        poo-flow-temporal-query
+        poo-flow-temporal-model-receipt)
 
 (def (poo-flow-relation-trajectory-witness
       target-node-id-value node-path-value relation-path-value)
@@ -193,3 +214,68 @@
        assurance-closed?: #f
        release-authorized?: #f
        runtime-executed?: #f)))
+
+(def (poo-flow-temporal-clock-domain identity-value role-value)
+  (validate PooFlowTemporalClockDomain
+    (.o kind: poo-flow-temporal-clock-domain-kind
+        identity: identity-value clock-role: role-value)))
+
+(def (poo-flow-temporal-model-observation
+      identity-value domain-id-value position-value provenance-value modality-value)
+  (validate PooFlowTemporalModelObservation
+    (.o kind: poo-flow-temporal-model-observation-kind
+        identity: identity-value domain-identity: domain-id-value
+        logical-position: position-value provenance-identity: provenance-value
+        modality: modality-value)))
+
+(def (poo-flow-temporal-constraint
+      identity-value relation-value left-id-value right-id-value)
+  (validate PooFlowTemporalConstraint
+    (.o kind: poo-flow-temporal-constraint-kind
+        identity: identity-value relation: relation-value
+        left-observation-id: left-id-value
+        right-observation-id: right-id-value)))
+
+(def (poo-flow-temporal-hypothesis
+      identity-value cause-id-value effect-id-value constraints-value)
+  (validate PooFlowTemporalHypothesis
+    (.o kind: poo-flow-temporal-hypothesis-kind
+        identity: identity-value
+        cause-observation-id: cause-id-value
+        effect-observation-id: effect-id-value
+        constraints: constraints-value)))
+
+(def (poo-flow-temporal-model-value
+      identity-value digest-value domains-value observations-value
+      hypotheses-value family-complete-value)
+  (validate PooFlowTemporalModel
+    (.o kind: poo-flow-temporal-model-kind
+        identity: identity-value semantic-digest: digest-value
+        domains: domains-value observations: observations-value
+        hypotheses: hypotheses-value
+        family-complete?: family-complete-value)))
+
+(def (poo-flow-temporal-query
+      identity-value hypothesis-id-value exploration-limit-value)
+  (validate PooFlowTemporalQuery
+    (.o kind: poo-flow-temporal-query-kind
+        identity: identity-value
+        hypothesis-identity: hypothesis-id-value
+        exploration-limit: exploration-limit-value)))
+
+(def (poo-flow-temporal-model-receipt
+      model-value query-value classification-value admitted-value refuted-value
+      unknown-value unexplored-value exhausted-value)
+  (validate PooFlowTemporalModelReceipt
+    (.o kind: poo-flow-temporal-model-receipt-kind
+        model-digest: (.ref model-value 'semantic-digest)
+        query-identity: (.ref query-value 'identity)
+        classification: classification-value
+        admissible-hypothesis-ids: admitted-value
+        refuted-hypothesis-ids: refuted-value
+        unknown-hypothesis-ids: unknown-value
+        unexplored-hypothesis-ids: unexplored-value
+        exhausted?: exhausted-value
+        family-complete?: (.ref model-value 'family-complete?)
+        assumption: 'exclusive-explanations
+        runtime-executed?: #f)))
