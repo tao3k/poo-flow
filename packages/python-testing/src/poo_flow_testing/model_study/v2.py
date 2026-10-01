@@ -14,6 +14,7 @@ from typing import Any
 
 from ..ascent.live import key_from_file
 from .runner import build_graph, corpus, observations, source_head, CORPUS_SHA256
+from .reporting import report_json, report_record
 
 
 def typed_observation(case_id: str, old: dict[str, Any]) -> dict[str, Any]:
@@ -82,10 +83,7 @@ def run(api_key: str, ascent_root: Path, poo_root: Path, output: Path,
                     record["score"] = None
                 with output.open("a", encoding="utf-8") as file:
                     file.write(json.dumps(record, sort_keys=True) + "\n")
-                print(case_id, repeat, arm,
-                      record["score"] if record["score"] is not None
-                      else record.get("error_type", record.get("response_status")),
-                      flush=True)
+                report_record(case_id, repeat, arm, record)
 
 
 def main() -> int:
@@ -101,7 +99,7 @@ def main() -> int:
     typed = {case["id"]: typed_observation(case["id"], old[case["id"]])
              for case in cases}
     if args.dry_run:
-        print(json.dumps({"old": old, "typed": typed}, sort_keys=True))
+        report_json({"old": old, "typed": typed})
         return 0
     if args.output is None:
         parser.error("--output is required for a live run")
