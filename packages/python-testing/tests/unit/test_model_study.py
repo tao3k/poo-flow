@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 from poo_flow_testing.model_study.runner import build_graph, corpus, grade
 from poo_flow_testing.model_study.v2 import typed_observation
+from poo_flow_testing.temporal.authority import gate_model_answer, guarded_runtime
 
 
 def test_frozen_corpus_and_strict_score() -> None:
@@ -69,4 +70,34 @@ def test_typed_observation_preserves_boolean_and_scope() -> None:
         "release_authorized": False,
         "causation_proven": False,
         "evidence_scope": "temporal_classification_only",
+    }
+
+
+def test_runtime_guard_withholds_native_denied_model_claims() -> None:
+    closed = typed_observation("temporal.closed-cut", {
+        "source": "poo-flow.temporal-causality",
+        "status": "bounded-temporal-classification",
+        "release-authorized?": "#f",
+        "unknown": "()",
+    })
+    unsafe = '{"choice":"A","claim":"release_authorized"}'
+    state, trace = guarded_runtime().invoke_with_trace({
+        "model_output": unsafe, "observation": closed,
+    })
+    assert trace == ["authority"]
+    assert state["guard"] == {
+        "status": "withheld", "reason": "native-denies-release",
+    }
+    safe = '{"choice":"A","claim":"classification_no_authority"}'
+    assert gate_model_answer(safe, closed) == {
+        "status": "observation-only", "choice": "A",
+        "claim": "classification_no_authority",
+    }
+    opened = typed_observation("temporal.open-parent", {
+        "source": "poo-flow.temporal-causality",
+        "release-authorized?": "#f",
+        "unknown": '("missing-administration")',
+    })
+    assert gate_model_answer('{"choice":"A","claim":"negative_claim"}', opened) == {
+        "status": "withheld", "reason": "open-frontier-denies-absence",
     }

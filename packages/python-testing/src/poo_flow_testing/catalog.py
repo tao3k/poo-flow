@@ -8,6 +8,7 @@ from __future__ import annotations
 from .checks.ascent import candidate_boundary, native_withdrawal
 from .checks.cross import runtime_ascent_candidate
 from .checks.evidence import evidence_assessment
+from .checks.model_study import native_fixtures
 from .checks.runtime import graph_transport
 from .model import CaseSpec, ModulePart
 from .registry import CaseRegistry
@@ -41,5 +42,12 @@ def build_catalog() -> CaseRegistry:
                  (ModulePart("evidence-assessment", "hypothesis/status"),
                   ModulePart("gerbil-ascent", "program/evaluation")), "native"),
         evidence_assessment,
+    )
+    catalog.register(
+        CaseSpec("model-study.native-fixtures",
+                 (ModulePart("gerbil-ascent", "candidate/finite-evidence"),
+                  ModulePart("temporal-causality", "classification")),
+                 "native"),
+        native_fixtures,
     )
     return catalog

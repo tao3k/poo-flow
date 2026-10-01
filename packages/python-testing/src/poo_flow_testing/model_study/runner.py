@@ -71,7 +71,7 @@ def native_script(script: Path, root: Path, load_roots: list[Path]) -> dict[str,
     return fields
 
 
-def observations(ascent_root: Path, poo_root: Path) -> tuple[dict[str, dict], dict[str, float]]:
+def observations(ascent_root: Path | None, poo_root: Path) -> tuple[dict[str, dict], dict[str, float]]:
     started = time.perf_counter()
     checker = SchemeChecker(ascent_root)
     try:
@@ -88,8 +88,9 @@ def observations(ascent_root: Path, poo_root: Path) -> tuple[dict[str, dict], di
 
     started = time.perf_counter()
     finite = native_script(
-        HERE.parent / "ascent" / "finite_attempt.ss", ascent_root,
-        [ascent_root],
+        HERE.parent / "ascent" / "finite_attempt.ss",
+        ascent_root or poo_root,
+        [ascent_root] if ascent_root is not None else [poo_root],
     )
     finite_seconds = round(time.perf_counter() - started, 3)
     if finite != {

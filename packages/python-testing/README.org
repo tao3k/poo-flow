@@ -12,7 +12,7 @@ Scheme test workers, or case registrations.
 
 * Case contract
 
-Each =CaseSpec= has a stable identity, a mode (=unit= or =native=), and one or
+Each =CaseSpec= has a stable identity, a mode (=unit=, =native= or =live=), and one or
 more =(module, part)= targets. One module is a module case; two or more
 distinct modules are a cross-module case. The check receives a =CaseContext=
 with the repository root and optional source roots for externally pinned
@@ -21,7 +21,8 @@ modules. Registration rejects duplicate case identities and target pairs.
 The [[file:src/poo_flow_testing/catalog.py][catalog]] currently registers an
 inert Ascent candidate boundary, a native source-withdrawal check, a Python
 Runtime graph check, a Runtime + Ascent candidate graph, and the POO Flow
-evidence-assessment + Ascent qualification. These are actual checks, not
+evidence-assessment + Ascent qualification, and a native ASCENT plus
+temporal-causality fixture check. These are actual checks, not
 coverage placeholders. New module owners add a check near their domain and
 register its target parts in the catalog.
 
@@ -57,6 +58,10 @@ Scheme worker for the two-source snapshot fixture. Other modules can
 register checks that use their own semantic test owners; this framework
 does not reimplement their logic in Python.
 
+The =model-study.native-fixtures= case executes both Scheme owners and
+checks their outputs against the pre-registered answer keys. It runs in
+Ubuntu CI with the declared ASCENT pin and makes no model API request.
+
 * Interactive model study
 
 The optional =live= extra adds the official OpenAI Python SDK. The
@@ -65,3 +70,12 @@ Runtime graph executor, an interactive user turn, and the same bounded
 Scheme checker. It contains no stored model task prompt. The
 [[file:docs/pilot-2026-10-01.org][pilot receipt]] covers two finite graph
 snapshots and does not establish general model performance.
+
+The fixed [[file:docs/model-study-v1.org][v1]] and
+[[file:docs/model-study-v2.org][v2]] protocols separately test ASCENT
+candidate evidence and POO Flow temporal classification with a real
+model. Their [[file:docs/model-study-v1-results.org][v1]] and
+[[file:docs/model-study-v2-results.org][v2]] results retain wrong
+answers and boundary failures. The experimental Runtime output guard
+in =temporal/authority.py= withholds model claims of release authority
+when the native receipt denies it; it does not authorize any effect.
