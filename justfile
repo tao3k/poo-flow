@@ -380,6 +380,11 @@ _prepare-gerbil-parser:
 check-tla-interface: _prepare-gerbil-parser
     GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 4 t/qualification/tla-plus-interface/interface-test.ss
 
+# Bind one parser-owned TLC run to an exact parsed TLA+ source and config.
+[group('check')]
+check-tla-checked-source: _prepare-gerbil-parser
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 90s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/tla-plus-interface/checked-source-test.ss
+
 # Qualify Case-owned GQL Sources from the parser owner's package environment.
 # Lambda stays independent of gerbil-parser; parser acceptance is not execution.
 [group('check')]
