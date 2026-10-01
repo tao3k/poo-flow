@@ -58,6 +58,14 @@ uv run --project packages/python-runtime poo-flow-jsonschema-contract --help
 uv run --project packages/python-runtime pytest packages/python-runtime/tests
 #+end_src
 
+* Optional model experiment
+
+The =reasoning-live= extra supplies the OpenAI Python SDK for an
+[[file:examples/ascent_reasoning_live/README.org][interactive ASCENT reasoning experiment]].
+The adapter composes existing Runtime graph nodes and checks candidate data
+through the Scheme Library. It adds no model dependency to the core wheel,
+stores no preset prompt, and makes no production native ABI claim.
+
 * JSON Schema contract generation
 
 Users can bring a JSON Schema file and generate a Scheme contract artifact for

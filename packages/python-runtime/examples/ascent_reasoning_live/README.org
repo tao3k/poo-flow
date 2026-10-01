@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Interactive model experiment for the Scheme reasoning Library
+
+This is an optional POO Flow experiment adapter. The OpenAI Python SDK calls the
+DeepSeek Responses endpoint. POO Flow's =poo_flow_runtime.RuntimeGraphExecutor=
+executes the two nodes =model= and =candidate=. The second node passes a
+bounded, inert candidate datum to =candidate/reasoning.ss=. No model prompt,
+task, answer or revision policy is stored in the adapter. The caller enters
+each message at the terminal and decides what feedback to send next.
+
+The sample verifier uses immutable =live-graph= snapshots: generation 1 has
+=edge/2= rows =(0 1)= and =(1 2)=; generation 2 withdraws =(1 2)=. The
+checker returns both receipts and their local binding digests. This verifies
+one candidate against those finite sources. It does not test POO Flow's
+authorization, ASCENT source admission, or a retained incremental deletion
+algorithm. Exact model text enclosed by a single Markdown code fence is
+accepted; arbitrary Scheme expressions and reader extensions are rejected
+before entering the Gerbil worker.
+
+Install the Runtime with its =reasoning-live= extra. POO Flow's
+=gerbil.pkg= pins the Scheme =gerbil-ascent= package. The =--ascent-root=
+argument permits testing a local ASCENT checkout before its pinned package
+is installed. Build that checkout with =just build= first. From the POO Flow
+root, run:
+
+#+begin_src sh
+DEEPSEEK_API_KEY=... python3 packages/python-runtime/examples/ascent_reasoning_live/run.py
+#+end_src
+
+The adapter can read a local =--env-file= containing =DEEPSEEK_API_KEY=, but
+does not print the value. =--model= defaults to =deepseek-flash=, currently
+DeepSeek-V4.1-Flash. =--transcript= is opt-in; it writes user and model text,
+usage, graph trace, timing and any Scheme receipt. Keep such a file local.
+The built-in experiment fixture and separate Scheme worker are not a
+published ABI. The worker remains open for the interactive session; it is
+started only once. In the [[file:pilot-2026-10-01.org][live pilot]], its first
+candidate took 6.231 s and later checks took 0.060 and 0.158 s.
+
+For offline checks, with =poo_flow_runtime= importable and a local ASCENT
+checkout available:
+
+#+begin_src sh
+ASCENT_TEST_ROOT=/path/to/gerbil-ascent \
+  python3 -m unittest packages/python-runtime/examples/ascent_reasoning_live/test_run.py -v
+#+end_src
+
+The official SDK call pattern is documented at
+[[https://developers.openai.com/api/docs/quickstart][OpenAI developer quickstart]].
+DeepSeek documents the compatible Responses endpoint and the current Flash
+alias at [[https://api-docs.deepseek.com/guides/responses_api/][Responses API]]
+and [[https://api-docs.deepseek.com/quick_start/pricing/][Models & Pricing]].
+
+* ABI ownership
+
+POO Flow owns the shared versioned C ABI, module selection and downstream
+distribution. ASCENT remains a Scheme-native Library consumed through its
+Gerbil package pin. Python and Rust bind to POO Flow's selected native
+features; they do not independently reimplement ASCENT semantics. The
+existing =scheme_native_v1.h= has global symbols and a centralized
+POO Flow contract dispatch. A module-selective reasoning call contract and
+its AOT packaging need to be designed and qualified in POO Flow before
+this experiment can use that ABI. The process worker here is a temporary
+experiment boundary and is not a published ABI.

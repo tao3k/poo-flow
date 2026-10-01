@@ -16,6 +16,9 @@ dependencies = [
     "pyturso>=0.6.1",
 ]
 
+[project.optional-dependencies]
+reasoning-live = ["openai>=2.29,<3"]
+
 [project.scripts]
 poo-flow-build-profile = "poo_flow_runtime.build_profile:main"
 poo-flow-jsonschema-contract = "poo_flow_runtime.json_schema_contract:main"
