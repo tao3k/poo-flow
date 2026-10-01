@@ -8,5 +8,5 @@ depend:
  ("github.com/tao3k/poo-flow-core@e85fd45303b208b23e5957fd316e7004994109a4"
   "github.com/tao3k/gerbil-poo@099b381588360a8a49fd772f666a1a00351366f5"
   "github.com/tao3k/asp-gerbil-scheme@11aabb4cef76c369d8e52ef39ae02d113c7d6dfe"
-  "github.com/tao3k/gerbil-parser@0eb34f399e38c36d299361060be274e6a891058e"
-  "github.com/tao3k/orgize@9217d9bcee0cf250db618fb3ea0b55a4998f9267"))
+  "github.com/tao3k/gerbil-parser@9b940b5def6cff0597c117967fd17f40d2a43060"
+  "github.com/tao3k/orgize@9fe586f3550ecdcfadec9e2c46bd77081cb77001"))
