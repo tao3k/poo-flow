@@ -24,6 +24,15 @@ def DefinitelyBefore (interval : Bound) (boundary : Nat) : Prop :=
 def DefinitelyAfter (interval : Bound) (boundary : Nat) : Prop :=
   boundary < interval.lower
 
+def DefinitelyBeforePair (left right : Bound) : Prop :=
+  left.upper < right.lower
+
+def DefinitelyAfterPair (left right : Bound) : Prop :=
+  right.upper < left.lower
+
+def MayOverlap (left right : Bound) : Prop :=
+  left.lower ≤ right.upper ∧ right.lower ≤ left.upper
+
 /-- A watermark's whole uncertainty range must be at or beyond the cut. -/
 def CoverageClaim (watermark : Bound) (cut : Nat) : Prop :=
   cut ≤ watermark.lower
@@ -39,6 +48,29 @@ theorem afterSound (interval : Bound) (boundary position : Nat)
     (within : Contains interval position) :
     boundary < position :=
   Nat.lt_of_lt_of_le after within.1
+
+theorem beforePairSound (left right : Bound) (leftPosition rightPosition : Nat)
+    (before : DefinitelyBeforePair left right)
+    (withinLeft : Contains left leftPosition)
+    (withinRight : Contains right rightPosition) :
+    leftPosition < rightPosition :=
+  Nat.lt_of_lt_of_le (Nat.lt_of_le_of_lt withinLeft.2 before) withinRight.1
+
+theorem afterPairSound (left right : Bound) (leftPosition rightPosition : Nat)
+    (after : DefinitelyAfterPair left right)
+    (withinLeft : Contains left leftPosition)
+    (withinRight : Contains right rightPosition) :
+    rightPosition < leftPosition :=
+  Nat.lt_of_lt_of_le (Nat.lt_of_le_of_lt withinRight.2 after) withinLeft.1
+
+theorem overlapCannotBeDefinite (left right : Bound)
+    (overlap : MayOverlap left right) :
+    ¬ DefinitelyBeforePair left right ∧ ¬ DefinitelyAfterPair left right := by
+  constructor
+  · intro before
+    exact (Nat.not_lt_of_ge overlap.2) before
+  · intro after
+    exact (Nat.not_lt_of_ge overlap.1) after
 
 theorem crossingCannotBeBefore (interval : Bound) (boundary : Nat)
     (crosses : Contains interval boundary) :
