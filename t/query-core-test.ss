@@ -10,8 +10,10 @@
         :poo-flow/modules/query/interface
         (only-in :poo-flow/modules/temporal-causality/candidates/interface
                  poo-flow-candidate-scope poo-flow-candidate-exchange
+                 poo-flow-candidate-check
                  poo-flow-gql-candidate-receipt
-                 poo-flow-gql-candidate-row-check))
+                 poo-flow-gql-candidate-row-check
+                 poo-flow-mrr-projected-candidate-receipt))
 
 (export query-core-test)
 
@@ -80,6 +82,9 @@
        evidence-requirements: '(provenance-root result-digest)
        visibility-request: 'organization
        result-contract: QueryResult)))
+
+(def (test-sha256 character)
+  (string-append "sha256:" (make-string 64 character)))
 
 (def query-core-test
   (test-suite
@@ -285,6 +290,8 @@
        (check (.ref row 'semantic-digest)
               => (.ref reordered 'semantic-digest))
        (check (.ref rows 'result-count) => 1)
+       (check (substring (.ref rows 'result-digest) 0 29)
+              => "poo-flow.query.scalar-row-v1:")
        (check (.ref row-check 'verdict) => 'valid)
        (check (.ref exchange 'status) => 'reviewable)
        (check (.ref exchange 'admitted?) => #f)
@@ -315,6 +322,92 @@
                (poo-flow-gql-candidate-row-check
                 "invalid" candidate-receipt Query other-rows)))
          (check (.ref invalid 'verdict) => 'invalid))))
+
+   (poo-flow-test-case "native MRR admission remains incomplete and separate from scalar rows"
+     (let* ((cut (test-sha256 #\a))
+            (query
+             (validate PooFlowQuery
+                       (.o (:: @ Query) semantic-revision: cut)))
+            (space
+             (poo-flow-query-element-space
+              'healthcare/case-space cut
+              '(case-1 profile-1 source-1) #t))
+            (projection
+             (poo-flow-mrr-result-admission-projection
+              "native" query (test-sha256 #\b) 7
+              (test-sha256 #\c) (test-sha256 #\d) cut
+              (test-sha256 #\e) 1))
+            (admission (poo-flow-query-admit query space))
+            (execution-candidate
+             (poo-flow-query-execution-candidate
+              'mrr (.ref query 'identity) (.ref query 'version) cut
+              (poo-flow-query-source-content-identity query)
+              'gerbil-parser "sha256:provenance"
+              (.ref projection 'result-digest) 1 #t))
+            (source-receipt
+             (poo-flow-query-bind-execution-receipt
+              MrrGqlQueryProvider query admission execution-candidate))
+            (scope
+             (poo-flow-candidate-scope
+              "scope" cut 7 "sha256:coverage" '(gql)))
+            (candidate-receipt
+             (poo-flow-mrr-projected-candidate-receipt
+              "mrr" "candidate" scope query space
+              source-receipt projection))
+            (exchange
+             (poo-flow-candidate-exchange
+              "exchange" "candidate" scope (list candidate-receipt)
+              (list (poo-flow-candidate-check
+                     "claimed-check" candidate-receipt
+                     "unverified-native-result" 'valid
+                     "sha256:declared-basis")))))
+       (check (.ref projection 'native-schema)
+              => "mrr.query-result-admission.v1")
+       (check (.ref candidate-receipt 'complete?) => #f)
+       (check (.ref candidate-receipt 'result-digest)
+              => (.ref projection 'result-digest))
+       (check (.ref exchange 'status) => 'pending)
+       (check (.ref exchange 'incomplete-receipts) => '("mrr"))
+       (check (.ref exchange 'unchecked-receipts) => '())
+       (check (.ref exchange 'admitted?) => #f)
+       (check-exception
+        (poo-flow-gql-candidate-row-check
+         "wrong-profile" candidate-receipt query
+         (poo-flow-query-result-set
+          "rows" QueryResult (.ref query 'identity)
+          (.ref query 'version) cut
+          (list (poo-flow-query-result-row
+                 "row"
+                 (list (poo-flow-query-result-cell 'source "s")
+                       (poo-flow-query-result-cell 'target "t")
+                       (poo-flow-query-result-cell 'evidence #t)))) #t))
+        true)
+       (check-exception
+        (poo-flow-mrr-projected-candidate-receipt
+         "stale" "candidate"
+         (poo-flow-candidate-scope
+          "scope" cut 8 "sha256:coverage" '(gql))
+         query space source-receipt projection)
+        true)
+       (check-exception
+        (poo-flow-mrr-projected-candidate-receipt
+         "forged" "candidate" scope query space source-receipt
+         (.o (:: @ projection) generation: 8))
+        true)
+       (check-exception
+        (poo-flow-mrr-projected-candidate-receipt
+         "other-snapshot" "candidate" scope query space source-receipt
+         (poo-flow-mrr-result-admission-projection
+          "other" query (test-sha256 #\b) 7
+          (test-sha256 #\c) (test-sha256 #\d)
+          (test-sha256 #\f) (test-sha256 #\e) 1))
+        true)
+       (check-exception
+        (poo-flow-mrr-result-admission-projection
+         "bad" query "sha256:short" 7
+         (test-sha256 #\c) (test-sha256 #\d) cut
+         (test-sha256 #\e) 1)
+        true)))
 
    (poo-flow-test-case "rejects undeclared Elements without widening the space"
      (let* ((query

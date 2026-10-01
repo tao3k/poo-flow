@@ -98,7 +98,11 @@
   (let (result-set
         (poo-flow-query-result-set-replay
          result-set (.ref query 'result-contract)))
-    (unless (and (eq? (.ref candidate-receipt 'provider-identity) 'gql)
+    (unless (and (>= (string-length (.ref candidate-receipt 'result-digest)) 29)
+                 (string=?
+                  (substring (.ref candidate-receipt 'result-digest) 0 29)
+                  "poo-flow.query.scalar-row-v1:")
+                 (eq? (.ref candidate-receipt 'provider-identity) 'gql)
                  (equal? (.ref candidate-receipt 'request-digest)
                          (poo-flow-query-source-content-identity query))
                  (equal? (.ref result-set 'query-identity)

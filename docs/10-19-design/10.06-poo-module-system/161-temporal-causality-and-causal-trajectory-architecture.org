@@ -438,10 +438,16 @@ unchecked =CandidateReceipt=.  It replays the Query admission and Provider
 binding, including the Query source hash and result bounds.  A new POO-native
 finite scalar [[file:../../../modules/query/results/model.org][result-row contract]] canonicalizes materialized rows.  A separate local
 check compares those rows with the candidate digest, count and completion
-bit.  GQL still has no *live Provider row transport* shared with ASCENT, and
-the MRR Provider has not implemented the canonical row digest.  An end-to-end
-adapter must add that conformance and authenticated source-snapshot mapping;
-the local row check alone cannot establish execution or verifier authority.
+bit.  This scalar digest has a distinct =poo-flow.query.scalar-row-v1:= label.
+MRR already has a richer typed =QueryResultAdmissionReceipt= with a native
+CBOR-based digest; the POO Flow Provider still has no live transport of
+that receipt or its rows.  An end-to-end adapter must preserve MRR's query
+binding, generation, catalog and snapshot identities and establish their
+mapping to the POO Query and Temporal cut.  The new
+[[file:../../../modules/query/providers/mrr/result-model.org][MRR result projection]] structurally retains those identities and forces
+the Temporal candidate to stay incomplete.  It is a declared POO projection,
+not a verified native exporter.  The local scalar row check cannot establish
+execution or verifier authority.
 
 =packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla=
 checks the abstract handoff lifecycle.  GQL and ASCENT may report complete

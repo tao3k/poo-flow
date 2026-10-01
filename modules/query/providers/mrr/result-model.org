@@ -1,0 +1,68 @@
+#+title: MRR Query Result Admission Projection
+#+date: [2026-10-01]
+#+options: toc:2 num:t
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Native semantic owner
+:PROPERTIES:
+:CUSTOM_ID: mrr-result-native-owner
+:END:
+
+MRR's =QueryResultAdmissionReceipt= is produced after typed admission of a
+physical candidate against one =CatalogBoundQuery=.  It retains the binding's
+query digest, generation, relation-catalog digest, entity-catalog digest and
+snapshot digest, plus row count and an MRR-owned digest over ordered columns
+and rows.  MRR result admission does not assert execution authenticity,
+completeness or downstream causality.  Its implementation and proof scope
+remain owned by the MRR repository.
+
+The POO =MrrResultAdmissionProjection= records those fields with canonical
+lowercase SHA-256 text encodings and a separate POO Query source hash.  The
+projection digest covers all fields.  It is a *declared representation* of
+native metadata: this Scheme constructor cannot prove that an MRR runtime
+emitted it or that its bound query denotes the same semantics as the POO
+Query.  No native Rust-to-Scheme exporter or attested crosswalk is wired yet.
+
+#+name: mrr-result-projection-fields
+#+caption: Preserved native identities and current checks.
+| Native field | POO projection check | Missing verification |
+|--------------+----------------------+----------------------|
+| Bound-query digest | Canonical 32-byte hex representation retained | Equality to a POO Query's semantics |
+| Generation | Exact nonnegative integer; matches Temporal scope | Authenticity of native generation |
+| Relation and entity catalog digests | Both retained in projection digest | Catalog materialization and authority |
+| Snapshot digest | Exact equality to Temporal cut digest | Snapshot bytes and coverage |
+| Result digest and row count | Equal to SourceQueryReceipt assertion | Native row materialization and execution |
+
+* Temporal handoff
+:PROPERTIES:
+:CUSTOM_ID: mrr-result-temporal-handoff
+:END:
+
+=poo-flow-mrr-projected-candidate-receipt= first replays the ordinary GQL
+Query/ElementSpace/Provider receipt binding.  It then replays the MRR
+projection and checks exact cut, generation, provider, result digest and row
+count.  Its output uses the distinct
+=mrr.query-result-admission.v1:sha256:= digest label and forces
+=complete?= =#f= even when a caller's SourceQueryReceipt says complete.  A
+typed MRR result-admission receipt does not by itself establish a complete
+source inventory or exhaustive query answer, so an exchange remains
+=pending= even if a caller supplies a =valid= CandidateCheck.  The POO
+scalar-row checker rejects the MRR digest label;
+transcoding MRR's ordered typed rows into an unordered scalar set would lose
+semantics.
+
+#+name: mrr-result-projection-receipt
+#+caption: Local evidence, not an external execution claim.
+| Gate | Result | Scope |
+|------+--------+-------|
+| =t/query-core-test.ss= | =MODULE-OK=, =HARNESS-OK=, =OK= | Valid projection, stale generation, wrong snapshot, forged digest, unsupported scalar checker |
+| =t/temporal-candidate-exchange-test.ss= | =MODULE-OK=, =HARNESS-OK=, =OK= | Incomplete required receipt remains pending |
+
+The next owner slice must carry the native receipt through a versioned byte
+transport, verify it against the actual MRR bound query and materialized
+rows, and establish the crosswalk to POO Query and Temporal cut.  The current
+projection is useful for fail-closed handoff tests but is not that exporter.

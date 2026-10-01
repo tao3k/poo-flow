@@ -37,6 +37,8 @@
     (sha256 (string->utf8
              (call-with-output-string
               (lambda (port) (write datum port))))))))
+(def (result-digest datum)
+  (string-append "poo-flow.query.scalar-row-v1:" (digest datum)))
 
 (def (poo-flow-query-result-cell field value)
   (unless (and (symbol? field)
@@ -105,10 +107,11 @@
     (poo-flow-query-result-set-value
      id query version revision (.ref contract 'identity)
      rows (length rows)
-     (digest (list 'poo-flow.query.result-set.v1
-                   query version revision (.ref contract 'identity)
-                   complete?
-                   (map (lambda (row) (.ref row 'semantic-digest)) rows)))
+     (result-digest
+      (list 'poo-flow.query.result-set.v1
+            query version revision (.ref contract 'identity)
+            complete?
+            (map (lambda (row) (.ref row 'semantic-digest)) rows)))
      complete?)))
 
 (def (poo-flow-query-result-set-replay result-set contract)

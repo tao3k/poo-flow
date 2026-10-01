@@ -23,10 +23,21 @@ and row digests, requires every contract field in each row, rejects duplicate
 row identities and enforces the contract's result bound.  Cell order and row
 order are canonicalized.  The versioned result digest covers Query identity,
 version, semantic revision, contract identity, completion bit and sorted row
-digests.  A Provider claiming this profile must compute exactly that digest
-over the same materialized rows.  The current MRR boundary accepts a caller
-supplied digest and has no implemented row transport; it has not yet been
-shown to conform to this profile.
+digests.  Its label is =poo-flow.query.scalar-row-v1:sha256:=.  A Provider
+claiming this profile must compute exactly that digest over the same rows.
+
+MRR already owns a *different* typed result-admission contract:
+=QueryResultAdmissionReceipt= binds a catalog-bound query digest, generation,
+relation and entity catalog digests, semantic snapshot, ordered typed columns
+and rows.  Its digest is length-framed SHA-256 over MRR's CBOR encoding under
+=mrr.query-result-admission.v1=.  MRR supports graph values, nulls and lists
+and checks static types and query-specific result constraints.  The Scheme
+scalar row digest does not claim equivalence to the MRR digest, and no live
+conversion is implemented.  The POO Flow =MrrGqlQueryProvider= currently
+binds caller-supplied execution metadata without transporting the admitted
+MRR rows or native result receipt.  The [[file:../providers/mrr/result-model.org][MRR result projection]] preserves the
+native identity fields as declared POO metadata and deliberately marks its
+Temporal candidate incomplete.
 
 #+name: query-scalar-result-limits
 #+caption: Meaning of the local row check.
@@ -41,7 +52,10 @@ Query source hash, Query identity/version/revision and result contract before
 issuing a separate =CandidateCheck=.  Even with a =valid= row check, the
 exchange may only become =reviewable=, and its =admitted?= slot remains =#f=.
 No signature, runtime attestation or source snapshot authentication is
-produced by this check.
+produced by this check.  A future MRR bridge must preserve its native
+receipt's five identity components and typed result semantics, then establish
+an explicit mapping to the POO Query and Temporal cut.  Replacing its digest
+with the scalar profile would discard MRR's stronger admission evidence.
 
 * Executable receipt
 :PROPERTIES:

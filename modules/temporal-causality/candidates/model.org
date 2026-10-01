@@ -121,10 +121,15 @@ rows and a set with a versioned canonical digest.  The separate
 count and completion bit with the =CandidateReceipt=.  A mismatch is
 =invalid=; a matching incomplete set is =unknown=; a matching complete set
 is =valid= *for this local row-consistency claim*.  The bridge itself does
-not issue this check.  The current MRR Provider has no live row transport or
-demonstrated implementation of this digest algorithm, so even a local
-=valid= check does not attest Provider execution, source authenticity or
-provenance semantics.
+not issue this check.  The POO Flow MRR Provider has no live row transport.
+The MRR repository already owns a typed =QueryResultAdmissionReceipt= with a
+different MRR-owned CBOR digest.  The new
+[[file:../../query/providers/mrr/result-model.org][POO MRR result projection]] retains its binding, generation, catalog,
+snapshot, digest and count fields.  The Temporal MRR bridge checks cut and
+generation, then emits an *incomplete* candidate receipt; it does not treat
+the native digest as a scalar row digest.  A future native exporter must
+prove an explicit query/snapshot mapping.  Even a local scalar =valid= check
+does not attest Provider execution or source authenticity.
 
 ASCENT owns positive-rule Why/Why-Not proof generation and replay for a
 finite relation snapshot.  Its adapter must require the native result to
