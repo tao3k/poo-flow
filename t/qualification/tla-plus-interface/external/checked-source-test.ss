@@ -55,10 +55,10 @@
            (.ref projection 'model)
            (poo-flow-temporal-query "finite-family-check" "via-a" #f)))
          (expected
-          (string-append "ExpectedClassifications = {\""
+          (string-append "          ExpectedClassifications = {\""
                          (symbol->string (.ref native 'classification)) "\"}"))
          (cfg-source (call-with-input-file cfg-path read-all-as-string)))
-    (check (and (string-contains cfg-source expected) #t) => #t)
+    (check (and (member expected (string-split cfg-source #\newline)) #t) => #t)
     (check (.ref native 'exhausted?) => #t)
     (let (checked
           (poo-flow-tla-check-source!
