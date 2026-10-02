@@ -49,6 +49,7 @@ def score(raw: str, reference: str) -> dict:
                "task_shape": row["policy"] == "task-shape", "output_matches": row["rows"] == target["rows"]}
               for row, target in zip(observed[:4], expected[:4], strict=True)]
     matches = [all(value for name, value in state.items() if name != "generation") for state in states]
+    applicable = all(states[0][name] for name in ("complete", "finite_valid", "founded_valid"))
     stale = observed[-1]["finite"] == observed[-1]["founded"] == "invalid"
     return {"states": states, "matched_states": matches, "stale_invalid": stale,
-            "correct": all(matches) and stale}
+            "stale_applicable": applicable, "correct": all(matches) and applicable and stale}

@@ -50,6 +50,7 @@ def test_native_validity_does_not_make_wrong_task_results_correct():
     result = score(wrong, REFERENCE)
     assert result["matched_states"] == [True, True, False, True]
     assert result["stale_invalid"] is True and result["correct"] is False
+    assert result["stale_applicable"] is True
     assert result["states"][2] == {"generation": "2", "complete": True,
                                    "finite_valid": True, "founded_valid": True,
                                    "task_shape": True, "output_matches": False}
@@ -80,3 +81,11 @@ def test_preview_rejects_modified_bytes_before_live_calls(tmp_path, monkeypatch)
     (directory / "self_review.txt").write_text("replacement instruction")
     with pytest.raises(RuntimeError, match="preview bytes"):
         protocol.validate(directory, ascent, poo)
+
+
+def test_rejected_receipt_cannot_test_generation_binding():
+    rejected = REFERENCE.replace("\tcomplete\t", "\trejected\t").replace(
+        "\tvalid\tvalid\t", "\tinvalid\tinvalid\t")
+    result = score(rejected, REFERENCE)
+    assert result["stale_invalid"] is True
+    assert result["stale_applicable"] is False and result["correct"] is False
