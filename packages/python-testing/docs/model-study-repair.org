@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme candidate and native receipt repair protocol
-#+STATUS: frozen local protocol; model calls pending payload approval
+#+STATUS: initial four-call pilot complete; diagnostic feedback revision pending approval
 #+DATE: 2026-10-02
 
 * Question and controls
@@ -70,6 +70,10 @@ python -m poo_flow_testing.model_study.repair \
 After payload approval, add =--env-file= and a fresh =--output-dir=.
 The result is a bounded tool-use observation; it cannot establish
 general model usefulness or deployed authorization behavior.
+The [[file:model-study-repair-results.org][initial result]] preserves the original payload and failure. Its
+status-only receipt omitted a =duplicate-relation= diagnostic; the
+revised task and tool now return located diagnostic code/path pairs.
+Any second run needs a new exact-head preview and authorization.
 
 * Matched native boundary timing
 
@@ -93,3 +97,15 @@ shared runtime. Cold startup is material and is a separate target:
 check compiled worker startup and retained process reuse before
 changing the ABI. This timing does not measure allocator totals,
 Python application integration, or a production deployment.
+
+After adding diagnostic code/path pairs, the same candidate yielded a
+197-byte receipt. A second ten-warm-sample local run recorded worker
+median/p95 6.006/6.727 s, Scheme median/p95 6.004/6.706 s, and
+boundary delta median/p95 1.20/31.62 ms. Its cold worker/Scheme times
+were 70.899/5.390 s. Raw SHA256 for
+=/private/tmp/poo-repair-diagnostic-benchmark.json= is
+=2b717aa5df711684b4d020f7bbe0ec180b39aa764d657f0976cf8b7ff21da66a=.
+The large native-time change between runs is not attributed to the
+nine added receipt bytes; background load and runtime state were not
+controlled. Both runs show warm boundary cost far below native work,
+while cold startup remains substantial.

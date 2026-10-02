@@ -14,14 +14,15 @@
 
 (def (valid-row? actual name expected)
   (and (list? actual)
-       (= (length actual) 7)
+       (= (length actual) 8)
        (eq? (car actual) name)
        (eq? (cadr actual) 'complete)
        (equal? (caddr actual) expected)
        (eq? (list-ref actual 3) #t)
        (eq? (list-ref actual 4) 'complete)
        (eq? (list-ref actual 5) 'valid)
-       (eq? (list-ref actual 6) 'valid)))
+       (eq? (list-ref actual 6) 'valid)
+       (null? (list-ref actual 7))))
 
 (def (main . paths)
   (unless (= (length paths) 1) (error "expected one receipt path"))

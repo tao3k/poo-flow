@@ -6,8 +6,10 @@
 (import (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
+                 reasoning-receipt-diagnostics
                  reasoning-receipt-bound? reasoning-receipt-stratified
                  reasoning-stratified-evidence-status
+                 reasoning-diagnostic-code reasoning-diagnostic-path
                  reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt)
         (only-in :std/time/precise
@@ -37,7 +39,11 @@
           (reasoning-receipt-bound? receipt source datum)
           (if evidence (reasoning-stratified-evidence-status evidence) 'none)
           (reasoning-verify-finite-receipt receipt source datum 20000)
-          (reasoning-verify-stratified-receipt receipt source datum 20000))))
+          (reasoning-verify-stratified-receipt receipt source datum 20000)
+          (map (lambda (diagnostic)
+                 (list (reasoning-diagnostic-code diagnostic)
+                       (reasoning-diagnostic-path diagnostic)))
+               (reasoning-receipt-diagnostics receipt)))))
 
 (def (main . _)
   (let loop ()

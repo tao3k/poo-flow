@@ -95,3 +95,6 @@ its [[file:docs/model-study-scheme-results.org][nine-call result]] found no exac
 The [[file:docs/model-study-repair.org][repair protocol]] separates self-contained Scheme,
 an explicit ASCENT API contract, and a model candidate evaluated by a
 native finite/founded receipt with at most one repair turn.
+Its [[file:docs/model-study-repair-results.org][first four-call result]] exposed an underspecified source-relation
+contract and a status-only receipt; revised diagnostic feedback is
+pending a separate live qualification.

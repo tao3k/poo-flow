@@ -18,6 +18,9 @@
 ;;; (reduce ?n (count) (RELATION ?r ?v)).
 ;;; Variables start with ?. Rules form a fixed point; lower-stratum
 ;;; negation filters existing path rows, and count uses distinct rows.
+;;; Source relations edge, blocked, weight, and root are already declared
+;;; by each snapshot. Declare only the new derived relations in the
+;;; candidate; redeclaring a source relation is rejected by admission.
 ;;; A complete native receipt is bound to its source generation and
 ;;; candidate. A prior receipt must fail on a changed source.
 ;;;
