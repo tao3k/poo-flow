@@ -186,13 +186,14 @@ hypotheses without editing the public API or the existing Healthcare =.tla=
 files.  The public contract contains possible behaviors and their constraints,
 not a caller-authored =Next= action list.
 
-The checked-in Scheme-native parser contract is
-=gerbil-parser/languages/tla-plus/v1= (=tla-plus.native-core.v1=).  Its
-published language contract explicitly does not claim the entire SANY grammar,
-PlusCal or TLAPS proof syntax.  The semantic mapper must declare an even
+The checked-in Scheme-native parser is
+=gerbil-parser/languages/tla-plus=; its core and layout identities come from
+the corresponding grammar metadata.  The layout grammar admits column-sensitive
+junction lists but does not claim the entire SANY grammar, PlusCal or TLAPS
+proof syntax.  The semantic mapper must declare an even
 narrower supported subset and reject unsupported CST kinds with a typed
 diagnostic; byte-exact roundtrip does not establish TLA+ semantic coverage.
-Full grammar expansion belongs to a new parser contract version.
+Full grammar expansion requires a separately admitted grammar identity.
 
 This is initially a TLA+ source-to-POO path, not a promise of automatic
 POO-to-TLA+ generation.  Later emission back to =.tla/.cfg= is useful for

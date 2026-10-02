@@ -8,6 +8,10 @@
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/test check-equal? check-exception test-suite)
         (only-in :gerbil-parser/src/runtime/artifact sha256-text)
+        (only-in :gerbil-parser/languages/tla-plus/grammars/layout
+                 tla-plus-layout-language-grammar)
+        (only-in :gerbil-parser/src/language/descriptor
+                 language-grammar-contract)
         (only-in :poo-flow/modules/temporal-causality/interface
                  poo-flow-temporal-clock-domain
                  poo-flow-temporal-model-observation
@@ -34,6 +38,32 @@
 (def modular-source
   "---- MODULE Modular ----\nVARIABLES active,\n queued\nWork == INSTANCE WorkLifecycle\nInit ==\n  /\\ Work!Init\n  /\\ active = TRUE\n====\n")
 
+;;; Keep the models that exposed the layout gap in the executable consumer
+;;; contract. Each path is read from this checkout, not a sibling repository.
+(def tla-layout-corpus-paths
+  (append
+   (map (lambda (name) (path-expand name "packages/proofs/tla"))
+        '("NativeSemanticQuery.tla" "GovernanceCore.tla"
+          "HealthcareAIAssistedPrescriptionCausality.tla"
+          "HealthcareStandardMigration.tla"
+          "HealthcarePrescriptionCausality.tla"))
+   (map (lambda (name)
+          (path-expand name "packages/proofs/tla/temporal-causality"))
+        '("TemporalInvalidationExplorer.tla" "TemporalRevisionData.tla"
+          "TemporalHypothesisFamily.tla" "TemporalConclusionSelectionData.tla"
+          "TemporalInvalidationCase.tla" "TemporalRevisionCase.tla"
+          "TemporalFamilyCase.tla" "TemporalRevisionSemantics.tla"
+          "TemporalInvalidationData.tla" "TemporalOrder.tla"
+          "TemporalFamilySemantics.tla" "TemporalConclusionSelection.tla"
+          "TemporalFamilyExplorer.tla" "TemporalDiscriminatingFamily.tla"
+          "TemporalConclusionSelectionCase.tla" "TemporalRevisionExplorer.tla"
+          "TemporalDiscriminatingCase.tla"))
+   (map (lambda (name)
+          (path-expand name "packages/proofs/tla/temporal-causality/evidence"))
+        '("EvidenceAssessmentCase.tla" "EvidenceLineageExplorer.tla"
+          "EvidenceLineageCase.tla" "EvidenceAssessmentExplorer.tla"
+          "EvidenceLineageSemantics.tla" "CandidateExchangeExplorer.tla"))))
+
 (def (contains-node-kind? element kind)
   (or (and (syntax-node? element) (eq? (syntax-node-kind element) kind))
       (let (children
@@ -54,7 +84,8 @@
         (check-equal? (.ref (.ref document 'language) 'parser-owner)
                       'gerbil-parser)
         (check-equal? (.ref PooFlowTlaLanguage. 'syntax-contract)
-                      "tla-plus.native-core.v1")
+                      (language-grammar-contract
+                       tla-plus-layout-language-grammar))
         (check-equal? (.ref document 'source-digest)
                       (sha256-text sample-source))
         (check-equal? (.ref document 'source-byte-length)
@@ -78,6 +109,16 @@
                       (sha256-text source))
         (check-equal? (syntax-node?
                        (poo-flow-tla-parser-cst document)) #t)))
+    (poo-flow-test-case "temporal model corpus remains byte-exact"
+      (check-equal? (length tla-layout-corpus-paths) 28)
+      (for-each
+       (lambda (path)
+         (let* ((source (call-with-input-file path read-all-as-string))
+                (document (poo-flow-tla-parse-source source)))
+           (check-equal? (.ref document 'exact-roundtrip?) #t)
+           (check-equal? (.ref document 'source-byte-length)
+                         (u8vector-length (string->utf8 source)))))
+       tla-layout-corpus-paths))
     (poo-flow-test-case "multiline modules preserve named instances and qualified names"
       (let* ((document (poo-flow-tla-parse-source modular-source))
              (root (poo-flow-tla-parser-cst document))

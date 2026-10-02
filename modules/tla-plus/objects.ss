@@ -6,8 +6,10 @@
 ;;; the lossless TLA+ syntax tree; this module defines no parallel AST.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in :gerbil-parser/languages/tla-plus/v1/parser
-                 +tla-plus-syntax-contract+)
+        (only-in :gerbil-parser/languages/tla-plus/grammars/layout
+                 tla-plus-layout-language-grammar)
+        (only-in :gerbil-parser/src/language/descriptor
+                 language-grammar-contract)
         (only-in "types.ss"
                  PooFlowTlaModelOutline PooFlowTlaTemporalProjection))
 (export PooFlowTlaLanguage. PooFlowTlaDocument.
@@ -17,7 +19,8 @@
 (def PooFlowTlaLanguage.
   (.o identity: 'tla-plus
       parser-owner: 'gerbil-parser
-      syntax-contract: +tla-plus-syntax-contract+
+      syntax-contract: (language-grammar-contract
+                        tla-plus-layout-language-grammar)
       representation: 'parser-owned-cst
       semantic-validation?: #f
       model-checking?: #f))
