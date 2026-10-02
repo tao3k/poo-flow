@@ -1,29 +1,29 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: Pre-registered typed observation repair pilot v2
-#+STATUS: frozen before v2 live requests; results not yet collected
+#+TITLE: Pre-registered typed observation repair pilot
+#+STATUS: frozen before typed live requests; results collected
 #+DATE: 2026-10-01
 #+FILETAGS: :testing:ascent:temporal:llm:
 
 * Repair being tested
 
-The [[file:model-study-v1-results.org][v1 pilot]] found boundary mistakes:
+The [[file:model-study-baseline-results.org][baseline pilot]] found boundary mistakes:
 the model called completed candidate results =verified_intent= and, in
 the temporal tool arm, selected =release_authorized= despite the native
-boolean =#f=. The v2 hypothesis is that the Testing adapter should
+boolean =#f=. The typed protocol hypothesizes that the Testing adapter should
 preserve booleans and state the module's claim scope in typed fields.
 This changes the observation given to the model, not ASCENT or
 temporal-causality semantics.
 
 * Frozen observation transformation
 
-Use the same five prompts, answer keys and task order from v1 corpus
+Use the same five prompts, answer keys and task order from the baseline corpus
 SHA256
 =7248c6452afba59a1627f82c9fd5763b1fb4bba71513153a303d8edc4abec628=.
 Both arms generate observations from the same live native fixtures.
 
-- =old=: exactly the v1 observation dictionary for that task.
+- =old=: exactly the baseline observation dictionary for that task.
 - =typed= for the three ASCENT tasks: copy the old dictionary and add
   =evidence_scope="candidate_on_named_finite_snapshot"= and
   =intent_verified=false=. For =ascent.negation-count=, keep the
@@ -49,7 +49,7 @@ old/typed, typed/old, old/typed. The first user message is the unchanged
 case prompt; the second user message is the old or typed JSON
 observation. The existing Runtime graph transports both arms.
 
-Use the v1 strict parser and separate =choice= and =claim= exact-match
+Use the baseline strict parser and separate =choice= and =claim= exact-match
 scores. Report each case, errors, token usage and latency. The primary
 question is whether boundary scores change on the two failing tasks;
 also check that choice accuracy and the other three task boundaries do

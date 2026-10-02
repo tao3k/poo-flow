@@ -58,8 +58,9 @@ Scheme worker for the two-source snapshot fixture. Other modules can
 register checks that use their own semantic test owners; this framework
 does not reimplement their logic in Python.
 
-The =model-study.native-fixtures= case executes both Scheme owners and
-checks their outputs against the pre-registered answer keys. It runs in
+The =model-study.native-fixtures= case executes both Scheme owners, including
+ASCENT's requested finite and founded receipt, and checks their outputs
+against the pre-registered answer keys. It runs in
 Ubuntu CI with the declared ASCENT pin and makes no model API request.
 
 * Interactive model study
@@ -71,11 +72,16 @@ Scheme checker. It contains no stored model task prompt. The
 [[file:docs/pilot-2026-10-01.org][pilot receipt]] covers two finite graph
 snapshots and does not establish general model performance.
 
-The fixed [[file:docs/model-study-v1.org][v1]] and
-[[file:docs/model-study-v2.org][v2]] protocols separately test ASCENT
+The fixed [[file:docs/model-study-baseline.org][baseline]] and
+[[file:docs/model-study-typed.org][typed]] protocols separately test ASCENT
 candidate evidence and POO Flow temporal classification with a real
-model. Their [[file:docs/model-study-v1-results.org][v1]] and
-[[file:docs/model-study-v2-results.org][v2]] results retain wrong
+model. Their [[file:docs/model-study-baseline-results.org][baseline]] and
+[[file:docs/model-study-typed-results.org][typed]] results retain wrong
 answers and boundary failures. The experimental Runtime output guard
 in =temporal/authority.py= withholds model claims of release authority
 when the native receipt denies it; it does not authorize any effect.
+The [[file:docs/model-study-protocol.org][founded receipt protocol]] pairs the typed
+observation with the newly verified ASCENT receipt on the same frozen
+task and records the Runtime's guarded output separately from model
+scores. The pinned Ascent package and the local checkout must identify
+the same source head before a live founded-receipt result is admitted.

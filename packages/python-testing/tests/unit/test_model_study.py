@@ -8,7 +8,10 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from poo_flow_testing.model_study.runner import build_graph, corpus, grade
-from poo_flow_testing.model_study.v2 import typed_observation
+from poo_flow_testing.model_study.paired import typed_observation
+from poo_flow_testing.model_study.protocol import (
+    guard_answer, proof_observation, require_pinned_ascent,
+)
 from poo_flow_testing.temporal.authority import gate_model_answer, guarded_runtime
 
 
@@ -101,3 +104,49 @@ def test_runtime_guard_withholds_native_denied_model_claims() -> None:
     assert gate_model_answer('{"choice":"A","claim":"negative_claim"}', opened) == {
         "status": "withheld", "reason": "open-frontier-denies-absence",
     }
+
+
+def test_stratified_observation_keeps_candidate_scope_and_guards_model_claim() -> None:
+    typed = typed_observation("ascent.negation-count", {
+        "source": "gerbil-ascent", "status": "complete", "rows": "((1 1))",
+    })
+    receipt = {
+        "status": "complete", "rows": "((1 1))",
+        "proof-status": "complete", "finite-verdict": "valid",
+        "proof-verdict": "valid",
+    }
+    proof = proof_observation("ascent.negation-count", typed, receipt)
+    assert proof["proof_scope"] == "one_founded_support_per_result_on_named_finite_snapshot"
+    assert proof["intent_verified"] is False
+    assert guard_answer(
+        "ascent.negation-count", '{"choice":"A","claim":"bounded_candidate_only"}',
+        proof, {},
+    ) == {"status": "observation-only", "choice": "A",
+          "claim": "bounded_candidate_only"}
+    assert guard_answer(
+        "ascent.negation-count", '{"choice":"A","claim":"general_truth"}',
+        proof, {},
+    ) == {"status": "withheld", "reason": "candidate-claim-exceeds-evidence"}
+    assert proof_observation("ascent.wrong-join", typed, receipt) == typed
+
+
+def test_live_study_requires_exact_ascent_dependency_pin(tmp_path, monkeypatch) -> None:
+    from poo_flow_testing.model_study import protocol
+
+    ascent = tmp_path / "ascent"
+    poo = tmp_path / "poo"
+    ascent.mkdir()
+    poo.mkdir()
+    head = "a" * 40
+    monkeypatch.setattr(protocol, "source_head", lambda _root: head)
+    package = poo / "gerbil.pkg"
+    package.write_text(f'(dependencies "github.com/tao3k/gerbil-ascent@{head}")')
+    require_pinned_ascent(ascent, poo)
+
+    package.write_text('(dependencies "github.com/tao3k/gerbil-ascent@' + "b" * 40 + '")')
+    try:
+        require_pinned_ascent(ascent, poo)
+    except RuntimeError as error:
+        assert "dependency pin" in str(error)
+    else:
+        raise AssertionError("mismatched dependency pin accepted")

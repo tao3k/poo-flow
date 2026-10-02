@@ -17,10 +17,10 @@ from ..ascent.live import key_from_file
 from .fixtures import observations, source_head
 from .graph import build_graph, grade
 from .reporting import report_json, report_record
+from .schema import CORPUS_SHA256
 
 HERE = Path(__file__).resolve().parent
 CORPUS = HERE / "cases.json"
-CORPUS_SHA256 = "7248c6452afba59a1627f82c9fd5763b1fb4bba71513153a303d8edc4abec628"
 
 
 def corpus() -> list[dict[str, Any]]:

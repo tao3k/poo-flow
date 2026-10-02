@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-"""Compare the frozen v1 and typed v2 module observations."""
+"""Run a registered paired model study with fixed observations."""
 
 from __future__ import annotations
 
@@ -10,11 +10,12 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from ..ascent.live import key_from_file
 from .runner import build_graph, corpus, observations, source_head, CORPUS_SHA256
 from .reporting import report_json, report_record
+from .schema import PROTOCOLS, SCHEMA_ID, SCHEMA_VERSION
 
 
 def typed_observation(case_id: str, old: dict[str, Any]) -> dict[str, Any]:
@@ -36,11 +37,18 @@ def typed_observation(case_id: str, old: dict[str, Any]) -> dict[str, Any]:
 
 
 def run(api_key: str, ascent_root: Path, poo_root: Path, output: Path,
-        cases: list[dict], old: dict[str, dict], tool_seconds: dict[str, float]) -> None:
+        cases: list[dict], old: dict[str, dict], tool_seconds: dict[str, float],
+        *, variants_for_case: Callable[[str, dict], dict[str, dict]] | None = None,
+        arms: tuple[str, str] = PROTOCOLS["typed"]["arms"],
+        study: str = "typed",
+        postprocess: Callable[[str, str, dict, dict], dict] | None = None) -> None:
     from openai import OpenAI
 
+    if study not in PROTOCOLS or arms != PROTOCOLS[study]["arms"]:
+        raise ValueError("model study protocol is not registered in schema")
+
     if output.exists():
-        raise FileExistsError("v2 study output already exists")
+        raise FileExistsError(f"{study} study output already exists")
     if output.parent.resolve().is_relative_to(poo_root.resolve()):
         raise ValueError("raw model responses must stay outside the repository")
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com",
@@ -49,18 +57,23 @@ def run(api_key: str, ascent_root: Path, poo_root: Path, output: Path,
     attempted = 0
     for case in cases:
         case_id = case["id"]
-        variants = {"old": old[case_id],
-                    "typed": typed_observation(case_id, old[case_id])}
-        for repeat, order in enumerate((("old", "typed"),
-                                        ("typed", "old"),
-                                        ("old", "typed")), 1):
+        variants = (variants_for_case(case_id, old[case_id])
+                    if variants_for_case else
+                    {"old": old[case_id],
+                     "typed": typed_observation(case_id, old[case_id])})
+        if set(variants) != set(arms):
+            raise RuntimeError(f"{study} observation arms are incomplete")
+        for repeat, order in enumerate((arms, arms[::-1], arms), 1):
             for arm in order:
                 attempted += 1
                 if attempted > 30:
-                    raise RuntimeError("pre-registered v2 request cap exceeded")
+                    raise RuntimeError(f"pre-registered {study} request cap exceeded")
                 observation = variants[arm]
                 record: dict[str, Any] = {
                     "case": case_id, "repeat": repeat, "arm": arm,
+                    "schema_id": SCHEMA_ID, "schema_version": SCHEMA_VERSION,
+                    "protocol": study,
+                    "protocol_revision": PROTOCOLS[study]["revision"],
                     "corpus_sha256": CORPUS_SHA256, "heads": heads,
                     "observation_sha256": hashlib.sha256(
                         json.dumps(observation, sort_keys=True).encode()
@@ -78,6 +91,10 @@ def run(api_key: str, ascent_root: Path, poo_root: Path, output: Path,
                         "model_seconds": result["model_seconds"],
                         "score": result["score"],
                     })
+                    if postprocess:
+                        record["guard"] = postprocess(
+                            case_id, result["output"], observation, result["score"]
+                        )
                 except Exception as error:
                     record["error_type"] = type(error).__name__
                     record["score"] = None

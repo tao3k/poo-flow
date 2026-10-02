@@ -64,3 +64,23 @@ POO Flow contract dispatch. A module-selective reasoning call contract and
 its AOT packaging need to be designed and qualified in POO Flow before
 this experiment can use that ABI. The process worker here is a temporary
 experiment boundary and is not a published ABI.
+
+* ABI decision gate
+
+The model-study fixture's current local dry run spent about 18–21 seconds
+per fresh Gerbil script on this macOS host. A persistent two-snapshot
+candidate worker took 12.001 seconds for its first request and 0.266
+seconds for its next request in one focused run. The separate ASCENT
+three-node ASP benchmark measures roughly 20 ms median for public
+admit-and-solve and about 0.3 ms for the reused native core. These
+different workloads do not identify how much of the worker's warm cost
+is Python transport, parsing, candidate admission, or inference.
+
+ASCENT therefore does not publish a separate C ABI. POO Flow owns the
+existing native ABI and any module-selective reasoning call added to it.
+Before changing that surface, compare the same candidate through a
+persistent worker and an in-process Scheme call on the same source,
+including cold startup, warm call p50/p95, payload bytes, allocations,
+status preservation, and source/receipt binding. Add a POO Flow ABI
+entrypoint only if its measured benefit exceeds its packaging and
+ownership cost, while retaining the same Scheme receipt verifier.

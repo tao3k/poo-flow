@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from ..model import CaseContext
 from ..model_study.runner import corpus, observations
+from ..model_study.fixtures import stratified_observation
 
 
 def native_fixtures(context: CaseContext) -> None:
@@ -16,3 +17,6 @@ def native_fixtures(context: CaseContext) -> None:
     )
     if set(actual) != expected:
         raise AssertionError("model study fixture catalog is incomplete")
+    stratified_observation(
+        context.module_root("gerbil-ascent"), context.repository_root,
+    )

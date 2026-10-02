@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: Pre-registered finite reasoning model pilot v1
+#+TITLE: Pre-registered finite reasoning baseline pilot
 #+STATUS: frozen before live requests; results not yet collected
 #+DATE: 2026-10-01
 #+FILETAGS: :testing:ascent:temporal:llm:
@@ -15,7 +15,7 @@ real-world causation, or superiority over other systems. The fixed tasks
 and answer keys are in =src/poo_flow_testing/model_study/cases.json=.
 Freeze that file's SHA256 and the tested repository heads in each result.
 Do not edit its prompts, expected answers or task order after the first
-live request; make a v2 study for changes.
+live request; register a separate protocol for changes.
 The frozen corpus SHA256 is
 =7248c6452afba59a1627f82c9fd5763b1fb4bba71513153a303d8edc4abec628=.
 

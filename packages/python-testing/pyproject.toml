@@ -37,7 +37,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"poo_flow_testing.ascent" = ["attempt.ss", "finite_attempt.ss"]
+"poo_flow_testing.ascent" = ["attempt.ss", "finite_attempt.ss", "stratified_attempt.ss"]
 "poo_flow_testing.temporal" = ["attempt.ss"]
 "poo_flow_testing.model_study" = ["cases.json"]
 

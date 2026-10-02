@@ -135,3 +135,20 @@ def observations(ascent_root: Path | None, poo_root: Path) -> tuple[dict[str, di
         "temporal.open-parent": temporal_seconds,
     }
     return data, elapsed
+
+
+def stratified_observation(ascent_root: Path | None, poo_root: Path) -> dict[str, str]:
+    """Check the new receipt on the same frozen negation/count input."""
+    result = native_script(
+        HERE.parent / "ascent" / "stratified_attempt.ss",
+        ascent_root or poo_root,
+        [ascent_root] if ascent_root is not None else [poo_root],
+    )
+    expected = {
+        "status": "complete", "rows": "((1 1))",
+        "proof-status": "complete", "finite-verdict": "valid",
+        "proof-verdict": "valid",
+    }
+    if result != expected:
+        raise RuntimeError("ASCENT receipt disagrees with frozen Rust/finite result")
+    return result
