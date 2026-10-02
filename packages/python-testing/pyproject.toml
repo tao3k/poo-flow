@@ -40,7 +40,7 @@ where = ["src"]
 "poo_flow_testing.ascent" = ["attempt.ss", "finite_attempt.ss", "stratified_attempt.ss"]
 "poo_flow_testing.model_study.scheme_source" = ["*.ss", "*.sexp"]
 "poo_flow_testing.temporal" = ["attempt.ss"]
-"poo_flow_testing.model_study" = ["cases.json"]
+"poo_flow_testing.model_study" = ["cases.json", "scheme_questions.json"]
 
 [tool.pytest.ini_options]
 addopts = ["--python-project-harness"]

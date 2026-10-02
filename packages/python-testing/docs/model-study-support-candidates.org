@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Candidate self-review versus ASCENT execution feedback
+#+DATE: 2026-10-02
+#+STATUS: protocol preparation; no model calls
+
+* Task and ownership
+
+The model reads the exact ASCENT =candidate/program.ss= and
+=program/scheme-checked.ss= modules and writes one inert candidate for
+recursive path, pair negation, checked even-weight doubling and grouped
+sum. ASCENT owns the source states, canonical candidate, native execution
+and evidence verification. Python Testing owns preview, transport,
+response records and comparison with ASCENT's reference output. It adds
+no Scheme program or evaluator.
+
+The native adapter imports the existing =scheme-library-contract-test.ss=
+corpus. It uses the public =reasoning-attempt= API with solve budget
+=100000= and evidence budget =20000=. The four source states yield
+=20,20,8,12= with weights =2,4,6= and root =0=. The first receipt must
+fail finite and founded verification against the second source, despite
+an equal answer. Rust 0.8.0 checks the same source states and directly
+compares this adapter's reference output. A hypothetical fact can have
+valid native evidence but fail this task's shape rule: no candidate facts,
+query =summary= with two variables, and limits =16 64 128=.
+
+* Fixed comparison
+
+| Arm | Call 1 | Call 2 | Final evaluation |
+|-----+--------+--------+------------------|
+| self | Common source/task prompt | Self-review with own candidate, no native observation | Native execution over all four source states |
+| native | Identical common source/task prompt | Own candidate plus initial-source native observation | Same four source states |
+
+Each arm is a fresh conversation. The second message contains its own
+first response. Only the native arm receives execution feedback, and
+only for generation 0. Hidden update-state outputs, reference totals,
+correctness scores and the other arm's responses are never sent. The
+self arm is evaluated only after its second call. Arm order is fixed:
+=self=, then =native=. One pair cannot separate order effects or estimate
+reliability; the equal two-call budget supports a bounded task comparison,
+not a general claim that native feedback improves a model.
+
+With explicit approval, maximum four calls to =deepseek-flash=, one per
+stage, non-thinking, temperature 0, maximum 1024 output tokens per call,
+45-second timeout, zero retries. API failures stop the run. The model
+emits bounded candidate data; it cannot supply an executable Scheme
+closure. A non-completed or malformed response is not executed.
+
+* Frozen preview and scores
+
+A new external preview directory contains =initial.txt=,
+=self_review.txt=, =native_review.txt=, =reference.tsv= and
+=manifest.json=. The manifest records both Git heads, settings, four-call
+cap and SHA256 for each file. The reference is checked before preview
+publication. Follow-up templates are frozen; their inserted first
+response and native observation necessarily depend on the approved run.
+
+Live execution requires clean checkouts, the exact POO Flow ASCENT pin,
+unchanged preview and the approved manifest SHA256. Preview reads no API
+key. Each call records the complete outgoing messages, request hash,
+response JSON, raw text, usage and elapsed time outside the repository.
+Final native observations and state-by-state scores are also preserved.
+
+Report API completion, candidate readability, native completion, finite
+and founded validity, task shape and output correctness independently.
+A final candidate passes only when all four query outputs match the
+reference, each current receipt verifies, the task shape passes and the
+old receipt fails both current-source verifiers. This certifies the
+supplied finite cases, not general intent, source completeness,
+exhaustive provenance, external authorization or effects.
+
+* Entrypoint
+
+#+begin_src sh
+python -m poo_flow_testing.model_study.support \
+  --ascent-root ASCENT --poo-root POO --gerbil-path GERBIL_PATH \
+  --preview-dir NEW_EXTERNAL_PREVIEW
+#+end_src
+
+For an approved live run, additionally supply =--output-dir=,
+=--approved-manifest-sha256= and =--env-file= (or an existing API-key
+variable). The frozen raw key is never included in preview or results.

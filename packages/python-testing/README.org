@@ -108,3 +108,5 @@ exact fragment answer and two semantic errors.
 The current [[file:docs/model-study-scheme-source-questions.org][source-question protocol]] reads the pinned ASCENT modules and
 their established qualification contracts. Python Testing only prepares
 model prompts, records calls, and scores short answers.
+
+See [[file:docs/model-study-support-candidates.org][the support candidate comparison]] for the frozen four-call protocol.
