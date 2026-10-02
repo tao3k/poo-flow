@@ -64,6 +64,11 @@ POO Flow contract dispatch. A module-selective reasoning call contract and
 its AOT packaging need to be designed and qualified in POO Flow before
 this experiment can use that ABI. The process worker here is a temporary
 experiment boundary and is not a published ABI.
+The current header exposes descriptor and contract-validation calls; it
+does not expose ASCENT snapshots, candidate evaluation or proof receipts.
+The Scheme source pilot therefore executes the pinned native Gerbil
+program and uses a persistent native Scheme scorer. The process boundary
+adds startup and transport cost but does not replace Scheme evaluation.
 
 * ABI decision gate
 

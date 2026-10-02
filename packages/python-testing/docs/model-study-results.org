@@ -8,6 +8,10 @@
 
 * Receipt and source identity
 
+This was a JSON-observation interface study. The model did not read the
+Gerbil Scheme program, and these scores are not evidence of Scheme
+source comprehension. The separate [[file:model-study-scheme.org][Scheme source pilot]] tests that question.
+
 The [[file:model-study-protocol.org][founded protocol]] and its five-task answer key were fixed
 before any request. The corpus SHA256 was
 =7248c6452afba59a1627f82c9fd5763b1fb4bba71513153a303d8edc4abec628=.

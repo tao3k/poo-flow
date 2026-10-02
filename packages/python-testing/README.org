@@ -88,3 +88,7 @@ the same source head before a live founded-receipt result is admitted.
 Its [[file:docs/model-study-results.org][bounded pilot]] found no score improvement on the fixed
 corpus: both arms scored 15/15 on choice and 12/15 on boundary claim.
 The guard withheld all six closed-cut release-authority claims.
+That pilot sent JSON observations. The separate
+[[file:docs/model-study-scheme.org][Scheme source pilot]] sends actual Gerbil Scheme
+programs and scores returned S-expressions with a native Scheme reader;
+its external model calls have not run.
