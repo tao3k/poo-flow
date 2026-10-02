@@ -101,12 +101,18 @@ have been made for this protocol. Temporal lens qualification remains separate.
 
 * Local qualification receipt
 
-The implementation pins ASCENT =b3d960ce1d84abd67cfe09dd960962b41e7a9538=;
+The implementation pins ASCENT =cd6f60fe75cc12db6a0e5118fe8c71ff09e4b52b=;
 the Bazel archive SHA256 is
-=be642c6be7332b2d96604289a09799bf2fafdfed27957ab92ee0ac687da5eff9=.
+=f5431b31b233a0238e02c93a8079b80376a3b99fae3eba14e720db645c454a07=.
 All 23 Python unit/harness checks passed, including preview-tamper rejection,
 feedback isolation, seven-state evidence/output scoring, archive-tamper
 rejection and archive destination checks. The license contract passed for
 2629 project files; four dependency-projection automation tests and the
 native/Bazel contract and error-mode lock check passed. Current-head CI and
 approval remain distinct gates. No live calls were made for this protocol.
+
+The earlier implementation head =b3d960c= passed Scheme and byods CI, but
+failed Rust Clippy's type-complexity gate. =cd6f60f= names the unchanged case
+tuple type; local Clippy for all targets passed with =-D warnings=. No gate
+was relaxed. The initial preview at POO =b0c093e3= is marked superseded,
+with zero model calls. A fresh final-head preview is required.
