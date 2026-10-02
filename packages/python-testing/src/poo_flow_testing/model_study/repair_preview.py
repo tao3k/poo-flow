@@ -7,15 +7,28 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+import subprocess
 from pathlib import Path
 
-from .repair_native import SCHEME_SOURCE_DIR
+from .repair_native import SCHEME_SOURCE_DIR, scheme_env
 from .runner import source_head
-from .scheme import native as native_control
 
 MODEL = "deepseek-flash"
 TASK = "repair_task.ss"
 CONTROLS = ("control_pure", "control_contract")
+
+
+def native_control(script: Path, poo_root: Path, ascent_root: Path,
+                   gerbil_path: Path) -> str:
+    result = subprocess.run(
+        ["gerbil", "-:max-heap=1G,debug=q", "env", "gxi", str(script)],
+        cwd=poo_root, env=scheme_env(ascent_root, gerbil_path),
+        text=True, capture_output=True, timeout=90, check=True,
+    )
+    lines = [line for line in result.stdout.splitlines() if line.startswith("(")]
+    if len(lines) != 1:
+        raise RuntimeError(f"native Scheme control emitted {len(lines)} data lines")
+    return lines[0] + "\n"
 
 
 def repair_payload(task: str, candidate: str, receipt: str) -> str:
