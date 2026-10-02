@@ -5,6 +5,11 @@
 #+STATUS: completed bounded pilot; native regrade documented
 #+DATE: 2026-10-02
 
+This page records the completed historical pilot. The current =scheme.py=
+entry point has migrated to the seven-case
+[[file:model-study-module-capabilities.org][module comprehension protocol]];
+the three-case pilot remains reproducible from its recorded Git commit.
+
 * Question
 
 Can the model read actual Gerbil Scheme source for a finite ASCENT

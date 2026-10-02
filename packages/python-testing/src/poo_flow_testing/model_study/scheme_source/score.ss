@@ -18,6 +18,12 @@
        (andmap (lambda (row) (and (list? row) (member row right equal?))) left)
        (andmap (lambda (row) (and (list? row) (member row left equal?))) right)))
 
+(def (answer-field=? left right)
+  (if (and (pair? left) (pair? right)
+           (andmap list? left) (andmap list? right))
+    (row-set=? left right)
+    (equal? left right)))
+
 (def (score expected-path answer-path)
   (let* ((expected (read-one expected-path))
          (answer (read-one answer-path))
@@ -28,7 +34,7 @@
          (correct (and valid
                        (list? expected)
                        (= (length answer) (length expected))
-                       (andmap row-set=? (cdr answer) (cdr expected)))))
+                       (andmap answer-field=? (cdr answer) (cdr expected)))))
     (write (list 'score (list 'valid (if valid #t #f))
                  (list 'correct (if correct #t #f))))
     (newline)

@@ -98,3 +98,5 @@ native finite/founded receipt with at most one repair turn.
 Its [[file:docs/model-study-repair-results.org][first four-call result]] exposed an underspecified source-relation
 contract and a status-only receipt; revised diagnostic feedback is
 pending a separate live qualification.
+The [[file:docs/model-study-module-capabilities.org][module comprehension study]] fixes seven distinct Gerbil
+Scheme programs and their native answers, with one model call per case.

@@ -10,9 +10,9 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from ..ascent.live import key_from_file
@@ -21,7 +21,15 @@ from .reporting import report_json
 from .runner import source_head
 
 HERE = Path(__file__).resolve().parent / "scheme_source"
-CASES = ("withdrawal", "wrong_join", "negation_count")
+CASES = (
+    "control_pure", "control_contract", "withdrawal", "negation_count",
+    "module_fragment", "module_diagnostic", "receipt_boundary",
+)
+MODULE_CONTEXT = {
+    "module_fragment": "program/interface.ss",
+    "module_diagnostic": "program/interface.ss",
+    "receipt_boundary": "candidate/reasoning.ss",
+}
 ANSWER_ALPHABET = re.compile(r"[()\s0-9A-Za-z-]+\Z")
 MODEL = "deepseek-flash"
 
@@ -44,6 +52,16 @@ def native(script: Path, root: Path, ascent_root: Path, gerbil_path: Path,
     return lines[0] + "\n"
 
 
+def module_payload(case: str, ascent_root: Path) -> bytes:
+    source = (HERE / f"{case}.ss").read_bytes()
+    module = MODULE_CONTEXT.get(case)
+    if module is None:
+        return source
+    context = (ascent_root / module).read_bytes()
+    return (f";;; Imported module source: {module}\n".encode()
+            + context + b"\n;;; Calling program follows.\n" + source)
+
+
 def preview(preview_dir: Path, ascent_root: Path, poo_root: Path,
             gerbil_path: Path) -> dict[str, str]:
     if preview_dir.exists():
@@ -55,18 +73,25 @@ def preview(preview_dir: Path, ascent_root: Path, poo_root: Path,
     expected_dir.mkdir()
     digests = {}
     for case in CASES:
-        source = HERE / f"{case}.ss"
-        payload = source.read_bytes()
-        shutil.copyfile(source, preview_dir / f"{case}.ss")
-        expected = native(source, poo_root, ascent_root, gerbil_path)
-        (expected_dir / f"{case}.sexp").write_text(expected, encoding="utf-8")
+        payload = module_payload(case, ascent_root)
+        (preview_dir / f"{case}.ss").write_bytes(payload)
         digests[case] = hashlib.sha256(payload).hexdigest()
+    def expected_for(case: str) -> str:
+        return native(HERE / f"{case}.ss", poo_root, ascent_root, gerbil_path)
+    # Each Gerbil process has a 1 GiB heap fence: at most 2 GiB total.
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        expectations = list(pool.map(expected_for, CASES))
+    expected_digests = {}
+    for case, expected in zip(CASES, expectations, strict=True):
+        (expected_dir / f"{case}.sexp").write_text(expected, encoding="utf-8")
+        expected_digests[case] = hashlib.sha256(expected.encode()).hexdigest()
+    header = ("case\tpayload_sha256\texpected_sha256\tascent_head\t"
+              "poo_head\tmodel\trepeats\n")
+    rows = (f"{case}\t{digests[case]}\t{expected_digests[case]}\t"
+            f"{source_head(ascent_root)}\t{source_head(poo_root)}\t"
+            f"{MODEL}\t1\n" for case in CASES)
     (preview_dir / "manifest.tsv").write_text(
-        "case\tpayload_sha256\tascent_head\tpoo_head\tmodel\trepeats\n"
-        + "".join(
-            f"{case}\t{digests[case]}\t{source_head(ascent_root)}\t"
-            f"{source_head(poo_root)}\t{MODEL}\t3\n" for case in CASES
-        ), encoding="utf-8",
+        header + "".join(rows), encoding="utf-8",
     )
     return digests
 
@@ -100,18 +125,17 @@ def live(preview_dir: Path, output_dir: Path, ascent_root: Path, poo_root: Path,
     if len(preview_rows) != len(CASES) + 1:
         raise RuntimeError("preview manifest has unexpected case count")
     for case, row in zip(CASES, preview_rows[1:], strict=True):
-        name, digest, ascent_head, poo_head, model, repeats = row.split("\t")
+        (name, digest, expected_digest, ascent_head, poo_head,
+         model, count) = row.split("\t")
         payload = (preview_dir / f"{case}.ss").read_bytes()
         if (name != case or hashlib.sha256(payload).hexdigest() != digest
                 or ascent_head != source_head(ascent_root)
                 or poo_head != source_head(poo_root)
-                or model != MODEL or repeats != "3"
-                or payload != (HERE / f"{case}.ss").read_bytes()):
+                or model != MODEL or count != "1"
+                or payload != module_payload(case, ascent_root)):
             raise RuntimeError("preview no longer matches committed source and heads")
-        expected = native(HERE / f"{case}.ss", poo_root,
-                          ascent_root, gerbil_path)
-        if expected != (preview_dir / "expected" / f"{case}.sexp").read_text(
-                encoding="utf-8"):
+        expected_path = preview_dir / "expected" / f"{case}.sexp"
+        if hashlib.sha256(expected_path.read_bytes()).hexdigest() != expected_digest:
             raise RuntimeError("native answer changed since preview")
     output_dir.mkdir(parents=True)
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com",
@@ -132,7 +156,7 @@ def live(preview_dir: Path, output_dir: Path, ascent_root: Path, poo_root: Path,
         for case in CASES:
             payload = (preview_dir / f"{case}.ss").read_text(encoding="utf-8")
             expected = preview_dir / "expected" / f"{case}.sexp"
-            for repeat in range(1, 4):
+            for repeat in (1,):
                 started = time.perf_counter()
                 response = client.responses.create(
                     model=MODEL, input=[{"role": "user", "content": payload}],
