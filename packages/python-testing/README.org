@@ -103,3 +103,5 @@ Scheme programs and their native answers, with one model call per case.
 Its [[file:docs/model-study-module-capabilities-results.org][bounded result]] records one exact answer; the three module-source
 responses were prose, motivating a separately gated
 [[file:docs/model-study-module-answer-followup.org][answer-format follow-up]].
+The [[file:docs/model-study-module-answer-followup-results.org][three-call result]] returned S-expressions for all three, with one
+exact fragment answer and two semantic errors.

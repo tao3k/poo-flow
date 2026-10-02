@@ -155,6 +155,7 @@ def test_live_study_requires_exact_ascent_dependency_pin(tmp_path, monkeypatch) 
 
 def test_scheme_answer_filter_allows_symbols_without_reader_directives() -> None:
     assert readable_answer("(answer ((path 0 1) (summary 1 2)))")
+    assert readable_answer("(answer ((invalid-body (rule ?x ?y))))")
     assert not readable_answer("(answer #.(system 1))")
     assert not readable_answer("(answer ((0 1))")
     assert not readable_answer("(answer 0))(")

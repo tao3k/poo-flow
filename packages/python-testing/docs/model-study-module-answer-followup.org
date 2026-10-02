@@ -3,7 +3,9 @@
 
 #+TITLE: Three-case Scheme module answer-format follow-up
 #+DATE: 2026-10-02
-#+STATUS: preview pending; no calls authorized
+#+STATUS: completed bounded run
+
+The completed result is in [[file:model-study-module-answer-followup-results.org][the follow-up receipt]].
 
 * Reason for follow-up
 

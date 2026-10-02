@@ -29,7 +29,7 @@ MODULE_CONTEXT = {
     "module_diagnostic": "program/interface.ss",
     "receipt_boundary": "candidate/reasoning.ss",
 }
-ANSWER_ALPHABET = re.compile(r"[()\s0-9A-Za-z-]+\Z")
+ANSWER_ALPHABET = re.compile(r"[()\s0-9A-Za-z?-]+\Z")
 MODEL = "deepseek-flash"
 
 
