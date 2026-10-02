@@ -15,7 +15,7 @@ identity and revision are fixed only in =model_study/schema.py=. This
 experiment selects its =founded= protocol. Future studies must register
 their protocol there and keep filenames and the command entry point stable.
 The ASCENT dependency is pinned to
-=80fee6f0860ff71aaea27ebd08c36b195d4a225f= in =gerbil.pkg=.
+=f80c9dc7cf5e4ed42a806b0d78c847e52be09de6= in =gerbil.pkg=.
 The frozen five-task corpus and answer key remain byte-identical to the
 baseline and typed studies,
 SHA256
