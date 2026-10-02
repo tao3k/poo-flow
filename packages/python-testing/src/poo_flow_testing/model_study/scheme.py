@@ -21,7 +21,7 @@ from .runner import source_head
 
 HERE = Path(__file__).resolve().parent / "scheme_source"
 CASES = ("withdrawal", "wrong_join", "negation_count")
-ANSWER_ALPHABET = re.compile(r"[()\s0-9aenrsw-]+\Z")
+ANSWER_ALPHABET = re.compile(r"[()\s0-9A-Za-z-]+\Z")
 MODEL = "deepseek-flash"
 
 
@@ -157,6 +157,8 @@ def live(preview_dir: Path, output_dir: Path, ascent_root: Path, poo_root: Path,
                     file.write(f"{case}\t{repeat}\t{response.status}\t"
                                f"{str(valid).lower()}\t{str(correct).lower()}\t"
                                f"{seconds}\t{response.id}\n")
+        scorer.stdin.write("quit\n")
+        scorer.stdin.flush()
 
 
 def main() -> int:

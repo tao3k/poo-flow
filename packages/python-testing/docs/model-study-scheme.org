@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme source comprehension pilot
-#+STATUS: frozen locally; no model calls yet
+#+STATUS: completed bounded pilot; native regrade documented
 #+DATE: 2026-10-02
 
 * Question
@@ -58,3 +58,6 @@ python -m poo_flow_testing.model_study.scheme \
 
 After review and authorization, the live command adds =--env-file= and
 =--output-dir=. The output directory must be new and external.
+
+The completed result and the correction to the initial syntax filter are
+in [[file:model-study-scheme-results.org][the result receipt]].

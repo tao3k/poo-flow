@@ -91,4 +91,4 @@ The guard withheld all six closed-cut release-authority claims.
 That pilot sent JSON observations. The separate
 [[file:docs/model-study-scheme.org][Scheme source pilot]] sends actual Gerbil Scheme
 programs and scores returned S-expressions with a native Scheme reader;
-its external model calls have not run.
+its [[file:docs/model-study-scheme-results.org][nine-call result]] found no exact row-set answer on the fixed programs.

@@ -12,6 +12,7 @@ from poo_flow_testing.model_study.paired import typed_observation
 from poo_flow_testing.model_study.protocol import (
     guard_answer, proof_observation, require_pinned_ascent,
 )
+from poo_flow_testing.model_study.scheme import readable_answer
 from poo_flow_testing.temporal.authority import gate_model_answer, guarded_runtime
 
 
@@ -150,3 +151,10 @@ def test_live_study_requires_exact_ascent_dependency_pin(tmp_path, monkeypatch) 
         assert "dependency pin" in str(error)
     else:
         raise AssertionError("mismatched dependency pin accepted")
+
+
+def test_scheme_answer_filter_allows_symbols_without_reader_directives() -> None:
+    assert readable_answer("(answer ((path 0 1) (summary 1 2)))")
+    assert not readable_answer("(answer #.(system 1))")
+    assert not readable_answer("(answer ((0 1))")
+    assert not readable_answer("(answer 0))(")

@@ -39,6 +39,6 @@
     (score (car paths) (cadr paths))
     (let loop ()
       (let (expected-path (read))
-        (unless (eof-object? expected-path)
+        (unless (or (eof-object? expected-path) (eq? expected-path 'quit))
           (score expected-path (read))
           (loop))))))
