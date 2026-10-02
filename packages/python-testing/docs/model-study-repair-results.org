@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme candidate and native receipt repair pilot results
-#+STATUS: completed four-call pilot; repair feedback contract revised afterward
+#+STATUS: two bounded pilots completed; candidate contract corrected afterward
 #+DATE: 2026-10-02
 
 * Exact run receipt
@@ -54,9 +54,41 @@ contained =rejected= and =invalid= statuses, not the located
 the model's ability to repair a diagnosed error. After preserving the
 raw run, the task contract was made explicit and the native tool was
 changed to include diagnostic code/path pairs in its Scheme receipt.
-The revised protocol needs a new committed-head preview and separate
-authorization before any further paid calls. The earlier four-call
-authorization is exhausted.
+The earlier four-call authorization was exhausted before the revised run.
+
+* Diagnostic feedback run
+
+The user separately authorized the immutable repair-only preview at
+=/private/tmp/poo-scheme-repair-diagnostic-preview-head-5939b39f=,
+bound to POO Flow =5939b39f= and the same ASCENT =f80c9dc=. The preview
+contained only the revised Scheme task and a bounded repair template;
+it did not resend the two unchanged controls. Two DeepSeek calls were
+made, with no retries. Raw candidates, native receipts, response IDs,
+and the manifest are in
+=/private/tmp/poo-scheme-repair-diagnostic-live-head-5939b39f=.
+The manifest SHA256 is
+=cf84e6af18c517aad7dc4e10117cecebdcc34da9c06e60a3f769de8ecd47ef7b=.
+
+Both returned candidates were readable and byte-identical (SHA256
+=f0628b625b221bc1648aa25265c0527d3a2a548567d5bcfda3f397219bcb4b85=).
+They declared only derived relations, correcting the first pilot's
+source-redeclaration error. Native admission rejected each candidate
+on all three source states with
+=((invalid-limits (clause 11)))=. The candidate supplied
+=(limits 100 1000 10000)=; the third value exceeds ASCENT's maximum
+output-fact limit of 4096. The second turn repeated the candidate
+despite receiving the located diagnostic. Both independent scores were
+=(score (exact #f))=, and neither candidate obtained a finite or founded
+receipt. The two-call authorization is exhausted.
+
+The outgoing task incorrectly labeled the three limits as iterations,
+rows and steps, and omitted their upper bounds. This makes the run a
+test of an incomplete public contract as well as model repair. After
+preserving the exact preview and output, the checked-in task now names
+the input, derived and output fact limits, gives their caps, and shows
+a valid example. Any further paid call requires a fresh preview and
+authorization. Together, the six calls do not establish general Scheme
+literacy or ASCENT tool usefulness.
 
 This fixed, tiny sample does not establish general Scheme literacy,
 ASCENT tool usefulness, or deployed behavior. It does show that a

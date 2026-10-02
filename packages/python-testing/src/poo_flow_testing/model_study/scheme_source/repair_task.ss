@@ -12,7 +12,9 @@
 ;;;     (relation NAME ARITY) ...
 ;;;     (rule (HEAD ARG ...) (BODY ARG ...) ...)
 ;;;     (query RELATION ARG ...)
-;;;     (limits MAX-ITERATIONS MAX-ROWS MAX-STEPS))
+;;;     (limits MAX-INPUT-FACTS MAX-DERIVED-FACTS MAX-OUTPUT-FACTS))
+;;; Each limit is a positive integer, at most 1024, 4096, 4096
+;;; respectively. (limits 16 64 128) is sufficient for these sources.
 ;;; BODY terms may include (not (RELATION ...)), (where (even? ?w)),
 ;;; (compute ?v (+ ?w ?w)), and
 ;;; (reduce ?n (count) (RELATION ?r ?v)).

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme candidate and native receipt repair protocol
-#+STATUS: initial four-call pilot complete; diagnostic feedback revision pending approval
+#+STATUS: four-call and two-call pilots complete; limit contract corrected afterward
 #+DATE: 2026-10-02
 
 * Question and controls
@@ -74,12 +74,18 @@ The [[file:model-study-repair-results.org][initial result]] preserves the origin
 status-only receipt omitted a =duplicate-relation= diagnostic; the
 revised task and tool now return located diagnostic code/path pairs.
 Any second run needs a new exact-head preview and authorization.
-The revised run uses =--repair-only=. It reuses the completed control
-scores because their source bytes and model settings are unchanged;
-it sends only the revised candidate task and, if needed, one feedback
-turn. Its new preview declares a two-call maximum and contains no
+The revised run used =--repair-only=. It reused the completed control
+scores because their source bytes and model settings were unchanged;
+it sent only the revised candidate task and one feedback turn.
+Its preview declared a two-call maximum and contained no
 control payloads. The first run's raw control answers and hashes stay
 available in [[file:model-study-repair-results.org][the result receipt]].
+Both new candidates failed the native limit check and were identical.
+The reviewed task had incorrectly named the three =limits= fields as
+iterations, rows and steps, and had omitted their caps. The corrected
+task names input, derived and output fact caps of 1024, 4096 and 4096.
+The exact original payloads and scores remain in the result receipt;
+this post-run correction is not evidence of model performance.
 
 * Matched native boundary timing
 
