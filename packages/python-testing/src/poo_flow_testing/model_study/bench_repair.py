@@ -11,7 +11,7 @@ import statistics
 import time
 from pathlib import Path
 
-from .repair import HERE, NativeTool, score
+from .repair_native import SCHEME_SOURCE_DIR, NativeTool, score
 from .reporting import report_json
 
 
@@ -29,7 +29,7 @@ def main() -> int:
         raise FileExistsError(args.output)
     if args.output.resolve().is_relative_to(args.poo_root.resolve()):
         raise ValueError("benchmark receipt must stay outside the repository")
-    fixture = (HERE / "repair_reference.sexp").read_text(encoding="utf-8")
+    fixture = (SCHEME_SOURCE_DIR / "repair_reference.sexp").read_text(encoding="utf-8")
     candidate = fixture[fixture.index("(candidate"):]
     worker = NativeTool(args.poo_root, args.ascent_root, args.gerbil_path)
     samples = []
