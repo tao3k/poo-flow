@@ -86,3 +86,5 @@ def test_archive_cannot_be_nested_in_inputs(tmp_path, monkeypatch):
     monkeypatch.setattr(archive, 'require_durable', lambda _: None)
     with pytest.raises(ValueError, match='outside evidence inputs'):
         archive.require_archive(tmp_path / 'result/archive', tmp_path / 'preview', tmp_path / 'result')
+    with pytest.raises(ValueError, match='outside evidence inputs'):
+        archive.require_archive(tmp_path / 'archive', tmp_path / 'preview', tmp_path / 'archive/result')

@@ -27,7 +27,8 @@ def require_durable(path: Path) -> None:
 
 def require_archive(destination: Path, *sources: Path) -> None:
     require_durable(destination)
-    if any(destination.resolve().is_relative_to(source.resolve()) for source in sources):
+    if any(destination.resolve().is_relative_to(source.resolve())
+           or source.resolve().is_relative_to(destination.resolve()) for source in sources):
         raise ValueError('archive destination must be outside evidence inputs')
 
 
