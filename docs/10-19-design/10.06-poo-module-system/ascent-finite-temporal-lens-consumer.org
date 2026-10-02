@@ -8,8 +8,8 @@
 * Implementation and dependency
 
 The authoritative native package manifest pins ASCENT
-=246ee9b5d2eef8aba79b98d3725ab8733363a3a3=. The Bazel archive SHA256 is
-=1138da7bad6431451c79546c1c9b8db45dc0ac23bc7e0160e8c827b9c33a86c3=;
+=891cfb9454f726784209d6becd7805b98fbf2b97=. The Bazel archive SHA256 is
+=af893aa9d245997997cabf6cb368671f60460f7045bcfff4b7fc3b8bfc80716f=;
 both platform lock projections match. Dependency-contract and error-mode
 Bazel lock validation passed through the captured workspace environment.
 
@@ -78,3 +78,13 @@ edits and tag, and reject a non-Git directory or non-full revision. A real
 clean temporary package root fetched all four declared SHA dependencies.
 No package uninstall, remote dependency rewrite or threshold relaxation
 was used. Exact-head CI after this repair remains the final gate.
+
+* Complete coordinate binding pin
+
+The final pin adds native snapshot identity binding for the complete canonical
+lens, full source, root and supplied/hypothetical scope. Even equal-output
+cut/window changes or a POO projection extension cannot reuse the old native
+receipt. Fork/compare reverify their actual base receipts. ASCENT's ninth
+case checks this directly; its build/policy and both finite matrices passed.
+Content binding is still distinct from POO/MRR source authority. The consumer
+and native/Bazel contract are rechecked at the final pinned implementation.
