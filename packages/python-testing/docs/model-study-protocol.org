@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Pre-registered cross-layer ASCENT receipt model pilot
-#+STATUS: frozen protocol; live results pending
+#+STATUS: frozen protocol; bounded live pilot completed
 #+DATE: 2026-10-02
 
 * Question and source identity
@@ -75,3 +75,6 @@ uv run --project packages/python-testing --extra live --extra runtime \
 
 The live invocation uses the same arguments plus =--env-file= and
 =--output=. Review its JSONL receipt before writing a result summary.
+
+The completed bounded result, including unchanged scores and the
+closed-cut guard outcomes, is in [[file:model-study-results.org][the result receipt]].

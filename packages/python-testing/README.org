@@ -85,3 +85,6 @@ observation with the newly verified ASCENT receipt on the same frozen
 task and records the Runtime's guarded output separately from model
 scores. The pinned Ascent package and the local checkout must identify
 the same source head before a live founded-receipt result is admitted.
+Its [[file:docs/model-study-results.org][bounded pilot]] found no score improvement on the fixed
+corpus: both arms scored 15/15 on choice and 12/15 on boundary claim.
+The guard withheld all six closed-cut release-authority claims.
