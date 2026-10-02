@@ -137,7 +137,7 @@ class NativeTool:
 
 
 def preview(directory: Path, poo_root: Path, ascent_root: Path,
-            gerbil_path: Path) -> None:
+            gerbil_path: Path, repair_only: bool = False) -> None:
     if directory.exists():
         raise FileExistsError(directory)
     if directory.resolve().is_relative_to(poo_root.resolve()):
@@ -145,23 +145,24 @@ def preview(directory: Path, poo_root: Path, ascent_root: Path,
     directory.mkdir(parents=True)
     source = HERE / TASK
     shutil.copyfile(source, directory / TASK)
-    expected_dir = directory / "expected"
-    expected_dir.mkdir()
-    control_digests = []
-    for name in CONTROLS:
-        control = HERE / f"{name}.ss"
-        shutil.copyfile(control, directory / control.name)
-        (expected_dir / f"{name}.sexp").write_text(
-            native_control(control, poo_root, ascent_root, gerbil_path),
+    if not repair_only:
+        expected_dir = directory / "expected"
+        expected_dir.mkdir()
+        control_digests = []
+        for name in CONTROLS:
+            control = HERE / f"{name}.ss"
+            shutil.copyfile(control, directory / control.name)
+            (expected_dir / f"{name}.sexp").write_text(
+                native_control(control, poo_root, ascent_root, gerbil_path),
+                encoding="utf-8",
+            )
+            control_digests.append(
+                f"{name}\t{hashlib.sha256(control.read_bytes()).hexdigest()}\n"
+            )
+        (directory / "controls.tsv").write_text(
+            "name\tpayload_sha256\n" + "".join(control_digests),
             encoding="utf-8",
         )
-        control_digests.append(
-            f"{name}\t{hashlib.sha256(control.read_bytes()).hexdigest()}\n"
-        )
-    (directory / "controls.tsv").write_text(
-        "name\tpayload_sha256\n" + "".join(control_digests),
-        encoding="utf-8",
-    )
     task = source.read_text(encoding="utf-8")
     (directory / "repair-template.ss").write_text(
         repair_payload(task, "<candidate-from-first-call>",
@@ -173,13 +174,14 @@ def preview(directory: Path, poo_root: Path, ascent_root: Path,
     (directory / "manifest.tsv").write_text(
         "payload_sha256\tascent_head\tpoo_head\tmodel\tmax_calls\n"
         f"{hashlib.sha256(source.read_bytes()).hexdigest()}\t"
-        f"{source_head(ascent_root)}\t{source_head(poo_root)}\t{MODEL}\t4\n",
+        f"{source_head(ascent_root)}\t{source_head(poo_root)}\t{MODEL}\t"
+        f"{2 if repair_only else 4}\n",
         encoding="utf-8",
     )
 
 
 def live(directory: Path, output: Path, poo_root: Path, ascent_root: Path,
-         gerbil_path: Path, api_key: str) -> None:
+         gerbil_path: Path, api_key: str, repair_only: bool = False) -> None:
     from openai import OpenAI
 
     require_clean(poo_root)
@@ -199,7 +201,8 @@ def live(directory: Path, output: Path, poo_root: Path, ascent_root: Path,
             or payload != (HERE / TASK).read_text(encoding="utf-8")
             or ascent_head != source_head(ascent_root)
             or poo_head != source_head(poo_root)
-            or model != MODEL or max_calls != "4"):
+            or model != MODEL
+            or max_calls != ("2" if repair_only else "4")):
         raise RuntimeError("preview no longer matches committed source and heads")
     if ((directory / "repair-template.ss").read_text(encoding="utf-8")
             != repair_payload(payload, "<candidate-from-first-call>",
@@ -207,28 +210,32 @@ def live(directory: Path, output: Path, poo_root: Path, ascent_root: Path,
             or (directory / "syntax-template.ss").read_text(
                 encoding="utf-8") != syntax_payload(payload)):
         raise RuntimeError("repair preview changed")
-    control_rows = (directory / "controls.tsv").read_text(
-        encoding="utf-8").splitlines()
-    if (len(control_rows) != len(CONTROLS) + 1
-            or control_rows[0] != "name\tpayload_sha256"):
-        raise RuntimeError("control manifest changed")
-    for name, row in zip(CONTROLS, control_rows[1:], strict=True):
-        actual_name, control_digest = row.split("\t")
-        control = (directory / f"{name}.ss").read_bytes()
-        if (actual_name != name
-                or hashlib.sha256(control).hexdigest() != control_digest
-                or control != (HERE / f"{name}.ss").read_bytes()
-                or (directory / "expected" / f"{name}.sexp").read_text(
-                    encoding="utf-8") != native_control(
-                        HERE / f"{name}.ss", poo_root,
-                        ascent_root, gerbil_path)):
-            raise RuntimeError("control preview changed")
+    if repair_only:
+        if (directory / "controls.tsv").exists():
+            raise RuntimeError("repair-only preview unexpectedly has controls")
+    else:
+        control_rows = (directory / "controls.tsv").read_text(
+            encoding="utf-8").splitlines()
+        if (len(control_rows) != len(CONTROLS) + 1
+                or control_rows[0] != "name\tpayload_sha256"):
+            raise RuntimeError("control manifest changed")
+        for name, row in zip(CONTROLS, control_rows[1:], strict=True):
+            actual_name, control_digest = row.split("\t")
+            control = (directory / f"{name}.ss").read_bytes()
+            if (actual_name != name
+                    or hashlib.sha256(control).hexdigest() != control_digest
+                    or control != (HERE / f"{name}.ss").read_bytes()
+                    or (directory / "expected" / f"{name}.sexp").read_text(
+                        encoding="utf-8") != native_control(
+                            HERE / f"{name}.ss", poo_root,
+                            ascent_root, gerbil_path)):
+                raise RuntimeError("control preview changed")
     output.mkdir(parents=True)
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com",
                     max_retries=0, timeout=45.0)
     records: list[dict[str, object]] = []
     try:
-        for name in CONTROLS:
+        for name in (() if repair_only else CONTROLS):
             control_payload = (directory / f"{name}.ss").read_text(
                 encoding="utf-8")
             started = time.perf_counter()
@@ -311,11 +318,14 @@ def main() -> int:
     parser.add_argument("--preview-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--env-file", type=Path)
+    parser.add_argument("--repair-only", action="store_true",
+                        help="reuse the already scored control calls")
     args = parser.parse_args()
     if args.output_dir is None:
         preview(args.preview_dir, args.poo_root, args.ascent_root,
-                args.gerbil_path)
-        report_json({"preview": str(args.preview_dir), "max_calls": 4})
+                args.gerbil_path, args.repair_only)
+        report_json({"preview": str(args.preview_dir),
+                     "max_calls": 2 if args.repair_only else 4})
         return 0
     api_key = os.environ.get("DEEPSEEK_API_KEY") or (
         key_from_file(args.env_file) if args.env_file else ""
@@ -323,7 +333,7 @@ def main() -> int:
     if not api_key:
         parser.error("DEEPSEEK_API_KEY or --env-file is required")
     live(args.preview_dir, args.output_dir, args.poo_root,
-         args.ascent_root, args.gerbil_path, api_key)
+         args.ascent_root, args.gerbil_path, api_key, args.repair_only)
     return 0
 
 

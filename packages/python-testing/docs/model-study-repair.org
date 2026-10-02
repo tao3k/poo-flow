@@ -74,6 +74,12 @@ The [[file:model-study-repair-results.org][initial result]] preserves the origin
 status-only receipt omitted a =duplicate-relation= diagnostic; the
 revised task and tool now return located diagnostic code/path pairs.
 Any second run needs a new exact-head preview and authorization.
+The revised run uses =--repair-only=. It reuses the completed control
+scores because their source bytes and model settings are unchanged;
+it sends only the revised candidate task and, if needed, one feedback
+turn. Its new preview declares a two-call maximum and contains no
+control payloads. The first run's raw control answers and hashes stay
+available in [[file:model-study-repair-results.org][the result receipt]].
 
 * Matched native boundary timing
 
