@@ -634,3 +634,17 @@ pin-gerbil-dependency package revision:
 [group('dependency')]
 mod-tidy:
     {{ bazel }} mod tidy --lockfile_mode=update
+
+# Qualify the pinned temporal package with visible case receipts.
+[group('test')]
+test-ascent-temporal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 120s gerbil {{ gerbil_test_runtime_options }} env gxtest -v 5 t/ascent-temporal-lens-test.ss 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -F 'MODULE-OK t/ascent-temporal-lens-test.ss' "$log" >/dev/null
+    grep -F 'CASE-OK POO values keep native evidence separate from cut authority' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null
