@@ -22,7 +22,6 @@ from .runner import source_head
 
 HERE = Path(__file__).resolve().parent / "scheme_source"
 CASES = (
-    "control_pure", "control_contract", "withdrawal", "negation_count",
     "module_fragment", "module_diagnostic", "receipt_boundary",
 )
 MODULE_CONTEXT = {
@@ -59,7 +58,9 @@ def module_payload(case: str, ascent_root: Path) -> bytes:
         return source
     context = (ascent_root / module).read_bytes()
     return (f";;; Imported module source: {module}\n".encode()
-            + context + b"\n;;; Calling program follows.\n" + source)
+            + context + b"\n;;; Calling program follows.\n" + source
+            + b"\nReturn only the exact S-expression printed by main. "
+              b"Do not explain or use Markdown.\n")
 
 
 def preview(preview_dir: Path, ascent_root: Path, poo_root: Path,

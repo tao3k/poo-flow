@@ -100,3 +100,6 @@ contract and a status-only receipt; revised diagnostic feedback is
 pending a separate live qualification.
 The [[file:docs/model-study-module-capabilities.org][module comprehension study]] fixes seven distinct Gerbil
 Scheme programs and their native answers, with one model call per case.
+Its [[file:docs/model-study-module-capabilities-results.org][bounded result]] records one exact answer; the three module-source
+responses were prose, motivating a separately gated
+[[file:docs/model-study-module-answer-followup.org][answer-format follow-up]].

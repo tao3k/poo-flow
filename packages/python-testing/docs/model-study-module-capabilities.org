@@ -5,6 +5,11 @@
 #+STATUS: native references and paid-call preview pending
 #+DATE: 2026-10-02
 
+The completed run is recorded in [[file:model-study-module-capabilities-results.org][the seven-case result]].
+The current =scheme.py= entry point has moved to the focused
+[[file:model-study-module-answer-followup.org][three-case answer-format follow-up]];
+the seven-case runner remains reproducible from commit =21d11b9=.
+
 * Question
 
 Can a model read ordinary Gerbil Scheme programs and current ASCENT
