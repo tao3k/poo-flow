@@ -55,3 +55,26 @@ release/deployment authority remain separate gates. The existing approved
 four-call repair study stays bound to its earlier ASCENT =cd6f60f= and POO
 =0b7a6c52=; this dependency update neither changes its frozen preview nor
 spends any model-call budget. No model calls were made for this slice.
+
+* CI pin reachability repair
+
+At initial consumer head =f1b8e1e2=, Ubuntu dependency installation failed
+before tests: plain cloning no longer included the unchanged parser pin
+=3f25eb4542d41caa96d3a8e449cf39b18247fc05= (unable to read tree). The GitHub
+commit API and a clean explicit SHA fetch still returned that exact commit
+and tree =1ef7a58fefe7d31bba6c476a20e55d283a60e2a8=. This was a dependency
+retrieval gap, not evidence of a temporal semantic regression.
+
+Both native dependency-install workflows now call the manifest-owned
+=gerbil_dependency_pin.py prepare-native= before gxpkg. It prefetches full
+commit SHA objects into the managed package root. A new/unborn package
+checkout receives only its declared SHA and the adjacent gxpkg =.tag= datum;
+existing checkouts, edits and tag metadata remain intact. Tag resolution
+and builds stay with gxpkg. No dependency pin was changed for this fix.
+
+Two hermetic regression tests reproduce an unadvertised retained commit,
+verify fresh materialization and preservation of an existing branch, local
+edits and tag, and reject a non-Git directory or non-full revision. A real
+clean temporary package root fetched all four declared SHA dependencies.
+No package uninstall, remote dependency rewrite or threshold relaxation
+was used. Exact-head CI after this repair remains the final gate.
