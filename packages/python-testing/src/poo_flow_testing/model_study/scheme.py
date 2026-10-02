@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-"""Run a bounded study in which the model reads Gerbil Scheme source."""
+"""Ask a model bounded questions about existing ASCENT Scheme modules."""
 
 from __future__ import annotations
 
@@ -10,9 +10,7 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from ..ascent.live import key_from_file
@@ -20,51 +18,35 @@ from .protocol import require_clean, require_pinned_ascent
 from .reporting import report_json
 from .runner import source_head
 
-HERE = Path(__file__).resolve().parent / "scheme_source"
-CASES = (
-    "module_fragment", "module_diagnostic", "receipt_boundary",
-)
-MODULE_CONTEXT = {
-    "module_fragment": "program/interface.ss",
-    "module_diagnostic": "program/interface.ss",
-    "receipt_boundary": "candidate/reasoning.ss",
-}
+HERE = Path(__file__).resolve().parent
+QUESTIONS = HERE / "scheme_questions.json"
 ANSWER_ALPHABET = re.compile(r"[()\s0-9A-Za-z?-]+\Z")
 MODEL = "deepseek-flash"
 
 
-def native(script: Path, root: Path, ascent_root: Path, gerbil_path: Path,
-           *arguments: Path) -> str:
-    env = os.environ.copy()
-    env.pop("DEEPSEEK_API_KEY", None)
-    env["GERBIL_PATH"] = str(gerbil_path)
-    env["GERBIL_LOADPATH"] = str(ascent_root)
-    result = subprocess.run(
-        ["gerbil", "-:max-heap=1G,debug=q", "env", "gxi", str(script),
-         *(str(argument) for argument in arguments)],
-        cwd=root, env=env, text=True, capture_output=True,
-        timeout=90, check=True,
-    )
-    lines = [line for line in result.stdout.splitlines() if line.startswith("(")]
-    if len(lines) != 1:
-        raise RuntimeError(f"native Scheme script emitted {len(lines)} data lines")
-    return lines[0] + "\n"
+def questions() -> list[dict[str, str]]:
+    items = json.loads(QUESTIONS.read_text(encoding="utf-8"))
+    if not items or len({item["id"] for item in items}) != len(items):
+        raise ValueError("questions need distinct identifiers")
+    for item in items:
+        source = Path(item["source"])
+        if (not re.fullmatch(r"[a-z0-9_]+", item["id"])
+                or source.is_absolute() or ".." in source.parts
+                or source.suffix != ".ss" or not readable_answer(item["answer"])):
+            raise ValueError(f"invalid question contract: {item['id']}")
+    return items
 
 
-def module_payload(case: str, ascent_root: Path) -> bytes:
-    source = (HERE / f"{case}.ss").read_bytes()
-    module = MODULE_CONTEXT.get(case)
-    if module is None:
-        return source
-    context = (ascent_root / module).read_bytes()
-    return (f";;; Imported module source: {module}\n".encode()
-            + context + b"\n;;; Calling program follows.\n" + source
-            + b"\nReturn only the exact S-expression printed by main. "
+def payload(item: dict[str, str], ascent_root: Path) -> bytes:
+    source = item["source"]
+    module = (ascent_root / source).read_bytes()
+    return (f";;; ASCENT Scheme source: {source}\n".encode()
+            + module + b"\n\nQuestion: " + item["question"].encode()
+            + b"\nReturn exactly one (answer ...) S-expression. "
               b"Do not explain or use Markdown.\n")
 
 
-def preview(preview_dir: Path, ascent_root: Path, poo_root: Path,
-            gerbil_path: Path) -> dict[str, str]:
+def preview(preview_dir: Path, ascent_root: Path, poo_root: Path) -> dict[str, str]:
     if preview_dir.exists():
         raise FileExistsError(preview_dir)
     if preview_dir.resolve().is_relative_to(poo_root.resolve()):
@@ -73,26 +55,21 @@ def preview(preview_dir: Path, ascent_root: Path, poo_root: Path,
     expected_dir = preview_dir / "expected"
     expected_dir.mkdir()
     digests = {}
-    for case in CASES:
-        payload = module_payload(case, ascent_root)
-        (preview_dir / f"{case}.ss").write_bytes(payload)
-        digests[case] = hashlib.sha256(payload).hexdigest()
-    def expected_for(case: str) -> str:
-        return native(HERE / f"{case}.ss", poo_root, ascent_root, gerbil_path)
-    # Each Gerbil process has a 1 GiB heap fence: at most 2 GiB total.
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        expectations = list(pool.map(expected_for, CASES))
-    expected_digests = {}
-    for case, expected in zip(CASES, expectations, strict=True):
-        (expected_dir / f"{case}.sexp").write_text(expected, encoding="utf-8")
-        expected_digests[case] = hashlib.sha256(expected.encode()).hexdigest()
-    header = ("case\tpayload_sha256\texpected_sha256\tascent_head\t"
-              "poo_head\tmodel\trepeats\n")
-    rows = (f"{case}\t{digests[case]}\t{expected_digests[case]}\t"
-            f"{source_head(ascent_root)}\t{source_head(poo_root)}\t"
-            f"{MODEL}\t1\n" for case in CASES)
+    rows = []
+    for item in questions():
+        case = item["id"]
+        outgoing = payload(item, ascent_root)
+        answer = item["answer"].encode() + b"\n"
+        (preview_dir / f"{case}.txt").write_bytes(outgoing)
+        (expected_dir / f"{case}.sexp").write_bytes(answer)
+        digest = hashlib.sha256(outgoing).hexdigest()
+        digests[case] = digest
+        rows.append(f"{case}\t{digest}\t{hashlib.sha256(answer).hexdigest()}\t"
+                    f"{source_head(ascent_root)}\t{source_head(poo_root)}\t"
+                    f"{MODEL}\t1\n")
     (preview_dir / "manifest.tsv").write_text(
-        header + "".join(rows), encoding="utf-8",
+        "case\tpayload_sha256\texpected_sha256\tascent_head\t"
+        "poo_head\tmodel\trepeats\n" + "".join(rows), encoding="utf-8",
     )
     return digests
 
@@ -112,7 +89,7 @@ def readable_answer(raw: str) -> bool:
 
 
 def live(preview_dir: Path, output_dir: Path, ascent_root: Path, poo_root: Path,
-         gerbil_path: Path, api_key: str) -> None:
+         api_key: str) -> None:
     from openai import OpenAI
 
     require_clean(ascent_root)
@@ -121,92 +98,66 @@ def live(preview_dir: Path, output_dir: Path, ascent_root: Path, poo_root: Path,
     if output_dir.exists():
         raise FileExistsError(output_dir)
     if output_dir.resolve().is_relative_to(poo_root.resolve()):
-        raise ValueError("raw model responses must stay outside the repository")
+        raise ValueError("raw responses must stay outside the repository")
+    items = questions()
     preview_rows = (preview_dir / "manifest.tsv").read_text(encoding="utf-8").splitlines()
-    if len(preview_rows) != len(CASES) + 1:
+    if len(preview_rows) != len(items) + 1:
         raise RuntimeError("preview manifest has unexpected case count")
-    for case, row in zip(CASES, preview_rows[1:], strict=True):
-        (name, digest, expected_digest, ascent_head, poo_head,
-         model, count) = row.split("\t")
-        payload = (preview_dir / f"{case}.ss").read_bytes()
-        if (name != case or hashlib.sha256(payload).hexdigest() != digest
+    for item, row in zip(items, preview_rows[1:], strict=True):
+        name, digest, expected_digest, ascent_head, poo_head, model, count = row.split("\t")
+        case = item["id"]
+        outgoing = (preview_dir / f"{case}.txt").read_bytes()
+        expected = (preview_dir / "expected" / f"{case}.sexp").read_bytes()
+        if (name != case or hashlib.sha256(outgoing).hexdigest() != digest
+                or hashlib.sha256(expected).hexdigest() != expected_digest
+                or outgoing != payload(item, ascent_root)
+                or expected != item["answer"].encode() + b"\n"
                 or ascent_head != source_head(ascent_root)
                 or poo_head != source_head(poo_root)
-                or model != MODEL or count != "1"
-                or payload != module_payload(case, ascent_root)):
-            raise RuntimeError("preview no longer matches committed source and heads")
-        expected_path = preview_dir / "expected" / f"{case}.sexp"
-        if hashlib.sha256(expected_path.read_bytes()).hexdigest() != expected_digest:
-            raise RuntimeError("native answer changed since preview")
+                or model != MODEL or count != "1"):
+            raise RuntimeError("preview no longer matches question source and heads")
     output_dir.mkdir(parents=True)
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com",
                     max_retries=0, timeout=45.0)
     manifest = output_dir / "manifest.tsv"
-    manifest.write_text("case\trepeat\tstatus\tvalid\tcorrect\tseconds\tresponse_id\n",
+    manifest.write_text("case\tstatus\tvalid\tcorrect\tseconds\tresponse_id\n",
                         encoding="utf-8")
-    scorer_env = os.environ.copy()
-    scorer_env.pop("DEEPSEEK_API_KEY", None)
-    scorer_env["GERBIL_PATH"] = str(gerbil_path)
-    scorer_env["GERBIL_LOADPATH"] = str(ascent_root)
-    with subprocess.Popen(
-        ["gerbil", "-:max-heap=1G,debug=q", "env", "gxi", str(HERE / "score.ss")],
-        cwd=poo_root, env=scorer_env, text=True, bufsize=1,
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-    ) as scorer:
-        assert scorer.stdin is not None and scorer.stdout is not None
-        for case in CASES:
-            payload = (preview_dir / f"{case}.ss").read_text(encoding="utf-8")
-            expected = preview_dir / "expected" / f"{case}.sexp"
-            for repeat in (1,):
-                started = time.perf_counter()
-                response = client.responses.create(
-                    model=MODEL, input=[{"role": "user", "content": payload}],
-                    reasoning={"effort": "none"}, temperature=0,
-                    max_output_tokens=512,
-                )
-                seconds = round(time.perf_counter() - started, 3)
-                raw = response.output_text
-                answer = output_dir / f"{case}-{repeat}.sexp"
-                answer.write_text(raw, encoding="utf-8")
-                valid = correct = False
-                if response.status == "completed" and readable_answer(raw):
-                    scorer.stdin.write(
-                        f"{json.dumps(str(expected))} {json.dumps(str(answer))}\n"
-                    )
-                    scorer.stdin.flush()
-                    score = scorer.stdout.readline()
-                    if not score.startswith("(score "):
-                        raise RuntimeError("native Scheme scorer did not return a score")
-                    valid = "(valid #t)" in score
-                    correct = "(correct #t)" in score
-                with manifest.open("a", encoding="utf-8") as file:
-                    file.write(f"{case}\t{repeat}\t{response.status}\t"
-                               f"{str(valid).lower()}\t{str(correct).lower()}\t"
-                               f"{seconds}\t{response.id}\n")
-        scorer.stdin.write("quit\n")
-        scorer.stdin.flush()
+    for item in items:
+        case = item["id"]
+        outgoing = (preview_dir / f"{case}.txt").read_text(encoding="utf-8")
+        started = time.perf_counter()
+        response = client.responses.create(
+            model=MODEL, input=[{"role": "user", "content": outgoing}],
+            reasoning={"effort": "none"}, temperature=0,
+            max_output_tokens=512,
+        )
+        seconds = round(time.perf_counter() - started, 3)
+        raw = response.output_text
+        (output_dir / f"{case}.sexp").write_text(raw, encoding="utf-8")
+        valid = response.status == "completed" and readable_answer(raw)
+        correct = valid and raw.strip() == item["answer"]
+        with manifest.open("a", encoding="utf-8") as file:
+            file.write(f"{case}\t{response.status}\t{str(valid).lower()}\t"
+                       f"{str(correct).lower()}\t{seconds}\t{response.id}\n")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ascent-root", type=Path, required=True)
     parser.add_argument("--poo-root", type=Path, required=True)
-    parser.add_argument("--gerbil-path", type=Path, required=True)
     parser.add_argument("--preview-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--env-file", type=Path)
     args = parser.parse_args()
     if args.output_dir is None:
-        report_json(preview(args.preview_dir, args.ascent_root, args.poo_root,
-                            args.gerbil_path))
+        report_json(preview(args.preview_dir, args.ascent_root, args.poo_root))
         return 0
     api_key = os.environ.get("DEEPSEEK_API_KEY") or (
         key_from_file(args.env_file) if args.env_file else ""
     )
     if not api_key:
         parser.error("DEEPSEEK_API_KEY or --env-file is required for a live run")
-    live(args.preview_dir, args.output_dir, args.ascent_root, args.poo_root,
-         args.gerbil_path, api_key)
+    live(args.preview_dir, args.output_dir, args.ascent_root, args.poo_root, api_key)
     return 0
 
 

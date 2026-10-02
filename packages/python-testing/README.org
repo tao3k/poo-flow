@@ -105,3 +105,6 @@ responses were prose, motivating a separately gated
 [[file:docs/model-study-module-answer-followup.org][answer-format follow-up]].
 The [[file:docs/model-study-module-answer-followup-results.org][three-call result]] returned S-expressions for all three, with one
 exact fragment answer and two semantic errors.
+The current [[file:docs/model-study-scheme-source-questions.org][source-question protocol]] reads the pinned ASCENT modules and
+their established qualification contracts. Python Testing only prepares
+model prompts, records calls, and scores short answers.

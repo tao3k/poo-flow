@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Model questions over existing ASCENT Scheme source
+#+DATE: 2026-10-02
+#+STATUS: preview pending; no model calls authorized
+
+* Ownership
+
+ASCENT owns the Scheme implementation and its qualification tests.
+Python Testing reads the pinned ASCENT modules, presents them to a real
+model, records responses, and compares short answer data. This protocol
+adds no Scheme program or native test fixture to Python Testing. The
+earlier Scheme execution pilots remain in Git history with their raw
+result receipts; they do not define this current model input.
+
+* Questions and answer evidence
+
+The five entries in =model_study/scheme_questions.json= name existing
+ASCENT module paths and short questions. Each prompt contains the module
+source at the pinned Git head, followed by the question and an instruction
+to return one =(answer ...)= S-expression. The answer key is saved
+separately in the external preview and is never sent to the model.
+
+| Question | ASCENT source | Existing qualification evidence |
+|----------+---------------+---------------------------------|
+| Fragment names are fresh across builder calls | =program/scheme-language.ss= | =t/qualification/scheme-operator-test.ss=, fresh fragment case |
+| Diagnostic code/path for a body failure | =program/scheme-admission.ss= | =t/qualification/scheme-native-language-test.ss=, failing body case |
+| Diagnostic code/path for a head failure | =program/scheme-admission.ss= | =t/qualification/scheme-native-language-test.ss=, failing head case |
+| Finite verification returns =valid= after success | =candidate/reasoning.ss= | =t/qualification/ascent-reasoning-library-test.ss=, finite verifier case |
+| A different source generation invalidates an old receipt | =candidate/reasoning.ss= | =reasoning-receipt-bound?= generation check and stale-source qualification case |
+
+The diagnostic questions use the zero-based locations already checked in
+ASCENT. The generation question holds source rows and candidate fixed so
+the generation binding is the only changed fact. These are questions
+about the documented native contract, not a new Python-owned semantics.
+
+* Fixed call and scoring rule
+
+Preview generation copies the outgoing prompt bytes, expected answer,
+SHA256 hashes, and both Git heads to a new external directory. The live
+runner requires clean checkouts, the exact POO Flow ASCENT dependency pin,
+and unchanged preview bytes. It reads no API key during preview.
+
+If separately authorized, send each prompt once to =deepseek-flash= via
+the Responses API in non-thinking mode with =temperature=0=,
+=max_output_tokens=512=, 45-second timeout, and no retry: five calls
+maximum. Preserve raw response text and response IDs outside the
+repository. A response is exact only when it is a completed, readable
+S-expression equal to its fixed short answer. Report completion,
+readability, and exactness separately.
+
+This small set can identify specific source misunderstandings. One call
+per question does not measure population accuracy or reveal internal
+model reasoning. No new ASCENT implementation claim follows from it.
