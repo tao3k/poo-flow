@@ -17,6 +17,7 @@ from pathlib import Path
 
 from ..ascent.live import key_from_file
 from .protocol import require_clean, require_pinned_ascent
+from .reporting import report_json
 from .runner import source_head
 
 HERE = Path(__file__).resolve().parent / "scheme_source"
@@ -171,8 +172,8 @@ def main() -> int:
     parser.add_argument("--env-file", type=Path)
     args = parser.parse_args()
     if args.output_dir is None:
-        print(preview(args.preview_dir, args.ascent_root, args.poo_root,
-                      args.gerbil_path))
+        report_json(preview(args.preview_dir, args.ascent_root, args.poo_root,
+                            args.gerbil_path))
         return 0
     api_key = os.environ.get("DEEPSEEK_API_KEY") or (
         key_from_file(args.env_file) if args.env_file else ""
