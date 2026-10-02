@@ -14,6 +14,7 @@ from pathlib import Path
 from ..ascent.candidate import candidate_text
 from ..ascent.live import key_from_file
 from .reporting import report_json
+from .archive import require_archive, seal
 from .support_native import observe, score
 from .support_protocol import SETTINGS, TRANSPORT, digest, preview, validate
 
@@ -79,6 +80,7 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--approved-manifest-sha256")
     parser.add_argument("--env-file", type=Path)
+    parser.add_argument("--archive-dir", type=Path)
     args = parser.parse_args()
     if args.output_dir is None:
         report_json(preview(args.preview_dir, args.ascent_root, args.poo_root, args.gerbil_path))
@@ -90,6 +92,9 @@ def main() -> int:
     if (args.output_dir.exists() or args.output_dir.resolve().is_relative_to(args.poo_root.resolve())
             or args.output_dir.resolve().is_relative_to(args.ascent_root.resolve())):
         parser.error("raw results require a new external directory")
+    if args.archive_dir is None:
+        parser.error("live runs require a durable --archive-dir")
+    require_archive(args.archive_dir, args.preview_dir, args.output_dir)
     key = os.environ.get("DEEPSEEK_API_KEY") or (key_from_file(args.env_file) if args.env_file else "")
     if not key:
         parser.error("DEEPSEEK_API_KEY or --env-file is required for a live run")
@@ -98,7 +103,13 @@ def main() -> int:
     client = OpenAI(api_key=key, **TRANSPORT)
     args.output_dir.mkdir(parents=True)
     (args.output_dir / "preview-manifest.json").write_bytes(manifest)
-    report_json(run(client, files, args.ascent_root, args.gerbil_path, args.output_dir))
+    try:
+        result = run(client, files, args.ascent_root, args.gerbil_path, args.output_dir)
+    except Exception:
+        seal(args.preview_dir, args.output_dir, args.archive_dir, outcome="failed")
+        raise
+    seal(args.preview_dir, args.output_dir, args.archive_dir, outcome="completed")
+    report_json(result)
     return 0
 
 

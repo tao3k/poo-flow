@@ -1,0 +1,112 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Shared-seed candidate repair with a parser-owned contract
+#+DATE: 2026-10-02
+#+STATUS: implementation and qualification; no live calls authorized
+
+* Question and ownership
+
+Given one fixed erroneous inert candidate and the same parser-owned syntax
+contract, does initial-source native feedback help repair that candidate?
+This is a syntax-repair comparison conditional on a supplied seed. It does
+not estimate end-to-end program generation, internal reasoning, general
+feedback benefit or model interpretation of verifier verdicts.
+
+ASCENT owns the grammar/operator description, two frozen erroneous seeds,
+seven-state corpus, independent matrix model, Scheme qualification and
+Rust 0.8.0 differential reference. Python Testing reads these native data
+projections, freezes prompts, records API results and compares output and
+evidence scores. Python adds no Scheme evaluator or owned Scheme fixture.
+
+* Native qualification before preview
+
+The parser description advertises nested where/compute/reduce forms,
+closed operator names and arities, prior-bound operator inputs, fresh
+compute/reduction output bindings and one-based candidate diagnostic paths.
+The operator/reducer registry is shared with admission. Public description
+values are detached copies. Positive and negative forms are checked through
+real native attempts; the description does not replace schema, binding,
+planner, finite-domain or budget admission checks.
+
+The first four states retain support withdrawal/replacement totals
+=20,20,8,12=. Three further states independently discriminate a blocked pair
+(total 8), an odd original weight (12) and equal weighted values under set
+semantics (8). Missing negation, missing original-weight guard and checking
+evenness after doubling must all complete and verify natively, yet disagree
+with the independent intended output on at least one state. Scheme direct,
+fragment and candidate results and the Rust full relation sets are qualified.
+The first valid receipt must fail against the equal-answer next generation;
+a rejected original receipt cannot test generation binding.
+
+* Frozen four-call comparison
+
+| Task | Shared erroneous seed | Order | Calls per arm |
+|------+-----------------------+-------+---------------|
+| compute | flat compute arguments; invalid-computation | self then native | 1 |
+| filter | flat where arguments; invalid-filter | native then self | 1 |
+
+Both arms receive byte-identical task, candidate contract and seed for the
+same task. Neither receives a prior model-generated candidate. Only native
+receives the seed's initial-source observation, frozen during preview.
+Each call is a fresh conversation and emits only one candidate datum.
+No update/discriminator source rows, reference outputs or correctness scores
+are included. Order is alternated across the two tasks, not randomized.
+The two selected syntax mistakes and two task pairs cannot estimate causal
+benefit reliably; report each repair and avoid significance claims.
+
+Settings: =deepseek-flash=, non-thinking, temperature 0, at most 1024 output
+tokens, 45-second timeout, zero retries. Maximum four paid requests; any API
+failure stops the run and preserves partial records. Temperature 0 is not a
+determinism guarantee. API duration excludes native evaluation and archiving.
+
+* Scores and evidence retention
+
+Report API completion, inert readability, each state's native completion,
+finite/founded validity, task shape and exact query-row agreement separately.
+Final success requires all seven outputs, valid current receipts and a
+meaningful stale-generation rejection. Native validity proves the proposed
+program's bounded execution, not its agreement with the task. The wrong-rule
+qualification cases demonstrate this distinction before any paid call.
+
+Preview freezes all four complete prompts, both seeds, canonical description,
+reference TSV, source heads, package pin, settings, order and SHA256 inventory.
+Live execution requires clean exact-head checkouts, unchanged approved preview
+and manifest digest, a new external output directory and a new durable archive
+directory outside temporary storage. Each request/response, usage, elapsed time,
+raw candidate and native TSV is retained. Both completed and failed runs are
+sealed with a file inventory and verified hashes before returning. Archive
+integrity is consistency evidence, not source authentication.
+
+The earlier four-call study has a [[file:evidence/support-candidates-f2f2315a/recovery.json][partial original-text recovery]]:
+all four recovered texts match recorded hashes, but full original JSON,
+requests, preview and native records are unavailable. It remains a bounded
+historical result with incomplete audit retention; missing records are not
+reconstructed or presented as originals.
+
+* Entrypoint and remaining gate
+
+#+begin_src sh
+python -m poo_flow_testing.model_study.shared_repair \
+  --ascent-root ASCENT --poo-root POO --gerbil-path GERBIL_PATH \
+  --preview-dir NEW_EXTERNAL_PREVIEW
+#+end_src
+
+A live run additionally requires =--output-dir=, =--archive-dir=,
+=--approved-manifest-sha256= and an API key or =--env-file=. Both current
+qualified heads must pass CI before live execution. The previous four-call
+approval is exhausted. A new immutable preview and explicit four-call budget
+must be approved before this protocol sends requests. No paid model calls
+have been made for this protocol. Temporal lens qualification remains separate.
+
+* Local qualification receipt
+
+The implementation pins ASCENT =b3d960ce1d84abd67cfe09dd960962b41e7a9538=;
+the Bazel archive SHA256 is
+=be642c6be7332b2d96604289a09799bf2fafdfed27957ab92ee0ac687da5eff9=.
+All 23 Python unit/harness checks passed, including preview-tamper rejection,
+feedback isolation, seven-state evidence/output scoring, archive-tamper
+rejection and archive destination checks. The license contract passed for
+2629 project files; four dependency-projection automation tests and the
+native/Bazel contract and error-mode lock check passed. Current-head CI and
+approval remain distinct gates. No live calls were made for this protocol.

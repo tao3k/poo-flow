@@ -9,4 +9,4 @@ depend:
   "github.com/tao3k/asp-gerbil-scheme@v0.1.2.1"
   "github.com/tao3k/gerbil-parser@3f25eb4542d41caa96d3a8e449cf39b18247fc05"
   "github.com/tao3k/orgize@a450bcb2fded80fb644adc68daed97e238734119"
-  "github.com/tao3k/gerbil-ascent@d2b2eb501fdb1c3b9ab6a1edc8141ef1d77ba0ad"))
+  "github.com/tao3k/gerbil-ascent@b3d960ce1d84abd67cfe09dd960962b41e7a9538"))

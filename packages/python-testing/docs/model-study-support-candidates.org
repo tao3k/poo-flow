@@ -231,3 +231,18 @@ The request JSON records preserve complete outgoing messages, settings,
 canonical message hashes, response JSON and usage. The approved preview
 manifest is copied unchanged into the result directory. No additional
 calls were made after these four responses.
+
+* Evidence retention correction
+
+The temporary preview/result paths above are no longer present. The four
+original response texts were recovered from this immutable result document
+at =6d27a089= only where their bytes matched the recorded SHA256. They are
+retained in [[file:evidence/support-candidates-f2f2315a/recovery.json][the partial recovery inventory]] with explicit unavailable JSON,
+request, preview and native-record entries. No missing original record was
+reconstructed; the historical run cannot currently be fully re-audited.
+
+New live entrypoints require a new durable =--archive-dir= outside temporary
+directories. Preview, results (including failure records) and an inventory
+of SHA256 values are copied and verified before a successful return. Hashes
+check consistency and do not authenticate a source. Model calls remain
+separately budgeted and approved.

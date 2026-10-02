@@ -110,3 +110,7 @@ their established qualification contracts. Python Testing only prepares
 model prompts, records calls, and scores short answers.
 
 See [[file:docs/model-study-support-candidates.org][the support candidate comparison]] for the frozen four-call protocol.
+
+The [[file:docs/model-study-shared-seed-repair.org][shared-seed repair protocol]] reads the native parser description,
+compares two frozen erroneous candidates at a four-call cap and requires
+durable verified evidence archives for any approved live run.
