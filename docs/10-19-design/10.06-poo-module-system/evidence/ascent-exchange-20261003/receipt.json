@@ -20,5 +20,6 @@
     "qualification.log": "8c1d2b9da86ce17da1e2187562d6477746fa5e5e5490b7f09a7546a76cc10402"
   },
   "bazel_dependency_gate": "ASCENT package explicitly declared in dependency_packages, compile and dev_compile; exact-head CI required",
-  "local_environment_admission": "gerbil env with a separately heap-fenced child"
+  "local_environment_admission": "gerbil env with a separately heap-fenced child",
+  "runner_discovery_boundary": "t/harness/ascent-temporal-runner.ss does not match the recursive -test.ss discovery rule"
 }
