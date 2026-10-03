@@ -1,0 +1,60 @@
+{
+  "case": "overlapping-sole",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a has same-domain observed cause at local time 1 strictly before effect at local time 3, so it is admitted. The family is complete and has exactly one admitted member, but FamilySemantics is overlapping-mechanisms (not exclusive), so via-a is only possible, not necessary. Precedence alone does not prove causation; no model authorization or fairness/infinite progress is established.\"\n}",
+    "elapsed_seconds": 11.176174958003685,
+    "first_content_seconds": 1.3074312500029919,
+    "max_content_gap_seconds": 1.3074312500029919,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 2394,
+        "totalTokens": 2608
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 2394,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+  },
+  "errors": [],
+  "publication_native": {
+    "admitted": true,
+    "classification": "possible",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:overlapping-sole-2,71:sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:cba1b67dccc80795f85fa4848a6676b44f790c6dc4a21f989022ddd778c7e845,71:sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5,24:overlapping-sole-2-nonce,6:assert,1:0,10:1791017347,",
+    "exhausted": true,
+    "model": "sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5",
+    "proof": "sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 61.81801241699577
+}

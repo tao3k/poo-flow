@@ -1,0 +1,8 @@
+{
+  "case": "forged-authority",
+  "repeat": 2,
+  "capability": "authority",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.19999079199624248
+}

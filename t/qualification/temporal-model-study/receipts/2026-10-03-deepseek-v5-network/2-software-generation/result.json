@@ -1,0 +1,8 @@
+{
+  "case": "software-generation",
+  "repeat": 2,
+  "capability": "generation",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.17276533399854088
+}

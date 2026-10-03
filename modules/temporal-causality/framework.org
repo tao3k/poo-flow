@@ -57,19 +57,19 @@ an identity suitable for immutable evidence and replay.
 | Interval | Ordered endpoints with explicit closure | Same-domain endpoints; empty interval is representable | =time/{types,objects,funs}.ss= executable |
 | Temporal relation | Partial comparison, not a Boolean total order | Instants use five-valued comparison; proper observed interval extents use the thirteen Allen endpoint relations | =time/funs.ss= executable; interval closure and uncertainty remain separate |
 | Multi-time observation | Event, ingress and processing times plus provenance | Never silently coerce one role to another | =time/{types,objects}.ss= has optional distinct axes |
-| Uncertain time observation | One observed coordinate enclosed by a finite interval, with source, acquisition, precision and receipt identities | Bounds are observed, same-domain and ordered; crossing a decision boundary is unknown | =time/uncertainty-{types,objects,funs}.ss= and =t/temporal-time-test.ss= executable; external receipt authenticity remains open |
-| Monotonic duration | Conservative elapsed-time bounds between two clock observations | Only same-domain ordered monotonic observations yield a numeric range | =time/uncertainty-{types,objects,funs}.ss= executable; distributed budget delegation remains open |
-| Source watermark | Scoped assertion over source, partition, sequence range and uncertain event-time bound | Structural coverage cannot close a cut without source-owner receipt verification | =time/watermark-{types,objects,funs}.ss= executable; late-event reconciliation and authentic coverage remain open |
+| Uncertain time observation | One observed coordinate enclosed by a finite interval, with source, acquisition, precision and receipt identities | Bounds are observed, same-domain and ordered; crossing a decision boundary is unknown | =time/uncertainty-{types,objects,funs}.ss= and =t/temporal-time-test.ss= executable; scoped source HMAC verification implemented; external source-owner trust is a declared premise |
+| Monotonic duration | Conservative elapsed-time bounds between two clock observations | Only same-domain ordered monotonic observations yield a numeric range | =time/uncertainty-{types,objects,funs}.ss= executable; signed parent/child duration conservation implemented; cross-host storage coordination remains outside the profile |
+| Source watermark | Scoped assertion over source, partition, sequence range and uncertain event-time bound | Structural coverage cannot close a cut without source-owner receipt verification | =time/watermark-{types,objects,funs}.ss= executable; scoped authenticated coverage and immutable late reconciliation implemented; source-owner completeness remains an external assertion |
 | Evidence revision | Immutable assertion, correction or retraction with valid interval and admission instant | Predecessors must be same-subject, earlier on one declared admission domain; branches remain visible | =revisions/{types,objects,funs}.ss= executable |
 | As-of evidence cut | Beliefs admitted by one explicit transaction-time cut, optionally filtered at a valid-time instant | Conflicting heads, unknown validity and incomparable clocks are distinct outcomes | =revisions/funs.ss= executable |
 | Reverse dependency plan | Cut-bound derivations with subject and conclusion premises | Complete inventory is an explicit scoped assertion; a partial index cannot certify unaffected conclusions | =truth-maintenance/{types,objects,funs}.ss= executable scheduler |
 | Conclusion revision | Immutable assertion, correction or retraction with proof identity, cut and supersession | A change requires a scoped-complete affected frontier and a distinct revised cut; proof semantics remain evaluator-owned | =conclusions/{types,objects,funs}.ss= executable provenance envelope |
-| Active selection | Versioned observation and pure CAS preparation | Journal graph/digest and plan inputs replay; observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= executable planner; runtime handoff open |
+| Active selection | Versioned observation and pure CAS preparation | Journal graph/digest and plan inputs replay; observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= pure planner; native evaluation plus signed Runtime C/Python SQLite handoff locally qualified |
 | Causal event and cut | Committed event graph and as-of projection | Future/counterfactual elements cannot enter the committed cut | =types/objects/funs.ss= executable first slice |
 | Candidate hypothesis | Proposed cause, effect and constraints | Explicit exclusive or overlapping family semantics; temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
 | Candidate exchange | Exact cut/provider receipt and separate checker assertion | Reviewable requires current, complete, checked required providers; it never grants admission | =candidates/{types,objects,funs}.ss= executable; [[file:candidates/model.org][module-local model]] |
 | Temporal query | Target, assumptions, evidence snapshot and optional operational scope | Resource limits belong to query execution, not model truth | current query supports candidate limit or =#f= for full finite family |
-| Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; TLC correspondence open |
+| Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native finite receipt; source-bound hypothesis/behavior TLC correspondence locally qualified |
 
 The type relations are intentionally partial.  For instants =a= and =b=,
 =compare(a,b)= is =incomparable= if their domains differ without conversion
@@ -564,3 +564,59 @@ atomically commit pointer/effect and authenticate observations. The trusted host
 must only sign evaluation assertions after native admission. Runtime signatures
 prove issuer assertions; model-relative evaluation and real-world source
 completeness remain separate. See =closure.org= for remaining required gates.
+
+
+* Model proposal and host authority contract (2026-10-03)
+
+The public extension path remains native POO models, queries and functional
+composition. The internal real-model runner is an adapter for proposing inert
+source data and interpreting finite questions. Its JSON and TLA literal formats
+are private transport projections, not a public object-construction DSL.
+
+| Stage | Input and owner | Required check | Failure meaning |
+|-------+-----------------+----------------+-----------------|
+| Task | host-owned capability, exact identity vocabulary and finite assumptions | independent task/schema manifest frozen before inference | invalid contract prevents acceptance |
+| Inference | configured DeepSeek endpoint/model/effort, one independent task | exact returned model, actual streamed content, complete response and strict JSON field types | transport or schema failure, never permission |
+| Projection | inert zero-argument literal bindings | exact native profile parsing and canonical model equality to independent reference | unsupported syntax or identity drift rejects source |
+| Assessment | native POO model/query at host context | replay classification, explored frontier, exhaustion and source/proof identity | unknown/unfinished results cannot be signed |
+| Admission | trusted host evaluator | fresh model/proof/classification/admission/exhaustion equals frozen native reference | mismatch rejects handoff |
+| Authorization | separate host policy/key and scoped duration grant | authenticated authorization distinct from evaluator assertion | an LLM claim grants no authority |
+| Commit | Runtime C or Python durable store | authenticate inputs, scope/version CAS, atomic pointer/effect, budget accounting | conflict/exhaustion/tamper rejects commit |
+| Recovery | opposite adapter reopening the owned store | signed observation, exact receipt/payload, idempotent replay without another debit | failure is a pipeline failure |
+
+Hypothesis and behavior tasks use =classification= for the finite semantic
+question. Authority, axis, API and proposed-journal tasks use =unknown= as the
+nonclassification placeholder in this private response schema. That placeholder
+does not classify whether an untrusted publication claim is false. Publication
+permission is always represented and checked separately; =operation= is only a
+proposal until host admission and authorization succeed.
+
+Generation tasks specify exact quoted model/domain/source/hypothesis identities.
+Description text is not an alternative identity: changing ="ledger"= to
+="source ledger"= or a clock domain from ="local"= changes the admitted model.
+The parser permits the profile's literal =Name == value= bindings, not action
+operators, imports or arbitrary code. Missing required bindings reject before
+interpreter startup; this negative preflight does not replace native admission.
+
+Natural-language task revisions produce a new frozen model study. A retained
+native reference may be reused only if its original manifest hashes verify,
+all non-task case fields and schema are identical, and the host admission context
+matches the literal context in its driver snapshot. The new study freezes its
+own cases, references, schema and exact driver/backend/common snapshots. Before
+any signing, fresh native evaluation checks the reused result again. Reference
+reuse supplies no golden answers, previous outputs or failure feedback to the
+model. Historical failed studies retain their original denominators and statuses.
+
+Five seconds without nonempty actual thinking/text content fails from process
+startup or during streaming. Configuration, ping and usage events do not refresh
+this timer. Provider reasoning is redacted, but its actual content events count
+as progress; a complete final answer is a separate gate. The selected budget is
+32768 output tokens and 180 seconds total at the configured max effort. Neither
+long reasoning nor successful transport implies native semantic acceptance.
+
+Local native, C/Python, TLC and Lean receipts qualify their respective finite
+contracts. Real-model acceptance requires every independently frozen planned
+call to pass the same rubric and its applicable publication path. Cross-host
+coordination, unbounded fairness, arbitrary-source theorem transport and
+real-world source completeness require separate contracts and evidence. The
+current exact outcome is recorded in [[file:closure.org][the closure ledger]].

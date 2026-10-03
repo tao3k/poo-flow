@@ -1,0 +1,45 @@
+{
+  "case": "visited-frontier",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: observed same-domain cause care/cause at local time 1 strictly precedes effect care/effect at local time 3. With exploration limit 1, via-b remains unvisited/unknown, so the family is not exhausted and has unknown members; via-a is therefore not necessary. Classification: possible.\"}",
+    "elapsed_seconds": 7.391010583000025,
+    "first_content_seconds": 1.4815907500014873,
+    "max_content_gap_seconds": 1.4815907500014873,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1270,
+        "totalTokens": 1484
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1270,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+  },
+  "errors": [],
+  "publication_native": {
+    "exhausted": false,
+    "publication": false,
+    "proof": "sha256:652d1dab396b06856a1750cf30c9473467fe0908e095385418dbfde1c81a2b72",
+    "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+    "classification": "possible",
+    "admitted": false
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 68.63141429199459
+}

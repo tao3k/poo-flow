@@ -1,0 +1,8 @@
+{
+  "case": "visited-frontier",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.8745608749959501
+}

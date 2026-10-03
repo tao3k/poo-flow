@@ -1,0 +1,8 @@
+{
+  "case": "declared-cause",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.29378129100223305
+}

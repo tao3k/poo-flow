@@ -22,7 +22,21 @@ def audit(directory):
     identities=[(r['case'],r['repeat']) for r in records]
     assert planned and len(identities)==len(set(identities)) and set(identities)==planned, 'missing or duplicate planned calls'
     counts={k:0 for k in ('passed','semantic-failure','transport-failure','pipeline-failure')}
+    cases_by_id={c['id']:c for c in cases}
     for record in records:
+        if freeze.get('provider')=='deepseek':
+            call=directory/(str(record['repeat'])+'-'+record['case'])
+            prompt=(call/'prompt.txt').read_text()
+            assert prompt.endswith('\nTASK\n'+cases_by_id[record['case']]['task']), 'task prompt mismatch'
+            assert strict_json((call/'result.json').read_text())==record, 'per-call result mismatch'
+            if 'response' in record:
+                assert strict_json((call/'response.json').read_text())==record['response'], 'per-call response mismatch'
+                assert record['response']['prompt_digest']=='sha256:'+hashlib.sha256(prompt.encode()).hexdigest(), 'response prompt binding mismatch'
+                assert record['response']['resolved']['reasoningEffort']==freeze['effort'], 'effort mismatch'
+                if freeze.get('provider')=='deepseek':
+                    assert record['response']['resolved']['modelProvider']=='deepseek', 'provider mismatch'
+                    assert 0 < record['response']['first_content_seconds'] <= 5, 'first content deadline mismatch'
+                    assert 0 < record['response']['max_content_gap_seconds'] <= 5, 'content gap deadline mismatch'
         counts[record['status']]+=1
         if record['status']!='passed': continue
         answer=strict_json(record['response']['text'])

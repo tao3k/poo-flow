@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted: observed same-domain cause at local time 1 precedes effect at local time 3. via-b is refuted (cause 4 >= effect 3). Family is complete with no unknowns and one admitted member, but FamilySemantics=overlapping-mechanisms means not exclusive, so via-a is possible, not necessary. Precedence does not prove causation; no model authorization or fairness.\"\n}",
+  "elapsed_seconds": 16.02972937499726,
+  "first_content_seconds": 1.172419999995327,
+  "max_content_gap_seconds": 1.172419999995327,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 3530,
+      "totalTokens": 3744
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 3530,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+}

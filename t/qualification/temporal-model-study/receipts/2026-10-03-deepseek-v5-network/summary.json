@@ -1,0 +1,66 @@
+{
+  "total": 40,
+  "counts": {
+    "passed": 0,
+    "semantic-failure": 0,
+    "transport-failure": 40,
+    "pipeline-failure": 0
+  },
+  "first_shot_passes": 0,
+  "first_shot_total": 20,
+  "model": "deepseek-v4-flash",
+  "effort": "max",
+  "model_calls_completed": 0,
+  "latency_median_seconds": null,
+  "cost": null,
+  "cost_reason": "provider usage receipt does not return billed monetary amount",
+  "provider": "deepseek",
+  "runtime_pairs": 0,
+  "threshold": 1.0,
+  "accepted": false,
+  "no_repair": true,
+  "latency_p95_seconds": null,
+  "capabilities": {
+    "api": {
+      "total": 2,
+      "passed": 0
+    },
+    "authority": {
+      "total": 2,
+      "passed": 0
+    },
+    "axes": {
+      "total": 2,
+      "passed": 0
+    },
+    "behavior": {
+      "total": 8,
+      "passed": 0
+    },
+    "classification": {
+      "total": 20,
+      "passed": 0
+    },
+    "generation": {
+      "total": 4,
+      "passed": 0
+    },
+    "late": {
+      "total": 2,
+      "passed": 0
+    }
+  },
+  "tokens": {
+    "inputTokens": 0,
+    "cachedInputTokens": 0,
+    "outputTokens": 0,
+    "reasoningOutputTokens": 0,
+    "totalTokens": 0
+  },
+  "first_content_max_seconds": null,
+  "max_content_gap_seconds": null,
+  "usage_receipts": 0,
+  "latency_scope": "completed model calls only",
+  "token_scope": "available usage receipts only; failed calls may have unreported usage",
+  "first_token_timeout": 5
+}

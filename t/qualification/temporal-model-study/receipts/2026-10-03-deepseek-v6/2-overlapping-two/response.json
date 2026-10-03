@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause is observed in local logical-version at 1, strictly before care/effect at 3. The family is complete but overlapping, not exclusive, and has two admitted members (via-a and via-b), so via-a is possible rather than necessary. No causation, authority, or fairness is established.\"}",
+  "elapsed_seconds": 7.8310009999986505,
+  "first_content_seconds": 0.8042541250033537,
+  "max_content_gap_seconds": 0.8042541250033537,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 1542,
+      "totalTokens": 1756
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1542,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+}

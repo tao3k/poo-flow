@@ -1,0 +1,68 @@
+{
+  "case": "software-generation",
+  "repeat": 1,
+  "capability": "generation",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\\n\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted: observed build at local time 1 strictly precedes observed release at local time 2 in the same domain. The family is complete, exclusive, unconstrained, exhausted by the sole admitted member, and has no unknown members, so via-a is necessary. Precedence does not prove causation; the model cannot authorize effects; no fairness or infinite progress is established.\"\n}",
+    "elapsed_seconds": 24.989422500002547,
+    "first_content_seconds": 1.4392747500023688,
+    "max_content_gap_seconds": 1.4392747500023688,
+    "usage": {
+      "last": {
+        "inputTokens": 358,
+        "cachedInputTokens": 640,
+        "outputTokens": 5596,
+        "totalTokens": 5954
+      },
+      "provider": {
+        "input_tokens": 358,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 5596,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:d9520e8bc4c3e84e77c453a34be956ed896b5c204fdbbb1648d9673bfead492c"
+  },
+  "generated_native": {
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "exhausted": true,
+    "publication": false,
+    "classification": "necessary",
+    "admitted": true
+  },
+  "errors": [],
+  "publication_native": {
+    "classification": "necessary",
+    "admitted": true,
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,21:software-generation-1,71:sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:c5f6129f1a1b4b91948276d0242c75af016bec5f6644ce645606effe9758d393,71:sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3,27:software-generation-1-nonce,6:assert,1:0,10:1791017024,",
+    "exhausted": true
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 128.2856238749955
+}

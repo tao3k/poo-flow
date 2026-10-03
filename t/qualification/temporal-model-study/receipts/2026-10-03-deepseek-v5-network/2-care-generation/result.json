@@ -1,0 +1,8 @@
+{
+  "case": "care-generation",
+  "repeat": 2,
+  "capability": "generation",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.26241737499367446
+}

@@ -1,0 +1,8 @@
+{
+  "case": "incomplete-family",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.2647870829969179
+}

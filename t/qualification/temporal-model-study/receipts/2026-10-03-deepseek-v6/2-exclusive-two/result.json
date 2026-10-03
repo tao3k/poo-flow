@@ -1,0 +1,60 @@
+{
+  "case": "exclusive-two",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local care/cause at 1 is strictly before local care/effect at 3. via-b is also admitted (local 2 before 3), so the complete exclusive family does not have exactly one admitted member. Thus via-a is possible, not necessary; precedence alone does not prove causation.\"}",
+    "elapsed_seconds": 15.819950584002072,
+    "first_content_seconds": 1.3573702499998035,
+    "max_content_gap_seconds": 1.3573702499998035,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 3190,
+        "totalTokens": 3404
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 3190,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+  },
+  "errors": [],
+  "publication_native": {
+    "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+    "proof": "sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,15:exclusive-two-2,71:sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:1578baaa89aca44001409c7431b0c3b7711c5e451bcb1c626397abfe0e171952,71:sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520,21:exclusive-two-2-nonce,6:assert,1:0,10:1791017220,",
+    "exhausted": true,
+    "admitted": true,
+    "classification": "possible"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 66.82262037499459
+}

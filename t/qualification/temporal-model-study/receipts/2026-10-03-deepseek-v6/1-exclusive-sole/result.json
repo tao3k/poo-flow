@@ -1,0 +1,60 @@
+{
+  "case": "exclusive-sole",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: same local clock domain, cause time 1 strictly before effect time 3. via-b is refuted: cause time 4 is not before effect time 3. Family is complete/exclusive, unbounded exploration exhausts hypotheses, no unknowns remain, and exactly one member is admitted, so via-a is necessary.\"}",
+    "elapsed_seconds": 14.612928084003215,
+    "first_content_seconds": 0.715850959000818,
+    "max_content_gap_seconds": 0.715850959000818,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 3176,
+        "totalTokens": 3390
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 3176,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+  },
+  "errors": [],
+  "publication_native": {
+    "admitted": true,
+    "classification": "necessary",
+    "model": "sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673",
+    "proof": "sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8",
+    "exhausted": true,
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,16:exclusive-sole-1,71:sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:b0933965eda0cb73b1a852cb377061bb7060dc56686810af2f65ec21e7d68cdc,71:sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673,22:exclusive-sole-1-nonce,6:assert,1:0,10:1791016039,"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 42.506061290994694
+}

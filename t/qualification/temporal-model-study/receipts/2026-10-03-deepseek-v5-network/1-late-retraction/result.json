@@ -1,0 +1,8 @@
+{
+  "case": "late-retraction",
+  "repeat": 1,
+  "capability": "late",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.22077779199753422
+}

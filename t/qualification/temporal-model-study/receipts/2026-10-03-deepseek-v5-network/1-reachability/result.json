@@ -1,0 +1,8 @@
+{
+  "case": "reachability",
+  "repeat": 1,
+  "capability": "behavior",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.18896712500281865
+}

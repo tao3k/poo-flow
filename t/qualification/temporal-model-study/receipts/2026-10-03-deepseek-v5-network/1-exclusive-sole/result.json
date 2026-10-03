@@ -1,0 +1,8 @@
+{
+  "case": "exclusive-sole",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.21367599999939557
+}

@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Bounded-progress is mixed across finite schedules: prescribe then administer reaches administration=given by Deadline 2, while no-op or omit-step schedules do not. Therefore the property is possible, not necessary or refuted. Temporal precedence is not causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+  "elapsed_seconds": 7.845819041998766,
+  "first_content_seconds": 1.0546278749970952,
+  "max_content_gap_seconds": 1.0546278749970952,
+  "usage": {
+    "last": {
+      "inputTokens": 253,
+      "cachedInputTokens": 640,
+      "outputTokens": 1338,
+      "totalTokens": 1591
+    },
+    "provider": {
+      "input_tokens": 253,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1338,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+}

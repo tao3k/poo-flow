@@ -26,6 +26,7 @@ transport study; it does not describe the configured DeepSeek model.
 The runner writes =cases.json=, =schema.json= and independent native
 =references.json= before the first scored model call. =freeze.json= binds these
 files, driver, transport, late fixture, model, effort, repeats and threshold.
+The runner retains these exact source snapshots before the first model call.
 Human-declared reference classes are cross-checked with the native evaluator.
 
 | Capability | Cases | Rule |
@@ -76,7 +77,7 @@ PYTHONPATH=packages/python-runtime/src python3 -u scripts/temporal/model_study.p
 #+end_src
 Set =GERBIL_PATH=, =GERBIL_LOADPATH= and =GAMBOPT=max-heap=1G,debug=q= to the
 qualified native environment. =--reference-receipt= can select a retained native
-reference only when case/schema/reference hashes exactly match. Every successful
+reference only when its original case/schema/reference/driver hashes verify and all non-task case fields, schema and host context match. Every successful
 model-to-publication path still recomputes native admission and compares the
 fresh proof/model/classification/exhaustion with the frozen reference before
 signing. Native reference reuse supplies no answers or feedback to the model.

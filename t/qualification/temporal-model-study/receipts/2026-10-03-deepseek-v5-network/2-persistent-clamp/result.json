@@ -1,0 +1,8 @@
+{
+  "case": "persistent-clamp",
+  "repeat": 2,
+  "capability": "behavior",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.3522207089990843
+}

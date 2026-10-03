@@ -1,0 +1,458 @@
+{
+  "exclusive-sole": {
+    "native": {
+      "classification": "necessary",
+      "admitted": true,
+      "exhausted": true,
+      "publication": false,
+      "proof": "sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8",
+      "model": "sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673"
+    },
+    "expected": {
+      "classification": "necessary",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "exclusive-two": {
+    "native": {
+      "admitted": true,
+      "classification": "possible",
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe",
+      "publication": false,
+      "exhausted": true
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "overlapping-two": {
+    "native": {
+      "admitted": true,
+      "classification": "possible",
+      "exhausted": true,
+      "publication": false,
+      "model": "sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54",
+      "proof": "sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35"
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "overlapping-sole": {
+    "native": {
+      "admitted": true,
+      "classification": "possible",
+      "model": "sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5",
+      "proof": "sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923",
+      "publication": false,
+      "exhausted": true
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "cause-after-effect": {
+    "native": {
+      "classification": "refuted",
+      "admitted": true,
+      "proof": "sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1",
+      "model": "sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc",
+      "exhausted": true,
+      "publication": false
+    },
+    "expected": {
+      "classification": "refuted",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "cross-domain": {
+    "native": {
+      "classification": "unknown",
+      "admitted": false,
+      "proof": "sha256:5c4c158abce00afacb213c894f61422475d2722eb9f619a7ea4ea00b3a82264a",
+      "model": "sha256:04601dcfbd1dd0442b09f3d04d8e4772687e86b330330403156f3629dcc89d1b",
+      "publication": false,
+      "exhausted": true
+    },
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "declared-cause": {
+    "native": {
+      "classification": "unknown",
+      "admitted": false,
+      "exhausted": true,
+      "publication": false,
+      "proof": "sha256:3fb6721ab5af518e8b43bc36883aec7c6d74fc6b34256008a9505c589f390285",
+      "model": "sha256:082c786e80ba7ff6c5c77a6e19e6cb5c081ec19250d651287512964f51338bfb"
+    },
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "incomplete-family": {
+    "native": {
+      "exhausted": true,
+      "publication": false,
+      "proof": "sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da",
+      "model": "sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0",
+      "classification": "possible",
+      "admitted": true
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "unvisited-target": {
+    "native": {
+      "admitted": false,
+      "classification": "unknown",
+      "publication": false,
+      "exhausted": false,
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:a1ba79570f1d03dcc4f0329a4cf31af113c65f1547c19023f0ef8a8ceb3b39e9"
+    },
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "visited-frontier": {
+    "native": {
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:652d1dab396b06856a1750cf30c9473467fe0908e095385418dbfde1c81a2b72",
+      "publication": false,
+      "exhausted": false,
+      "admitted": false,
+      "classification": "possible"
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "safety-preserved": {
+    "native": {
+      "admitted": true,
+      "classification": "necessary",
+      "exhausted": true,
+      "publication": false,
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:84fc98af02d3609a7edb7fbdb4c4d93214c49f6b349e6f03358267b2d4bef34f"
+    },
+    "expected": {
+      "classification": "necessary",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "reachability": {
+    "native": {
+      "admitted": true,
+      "classification": "possible",
+      "publication": false,
+      "exhausted": true,
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96"
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "persistent-clamp": {
+    "native": {
+      "admitted": true,
+      "classification": "refuted",
+      "publication": false,
+      "exhausted": true,
+      "model": "sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4",
+      "proof": "sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660"
+    },
+    "expected": {
+      "classification": "refuted",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "bounded-progress": {
+    "native": {
+      "exhausted": true,
+      "publication": false,
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8",
+      "admitted": true,
+      "classification": "possible"
+    },
+    "expected": {
+      "classification": "possible",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "care-generation": {
+    "native": {
+      "publication": false,
+      "exhausted": true,
+      "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+      "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "expected": {
+      "classification": "necessary",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "software-generation": {
+    "native": {
+      "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+      "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+      "publication": false,
+      "exhausted": true,
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "expected": {
+      "classification": "necessary",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "time-axes": {
+    "native": null,
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "r7",
+        "valid_time": "10",
+        "knowledge_time": "20",
+        "causal_cut": "C"
+      },
+      "api_symbols": []
+    }
+  },
+  "forged-authority": {
+    "native": null,
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "late-retraction": {
+    "native": null,
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "retract",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": []
+    }
+  },
+  "poo-public-api": {
+    "native": null,
+    "expected": {
+      "classification": "unknown",
+      "precedence_proves_causation": false,
+      "model_can_authorize": false,
+      "fair_infinite_progress": false,
+      "operation": "none",
+      "axes": {
+        "source_generation": "",
+        "valid_time": "",
+        "knowledge_time": "",
+        "causal_cut": ""
+      },
+      "api_symbols": [
+        "poo-flow-temporal-model",
+        "poo-flow-temporal-query",
+        "poo-flow-temporal-model-classify"
+      ]
+    }
+  }
+}

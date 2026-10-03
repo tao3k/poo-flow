@@ -1,0 +1,8 @@
+{
+  "case": "safety-preserved",
+  "repeat": 1,
+  "capability": "behavior",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.21196295900153928
+}

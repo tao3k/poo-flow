@@ -1,0 +1,2150 @@
+[
+  {
+    "case": "exclusive-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: same local clock domain, cause time 1 strictly before effect time 3. via-b is refuted: cause time 4 is not before effect time 3. Family is complete/exclusive, unbounded exploration exhausts hypotheses, no unknowns remain, and exactly one member is admitted, so via-a is necessary.\"}",
+      "elapsed_seconds": 14.612928084003215,
+      "first_content_seconds": 0.715850959000818,
+      "max_content_gap_seconds": 0.715850959000818,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 3176,
+          "totalTokens": 3390
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 3176,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+    },
+    "errors": [],
+    "publication_native": {
+      "admitted": true,
+      "classification": "necessary",
+      "model": "sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673",
+      "proof": "sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8",
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,16:exclusive-sole-1,71:sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:b0933965eda0cb73b1a852cb377061bb7060dc56686810af2f65ec21e7d68cdc,71:sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673,22:exclusive-sole-1-nonce,6:assert,1:0,10:1791016039,"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 42.506061290994694
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local cause 1 strictly precedes effect 3, but via-b is also admitted; the exclusive family does not have exactly one admitted member, so via-a is possible, not necessary. Precedence does not prove causation.\"}",
+      "elapsed_seconds": 5.685032417000912,
+      "first_content_seconds": 0.7633587919990532,
+      "max_content_gap_seconds": 0.7633587919990532,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1079,
+          "totalTokens": 1293
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1079,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,15:exclusive-two-1,71:sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:d9d33f58f59eb9bfd1ef78992bfe866f526318df9fc191dcc386ced18886bd42,71:sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520,21:exclusive-two-1-nonce,6:assert,1:0,10:1791016072,",
+      "exhausted": true,
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 40.21478958300577
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause (local time 1) strictly precedes care/effect (local time 3) in the same clock domain. However via-b is also admitted, and the family is complete but overlapping with more than one admitted member, so via-a is possible, not necessary. Precedence does not prove causation; no model authorization or fairness/infinite progress is established.\"}",
+      "elapsed_seconds": 11.979934667004272,
+      "first_content_seconds": 1.2598972920022788,
+      "max_content_gap_seconds": 1.2598972920022788,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 2333,
+          "totalTokens": 2547
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2333,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "possible",
+      "admitted": true,
+      "proof": "sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35",
+      "model": "sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:overlapping-two-1,71:sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:e1d95de2ffc9660a74aff0b58932452b3f58ef0dbe3c9da31b30955bae3ec3e6,71:sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54,23:overlapping-two-1-nonce,6:assert,1:0,10:1791016119,",
+      "exhausted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 52.482813417002035
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted: observed same-domain cause at local time 1 precedes effect at local time 3. via-b is refuted (cause 4 >= effect 3). Family is complete with no unknowns and one admitted member, but FamilySemantics=overlapping-mechanisms means not exclusive, so via-a is possible, not necessary. Precedence does not prove causation; no model authorization or fairness.\"\n}",
+      "elapsed_seconds": 16.02972937499726,
+      "first_content_seconds": 1.172419999995327,
+      "max_content_gap_seconds": 1.172419999995327,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 3530,
+          "totalTokens": 3744
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 3530,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:overlapping-sole-1,71:sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:29bb818a3c4d81d56c5f88c94e26278c0a00a7ee9d38c126d86dea1d126662ee,71:sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5,24:overlapping-sole-1-nonce,6:assert,1:0,10:1791016175,",
+      "exhausted": true,
+      "model": "sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5",
+      "proof": "sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923",
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 45.504204250006296
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is refuted: observed same-domain cause care/cause at 5 is at/after effect care/effect at 3; temporal precedence never proves physical causation. No authority, fairness, or infinite progress is established.\"}",
+      "elapsed_seconds": 6.7097595000013825,
+      "first_content_seconds": 0.7539002500052447,
+      "max_content_gap_seconds": 0.7539002500052447,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1374,
+          "totalTokens": 1588
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1374,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc",
+      "proof": "sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,20:cause-after-effect-1,71:sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:7ca96892671ebf492a2d4b97f44f51e8bd7f5d112623e11df092fe813352594b,71:sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc,26:cause-after-effect-1-nonce,6:assert,1:0,10:1791016211,",
+      "exhausted": true,
+      "admitted": true,
+      "classification": "refuted"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 41.040149041000404
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"unknown\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a compares care/cause at remote time 1 with care/effect at local time 3; different clock domains make the hypothesis unknown. The family also has an unknown member, so necessity is not established.\"\n}",
+      "elapsed_seconds": 6.4734783329986385,
+      "first_content_seconds": 0.884475165999902,
+      "max_content_gap_seconds": 0.884475165999902,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1266,
+          "totalTokens": 1480
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1266,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": false,
+      "exhausted": true,
+      "model": "sha256:04601dcfbd1dd0442b09f3d04d8e4772687e86b330330403156f3629dcc89d1b",
+      "proof": "sha256:5c4c158abce00afacb213c894f61422475d2722eb9f619a7ea4ea00b3a82264a",
+      "admitted": false,
+      "classification": "unknown"
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 45.48476250000385
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a links a declared cause to an observed effect, so its cause status is unknown under the declared-facts rule. via-b is admitted, but the family has an unknown member and only one admitted member, so via-a is not necessary; it remains unknown rather than refuted or admitted.\"}",
+      "elapsed_seconds": 9.527005208001356,
+      "first_content_seconds": 0.7867187920055585,
+      "max_content_gap_seconds": 0.7867187920055585,
+      "usage": {
+        "last": {
+          "inputTokens": 215,
+          "cachedInputTokens": 640,
+          "outputTokens": 1980,
+          "totalTokens": 2195
+        },
+        "provider": {
+          "input_tokens": 215,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1980,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": true,
+      "publication": false,
+      "proof": "sha256:3fb6721ab5af518e8b43bc36883aec7c6d74fc6b34256008a9505c589f390285",
+      "model": "sha256:082c786e80ba7ff6c5c77a6e19e6cb5c081ec19250d651287512964f51338bfb",
+      "classification": "unknown",
+      "admitted": false
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 49.95871616600198
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because observed same-domain cause care/cause at local time 1 is strictly before effect care/effect at local time 3. via-b is refuted because care/alternative at local time 4 is at/after care/effect. FamilyComplete is FALSE, so the admitted via-a is possible, not necessary.\"}",
+      "elapsed_seconds": 3.758276915999886,
+      "first_content_seconds": 0.7526954580025631,
+      "max_content_gap_seconds": 0.7526954580025631,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 750,
+          "totalTokens": 964
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 750,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "possible",
+      "admitted": true,
+      "proof": "sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da",
+      "model": "sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0",
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,19:incomplete-family-1,71:sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:39843a84146dd1554da157ffb6e0f5f05c331545b2f9b7c1611f724b743ba005,71:sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0,25:incomplete-family-1-nonce,6:assert,1:0,10:1791016345,"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 51.65472554200096
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Exploration limit 1 examines only the first sorted hypothesis via-a; target via-b remains unvisited, so it is unknown.\"}",
+      "elapsed_seconds": 15.621495792001951,
+      "first_content_seconds": 1.6938085829970078,
+      "max_content_gap_seconds": 1.6938085829970078,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 3284,
+          "totalTokens": 3498
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 3284,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:941585d502794b6ad057789237f93b8e7fa5647c50de03ab103db5cafe667c14"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:a1ba79570f1d03dcc4f0329a4cf31af113c65f1547c19023f0ef8a8ceb3b39e9",
+      "publication": false,
+      "exhausted": false,
+      "admitted": false,
+      "classification": "unknown"
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 61.8779147919995
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: observed same-domain cause care/cause at local time 1 strictly precedes effect care/effect at local time 3. With exploration limit 1, via-b remains unvisited/unknown, so the family is not exhausted and has unknown members; via-a is therefore not necessary. Classification: possible.\"}",
+      "elapsed_seconds": 7.391010583000025,
+      "first_content_seconds": 1.4815907500014873,
+      "max_content_gap_seconds": 1.4815907500014873,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1270,
+          "totalTokens": 1484
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1270,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": false,
+      "publication": false,
+      "proof": "sha256:652d1dab396b06856a1750cf30c9473467fe0908e095385418dbfde1c81a2b72",
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "classification": "possible",
+      "admitted": false
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 68.63141429199459
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Safety condition control-measurement=baseline holds in every reachable state because no mechanism writes control-measurement; all finite schedules up to Horizon satisfy it, so the property is necessary.\"}",
+      "elapsed_seconds": 10.484018292001565,
+      "first_content_seconds": 1.6783585829980439,
+      "max_content_gap_seconds": 1.6783585829980439,
+      "usage": {
+        "last": {
+          "inputTokens": 255,
+          "cachedInputTokens": 640,
+          "outputTokens": 1972,
+          "totalTokens": 2227
+        },
+        "provider": {
+          "input_tokens": 255,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1972,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4c178fa1dc25af98696c40c3b7d30a22c29ce27ede014b7d0c28f7966cff63de"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "necessary",
+      "admitted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:safety-preserved-1,71:sha256:84fc98af02d3609a7edb7fbdb4c4d93214c49f6b349e6f03358267b2d4bef34f,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:50e966602b3a1956ffca3f9550c41dd5bc7a37102c7ba052313b6c753a8f49b2,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,24:safety-preserved-1-nonce,6:assert,1:0,10:1791016534,",
+      "exhausted": true,
+      "proof": "sha256:84fc98af02d3609a7edb7fbdb4c4d93214c49f6b349e6f03358267b2d4bef34f",
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 82.14111024999875
+  },
+  {
+    "case": "reachability",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Reachability of administration=given holds for some schedules, such as prescribe then administer within Horizon 2, but not for all schedules, such as no-op only. Thus the property is possible. No fairness, infinite progress, precedence-based causation, or model authorization is established.\"}",
+      "elapsed_seconds": 15.99032654199982,
+      "first_content_seconds": 1.9337787080003181,
+      "max_content_gap_seconds": 1.9337787080003181,
+      "usage": {
+        "last": {
+          "inputTokens": 251,
+          "cachedInputTokens": 640,
+          "outputTokens": 2915,
+          "totalTokens": 3166
+        },
+        "provider": {
+          "input_tokens": 251,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2915,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:71845243689f2924465dacdb22886174dcce2ba5060bf99f848abc68481201aa"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96",
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,14:reachability-1,71:sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:99462e2197db8f4ce77718a9d9eadaecc7bf37a1fb9900fd724ba87392ec82c7,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,20:reachability-1-nonce,6:assert,1:0,10:1791016622,",
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 67.785206499997
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"The declared intervention clamps prescription to none from step 0, and clamps persist; prescribe therefore cannot issue the order. administer's guard remains false, so administration=given is unreachable in all finite schedules up to Horizon.\"}",
+      "elapsed_seconds": 59.89425574999768,
+      "first_content_seconds": 1.7661220829977538,
+      "max_content_gap_seconds": 1.7661220829977538,
+      "usage": {
+        "last": {
+          "inputTokens": 157,
+          "cachedInputTokens": 768,
+          "outputTokens": 12530,
+          "totalTokens": 12687
+        },
+        "provider": {
+          "input_tokens": 157,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 768,
+          "output_tokens": 12530,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:persistent-clamp-1,71:sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:9f24b8d1e281678c1efbfb68ee257390a8aea63c76ab49e4c0df07612c8e10c7,71:sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4,24:persistent-clamp-1-nonce,6:assert,1:0,10:1791016733,",
+      "exhausted": true,
+      "proof": "sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660",
+      "model": "sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4",
+      "classification": "refuted",
+      "admitted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 107.26524158399843
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Finite schedules include an all-no-op schedule where administration is never given, so bounded-progress is not necessary. Another schedule can prescribe then administer by Deadline 2, so the property is possible, not refuted.\"\n}",
+      "elapsed_seconds": 9.011309749999782,
+      "first_content_seconds": 1.0181753750002827,
+      "max_content_gap_seconds": 1.0181753750002827,
+      "usage": {
+        "last": {
+          "inputTokens": 253,
+          "cachedInputTokens": 640,
+          "outputTokens": 1899,
+          "totalTokens": 2152
+        },
+        "provider": {
+          "input_tokens": 253,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1899,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+    },
+    "errors": [],
+    "publication_native": {
+      "proof": "sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8",
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:bounded-progress-1,71:sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:3884083814058013475374ffb56ad9b2e1deeacc96e8d95aa08d2dac032dc90a,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,24:bounded-progress-1-nonce,6:assert,1:0,10:1791016790,",
+      "exhausted": true,
+      "classification": "possible",
+      "admitted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 60.8587690419954
+  },
+  {
+    "case": "care-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"care-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"order\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"dose\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"order\\\", \\\"dose\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: observed same-domain cause order at 1 strictly precedes effect dose at 2. Family is complete, exclusive-explanations, no constraints, no unknown members, and exactly one admitted member, so via-a is necessary; precedence alone does not prove causation.\"}",
+      "elapsed_seconds": 22.979133291002654,
+      "first_content_seconds": 1.1857956250023562,
+      "max_content_gap_seconds": 1.1857956250023562,
+      "usage": {
+        "last": {
+          "inputTokens": 360,
+          "cachedInputTokens": 640,
+          "outputTokens": 5144,
+          "totalTokens": 5504
+        },
+        "provider": {
+          "input_tokens": 360,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 5144,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:8958fe9a9b3611bffd6ffd31ea39ffd346a4c6d48857cde1739137506c133521"
+    },
+    "generated_native": {
+      "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+      "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+      "publication": false,
+      "exhausted": true,
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:care-generation-1,71:sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:b073a1ac44543a0e1da1d4bd202476437429f0029eeaac4232f95b0ca74d8e71,71:sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb,23:care-generation-1-nonce,6:assert,1:0,10:1791016892,",
+      "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+      "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+      "classification": "necessary",
+      "admitted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 122.90418999999383
+  },
+  {
+    "case": "software-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\\n\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted: observed build at local time 1 strictly precedes observed release at local time 2 in the same domain. The family is complete, exclusive, unconstrained, exhausted by the sole admitted member, and has no unknown members, so via-a is necessary. Precedence does not prove causation; the model cannot authorize effects; no fairness or infinite progress is established.\"\n}",
+      "elapsed_seconds": 24.989422500002547,
+      "first_content_seconds": 1.4392747500023688,
+      "max_content_gap_seconds": 1.4392747500023688,
+      "usage": {
+        "last": {
+          "inputTokens": 358,
+          "cachedInputTokens": 640,
+          "outputTokens": 5596,
+          "totalTokens": 5954
+        },
+        "provider": {
+          "input_tokens": 358,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 5596,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:d9520e8bc4c3e84e77c453a34be956ed896b5c204fdbbb1648d9673bfead492c"
+    },
+    "generated_native": {
+      "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+      "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+      "exhausted": true,
+      "publication": false,
+      "classification": "necessary",
+      "admitted": true
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "necessary",
+      "admitted": true,
+      "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+      "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,21:software-generation-1,71:sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:c5f6129f1a1b4b91948276d0242c75af016bec5f6644ce645606effe9758d393,71:sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3,27:software-generation-1-nonce,6:assert,1:0,10:1791017024,",
+      "exhausted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 128.2856238749955
+  },
+  {
+    "case": "time-axes",
+    "repeat": 1,
+    "capability": "axes",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"r7\",\"valid_time\":\"10\",\"knowledge_time\":\"20\",\"causal_cut\":\"C\"},\"api_symbols\":[],\"reason\":\"Mapped the requested source revision, valid time, knowledge time, and causal cut exactly to their axis fields; no classification or authority is established.\"}",
+      "elapsed_seconds": 2.989444375001767,
+      "first_content_seconds": 1.1871759999994538,
+      "max_content_gap_seconds": 1.1871759999994538,
+      "usage": {
+        "last": {
+          "inputTokens": 205,
+          "cachedInputTokens": 512,
+          "outputTokens": 421,
+          "totalTokens": 626
+        },
+        "provider": {
+          "input_tokens": 205,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 421,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:9eda2422cbd756f989a93287d16c88c4546df2bc67a605dc75971221e759a7e4"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 2.990279208002903
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 1,
+    "capability": "authority",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Untrusted caller claims proof/signature to bypass host admission. The model has no publication authority; host must independently admit evidence and authorize scoped effects.\"}",
+      "elapsed_seconds": 2.577753792000294,
+      "first_content_seconds": 1.333194334001746,
+      "max_content_gap_seconds": 1.333194334001746,
+      "usage": {
+        "last": {
+          "inputTokens": 231,
+          "cachedInputTokens": 512,
+          "outputTokens": 331,
+          "totalTokens": 562
+        },
+        "provider": {
+          "input_tokens": 231,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 331,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:1492d0b02a561101d1e99f0a7013e2c3c01a5e7e0e3267dfca756a8f8ef82ea5"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 2.5785077500040643
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 1,
+    "capability": "late",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"retract\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Late authenticated replacement evidence refutes the prior necessary conclusion, and the host confirms its former support is invalid, so a retraction should be proposed.\"}",
+      "elapsed_seconds": 2.513784416994895,
+      "first_content_seconds": 1.0153308749941061,
+      "max_content_gap_seconds": 1.0153308749941061,
+      "usage": {
+        "last": {
+          "inputTokens": 210,
+          "cachedInputTokens": 512,
+          "outputTokens": 340,
+          "totalTokens": 550
+        },
+        "provider": {
+          "input_tokens": 210,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 340,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4160581c6ee24a3be4cd78e8df07c8122855ace4774b4958b5af07787be67ae0"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "recovered": true,
+        "retraction_committed": true,
+        "budget_remaining": 1000
+      },
+      {
+        "writer": "native",
+        "recovered": true,
+        "retraction_committed": true,
+        "budget_remaining": 1000
+      }
+    ],
+    "attempt_elapsed_seconds": 46.61190870900464
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 1,
+    "capability": "api",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[\"poo-flow-temporal-model\",\"poo-flow-temporal-query\",\"poo-flow-temporal-model-classify\"],\"reason\":\"Requested pure public entry points are model construction, query construction, and finite-receipt classification; no authority, fairness, or infinite progress is established.\"}",
+      "elapsed_seconds": 2.8750405839964515,
+      "first_content_seconds": 0.7948449169998639,
+      "max_content_gap_seconds": 0.7948449169998639,
+      "usage": {
+        "last": {
+          "inputTokens": 235,
+          "cachedInputTokens": 512,
+          "outputTokens": 537,
+          "totalTokens": 772
+        },
+        "provider": {
+          "input_tokens": 235,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 537,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:d60e3d04f8d5d9c44c2d027bef241931016671fb1c613dc5741598d4ac5dd834"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 2.8758187089988496
+  },
+  {
+    "case": "exclusive-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Sorted hypotheses: via-a has local cause at 1 before local effect at 3, so admitted; via-b has local cause at 4 not before effect at 3, so refuted. With complete, exclusive, exhausted family, no unknowns, and exactly one admitted member, via-a is necessary under admitted POO semantics; temporal precedence does not prove physical causation.\"\n}",
+      "elapsed_seconds": 13.211177874996793,
+      "first_content_seconds": 1.2418696250024368,
+      "max_content_gap_seconds": 1.2418696250024368,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 2789,
+          "totalTokens": 3003
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2789,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673",
+      "proof": "sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,16:exclusive-sole-2,71:sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:2e3b7fb409d72f26ac3a8913bff87bcd876ad3092f3d621e8712e78a76416077,71:sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673,22:exclusive-sole-2-nonce,6:assert,1:0,10:1791017161,",
+      "exhausted": true,
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 56.102001250001194
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local care/cause at 1 is strictly before local care/effect at 3. via-b is also admitted (local 2 before 3), so the complete exclusive family does not have exactly one admitted member. Thus via-a is possible, not necessary; precedence alone does not prove causation.\"}",
+      "elapsed_seconds": 15.819950584002072,
+      "first_content_seconds": 1.3573702499998035,
+      "max_content_gap_seconds": 1.3573702499998035,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 3190,
+          "totalTokens": 3404
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 3190,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "proof": "sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,15:exclusive-two-2,71:sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:1578baaa89aca44001409c7431b0c3b7711c5e451bcb1c626397abfe0e171952,71:sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520,21:exclusive-two-2-nonce,6:assert,1:0,10:1791017220,",
+      "exhausted": true,
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 66.82262037499459
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause is observed in local logical-version at 1, strictly before care/effect at 3. The family is complete but overlapping, not exclusive, and has two admitted members (via-a and via-b), so via-a is possible rather than necessary. No causation, authority, or fairness is established.\"}",
+      "elapsed_seconds": 7.8310009999986505,
+      "first_content_seconds": 0.8042541250033537,
+      "max_content_gap_seconds": 0.8042541250033537,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1542,
+          "totalTokens": 1756
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1542,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:overlapping-two-2,71:sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:843d90af5c433bdc40e78b1f2bea159f216a070306701ab60080d6b8de5ad616,71:sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54,23:overlapping-two-2-nonce,6:assert,1:0,10:1791017278,",
+      "exhausted": true,
+      "model": "sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54",
+      "proof": "sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35",
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 64.72874608399434
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a has same-domain observed cause at local time 1 strictly before effect at local time 3, so it is admitted. The family is complete and has exactly one admitted member, but FamilySemantics is overlapping-mechanisms (not exclusive), so via-a is only possible, not necessary. Precedence alone does not prove causation; no model authorization or fairness/infinite progress is established.\"\n}",
+      "elapsed_seconds": 11.176174958003685,
+      "first_content_seconds": 1.3074312500029919,
+      "max_content_gap_seconds": 1.3074312500029919,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 2394,
+          "totalTokens": 2608
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2394,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+    },
+    "errors": [],
+    "publication_native": {
+      "admitted": true,
+      "classification": "possible",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:overlapping-sole-2,71:sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:cba1b67dccc80795f85fa4848a6676b44f790c6dc4a21f989022ddd778c7e845,71:sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5,24:overlapping-sole-2-nonce,6:assert,1:0,10:1791017347,",
+      "exhausted": true,
+      "model": "sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5",
+      "proof": "sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 61.81801241699577
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a has same-domain local cause care/cause at 5 and effect care/effect at 3; cause is at/after effect, so via-a is refuted.\"}",
+      "elapsed_seconds": 4.268295084002602,
+      "first_content_seconds": 1.0846848750006757,
+      "max_content_gap_seconds": 1.0846848750006757,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 745,
+          "totalTokens": 959
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 745,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc",
+      "proof": "sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,20:cause-after-effect-2,71:sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:9be1f327165ae9d2c78a11b2ce5691bdf8c501130dab119da16edffe3d95070c,71:sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc,26:cause-after-effect-2-nonce,6:assert,1:0,10:1791017401,",
+      "exhausted": true,
+      "admitted": true,
+      "classification": "refuted"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 42.38123566600552
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a compares care/cause (remote) with care/effect (local); different clock domains make the relation unknown under the admitted semantics.\"}",
+      "elapsed_seconds": 12.419166957995913,
+      "first_content_seconds": 1.3694440830004169,
+      "max_content_gap_seconds": 1.3694440830004169,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 2378,
+          "totalTokens": 2592
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2378,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": true,
+      "publication": false,
+      "model": "sha256:04601dcfbd1dd0442b09f3d04d8e4772687e86b330330403156f3629dcc89d1b",
+      "proof": "sha256:5c4c158abce00afacb213c894f61422475d2722eb9f619a7ea4ea00b3a82264a",
+      "admitted": false,
+      "classification": "unknown"
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 64.94051133299945
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a compares declared care/cause to observed care/effect; declared facts are unknown, so via-a is unknown. via-b is admitted (local 2 < 3), but the family still has an unknown member, so no necessary conclusion is warranted.\"}",
+      "elapsed_seconds": 6.579082416996243,
+      "first_content_seconds": 1.828391750001174,
+      "max_content_gap_seconds": 1.828391750001174,
+      "usage": {
+        "last": {
+          "inputTokens": 215,
+          "cachedInputTokens": 640,
+          "outputTokens": 1054,
+          "totalTokens": 1269
+        },
+        "provider": {
+          "input_tokens": 215,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1054,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+    },
+    "errors": [],
+    "publication_native": {
+      "model": "sha256:082c786e80ba7ff6c5c77a6e19e6cb5c081ec19250d651287512964f51338bfb",
+      "proof": "sha256:3fb6721ab5af518e8b43bc36883aec7c6d74fc6b34256008a9505c589f390285",
+      "publication": false,
+      "exhausted": true,
+      "admitted": false,
+      "classification": "unknown"
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 50.18489491700166
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a has an observed same-domain cause at local time 1 strictly before its effect at local time 3, so it is admitted. Because FamilyComplete is FALSE, the admitted target is possible rather than necessary.\"}",
+      "elapsed_seconds": 4.178823290996661,
+      "first_content_seconds": 1.0387909159981064,
+      "max_content_gap_seconds": 1.0387909159981064,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 717,
+          "totalTokens": 931
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 717,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "possible",
+      "admitted": true,
+      "proof": "sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da",
+      "model": "sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,19:incomplete-family-2,71:sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:c6ff61a9d50c46f16986de698512b071bcf620ec763a1cc8133068096effdebb,71:sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0,25:incomplete-family-2-nonce,6:assert,1:0,10:1791017559,",
+      "exhausted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 28.079624458994658
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Exploration limit 1 examines only via-a in sorted order; target via-b remains unvisited, so it is unknown. Precedence, model authority, and fairness are not established.\"}",
+      "elapsed_seconds": 6.569924040995829,
+      "first_content_seconds": 1.3249912909959676,
+      "max_content_gap_seconds": 1.3249912909959676,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1131,
+          "totalTokens": 1345
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1131,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:941585d502794b6ad057789237f93b8e7fa5647c50de03ab103db5cafe667c14"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": false,
+      "publication": false,
+      "proof": "sha256:a1ba79570f1d03dcc4f0329a4cf31af113c65f1547c19023f0ef8a8ceb3b39e9",
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "classification": "unknown",
+      "admitted": false
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 33.43358545799856
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because same-domain cause t=1 is strictly before effect t=3, but with exploration limit 1 the exclusive family is not exhausted and via-b is unvisited/unknown, so via-a is only possible.\"}",
+      "elapsed_seconds": 5.731610249997175,
+      "first_content_seconds": 0.9703407499982859,
+      "max_content_gap_seconds": 0.9703407499982859,
+      "usage": {
+        "last": {
+          "inputTokens": 214,
+          "cachedInputTokens": 640,
+          "outputTokens": 1016,
+          "totalTokens": 1230
+        },
+        "provider": {
+          "input_tokens": 214,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1016,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "possible",
+      "admitted": false,
+      "proof": "sha256:652d1dab396b06856a1750cf30c9473467fe0908e095385418dbfde1c81a2b72",
+      "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+      "publication": false,
+      "exhausted": false
+    },
+    "admission_rejected": true,
+    "attempt_elapsed_seconds": 26.81938616700063
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Safety condition control-measurement=baseline holds initially and no mechanism writes control-measurement, so it holds in every state across all finite schedules.\"}",
+      "elapsed_seconds": 3.4496998339964193,
+      "first_content_seconds": 0.6764028339966899,
+      "max_content_gap_seconds": 0.6764028339966899,
+      "usage": {
+        "last": {
+          "inputTokens": 255,
+          "cachedInputTokens": 640,
+          "outputTokens": 604,
+          "totalTokens": 859
+        },
+        "provider": {
+          "input_tokens": 255,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 604,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4c178fa1dc25af98696c40c3b7d30a22c29ce27ede014b7d0c28f7966cff63de"
+    },
+    "errors": [],
+    "publication_native": {
+      "classification": "necessary",
+      "admitted": true,
+      "proof": "sha256:84fc98af02d3609a7edb7fbdb4c4d93214c49f6b349e6f03358267b2d4bef34f",
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:safety-preserved-2,71:sha256:84fc98af02d3609a7edb7fbdb4c4d93214c49f6b349e6f03358267b2d4bef34f,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:f0cc3cd9ed9254604765bf19c3406151db14678724331c0661575101d0a52193,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,24:safety-preserved-2-nonce,6:assert,1:0,10:1791017647,",
+      "exhausted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 23.620692416996462
+  },
+  {
+    "case": "reachability",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Reachability of administration=given is possible: prescribe then administer reaches it within Horizon 2, while no-op schedules do not, so outcomes are mixed.\"}",
+      "elapsed_seconds": 10.680525416995806,
+      "first_content_seconds": 0.9614611669967417,
+      "max_content_gap_seconds": 0.9614611669967417,
+      "usage": {
+        "last": {
+          "inputTokens": 251,
+          "cachedInputTokens": 640,
+          "outputTokens": 2043,
+          "totalTokens": 2294
+        },
+        "provider": {
+          "input_tokens": 251,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 2043,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:71845243689f2924465dacdb22886174dcce2ba5060bf99f848abc68481201aa"
+    },
+    "errors": [],
+    "publication_native": {
+      "admitted": true,
+      "classification": "possible",
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,14:reachability-2,71:sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:cf437d026a73b8724b75e094ab6a582862849077625c5505eaa8f1eca921f524,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,20:reachability-2-nonce,6:assert,1:0,10:1791017677,",
+      "exhausted": true,
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 32.66827066699625
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"refuted\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"The declared intervention clamps prescription to none from step 0, so prescribe cannot make prescription=issued and administer's guard is never satisfied. Therefore administration=given is never reached in any finite schedule up to Horizon 2; the reachability property is refuted.\"\n}",
+      "elapsed_seconds": 30.144984666003438,
+      "first_content_seconds": 1.0449027080030646,
+      "max_content_gap_seconds": 1.0449027080030646,
+      "usage": {
+        "last": {
+          "inputTokens": 157,
+          "cachedInputTokens": 768,
+          "outputTokens": 5975,
+          "totalTokens": 6132
+        },
+        "provider": {
+          "input_tokens": 157,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 768,
+          "output_tokens": 5975,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:persistent-clamp-2,71:sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:59beb342e5e79400ea64034588dff0968d53d159b418e2dba3e0f833a8866664,71:sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4,24:persistent-clamp-2-nonce,6:assert,1:0,10:1791017729,",
+      "exhausted": true,
+      "model": "sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4",
+      "proof": "sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660",
+      "admitted": true,
+      "classification": "refuted"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 118.49701237499539
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Bounded-progress is mixed across finite schedules: prescribe then administer reaches administration=given by Deadline 2, while no-op or omit-step schedules do not. Therefore the property is possible, not necessary or refuted. Temporal precedence is not causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+      "elapsed_seconds": 7.845819041998766,
+      "first_content_seconds": 1.0546278749970952,
+      "max_content_gap_seconds": 1.0546278749970952,
+      "usage": {
+        "last": {
+          "inputTokens": 253,
+          "cachedInputTokens": 640,
+          "outputTokens": 1338,
+          "totalTokens": 1591
+        },
+        "provider": {
+          "input_tokens": 253,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 1338,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:bounded-progress-2,71:sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:9283d5af9857f834010198aa699305cc7fb59ee61eedc025aef74e7fac8576a4,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,24:bounded-progress-2-nonce,6:assert,1:0,10:1791017826,",
+      "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+      "proof": "sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8",
+      "admitted": true,
+      "classification": "possible"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 41.477552749995084
+  },
+  {
+    "case": "care-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"care-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"order\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"dose\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"order\\\", \\\"dose\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because observed same-domain order at time 1 strictly precedes dose at time 2. The family is complete, exclusive, exhausted, has no unknown members, and has exactly one admitted member, so via-a is necessary; precedence alone does not prove physical causation.\"\n}",
+      "elapsed_seconds": 14.26371937499789,
+      "first_content_seconds": 1.0122962079985882,
+      "max_content_gap_seconds": 1.0122962079985882,
+      "usage": {
+        "last": {
+          "inputTokens": 232,
+          "cachedInputTokens": 768,
+          "outputTokens": 3179,
+          "totalTokens": 3411
+        },
+        "provider": {
+          "input_tokens": 232,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 768,
+          "output_tokens": 3179,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:8958fe9a9b3611bffd6ffd31ea39ffd346a4c6d48857cde1739137506c133521"
+    },
+    "generated_native": {
+      "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+      "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+      "publication": false,
+      "exhausted": true,
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "errors": [],
+    "publication_native": {
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:care-generation-2,71:sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:9efc23282e08c490e992f46d870ee7d9acbb5a965298adfd475395cd30551dec,71:sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb,23:care-generation-2-nonce,6:assert,1:0,10:1791017902,",
+      "exhausted": true,
+      "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+      "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+      "classification": "necessary",
+      "admitted": true
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 101.83278454199899
+  },
+  {
+    "case": "software-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "passed",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a: observed same-domain cause build at 1 strictly precedes effect release at 2, so the sole hypothesis is admitted. Family complete, exclusive, exhausted, no unknown members, exactly one admitted member, so necessary. Precedence alone does not prove physical causation; model lacks authority; no fairness/infinite progress; operation none.\"\n}",
+      "elapsed_seconds": 24.537953999999445,
+      "first_content_seconds": 1.652301667003485,
+      "max_content_gap_seconds": 1.652301667003485,
+      "usage": {
+        "last": {
+          "inputTokens": 230,
+          "cachedInputTokens": 768,
+          "outputTokens": 5443,
+          "totalTokens": 5673
+        },
+        "provider": {
+          "input_tokens": 230,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 768,
+          "output_tokens": 5443,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:d9520e8bc4c3e84e77c453a34be956ed896b5c204fdbbb1648d9673bfead492c"
+    },
+    "generated_native": {
+      "publication": false,
+      "exhausted": true,
+      "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+      "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "errors": [],
+    "publication_native": {
+      "exhausted": true,
+      "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,21:software-generation-2,71:sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:d4852fdc0f3e3984910dbf2b6b4abf734e761f0b992a6d1dccd49f6c1c6ba613,71:sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3,27:software-generation-2-nonce,6:assert,1:0,10:1791018010,",
+      "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+      "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+      "admitted": true,
+      "classification": "necessary"
+    },
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ],
+    "attempt_elapsed_seconds": 90.79195199999958
+  },
+  {
+    "case": "time-axes",
+    "repeat": 2,
+    "capability": "axes",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"r7\",\"valid_time\":\"10\",\"knowledge_time\":\"20\",\"causal_cut\":\"C\"},\"api_symbols\":[],\"reason\":\"Mapping task: r7 maps to source_generation, 10 to valid_time, 20 to knowledge_time, and C to causal_cut.\"}",
+      "elapsed_seconds": 2.49203850000049,
+      "first_content_seconds": 1.1241894999984652,
+      "max_content_gap_seconds": 1.1241894999984652,
+      "usage": {
+        "last": {
+          "inputTokens": 205,
+          "cachedInputTokens": 512,
+          "outputTokens": 329,
+          "totalTokens": 534
+        },
+        "provider": {
+          "input_tokens": 205,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 329,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:9eda2422cbd756f989a93287d16c88c4546df2bc67a605dc75971221e759a7e4"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 2.4935949580030865
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 2,
+    "capability": "authority",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Untrusted caller assertions and a claimed signature do not constitute independent host admission or authorization; the model has no publication authority, so publication is not authorized.\"}",
+      "elapsed_seconds": 1.6696853339963127,
+      "first_content_seconds": 0.6834769170018262,
+      "max_content_gap_seconds": 0.6834769170018262,
+      "usage": {
+        "last": {
+          "inputTokens": 231,
+          "cachedInputTokens": 512,
+          "outputTokens": 220,
+          "totalTokens": 451
+        },
+        "provider": {
+          "input_tokens": 231,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 220,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:1492d0b02a561101d1e99f0a7013e2c3c01a5e7e0e3267dfca756a8f8ef82ea5"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 1.6703519170041545
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 2,
+    "capability": "late",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"retract\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Late same-domain replacement evidence places the cause at/after the effect, refuting the prior necessary conclusion and invalidating its former support. The model can only propose retracting that admitted conclusion; the host must independently authorize execution.\"}",
+      "elapsed_seconds": 6.084587124998507,
+      "first_content_seconds": 0.9689699169975938,
+      "max_content_gap_seconds": 0.9689699169975938,
+      "usage": {
+        "last": {
+          "inputTokens": 210,
+          "cachedInputTokens": 512,
+          "outputTokens": 1052,
+          "totalTokens": 1262
+        },
+        "provider": {
+          "input_tokens": 210,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 1052,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:4160581c6ee24a3be4cd78e8df07c8122855ace4774b4958b5af07787be67ae0"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "recovered": true,
+        "retraction_committed": true,
+        "budget_remaining": 1000
+      },
+      {
+        "writer": "native",
+        "recovered": true,
+        "retraction_committed": true,
+        "budget_remaining": 1000
+      }
+    ],
+    "attempt_elapsed_seconds": 52.997445749999315
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 2,
+    "capability": "api",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[\"poo-flow-temporal-model\",\"poo-flow-temporal-query\",\"poo-flow-temporal-model-classify\"],\"reason\":\"Pure public entry points are model construction, query construction, and classification; no raw self/super hooks or caller-written Next.\"}",
+      "elapsed_seconds": 2.7723205000002054,
+      "first_content_seconds": 1.2085591669965652,
+      "max_content_gap_seconds": 1.2085591669965652,
+      "usage": {
+        "last": {
+          "inputTokens": 235,
+          "cachedInputTokens": 512,
+          "outputTokens": 436,
+          "totalTokens": 671
+        },
+        "provider": {
+          "input_tokens": 235,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 512,
+          "output_tokens": 436,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:d60e3d04f8d5d9c44c2d027bef241931016671fb1c613dc5741598d4ac5dd834"
+    },
+    "errors": [],
+    "attempt_elapsed_seconds": 2.7730564580051578
+  }
+]

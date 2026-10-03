@@ -1,0 +1,322 @@
+[
+  {
+    "case": "exclusive-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.21367599999939557
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2840014169996721
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.24054712500219466
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.5642830409997259
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.32643916699453257
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.1650279999958002
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2532714999979362
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2647870829969179
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.38402437499462394
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.8745608749959501
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.21196295900153928
+  },
+  {
+    "case": "reachability",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.18896712500281865
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2243803749952349
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2820688339998014
+  },
+  {
+    "case": "care-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.7706034580041887
+  },
+  {
+    "case": "software-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.48087854200275615
+  },
+  {
+    "case": "time-axes",
+    "repeat": 1,
+    "capability": "axes",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.15012004200252704
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 1,
+    "capability": "authority",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.28793466599745443
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 1,
+    "capability": "late",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.22077779199753422
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 1,
+    "capability": "api",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.4686511249965406
+  },
+  {
+    "case": "exclusive-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.17808075000357348
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2833109580024029
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.16729591699549928
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.2353979170002276
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.24919762499484932
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.155050334004045
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.29378129100223305
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.1875244160037255
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.4447143750003306
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.16483479099406395
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.16952670899627265
+  },
+  {
+    "case": "reachability",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.19089099999837345
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.3522207089990843
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.37039399999775924
+  },
+  {
+    "case": "care-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.26241737499367446
+  },
+  {
+    "case": "software-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.17276533399854088
+  },
+  {
+    "case": "time-axes",
+    "repeat": 2,
+    "capability": "axes",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.44340145800379105
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 2,
+    "capability": "authority",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.19999079199624248
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 2,
+    "capability": "late",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.33071766599459806
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 2,
+    "capability": "api",
+    "status": "transport-failure",
+    "error": "ConnectError",
+    "attempt_elapsed_seconds": 0.23683524999796646
+  }
+]

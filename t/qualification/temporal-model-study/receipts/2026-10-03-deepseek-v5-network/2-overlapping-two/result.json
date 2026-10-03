@@ -1,0 +1,8 @@
+{
+  "case": "overlapping-two",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.16729591699549928
+}

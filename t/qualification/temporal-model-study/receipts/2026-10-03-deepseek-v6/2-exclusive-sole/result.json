@@ -1,0 +1,60 @@
+{
+  "case": "exclusive-sole",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Sorted hypotheses: via-a has local cause at 1 before local effect at 3, so admitted; via-b has local cause at 4 not before effect at 3, so refuted. With complete, exclusive, exhausted family, no unknowns, and exactly one admitted member, via-a is necessary under admitted POO semantics; temporal precedence does not prove physical causation.\"\n}",
+    "elapsed_seconds": 13.211177874996793,
+    "first_content_seconds": 1.2418696250024368,
+    "max_content_gap_seconds": 1.2418696250024368,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 2789,
+        "totalTokens": 3003
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 2789,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+  },
+  "errors": [],
+  "publication_native": {
+    "model": "sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673",
+    "proof": "sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,16:exclusive-sole-2,71:sha256:02955cdaf6a9425b6087692289484270d63e22f1f3a0c04f2b99a0543d9df0c8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:2e3b7fb409d72f26ac3a8913bff87bcd876ad3092f3d621e8712e78a76416077,71:sha256:062910365598ff2ae595f413e8a4111e8fa074dab29838bd2780ed094d526673,22:exclusive-sole-2-nonce,6:assert,1:0,10:1791017161,",
+    "exhausted": true,
+    "admitted": true,
+    "classification": "necessary"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 56.102001250001194
+}

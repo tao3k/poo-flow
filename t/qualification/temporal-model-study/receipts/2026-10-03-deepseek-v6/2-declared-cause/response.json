@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a compares declared care/cause to observed care/effect; declared facts are unknown, so via-a is unknown. via-b is admitted (local 2 < 3), but the family still has an unknown member, so no necessary conclusion is warranted.\"}",
+  "elapsed_seconds": 6.579082416996243,
+  "first_content_seconds": 1.828391750001174,
+  "max_content_gap_seconds": 1.828391750001174,
+  "usage": {
+    "last": {
+      "inputTokens": 215,
+      "cachedInputTokens": 640,
+      "outputTokens": 1054,
+      "totalTokens": 1269
+    },
+    "provider": {
+      "input_tokens": 215,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1054,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+}

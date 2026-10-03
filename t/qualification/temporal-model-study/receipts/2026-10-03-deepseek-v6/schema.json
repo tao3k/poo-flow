@@ -1,0 +1,79 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "classification": {
+      "type": "string",
+      "enum": [
+        "necessary",
+        "possible",
+        "refuted",
+        "unknown"
+      ]
+    },
+    "precedence_proves_causation": {
+      "type": "boolean"
+    },
+    "model_can_authorize": {
+      "type": "boolean"
+    },
+    "fair_infinite_progress": {
+      "type": "boolean"
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "none",
+        "assert",
+        "retract"
+      ]
+    },
+    "source": {
+      "type": "string"
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_generation": {
+          "type": "string"
+        },
+        "valid_time": {
+          "type": "string"
+        },
+        "knowledge_time": {
+          "type": "string"
+        },
+        "causal_cut": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_generation",
+        "valid_time",
+        "knowledge_time",
+        "causal_cut"
+      ]
+    },
+    "api_symbols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "classification",
+    "precedence_proves_causation",
+    "model_can_authorize",
+    "fair_infinite_progress",
+    "operation",
+    "source",
+    "axes",
+    "api_symbols",
+    "reason"
+  ]
+}

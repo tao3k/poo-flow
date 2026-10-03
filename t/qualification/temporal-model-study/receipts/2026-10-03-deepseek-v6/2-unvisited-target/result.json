@@ -1,0 +1,45 @@
+{
+  "case": "unvisited-target",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Exploration limit 1 examines only via-a in sorted order; target via-b remains unvisited, so it is unknown. Precedence, model authority, and fairness are not established.\"}",
+    "elapsed_seconds": 6.569924040995829,
+    "first_content_seconds": 1.3249912909959676,
+    "max_content_gap_seconds": 1.3249912909959676,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1131,
+        "totalTokens": 1345
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1131,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:941585d502794b6ad057789237f93b8e7fa5647c50de03ab103db5cafe667c14"
+  },
+  "errors": [],
+  "publication_native": {
+    "exhausted": false,
+    "publication": false,
+    "proof": "sha256:a1ba79570f1d03dcc4f0329a4cf31af113c65f1547c19023f0ef8a8ceb3b39e9",
+    "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+    "classification": "unknown",
+    "admitted": false
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 33.43358545799856
+}

@@ -1,0 +1,60 @@
+{
+  "case": "exclusive-two",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local cause 1 strictly precedes effect 3, but via-b is also admitted; the exclusive family does not have exactly one admitted member, so via-a is possible, not necessary. Precedence does not prove causation.\"}",
+    "elapsed_seconds": 5.685032417000912,
+    "first_content_seconds": 0.7633587919990532,
+    "max_content_gap_seconds": 0.7633587919990532,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1079,
+        "totalTokens": 1293
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1079,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+  },
+  "errors": [],
+  "publication_native": {
+    "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+    "proof": "sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,15:exclusive-two-1,71:sha256:c8e13305a721921ab8483b6334ab73fbaec58094d530455b0f3ad4dec5f6aafe,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:d9d33f58f59eb9bfd1ef78992bfe866f526318df9fc191dcc386ced18886bd42,71:sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520,21:exclusive-two-1-nonce,6:assert,1:0,10:1791016072,",
+    "exhausted": true,
+    "admitted": true,
+    "classification": "possible"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 40.21478958300577
+}

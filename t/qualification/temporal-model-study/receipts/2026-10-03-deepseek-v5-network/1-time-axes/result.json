@@ -1,0 +1,8 @@
+{
+  "case": "time-axes",
+  "repeat": 1,
+  "capability": "axes",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.15012004200252704
+}

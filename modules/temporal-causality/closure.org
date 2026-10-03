@@ -122,7 +122,7 @@ consistency under the trusted host execution premise.
 - Progress is bounded with fairness =none=. No fair infinite-progress,
   unrestricted source-interpreter or actual-causation claim is issued.
 
-* Real-model acceptance remains open
+* Historical Codex model acceptance failure
 
 [[file:../../t/qualification/temporal-model-study/report.org][The frozen real-model study]] used actual =gpt-6-sol=, medium effort, for twenty
 capability cases with two independent calls each. Result: 12/40 passed, 28/40
@@ -130,7 +130,7 @@ failed the five-second genuine-progress deadline, no observed semantic or
 publication failures among completed calls. First-shot acceptance is 9/20;
 16 C/Python writer/recovery paths passed. Description-to-model and late-proposal
 calls have no successful real-model receipt. The owner reconfirmed the five-second
-bound. The real-model gate remains failed; native framework qualification above
+bound. That historical gate remains failed; native framework qualification above
 is a separate evidence boundary.
 
 =just check-temporal-model-study FRESH_DIRECTORY ENV_FILE= is the maintained
@@ -142,7 +142,7 @@ existing two-case gate and focused new-case gate. Six model transport/receipt
 controls passed. No remote push or exact-head CI is claimed for this work.
 
 
-* Configured DeepSeek acceptance update
+* Historical configured DeepSeek v2 acceptance
 [[file:../../t/qualification/temporal-model-study/deepseek-report.org][Configured DeepSeek audit]] replaces the default inference path with the owner-specified
 ASP ENV. Full frozen v2: 35/40 passed, 3 semantic failures, 2 incomplete
 responses, no model five-second idle timeouts and no pipeline failures.
@@ -152,3 +152,29 @@ they are not pooled into the forty-call score. The maintained backend records
 stop reasons, uses a 32768-token ceiling and 180-second total bound, and keeps
 the five-second genuine-content deadline. Missing literal bindings now reject
 before native startup. Model keys remain outside model context.
+
+
+* Current full finite model acceptance: DeepSeek v6
+[[file:../../t/qualification/temporal-model-study/deepseek-report.org][The revised frozen finite study]] passed 40/40 independent configured
+=deepseek-v4-flash= calls at =max= effort, first-shot 20/20, zero semantic,
+transport or publication failures. All four generated-source calls matched
+independent native canonical models. Fifty-two actual C/Python writer/recovery
+paths passed, including native admission before signing and signed duration
+accounting. Maximum first content/gap including startup was 1.933779 seconds;
+the unchanged five-second progress gate passed all forty calls.
+
+The framework design now defines proposal, projection, assessment, admission,
+authorization, commit and recovery contracts, including exact source identities
+and nonclassification response roles. Original failed studies remain failed.
+A new reference-reuse control binds every non-task case field, schema and host
+context; a new receipt control rejects answer rebinding to another task.
+Fourteen transport/schema/receipt controls pass. The retained v6 corpus passes
+the strengthened hash/task/model/effort/progress/runtime auditor.
+
+=python3 scripts/temporal/model_study_receipt.py
+ t/qualification/temporal-model-study/receipts/2026-10-03-deepseek-v6=
+returns accepted=true and exit 0. The separate v5 sandbox-network attempt retains
+all 40 connection failures. The maintained live entry point retains exact source
+snapshots automatically. This closes this finite model acceptance gate locally;
+it does not establish unrestricted modeling, general theorem transport, deployed
+behavior or remote CI. No remote push is included.

@@ -1,0 +1,60 @@
+{
+  "case": "bounded-progress",
+  "repeat": 2,
+  "capability": "behavior",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Bounded-progress is mixed across finite schedules: prescribe then administer reaches administration=given by Deadline 2, while no-op or omit-step schedules do not. Therefore the property is possible, not necessary or refuted. Temporal precedence is not causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+    "elapsed_seconds": 7.845819041998766,
+    "first_content_seconds": 1.0546278749970952,
+    "max_content_gap_seconds": 1.0546278749970952,
+    "usage": {
+      "last": {
+        "inputTokens": 253,
+        "cachedInputTokens": 640,
+        "outputTokens": 1338,
+        "totalTokens": 1591
+      },
+      "provider": {
+        "input_tokens": 253,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1338,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+  },
+  "errors": [],
+  "publication_native": {
+    "exhausted": true,
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:bounded-progress-2,71:sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:9283d5af9857f834010198aa699305cc7fb59ee61eedc025aef74e7fac8576a4,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,24:bounded-progress-2-nonce,6:assert,1:0,10:1791017826,",
+    "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+    "proof": "sha256:2b46539b9ea18882ac26cf9a0b23b72a3b5171c30472543e8c1b1e2038948bd8",
+    "admitted": true,
+    "classification": "possible"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 41.477552749995084
+}

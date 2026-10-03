@@ -1,0 +1,8 @@
+{
+  "case": "cause-after-effect",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.32643916699453257
+}

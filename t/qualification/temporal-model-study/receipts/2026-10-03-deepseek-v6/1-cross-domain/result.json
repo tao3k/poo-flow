@@ -1,0 +1,45 @@
+{
+  "case": "cross-domain",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"unknown\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a compares care/cause at remote time 1 with care/effect at local time 3; different clock domains make the hypothesis unknown. The family also has an unknown member, so necessity is not established.\"\n}",
+    "elapsed_seconds": 6.4734783329986385,
+    "first_content_seconds": 0.884475165999902,
+    "max_content_gap_seconds": 0.884475165999902,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1266,
+        "totalTokens": 1480
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1266,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+  },
+  "errors": [],
+  "publication_native": {
+    "publication": false,
+    "exhausted": true,
+    "model": "sha256:04601dcfbd1dd0442b09f3d04d8e4772687e86b330330403156f3629dcc89d1b",
+    "proof": "sha256:5c4c158abce00afacb213c894f61422475d2722eb9f619a7ea4ea00b3a82264a",
+    "admitted": false,
+    "classification": "unknown"
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 45.48476250000385
+}

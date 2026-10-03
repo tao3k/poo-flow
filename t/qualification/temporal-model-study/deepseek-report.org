@@ -1,6 +1,73 @@
 #+title: Configured DeepSeek Temporal acceptance, 2026-10-03
 
-* Result
+* Latest full frozen acceptance: v6
+The revised finite task contract PASSED: 40/40 independently planned calls,
+first-shot 20/20, zero semantic, transport or pipeline failures. Exact configured
+model =deepseek-v4-flash= and effort =max= were retained. All four generation
+calls matched independent native canonical model references and completed native
+host admission and both actual Runtime C/Python publication/recovery paths.
+
+| Capability | Passed/planned |
+|------------+----------------|
+| Hypothesis classification | 20/20 |
+| Finite behavior | 8/8 |
+| Literal model generation | 4/4 |
+| Time axes | 2/2 |
+| Authority response contract | 2/2 |
+| Authenticated late retraction | 2/2 |
+| Public POO API | 2/2 |
+
+Fifty-two writer/recovery paths passed. Each applicable path checked forged
+issuer rejection, authorized SQLite pointer/effect commit, opposite-adapter
+reopen, signed exact payload and idempotent replay without another budget debit.
+Unknown or unfinished inputs still denied admission. Every signature path
+rechecked native model/proof/classification/admission/exhaustion against the
+reference. No generated source or model classification issued its own authority.
+
+Maximum first actual content was 1.933779 seconds. Maximum recorded gap,
+including startup, was 1.933779 seconds. Median completed-call latency was
+7.838410 seconds, p95 24.989423 seconds. No five-second content deadline failed.
+Progress includes real thinking deltas, redacted to digests/byte counts; these
+numbers are not time to final answer or production latency guarantees.
+
+Generation inputs now explicitly quote exact domain/source/model/hypothesis
+identities rather than leaving their interpretation to prose. The authority task
+explicitly identifies its nonclassification schema role. This is a bounded
+instruction-conditioned capability study, not independent discovery of the
+schema, an adversarial security proof or a population reliability estimate.
+Host authorization remains independently checked by native/runtime controls.
+
+V6 freezes its own cases/schema/references and exact driver/backend/common
+snapshots before inference. The v2 native reference manifest was verified;
+non-task fields, schema and literal host context matched. No old model response,
+failed source or rubric feedback was supplied to a new inference. V6 is a new
+study, not repaired old answers. The maintained driver differs from its retained
+snapshot only by removal of trailing whitespace; Python AST equality was checked.
+
+Fourteen transport/schema/receipt controls passed. The strengthened auditor
+checks task text, per-call result/response identity, prompt digest, configured
+model/effort/provider, content deadlines, frozen inputs and the full planned
+case set. It accepts both original and retained v6 receipts and exits zero.
+
+[[file:receipts/2026-10-03-deepseek-v6/summary.json][V6 full acceptance receipt]] and per-call evidence are retained, with gzip SSE
+journals. [[file:receipts/2026-10-03-deepseek-v5-network/summary.json][V5 sandbox-network failure]] retains all forty connection failures as a
+separate failed environment attempt; it is not model capability evidence.
+Historical v2/v3/v4 failures remain below and retain their original outcomes.
+Raw provider usage is preserved; reasoning-token count and billed cost remain
+unknown. Legacy normalized token totals exclude separately reported cache tokens
+and must not be interpreted as total billed tokens.
+
+The admitted finite profiles now have local native/framework qualification and
+this separate full real-model acceptance. Remote CI, deployed-service behavior,
+cross-host coordination, real-world causation and arbitrary-source theorem
+transport are not established by these receipts.
+
+#+begin_src sh
+python3 scripts/temporal/model_study_receipt.py \
+  t/qualification/temporal-model-study/receipts/2026-10-03-deepseek-v6
+#+end_src
+
+* Historical v2 result
 The user-specified =agent-semantic-protocols/.env= selected =deepseek-v4-flash=,
 =max= effort and the official Anthropic-compatible endpoint. Credential values
 are neither retained nor printed. The forty independent calls used no tools,
@@ -45,7 +112,7 @@ missing literal bindings before starting Gerbil; native parsing and admission
 remain authoritative. The maintained runner enforces strict boolean/JSON types
 and rechecks fresh native admission against frozen reference before signing.
 
-* Separate corrected-contract evidence
+* Historical corrected-contract evidence
 The v4 four-call generation follow-up passed 2/4, including fresh native model
 projection, host admission and C/Python publication/recovery. Two answers had
 valid syntax but wrong clock-domain/source fields, so canonical model comparison
@@ -71,11 +138,10 @@ and billed cost are unknown. The maintained summary reports missing counts as nu
 validates the manifest and deliberately exits 1 for the failed acceptance.
 The live default is =just check-temporal-model-study FRESH_DIRECTORY ENV_FILE=.
 The earlier [[file:report.org][Codex failure report]] remains separate.
-No remote push, CI or deployment acceptance is claimed. Full real-model
-acceptance remains open: exact source-field fidelity and nonclassification
-label adherence require a new frozen full corpus, not pooled follow-up scores.
+No remote push, CI or deployment acceptance is claimed. The v2 real-model gate remains failed. The new v6 corpus below independently
+qualifies the revised finite task contract; follow-up scores are not pooled.
 
-* Focused implementation checks
+* Previous implementation checks
 Twelve transport/schema/receipt controls passed. Three live native host cases
 passed (98.05 seconds), covering signed C/Python publication, authenticated late
 retraction/recovery and unknown-assessment denial. Frozen receipt auditor accepted

@@ -1,0 +1,60 @@
+{
+  "case": "persistent-clamp",
+  "repeat": 2,
+  "capability": "behavior",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"refuted\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"The declared intervention clamps prescription to none from step 0, so prescribe cannot make prescription=issued and administer's guard is never satisfied. Therefore administration=given is never reached in any finite schedule up to Horizon 2; the reachability property is refuted.\"\n}",
+    "elapsed_seconds": 30.144984666003438,
+    "first_content_seconds": 1.0449027080030646,
+    "max_content_gap_seconds": 1.0449027080030646,
+    "usage": {
+      "last": {
+        "inputTokens": 157,
+        "cachedInputTokens": 768,
+        "outputTokens": 5975,
+        "totalTokens": 6132
+      },
+      "provider": {
+        "input_tokens": 157,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 768,
+        "output_tokens": 5975,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+  },
+  "errors": [],
+  "publication_native": {
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:persistent-clamp-2,71:sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:59beb342e5e79400ea64034588dff0968d53d159b418e2dba3e0f833a8866664,71:sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4,24:persistent-clamp-2-nonce,6:assert,1:0,10:1791017729,",
+    "exhausted": true,
+    "model": "sha256:c06b2cc28e7da32acd7e6ae03ca6224e0cfc98ff0d1ebd38a32226f18667ede4",
+    "proof": "sha256:b8eb24301406e1e5752c1914df33f7ef4637c650faa394e91db37d2e1e083660",
+    "admitted": true,
+    "classification": "refuted"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 118.49701237499539
+}

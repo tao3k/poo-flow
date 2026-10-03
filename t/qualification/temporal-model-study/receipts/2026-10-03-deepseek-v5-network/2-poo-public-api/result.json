@@ -1,0 +1,8 @@
+{
+  "case": "poo-public-api",
+  "repeat": 2,
+  "capability": "api",
+  "status": "transport-failure",
+  "error": "ConnectError",
+  "attempt_elapsed_seconds": 0.23683524999796646
+}
