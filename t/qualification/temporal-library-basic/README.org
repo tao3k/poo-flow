@@ -1,21 +1,10 @@
-#+title: Historical Python Library Basic qualification
+#+title: Python Library loader qualification
 
-* Evidence boundary
-The receipts under receipts/2026-10-03-python-deepseek-v1 qualify the
-historical Temporal API on source parent b77b3184 and qualification commit
-7ab549d060c98b9a0997f6f1879da3d0eec4b07d. That commit is retained in
-PR #34 ancestry. The archived manifest and archive index are unchanged.
+The active Library uses SemanticRuntime semantic ABI version 1.
+The historical Temporal adapters, prompted producer, replay utilities and copied
+old qualification source archive have been removed. Git history retains past
+versions; they are not current acceptance gates.
 
-PR #34 at 273e637d2e6055ef072816f5567705afd17c78b7 uses the newer
-SemanticRuntime ABI and has retired the historical Temporal adapters and
-prompted model driver. The historical 40 model calls, 348 unit cases,
-wheel and TLC receipts do not qualify that newer ABI or establish its
-model acceptance. Do not use them as the current design acceptance gate.
-
-* Integration
-The current typed CFFI runtime and native import progress reporting are
-preserved. Applicable changes add a 90-second total projection deadline,
-preserve the caller's durable fixture load path and bound its subprocess
-with the project heap limit.
-The five-second no-output projection failure remains in effect.
-Targeted regression results are recorded separately in integration/.
+The integration/ receipt records 21 focused loader tests from commit 5105dbde.
+Current ABI native and real-provider acceptance belongs to
+../semantic-abi/ and the python-testing model_study.semantic_abi entrypoint.

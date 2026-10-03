@@ -13,7 +13,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-live = ["openai>=2.29,<3"]
+live = ["openai>=2.29,<3", "httpx>=0.28,<0.29"]
 runtime = ["poo-flow-runtime==0.1.0"]
 
 [project.scripts]

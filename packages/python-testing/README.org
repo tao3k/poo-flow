@@ -114,3 +114,30 @@ See [[file:docs/model-study-support-candidates.org][the support candidate compar
 The [[file:docs/model-study-shared-seed-repair.org][shared-seed repair protocol]] reads the native parser description,
 compares two frozen erroneous candidates at a four-call cap and requires
 durable verified evidence archives for any approved live run.
+
+* Current semantic ABI live acceptance
+
+=model_study.semantic_abi= consumes current =SemanticRuntime= APIs. It freezes
+twelve task variants and 24 calls across synchronous and asynchronous prediction.
+Model input contains actual Scheme source, task data and an inert JSON output
+schema. It contains no solved answer or semantic tutorial. Each fresh answer
+passes through =temporal.observe= and a caller-owned observation sink.
+
+Five seconds without non-whitespace content fails, including before the first
+content event. Metadata and private reasoning cannot reset the deadline. The
+producer disables retries, preserves failures and checks source and artifact
+hashes before and after the batch. The frozen transport configuration uses
+=reasoning.effort: none= for this latency-constrained ABI acceptance; it is not
+a max-effort reasoning or real-time teaching experiment.
+
+#+begin_src sh
+python -m poo_flow_testing.model_study.semantic_abi \
+  --poo-root /path/to/poo-flow --ascent-root /path/to/pinned/ascent \
+  --library /path/to/libpoo_flow_semantic.dylib \
+  --env-file /path/to/config.env --output /path/to/new/receipt --live
+#+end_src
+
+Use the =live= extra and the current Runtime package. The output directory must
+be new; its exclusive batch claim prevents accidental duplicate paid execution.
+ABI observation counts, model correctness and failed transport counts are
+reported separately. Admission and answer consistency confer no effect authority.

@@ -11,7 +11,7 @@ import statistics
 import subprocess
 import sys
 import time
-from .runtime_accuracy import corpus
+from .semantic_cases import corpus
 
 
 def read_line(worker, *, progress=False):

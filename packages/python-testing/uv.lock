@@ -461,6 +461,7 @@ source = { editable = "." }
 
 [package.optional-dependencies]
 live = [
+    { name = "httpx" },
     { name = "openai" },
 ]
 runtime = [
@@ -475,6 +476,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", marker = "extra == 'live'", specifier = ">=0.28,<0.29" },
     { name = "openai", marker = "extra == 'live'", specifier = ">=2.29,<3" },
     { name = "poo-flow-runtime", marker = "extra == 'runtime'", directory = "../python-runtime" },
 ]
