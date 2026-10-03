@@ -63,7 +63,7 @@
 
     (poo-flow-test-case "shared worker Case memory override retains typed rejection"
       (let* ((profile
-              (.o (:: @ poo-flow-testing-case-profile-prototype)
+             (.o (:: @ poo-flow-testing-case-profile-prototype)
                   identity: 'testing/shared-memory-rejection
                   heap-limit-bytes: 0
                   sample-interval-milliseconds: 1))
