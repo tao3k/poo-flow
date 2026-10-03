@@ -26,10 +26,10 @@ def prepare(root, ascent, output):
     output.mkdir(parents=True, exist_ok=False)
     context = '\n'.join(f';;; file: {module}\n'+(ascent / module).read_text()
                         for module in DIRECT_MODULES)
-    manifest = {'schema': 'poo-flow.direct-scheme-understanding-plan.v1',
+    manifest = {'schema': 'poo-flow.direct-scheme-understanding-plan.v2',
         'model': 'deepseek-flash', 'maxCalls': 24, 'retries': 0,
-        'maxInputBytes': 98304, 'maxOutputTokens': 4096, 'budgetCeilingUsd': 1,
-        'conservativeMaximumUsd': 24*(98304*.3+4096*1.2)/1_000_000,
+        'maxInputBytes': 98304, 'maxOutputTokens': 8192, 'budgetCeilingUsd': 1,
+        'conservativeMaximumUsd': 24*(98304*.3+8192*1.2)/1_000_000,
         'pooHead': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
         'ascentHead': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ascent, text=True).strip(),
         'modules': {name: digest((ascent/name).read_bytes()) for name in DIRECT_MODULES},
