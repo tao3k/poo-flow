@@ -2,7 +2,27 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+title: Python / Scheme Runtime foundation and real-model qualification
 #+date: 2026-10-03
-#+status: implemented semantic foundation; qualification receipts below; MRR deferred
+#+status: implemented ABI foundation; no-Prompt model qualification and real-time teaching open; MRR deferred
+
+* Design correction: no preset Prompt and real-time teaching
+
+The user prohibits preset Prompts and requires semantic guards to teach in real
+time. The historical 48-call experiment violates that criterion: both arms
+received preset natural-language RULES, and the native arm additionally received
+the solved answer before model generation. Its 25% to 91.67% difference is an
+answer-supply/rendering measurement, not evidence of the requested architecture
+or model learning. It is withdrawn as an acceptance or benefit receipt for that
+design. Raw paid records remain immutable; the prompted live producer is retired.
+
+The implemented final gate recomputes and rejects contradictions. It does not
+teach the model, update model weights, or demonstrate learning; 100% accepted
+accuracy with abstention is not a learning benefit. No-Prompt integration,
+current-execution feedback, and learning effectiveness remain unimplemented and
+unqualified. The meaning of real-time teaching must be resolved before choosing
+an execution-feedback interface or online parameter-training architecture.
+
+ABI, native ownership, packaging and Runtime regression receipts remain bounded
+engineering evidence. RFC model/teaching closure and MRR admission remain open.
 
 * Delivery order and owners
 
@@ -59,7 +79,7 @@ Mac local packaging uses a local C control artifact; Linux CI owns the Bazel
 control artifact handoff. Local evidence does not establish hermetic Bazel or
 clean-host portability. External system dylibs remain packaging dependencies.
 
-* Real LLM paired experiment
+* Historical prompted experiment: not design acceptance
 
 [[file:evidence/python-scheme-runtime-20261003/plan.json][Frozen plan]],
 [[file:evidence/python-scheme-runtime-20261003/calls.jsonl][48 raw outputs and token usage]],
@@ -95,7 +115,7 @@ measures neither autonomous tool selection nor general agent/business accuracy.
 The corpus is small and curated. Lower provider-stream latency in this run is
 not a general performance guarantee or combined Runtime+provider latency.
 
-* Architecture correction from real failures
+* Existing rejection gate: not real-time teaching
 
 Both native-assisted failures fabricated three rows when the correct native
 answer was empty. Correct tool output alone did not guarantee correct model
@@ -142,7 +162,7 @@ All required local checks use real-output watchdogs. Silence beyond five
 seconds is a failed attempt; failed builds are not successful receipts.
 Remote CI must be checked on the submitted exact head independently.
 
-* Scoped RFC closure
+* Scoped ABI evidence; model/teaching RFC closure remains open
 
 | RFC | Closed by this implementation | Still outside this receipt |
 | 63 Scheme / Runtime boundary | Scheme temporal/graph decisions with Python IO/scheduler separation | General policy/effect authorization qualification |
@@ -150,7 +170,8 @@ Remote CI must be checked on the submitted exact head independently.
 | 150 Runtime ABI lane | Versioned semantic operation/result/error/ownership projection with immutable artifact hashes | Whole control ABI v1 freeze and protocol-person promotion |
 
 Related RFC supplements link to this receipt. This closes the listed Python /
-Scheme foundation questions and the measured temporal model-rendering gate;
+Scheme ABI foundation questions. The historical model-rendering gate does not
+close the no-Prompt or real-time teaching requirements;
 it does not blanket-close unrelated RFC requirements. Cross-platform exact-head
 CI and deployment remain distinct evidence. MRR consumes the qualified POO ABI
 after the submitted-head native CI gate; no premature Rust adapter is

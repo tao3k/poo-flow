@@ -269,3 +269,11 @@ study. Final answer rejection is recorded separately from accepted accuracy and
 coverage. This supplement does not freeze the entire control ABI, authenticate
 caller source labels, grant effects or qualify all protocol-person requirements.
 MRR Rust integration follows the Python/Scheme and exact-head qualification.
+
+* No-Prompt / real-time teaching correction
+
+The 48-call study used preset rules and supplied native solved answers. It is
+withdrawn as acceptance evidence for the user's no-Prompt architecture. The
+existing contradiction gate rejects output but does not teach the model. ABI
+receipts remain scoped engineering evidence; model integration and real-time
+teaching closure remain open, and MRR Rust admission remains deferred.

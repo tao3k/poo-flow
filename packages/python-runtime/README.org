@@ -37,6 +37,9 @@ JSON and recomputes the Scheme answer, returning =consistent= or =contradicted=.
 =render_temporal_answer(task, renderer)= and its async counterpart run model
 IO in Python and return only a consistent candidate; contradicted answers raise
 a typed rejection after recomputing against the current task.
+This is a rejection API, not a real-time model teaching implementation. The
+historical prompted answer-supply experiment is withdrawn as design acceptance;
+no-Prompt model integration and real-time teaching remain open.
 Caller-declared source labels are not authenticated. Admission and answer
 consistency do not grant effect authorization.
 

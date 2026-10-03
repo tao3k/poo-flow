@@ -36,7 +36,9 @@
     "150 versioned semantic operation and owned-byte artifact lane"
   ],
   "remainingGates": [
-    "exact submitted-head Linux/macOS CI"
+    "exact submitted-head Linux/macOS CI",
+    "no-Prompt model integration",
+    "real-time teaching semantics, implementation and effectiveness qualification"
   ],
   "rustIntegration": "deferred; no MRR Rust changes",
   "files": {
@@ -51,6 +53,7 @@
     "plan.json": "13f15dcd538103f617f6f5f563dae30e0f4dc35230adc1d1975cf7b0b9a9f589",
     "report.json": "441f468f1b1d4e39e3d401b45875e6f4069960a7c59c3440a17e6b668291ce65",
     "runtime-complete-suite.log": "26160e3e93848a5054b0400f57c270b1a793af4b290ca6a13653bde470db2d5f",
+    "testing-correction.log": "48101ed4c5eaae1bf181f172ce088ca3c225059bc5ef0fae9eba43109fe3718b",
     "testing-unit.log": "51497b470d502eccba5f01e9e52a52cecd85527baf64431992c70168c587ffcb",
     "transport-final.json": "403f603b56c36f2c336ba60dd7a78d9e0e921a25cdb8e34dba22b7db4c40afc1",
     "transport-final.log": "7e4373dc7d8fd5c2554a0c9586d7331f0880458f90ad883826020328bdc1606a",
@@ -60,5 +63,11 @@
     "deployment",
     "additional workloads",
     "whole control ABI v1 freeze"
-  ]
+  ],
+  "modelDesignAcceptance": "withdrawn: preset RULES and supplied solved answers; historical records only",
+  "realTimeTeaching": "not implemented; existing gate only recomputes and rejects",
+  "testingPackageTestsAfterCorrection": {
+    "passed": 26,
+    "failed": 0
+  }
 }
