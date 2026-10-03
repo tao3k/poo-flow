@@ -120,7 +120,12 @@ from .stores import (
 from .subgraphs import RuntimeGraphSubgraph
 from .tools import RuntimeGraphTool, RuntimeGraphToolError, RuntimeGraphToolNode
 
+from .temporal_selection import Publication, SignedPublication, PublicationEffect, PointerObservation, TemporalSelectionStore
+from .native_temporal_selection import NativeTemporalSelectionStore
+
 __all__ = (
+    "Publication", "SignedPublication", "PublicationEffect", "PointerObservation",
+    "TemporalSelectionStore", "NativeTemporalSelectionStore", "TemporalBudgetCoordinator", "NativeTemporalEvaluator",
     "RuntimeGraphBindings",
     "BatchedEvidenceLeaf",
     "BatchedMerkleProof",
@@ -216,3 +221,6 @@ __all__ = (
     "json_schema_to_scheme_contract",
     "load_json_schema",
 )
+
+from .temporal_budget import TemporalBudgetCoordinator
+from .temporal_evaluator import NativeTemporalEvaluator

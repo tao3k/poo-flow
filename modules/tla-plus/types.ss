@@ -9,9 +9,12 @@
         (only-in :clan/poo/mop Type. define-type element?)
         (only-in :std/list/list every)
         (only-in :poo-flow/modules/temporal-causality/types
-                 poo-flow-temporal-model?))
+                 poo-flow-temporal-model?)
+        (only-in :poo-flow/modules/temporal-causality/behavior/types
+                 poo-flow-temporal-behavior-model? poo-flow-temporal-property?))
 
-(export PooFlowTlaLanguage
+(export PooFlowTlaBehaviorProjection poo-flow-tla-behavior-projection?
+        PooFlowTlaLanguage
         PooFlowTlaDocument
         PooFlowTlaModelOutline
         PooFlowTlaTemporalProjection
@@ -108,8 +111,9 @@
                (.ref (.ref value 'document) 'grammar-digest))
        (equal? (.ref value 'semantic-digest)
                (.ref (.ref value 'model) 'semantic-digest))
-       (eq? (.ref value 'semantic-subset)
-            'poo-flow.tla-plus.literal-hypothesis-family.v1)
+       (memq (.ref value 'semantic-subset)
+             '(poo-flow.tla-plus.literal-hypothesis-family.v1
+               poo-flow.tla-plus.literal-hypothesis-family.v2))
        (eq? (.ref value 'model-checking?) #f)))
 
 (define-type (PooFlowTlaTemporalProjection @ Type.)
@@ -117,3 +121,18 @@
 
 (def (poo-flow-tla-temporal-projection? value)
   (element? PooFlowTlaTemporalProjection value))
+
+(def (tla-behavior-projection-shape? value)
+  (and (tla-has-slots? value '(kind document model property source-digest grammar-digest semantic-digest
+                                  semantic-subset model-checking? action-authorized?))
+       (eq? (.ref value 'kind) 'poo-flow.tla-plus.behavior-projection)
+       (poo-flow-tla-document? (.ref value 'document))
+       (poo-flow-temporal-behavior-model? (.ref value 'model))
+       (poo-flow-temporal-property? (.ref value 'property))
+       (equal? (.ref value 'source-digest) (.ref (.ref value 'document) 'source-digest))
+       (equal? (.ref value 'grammar-digest) (.ref (.ref value 'document) 'grammar-digest))
+       (equal? (.ref value 'semantic-digest) (.ref (.ref value 'model) 'semantic-digest))
+       (eq? (.ref value 'semantic-subset) 'poo-flow.tla-plus.logical-step-behavior.v1)
+       (eq? (.ref value 'model-checking?) #f) (eq? (.ref value 'action-authorized?) #f)))
+(define-type (PooFlowTlaBehaviorProjection @ Type.) .element?: tla-behavior-projection-shape?)
+(def (poo-flow-tla-behavior-projection? value) (element? PooFlowTlaBehaviorProjection value))

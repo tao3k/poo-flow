@@ -1,0 +1,123 @@
+#+title: Temporal Framework Closure Ledger
+#+property: STATUS locally-qualified
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Objective and evidence boundary
+
+All six framework obligations now have implementations, rejecting controls and
+local executable receipts for the admitted =finite-hypothesis-v2= and
+=finite-behavior-v1= profiles. Qualification is model-relative and finite.
+The table records local closure of these contracts; it is not a certificate of
+remote CI, deployed operation, physical causation or a universal interpreter
+refinement theorem. Source generation, valid time, knowledge time and causal
+cut remain distinct.
+
+| Obligation | Implemented contract | Closure evidence | State |
+|------------+----------------------+------------------+-------|
+| Time | scoped source HMAC evidence, verified affine conversions, immutable authenticated late reconciliation, signed shared duration coordinator, finite interval/partial-order networks | native authentication/network/budget/late controls; concurrent reservations, conservation, overrun and crash tests | locally qualified |
+| Reevaluation and publication | replayed native evaluator admission and fixed host signature issuer; prior-bound journal/retraction; budgeted C/Python atomic SQLite pointer/effect commits and signed observations | native proof/journal controls; actual signature-to-commit and late retraction/restart; competing writer, tamper and process-exit tests | locally qualified |
+| Mechanisms and intervention | exclusive/overlapping families, guarded finite mechanisms, persistent intervention clamps, protected variables and approved model assumptions | two independent vocabularies; native intervention controls and complete finite TLC behavior corpus | locally qualified |
+| Property/query | native POO safety/reachability/bounded-progress objects, independent world/node limits and explicit fairness =none= | native queries, unknown frontiers, witness/counterexample replay and TLC classifications | locally qualified |
+| Source correspondence | typed native projections, owned emission and semantic-library source pins, private complete import/config/toolchain bundle, complete reachable behavior steps | 56 hypothesis and 24 behavior bundles; two bound correspondence receipts; missing-edge, changed-witness, family-mode and relabeling controls | locally qualified |
+| Generic proof | temporal/order and classification laws, schedule/trace projection, finite source-bound table transport, duration conservation | Lean target builds; identity/projection premises explicit; exact finite step conditions independently checked by TLC | locally qualified |
+
+* Maintained qualification entrypoints
+
+The canonical =build.ss= includes the fixed evaluator and single-job child
+process exit helper. Qualification uses the public Temporal and TLA+ interfaces
+with their compiled dependency closure. Configure =GERBIL_PATH= and
+=GERBIL_LOADPATH= for that build and its pinned dependencies.
+
+=just check-temporal-closure PINS_JSON FRESH_CORPUS_DIRECTORY= composes the
+following maintained gates. =PINS_JSON= contains owner-approved Java/TLC
+artifact paths and expected SHA-256 values. The dedicated backend integration
+also requires =POO_FLOW_TLC_JAVA=, =POO_FLOW_TLC_JAR= and
+=POO_FLOW_TLC_RUNTIME_ARTIFACTS=; absence fails that dedicated gate.
+
+| Gate | Latest local receipt |
+|------+----------------------|
+| =check-temporal-native-closure= | 19 modules, 97 cases; =MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0 |
+| =check-temporal-runtime-publication= | 25 tests pass against actual C and Python adapters; C11 strict compile also passes |
+| =check-temporal-host-evaluator= | 2 tests pass: native signature issuance for both adapters; authenticated late retraction, budgeted commit, signed observation and opposite-adapter restart/replay |
+| =check-temporal-correspondence= | both hypothesis v2 and behavior v1 checked receipts pass real TLC and model/step/config/authority relabeling controls |
+| =check-temporal-frozen-tlc-bundle= | 4 tests pass: complete bundle, ambient import/Java-option exclusion, owner pins/path boundaries, complete step table and missing-edge rejection |
+| =check-temporal-frozen-corpus= | regenerated native inputs: all 56 hypothesis and 24 behavior bundles pass through native POO and private frozen TLC backend |
+| =check-temporal-child-exit= | deliberate assertion failure returns 42; the qualifying wrapper accepts exactly that status |
+| =lake build= in =packages/proofs/lean-poo= | full Lean 4.34 target succeeds, 19 jobs |
+
+The parser dependency is pinned to
+=7c1533356585154c8b5d340f64ffefb289d18907=. The full public-interface dependency
+closure contains 99 modules; their native build artifacts were verified.
+These receipts qualify the local worktree, based on
+=2bc655337ddd62bfe7ab77f6c871c768745dcaeb=, with the changes under review.
+They are not exact-head remote CI results. The unrelated Lambda Aitia submodule
+changes are excluded from this work.
+
+* Concrete source and step correspondence
+
+The emitter reconstructs data/check/config from replayed POO values. Hypothesis
+v2 preserves =ModelIdentity=, family mode and canonical limited frontiers.
+TLC independently computes each expected classification; full traversal checks
+all candidate orders and terminal stutter retains deadlock checks.
+
+Behavior v1 emits a complete native reachable-state transition table. The
+native table uses the same private step function as native query exploration.
+TLC =NativeStepsSoundness= independently checks every emitted row against guard,
+assignment and intervention-clamp semantics. =StepAgreement= checks that every
+TLC reachable state/action result occurs in that table. Initial values and the
+variable-order bijection are checked, as are forced native witness/counterexample
+states and final property truth. An incomplete native table cannot admit a
+correspondence bundle. Deleting a row while retaining classification and witness
+states produces a =StepAgreement= violation; changing a witness state produces
+=TraceAgreement= failure, and a family-mode mutation violates
+=TerminalAgreement=.
+
+=poo-flow-tla-check-correspondence!= binds model/profile and complete step-table
+identity to the exact checked bundle. Its semantic imports have built-in owned
+source pins; callers cannot replace them with a trivial checking program.
+The private backend binds every source/config byte, the complete pinned Java
+Home/TLC inventory, and output. Ambient imports/options cannot supply omissions.
+
+Lean =FiniteStepTable= proves projected step equivalence under injectivity,
+trace transport and source-bound table transport under explicit identity/row
+premises, and rejection of a mismatched source identity. =BehaviorProjection=
+proves schedule/trace and property laws under commuting steps;
+=HypothesisClassification= proves the finite classification laws;
+=DurationBudget= proves conservation, monotone remaining balance, delegation and
+failure-no-refund. The exact admitted finite inputs have separate executable
+TLC correspondence evidence. This does not prove the Scheme/TLC implementations
+for arbitrary source programs. Correspondence receipts retain
+=semantic-refinement? #f= and =action-authorized? #f=; replay checks identity
+consistency under the trusted host execution premise.
+
+* Runtime and trust contracts
+
+- Late reconciliation replaces one authenticated existing observation in the
+  same source/domain. It requires fresh source sequence, preserves the old model
+  and watermark, and triggers a newly admitted revision/retraction.
+- The host approves the complete literal model source and its assumptions. The
+  fixed native evaluator replays the actual query in the publication context;
+  opaque proof labels, caller admission flags and unfinished search cannot sign.
+- Both real runtimes atomically commit pointer and signed effect. Signed CAS
+  observations do not reserve the pointer. Durable exact replay preserves the
+  original effect; nonce collisions and competing predecessors are rejected.
+- Shared duration budgets use signed balances/delegations and one-shot grants in
+  a trusted shared SQLite coordinator. Spending precedes the publication
+  transaction, so crashes and failures do not refresh grants. Elapsed monotonic
+  duration is checked before commit; this does not preempt CPU work or bound the
+  final filesystem commit syscall. It is not an independent cross-host service.
+- Native worker children perform a single pure evaluation or completed test
+  harness, flush output and propagate status without macOS dyld unload latency.
+  Application runtimes retain their ordinary lifecycle and persistent resources.
+  The five-second no-output gate remains; the expanded 19-module native matrix
+  has a bounded 180-second total deadline.
+- Host-owned interpreter/compiled modules, keys, OS and filesystem are explicit
+  premises. Current test tool pins qualify the local installation, not external
+  release approval. Complete malicious database rollback needs an external
+  monotonic authority; signed stored fields alone do not prevent it.
+- Progress is bounded with fairness =none=. No fair infinite-progress,
+  unrestricted source-interpreter or actual-causation claim is issued.

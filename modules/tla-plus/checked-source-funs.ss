@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :gerbil-parser/src/runtime/artifact sha256-text)
-        (only-in :gerbil-parser/languages/tla-plus/v1/qualification
+        (only-in :gerbil-parser/languages/tla-plus/qualification
                  qualify-tla-plus-model
                  tla-plus-model-receipt-output
                  tla-plus-model-receipt->alist)

@@ -349,7 +349,7 @@ journal remains a replayable value.
 
 The change constructor requires an old conclusion in a =scoped-complete=
 invalidation plan's affected set, exact old/new cut and projection binding,
-and a new opaque
+and a new evaluator
 proof identity.  The reverse index proves only *which conclusions require
 reevaluation*.  The supplied proof identity is a reference to evaluator-owned
 evidence, not a theorem checked by this constructor.  Monotonicity, closed
@@ -419,53 +419,66 @@ are broader:
   explored frontier and perhaps the answer's certainty, not the model digest.
 - *Source projection*: accepted TLA+ literal values and native POO values
   have the same admitted interpretation; unsupported syntax fails closed.
-- *Behavior refinement*: a future observable map relates native state changes
-  to TLA+ traces, including stutter steps and environment assumptions.
+- *Behavior correspondence*: a complete native reachable-state step table is
+  checked against independent TLA+ guard, assignment and intervention semantics.
+  =NativeStepsSoundness= and =StepAgreement= cover every edge for the admitted
+  finite model; native witness/counterexample states have a separate trace check.
 - *Proof/receipt binding*: Lean theorems, TLC executions and native runtime
   receipts retain their own identities and scopes.  One is not substituted
   for another.
 
 Finite TLC state exploration is an executable counterexample search.  It
 supports a claim only for an exact source, configuration and finite scope.
-=modules/tla-plus/checked-source-{types,objects,funs}.ss= now wraps the
-parser-owned TLC qualification in a POO receipt.  It checks the parsed root
-source digest, config digest, TLC launcher and output digests, final state
-counts and empty queue; it rechecks root source/config bytes around the run.
-Imported TLA+ modules and the full TLC toolchain remain outside this digest
-binding.  The receipt
-states =semantic-refinement? #f= and =action-authorized? #f=.  It cannot prove
-that the checked behavior model refines the POO model, or guard against a
-hostile concurrent rewrite of the same source path during TLC execution.
-Progress needs explicit fairness and environmental assumptions.  Lean can
-eventually establish generic laws across admitted models; current Lean
-temporal theorems concern a narrower event/cut model and do not discharge
-the new projection/refinement obligations.
+The older single-source receipt retains its narrow root/config/launcher scope.
+The native =bundle/= path snapshots all supplied custom imports and configuration,
+verifies the complete owner-pinned Java Home/TLC inventory before and after the
+run, and binds the output. Missing imports cannot use ambient library paths.
+=correspondence/= constructs the checking program from a replayed native model
+and query, requires the exact owned semantic-library source pins, and binds the
+model/profile, complete behavior step-table identity and checked bundle together.
+A generic caller-authored bundle has no native correspondence claim.
 
-* Work remaining for a complete framework
+The bounded correspondence receipt records executable differential evidence and
+keeps =semantic-refinement? #f= and =action-authorized? #f=. Receipt replay checks
+identity consistency; host-owned execution and toolchain integrity remain trust
+premises. It is not a general proof about the Scheme interpreter, TLC or physical
+causation. Generic Lean classification, schedule/trace, finite step-table/source
+identity and duration-budget laws build independently; their premises are explicit.
 
-1. Extend the bounded observation layer with source-verified clock
-   conversions and authenticated watermark/completeness semantics over the
-   existing event/ingress/processing axes, distributed duration budgets,
-   interval constraint propagation, and partial-order constraints.  Align it
-   with RFC 45-70 and 45-72.
-2. Bind reevaluation proof admission to immutable conclusion revisions and
-   an authorized runtime active-pointer transition under RFC 45-73.  The
-   evidence journal, as-of cuts, reverse index, conclusion journal and pure
-   CAS plan are executable; proof admission, signed observations, atomic
-   publication and effect receipts remain open.
-3. Extend the now-explicit overlapping hypothesis-family mode with actual
-   interventions and behavior spaces.  Keep candidate generation, assumption
-   admission and causal attribution distinct.
-4. Define property and query objects for safety, reachability and progress;
-   generate or interpret TLA+ transitions from the semantic model rather than
-   exposing a caller-authored =Next= API.
-5. Extend the new typed checked-source receipt to a proved or differentially
-   checked native/TLA+ projection.  The receipt currently binds TLC's own
-   finite run, not the POO state-transition interpretation.
-6. Extend Lean proofs from event/cut facts to generic temporal relations,
-   source projection and trace refinement.  The abstract future-append cut
-   lemma is now in the Temporal proof target; retain bounded TLC as separate
-   executable evidence.
+* Six framework closure gates
+
+The implementation and exact local qualification are tracked in
+[[file:closure.org][the closure ledger]]. The admitted profiles are finite-hypothesis-v2 and
+finite-behavior-v1. Each obligation retains its required executable gate:
+
+1. Scoped source-authenticated affine conversions and coverage/watermark claims;
+   immutable late-observation reconciliation; shared signed duration grants with
+   parent/child conservation and no refund after failure; finite interval and
+   partial-order constraint networks with explicit unknown frontiers.
+2. Actual native evaluator replay and trusted-host signature issuance; immutable
+   prior-bound conclusion revisions/journals and retraction; authenticated pointer
+   observation, authorized CAS publication and durable signed effect in both
+   Runtime C and Python, including competing writers and process crashes.
+3. Explicit exclusive/overlapping hypothesis families, guarded finite mechanisms,
+   persistent intervention clamps and protected-variable controls. The approved
+   source binds model assumptions; admission remains model-relative.
+4. Native POO safety, reachability and bounded-progress properties, independent
+   world/node limits and native behavior exploration. No caller-authored =Next=;
+   fairness is explicitly =none=, so no infinite-progress claim is issued.
+5. Typed source roundtrip, exact private imported-source/toolchain binding,
+   native/TLC classification, full reachable behavior-step correspondence and
+   witness/counterexample replay. Altered family modes, missing edges, changed
+   witnesses and relabeled sources have rejecting controls.
+6. Generic temporal/order and classification laws, schedule/trace and finite
+   source-bound table transport, and integer duration conservation. Lean transport
+   requires the declared identity/projection premises; concrete admitted inputs
+   have separate executable TLC checks, not a universal implementation theorem.
+
+The shared SQLite coordinator assumes trusted storage and cooperating runtimes;
+it is not an independent cross-host coordination service. Late reconciliation
+replaces an authenticated existing observation in the same source/domain. Duration
+checks occur before commit and do not bound the final filesystem syscall. These
+are declared contracts, not evidence of deployed operation or remote CI.
 
 * Trajectory, Impact and 2026 research
 :PROPERTIES:
@@ -528,3 +541,26 @@ invalidation frontier, not actual influence or claim truth.
 - Repository architecture: =docs/10-19-design/10.06-poo-module-system/161-temporal-causality-and-causal-trajectory-architecture.org=.
 - Temporal observation and revision contracts: RFC 45-70, 45-72 and 45-73
   in the same design directory.
+
+
+* Finite evaluator admission and runtime publication (2026-10-03)
+
+The =conclusions/evaluation-= roles implement two named native evaluators,
+=finite-hypothesis-v2= and =finite-behavior-v1=. Evaluation replay recomputes the
+classification and binds the exact model, query, statement, subject, scope,
+cut, projection, policy and generation. Unknown or unfinished evaluations are
+not admitted for publication. The conclusion journal retains every old row.
+
+The pure publication handoff now requires this evaluation. Its conclusion
+result must equal the evaluated classification. Corrections and retractions
+also require the prior evaluation bound to the journal predecessor and the
+same statement. A retraction additionally requires a newly refuted former
+necessary/possible classification. No opaque proof ID grants publication.
+This profile does not admit arbitrary domain result strings or check general
+Lean/TLA theorems. Those require a separately named evaluator integration.
+
+Runtime C and Python execute scope/version CAS, authenticate issuer signatures,
+atomically commit pointer/effect and authenticate observations. The trusted host
+must only sign evaluation assertions after native admission. Runtime signatures
+prove issuer assertions; model-relative evaluation and real-world source
+completeness remain separate. See =closure.org= for remaining required gates.

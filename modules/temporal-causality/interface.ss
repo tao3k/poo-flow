@@ -6,7 +6,7 @@
 (import "types.ss" "objects.ss" "funs.ss" "config.ss" "time/interface.ss"
         "revisions/interface.ss" "truth-maintenance/interface.ss"
         "conclusions/interface.ss" "trajectory/interface.ss" "impact/interface.ss"
-        "evidence/interface.ss" "candidates/interface.ss")
+        "evidence/interface.ss" "candidates/interface.ss" "behavior/interface.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "funs.ss")
@@ -16,4 +16,5 @@
         (import: "truth-maintenance/interface.ss")
         (import: "conclusions/interface.ss")
         (import: "trajectory/interface.ss" "impact/interface.ss"
-                 "evidence/interface.ss" "candidates/interface.ss"))
+                 "evidence/interface.ss" "candidates/interface.ss")
+        (import: "behavior/interface.ss"))

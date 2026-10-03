@@ -54,7 +54,7 @@
         (check-equal? (.ref (.ref document 'language) 'parser-owner)
                       'gerbil-parser)
         (check-equal? (.ref PooFlowTlaLanguage. 'syntax-contract)
-                      "tla-plus.native-core.v1")
+                      "tla-plus.native-layout.v2")
         (check-equal? (.ref document 'source-digest)
                       (sha256-text sample-source))
         (check-equal? (.ref document 'source-byte-length)

@@ -15,4 +15,8 @@ require LeanPoo from git
 @[default_target]
 lean_lib PooFlowTemporalPooProof where
   roots := #[`PooFlowTemporalPooProof.TruthMaintenance,
-             `PooFlowTemporalPooProof.ConclusionSelection]
+             `PooFlowTemporalPooProof.ConclusionSelection,
+             `PooFlowTemporalPooProof.HypothesisClassification,
+             `PooFlowTemporalPooProof.BehaviorProjection,
+             `PooFlowTemporalPooProof.DurationBudget,
+             `PooFlowTemporalPooProof.FiniteStepTable]

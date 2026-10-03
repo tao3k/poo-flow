@@ -1,0 +1,30 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :clan/poo/object .ref .slot? object?)
+        (only-in :clan/poo/mop define-type Type. element?) (only-in :std/list/list every)
+        "types.ss")
+(export PooFlowTemporalTimeChoice PooFlowTemporalTimeConstraint PooFlowTemporalTimeNetwork
+        poo-flow-temporal-time-choice? poo-flow-temporal-time-constraint? poo-flow-temporal-time-network?)
+(def (text? v) (and (string? v) (> (string-length v) 0)))
+(def (base? v kind fields)
+  (and (object? v) (.slot? v 'kind) (eq? (.ref v 'kind) kind)
+       (.slot? v 'identity) (text? (.ref v 'identity)) (every (lambda (s) (.slot? v s)) fields)))
+(def (choice? v)
+  (and (base? v 'temporal/time-choice '(alternatives)) (list? (.ref v 'alternatives)) (pair? (.ref v 'alternatives))
+       (or (every poo-flow-temporal-instant? (.ref v 'alternatives)) (every poo-flow-temporal-interval? (.ref v 'alternatives)))))
+(def (constraint? v)
+  (and (base? v 'temporal/time-constraint '(left right relations))
+       (text? (.ref v 'left)) (text? (.ref v 'right)) (list? (.ref v 'relations)) (pair? (.ref v 'relations))
+       (every (lambda (s) (memq s '(before equal after meets met-by overlaps overlapped-by starts started-by
+                                          during contains finishes finished-by))) (.ref v 'relations))))
+(def (network? v)
+  (and (base? v 'temporal/time-network '(choices constraints semantic-digest))
+       (list? (.ref v 'choices)) (pair? (.ref v 'choices)) (every choice? (.ref v 'choices))
+       (list? (.ref v 'constraints)) (every constraint? (.ref v 'constraints)) (text? (.ref v 'semantic-digest))))
+(define-type (PooFlowTemporalTimeChoice @ Type.) .element?: choice?)
+(define-type (PooFlowTemporalTimeConstraint @ Type.) .element?: constraint?)
+(define-type (PooFlowTemporalTimeNetwork @ Type.) .element?: network?)
+(def (poo-flow-temporal-time-choice? v) (element? PooFlowTemporalTimeChoice v))
+(def (poo-flow-temporal-time-constraint? v) (element? PooFlowTemporalTimeConstraint v))
+(def (poo-flow-temporal-time-network? v) (element? PooFlowTemporalTimeNetwork v))

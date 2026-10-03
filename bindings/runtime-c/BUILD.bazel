@@ -83,6 +83,22 @@ cc_library(
 )
 
 cc_library(
+    name = "temporal_selection_v1",
+    srcs = ["src/temporal_selection_v1.c"],
+    hdrs = ["include/poo_flow/temporal_selection_v1.h"],
+    strip_include_prefix = "include",
+    copts = ["-std=c11", "-Wall", "-Wextra", "-Werror", "-pedantic"],
+    linkopts = ["-lsqlite3", "-lpthread"],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libpoo_flow_temporal_selection_v1.so",
+    linkshared = True,
+    deps = [":temporal_selection_v1"],
+)
+
+cc_library(
     name = "runtime_c_library",
     srcs = [
         "src/proof_case_v1.c",

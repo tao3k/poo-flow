@@ -1,0 +1,139 @@
+#+title: Temporal selection publication v1
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Host integration
+
+The optional =temporal_selection_v1= Bazel library and
+=libpoo_flow_temporal_selection_v1.so= shared target require SQLite and pthreads.
+The public header is =include/poo_flow/temporal_selection_v1.h=.
+Python exports =Publication=, =SignedPublication=, =PublicationEffect=,
+=PointerObservation=, =TemporalSelectionStore= and
+=NativeTemporalSelectionStore= from =poo_flow_runtime=.
+The native adapter accepts the shared library's absolute path explicitly.
+Both adapters use the same persistent SQLite schema and exact UTF-8 netstrings.
+
+Configure distinct authorizer, evaluator and runtime keys (at least 32 bytes)
+in the trusted host. Authorizer and evaluator attestations cover the entire
+publication projection, including source generation, causal cut, journal,
+model, proof, nonce, operation, expiry and expected pointer version.
+The runtime checks expiry from its own clock inside the transaction.
+A signature authenticates an issuer's assertion. The Scheme handoff now requires a replayed =TemporalEvaluation= for its
+finite-hypothesis-v2 or finite-behavior-v1 profile. It checks the exact model,
+query, classification, exhaustive search and subject/scope/cut/projection/
+policy/generation before emitting publication bytes. Corrections and retractions
+also require the prior evaluation of the same statement; retraction requires
+its new native refutation. Unknown or unfinished evaluation cannot publish.
+These checks establish model-relative classification only. Runtime issuer
+verification is still separate from Scheme semantic admission: the trusted host
+must issue the evaluator signature only after that admission. A signature or
+digest does not establish arbitrary theorem semantics.
+
+Call =publish= with both signatures. Successful publication returns a signed,
+durable effect. A competing predecessor/version returns =conflict=; identical
+nonce/payload replay returns the original effect with =replayed= status.
+Corrections and retractions require the selected predecessor and positive
+expected version. Retraction publishes an explicit immutable tombstone revision.
+
+Call =observe(subject, scope)= to obtain a snapshot whose runtime signature
+covers version and exact publication bytes. Verify the signature and requested
+scope when transporting observations outside the trusted adapter. =absent=
+is a local database result. It does not authenticate global nonexistence.
+Observation does not reserve the pointer: publication still performs CAS.
+The C host must serialize close against all handle operations. Python adapters
+perform this serialization internally.
+
+* Durability and evidence boundary
+
+=BEGIN IMMEDIATE=, WAL and =synchronous=FULL= couple the selected pointer and
+its effect in one transaction. The signer failure, SQL failure and process
+exit paths do not leave a selected pointer without its effect. Signer callbacks
+execute within the transaction and must not recursively operate on that store.
+
+Signatures detect altered persisted fields. Complete rollback/removal of a
+previously valid database is outside this profile: it requires an external
+monotonic checkpoint or trusted storage authority. SQLite crash durability also
+assumes a functioning filesystem and platform sync implementation.
+
+=just check-temporal-runtime-publication= compiles the real C11 implementation
+and runs both adapters, cross-adapter contention/recovery, authenticated
+observations, field tampering, expiry, nonce collision, effect-write failure,
+process exit between pointer/effect writes and process exit after commit.
+The maintained progress gate fails after five seconds without actual output.
+
+
+* Frozen TLC backend
+
+The internal Python =tla_bundle= runtime backend accepts source byte snapshots
+from the control plane. It copies flat module/config filenames into a private
+directory, clears ambient Java options/classpath/library injection, fixes
+Java home/temp properties, and executes an explicitly pinned Java/TLC classpath.
+Every supplied source and configuration digest is included in its bundle
+identity. Missing custom imports fail; ambient =TLA_LIBRARY= cannot satisfy them.
+
+The trusted host supplies expected hashes for the complete Java Home file
+inventory, TLC JAR and additional runtime dependencies. The backend verifies
+these pins and snapshots before/after execution. Host OS and filesystem are
+its declared trust base. Test fixtures pin the current local installation for
+an executable qualification; they are not a supply-chain approval certificate.
+The receipt binds output and toolchain hashes and explicitly denies semantic
+refinement/action authority. The native POO bundle path verifies this receipt against its source/toolchain
+objects; all 56 hypothesis and 24 behavior corpus bundles pass that path.
+The owned correspondence API additionally re-emits the native model/query,
+requires exact semantic-library source pins and binds the model/profile and
+complete native step-table identity. TLC checks every emitted behavior edge
+with =NativeStepsSoundness= and every reachable action with =StepAgreement=.
+Deleting an edge is rejected even when classification and witness are unchanged.
+Generic Lean source-bound table/trace laws retain explicit projection premises.
+
+=just check-temporal-frozen-tlc-bundle= requires =POO_FLOW_TLC_JAVA=,
+=POO_FLOW_TLC_JAR= and a colon-separated =POO_FLOW_TLC_RUNTIME_ARTIFACTS= list.
+The dedicated gate does not permit a skipped missing-toolchain run. Ordinary
+Python suites skip this external integration when those variables are absent.
+
+
+* Native evaluator issuance
+
+=NativeTemporalEvaluator= is a trusted-host component. The host supplies an
+approved source digest, interpreter environment, compiled native modules and
+an evaluator key. Its fixed =scripts/temporal/evaluate-source.ss= entry point
+parses source literals into POO models/queries and replays actual evaluation.
+The host signs publication bytes only when their proof and model identities
+match the admitted, exhausted evaluation in that publication's exact context.
+A caller admission flag or arbitrary evaluator script cannot replace this path.
+The child evaluator never receives the signing key. After a completed pure
+evaluation it flushes the result and exits through the fixed single-job child
+boundary, avoiding macOS dynamic-module unload latency. Failed evaluation never
+reaches that success exit, and the host still requires a unique admitted result
+and successful child status before signing. A deliberate failing native test
+returns 42 through the same status boundary. Interpreter/module integrity
+remains a trusted-host premise, separate from a mathematical implementation proof.
+
+* Shared duration quantum budgets
+
+The trusted host uses =TemporalBudgetCoordinator= on the same persistent SQLite
+store, creates a parent capacity and optionally delegates child capacities.
+=reserve= binds a positive integer millisecond quantum to an exact publication
+and nonce. Signed parent balances and leases prevent field relabeling. The full
+quantum is deducted once; failure does not refund it and recreating budget or
+child identities is rejected. Workers receive grants, not the coordinator key.
+
+Configure either adapter with =budget=, or the C handle with
+=poo_flow_temporal_require_budget_v1= before exposing it to workers. The runtime
+spends its authenticated grant in a separate durable transaction before touching
+the selected pointer. Crash/SQL failure/conflict cannot refresh that grant. An
+identical authenticated durable effect replay does not consume a second grant.
+A fresh attempt requires a fresh nonce and grant. Runtime monotonic elapsed time
+is checked immediately before committing pointer/effect; no cross-host clock
+subtraction is used. This is a conservative duration quantum/admission profile,
+not CPU preemption or a bound on the final filesystem commit syscall latency.
+The shared SQLite store, filesystem and configured host coordinator are trusted;
+this profile does not provide an independent distributed coordination service.
+
+The POO =poo-flow-temporal-duration-budget= objects and reserve/replay functions
+are immutable allocation plans. They cannot create authenticated runtime grants.
+Lean duration-quanta laws establish conservation for their integer abstraction;
+they are not a proof of SQLite or either runtime implementation.

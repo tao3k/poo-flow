@@ -14,6 +14,7 @@ Explorer == INSTANCE TemporalFamilyExplorer
        Hypotheses <- Hypotheses,
        Constraints <- Constraints,
        FamilyComplete <- FamilyComplete,
+       FamilySemantics <- "exclusive-explanations",
        ExplorationLimit <- ExplorationLimit,
        Target <- Target,
        ExpectedClassifications <- ExpectedClassifications,

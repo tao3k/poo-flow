@@ -97,6 +97,8 @@
   `((gxc: "modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `(,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+
+               (gxc: "scripts/temporal/evaluate-source")
+               (gxc: "scripts/temporal/exit-child-process"))))
 
 (defbuild-script (poo-flow-native-spec))

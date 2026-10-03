@@ -7,7 +7,7 @@
 EXTENDS Naturals, FiniteSets
 
 CONSTANTS ClockDomains, Observations, Hypotheses, Constraints,
-          FamilyComplete, ExplorationLimit, Target, ExpectedClassifications
+          FamilyComplete, FamilySemantics, ExplorationLimit, Target, ExpectedClassifications
 
 Semantics == INSTANCE TemporalFamilySemantics
   WITH ClockDomains <- ClockDomains,
@@ -47,16 +47,17 @@ Explore(id) ==
        THEN unknown \cup {id} ELSE unknown
 
 ExploreAny == \E id \in remaining : Explore(id)
-Next == ExploreAny
+Terminal == remaining = {} \/ Cardinality(Explored) = EffectiveLimit
+\* Terminal stutter is explicit so a completed finite exploration is not a deadlock.
+Next == ExploreAny \/ (Terminal /\ UNCHANGED vars)
 Spec == Init /\ [][Next]_vars
 FairSpec == Spec /\ WF_vars(ExploreAny)
-
-Terminal == remaining = {} \/ Cardinality(Explored) = EffectiveLimit
 
 Classification ==
   IF Target \in refuted THEN "refuted"
   ELSE IF Target \in admitted
        THEN IF remaining = {} /\ FamilyComplete /\ unknown = {}
+               /\ FamilySemantics = "exclusive-explanations"
                /\ Cardinality(admitted) = 1
             THEN "necessary" ELSE "possible"
        ELSE "unknown"
@@ -86,6 +87,7 @@ InputInvariant ==
   /\ Target \in HypothesisIds
   /\ ExplorationLimit \in Nat
   /\ FamilyComplete \in BOOLEAN
+  /\ FamilySemantics \in {"exclusive-explanations", "overlapping-mechanisms"}
   /\ ExpectedClassifications \subseteq
        {"possible", "necessary", "refuted", "unknown"}
 TerminalAgreement == Terminal => Classification \in ExpectedClassifications

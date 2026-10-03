@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in :std/list/list filter)
-        (only-in :gerbil-parser/languages/tla-plus/v1/parser parse-tla-plus-v1)
+        (only-in :gerbil-parser/languages/tla-plus/parser parse-tla-plus)
         (only-in :gerbil-parser/src/runtime/artifact
                  parse-artifact-ref parse-artifact-success?
                  parse-artifact-roundtrip)
@@ -25,21 +25,26 @@
                  poo-flow-temporal-constraint
                  poo-flow-temporal-hypothesis)
         (only-in :poo-flow/modules/temporal-causality/funs
-                 poo-flow-temporal-model)
+                 poo-flow-temporal-model poo-flow-temporal-overlapping-model)
+        (only-in :poo-flow/modules/temporal-causality/behavior/objects
+                 poo-flow-temporal-state-variable poo-flow-temporal-condition
+                 poo-flow-temporal-assignment poo-flow-temporal-mechanism
+                 poo-flow-temporal-intervention poo-flow-temporal-property)
+        (only-in :poo-flow/modules/temporal-causality/behavior/funs poo-flow-temporal-behavior-model)
         (only-in "types.ss" PooFlowTlaDocument poo-flow-tla-document?)
         (only-in "objects.ss"
                  PooFlowTlaDocument. poo-flow-tla-model-outline-value
-                 poo-flow-tla-temporal-projection-value))
+                 poo-flow-tla-temporal-projection-value poo-flow-tla-behavior-projection-value))
 (export poo-flow-tla-parse-source poo-flow-tla-parser-cst
         poo-flow-tla-model-outline
-        poo-flow-tla-project-temporal-model)
+        poo-flow-tla-project-temporal-model poo-flow-tla-project-behavior-model)
 
 ;;; Accepted syntax is not a proof of TLA+ semantics or TLC admission.
 ;;; Rejected sources fail closed with parser-owned diagnostics.
 (def (poo-flow-tla-parse-source source)
   (unless (string? source)
     (error "TLA+ source must be a string" source))
-  (let (artifact (parse-tla-plus-v1 source))
+  (let (artifact (parse-tla-plus source))
     (unless (parse-artifact-success? artifact)
       (error "gerbil-parser rejected TLA+ source"
              (parse-artifact-ref artifact 'diagnostics)))
@@ -174,8 +179,11 @@
                        (tla-only (filter syntax-node?
                                          (syntax-field-children field))))
                      (tla-fields module 'item)))
-         (names '("ClockDomains" "Observations" "Hypotheses"
-                  "Constraints" "FamilyComplete")))
+         (legacy-names '("ClockDomains" "Observations" "Hypotheses"
+                         "Constraints" "FamilyComplete"))
+         (v2? (= (length items) 7))
+         (names (if v2? (append legacy-names '("ModelIdentity" "FamilySemantics"))
+                    legacy-names)))
     (unless (and (= (length items) (length names))
                  (every (lambda (item)
                           (and (eq? (syntax-node-kind item) 'OperatorDefinition)
@@ -203,7 +211,14 @@
             (tla-literal-tuples (operator "Hypotheses") 3 'Hypotheses))
            (constraint-tuples
             (tla-literal-tuples (operator "Constraints") 5 'Constraints))
-           (complete? (operator "FamilyComplete")))
+           (complete? (operator "FamilyComplete"))
+           (model-identity (if v2? (operator "ModelIdentity")
+                               (.ref outline 'module-identity)))
+           (semantics (if v2? (operator "FamilySemantics")
+                          "exclusive-explanations")))
+      (unless (and (string? model-identity) (> (string-length model-identity) 0)
+                   (member semantics '("exclusive-explanations" "overlapping-mechanisms")))
+        (error "unsupported TLA+ temporal model identity or family semantics"))
       (unless (boolean? complete?)
         (error "FamilyComplete must be a TLA+ boolean literal"))
       (unless (every (lambda (tuple) (every string? tuple))
@@ -255,7 +270,55 @@
                                    '()))))
                    hypothesis-tuples))
              (model
-              (poo-flow-temporal-model
-               (.ref outline 'module-identity)
+              ((if (equal? semantics "overlapping-mechanisms")
+                 poo-flow-temporal-overlapping-model poo-flow-temporal-model)
+               model-identity
                domains observations hypotheses complete?)))
-          (poo-flow-tla-temporal-projection-value document model))))))
+          (poo-flow-tla-temporal-projection-value
+           document model
+           (if v2? 'poo-flow.tla-plus.literal-hypothesis-family.v2
+               'poo-flow.tla-plus.literal-hypothesis-family.v1)))))))
+
+(def (literal-profile document names)
+  (let* ((root (poo-flow-tla-parser-cst document))
+         (module (tla-only (filter syntax-node? (syntax-field-children (tla-only (tla-fields root 'module))))))
+         (items (map (lambda (f) (tla-only (filter syntax-node? (syntax-field-children f)))) (tla-fields module 'item))))
+    (unless (and (= (length items) (length names))
+                 (every (lambda (i) (and (eq? (syntax-node-kind i) 'OperatorDefinition)
+                                         (null? (tla-fields i 'parameter)))) items)
+                 (equal? (list-sort string<? names)
+                         (list-sort string<? (.ref (poo-flow-tla-model-outline document) 'operator-identities))))
+      (error "unsupported TLA+ behavior profile declarations"))
+    (lambda (name)
+      (let (item (tla-only (filter (lambda (i) (equal? (tla-identifier (tla-only (tla-fields i 'name))) name)) items)))
+        (tla-literal (tla-only (filter syntax-node? (syntax-field-children (tla-only (tla-fields item 'body))))))))))
+
+(def (poo-flow-tla-project-behavior-model document)
+  (let* ((get (literal-profile document '("ModelIdentity" "StateVariables" "Mechanisms" "Interventions"
+                                         "Horizon" "PropertyIdentity" "PropertyKind" "Conditions"
+                                         "Deadline" "ExpectedOutcomes")))
+         (variables (tla-literal-tuples (get "StateVariables") 3 'StateVariables))
+         (mechanisms (tla-literal-tuples (get "Mechanisms") 4 'Mechanisms))
+         (interventions (tla-literal-tuples (get "Interventions") 5 'Interventions)))
+    (def (conditions rows)
+      (map (lambda (r) (apply poo-flow-temporal-condition r)) (tla-literal-tuples rows 3 'Conditions)))
+    (def (assignments rows)
+      (map (lambda (r) (apply poo-flow-temporal-assignment r)) (tla-literal-tuples rows 3 'Assignments)))
+    (unless (and (string? (get "PropertyKind"))
+                 (list? (get "ExpectedOutcomes")) (every boolean? (get "ExpectedOutcomes")))
+      (error "invalid TLA+ behavior property profile"))
+    (let* ((source-document document)
+           (model-value
+            (poo-flow-temporal-behavior-model
+             (get "ModelIdentity")
+             (map (lambda (r) (apply poo-flow-temporal-state-variable r)) variables)
+             (map (lambda (r) (poo-flow-temporal-mechanism
+                               (car r) (conditions (cadr r)) (assignments (caddr r)) (list-ref r 3))) mechanisms)
+             (map (lambda (r) (poo-flow-temporal-intervention
+                               (car r) (cadr r) (assignments (caddr r)) (list-ref r 3) (list-ref r 4))) interventions)
+             (get "Horizon")))
+           (property-value (poo-flow-temporal-property (get "PropertyIdentity")
+                             (string->symbol (get "PropertyKind")) (conditions (get "Conditions")) (get "Deadline"))))
+      ;; Domain-level values are the output; the CST stays with the document.
+      ;; This projection is not a TLC run or an action authorization.
+      (poo-flow-tla-behavior-projection-value source-document model-value property-value))))
