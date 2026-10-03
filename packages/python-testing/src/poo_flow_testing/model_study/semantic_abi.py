@@ -49,9 +49,17 @@ def request_for(task, sources, model):
                   'rows': {'type': 'array', 'items': {
                       'type': 'array', 'items': {'type': 'string'},
                       'minItems': 2, 'maxItems': 2}}}}
-    content = json.dumps({'operation': 'temporal.solve', 'task': task,
-                          'implementation': sources, 'JSON_output_schema': schema},
-                         ensure_ascii=False, separators=(',', ':'))
+    content = '\n\n'.join(';;; SOURCE ' + name + '\n' + source
+                            for name, source in sources.items())
+    payload = json.dumps(task, ensure_ascii=False, separators=(',', ':'))
+    literal = json.dumps(payload, ensure_ascii=False)
+    content += ('\n\n(parameterize ((current-json-read-options\n'
+                '                  (JSONReadOptions object-as-hash: #t)))\n'
+                '  (let ((result (string->json\n'
+                '                  (semantic-call "temporal.solve" ' + literal + '))))\n'
+                '    (json->string\n'
+                '      (hash (status (hash-get result "status"))\n'
+                '            (rows (hash-get result "rows"))))))\n')
     return {'model': model, 'input': [{'role': 'user', 'content': content}],
             'reasoning': {'effort': 'none'}, 'max_output_tokens': 1024,
             'text': {'format': {'type': 'json_schema', 'name': 'temporal_candidate',
@@ -89,6 +97,7 @@ def prepare(root, library, ascent, output, model):
     plan = {'schema': 'poo-flow.semantic-abi-live-plan', 'version': 1,
             'head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
             'artifactSha256': digest, 'model': model, 'reasoningEffort': 'none',
+            'inputRepresentation': 'public Scheme source and literal semantic-call result projection',
             'contentIdleSeconds': 5, 'totalCallSeconds': 90,
             'maximumCalls': 24, 'retries': 0, 'cases': tasks,
             'order': [{'case': c['id'], 'api': api} for c in tasks for api in ('sync', 'async')],

@@ -72,9 +72,12 @@ def test_request_contains_only_current_task_source_and_transport_contract():
         request = request_for(case['request'], {'source.ss': '(def actual-source 1)'}, 'configured-model')
         assert request['model'] == 'configured-model'
         assert len(request['input']) == 1
-        supplied = json.loads(request['input'][0]['content'])
-        assert set(supplied) == {'operation', 'task', 'implementation', 'JSON_output_schema'}
-        assert supplied['task'] == case['request']
+        supplied = request['input'][0]['content']
+        assert '(def actual-source 1)' in supplied
+        assert '(semantic-call "temporal.solve" ' in supplied
+        payload = json.dumps(case['request'], ensure_ascii=False, separators=(',', ':'))
+        assert json.dumps(payload, ensure_ascii=False) in supplied
+        assert 'expected' not in supplied and 'native-private' not in supplied
         assert 'instructions' not in request and 'tools' not in request
     cases[0]['request']['source']['parents'].clear()
     assert corpus()[0]['request']['source']['parents']
