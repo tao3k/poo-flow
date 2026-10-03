@@ -42,9 +42,16 @@ class BuildPyWithRuntime(build_py):
         target = Path(self.build_lib) / "poo_flow_runtime" / "_native" / "lib"
         target.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target / library_name)
+        semantic = os.environ.get("POO_FLOW_SEMANTIC_V1_LIBRARY")
+        if semantic:
+            semantic_source = Path(semantic).resolve()
+            semantic_name = "libpoo_flow_semantic_v1.dylib" if system == "Darwin" else "libpoo_flow_semantic_v1.so"
+            shutil.copy2(semantic_source, target / semantic_name)
+            shutil.copy2(Path(str(semantic_source) + ".json"), target / (semantic_name + ".json"))
 
 
 setup(
-    cffi_modules=["src/poo_flow_runtime/_native/_build.py:ffibuilder"],
+    cffi_modules=["src/poo_flow_runtime/_native/_build.py:ffibuilder",
+                  "src/poo_flow_runtime/_native/_semantic_build.py:ffibuilder"],
     cmdclass={"build_py": BuildPyWithRuntime},
 )

@@ -1,143 +1,157 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-
 #+title: Python / Scheme Runtime foundation and real-model qualification
 #+date: 2026-10-03
-#+status: foundation correction in progress; native semantic ABI and model qualification open
+#+status: implemented semantic foundation; qualification receipts below; MRR deferred
 
-* Delivery order
+* Delivery order and owners
 
-User-directed priority: Python/Scheme foundation -> Runtime qualification ->
-real LLM accuracy and benefit study -> MRR Rust Runtime integration.
-MRR is a later consumer of the qualified shared boundary. The finite temporal
-lens and POO exchange remain bounded receipts, not Runtime or model closure.
+User-directed order: Python/Scheme foundation -> Runtime qualification -> real
+LLM accuracy and benefit -> architecture correction and scoped RFC closure ->
+MRR Rust integration. No Rust integration is included in this delivery.
 
-* Verified architectural gap
+| Responsibility | Owner | Implemented boundary |
+| Pure finite temporal reasoning and answer verification | Existing ASCENT Scheme lens | POO semantic ABI temporal.solve / temporal.verify |
+| Graph objects and topology admission | POO Scheme graph types and algorithms | POO semantic ABI graph.admit / graph.targets |
+| Artifact and native lifetime | POO C ABI host | One process lifetime, one owner thread, terminal cleanup |
+| Scheduler, cancellation, action IO, reducers, checkpoints, stores | Python production Runtime | Dedicated semantic thread plus existing Python executor |
+| Model proposal and text rendering | LLM | Inert candidate JSON; final Scheme consistency gate |
+| Source authenticity and effect authority | Existing authority/control lanes | Not granted by labels, consistency or topology admission |
 
-| Source | Current implementation | Evidence boundary |
-|--------+------------------------+-------------------|
-| =packages/python-runtime/src/poo_flow_runtime/materialization.py= | Python generates a deterministic domain receipt | No ABI call or native graph handle |
-| =packages/python-runtime/src/poo_flow_runtime/_program_runtime.py= | Native selection previously checked only an open context, then used the Python executor | Negotiation did not bind or mediate graph execution |
-| =packages/python-runtime/src/poo_flow_runtime/_runtime_graph_executor.py= | Python owns reference graph progression, routing and reducer application | Reference behavior, not Scheme evaluation |
-| =bindings/runtime-c/include/poo_flow/runtime_v0.h= | Control-lane sessions, mediation, arena and evidence boundary | No semantic graph execution API |
-| =bindings/runtime-c/include/poo_flow/scheme_native_v1.h= | AOT Scheme descriptor and bounded contract validation | No snapshot/candidate/transition call |
-| =packages/python-testing/docs/ascent-reasoning.org= | Persistent native Scheme experiment worker | Experimental transport, not an installed semantic ABI |
+This extends the actual C ABI/FFI capability. Python does not reimplement the
+finite temporal solver. The semantic entrypoint calls existing Scheme semantic
+owners and has no arbitrary Scheme eval operation. JSON is a versioned internal
+byte projection; Scheme objects remain inside the native boundary.
 
-Immediate correction: native =RuntimeGraphProgram= execution fails before any
-action is called. Reference execution stays explicitly selected. Its plan
-receipt is local domain evidence. A live control session remains usable through
-the low-level API. This gate is temporary capability absence, not a new backend
-or a completed Scheme ABI implementation.
+* Implemented interface and package
 
-* Ownership and language strengths
+=bindings/runtime-c/include/poo_flow/semantic_v1.h= defines owned result bytes,
+borrowed bounded input, explicit release, open/call/close and typed errors.
+=src/ffi/semantic-v1.ss= owns descriptor and projections. Operations:
 
-This refines [[file:63-scheme-marlin-runtime-boundary.org][the Scheme / Runtime boundary]] and
-[[file:150-runtime-language-abi-lane-rfc.org][the Contract-derived ABI lane]].
+- =temporal.solve=: result status, rows, frontier, source/lens/root-bound digest,
+  native verification and evidence verdicts.
+- =graph.admit=: bounded POO graph construction, valid topology and bindings,
+  successors and full projection SHA256 receipt. This is topology admission,
+  not effect authorization or a claim of Scheme-owned scheduling.
+- =graph.targets=: resolve conditional labels and validate control/send targets
+  in Scheme against an immutable, digest-bound graph projection. The scheduler
+  consumes Scheme-produced static successors, including START.
+- =temporal.verify=: recompute the source-bound native answer and compare the
+  candidate's exact canonical status/rows. Returns consistent or contradicted.
 
-| Concern | Owner | Python responsibility |
-|---------+-------+-----------------------|
-| Composition, policies, scope, admissible graph intent | Scheme POO objects and pure functions | Project admitted values |
-| Pure semantic transition decisions, reasoning and proof checking | Scheme semantic modules | Marshal input and preserve typed outcomes |
-| Macros, prototype/slot composition, specialization | Scheme authoring and compilation | Consume compiled artifact; no Python evaluator |
-| Versioned transport, byte ownership, status, feature negotiation | POO shared C ABI / generated projections | CFFI API bindings, release/lifetime handling |
-| Async work, cancellation, timeouts, storage, model/tool/network IO | Python Runtime now; Rust Runtime later | Execute admitted effects and report observations |
-| Source truth, completeness, lineage and clock authority | Explicit source/provider owner | Bind immutable source identity, never infer authority from LLM text |
+Temporal requests are bounded to 128 events/members, 256 parent edges and
+horizon 1024. The C host rejects wrong-thread calls, malformed UTF-8, NUL, depth >64, input
+>1 MiB and invalid result ownership before Scheme. Cleanup is terminal. CFFI
+loading is mutex protected. Python serializes native work on an owner thread,
+limits pending calls to 64, releases every result, and discards canceled queued
+calls. A second runtime instance cannot replace the active process lifetime.
 
-Scheme does not absorb an async scheduler or durable store. Runtime execution
-must consume admitted semantic decisions; a Python graph dict or custom JSON
-dispatch must not establish a second semantic contract.
+The AOT builder queries the Gerbil compiler's runtime module closure. It does
+not parse Scheme source or interpret compiler IR. The manifest binds artifact,
+Scheme projection, C host/header, compiler and module closure hashes. Build
+caches bind compiler/header/options/platform as well as module source.
 
-* Foundation gates
+=SemanticRuntime.bundled()= loads the optional wheel artifact after digest
+verification. Native graph programs require this semantic context and an actual
+runtime-v0 session before action execution. Reference mode remains explicit.
+Mac local packaging uses a local C control artifact; Linux CI owns the Bazel
+control artifact handoff. Local evidence does not establish hermetic Bazel or
+clean-host portability. External system dylibs remain packaging dependencies.
 
-1. Select one vertical slice using existing POO-native values and pure functions:
-   finite temporal candidate evaluation against an immutable source snapshot,
-   with receipt verification. Reuse the current Scheme verifier. Do not add a
-   second inference engine or generic arbitrary Scheme evaluation entrypoint.
-2. Define a module-selected, versioned semantic call through the POO ABI.
-   Specify canonical source/lens/root/scope identity, explicit complete/partial/
-   unknown/rejected outcomes, supported operation IDs and byte limits. Derive
-   foreign projections from the Scheme contract. Global =scheme_native_v1=
-   validation alone is insufficient.
-3. Qualify the AOT package and initialization boundary. No hidden VM in the
-   ordinary pure-C SDK. Define thread affinity/reentrancy, borrowed input and
-   owner-released output, failure/close behavior, snapshot lifetime and stale
-   generation rejection before enabling production Python calls.
-4. Compare the same candidate/source through the persistent worker and AOT
-   in-process boundary. Record cold startup, warm p50/p95, payload bytes,
-   allocations/copies, status and receipt equality. The experiment worker is a
-   baseline until matched receipts and packaging evidence justify replacement.
-5. Implement Python CFFI marshaling, resource ownership and typed errors for the
-   qualified operation. Assert no semantic fallback on unavailable capability,
-   rejected input, callback failure, stale handle or closed session. Retain
-   Python scheduling, actual model/tool IO and durable operations at explicit
-   runtime handoffs.
-6. Qualify synchronous/async calls, cancellation, cleanup, concurrency contract,
-   duplicate mediation, checkpoint/recovery, source drift, malformed data and
-   evidence tampering. Separately record unit, real-native, isolated-wheel and
-   exact-head CI results. Skips are not completion.
+* Real LLM paired experiment
 
-The native graph guard may be removed only by an implemented, qualified
-semantic handoff. An open session, a Python callback, a green reference suite
-or a matching plan digest does not satisfy this gate.
+[[file:evidence/python-scheme-runtime-20261003/plan.json][Frozen plan]],
+[[file:evidence/python-scheme-runtime-20261003/calls.jsonl][48 raw outputs and token usage]],
+[[file:evidence/python-scheme-runtime-20261003/analysis.json][reproducible analysis]].
 
-** Current foundation correction qualification
+The approved batch was DeepSeek Flash, 48 calls, zero retries, maximum 384
+output tokens each, USD 1 ceiling. All 48 responses completed with distinct IDs.
+12 independent curated temporal truth classes were preflighted against native
+Scheme; each had two repetitions in each arm. The shuffled order was frozen
+before execution. Repetition indices are not provider seeds.
 
-2026-10-03 local macOS qualification, with captured POO devenv environment:
+| Metric | Plain model | Native-assisted model |
+| Exact status and complete rows | 6/24 (25%) | 22/24 (91.67%) |
+| Status accuracy | 6/24 | 24/24 |
+| Row true positive / false positive / false negative | 0 / 8 / 16 | 16 / 6 / 0 |
+| Row precision / recall | 0% / 0% | 72.73% / 100% |
+| Input / output tokens | 7978 / 316 | 10790 / 376 |
+| Provider-stream median seconds | 0.6400 | 0.4989 |
+| Conservative peak-price estimate USD | 0.0027726 | 0.0036882 |
 
-- Reference/program/materialization and rejection-entrypoint gate: 22 passed,
-  including one Python project-harness check. Seven negative cases verify that
-  native selection never calls a Python action through invoke, stream, batch
-  or resume, including async entrypoints.
-- Real runtime-v0 C session gate: 8 passed, including one project-harness check,
-  with out-of-line CFFI and an actual native control-lane library. Includes
-  negotiation, lifecycle, arena mediation, replay/root-fork rejection and the
-  native graph capability rejection.
-- Both test commands used a five-second real-output watchdog and a 120-second
-  command limit. No skips occurred in these focused gates.
-- The local library was compiled with Apple clang, C11, strict warnings and the
-  checked-in headers from =runtime_v0.c= and =proof_case_v1.c=. This is a local
-  C/CFFI receipt, not hermetic Bazel, installed-wheel or Scheme AOT qualification.
-- No semantic operation was added to the ABI in this correction. The six
-  foundation gates above, new-head remote CI and real-model evaluation remain
-  open. Earlier green CI cannot qualify this change.
+Exact-answer gain: +66.67 percentage points. Post-hoc case-cluster bootstrap
+(12 clusters, 10,000 samples, fixed analysis seed) interval: +41.67 to +91.67
+points. Native assistance used 35.25% more input tokens and estimated cost was
+33.03% higher. Total conservative estimate: USD 0.0064608, within the approved
+USD 1 ceiling; this is not a provider invoice.
 
-* Real LLM evaluation after foundation qualification
+Pricing ceiling used input USD 0.30 / million and output USD 1.20 / million,
+[[https://api-docs.deepseek.com/quick_start/pricing/?tab=case-studies][official DeepSeek pricing]],
+checked 2026-10-03. Cached/off-peak discounts are not assumed.
 
-Freeze corpus, source snapshots, gold labels, model ID/config, prompts,
-tool permissions, equal token/call budgets, stopping rule and evaluator version
-before provider calls. Native verification checks candidate validity; it does
-not establish external source truth or completeness.
+This is finite temporal answer rendering with supplied native assistance. It
+measures neither autonomous tool selection nor general agent/business accuracy.
+The corpus is small and curated. Lower provider-stream latency in this run is
+not a general performance guarantee or combined Runtime+provider latency.
 
-| Paired workload | Independent correctness check | Expected benefit to measure |
-|-----------------+------------------------------+-----------------------------|
-| Exact source extraction and bounded joins | Gold rows/fields and source IDs | Precision/recall; unsupported claims |
-| Valid-time window, knowledge-time cut and intervals | Enumerated finite source oracle | Correct answers and correct uncertainty |
-| Withdrawal and generation changes | Frozen before/after gold sets | Stale-answer rejection; preserved old snapshot |
-| Missing source, contradictory evidence, open cut | Explicit unknown/partial gold labels | Calibration and appropriate abstention |
-| Model proposes valid/invalid candidates | Independent candidate oracle plus Scheme verifier | Detection rate and false rejection rate |
-| Model/tool failure, timeout, cancellation and recovery | Event/effect/checkpoint records | No unauthorized or duplicate effects; recovery correctness |
+* Architecture correction from real failures
 
-Use the same model and task in paired arms: model with plain source access and
-model with the qualified POO/Scheme capabilities. Keep sources, permissions and
-budgets equal; include control cases where no benefit is expected. Randomize
-arm order and run multiple seeds; select sample counts and budget before calls.
-Do not use the same LLM as the sole judge of data accuracy.
+Both native-assisted failures fabricated three rows when the correct native
+answer was empty. Correct tool output alone did not guarantee correct model
+output. The delivered correction is =temporal.verify= plus
+=SemanticRuntime.validate_model_answer=, plus enforced synchronous/asynchronous
+=render_temporal_answer= entrypoints, keeping the LLM answer as inert data
+until the Scheme owner recomputes it against the current source.
 
-Record final task accuracy, field precision/recall, source attribution,
-uncertainty outcomes, verifier acceptance/rejection, latency, tokens, cost,
-tool calls and effect safety separately. Archive raw model output, call IDs,
-usage, exact Runtime/native heads, artifact digests and receipts. Report paired
-deltas and uncertainty; a green Runtime suite is not an LLM benefit result.
+[[file:evidence/python-scheme-runtime-20261003/final-gate.json][Offline final-answer gate]]
+replays all 48 archived answers without a provider call. The gate records
+accepted accuracy separately from coverage and retains every rejection. It
+must not report abstention as a correct full-task answer. A source withdrawal
+changes the binding and invalidates the old model answer.
 
-The earlier four-call study observed identical candidates across its paired
-arms and did not demonstrate a correctness benefit. It does not qualify this
-new Runtime ABI or a broader task corpus. Its approved call budget is exhausted.
-Prepare the runnable study and bounded budget before requesting new paid calls.
+* Executable qualification
 
-* MRR Rust admission
+[[file:evidence/python-scheme-runtime-20261003/qualification.json][Qualification receipt]]
+and accompanying logs bind the final artifact to actual tests:
 
-After these gates, Rust consumes the same C contract, immutable artifact pins
-and qualification vectors. Admission must bind generation/source/clock/cut and
-preserve status, lifetime and proof/evidence semantics. Record integration cost
-against the already-qualified Python slice; lower cost is a hypothesis until
-measured. This gate remains deferred and open.
+- Full Python Runtime suite: 325 passed, zero skips and zero failures. Testing
+  package suite: 25 passed.
+- Native descriptor, temporal status/evidence, generation rebinding, malformed
+  inputs and operation, owner thread, repeated release, lifecycle, bounded queue
+  and cancellation tests.
+- Actual native topology admission followed by Python action IO, using a real
+  runtime-v0 session; invalid topology and bindings reject before IO.
+- Python scheduler, streams, checkpoints, stores, control-lane and evidence
+  regression tests.
+- Installed wheel invokes native semantic solve, graph execution and final verification without
+  a Gerbil executable on PATH. This is local installed packaging evidence.
+- 60 matched Scheme receipts over worker and native ABI, with alternating call
+  order in the final measurement. Includes full binding and evidence equality.
+
+The final alternating-paired run found native median 20.75 ms versus worker
+12.54 ms (0.60x warm speedup), while native process setup was 0.0410 s versus
+the full test worker harness startup 3.266 s. Filesystem and shared-library
+caches were warm; these are process startup measurements. The final receipt
+is authoritative.
+The current native warm median is about 66% slower; there is no proven
+warm-throughput gain. Cold figures compare these particular
+harnesses; they do not establish the minimum possible worker startup cost.
+
+All required local checks use real-output watchdogs. Silence beyond five
+seconds is a failed attempt; failed builds are not successful receipts.
+Remote CI must be checked on the submitted exact head independently.
+
+* Scoped RFC closure
+
+| RFC | Closed by this implementation | Still outside this receipt |
+| 63 Scheme / Runtime boundary | Scheme temporal/graph decisions with Python IO/scheduler separation | General policy/effect authorization qualification |
+| 120 Python production CFFI Runtime | Owner-thread out-of-line semantic CFFI, native admission, installed artifact use | Every production workload and platform |
+| 150 Runtime ABI lane | Versioned semantic operation/result/error/ownership projection with immutable artifact hashes | Whole control ABI v1 freeze and protocol-person promotion |
+
+Related RFC supplements link to this receipt. This closes the listed Python /
+Scheme foundation questions and the measured temporal model-rendering gate;
+it does not blanket-close unrelated RFC requirements. Cross-platform exact-head
+CI and deployment remain distinct evidence. MRR consumes the qualified POO ABI
+after the submitted-head native CI gate; no premature Rust adapter is
+introduced here.

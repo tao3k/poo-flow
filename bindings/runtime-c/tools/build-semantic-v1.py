@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+"""Materialize the compiler-owned semantic AOT closure; never inspect Scheme IR."""
+from __future__ import annotations
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shlex
+import shutil
+import subprocess
+
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def run(argv: list[str], *, capture: bool = False) -> str:
+    print(f"BUILD {argv[0]} {argv[1:3]}", flush=True)
+    return subprocess.run(argv, cwd=ROOT, check=True, text=True,
+                          stdout=subprocess.PIPE if capture else None).stdout or ""
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    if platform.system() == 'Darwin':
+        for key in ['SDKROOT', 'NIX_CFLAGS_COMPILE', 'NIX_CFLAGS_COMPILE_FOR_BUILD',
+                    'NIX_LDFLAGS', 'NIX_LDFLAGS_FOR_BUILD']:
+            os.environ.pop(key, None)
+        os.environ['CC'] = '/usr/bin/clang'
+        os.environ['PATH'] = '/usr/bin:/bin:/opt/homebrew/bin:' + os.environ.get('PATH', '')
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = platform.mac_ver()[0].split('.')[0] + '.0'
+        developer = Path('/Applications/Xcode.app/Contents/Developer')
+        if developer.is_dir():
+            os.environ['DEVELOPER_DIR'] = str(developer)
+    output = args.output.resolve()
+    stage = output.parent / "semantic-v1-build"
+    stage.mkdir(parents=True, exist_ok=True)
+    home = Path(run(["gxi", "-e", "(displayln (gerbil-home))"], capture=True).strip())
+    gsc = str(home / "bin/gsc")
+    os.environ["GAMBOPT"] = f"~~={home},~~bin={home / 'bin'},~~lib={home / 'lib'}"
+    compiler = [str(home / "bin/gxc"), "-:max-heap=1G,debug=q", "-V"]
+    for source in ["src/utilities/product-syntax.ss", "src/utilities/final-projection-syntax.ss",
+                   "src/graph/types-core.ss", "src/graph/algorithms-list-support.ss",
+                   "src/graph/algorithms.ss"]:
+        run([*compiler, "-O", "-static", source])
+    run([*compiler, "-O", "-static",
+         "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
+         "src/ffi/semantic-v1.ss"])
+    expression = '''(let* ((ctx (import-module "src/ffi/semantic-v1.ss"))
+                           (deps (gxc#find-runtime-module-deps ctx)))
+                      (for-each (lambda (dep)
+                        (displayln (expander-context-id dep) "\\t"
+                                   (gxc#find-static-module-file dep))) deps)
+                      (displayln "ROOT\\t" (gxc#find-static-module-file ctx)))'''
+    closure = run([str(home / "bin/gxi"), "-:max-heap=1G,debug=q", "-e", "(import :gerbil/compiler/driver :gerbil/expander)",
+                   "-e", expression], capture=True)
+    system, user, inputs = [], [], []
+    seen = set()
+    for line in closure.splitlines():
+        name, path = line.split("\t", 1)
+        source = Path(path).resolve()
+        if source in seen or name.startswith("gerbil/core"):
+            continue
+        seen.add(source)
+        if not source.is_file():
+            raise RuntimeError(f"missing compiler closure source: {name}")
+        if not source.stat().st_size:
+            continue
+        inputs.append({"module": name, "sha256": hashlib.sha256(source.read_bytes()).hexdigest()})
+        if name.startswith(("gerbil/", "std/")):
+            system.append(source)
+        else:
+            target = stage / f"module-{len(user)}.scm"
+            shutil.copyfile(source, target)
+            user.append(target)
+    linker = stage / "semantic-v1_.c"
+    run([gsc, "-link", "-o", str(linker),
+         *[str(p.with_suffix('.c')) for p in system], *map(str, user)])
+    text = linker.read_text()
+    def define(name: str) -> str:
+        match = re.search(rf"^#define {name} ([A-Za-z0-9_]+)$", text, re.M)
+        if not match:
+            raise RuntimeError(f"missing Gambit linker metadata: {name}")
+        return match[1]
+    objects = []
+    for source in user:
+        target = source.with_suffix('.o')
+        fingerprint = hashlib.sha256(source.read_bytes() + Path(gsc).read_bytes() +
+                                     (home / 'include/gambit.h').read_bytes() +
+                                     b'-fPIC' + platform.platform().encode()).hexdigest()
+        cache = target.with_suffix('.sha256')
+        if not target.is_file() or not cache.is_file() or cache.read_text() != fingerprint:
+            run([gsc, "-cc-options", "-fPIC", "-obj", "-o", str(target), str(source.with_suffix('.c'))])
+            cache.write_text(fingerprint)
+        objects.append(target)
+    for source in system:
+        obj = source.with_suffix('.o')
+        if not obj.is_file():
+            raise RuntimeError(f"missing installed system object: {obj}")
+        objects.append(obj)
+    link_object, host_object = stage / "link.o", stage / "host.o"
+    run([gsc, "-cc-options", "-fPIC -D___LIBRARY", "-obj", "-o", str(link_object), str(linker)])
+    options = (f"-fPIC -D___VERSION={define('___VERSION')} "
+               f"-DPOO_FLOW_SEMANTIC_LINKER={define('___LINKER_ID')} "
+               f"-I{ROOT / 'bindings/runtime-c/include'}")
+    run([gsc, "-cc-options", options, "-obj", "-o", str(host_object),
+         str(ROOT / 'bindings/runtime-c/src/semantic_v1_host.c')])
+    flags = shlex.split((home / "lib/libgerbil.ldd").read_text().strip().strip("()"))
+    shared = ["-shared"]
+    if platform.system() == "Darwin":
+        shared = ["-dynamiclib", "-Wl,-no_compact_unwind"]
+    run([os.environ.get('CC', 'cc'), *shared, '-o', str(output),
+         *map(str, objects), str(link_object), str(host_object),
+         '-L', str(home / 'lib'), '-lgambit', *flags])
+    manifest = {"schema": "poo-flow.semantic-aot-artifact.v1", "modules": inputs,
+                "artifactSha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+                "sourceSha256": hashlib.sha256((ROOT / 'src/ffi/semantic-v1.ss').read_bytes()).hexdigest(),
+                "hostSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/src/semantic_v1_host.c').read_bytes()).hexdigest(),
+                "headerSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/include/poo_flow/semantic_v1.h').read_bytes()).hexdigest(),
+                "compilerSha256": hashlib.sha256(Path(gsc).read_bytes()).hexdigest()}
+    output.with_suffix(output.suffix + '.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    print(f"BUILD-OK {output} {manifest['artifactSha256']}", flush=True)
+
+
+if __name__ == '__main__':
+    main()

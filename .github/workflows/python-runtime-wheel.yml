@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 15
     env:
       POO_FLOW_RUNTIME_V0_LIBRARY: ${{ github.workspace }}/.ci/runtime-c/libpoo_flow_runtime_v0.so
+      POO_FLOW_SEMANTIC_V1_LIBRARY: ${{ github.workspace }}/.ci/semantic/libpoo_flow_semantic_v1.so
       PROJECTION_HANDOFF_DIR: .ci/python-wheel-projection
       PROJECTION_ARTIFACT: .ci/python-wheel-projection/wheel_smoke.ss.poo-flow-projection.sexp
 
@@ -50,6 +51,25 @@ jobs:
         with:
           name: poo-flow-runtime-native-library
           path: .ci/runtime-c
+
+      - name: Download semantic AOT producer handoff
+        uses: actions/download-artifact@v8
+        with:
+          name: poo-flow-semantic-native-linux
+          path: .ci/semantic
+
+      - name: Verify semantic artifact and source binding
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          library = Path(os.environ['POO_FLOW_SEMANTIC_V1_LIBRARY'])
+          manifest = json.loads(Path(str(library) + '.json').read_text())
+          assert hashlib.sha256(library.read_bytes()).hexdigest() == manifest['artifactSha256']
+          assert hashlib.sha256(Path('src/ffi/semantic-v1.ss').read_bytes()).hexdigest() == manifest['sourceSha256']
+          assert hashlib.sha256(Path('bindings/runtime-c/src/semantic_v1_host.c').read_bytes()).hexdigest() == manifest['hostSha256']
+          assert hashlib.sha256(Path('bindings/runtime-c/include/poo_flow/semantic_v1.h').read_bytes()).hexdigest() == manifest['headerSha256']
+          PY
 
       - name: Verify producer handoffs
         id: producer-handoffs
@@ -144,7 +164,8 @@ jobs:
         run: |
           set -euo pipefail
           uv run --project packages/python-runtime pytest \
-            packages/python-runtime/tests/unit/test_native_runtime_v0.py
+            packages/python-runtime/tests/unit/test_native_runtime_v0.py \
+            packages/python-runtime/tests/unit/test_semantic_runtime.py
 
       - name: Test Python module case catalog
         run: |
@@ -166,6 +187,7 @@ jobs:
       - name: Install wheel in clean environment
         run: |
           set -euo pipefail
+          unset POO_FLOW_RUNTIME_V0_LIBRARY POO_FLOW_SEMANTIC_V1_LIBRARY
           python -m venv "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke"
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m pip install \
             dist/python-runtime-wheel/*.whl
@@ -181,6 +203,38 @@ jobs:
           health = probe_native_runtime()
           assert (health.abi_major, health.abi_minor) == (0, 1)
           print("packaged Bazel runtime-v0 negotiation: ok")
+          PY
+          "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" - <<'PY'
+          import json, shutil
+          from poo_flow_runtime import (SemanticRuntime, RuntimeGraphProgram,
+              RuntimeGraphRuntime, RuntimeGraphRegistries, linear_plan)
+          from poo_flow_runtime._native.session import NativeRuntimeSession, NativeBundleDescriptor
+          assert shutil.which('gxi') is None
+          task = {'lens': {'generation': 1, 'clock': 'c', 'start': 0, 'end': 5,
+                          'asOf': 5, 'cut': 'cut', 'members': ['a', 'b'],
+                          'horizon': 8, 'closed': True},
+                  'source': {'identity': 'source', 'generation': 1, 'clock': 'c',
+                             'events': [['a', 1, 1], ['b', 2, 2]],
+                             'parents': [['a', 'b']]}, 'root': 'a'}
+          with SemanticRuntime.bundled() as runtime:
+              answer = runtime.call('temporal.solve', task)
+              assert answer['rows'] == [['a', 'b']]
+              rendered = runtime.render_temporal_answer(task, lambda native: json.dumps(
+                  {key: native[key] for key in ('status', 'rows')}))
+              assert rendered['receipt']['verdict'] == 'consistent'
+              assert runtime.validate_model_answer(task, json.dumps(
+                  {'status': 'complete', 'rows': [['a', 'b']]}))['verdict'] == 'consistent'
+              assert runtime.validate_model_answer(task,
+                  '{"status":"complete","rows":[]}')['verdict'] == 'contradicted'
+              with NativeRuntimeSession(NativeBundleDescriptor(bytes(32), 1, b'bundle')) as session:
+                  program = RuntimeGraphProgram(plan=linear_plan('act'),
+                      runtime=RuntimeGraphRuntime.native(session, semantic_context=runtime),
+                      registries=RuntimeGraphRegistries(actions={
+                          'act': lambda state: {'answer': state['value'] + 1}}))
+                  execution = program.invoke_with_trace({'value': 41})
+                  assert execution.state['answer'] == 42
+                  assert execution.validation.kind == 'scheme-graph-admission'
+          print('packaged no-Gerbil semantic solve and final gate: ok')
           PY
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" - <<'PY'
           import shutil

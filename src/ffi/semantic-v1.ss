@@ -1,0 +1,257 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; AOT semantic projection: inert JSON enters existing Scheme owners.
+(import :std/ffi :std/encoding/json
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/encoding/hex hex-encode)
+        (only-in :gerbil/core call-with-output-string display-exception)
+        (only-in :poo-flow/src/graph/types-core
+                 poo-flow-graph poo-flow-graph-node poo-flow-graph-edge)
+        (only-in :poo-flow/src/graph/algorithms poo-flow-graph-outgoing-ids)
+        (only-in :gerbil-ascent/temporal/lens
+                 temporal-lens temporal-source temporal-solve temporal-status
+                 temporal-rows temporal-frontier temporal-projection
+                 temporal-evidence-verdicts temporal-verify))
+(export semantic-call)
+
+(def (required object key)
+  (or (hash-get object key) (error "missing semantic field" key)))
+(def (identity value)
+  (unless (and (string? value) (< 0 (string-length value) 129))
+    (error "semantic identity must be a bounded string"))
+  (string->symbol value))
+(def (wire value)
+  (cond ((symbol? value) (symbol->string value))
+        ((pair? value) (map wire value))
+        ((null? value) [])
+        (else value)))
+(def (valid-time value)
+  (cond ((and (string? value) (string=? value "unknown")) 'unknown)
+        ((list? value)
+         (unless (and (= (length value) 3) (equal? (car value) "between"))
+           (error "invalid temporal bound"))
+         (cons 'between (map (lambda (x) (if (equal? x "unknown") 'unknown x))
+                             (cdr value))))
+        (else value)))
+(def (temporal-call object)
+  (let* ((l (required object "lens")) (s (required object "source"))
+         (_bounds
+          (unless (and (hash-table? l) (hash-table? s)
+                       (list? (required l "members"))
+                       (<= (length (required l "members")) 128)
+                       (list? (required s "events"))
+                       (<= (length (required s "events")) 128)
+                       (list? (required s "parents"))
+                       (<= (length (required s "parents")) 256)
+                       (exact-integer? (required l "horizon"))
+                       (<= 0 (required l "horizon") 1024))
+            (error "temporal finite domain bounds rejected")))
+         (lens (temporal-lens
+                (required l "generation") (identity (required l "clock"))
+                (required l "start") (required l "end") (required l "asOf")
+                (identity (required l "cut")) (map identity (required l "members"))
+                (required l "horizon") (hash-get l "closed")))
+         (source (temporal-source
+                  (identity (required s "identity")) (required s "generation")
+                  (identity (required s "clock"))
+                  (map (lambda (event)
+                         (unless (and (list? event) (= (length event) 3))
+                           (error "invalid event projection"))
+                         (list (identity (car event)) (valid-time (cadr event))
+                               (caddr event))) (required s "events"))
+                  (map (lambda (edge) (map identity edge)) (required s "parents"))))
+         (root (identity (required object "root")))
+         (answer (temporal-solve lens source root))
+         (projection (temporal-projection answer))
+         (binding (hex-encode (sha256 (string->utf8
+                                      (call-with-output-string
+                                       (lambda (port) (write projection port))))))))
+    (hash (schema "poo-flow.semantic-result.v1")
+          (operation "temporal.solve") (status (symbol->string (temporal-status answer)))
+          (rows (wire (temporal-rows answer)))
+          (frontier (wire (temporal-frontier answer)))
+          (bindingDigest binding)
+          (verification (symbol->string (temporal-verify lens source root answer)))
+          (evidence (wire (temporal-evidence-verdicts answer))))))
+
+(def (semantic-call operation payload)
+  (let (object (parameterize ((current-json-read-options
+                              (JSONReadOptions object-as-hash: #t)))
+                (string->json payload)))
+    (cond ((string=? operation "temporal.solve") (json->string (temporal-call object)))
+          ((string=? operation "graph.admit") (json->string (graph-call object payload)))
+          ((string=? operation "graph.targets") (json->string (graph-targets-call object)))
+          ((string=? operation "temporal.verify")
+           (let* ((answer (temporal-call (required object "task")))
+                  (candidate (required object "candidate"))
+                  (matches (and (hash-table? candidate) (= (hash-length candidate) 2)
+                                (equal? (hash-get candidate "status") (hash-get answer 'status))
+                                (equal? (hash-get candidate "rows") (hash-get answer 'rows)))))
+             (json->string
+              (hash (schema "poo-flow.semantic-result.v1") (operation "temporal.verify")
+                    (verdict (if matches "consistent" "contradicted"))
+                    (status (hash-get answer 'status))
+                    (bindingDigest (hash-get answer 'bindingDigest))
+                    (verification (hash-get answer 'verification))))))
+          ((string=? operation "descriptor")
+           (json->string
+            (hash (schema "poo-flow.semantic-descriptor.v1") (abiVersion 1)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets"]) (maximumInputBytes 1048576)
+                  (maximumTemporalEvents 128) (maximumTemporalParents 256)
+                  (maximumTemporalHorizon 1024)
+                  (threading "single-owner-thread")
+                  (sourceAuthority "caller-declared-not-authenticated"))))
+          (else (error "unsupported semantic operation" operation)))))
+
+(def (graph-call object payload)
+  (let* ((nodes (required object "nodes"))
+         (edges (required object "edges"))
+         (limit (required object "stepLimit")))
+    (unless (and (list? nodes) (<= 1 (length nodes) 256)
+                 (list? edges) (<= (length edges) 512)
+                 (exact-integer? limit) (< 0 limit 100001))
+      (error "graph bounds rejected"))
+    (for-each (lambda (node)
+                (identity node)
+                (when (or (member node ["__start__" "__end__"])
+                          (> (length (filter (lambda (other) (equal? node other)) nodes)) 1))
+                  (error "duplicate or reserved graph node"))) nodes)
+    (let ((actions (required object "actions")) (reducers (required object "reducers")))
+      (unless (and (hash-table? actions) (hash-table? reducers))
+        (error "invalid graph bindings"))
+      (hash-for-each (lambda (node action)
+                       (unless (member node nodes) (error "unknown action node"))
+                       (identity action)) actions)
+      (hash-for-each (lambda (key reducer) (identity key) (identity reducer)) reducers))
+    (unless (and (list? (required object "conditionalEdges"))
+                 (<= (length (required object "conditionalEdges")) 256))
+      (error "conditional graph bounds rejected"))
+    (let* ((ids (append ["__start__" "__end__"] nodes))
+           (conditional (required object "conditionalEdges"))
+           (_router-bindings
+            (for-each (lambda (entry)
+                        (when (> (length (filter
+                                          (lambda (other)
+                                            (and (equal? (required entry "source") (required other "source"))
+                                                 (equal? (required entry "router") (required other "router"))))
+                                          conditional)) 1)
+                          (error "duplicate conditional router binding"))) conditional))
+           (conditional-edges
+            (foldl (lambda (entry pairs)
+                     (let ((source (required entry "source"))
+                           (routes (required entry "routes")))
+                       (identity (required entry "router"))
+                       (unless (and (member source nodes) (hash-table? routes))
+                         (error "invalid conditional route"))
+                       (hash-for-each
+                        (lambda (label target)
+                          (identity label)
+                          (unless (member target (cdr ids)) (error "invalid route target"))
+                          (let (pair (list source target))
+                            (unless (member pair pairs) (set! pairs (cons pair pairs))))) routes)
+                       pairs)) [] conditional))
+           (graph (poo-flow-graph
+                   'runtime-plan (map poo-flow-graph-node ids)
+                   (map (lambda (edge)
+                          (unless (and (list? edge) (= (length edge) 2)
+                                       (member (car edge) ids) (member (cadr edge) ids)
+                                       (not (equal? (car edge) "__end__"))
+                                       (not (equal? (cadr edge) "__start__")))
+                            (error "invalid graph edge"))
+                          (poo-flow-graph-edge (car edge) (cadr edge)))
+                        (append edges (filter (lambda (e) (not (member e edges))) conditional-edges)))))
+           (static-graph (poo-flow-graph
+                          'runtime-static (map poo-flow-graph-node ids)
+                          (map (lambda (edge) (poo-flow-graph-edge (car edge) (cadr edge))) edges)))
+           (successors (make-hash-table))
+           (static-successors (make-hash-table))
+           (digest (hex-encode (sha256 (string->utf8 payload)))))
+      (for-each (lambda (id) (hash-put! successors id (poo-flow-graph-outgoing-ids graph id))) ids)
+      (for-each (lambda (id) (hash-put! static-successors id (poo-flow-graph-outgoing-ids static-graph id))) ids)
+      (hash (schema "poo-flow.semantic-result.v1") (operation "graph.admit")
+            (status "admitted") (planDigest digest) (successors successors)
+            (staticSuccessors static-successors)
+            (receipt (string-append "poo-flow-receipt.v1\nkind=scheme-graph-admission\nplan-digest="
+                                    digest "\n"))))))
+
+(def (graph-targets-call object)
+  (let* ((payload (required object "plan"))
+         (plan (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
+                 (string->json payload)))
+         (admission (graph-call plan payload))
+         (digest (hash-get admission 'planDigest))
+         (source (required object "source"))
+         (mode (required object "mode"))
+         (nodes (required plan "nodes"))
+         (targets
+          (begin
+            (unless (and (equal? digest (required object "expectedDigest"))
+                         (member source (cons "__start__" nodes)))
+              (error "graph transition binding rejected"))
+            (cond
+             ((equal? mode "control")
+              (let (values (required object "targets"))
+                (unless (and (list? values) (<= (length values) 256))
+                  (error "control targets bound rejected"))
+                (for-each (lambda (target)
+                            (unless (member target (cons "__end__" nodes))
+                              (error "control target rejected"))) values)
+                values))
+             ((equal? mode "route")
+              (let* ((router (required object "router"))
+                     (matches (filter (lambda (entry)
+                                        (and (equal? source (required entry "source"))
+                                             (equal? router (required entry "router"))))
+                                      (required plan "conditionalEdges")))
+                     (labels (required object "labels")))
+                (unless (and (= (length matches) 1) (list? labels) (<= (length labels) 128))
+                  (error "conditional router binding rejected"))
+                (let (routes (required (car matches) "routes"))
+                  (map (lambda (label)
+                         (identity label)
+                         (if (= (hash-length routes) 0)
+                           (begin
+                             (unless (member label (cons "__end__" nodes))
+                               (error "dynamic route target rejected"))
+                             label)
+                           (required routes label))) labels))))
+             (else (error "unknown graph transition mode"))))))
+    (hash (schema "poo-flow.semantic-result.v1") (operation "graph.targets")
+          (planDigest digest) (targets targets) (verification "valid"))))
+
+(def (semantic-error exception)
+  (json->string
+   (hash (schema "poo-flow.semantic-error.v1")
+         (message (call-with-output-string
+                   (lambda (p) (display-exception exception p)))))))
+
+(C-ffi-macrology)
+(C-declare #<<C
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+typedef struct { int32_t status; uint8_t *data; size_t length; } poo_flow_semantic_result;
+C
+)
+(def-C-type poo_flow_semantic_result "poo_flow_semantic_result")
+(def-C-type result-pointer (pointer poo_flow_semantic_result (result-pointer)))
+(def-C-lambda set-result! (result-pointer int32 scheme-object) int32 #<<C
+size_t length = U8_LEN(___arg3);
+uint8_t *bytes = (uint8_t *)malloc(length + 1);
+if (!bytes) { ___arg1->status = 5; ___arg1->data = NULL; ___arg1->length = 0; ___return(5); }
+memcpy(bytes, U8_DATA(___arg3), length); bytes[length] = 0;
+___arg1->data = bytes; ___arg1->length = length; ___arg1->status = ___arg2;
+___return(___arg2);
+C
+)
+(begin-foreign
+(c-define (native-evaluate operation payload result)
+  (UTF-8-string UTF-8-string result-pointer) int32
+  "poo_flow_semantic_evaluate" "extern"
+  (with-exception-catcher
+   (lambda (exception)
+     (poo-flow/src/ffi/semantic-v1#set-result! result 4 (string->utf8
+                    (poo-flow/src/ffi/semantic-v1#semantic-error exception))))
+   (lambda () (poo-flow/src/ffi/semantic-v1#set-result! result 0 (string->utf8 (poo-flow/src/ffi/semantic-v1#semantic-call operation payload)))))))

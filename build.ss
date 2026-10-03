@@ -44,6 +44,11 @@
    (else
     '(gxc: "src/ffi/runtime-v0-native"))))
 
+(def +semantic-v1-native-ffi-spec+
+  (cond-expand
+   (darwin '(gxc: "src/ffi/semantic-v1" "-ld-options" "-Wl,-undefined,dynamic_lookup"))
+   (else '(gxc: "src/ffi/semantic-v1"))))
+
 (asp-gerbil-scheme-package-spec!
  (poo-flow-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
@@ -91,6 +96,7 @@
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"
+                    "src/ffi/semantic-v1.ss"
                     "observe-contribute-import.ss"
                     "performance-tests.ss"
                     "run-contribute-test.ss"))
@@ -98,6 +104,6 @@
   `((gxc: "modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `(,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+ ,+semantic-v1-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))

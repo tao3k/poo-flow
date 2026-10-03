@@ -246,3 +246,19 @@ Scheme/POO Flow.
 
 This is the line that keeps the Scheme layer elegant and keeps the production
 runtime in the language that is built to run for a long time.
+
+* 2026-10-03 Python / Scheme semantic foundation qualification
+
+The [[file:python-scheme-runtime-foundation.org][implemented foundation and qualification receipt]] supersedes the
+control-lane-only graph guard for qualified native programs. Scheme owns finite
+temporal solving, final candidate consistency and POO graph topology admission
+through the semantic AOT byte ABI. Python remains the production Runtime owner
+of scheduler, IO, reducers and storage. A real control session and semantic
+context are required before native program actions run.
+
+The linked closure matrix bounds this supplement to implemented operations,
+owned-result lifetime, artifact/package transport and the 48-call real-model
+study. Final answer rejection is recorded separately from accepted accuracy and
+coverage. This supplement does not freeze the entire control ABI, authenticate
+caller source labels, grant effects or qualify all protocol-person requirements.
+MRR Rust integration follows the Python/Scheme and exact-head qualification.

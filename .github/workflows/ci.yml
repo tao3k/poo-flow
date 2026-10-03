@@ -146,6 +146,26 @@ jobs:
       - name: Build native Gerbil package
         run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
+      - name: Build Scheme semantic AOT byte boundary
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: |
+          mkdir -p .ci/semantic
+          extension=so
+          if [ "$RUNNER_OS" = macOS ]; then extension=dylib; fi
+          python3 bindings/runtime-c/tools/build-semantic-v1.py \
+            --output ".ci/semantic/libpoo_flow_semantic_v1.$extension"
+
+      - name: Upload immutable semantic AOT producer artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: poo-flow-semantic-native-linux
+          path: |
+            .ci/semantic/libpoo_flow_semantic_v1.so
+            .ci/semantic/libpoo_flow_semantic_v1.so.json
+
       - name: Run the single native unit-test entrypoint
         env:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
@@ -878,7 +898,7 @@ jobs:
   python-runtime-wheel:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Python runtime wheel
-    needs: native-linux
+    needs: [native-linux, native-gerbil-tests]
     uses: ./.github/workflows/python-runtime-wheel.yml
 
   lock-linux-seed:

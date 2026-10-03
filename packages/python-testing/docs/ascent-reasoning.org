@@ -89,3 +89,13 @@ including cold startup, warm call p50/p95, payload bytes, allocations,
 status preservation, and source/receipt binding. Add a POO Flow ABI
 entrypoint only if its measured benefit exceeds its packaging and
 ownership cost, while retaining the same Scheme receipt verifier.
+
+* 2026-10-03 implemented POO semantic ABI and matched measurement
+
+POO now owns =temporal.solve= and =temporal.verify= in its semantic AOT byte ABI,
+reusing ASCENT's finite temporal owner. See the
+[[file:../../../docs/10-19-design/10.06-poo-module-system/python-scheme-runtime-foundation.org][Python/Scheme qualification receipt]] for the 60 matched receipts and 48-call
+real-model study. =runtime_transport= compares the same source/lens/answers and
+bindings over both transports. It establishes equality, not a warm speed gain.
+=runtime_replay= performs final answer checking offline without extra paid calls.
+The worker remains an experiment transport; ASCENT publishes no separate ABI.

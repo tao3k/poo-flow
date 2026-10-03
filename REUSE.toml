@@ -37,3 +37,9 @@ path = ["docs/10-19-design/10.06-poo-module-system/evidence/ascent-exchange-2026
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.jsonl", "docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.log"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"

@@ -51,8 +51,8 @@ def test_declared_bazel_environment_selects_direct_gxi_first(
 
     commands = _scheme_loader_commands(tmp_path / "source-workspace", runner)
 
-    assert commands[0].argv == ("gxi", str(runner))
+    assert commands[0].argv == ("gxi", "-:max-heap=1G,debug=q", str(runner))
     assert commands[0].env is not None
     assert commands[0].env["GERBIL_PATH"] == str(gerbil_path)
-    assert commands[1].argv == ("gxpkg", "env", "gxi", str(runner))
+    assert commands[1].argv == ("gxpkg", "env", "gxi", "-:max-heap=1G,debug=q", str(runner))
     assert commands[1].env is None

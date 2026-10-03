@@ -1,0 +1,180 @@
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' GERBIL_PATH="${GERBIL_PATH:-/private/tmp/poo-plan-audit-20261002/.gerbil}" GERBIL_LOADPATH="${GERBIL_LOADPATH:-/private/tmp/poo-plan-audit-20261002/.gerbil/lib}" timeout --foreground --signal=TERM --kill-after=5s 120s gxi -:max-heap=1G,debug=q t/harness/semantic-v1-worker.ss
+IMPORT :clan/poo/object
+IMPORT-OK :clan/poo/object
+IMPORT :clan/poo/mop
+IMPORT-OK :clan/poo/mop
+IMPORT :core/types
+IMPORT-OK :core/types
+IMPORT :core/module-system/schema/slot-contracts
+IMPORT-OK :core/module-system/schema/slot-contracts
+IMPORT :poo-flow/src/utilities/product-syntax
+IMPORT-OK :poo-flow/src/utilities/product-syntax
+IMPORT :poo-flow/src/utilities/final-projection-syntax
+IMPORT-OK :poo-flow/src/utilities/final-projection-syntax
+IMPORT :poo-flow/src/graph/types-core
+IMPORT-OK :poo-flow/src/graph/types-core
+IMPORT :poo-flow/src/graph/types-contracts
+IMPORT-OK :poo-flow/src/graph/types-contracts
+IMPORT :poo-flow/src/graph/types
+IMPORT-OK :poo-flow/src/graph/types
+IMPORT :poo-flow/modules/temporal-causality/types
+IMPORT-OK :poo-flow/modules/temporal-causality/types
+IMPORT :poo-flow/modules/temporal-causality/objects
+IMPORT-OK :poo-flow/modules/temporal-causality/objects
+IMPORT :poo-flow/modules/temporal-causality/funs
+IMPORT-OK :poo-flow/modules/temporal-causality/funs
+IMPORT :poo-flow/modules/temporal-causality/time/types
+IMPORT-OK :poo-flow/modules/temporal-causality/time/types
+IMPORT :poo-flow/modules/temporal-causality/time/objects
+IMPORT-OK :poo-flow/modules/temporal-causality/time/objects
+IMPORT :poo-flow/modules/temporal-causality/time/uncertainty-types
+IMPORT-OK :poo-flow/modules/temporal-causality/time/uncertainty-types
+IMPORT :poo-flow/modules/temporal-causality/time/uncertainty-objects
+IMPORT-OK :poo-flow/modules/temporal-causality/time/uncertainty-objects
+IMPORT :poo-flow/modules/temporal-causality/time/uncertainty-funs
+IMPORT-OK :poo-flow/modules/temporal-causality/time/uncertainty-funs
+IMPORT :gerbil-ascent/table/expression
+IMPORT-OK :gerbil-ascent/table/expression
+IMPORT :gerbil-ascent/table/funs
+IMPORT-OK :gerbil-ascent/table/funs
+IMPORT :gerbil-ascent/table/eqrel
+IMPORT-OK :gerbil-ascent/table/eqrel
+IMPORT :gerbil-ascent/table/trrel
+IMPORT-OK :gerbil-ascent/table/trrel
+IMPORT :gerbil-ascent/table/provider
+IMPORT-OK :gerbil-ascent/table/provider
+IMPORT :gerbil-ascent/table/storage
+IMPORT-OK :gerbil-ascent/table/storage
+IMPORT :gerbil-ascent/table/interface
+IMPORT-OK :gerbil-ascent/table/interface
+IMPORT :gerbil-ascent/program/types
+IMPORT-OK :gerbil-ascent/program/types
+IMPORT :gerbil-ascent/program/objects
+IMPORT-OK :gerbil-ascent/program/objects
+IMPORT :gerbil-ascent/program/aggregators
+IMPORT-OK :gerbil-ascent/program/aggregators
+IMPORT :gerbil-ascent/program/syntax
+IMPORT-OK :gerbil-ascent/program/syntax
+IMPORT :gerbil-ascent/program/planning
+IMPORT-OK :gerbil-ascent/program/planning
+IMPORT :gerbil-ascent/program/scheme-checked
+IMPORT-OK :gerbil-ascent/program/scheme-checked
+IMPORT :gerbil-ascent/program/scheme-admission
+IMPORT-OK :gerbil-ascent/program/scheme-admission
+IMPORT :gerbil-ascent/program/scheme-language
+IMPORT-OK :gerbil-ascent/program/scheme-language
+IMPORT :gerbil-ascent/program/operator
+IMPORT-OK :gerbil-ascent/program/operator
+IMPORT :gerbil-ascent/program/operator-change
+IMPORT-OK :gerbil-ascent/program/operator-change
+IMPORT :gerbil-ascent/program/operator-session
+IMPORT-OK :gerbil-ascent/program/operator-session
+IMPORT :gerbil-ascent/program/funs
+IMPORT-OK :gerbil-ascent/program/funs
+IMPORT :gerbil-ascent/program/analysis
+IMPORT-OK :gerbil-ascent/program/analysis
+IMPORT :gerbil-ascent/program/summary
+IMPORT-OK :gerbil-ascent/program/summary
+IMPORT :gerbil-ascent/program/evaluate
+IMPORT-OK :gerbil-ascent/program/evaluate
+IMPORT :gerbil-ascent/program/session
+IMPORT-OK :gerbil-ascent/program/session
+IMPORT :gerbil-ascent/program/interface
+IMPORT-OK :gerbil-ascent/program/interface
+IMPORT :gerbil-ascent/core/binary-program
+IMPORT-OK :gerbil-ascent/core/binary-program
+IMPORT :gerbil-ascent/candidate/closure
+IMPORT-OK :gerbil-ascent/candidate/closure
+IMPORT :gerbil-ascent/candidate/types
+IMPORT-OK :gerbil-ascent/candidate/types
+IMPORT :gerbil-ascent/candidate/program
+IMPORT-OK :gerbil-ascent/candidate/program
+IMPORT :gerbil-ascent/candidate/funs
+IMPORT-OK :gerbil-ascent/candidate/funs
+IMPORT :gerbil-ascent/candidate/provenance
+IMPORT-OK :gerbil-ascent/candidate/provenance
+IMPORT :gerbil-ascent/candidate/nonmembership
+IMPORT-OK :gerbil-ascent/candidate/nonmembership
+IMPORT :gerbil-ascent/candidate/finite-evidence
+IMPORT-OK :gerbil-ascent/candidate/finite-evidence
+IMPORT :gerbil-ascent/candidate/stratified-proof
+IMPORT-OK :gerbil-ascent/candidate/stratified-proof
+IMPORT :gerbil-ascent/candidate/stratified-producer
+IMPORT-OK :gerbil-ascent/candidate/stratified-producer
+IMPORT :gerbil-ascent/candidate/reasoning
+IMPORT-OK :gerbil-ascent/candidate/reasoning
+IMPORT :gerbil-ascent/temporal/lens
+IMPORT-OK :gerbil-ascent/temporal/lens
+IMPORT :gerbil-ascent/interface/request
+IMPORT-OK :gerbil-ascent/interface/request
+IMPORT :poo-flow/modules/temporal-causality/ascent-exchange
+IMPORT-OK :poo-flow/modules/temporal-causality/ascent-exchange
+IMPORT :poo-flow/src/graph/algorithms
+IMPORT-OK :poo-flow/src/graph/algorithms
+IMPORT :poo-flow/src/ffi/semantic-v1
+IMPORT-OK :poo-flow/src/ffi/semantic-v1
+MODULE-OK semantic-v1
+HARNESS-OK semantic-worker
+READY
+MATCH 0 chain
+MATCH 0 withdrawal
+MATCH 0 empty-edges
+MATCH 0 window
+MATCH 0 bounded-points
+MATCH 0 generation
+MATCH 0 open-cut
+MATCH 0 late-knowledge
+MATCH 0 uncertain-window
+MATCH 0 horizon
+MATCH 0 clock-mismatch
+MATCH 0 reversed-order
+MATCH 1 chain
+MATCH 1 withdrawal
+MATCH 1 empty-edges
+MATCH 1 window
+MATCH 1 bounded-points
+MATCH 1 generation
+MATCH 1 open-cut
+MATCH 1 late-knowledge
+MATCH 1 uncertain-window
+MATCH 1 horizon
+MATCH 1 clock-mismatch
+MATCH 1 reversed-order
+MATCH 2 chain
+MATCH 2 withdrawal
+MATCH 2 empty-edges
+MATCH 2 window
+MATCH 2 bounded-points
+MATCH 2 generation
+MATCH 2 open-cut
+MATCH 2 late-knowledge
+MATCH 2 uncertain-window
+MATCH 2 horizon
+MATCH 2 clock-mismatch
+MATCH 2 reversed-order
+MATCH 3 chain
+MATCH 3 withdrawal
+MATCH 3 empty-edges
+MATCH 3 window
+MATCH 3 bounded-points
+MATCH 3 generation
+MATCH 3 open-cut
+MATCH 3 late-knowledge
+MATCH 3 uncertain-window
+MATCH 3 horizon
+MATCH 3 clock-mismatch
+MATCH 3 reversed-order
+MATCH 4 chain
+MATCH 4 withdrawal
+MATCH 4 empty-edges
+MATCH 4 window
+MATCH 4 bounded-points
+MATCH 4 generation
+MATCH 4 open-cut
+MATCH 4 late-knowledge
+MATCH 4 uncertain-window
+MATCH 4 horizon
+MATCH 4 clock-mismatch
+MATCH 4 reversed-order
+OK
+{"schema": "poo-flow.semantic-transport-comparison.v1", "matchedReceipts": 60, "callOrder": "alternating-paired", "workerColdSeconds": 3.2659226250034408, "nativeColdSeconds": 0.04103329099598341, "nativeArtifactSha256": "87e164acb84f9d95708aca232a22894e8edb86e5c703d77c5be43e1d64bc5f4c", "worker": {"p50Seconds": 0.01253758350139833, "p95Seconds": 0.08218537500215461, "samples": 60}, "native": {"p50Seconds": 0.020750104002217995, "p95Seconds": 0.04812074999790639, "samples": 60}, "warmSpeedup": 0.6042178632000196}
