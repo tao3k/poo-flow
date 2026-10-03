@@ -121,3 +121,4 @@ SUITE-OK pinned ASCENT temporal value consumer
 MODULE-OK t/ascent-temporal-lens-test.ss
 HARNESS-OK ("t/ascent-temporal-lens-test.ss")
 OK
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future

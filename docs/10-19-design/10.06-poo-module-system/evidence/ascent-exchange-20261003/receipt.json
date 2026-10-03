@@ -1,8 +1,8 @@
 {
   "schema": "poo-flow.ascent-exchange-qualification.v1",
   "base_head": "162cb7aa32d8526e53912ddb7f3cfe839fd6e985",
-  "ascent_revision": "1b35fa794ebc29b7eb5e43282ce9bb929ade2f13",
-  "ascent_archive_sha256": "8e70ce11a5c477c736d517dee7ac4fb383a92ee86027ed8689708ed5ef36333c",
+  "ascent_revision": "0176c061877ff364e0037ce56d7d085848a9ad60",
+  "ascent_archive_sha256": "4eafc63dbd7cde2000fcd8571b274b956a91ee28faff3f07a1028e944750a720",
   "cases": 2,
   "watchdog_seconds": 5,
   "checks": [
@@ -17,7 +17,8 @@
   "model_calls": 0,
   "scope": "local finite transport; MRR temporal admission and source authentication are open",
   "files": {
-    "qualification.log": "d3fec59a752bcc3f44731f11163056a0822ea862294f03fd483042d5a113d7ca"
+    "qualification.log": "8c1d2b9da86ce17da1e2187562d6477746fa5e5e5490b7f09a7546a76cc10402"
   },
-  "bazel_dependency_gate": "ASCENT package explicitly declared in dependency_packages, compile and dev_compile; exact-head CI required"
+  "bazel_dependency_gate": "ASCENT package explicitly declared in dependency_packages, compile and dev_compile; exact-head CI required",
+  "local_environment_admission": "gerbil env with a separately heap-fenced child"
 }

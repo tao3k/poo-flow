@@ -47,11 +47,11 @@ gerbil_dependency_sources.source_package(
     name = "gerbil_ascent_sources",
     canonical_uri = "https://github.com/tao3k/gerbil-ascent",
     package = "gerbil-ascent",
-    revision = "1b35fa794ebc29b7eb5e43282ce9bb929ade2f13",
-    sha256 = "8e70ce11a5c477c736d517dee7ac4fb383a92ee86027ed8689708ed5ef36333c",
-    strip_prefix = "gerbil-ascent-1b35fa794ebc29b7eb5e43282ce9bb929ade2f13",
+    revision = "0176c061877ff364e0037ce56d7d085848a9ad60",
+    sha256 = "4eafc63dbd7cde2000fcd8571b274b956a91ee28faff3f07a1028e944750a720",
+    strip_prefix = "gerbil-ascent-0176c061877ff364e0037ce56d7d085848a9ad60",
     urls = [
-        "https://github.com/tao3k/gerbil-ascent/archive/1b35fa794ebc29b7eb5e43282ce9bb929ade2f13.tar.gz",
+        "https://github.com/tao3k/gerbil-ascent/archive/0176c061877ff364e0037ce56d7d085848a9ad60.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(
