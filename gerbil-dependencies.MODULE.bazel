@@ -25,11 +25,11 @@ gerbil_dependency_sources.source_package(
     name = "asp_gerbil_scheme_sources",
     canonical_uri = "https://github.com/tao3k/asp-gerbil-scheme",
     package = "asp-gerbil-scheme",
-    revision = "v0.1.2.1",
-    sha256 = "35a4f84fd73b02ea19b90488d27a7924d47814b6606f7899411f40f4fdd9b573",
-    strip_prefix = "asp-gerbil-scheme-0.1.2.1",
+    revision = "v0.1.2.2",
+    sha256 = "189f4e5ca7dc3f07af06052bc5c830e8599e081657d2b2d0016660b59ef47ba8",
+    strip_prefix = "asp-gerbil-scheme-0.1.2.2",
     urls = [
-        "https://github.com/tao3k/asp-gerbil-scheme/archive/v0.1.2.1.tar.gz",
+        "https://github.com/tao3k/asp-gerbil-scheme/archive/v0.1.2.2.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(
