@@ -156,6 +156,7 @@ jobs:
         run: |
           cargo install just --version 1.56.0 --locked
           gerbil env just test-ascent-integration
+          gerbil env python3 "$GITHUB_WORKSPACE/.gerbil/pkg/github.com/tao3k/gerbil-ascent/t/harness/watch_output.py" -- just test-ascent-temporal
           PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
             gerbil env python3 -m poo_flow_testing run \
               --case ascent.source-withdrawal

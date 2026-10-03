@@ -86,6 +86,7 @@
     "modules/tla-plus/interface.ss"
     "modules/standards/interface.ss"
     "modules/temporal-causality/interface.ss"
+    "modules/temporal-causality/ascent-exchange.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("modules/nono-sandbox/_nono.ss"

@@ -88,3 +88,52 @@ receipt. Fork/compare reverify their actual base receipts. ASCENT's ninth
 case checks this directly; its build/policy and both finite matrices passed.
 Content binding is still distinct from POO/MRR source authority. The consumer
 and native/Bazel contract are rechecked at the final pinned implementation.
+
+* Explicit bounded-time exchange v1
+
+=modules/temporal-causality/ascent-exchange.ss= is an opt-in POO-native transport.
+=poo-flow-ascent-event-binding= requires one text event identity, a distinct
+non-reserved native symbol, a valid-time observed instant/bounded observation
+(or =#f= for unknown), and a separately supplied observed knowledge instant.
+=poo-flow-ascent-exchange= requires the owner graph/cut, one bijective binding
+per graph event, source/generation/native-clock names, both domain identities,
+and a finite window, knowledge cutoff, horizon and coverage declaration.
+
+The bridge recomputes the cut from the graph and its logical cutoff. It rejects
+cut relabeling, omitted/duplicate event bindings, unresolved parent mappings,
+unobserved instants and domain mismatches. It never converts logical cut time,
+acquisition time or a provenance label into a knowledge coordinate. The native
+clock name identifies the caller-declared pair of axes; no clock conversion is
+performed. Cut completeness is combined with the explicit coverage declaration.
+
+The projected source name hashes the complete original graph/cut and canonical
+bindings, including observation/provenance/receipt names. Thus equal native
+rows cannot reuse a receipt after original metadata changes. This is content
+consistency, not source authentication. Because that name identifies a single
+exchange snapshot, the native =temporal-compare= API must not be used to compare
+two such snapshot names across generations; a stable owner admission binding
+is a separate gate. Solve/verify operate on the immutable projected values.
+
+ASCENT now accepts closed uncertainty bounds for one valid-time point. These
+are not event duration intervals. Membership in a half-open window is
+=true= only when all possible positions lie inside, =false= only when all lie
+outside, and =unknown= otherwise. Overlapping parent bounds retain an unknown
+order frontier, even when both events are definitely inside the window. Known
+reversed bounds reject the cut. Unknown bounds, late knowledge and open coverage
+cannot produce complete native evidence or definitive absence.
+
+* MRR admission boundary still required
+
+The MRR facade at =fde89c72918f72e6cb8c925f5e11760ba019f328= admits canonical
+facts/lineage and evaluated query/closure candidates. =RelationContext::validate=
+checks source authority/provenance coherence; it does not admit external clocks,
+POO event identities or cut coverage. This transport does not fabricate an MRR
+admission receipt from a digest or a Boolean.
+
+A future admission adapter must bind a canonical admitted semantic generation,
+source fact identities, the full bijective event mapping, both declared axes,
+cut coverage, and the exchange schema. It must reject stale generation/fact
+bindings and partial/invalidated source contexts before promoting a native
+candidate into MRR facts/lineage. External authentication and runtime effects
+remain with their owners. Until that adapter is implemented, this exchange is a
+locally verified finite snapshot candidate, not an admitted semantic transition.

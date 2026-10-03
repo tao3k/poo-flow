@@ -140,7 +140,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "poZ1q2KcGxkoUkcuFye3xA3geWLg9D55HkaUr1GTwEY=",
+        "usagesDigest": "x5ZEkQEnnWAVc7bTGZo52JjqNyaSTYuluamIltLJHIk=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -229,11 +229,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-ascent",
               "package": "gerbil-ascent",
-              "revision": "891cfb9454f726784209d6becd7805b98fbf2b97",
-              "sha256": "af893aa9d245997997cabf6cb368671f60460f7045bcfff4b7fc3b8bfc80716f",
-              "strip_prefix": "gerbil-ascent-891cfb9454f726784209d6becd7805b98fbf2b97",
+              "revision": "2497e08de0efbb1f748744605fb5147b1a09dfde",
+              "sha256": "abc8a9120f73afcf7decb2815b368b43426f4cb8132c29403feb8e8e17692c3e",
+              "strip_prefix": "gerbil-ascent-2497e08de0efbb1f748744605fb5147b1a09dfde",
               "urls": [
-                "https://github.com/tao3k/gerbil-ascent/archive/891cfb9454f726784209d6becd7805b98fbf2b97.tar.gz"
+                "https://github.com/tao3k/gerbil-ascent/archive/2497e08de0efbb1f748744605fb5147b1a09dfde.tar.gz"
               ]
             }
           }
@@ -241,7 +241,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "ftvcVApdsKajkZscTLJdqAalEp8gjyxQjrBxQOOSik4=",
-        "usagesDigest": "poZ1q2KcGxkoUkcuFye3xA3geWLg9D55HkaUr1GTwEY=",
+        "usagesDigest": "x5ZEkQEnnWAVc7bTGZo52JjqNyaSTYuluamIltLJHIk=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -310,11 +310,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-ascent",
               "package": "gerbil-ascent",
-              "revision": "891cfb9454f726784209d6becd7805b98fbf2b97",
-              "sha256": "af893aa9d245997997cabf6cb368671f60460f7045bcfff4b7fc3b8bfc80716f",
-              "strip_prefix": "gerbil-ascent-891cfb9454f726784209d6becd7805b98fbf2b97",
+              "revision": "2497e08de0efbb1f748744605fb5147b1a09dfde",
+              "sha256": "abc8a9120f73afcf7decb2815b368b43426f4cb8132c29403feb8e8e17692c3e",
+              "strip_prefix": "gerbil-ascent-2497e08de0efbb1f748744605fb5147b1a09dfde",
               "urls": [
-                "https://github.com/tao3k/gerbil-ascent/archive/891cfb9454f726784209d6becd7805b98fbf2b97.tar.gz"
+                "https://github.com/tao3k/gerbil-ascent/archive/2497e08de0efbb1f748744605fb5147b1a09dfde.tar.gz"
               ]
             }
           },
