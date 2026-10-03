@@ -137,3 +137,14 @@ bindings and partial/invalidated source contexts before promoting a native
 candidate into MRR facts/lineage. External authentication and runtime effects
 remain with their owners. Until that adapter is implemented, this exchange is a
 locally verified finite snapshot candidate, not an admitted semantic transition.
+
+* Hermetic build boundary
+
+The explicit module import adds a real ASCENT library dependency to POO's build
+closure. =BUILD.bazel= declares =gerbil_ascent_package= from the authoritative
+source archive, with ASP/Core dependencies and a source resolution receipt.
+Both =compile= and =dev_compile= depend on that package; it also participates
+in =dependency_packages=. A native gxpkg consumer passing in a populated local
+prefix does not establish that the hermetic Bazel closure is complete. CI caught
+the missing declaration before the module could compile, and the explicit
+package edge repairs that boundary. Latest-head CI remains the acceptance gate.
