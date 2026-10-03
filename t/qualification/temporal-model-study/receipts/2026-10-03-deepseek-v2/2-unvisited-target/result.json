@@ -1,0 +1,45 @@
+{
+  "case": "unvisited-target",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Exploration limit 1 visits only via-a in sorted order. via-a is admitted because local cause t=1 is strictly before effect t=3, but via-b remains unvisited, so its classification is unknown. Precedence alone does not prove causation, the model cannot authorize, and no fairness or infinite progress is established.\"}",
+    "elapsed_seconds": 8.5773728330023,
+    "first_content_seconds": 1.3398515410008258,
+    "max_content_gap_seconds": 1.3398515410008258,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1536,
+        "totalTokens": 1750
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1536,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:941585d502794b6ad057789237f93b8e7fa5647c50de03ab103db5cafe667c14"
+  },
+  "errors": [],
+  "publication_native": {
+    "classification": "unknown",
+    "admitted": false,
+    "proof": "sha256:a1ba79570f1d03dcc4f0329a4cf31af113c65f1547c19023f0ef8a8ceb3b39e9",
+    "model": "sha256:221877b60298cef693ffdfada8cd4ef2c760e3c7fd42cf7ed4df156336ced520",
+    "exhausted": false,
+    "publication": false
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 40.941443083000195
+}

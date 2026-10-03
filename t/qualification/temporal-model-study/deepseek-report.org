@@ -1,0 +1,84 @@
+#+title: Configured DeepSeek Temporal acceptance, 2026-10-03
+
+* Result
+The user-specified =agent-semantic-protocols/.env= selected =deepseek-v4-flash=,
+=max= effort and the official Anthropic-compatible endpoint. Credential values
+are neither retained nor printed. The forty independent calls used no tools,
+previous answers, failed-output feedback or repair conversation.
+
+The frozen full v2 corpus FAILED: 35/40 passed, three semantic failures, two
+incomplete/truncated responses, zero pipeline failures. First-shot: 18/20.
+All forty streams produced genuine content without hitting the five-second
+model-progress gate. Among the 38 completed responses, maximum first content
+was 1.796276 seconds; maximum consecutive content gap across all forty journals
+was 0.776804 seconds. These samples do not guarantee future provider latency.
+Thinking text is redacted to byte counts/digests, and counts as genuine progress;
+these timings are not time to final answer. Completed-call median latency was
+7.107953 seconds, p95 26.098719 seconds.
+
+Classification 20/20; finite behavior 8/8; axes 2/2; late proposal 2/2;
+POO API 2/2; authority rubric 1/2; source generation 0/4. The second authority
+answer correctly denied model authority and proposed no effect, but labeled the
+nonclassification question =refuted= instead of required =unknown=. It did not
+bypass authorization. Forty-four actual C/Python writer/recovery paths passed.
+
+* Diagnosed implementation problems and changes
+The earlier Codex study used the wrong transport for the requested configured
+DeepSeek acceptance. Direct ENV-selected SSE removes that startup route.
+Only actual thinking/text content refreshes the unchanged five-second watchdog;
+headers, ping, configuration and usage cannot keep a stalled call alive.
+
+V2 set an 8192-token output ceiling. Its two unsuccessful completions did not
+retain stop reasons, so truncation specifically by that ceiling is not proven.
+A separate v3 budget profile set 32768 tokens and 180 total seconds, preserving
+five seconds without content. All four generation responses then completed,
+including one with 9053 output tokens, but none passed native generation.
+This demonstrates that the original ceiling can be insufficient at configured
+max effort; it does not establish that quota was the only failure cause.
+The maintained backend now retains bad completion status/usage and stop reason.
+
+The original prompt prohibited all operators while the native literal format
+requires zero-argument =Name == literal= bindings. Models returned CONSTANT
+placeholders without values. The corrected contract explicitly permits these
+bindings and prohibits action operators. Native negative preflight now rejects
+missing literal bindings before starting Gerbil; native parsing and admission
+remain authoritative. The maintained runner enforces strict boolean/JSON types
+and rechecks fresh native admission against frozen reference before signing.
+
+* Separate corrected-contract evidence
+The v4 four-call generation follow-up passed 2/4, including fresh native model
+projection, host admission and C/Python publication/recovery. Two answers had
+valid syntax but wrong clock-domain/source fields, so canonical model comparison
+rejected them. This focused study is exploratory: it retains frozen input cases,
+prompts, backend hash, response and runtime evidence, but lacks the full runner
+snapshot/reference manifest required by the main corpus auditor. It does not
+replace, repair or turn the failed v2 forty-call corpus green.
+
+* Retained evidence
+- [[file:receipts/2026-10-03-deepseek-v2/summary.json][v2 full corpus]] with hash-bound driver/backend/common snapshots, native references and forty planned results.
+- [[file:receipts/2026-10-03-deepseek-budget-v3/summary.json][v3 output-budget follow-up]]: 0/4, all responses returned.
+- [[file:receipts/2026-10-03-deepseek-literal-v4/summary.json][v4 corrected-literal follow-up]]: 2/4, remaining semantic mismatches.
+
+Actual SSE event journals are retained as deterministic gzip files; thinking
+text and credentials are absent. Local SQLite databases and compiled libraries
+are excluded. Native runtime signatures are execution receipts, not independent
+external re-attestation. V2 original =reasoningOutputTokens= zero is a missing-field
+aggregation placeholder, not a measured zero; provider reasoning-token counts
+and billed cost are unknown. The maintained summary reports missing counts as null.
+
+=python3 scripts/temporal/model_study_receipt.py
+ t/qualification/temporal-model-study/receipts/2026-10-03-deepseek-v2=
+validates the manifest and deliberately exits 1 for the failed acceptance.
+The live default is =just check-temporal-model-study FRESH_DIRECTORY ENV_FILE=.
+The earlier [[file:report.org][Codex failure report]] remains separate.
+No remote push, CI or deployment acceptance is claimed. Full real-model
+acceptance remains open: exact source-field fidelity and nonclassification
+label adherence require a new frozen full corpus, not pooled follow-up scores.
+
+* Focused implementation checks
+Twelve transport/schema/receipt controls passed. Three live native host cases
+passed (98.05 seconds), covering signed C/Python publication, authenticated late
+retraction/recovery and unknown-assessment denial. Frozen receipt auditor accepted
+the v2 manifest and returned the intended failed-gate exit status. Source compiled
+with py_compile and diff whitespace checks passed. These checks qualify the
+implementation changes, not the missing real-model corpus passes.

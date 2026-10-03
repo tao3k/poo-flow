@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANTS\\n    ModelIdentity,\\n    ClockDomains,\\n    Observations,\\n    Hypotheses,\\n    Constraints,\\n    FamilyComplete,\\n    FamilySemantics\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because observed build at 1 precedes release at 2 in the same local logical-version clock. The family is complete, exclusive, and has exactly one admitted member with no unknowns, so classification is necessary. Precedence alone does not prove causation, and the model cannot authorize effects or establish fairness/infinite progress.\"\n}",
+  "elapsed_seconds": 33.76279375000013,
+  "first_content_seconds": 0.6161803329960094,
+  "max_content_gap_seconds": 0.6161803329960094,
+  "usage": {
+    "last": {
+      "inputTokens": 185,
+      "cachedInputTokens": 640,
+      "outputTokens": 7265,
+      "totalTokens": 7450
+    },
+    "provider": {
+      "input_tokens": 185,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 7265,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:a38f1e7b4f0766bbcd45ea08362af7872949caaa2c528547697994142e279a2b"
+}

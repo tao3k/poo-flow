@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because same-domain local cause (1) is strictly before effect (3). However, FamilyComplete is FALSE, so necessity is not established; via-a is possible, not necessary. Precedence alone does not prove physical causation, and no model authorization or fairness is established.\"}",
+  "elapsed_seconds": 5.935272750000877,
+  "first_content_seconds": 0.8569239170028595,
+  "max_content_gap_seconds": 0.8569239170028595,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 1089,
+      "totalTokens": 1303
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1089,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+}

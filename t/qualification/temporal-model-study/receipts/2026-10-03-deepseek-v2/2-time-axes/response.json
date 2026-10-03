@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"r7\",\"valid_time\":\"10\",\"knowledge_time\":\"20\",\"causal_cut\":\"C\"},\"api_symbols\":[],\"reason\":\"Mapped source revision r7 to source_generation, valid time 10 to valid_time, knowledge time 20 to knowledge_time, and causal cut C to causal_cut. No classification or operation was requested.\"}",
+  "elapsed_seconds": 2.079827083995042,
+  "first_content_seconds": 0.8469206250010757,
+  "max_content_gap_seconds": 0.8469206250010757,
+  "usage": {
+    "last": {
+      "inputTokens": 205,
+      "cachedInputTokens": 512,
+      "outputTokens": 316,
+      "totalTokens": 521
+    },
+    "provider": {
+      "input_tokens": 205,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 316,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:9eda2422cbd756f989a93287d16c88c4546df2bc67a605dc75971221e759a7e4"
+}

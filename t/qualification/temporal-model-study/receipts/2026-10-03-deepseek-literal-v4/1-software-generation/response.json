@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"source ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"source ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because same-domain build@1 strictly precedes release@2. The family is complete, exclusive, exhausted, with no unknowns and exactly one admitted member, so via-a is necessary. Temporal precedence alone does not prove physical causation; no authorization or fairness/infinite progress is established.\"\n}",
+  "elapsed_seconds": 36.87044779199641,
+  "first_content_seconds": 0.9523648329995922,
+  "max_content_gap_seconds": 0.9523648329995922,
+  "usage": {
+    "last": {
+      "inputTokens": 179,
+      "cachedInputTokens": 768,
+      "outputTokens": 8263,
+      "totalTokens": 8442
+    },
+    "provider": {
+      "input_tokens": 179,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 768,
+      "output_tokens": 8263,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:fded188b1249691b81d03cbb5d1b83074b6f1db40d8a9942f788d77c65ad8a97"
+}

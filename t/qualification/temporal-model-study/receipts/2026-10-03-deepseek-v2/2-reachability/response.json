@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Reachability: some schedules can prescribe at step 1 then administer at step 2, making administration=given hold by Horizon/Deadline 2, while no-op schedules do not, so outcomes are mixed and classification is possible.\"}",
+  "elapsed_seconds": 26.098718875000486,
+  "first_content_seconds": 0.8794383749991539,
+  "max_content_gap_seconds": 0.8794383749991539,
+  "usage": {
+    "last": {
+      "inputTokens": 251,
+      "cachedInputTokens": 640,
+      "outputTokens": 5142,
+      "totalTokens": 5393
+    },
+    "provider": {
+      "input_tokens": 251,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 5142,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:71845243689f2924465dacdb22886174dcce2ba5060bf99f848abc68481201aa"
+}

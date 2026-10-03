@@ -12,8 +12,10 @@ def audit(directory):
     directory=Path(directory)
     def read(name): return strict_json((directory/name).read_text())
     freeze=read('freeze.json'); cases=read('cases.json'); references=read('references.json')
+    if 'common_transport' in freeze:
+        assert freeze['common_transport']=='sha256:'+hashlib.sha256((directory/'common_transport.py.txt').read_bytes()).hexdigest(), 'common transport mismatch'
     for key,name in [('cases','cases.json'),('schema','schema.json'),('references','references.json'),
-                     ('driver','model_study.py.txt'),('transport','model_study_transport.py.txt')]:
+                     ('driver','model_study.py.txt'),('transport','model_study_deepseek.py.txt' if freeze.get('provider')=='deepseek' else 'model_study_transport.py.txt')]:
         assert freeze[key]=='sha256:'+hashlib.sha256((directory/name).read_bytes()).hexdigest(), 'frozen input mismatch: '+key
     planned={(c['id'],r) for c in cases for r in range(1,freeze['repeats']+1)}
     records=read('results.json')

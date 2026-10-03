@@ -1,0 +1,66 @@
+{
+  "case": "care-generation",
+  "repeat": 2,
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"care-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"order\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"dose\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"order\\\", \\\"dose\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because order at local logical-version time 1 precedes dose at time 2 in the same domain and source ledger. The family is complete, exclusive, exhausted by the sole hypothesis, has no unknowns, and has exactly one admitted member, so via-a is necessary. Precedence does not prove physical causation, and the model cannot authorize effects.\"\n}",
+    "elapsed_seconds": 20.447627625006135,
+    "first_content_seconds": 0.9656473750001169,
+    "max_content_gap_seconds": 0.9656473750001169,
+    "usage": {
+      "last": {
+        "inputTokens": 179,
+        "cachedInputTokens": 768,
+        "outputTokens": 4463,
+        "totalTokens": 4642
+      },
+      "provider": {
+        "input_tokens": 179,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 768,
+        "output_tokens": 4463,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:178608b64613ba4567a06e946a2d313870eead1530be491c8176a179e9396b72"
+  },
+  "errors": [],
+  "generated_native": {
+    "admitted": true,
+    "classification": "necessary",
+    "exhausted": true,
+    "publication": false,
+    "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+    "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3"
+  },
+  "publication_native": {
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,24:care-generation-budget-2,71:sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:d0fadc1d85fae8a33b5386bfc56e021c83077a939bb2e34df0ec58c311bb574b,71:sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb,30:care-generation-budget-2-nonce,6:assert,1:0,10:1791014394,",
+    "exhausted": true,
+    "model": "sha256:b1bbc1fced9be8c9638d589126a107bd8f0c2ab030195f7e76397a48b8b706cb",
+    "proof": "sha256:55e21a3545bc424f87dc7c80797f98466571ad832ddcf6bf304a2fd1c6dcc5d3",
+    "admitted": true,
+    "classification": "necessary"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ]
+}

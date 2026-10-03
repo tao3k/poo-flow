@@ -1,25 +1,26 @@
 #+title: Real model finite Temporal capability acceptance
 
 * Boundary and target
-This is a frozen, first-shot capability study of =gpt-6-sol= with medium effort,
-using the installed authenticated Codex transport. It is separate from native
-engine, TLC, Lean, remote CI and deployed-service qualification. Transport is
-implemented with the documented [[https://developers.openai.com/codex/app-server][Codex app-server]] JSON protocol.
-The subscription transport returns token receipts, not a monetary price receipt;
-unknown cost must remain unknown.
+This is a frozen, first-shot capability study through the existing DeepSeek
+configuration in =agent-semantic-protocols/.env=. The configured
+=ANTHROPIC_BASE_URL=, =ANTHROPIC_MODEL= and =CLAUDE_CODE_EFFORT_LEVEL= select the
+endpoint, model and effort; =DEEPSEEK_API_KEY= authenticates the request.
+It uses the documented [[https://api-docs.deepseek.com/guides/anthropic_api/][DeepSeek Anthropic-compatible messages API]].
+The model is never selected from Codex defaults. Credential values are never
+printed or retained in snapshots. Configuration loading does not execute shell.
 
-The model receives only the supplied finite semantics, task and inert source.
-Each call starts a new ephemeral conversation. Shell, web, browser, computer,
-apps, memory, plugins, hooks and delegation features are disabled. Tool or approval
-requests and nonmessage/reasoning items reject the call. No answer feedback,
-repair loop, prompt adaptation or filesystem retrieval is permitted. This is an
-installed Codex inference-context study, not a context-free raw API experiment.
+Each inference sends one independent system/task pair, with no tools or prior
+history. A supervised worker receives actual SSE thinking/text deltas. Only
+nonempty model content refreshes the five-second deadline; connection startup,
+headers, pings, configuration and usage do not. The parent kills a stalled worker
+at five seconds and enforces a 180-second total bound with a 32768-token output ceiling. Thinking text is
+redacted to byte lengths and digests; final JSON and provider usage are retained.
+There are no answer-feedback retries or changed prompts after model failure.
 
-Only actual request acknowledgements and turn/message/reasoning/token progress
-refresh the five-second progress deadline. Stderr, account state and Hook
-notifications do not refresh it. A turn has a sixty-second total bound. First content and subsequent genuine
-progress both retain the five-second deadline; there is no longer first-content
-exception. The owner explicitly reconfirmed this bound after the first study.
+Native framework, TLC, Lean, remote CI and deployed-service qualification remain
+separate. No monetary amount is inferred from token receipts without an actual
+billing receipt. The former Codex study is retained as a failed, different
+transport study; it does not describe the configured DeepSeek model.
 
 * Frozen corpus and rubric
 The runner writes =cases.json=, =schema.json= and independent native
@@ -65,17 +66,24 @@ The late case replays the owned authenticated late fixture, publishes the root
 then retracts to version two and verifies cross-adapter recovery.
 
 * Reproduction
-Requires the qualified Gerbil/parser modules in the selected environment,
-=gxi=, the installed logged-in =codex=, Python, and a C11 compiler with SQLite.
-Use a fresh output directory; the runner refuses an existing directory.
+Requires qualified Gerbil/parser modules, =gxi=, Python with =httpx= and a C11
+compiler with SQLite. Use a fresh output directory.
 #+begin_src sh
 PYTHONPATH=packages/python-runtime/src python3 -u scripts/temporal/model_study.py \
-  --output /private/tmp/poo-temporal-live-study-new \
-  --model gpt-6-sol --effort medium --repeats 2
+  --output /private/tmp/poo-temporal-deepseek-study-new \
+  --env-file "$HOME/ghq/github.com/tao3k/agent-semantic-protocols/.env" \
+  --repeats 2
 #+end_src
 Set =GERBIL_PATH=, =GERBIL_LOADPATH= and =GAMBOPT=max-heap=1G,debug=q= to the
-qualified native environment. An optional =--catalog= accepts a model metadata
-snapshot only; do not copy authentication tokens into a study directory.
+qualified native environment. =--reference-receipt= can select a retained native
+reference only when case/schema/reference hashes exactly match. Every successful
+model-to-publication path still recomputes native admission and compares the
+fresh proof/model/classification/exhaustion with the frozen reference before
+signing. Native reference reuse supplies no answers or feedback to the model.
+
+=just check-temporal-model-study FRESH_DIRECTORY ENV_FILE= is the live gate.
+=--provider codex= explicitly selects the legacy transport for a separate study.
+It is never the default for DeepSeek acceptance.
 
 * Limits
 These twenty cases measure instruction-conditioned finite semantic use. They

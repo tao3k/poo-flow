@@ -1,0 +1,60 @@
+{
+  "case": "overlapping-sole",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause at local time 1 is strictly before care/effect at local time 3 in the same domain. The family is complete and via-b is refuted, but overlapping-mechanisms is not exclusive, so via-a is only possible, not necessary. Temporal precedence does not prove physical causation, and no model authority or fairness is established.\"}",
+    "elapsed_seconds": 8.764569416998711,
+    "first_content_seconds": 0.8035327090037754,
+    "max_content_gap_seconds": 0.8035327090037754,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1681,
+        "totalTokens": 1895
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1681,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+  },
+  "errors": [],
+  "publication_native": {
+    "admitted": true,
+    "classification": "possible",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,18:overlapping-sole-2,71:sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:cba1b67dccc80795f85fa4848a6676b44f790c6dc4a21f989022ddd778c7e845,71:sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5,24:overlapping-sole-2-nonce,6:assert,1:0,10:1791013713,",
+    "exhausted": true,
+    "model": "sha256:8a73eba88c7aaab69ad253d715d771a3480305e99e212d816c75531fc8402ee5",
+    "proof": "sha256:e3e1ce9e060f3b41734a0988afeb7858c40d3cb04b263b9ded30a8eb8ae1d923"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 29.458188165997854
+}

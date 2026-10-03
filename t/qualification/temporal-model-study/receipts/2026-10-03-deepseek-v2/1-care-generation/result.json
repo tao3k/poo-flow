@@ -1,0 +1,8 @@
+{
+  "case": "care-generation",
+  "repeat": 1,
+  "capability": "generation",
+  "status": "transport-failure",
+  "error": "DeepSeek response incomplete or truncated",
+  "attempt_elapsed_seconds": 37.96457233300316
+}

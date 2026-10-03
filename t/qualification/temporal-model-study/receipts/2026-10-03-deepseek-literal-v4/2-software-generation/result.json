@@ -1,0 +1,66 @@
+{
+  "case": "software-generation",
+  "repeat": 2,
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\\n\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because build at 1 precedes release at 2 in the same local logical-version clock; family is complete, exclusive, exhausted, has no unknown members, and exactly one admitted member, so via-a is necessary. Precedence alone does not prove physical causation, and the model cannot authorize effects or fairness/infinite progress.\"\n}",
+    "elapsed_seconds": 42.63291058300092,
+    "first_content_seconds": 1.2285673750011483,
+    "max_content_gap_seconds": 1.2285673750011483,
+    "usage": {
+      "last": {
+        "inputTokens": 179,
+        "cachedInputTokens": 768,
+        "outputTokens": 9089,
+        "totalTokens": 9268
+      },
+      "provider": {
+        "input_tokens": 179,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 768,
+        "output_tokens": 9089,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:fded188b1249691b81d03cbb5d1b83074b6f1db40d8a9942f788d77c65ad8a97"
+  },
+  "errors": [],
+  "generated_native": {
+    "exhausted": true,
+    "publication": false,
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "admitted": true,
+    "classification": "necessary"
+  },
+  "publication_native": {
+    "admitted": true,
+    "classification": "necessary",
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,28:software-generation-budget-2,71:sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:b95c499fb0186455289450d7db6d85d802b9583a4fe85ca761de6669c9f7c029,71:sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3,34:software-generation-budget-2-nonce,6:assert,1:0,10:1791014471,",
+    "exhausted": true
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ]
+}

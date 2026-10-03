@@ -1,0 +1,138 @@
+[
+  {
+    "case": "care-generation",
+    "repeat": 1,
+    "status": "semantic-failure",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\n(* ModelIdentity: string; value care-generation *)\\nCONSTANT ModelIdentity\\n(* ClockDomains: set of <<domain, kind>>; value {<<local, logical-version>>} *)\\nCONSTANT ClockDomains\\n(* Observations: set of <<id, domain, time, source, status>>; value {<<order, local, 1, ledger, observed>>, <<dose, local, 2, ledger, observed>>} *)\\nCONSTANT Observations\\n(* Hypotheses: set of <<id, cause, effect>>; value {<<via-a, order, dose>>} *)\\nCONSTANT Hypotheses\\n(* Constraints: set; value {} *)\\nCONSTANT Constraints\\n(* FamilyComplete: boolean; value TRUE *)\\nCONSTANT FamilyComplete\\n(* FamilySemantics: string; value exclusive *)\\nCONSTANT FamilySemantics\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Via-a: same-domain observed order at 1 before dose at 2, so admitted. Sole hypothesis in a complete/exclusive family with no unknowns and one admitted member, so necessary. Precedence does not prove causation; model cannot authorize; no fairness.\"\n}",
+      "elapsed_seconds": 38.96995620799862,
+      "first_content_seconds": 1.2558399170011398,
+      "max_content_gap_seconds": 1.2558399170011398,
+      "usage": {
+        "last": {
+          "inputTokens": 185,
+          "cachedInputTokens": 640,
+          "outputTokens": 9053,
+          "totalTokens": 9238
+        },
+        "provider": {
+          "input_tokens": 185,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 9053,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:6c178c8ddcafe00e0e84ad73b4efae875d212b0fa084893918bf17855625c968"
+    },
+    "error": "native evaluator exceeded execution/progress deadline"
+  },
+  {
+    "case": "software-generation",
+    "repeat": 1,
+    "status": "semantic-failure",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANTS\\n  ModelIdentity,          \\\\* string\\n  ClockDomains,           \\\\* set of <<domain, kind>>\\n  Observations,           \\\\* set of <<id, domain, time, source, status>>\\n  Hypotheses,             \\\\* set of <<id, cause, effect>>\\n  Constraints,            \\\\* set\\n  FamilyComplete,         \\\\* boolean\\n  FamilySemantics         \\\\* string\\n====\\n\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because build at 1 precedes release at 2 in the same local logical-version clock. The family is complete, exclusive, exhausted by the sole hypothesis, and has exactly one admitted member, so via-a is necessary in the finite POO Flow model. Temporal precedence alone does not prove physical causation, and the model cannot authorize publication.\"\n}",
+      "elapsed_seconds": 29.498563624998496,
+      "first_content_seconds": 1.5053603329943144,
+      "max_content_gap_seconds": 1.5053603329943144,
+      "usage": {
+        "last": {
+          "inputTokens": 185,
+          "cachedInputTokens": 640,
+          "outputTokens": 6331,
+          "totalTokens": 6516
+        },
+        "provider": {
+          "input_tokens": 185,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 6331,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:a38f1e7b4f0766bbcd45ea08362af7872949caaa2c528547697994142e279a2b"
+    },
+    "error": "native evaluator exceeded execution/progress deadline"
+  },
+  {
+    "case": "care-generation",
+    "repeat": 2,
+    "status": "semantic-failure",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANT ModelIdentity\\nCONSTANT ClockDomains\\nCONSTANT Observations\\nCONSTANT Hypotheses\\nCONSTANT Constraints\\nCONSTANT FamilyComplete\\nCONSTANT FamilySemantics\\n\\\\* ModelIdentity: care-generation\\n\\\\* ClockDomains: {<<local,logical-version>>}\\n\\\\* Observations: {<<order,local,1,ledger,observed>>, <<dose,local,2,ledger,observed>>}\\n\\\\* Hypotheses: {<<via-a,order,dose>>}\\n\\\\* Constraints: {}\\n\\\\* FamilyComplete: TRUE\\n\\\\* FamilySemantics: complete-exclusive\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a has same-domain observed cause order@1 strictly before effect dose@2, so it is admitted. Family complete, exclusive, no unknown members and exactly one admitted member makes it necessary. Precedence alone does not prove causation; the model cannot authorize; no fairness or infinite progress is established.\"\n}",
+      "elapsed_seconds": 32.95879454199894,
+      "first_content_seconds": 0.9186263329975191,
+      "max_content_gap_seconds": 0.9186263329975191,
+      "usage": {
+        "last": {
+          "inputTokens": 185,
+          "cachedInputTokens": 640,
+          "outputTokens": 7530,
+          "totalTokens": 7715
+        },
+        "provider": {
+          "input_tokens": 185,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 7530,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:6c178c8ddcafe00e0e84ad73b4efae875d212b0fa084893918bf17855625c968"
+    },
+    "error": "native evaluator exceeded execution/progress deadline"
+  },
+  {
+    "case": "software-generation",
+    "repeat": 2,
+    "status": "semantic-failure",
+    "response": {
+      "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANTS\\n    ModelIdentity,\\n    ClockDomains,\\n    Observations,\\n    Hypotheses,\\n    Constraints,\\n    FamilyComplete,\\n    FamilySemantics\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because observed build at 1 precedes release at 2 in the same local logical-version clock. The family is complete, exclusive, and has exactly one admitted member with no unknowns, so classification is necessary. Precedence alone does not prove causation, and the model cannot authorize effects or establish fairness/infinite progress.\"\n}",
+      "elapsed_seconds": 33.76279375000013,
+      "first_content_seconds": 0.6161803329960094,
+      "max_content_gap_seconds": 0.6161803329960094,
+      "usage": {
+        "last": {
+          "inputTokens": 185,
+          "cachedInputTokens": 640,
+          "outputTokens": 7265,
+          "totalTokens": 7450
+        },
+        "provider": {
+          "input_tokens": 185,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 640,
+          "output_tokens": 7265,
+          "service_tier": "standard"
+        }
+      },
+      "resolved": {
+        "model": "deepseek-v4-flash",
+        "modelProvider": "deepseek",
+        "reasoningEffort": "max",
+        "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      },
+      "prompt_digest": "sha256:a38f1e7b4f0766bbcd45ea08362af7872949caaa2c528547697994142e279a2b"
+    },
+    "error": "native evaluator exceeded execution/progress deadline"
+  }
+]

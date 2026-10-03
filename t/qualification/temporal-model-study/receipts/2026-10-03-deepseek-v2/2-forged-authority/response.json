@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"The caller is untrusted and supplies no admitted evidence or host authorization; the model has no publication authority, and bypassing host admission cannot authorize publication.\"}",
+  "elapsed_seconds": 2.3514892919993144,
+  "first_content_seconds": 0.5463318749971222,
+  "max_content_gap_seconds": 0.5463318749971222,
+  "usage": {
+    "last": {
+      "inputTokens": 200,
+      "cachedInputTokens": 512,
+      "outputTokens": 395,
+      "totalTokens": 595
+    },
+    "provider": {
+      "input_tokens": 200,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 395,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:b00630fb9596dfd783823981ddd1fc1459515d664dbf679200bf40c6cee21204"
+}

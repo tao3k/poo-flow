@@ -1,0 +1,33 @@
+import importlib.util,json,secrets,sys,time
+from pathlib import Path
+import model_study as s
+p=Path('/private/tmp/poo-temporal-deepseek-generation-v3');p.mkdir(exist_ok=False)
+source=Path('/private/tmp/poo-temporal-deepseek-output-budget.py')
+module_spec=importlib.util.spec_from_file_location('deepseek_budget',source);backend=importlib.util.module_from_spec(module_spec);module_spec.loader.exec_module(backend)
+keys=tuple(secrets.token_bytes(32)for _ in range(3));cases=[c for c in s.definitions()if c['capability']=='generation']
+refs=json.loads(Path('/private/tmp/poo-temporal-deepseek-study-v2/references.json').read_text())
+s.write(p/'cases.json',cases);s.write(p/'freeze.json',dict(planned=4,repeats=2,max_tokens=32768,total_seconds=180,progress_seconds=5,feedback=False,backend=s.digest(source.read_bytes())))
+records=[]
+for repeat in (1,2):
+ for case in cases:
+  directory=p/(str(repeat)+'-'+case['id']);directory.mkdir();prompt=s.RULES+'\nTASK\n'+case['task'];(directory/'prompt.txt').write_text(prompt)
+  record=dict(case=case['id'],repeat=repeat,status='transport-failure')
+  try:
+   transport=backend.DeepSeekInference(directory/'transport',env_file='/Users/guangtao/ghq/github.com/tao3k/agent-semantic-protocols/.env')
+   response=transport.infer(prompt,s.SCHEMA);s.write(directory/'response.json',response);record['response']=response
+   answer=s.strict_json(response['text']);s.validate_answer(answer)
+   errors=[k for k,v in refs[case['id']]['expected'].items()if answer[k]!=v]
+   candidate=s.issuer(answer['source'],keys[1]);native=candidate.assess(**s.spec(case))
+   if native['model']!=refs[case['id']]['native']['model']:errors.append('generated-model')
+   record.update(status='semantic-failure' if errors else 'passed',errors=errors,generated_native=native)
+   if not errors:
+    result=s.handoff(case,candidate,case['id']+'-budget-'+str(repeat));record['publication_native']=result
+    publication=s.Publication.from_payload(result['publication'].encode())
+    signature=candidate.attest(publication,query='query',target='via-a',output=s.emit)
+    record['runtime']=s.pipeline(directory,publication,signature,keys,Path('/private/tmp/poo-temporal-deepseek-study-v2/selection.dylib'))
+  except Exception as error:
+   if record['status']=='passed':record['status']='pipeline-failure'
+   elif 'response'in record:record['status']='semantic-failure'
+   record['error']=str(error)
+  records.append(record);s.write(directory/'result.json',record);s.write(p/'results.json',records);print('CASE',repeat,case['id'],record['status'],record.get('error',''),flush=True)
+s.write(p/'summary.json',dict(total=4,passed=sum(r['status']=='passed'for r in records),accepted=all(r['status']=='passed'for r in records)))

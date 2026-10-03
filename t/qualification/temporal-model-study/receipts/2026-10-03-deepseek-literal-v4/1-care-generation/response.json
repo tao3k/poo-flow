@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"care-generation\\\"\\nClockDomains == {<<\\\"care-generation\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"order\\\", \\\"care-generation\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"dose\\\", \\\"care-generation\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"order\\\", \\\"dose\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\\n\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is the sole hypothesis; observed same-domain order at 1 precedes dose at 2, so it is admitted. Family is complete, exclusive, exhausted, has no unknowns, and exactly one admitted member, so classification is necessary. Precedence does not prove physical causation and the model cannot authorize effects.\"}",
+  "elapsed_seconds": 19.306421458997647,
+  "first_content_seconds": 0.5865185420043417,
+  "max_content_gap_seconds": 0.5865185420043417,
+  "usage": {
+    "last": {
+      "inputTokens": 179,
+      "cachedInputTokens": 768,
+      "outputTokens": 4433,
+      "totalTokens": 4612
+    },
+    "provider": {
+      "input_tokens": 179,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 768,
+      "output_tokens": 4433,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:178608b64613ba4567a06e946a2d313870eead1530be491c8176a179e9396b72"
+}

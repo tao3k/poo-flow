@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause at local time 1 strictly precedes care/effect at local time 3. via-b is refuted because care/alternative at local time 4 is not strictly before care/effect at local time 3. The family is complete and exhausted, but overlapping-mechanisms is not exclusive, so the sole admitted member is possible, not necessary.\"}",
+  "elapsed_seconds": 11.365720583999064,
+  "first_content_seconds": 1.4748009169998113,
+  "max_content_gap_seconds": 1.4748009169998113,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 2293,
+      "totalTokens": 2507
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 2293,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+}

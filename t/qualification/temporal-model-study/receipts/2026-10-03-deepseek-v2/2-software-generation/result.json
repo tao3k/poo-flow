@@ -1,0 +1,8 @@
+{
+  "case": "software-generation",
+  "repeat": 2,
+  "capability": "generation",
+  "status": "transport-failure",
+  "error": "DeepSeek response incomplete or truncated",
+  "attempt_elapsed_seconds": 38.57773691700277
+}

@@ -1,0 +1,60 @@
+{
+  "case": "overlapping-two",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: care/cause at local 1 strictly precedes care/effect at local 3 in the same clock domain. But via-b is also admitted and the family is overlapping/non-exclusive, so exactly-one-admitted necessity fails; classify possible.\"}",
+    "elapsed_seconds": 5.411806292002439,
+    "first_content_seconds": 1.1828019999957178,
+    "max_content_gap_seconds": 1.1828019999957178,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 838,
+        "totalTokens": 1052
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 838,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+  },
+  "errors": [],
+  "publication_native": {
+    "classification": "possible",
+    "admitted": true,
+    "exhausted": true,
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:overlapping-two-2,71:sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:843d90af5c433bdc40e78b1f2bea159f216a070306701ab60080d6b8de5ad616,71:sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54,23:overlapping-two-2-nonce,6:assert,1:0,10:1791013677,",
+    "proof": "sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35",
+    "model": "sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 32.48636666700622
+}

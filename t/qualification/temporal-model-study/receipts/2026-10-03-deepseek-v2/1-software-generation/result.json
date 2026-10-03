@@ -1,0 +1,36 @@
+{
+  "case": "software-generation",
+  "repeat": 1,
+  "capability": "generation",
+  "status": "semantic-failure",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANT ModelIdentity  \\\\* string\\nCONSTANT ClockDomains  \\\\* set of <<domain, kind>>\\nCONSTANT Observations  \\\\* set of <<id, domain, time, source, status>>\\nCONSTANT Hypotheses  \\\\* set of <<id, cause, effect>>\\nCONSTANT Constraints  \\\\* set\\nCONSTANT FamilyComplete  \\\\* boolean\\nCONSTANT FamilySemantics  \\\\* string\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted: build at 1 strictly precedes release at 2 in one local logical-version clock. It is the sole hypothesis in a complete, exclusive family with no unknown and exactly one admitted member, so it is necessary under the finite semantics; precedence does not prove physical causation, and no authorization or fairness exists. Operation none.\"\n}",
+    "elapsed_seconds": 32.519952833994466,
+    "first_content_seconds": 0.9808961669987184,
+    "max_content_gap_seconds": 0.9808961669987184,
+    "usage": {
+      "last": {
+        "inputTokens": 313,
+        "cachedInputTokens": 512,
+        "outputTokens": 6986,
+        "totalTokens": 7299
+      },
+      "provider": {
+        "input_tokens": 313,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 512,
+        "output_tokens": 6986,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:a38f1e7b4f0766bbcd45ea08362af7872949caaa2c528547697994142e279a2b"
+  },
+  "error": "native evaluator exceeded execution/progress deadline",
+  "attempt_elapsed_seconds": 49.09206825000001
+}

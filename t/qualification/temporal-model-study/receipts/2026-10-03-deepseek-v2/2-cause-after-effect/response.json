@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a compares observed same-domain timestamps: cause care/cause local 5 is at/after effect care/effect local 3, so via-a is refuted. Temporal precedence does not prove causation.\"}",
+  "elapsed_seconds": 6.564754541999719,
+  "first_content_seconds": 0.5044953749966226,
+  "max_content_gap_seconds": 0.5044953749966226,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 1343,
+      "totalTokens": 1557
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1343,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+}

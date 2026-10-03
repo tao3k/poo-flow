@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local observed cause care/cause at 1 strictly precedes effect care/effect at 3. via-b is refuted because its local cause at 4 is not before effect at 3. With complete exclusive family, unbounded exploration, no unknown members, and exactly one admitted member, via-a is necessary.\"}",
+  "elapsed_seconds": 8.87004758400144,
+  "first_content_seconds": 0.5895397089989274,
+  "max_content_gap_seconds": 0.5895397089989274,
+  "usage": {
+    "last": {
+      "inputTokens": 854,
+      "cachedInputTokens": 0,
+      "outputTokens": 1948,
+      "totalTokens": 2802
+    },
+    "provider": {
+      "input_tokens": 854,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 1948,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+}

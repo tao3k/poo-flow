@@ -1,0 +1,50 @@
+{
+  "case": "late-retraction",
+  "repeat": 2,
+  "capability": "late",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"retract\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Late replacement evidence shows cause at/after effect and host confirms the prior support is invalid, so propose retracting the prior admitted necessary conclusion; do not execute.\"}",
+    "elapsed_seconds": 7.626674417006143,
+    "first_content_seconds": 0.6170932090026326,
+    "max_content_gap_seconds": 0.6170932090026326,
+    "usage": {
+      "last": {
+        "inputTokens": 210,
+        "cachedInputTokens": 512,
+        "outputTokens": 1427,
+        "totalTokens": 1637
+      },
+      "provider": {
+        "input_tokens": 210,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 512,
+        "output_tokens": 1427,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:4160581c6ee24a3be4cd78e8df07c8122855ace4774b4958b5af07787be67ae0"
+  },
+  "errors": [],
+  "runtime": [
+    {
+      "writer": "python",
+      "recovered": true,
+      "retraction_committed": true,
+      "budget_remaining": 1000
+    },
+    {
+      "writer": "native",
+      "recovered": true,
+      "retraction_committed": true,
+      "budget_remaining": 1000
+    }
+  ],
+  "attempt_elapsed_seconds": 32.506273999999394
+}

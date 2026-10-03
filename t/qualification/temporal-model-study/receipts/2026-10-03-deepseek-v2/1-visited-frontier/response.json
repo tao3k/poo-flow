@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted by same-domain local precedence (care/cause time 1 before care/effect time 3), but with exploration limit 1 the family is not exhausted and necessity conditions are not met; therefore via-a is only possible. Precedence alone does not prove physical causation.\"}",
+  "elapsed_seconds": 9.580088541995792,
+  "first_content_seconds": 1.2389282089934568,
+  "max_content_gap_seconds": 1.2389282089934568,
+  "usage": {
+    "last": {
+      "inputTokens": 342,
+      "cachedInputTokens": 512,
+      "outputTokens": 1685,
+      "totalTokens": 2027
+    },
+    "provider": {
+      "input_tokens": 342,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 1685,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+}

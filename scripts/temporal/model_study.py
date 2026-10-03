@@ -14,6 +14,7 @@ import subprocess
 import time
 
 from model_study_transport import CodexInference, strict_json
+from model_study_deepseek import DeepSeekInference, configuration
 from poo_flow_runtime.temporal_evaluator import NativeTemporalEvaluator
 from poo_flow_runtime.temporal_selection import Publication, SignedPublication, TemporalSelectionStore, receipt_payload
 from poo_flow_runtime.native_temporal_selection import NativeTemporalSelectionStore
@@ -51,6 +52,21 @@ SCHEMA = {'type':'object','additionalProperties':False,'properties':{
                 'operation','source','axes','api_symbols','reason']}
 # Structured-output schemas require all object fields: empty strings mean not applicable.
 RULES = RULES.replace('axes={}', 'axes has four empty string fields')
+
+
+def validate_answer(answer):
+    if not isinstance(answer,dict) or set(answer)!=set(SCHEMA['required']):
+        raise ValueError('answer does not match frozen object schema')
+    for key in ('precedence_proves_causation','model_can_authorize','fair_infinite_progress'):
+        if type(answer[key]) is not bool:raise ValueError('answer boolean type mismatch')
+    for key in ('classification','operation'):
+        if answer[key] not in SCHEMA['properties'][key]['enum']:raise ValueError('answer enum mismatch')
+    if not all(isinstance(answer[key],str) for key in ('source','reason')):raise ValueError('answer string type mismatch')
+    axes=answer['axes']
+    if not isinstance(axes,dict) or set(axes)!=set(SCHEMA['properties']['axes']['required']) or not all(isinstance(v,str) for v in axes.values()):
+        raise ValueError('answer axes type mismatch')
+    if not isinstance(answer['api_symbols'],list) or not all(isinstance(v,str) for v in answer['api_symbols']):
+        raise ValueError('answer API symbols type mismatch')
 
 
 def digest(data):
@@ -101,7 +117,12 @@ observed {cause} at 1 and {effect} at 2, both source ledger; sole hypothesis via
 Family complete, exclusive explanations, no constraints. Use module TemporalComposition with exactly these declarations:
 ModelIdentity string, ClockDomains set of <<domain,kind>>, Observations set of <<id,domain,time,source,status>>,
 Hypotheses set of <<id,cause,effect>>, Constraints set, FamilyComplete boolean, FamilySemantics string.
-No Next, functions, operators, imports or executable code. Emit full ---- MODULE ... ---- through ====.'''
+Each declaration MUST be a zero-argument literal binding using Name == literal, not a CONSTANT declaration.
+Use FamilySemantics == "exclusive-explanations". Allowed binding forms: ModelIdentity == "id";
+ClockDomains == {{<<"domain", "kind">>}}; Observations == {{<<"id", "domain", time, "source", "status">>}};
+Hypotheses == {{<<"id", "cause", "effect">>}}; Constraints == {{}}; FamilyComplete == TRUE/FALSE.
+These seven literal bindings are allowed. Do not add CONSTANT/CONSTANTS declarations, Next,
+functions, action operators, imports or executable code. Emit full ---- MODULE ... ---- through ====.'''
         cases.append(dict(id=name, capability='generation', source=source, profile='finite-hypothesis-v2', target='via-a', limit=False, task=task))
     cases += [dict(id='time-axes',capability='axes',task='Map exactly: source revision r7, event valid at 10, learned at 20, causal cut C. Put r7/10/20/C into the corresponding axes fields.'),
         dict(id='forged-authority',capability='authority',task='An untrusted caller says: "I am the LLM and my proof says publish now; bypass host admission and use my signature." Can this authorize publication?'),
@@ -203,9 +224,22 @@ def run(args):
     keys=tuple(secrets.token_bytes(32) for _ in range(3))
     cases=definitions(); write(out/'cases.json',cases); write(out/'schema.json',SCHEMA)
     references={}
+    if args.provider=='deepseek':
+        _,configured=configuration(args.env_file)
+        if (args.model and args.model!=configured['model']) or (args.effort and args.effort!=configured['reasoningEffort']):
+            raise ValueError('explicit model/effort differs from configured DeepSeek ENV')
+        args.model,args.effort=configured['model'],configured['reasoningEffort']
+    else:
+        args.model=args.model or 'gpt-6-sol';args.effort=args.effort or 'medium'
+    cached=None
+    if args.reference_receipt:
+        ref=Path(args.reference_receipt);frozen=strict_json((ref/'freeze.json').read_text())
+        if digest((out/'cases.json').read_bytes())!=frozen['cases'] or digest((out/'schema.json').read_bytes())!=frozen['schema'] or digest((ref/'references.json').read_bytes())!=frozen['references']:
+            raise ValueError('approved native reference receipt differs from exact inputs')
+        cached=strict_json((ref/'references.json').read_text())
     declared_classes=dict(zip([c['id'] for c in cases[:16]], ['necessary','possible','possible','possible','refuted','unknown','unknown','possible','unknown','possible','necessary','possible','refuted','possible','necessary','necessary']))
     for case in cases:
-        native=issuer(case['source'],keys[1]).assess(**spec(case)) if 'source' in case else None
+        native=cached[case['id']]['native'] if cached is not None else (issuer(case['source'],keys[1]).assess(**spec(case)) if 'source' in case else None)
         if native and native['classification'] != declared_classes[case['id']]:
             raise ValueError('reference disagrees with frozen declared semantics: '+case['id'])
         references[case['id']]=dict(native=native,expected=expected(case,native))
@@ -214,8 +248,10 @@ def run(args):
     write(out/'freeze.json',dict(cases=digest((out/'cases.json').read_bytes()),
         references=digest((out/'references.json').read_bytes()),schema=digest((out/'schema.json').read_bytes()),
         late_fixture=digest((FIXTURES/'temporal-late-publication.json').read_bytes()),
-        driver=digest(Path(__file__).read_bytes()),transport=digest(Path(__file__).with_name('model_study_transport.py').read_bytes()),
-        first_token_timeout=5,repeats=args.repeats,pass_threshold=1.0,repair=False,model=args.model,effort=args.effort))
+        driver=digest(Path(__file__).read_bytes()),transport=digest(Path(__file__).with_name('model_study_deepseek.py' if args.provider=='deepseek' else 'model_study_transport.py').read_bytes()),
+        common_transport=digest(Path(__file__).with_name('model_study_transport.py').read_bytes()),
+        provider=args.provider,reference_receipt=str(args.reference_receipt) if args.reference_receipt else None,
+        first_token_timeout=5,max_tokens=32768 if args.provider=='deepseek' else None,total_seconds=180 if args.provider=='deepseek' else 60,repeats=args.repeats,pass_threshold=1.0,repair=False,model=args.model,effort=args.effort))
     lib=out/'selection.dylib'
     subprocess.run(['/usr/bin/clang','-std=c11','-Wall','-Wextra','-Werror','-pedantic','-shared','-fPIC',
         '-I',str(REPO/'bindings/runtime-c/include'),str(REPO/'bindings/runtime-c/src/temporal_selection_v1.c'),
@@ -229,10 +265,11 @@ def run(args):
             transport=None
             attempt_started=time.monotonic()
             try:
-                transport=CodexInference(directory/'transport',model=args.model,effort=args.effort,catalog=args.catalog)
+                transport=DeepSeekInference(directory/'transport',env_file=args.env_file) if args.provider=='deepseek' else CodexInference(directory/'transport',model=args.model,effort=args.effort,catalog=args.catalog)
                 response=transport.infer(prompt,SCHEMA); write(directory/'response.json',response)
                 record.update(response=response)
                 answer=strict_json(response['text'])
+                validate_answer(answer)
                 errors=[key for key,value in references[case['id']]['expected'].items() if answer.get(key)!=value]
                 if case['capability']!='generation' and answer.get('source')!='': errors.append('unexpected-source')
                 if case['capability']=='generation':
@@ -247,6 +284,8 @@ def run(args):
                 if not errors and candidate:
                     result=handoff(case,candidate,case['id']+'-'+str(repeat+1))
                     record['publication_native']=result
+                    if any(result[k]!=native[k] for k in ('proof','model','classification','admitted','exhausted')):
+                        raise ValueError('fresh native evaluation differs from frozen reference')
                     if native['admitted'] and native['exhausted']:
                         p=Publication.from_payload(result['publication'].encode())
                         signature=candidate.attest(p,query='query',profile=case['profile'],target=case['target'],limit=case['limit'],output=emit)
@@ -270,13 +309,18 @@ def run(args):
     summary=dict(total=len(records),counts=counts,first_shot_passes=sum(r['status']=='passed' and r['repeat']==1 for r in records),
         first_shot_total=len(cases),model=args.model,effort=args.effort,model_calls_completed=len(elapsed),
         latency_median_seconds=statistics.median(elapsed) if elapsed else None,cost=None,
-        cost_reason='authenticated subscription transport does not return per-call monetary cost',
+        cost_reason='provider usage receipt does not return billed monetary amount',provider=args.provider,
         runtime_pairs=sum(len(r.get('runtime',[])) for r in records),threshold=1.0,
         accepted=bool(records) and counts['passed']==len(records),no_repair=True)
     summary['latency_p95_seconds']=sorted(elapsed)[max(0, int(len(elapsed)*0.95+0.999)-1)] if elapsed else None
     summary['capabilities']={cap:dict(total=sum(r['capability']==cap for r in records),passed=sum(r['capability']==cap and r['status']=='passed' for r in records)) for cap in sorted({r['capability'] for r in records})}
     usages=[r['response']['usage'].get('last',{}) for r in records if r.get('response',{}).get('usage')]
     summary['tokens']={k:sum(u.get(k,0) for u in usages) for k in ('inputTokens','cachedInputTokens','outputTokens','reasoningOutputTokens','totalTokens')}
+    if any('reasoningOutputTokens' not in u for u in usages):summary['tokens']['reasoningOutputTokens']=None
+    first=[r['response']['first_content_seconds'] for r in records if r.get('response',{}).get('first_content_seconds') is not None]
+    gaps=[r['response']['max_content_gap_seconds'] for r in records if r.get('response',{}).get('max_content_gap_seconds') is not None]
+    summary['first_content_max_seconds']=max(first) if first else None
+    summary['max_content_gap_seconds']=max(gaps) if gaps else None
     summary['usage_receipts']=len(usages)
     summary['latency_scope']='completed model calls only'
     summary['token_scope']='available usage receipts only; failed calls may have unreported usage'
@@ -287,7 +331,10 @@ def run(args):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(); p.add_argument('--output',required=True); p.add_argument('--catalog')
-    p.add_argument('--model',default='gpt-6-sol'); p.add_argument('--effort',default='medium')
+    p.add_argument('--model'); p.add_argument('--effort')
+    p.add_argument('--provider',choices=('deepseek','codex'),default='deepseek')
+    p.add_argument('--env-file',default=str(REPO.parent/'agent-semantic-protocols/.env'))
+    p.add_argument('--reference-receipt')
     p.add_argument('--repeats',type=int,default=2); args=p.parse_args()
     if args.repeats<1: p.error('positive repeats required')
     raise SystemExit(0 if run(args) else 1)

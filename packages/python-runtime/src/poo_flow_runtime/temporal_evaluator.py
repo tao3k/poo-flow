@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from pathlib import Path
 import selectors
 import signal
@@ -40,6 +41,17 @@ class NativeTemporalEvaluator:
         An optional host publication descriptor prepares an inert native root
         handoff only for admitted results; this method never signs or publishes.
         """
+        required = {
+            'finite-hypothesis-v2': {'ModelIdentity','ClockDomains','Observations','Hypotheses','Constraints','FamilyComplete','FamilySemantics'},
+            'finite-behavior-v1': {'ModelIdentity','StateVariables','Mechanisms','Interventions','Horizon','PropertyIdentity','PropertyKind','Conditions','Deadline','ExpectedOutcomes'},
+        }.get(profile)
+        if required is None:
+            raise ValueError('unsupported evaluator profile')
+        # Negative preflight only; native parsing/projection/admission remain authoritative.
+        bindings=set(re.findall(r'(?m)^\s*([A-Za-z][A-Za-z0-9_]*)\s*==', self._source))
+        missing=required-bindings
+        if missing:
+            raise ValueError('literal profile missing bindings: '+','.join(sorted(missing)))
         request = dict(source=self._source, subject=subject, scope=scope, cut=cut, projection=projection,
                        policy=policy, generation=generation, query=query, profile=profile,
                        target=target, limit=limit, node_limit=node_limit,

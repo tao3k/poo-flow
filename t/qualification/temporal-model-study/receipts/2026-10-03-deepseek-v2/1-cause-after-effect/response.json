@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Target via-a links care/cause at local time 5 to care/effect at local time 3. The same-domain cause is at/after its effect, so via-a is refuted; temporal precedence alone does not prove physical causation.\"}",
+  "elapsed_seconds": 6.711795125003846,
+  "first_content_seconds": 1.4634379580020322,
+  "max_content_gap_seconds": 1.4634379580020322,
+  "usage": {
+    "last": {
+      "inputTokens": 342,
+      "cachedInputTokens": 512,
+      "outputTokens": 1241,
+      "totalTokens": 1583
+    },
+    "provider": {
+      "input_tokens": 342,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 1241,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+}

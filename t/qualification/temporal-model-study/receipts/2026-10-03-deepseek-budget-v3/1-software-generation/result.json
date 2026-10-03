@@ -1,0 +1,34 @@
+{
+  "case": "software-generation",
+  "repeat": 1,
+  "status": "semantic-failure",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANTS\\n  ModelIdentity,          \\\\* string\\n  ClockDomains,           \\\\* set of <<domain, kind>>\\n  Observations,           \\\\* set of <<id, domain, time, source, status>>\\n  Hypotheses,             \\\\* set of <<id, cause, effect>>\\n  Constraints,            \\\\* set\\n  FamilyComplete,         \\\\* boolean\\n  FamilySemantics         \\\\* string\\n====\\n\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a is admitted because build at 1 precedes release at 2 in the same local logical-version clock. The family is complete, exclusive, exhausted by the sole hypothesis, and has exactly one admitted member, so via-a is necessary in the finite POO Flow model. Temporal precedence alone does not prove physical causation, and the model cannot authorize publication.\"\n}",
+    "elapsed_seconds": 29.498563624998496,
+    "first_content_seconds": 1.5053603329943144,
+    "max_content_gap_seconds": 1.5053603329943144,
+    "usage": {
+      "last": {
+        "inputTokens": 185,
+        "cachedInputTokens": 640,
+        "outputTokens": 6331,
+        "totalTokens": 6516
+      },
+      "provider": {
+        "input_tokens": 185,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 6331,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:a38f1e7b4f0766bbcd45ea08362af7872949caaa2c528547697994142e279a2b"
+  },
+  "error": "native evaluator exceeded execution/progress deadline"
+}

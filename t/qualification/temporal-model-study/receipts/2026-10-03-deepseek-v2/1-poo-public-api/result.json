@@ -1,0 +1,36 @@
+{
+  "case": "poo-public-api",
+  "repeat": 1,
+  "capability": "api",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[\"poo-flow-temporal-model\",\"poo-flow-temporal-query\",\"poo-flow-temporal-model-classify\"],\"reason\":\"Requested pure public entry points are the POO model constructor, POO query constructor, and finite-receipt classifier; no raw self/super hooks or caller-written Next.\"}",
+    "elapsed_seconds": 4.146327333000954,
+    "first_content_seconds": 1.1668239170030574,
+    "max_content_gap_seconds": 1.1668239170030574,
+    "usage": {
+      "last": {
+        "inputTokens": 235,
+        "cachedInputTokens": 512,
+        "outputTokens": 711,
+        "totalTokens": 946
+      },
+      "provider": {
+        "input_tokens": 235,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 512,
+        "output_tokens": 711,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:d60e3d04f8d5d9c44c2d027bef241931016671fb1c613dc5741598d4ac5dd834"
+  },
+  "errors": [],
+  "attempt_elapsed_seconds": 4.147353542000928
+}

@@ -1,0 +1,34 @@
+{
+  "case": "care-generation",
+  "repeat": 2,
+  "status": "semantic-failure",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANT ModelIdentity\\nCONSTANT ClockDomains\\nCONSTANT Observations\\nCONSTANT Hypotheses\\nCONSTANT Constraints\\nCONSTANT FamilyComplete\\nCONSTANT FamilySemantics\\n\\\\* ModelIdentity: care-generation\\n\\\\* ClockDomains: {<<local,logical-version>>}\\n\\\\* Observations: {<<order,local,1,ledger,observed>>, <<dose,local,2,ledger,observed>>}\\n\\\\* Hypotheses: {<<via-a,order,dose>>}\\n\\\\* Constraints: {}\\n\\\\* FamilyComplete: TRUE\\n\\\\* FamilySemantics: complete-exclusive\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a has same-domain observed cause order@1 strictly before effect dose@2, so it is admitted. Family complete, exclusive, no unknown members and exactly one admitted member makes it necessary. Precedence alone does not prove causation; the model cannot authorize; no fairness or infinite progress is established.\"\n}",
+    "elapsed_seconds": 32.95879454199894,
+    "first_content_seconds": 0.9186263329975191,
+    "max_content_gap_seconds": 0.9186263329975191,
+    "usage": {
+      "last": {
+        "inputTokens": 185,
+        "cachedInputTokens": 640,
+        "outputTokens": 7530,
+        "totalTokens": 7715
+      },
+      "provider": {
+        "input_tokens": 185,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 7530,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:6c178c8ddcafe00e0e84ad73b4efae875d212b0fa084893918bf17855625c968"
+  },
+  "error": "native evaluator exceeded execution/progress deadline"
+}

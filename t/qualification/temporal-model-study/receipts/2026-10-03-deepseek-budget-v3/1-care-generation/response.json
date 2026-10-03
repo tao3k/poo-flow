@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\n(* ModelIdentity: string; value care-generation *)\\nCONSTANT ModelIdentity\\n(* ClockDomains: set of <<domain, kind>>; value {<<local, logical-version>>} *)\\nCONSTANT ClockDomains\\n(* Observations: set of <<id, domain, time, source, status>>; value {<<order, local, 1, ledger, observed>>, <<dose, local, 2, ledger, observed>>} *)\\nCONSTANT Observations\\n(* Hypotheses: set of <<id, cause, effect>>; value {<<via-a, order, dose>>} *)\\nCONSTANT Hypotheses\\n(* Constraints: set; value {} *)\\nCONSTANT Constraints\\n(* FamilyComplete: boolean; value TRUE *)\\nCONSTANT FamilyComplete\\n(* FamilySemantics: string; value exclusive *)\\nCONSTANT FamilySemantics\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Via-a: same-domain observed order at 1 before dose at 2, so admitted. Sole hypothesis in a complete/exclusive family with no unknowns and one admitted member, so necessary. Precedence does not prove causation; model cannot authorize; no fairness.\"\n}",
+  "elapsed_seconds": 38.96995620799862,
+  "first_content_seconds": 1.2558399170011398,
+  "max_content_gap_seconds": 1.2558399170011398,
+  "usage": {
+    "last": {
+      "inputTokens": 185,
+      "cachedInputTokens": 640,
+      "outputTokens": 9053,
+      "totalTokens": 9238
+    },
+    "provider": {
+      "input_tokens": 185,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 9053,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:6c178c8ddcafe00e0e84ad73b4efae875d212b0fa084893918bf17855625c968"
+}

@@ -1,0 +1,17 @@
+{
+  "cases": "sha256:425c3f16f9c8d99da574545e55581599382a81bfe964610b8e47834ad5d929e6",
+  "references": "sha256:62d618b110353e944c12eacf32f85e1945ef7bb3572e9a3ed22cd381954fb3c7",
+  "schema": "sha256:546f7e1218ea9e455fe3f6ed3189093a3c77b2c632d305f545c673e22ee28a65",
+  "late_fixture": "sha256:d736a3a3adff02f8bf49abbc11d10bf975c674410bfb5e09750183d5280de101",
+  "driver": "sha256:13a0fb601adc3d18f092da29c894380e65512854acfb637115bb3a023900988b",
+  "transport": "sha256:c379b065ee64ae89d38665ffa0ca940723e68da537a6f35c00704b2048919ff6",
+  "common_transport": "sha256:9a8bc889c4fc30f092b7f01b5a116870445d9cc954c00e13dce9925065dc0465",
+  "provider": "deepseek",
+  "reference_receipt": "t/qualification/temporal-model-study/receipts/2026-10-03-gpt-6-sol",
+  "first_token_timeout": 5,
+  "repeats": 2,
+  "pass_threshold": 1.0,
+  "repair": false,
+  "model": "deepseek-v4-flash",
+  "effort": "max"
+}

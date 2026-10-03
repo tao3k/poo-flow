@@ -1,0 +1,20 @@
+[
+  {
+    "id": "care-generation",
+    "capability": "generation",
+    "source": "---- MODULE TemporalComposition ----\nModelIdentity == \"care-generation\"\nClockDomains == {<<\"local\", \"logical-version\">>}\nObservations == {<<\"order\", \"local\", 1, \"ledger\", \"observed\">>, <<\"dose\", \"local\", 2, \"ledger\", \"observed\">>}\nHypotheses == {<<\"via-a\", \"order\", \"dose\">>}\nConstraints == {}\nFamilyComplete == TRUE\nFamilySemantics == \"exclusive-explanations\"\n====\n",
+    "profile": "finite-hypothesis-v2",
+    "target": "via-a",
+    "limit": false,
+    "task": "Generate inert literal TLA source, then classify via-a. Model identity care-generation; one local logical-version clock;\nobserved order at 1 and dose at 2, both source ledger; sole hypothesis via-a from order to dose.\nFamily complete, exclusive explanations, no constraints. Use module TemporalComposition with exactly these declarations:\nModelIdentity string, ClockDomains set of <<domain,kind>>, Observations set of <<id,domain,time,source,status>>,\nHypotheses set of <<id,cause,effect>>, Constraints set, FamilyComplete boolean, FamilySemantics string.\nEach declaration MUST be a zero-argument literal binding using Name == literal, not a CONSTANT declaration.\nUse FamilySemantics == \"exclusive-explanations\". Allowed binding forms: ModelIdentity == \"id\";\nClockDomains == {<<\"domain\", \"kind\">>}; Observations == {<<\"id\", \"domain\", time, \"source\", \"status\">>};\nHypotheses == {<<\"id\", \"cause\", \"effect\">>}; Constraints == {}; FamilyComplete == TRUE/FALSE.\nThese seven literal bindings are allowed. Do not add CONSTANT/CONSTANTS declarations, Next,\nfunctions, action operators, imports or executable code. Emit full ---- MODULE ... ---- through ====."
+  },
+  {
+    "id": "software-generation",
+    "capability": "generation",
+    "source": "---- MODULE TemporalComposition ----\nModelIdentity == \"software-generation\"\nClockDomains == {<<\"local\", \"logical-version\">>}\nObservations == {<<\"build\", \"local\", 1, \"ledger\", \"observed\">>, <<\"release\", \"local\", 2, \"ledger\", \"observed\">>}\nHypotheses == {<<\"via-a\", \"build\", \"release\">>}\nConstraints == {}\nFamilyComplete == TRUE\nFamilySemantics == \"exclusive-explanations\"\n====\n",
+    "profile": "finite-hypothesis-v2",
+    "target": "via-a",
+    "limit": false,
+    "task": "Generate inert literal TLA source, then classify via-a. Model identity software-generation; one local logical-version clock;\nobserved build at 1 and release at 2, both source ledger; sole hypothesis via-a from build to release.\nFamily complete, exclusive explanations, no constraints. Use module TemporalComposition with exactly these declarations:\nModelIdentity string, ClockDomains set of <<domain,kind>>, Observations set of <<id,domain,time,source,status>>,\nHypotheses set of <<id,cause,effect>>, Constraints set, FamilyComplete boolean, FamilySemantics string.\nEach declaration MUST be a zero-argument literal binding using Name == literal, not a CONSTANT declaration.\nUse FamilySemantics == \"exclusive-explanations\". Allowed binding forms: ModelIdentity == \"id\";\nClockDomains == {<<\"domain\", \"kind\">>}; Observations == {<<\"id\", \"domain\", time, \"source\", \"status\">>};\nHypotheses == {<<\"id\", \"cause\", \"effect\">>}; Constraints == {}; FamilyComplete == TRUE/FALSE.\nThese seven literal bindings are allowed. Do not add CONSTANT/CONSTANTS declarations, Next,\nfunctions, action operators, imports or executable code. Emit full ---- MODULE ... ---- through ====."
+  }
+]

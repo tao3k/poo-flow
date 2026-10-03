@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause at local time 1 precedes care/effect at local time 3 in the same observed domain. However, exclusive family via-b is also admitted, so via-a is not the unique admitted member; classification is possible. Precedence alone does not prove causation.\"}",
+  "elapsed_seconds": 5.628820958001597,
+  "first_content_seconds": 1.0221689160025562,
+  "max_content_gap_seconds": 1.0221689160025562,
+  "usage": {
+    "last": {
+      "inputTokens": 342,
+      "cachedInputTokens": 512,
+      "outputTokens": 1127,
+      "totalTokens": 1469
+    },
+    "provider": {
+      "input_tokens": 342,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 1127,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+}

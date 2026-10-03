@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is visited and admitted because its same-domain cause (local 1) strictly precedes effect (local 3). However, exploration limit 1 leaves via-b unvisited/unknown and the family not exhausted with no unknown members or exactly one admitted member, so via-a is only possible.\"}",
+  "elapsed_seconds": 19.777339124993887,
+  "first_content_seconds": 0.6658848339939141,
+  "max_content_gap_seconds": 0.6658848339939141,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 3926,
+      "totalTokens": 4140
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 3926,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+}

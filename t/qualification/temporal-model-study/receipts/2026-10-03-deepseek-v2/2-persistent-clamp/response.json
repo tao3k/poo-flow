@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"refuted\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"The step-0 intervention clamps prescription to none persistently, so the administer guard prescription=issued is never satisfied and administration=given is unreachable in all finite schedules up to Horizon 2; reachability is refuted.\"\n}",
+  "elapsed_seconds": 23.715041499999643,
+  "first_content_seconds": 0.9702327920022071,
+  "max_content_gap_seconds": 0.9702327920022071,
+  "usage": {
+    "last": {
+      "inputTokens": 157,
+      "cachedInputTokens": 768,
+      "outputTokens": 4697,
+      "totalTokens": 4854
+    },
+    "provider": {
+      "input_tokens": 157,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 768,
+      "output_tokens": 4697,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+}

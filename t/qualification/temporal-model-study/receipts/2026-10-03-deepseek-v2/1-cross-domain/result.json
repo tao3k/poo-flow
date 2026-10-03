@@ -1,0 +1,45 @@
+{
+  "case": "cross-domain",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a relates a remote-domain cause to a local-domain effect, so different clock domains make it unknown; precedence never proves causation.\"}",
+    "elapsed_seconds": 6.509135624997725,
+    "first_content_seconds": 0.9914567079977132,
+    "max_content_gap_seconds": 0.9914567079977132,
+    "usage": {
+      "last": {
+        "inputTokens": 342,
+        "cachedInputTokens": 512,
+        "outputTokens": 1167,
+        "totalTokens": 1509
+      },
+      "provider": {
+        "input_tokens": 342,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 512,
+        "output_tokens": 1167,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+  },
+  "errors": [],
+  "publication_native": {
+    "admitted": false,
+    "classification": "unknown",
+    "exhausted": true,
+    "publication": false,
+    "model": "sha256:04601dcfbd1dd0442b09f3d04d8e4772687e86b330330403156f3629dcc89d1b",
+    "proof": "sha256:5c4c158abce00afacb213c894f61422475d2722eb9f619a7ea4ea00b3a82264a"
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 48.942068249998556
+}

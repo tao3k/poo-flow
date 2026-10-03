@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a uses declared care/cause, so its temporal relation to care/effect cannot be admitted or refuted; it remains unknown. Family completeness does not make an unknown hypothesis necessary.\"}",
+  "elapsed_seconds": 4.814554416996543,
+  "first_content_seconds": 0.6589097499963827,
+  "max_content_gap_seconds": 0.6589097499963827,
+  "usage": {
+    "last": {
+      "inputTokens": 215,
+      "cachedInputTokens": 640,
+      "outputTokens": 808,
+      "totalTokens": 1023
+    },
+    "provider": {
+      "input_tokens": 215,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 808,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+}

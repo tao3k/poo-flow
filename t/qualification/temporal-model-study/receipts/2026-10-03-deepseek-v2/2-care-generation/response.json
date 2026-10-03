@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nCONSTANT ModelIdentity \\\\* string\\nCONSTANT ClockDomains \\\\* set of <<domain, kind>>\\nCONSTANT Observations \\\\* set of <<id, domain, time, source, status>>\\nCONSTANT Hypotheses \\\\* set of <<id, cause, effect>>\\nCONSTANT Constraints \\\\* set\\nCONSTANT FamilyComplete \\\\* boolean\\nCONSTANT FamilySemantics \\\\* string\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a: order at time 1 strictly precedes dose at time 2 on the single local clock, so the hypothesis is admitted. The family is complete/exclusive with no unknown members and exactly one admitted member, so the admitted target is necessary under the finite POO Flow semantics. Precedence does not prove physical causation; the model cannot authorize effects; no fairness or infinite progress is established.\"\n}",
+  "elapsed_seconds": 22.7505229160015,
+  "first_content_seconds": 0.8910980829969049,
+  "max_content_gap_seconds": 0.8910980829969049,
+  "usage": {
+    "last": {
+      "inputTokens": 185,
+      "cachedInputTokens": 640,
+      "outputTokens": 4930,
+      "totalTokens": 5115
+    },
+    "provider": {
+      "input_tokens": 185,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 4930,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:6c178c8ddcafe00e0e84ad73b4efae875d212b0fa084893918bf17855625c968"
+}

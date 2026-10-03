@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Finite schedules include prescribe then administer, reaching administration=given by Deadline 2; other schedules fail, so outcomes are mixed across schedules => possible.\"}",
+  "elapsed_seconds": 21.654442999999446,
+  "first_content_seconds": 0.7427588330028811,
+  "max_content_gap_seconds": 0.7427588330028811,
+  "usage": {
+    "last": {
+      "inputTokens": 253,
+      "cachedInputTokens": 640,
+      "outputTokens": 4489,
+      "totalTokens": 4742
+    },
+    "provider": {
+      "input_tokens": 253,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 4489,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+}

@@ -710,5 +710,5 @@ check-temporal-closure pins directory:
     cd "{{ temporal_poo_proof_dir }}" && lake build
 
 # Real-model capability acceptance; requires authenticated Codex and a fresh output directory.
-check-temporal-model-study directory catalog:
-    PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 -u scripts/temporal/model_study.py --output {{ quote(directory) }} --catalog {{ quote(catalog) }} --model gpt-6-sol --effort medium --repeats 2
+check-temporal-model-study directory env_file:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 -u scripts/temporal/model_study.py --output {{ quote(directory) }} --provider deepseek --env-file {{ quote(env_file) }} --repeats 2

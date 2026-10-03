@@ -1,0 +1,9 @@
+{
+  "planned": 4,
+  "repeats": 2,
+  "max_tokens": 32768,
+  "total_seconds": 180,
+  "progress_seconds": 5,
+  "feedback": false,
+  "backend": "sha256:fe9e8ca1ca3802368f5cce51351e738ce5f2a1a72fc3397104264575dae11639"
+}

@@ -1,0 +1,60 @@
+{
+  "case": "overlapping-two",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: care/cause at local time 1 is strictly before care/effect at local time 3 in the same clock domain. With unbounded exploration, via-b is also admitted: care/alternative at local time 2 is strictly before care/effect at local time 3. The family is complete but overlapping rather than exclusive and has more than one admitted member, so via-a is possible, not necessary.\"}",
+    "elapsed_seconds": 6.928250125005434,
+    "first_content_seconds": 1.4003401250010938,
+    "max_content_gap_seconds": 1.4003401250010938,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 1333,
+        "totalTokens": 1547
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1333,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+  },
+  "errors": [],
+  "publication_native": {
+    "proof": "sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35",
+    "model": "sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54",
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,17:overlapping-two-1,71:sha256:0046c9922978a8639958f4f9c15071ddacb2a3f7baaeac7b43d6e272c798ab35,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:e1d95de2ffc9660a74aff0b58932452b3f58ef0dbe3c9da31b30955bae3ec3e6,71:sha256:ceb09a8e9283d57f63b703185e7bfed6c9e4745c9b25990b1ad650fb086c6f54,23:overlapping-two-1-nonce,6:assert,1:0,10:1791012910,",
+    "exhausted": true,
+    "classification": "possible",
+    "admitted": true
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 46.56733570800134
+}

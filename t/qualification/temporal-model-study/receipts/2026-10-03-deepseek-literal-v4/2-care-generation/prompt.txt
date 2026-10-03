@@ -1,0 +1,28 @@
+Evaluate the admitted finite POO Flow semantics only. Temporal precedence never proves physical causation.
+The model has no publication authority. A host must independently admit evidence and authorize scoped effects.
+Hypotheses are examined in sorted identity order. An observed same-domain cause strictly before its effect is admitted;
+cause at/after effect is refuted; declared facts or different clock domains are unknown. A visited admitted target is
+necessary only if the family is complete, exclusive, exhausted, has no unknown members and exactly one admitted member;
+otherwise it is possible. A visited refuted target is refuted; an unvisited or unknown target is unknown.
+Behavior semantics enumerate all finite schedules up to Horizon including no-op. Mechanisms require every guard;
+writes are simultaneous. Intervention clamps persist from their step and protected variables cannot be written.
+Safety holds if conditions hold at every state; reachability if they hold at some state;
+bounded-progress if they hold by Deadline. Across schedules: all true=necessary, mixed=possible, all false=refuted.
+No fairness or infinite progress is established. Do not invent observations, proof identities or credentials.
+Output classification, precedence_proves_causation, model_can_authorize, fair_infinite_progress, operation,
+source, axes, api_symbols, reason. For nonclassification tasks classification=unknown. Normally operation=none;
+a late evidence task asks for a PROPOSED journal operation, never permission to execute it.
+Only generation tasks output source; all others use source="". axes has four empty string fields and api_symbols=[] unless requested.
+Use a concise reason, no tools, files, code execution, repair or further conversation.
+TASK
+Generate inert literal TLA source, then classify via-a. Model identity care-generation; one local logical-version clock;
+observed order at 1 and dose at 2, both source ledger; sole hypothesis via-a from order to dose.
+Family complete, exclusive explanations, no constraints. Use module TemporalComposition with exactly these declarations:
+ModelIdentity string, ClockDomains set of <<domain,kind>>, Observations set of <<id,domain,time,source,status>>,
+Hypotheses set of <<id,cause,effect>>, Constraints set, FamilyComplete boolean, FamilySemantics string.
+Each declaration MUST be a zero-argument literal binding using Name == literal, not a CONSTANT declaration.
+Use FamilySemantics == "exclusive-explanations". Allowed binding forms: ModelIdentity == "id";
+ClockDomains == {<<"domain", "kind">>}; Observations == {<<"id", "domain", time, "source", "status">>};
+Hypotheses == {<<"id", "cause", "effect">>}; Constraints == {}; FamilyComplete == TRUE/FALSE.
+These seven literal bindings are allowed. Do not add CONSTANT/CONSTANTS declarations, Next,
+functions, action operators, imports or executable code. Emit full ---- MODULE ... ---- through ====.

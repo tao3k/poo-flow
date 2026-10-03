@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Bounded-progress over finite schedules through Horizon 2: the goal administration=given is achievable by prescribing then administering, but schedules that no-op or omit prescribe fail by Deadline 2, so outcomes are mixed => possible. Precedence does not prove causation, and no authority or fairness is established.\"\n}",
+  "elapsed_seconds": 15.533167458997923,
+  "first_content_seconds": 1.3661419589989237,
+  "max_content_gap_seconds": 1.3661419589989237,
+  "usage": {
+    "last": {
+      "inputTokens": 253,
+      "cachedInputTokens": 640,
+      "outputTokens": 2926,
+      "totalTokens": 3179
+    },
+    "provider": {
+      "input_tokens": 253,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 2926,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+}
