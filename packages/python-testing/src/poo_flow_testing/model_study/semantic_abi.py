@@ -103,6 +103,10 @@ def prepare(root, library, ascent, output, model):
 
 def execute(root, library, output, key):
     from poo_flow_runtime.semantic_runtime import SemanticRuntime
+    import poo_flow_runtime.semantic_runtime as implementation
+    runtime_source = Path(implementation.__file__).resolve()
+    if sha(runtime_source.read_bytes()) != sha((root/'packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py').read_bytes()):
+        raise ValueError('loaded Runtime does not match the frozen current interface source')
     plan_bytes = (output/'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
     requests = json.loads((output/'requests.json').read_text())
@@ -203,6 +207,7 @@ def execute(root, library, output, key):
         report = {'schema': 'poo-flow.semantic-abi-live-receipt', 'version': 1,
                   'planSha256': sha(plan_bytes), 'artifactSha256': plan['artifactSha256'],
                   'descriptor': runtime.descriptor, 'nativeColdSeconds': cold,
+                  'runtimeModule': str(runtime_source),
                   'attempts': len(records), 'plannedCalls': plan['maximumCalls'],
                   'unattempted': plan['maximumCalls'] - len(records),
                   'passed': sum(r['passed'] for r in records),
