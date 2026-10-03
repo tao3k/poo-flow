@@ -661,7 +661,7 @@ build-semantic-native output:
 
 [group('test')]
 model-understanding-compute script:
-    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi {{ gerbil_test_runtime_options }} "{{ script }}"
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s env GERBIL_DEBUG=expansion gxi {{ gerbil_test_runtime_options }} t/model-study/direct-understanding/compute-loader.ss "{{ script }}"
 
 [group('test')]
 model-understanding-score expected candidate:

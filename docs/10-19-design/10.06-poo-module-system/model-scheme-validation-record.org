@@ -259,3 +259,63 @@ SHA256 =40c55c12cc1c02f77d47a4b02f01ef6d87224aeea86163431f35297dc3a3e54b=
 新计划须在当前代码与依赖闭包/transport 边界核验后重新冻结。
 此前 24 次付费授权已用完；不复用该授权执行额外调用。
 完整程序生成、POO 组合、业务收益与 MRR 接入门限仍开放。
+
+* 继续闭合：依赖范围、惰性传输与原生入口
+
+模型输入将从三个入口模块扩展为编译器导出的 ASCENT runtime 项目
+依赖闭包，并包含 =core/types=。框架模块逐项列出为依赖假设；不把
+省略语言/POO 框架源码的实验称为全部 Scheme 语言理解验收。
+所有项目源码、编译对象、任务、scorer、compute loader 和 producer
+均绑定哈希。模型仍仅看到实际源码、Scheme 测试任务与当次计算反馈。
+
+传输层比较去除 quote/check-equal? 包装后的惰性数据结构。显式断言
+与引用值发生冲突时拒绝；相同数据不同展示可合并。混合说明中优先
+识别显式引用/断言，无显式值才使用 bare fence；这是一项预声明的
+传输策略，不执行 list/canonical 等解释代码，也不查 oracle 选答案。
+未填 ? 不再当成可比较的预测。旧 24 次及原补充评分均保持原样。
+
+原生预检出现新的 5 秒静默失败：一处发生于启动/导入阶段，另一次
+发生在计算输出 OK 后。原日志保留，底层停顿原因尚未完全隔离。
+原生子进程现在明确使用 EOF stdin；可信 fixture loader 使用 main
+入口，加载冻结可信原生任务，保留 Gerbil 自带的真实 @expand 进度。
+不做动态依赖逐项 eval；load 只接收冻结可信程序，不接收模型输出。
+门限仍为 5 秒，不增加计时 heartbeat；必须重新通过完整原生预检。
+
+精确提交 06051806 的 7 项 CI 失败均指向 build.ss 遗留的旧语义文件
+引用。已修正该入口。新提交 CI 必须独立验证，不能引用旧通过记录。
+
+新版计划的源码更大，预设 30 次、零重试、输出含 Reasoning 上限
+8192、请求编码输入上限 393216 字节。按官方高峰单价输入
+USD 0.3/百万 token、输出 USD 1.2/百万 token 的极保守字节上界，
+最高估算 USD 3.833856；新增预算申请上限 USD 4。价格于
+2026-10-03 核对：[[https://api-docs.deepseek.com/quick_start/pricing/][DeepSeek 官方价格]]。
+旧 24 次授权已耗尽；新的源码范围与付费预算须明确批准后才可外发。
+本次工程修正、预检与保存输出回放没有 Provider 调用。
+
+** 原生生命周期与已通过的工程资格
+
+12 个任务由单个原生 worker 以独立 lambda 词法作用域重算；每个
+模型回答后再次调用真实 Scheme thunk 并读取惰性候选，比较器由
+prediction-core.ss 统一拥有。Python 不实现逻辑推导，不执行模型代码。
+预检 12/12 与独立评估真值一致；5 秒 watchdog、MODULE-OK、
+HARNESS-OK worker-ready/worker-closed 和最终 OK 均通过。
+
+开发期间出现 EOF/let 语法错误及 HashTable/WAList 类型错配，失败
+日志均归档。JSON 默认返回 WAList，现与既有语义 ABI 相同，明确
+使用 JSONReadOptions object-as-hash。没有把这些失败算成模型错误。
+
+测试工具含项目 harness 共 42 项通过。旧 24 个输出在新 transport
+与当前原生 worker 中回放，16 个完成预测核验正确（多恢复 withdrawal
+none 的显式引用值）；这只是接口回放，旧严格 0/24 与第一轮补充
+评分不改写，也不是新模型正确率或学习收益。
+
+生产调用入口通过本地 SDK 夹具执行全部 30 个交互：输入、输出、
+当前原生观察、历史对照、独立批次 claim 和日志保存链全部走通；
+30 是模拟 SDK 交互，实际 Provider 调用/费用为 0。原始付费计划
+目录未创建 claim；模拟费用/准确率字段不作为实测结果报告。
+
+新增 transfer-history：与 transfer-feedback 使用相同初始任务/回答
+历史及相同迁移任务，仅后者加入当次真实计算观察。六族均保留
+none/high 与 fresh/history/feedback 观察，迁移条件次序覆盖六种
+排列。教学的主对照为 feedback 减 history，fresh 用作上下文整体
+效果对照；六族 pilot 不等于完整程序生成/POO 组合或总体业务收益。

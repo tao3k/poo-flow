@@ -7,13 +7,14 @@ from pathlib import Path
 import sys
 import time
 import statistics
-from .tasks import digest, DIRECT_MODULES
+from .tasks import digest
 from .native import score_candidate
+from .worker import NativeStudyWorker, worker_source
 
 def _request(plan, preview, item, initial):
     source = (preview/f"{item['case']}.input.ss").read_text()
     inputs = [{'role': 'user', 'content': source}]
-    if item['arm'] == 'transfer-feedback':
+    if item['arm'] in ('transfer-history', 'transfer-feedback'):
         previous = initial[item['family']]
         # Context reuse preserves the real initial task/output and the native
         # observation. It does not insert a natural-language teaching template.
@@ -25,7 +26,7 @@ def _request(plan, preview, item, initial):
         observation = json.dumps(previous['observation'], sort_keys=True)
         inputs = [{'role': 'user', 'content': first_source},
                   {'role': 'assistant', 'content': previous['raw']},
-                  {'role': 'user', 'content': observation + '\n' + transfer}]
+                  {'role': 'user', 'content': (observation + '\n' if item['arm'] == 'transfer-feedback' else '') + transfer}]
     request = {'model': plan['model'], 'input': inputs,
                'reasoning': {'effort': item['reasoningEffort']},
                'max_output_tokens': plan['maxOutputTokens'], 'stream': True}
@@ -59,14 +60,20 @@ def live(root, preview, output, approved_digest, ascent=None):
     if approved_digest != digest(encoded):
         raise ValueError('new paid batch needs approval for this exact prepared plan')
     plan = json.loads(encoded)
-    if ascent is None or any(digest((ascent/name).read_bytes()) != plan['modules'][name]
-                             for name in DIRECT_MODULES):
+    from .preview import producer_hashes, native_bindings, source_paths
+    if ascent is None or any(digest(path.read_bytes()) != plan['modules'][name]
+        for name, path in source_paths(root, ascent, plan['dependencyModules']).items()):
         raise ValueError('current Scheme source no longer matches frozen modules')
-    from .preview import producer_hashes, native_bindings
     if (producer_hashes() != plan['producerHashes'] or
-        native_bindings() != plan['nativeBindings'] or
-        digest((root/'t/model-study/direct-understanding/prediction-score.ss').read_bytes()) != plan['scorerSha256']):
-        raise ValueError('producer/scorer changed after preparation')
+        native_bindings(plan['dependencyModules']) != plan['nativeBindings'] or
+        digest((root/'t/model-study/direct-understanding/prediction-score.ss').read_bytes()) != plan['scorerSha256'] or
+        digest((root/'t/model-study/direct-understanding/source-closure.ss').read_bytes()) != plan['closureProbeSha256'] or
+        digest((root/'t/model-study/direct-understanding/compute-loader.ss').read_bytes()) != plan['computeLoaderSha256'] or
+        digest((root/'t/model-study/direct-understanding/prediction-core.ss').read_bytes()) != plan['predictionCoreSha256'] or
+        digest((root/'t/model-study/direct-understanding/worker-loop.ss').read_bytes()) != plan['workerLoopSha256'] or
+        digest(worker_source(root).encode()) != plan['workerScriptSha256'] or
+        digest((preview/'native-worker.ss').read_bytes()) != plan['workerScriptSha256']):
+        raise ValueError('producer/scorer/closure probe changed after preparation')
     for case in plan['cases']:
         if (digest((preview/f"{case['id']}.input.ss").read_bytes()) != case['inputSha256'] or
             digest((preview/'private'/f"{case['id']}.sexp").read_bytes()) != case['expectedSha256'] or
@@ -81,36 +88,40 @@ def live(root, preview, output, approved_digest, ascent=None):
         file.flush(); os.fsync(file.fileno())
     initial = {}
     records = []
-    for index, item in enumerate(plan['order']):
-        request = _request(plan, preview, item, initial)
-        request_path = output/f'{index:02d}.request.json'
-        request_path.write_text(json.dumps(request, ensure_ascii=False, indent=2)+'\n')
-        attempt = dict(item, index=index, planSha256=digest(encoded),
-                       requestSha256=digest(request_path.read_bytes()))
-        with (output/'attempts.jsonl').open('a') as file:
-            file.write(json.dumps(attempt)+'\n'); file.flush(); os.fsync(file.fileno())
-        sys.stdout.write(f'MODEL START {index+1}/24 {item["case"]} {item["arm"]}\n'); sys.stdout.flush()
-        raw, terminal, reasoning_events, provider_seconds = _provider_response(
-            client, request, output/f'{index:02d}.response.json')
-        native_started = time.perf_counter()
-        observation = score_candidate(root, preview/'private'/f"{item['case']}.sexp", raw,
-                                      output/f'{index:02d}.guard', preview/f"{item['case']}.ss",
-                                      normalize=True)
-        native_seconds = time.perf_counter()-native_started
-        observation.update({'taskSha256': next(case['inputSha256'] for case in plan['cases']
-                                              if case['id'] == item['case']),
-                            'sourceHeads': {'poo': plan['pooHead'], 'ascent': plan['ascentHead']}})
-        record = dict(attempt, raw=raw, observation=observation,
-                      responseId=terminal.id, responseStatus=terminal.status,
-                      usage=terminal.usage.model_dump() if terminal.usage else None,
-                      reasoningEvents=reasoning_events, providerSeconds=provider_seconds,
-                      nativeSeconds=native_seconds, providerAndGuardSeconds=provider_seconds+native_seconds)
-        with (output/'calls.jsonl').open('a') as file:
-            file.write(json.dumps(record)+'\n'); file.flush(); os.fsync(file.fileno())
-        records.append(record)
-        if item['arm'] == 'initial-high':
-            initial[item['family']] = record
-        sys.stdout.write(f' DONE correct={observation["correct"]} status={terminal.status}\n'); sys.stdout.flush()
+    worker = NativeStudyWorker(root, preview/'native-worker.ss', output/'native-worker.log')
+    try:
+        for index, item in enumerate(plan['order']):
+            request = _request(plan, preview, item, initial)
+            request_path = output/f'{index:02d}.request.json'
+            request_path.write_text(json.dumps(request, ensure_ascii=False, indent=2)+'\n')
+            attempt = dict(item, index=index, planSha256=digest(encoded),
+                           requestSha256=digest(request_path.read_bytes()))
+            with (output/'attempts.jsonl').open('a') as file:
+                file.write(json.dumps(attempt)+'\n'); file.flush(); os.fsync(file.fileno())
+            sys.stdout.write(f'MODEL START {index+1}/{plan['maxCalls']} {item["case"]} {item["arm"]}\n'); sys.stdout.flush()
+            raw, terminal, reasoning_events, provider_seconds = _provider_response(
+                client, request, output/f'{index:02d}.response.json')
+            native_started = time.perf_counter()
+            observation = score_candidate(root, preview/'private'/f"{item['case']}.sexp", raw,
+                                          output/f'{index:02d}.guard', preview/f"{item['case']}.ss",
+                                          normalize=True, worker=worker, case=item['case'])
+            native_seconds = time.perf_counter()-native_started
+            observation.update({'taskSha256': next(case['inputSha256'] for case in plan['cases']
+                                                  if case['id'] == item['case']),
+                                'sourceHeads': {'poo': plan['pooHead'], 'ascent': plan['ascentHead']}})
+            record = dict(attempt, raw=raw, observation=observation,
+                          responseId=terminal.id, responseStatus=terminal.status,
+                          usage=terminal.usage.model_dump() if terminal.usage else None,
+                          reasoningEvents=reasoning_events, providerSeconds=provider_seconds,
+                          nativeSeconds=native_seconds, providerAndGuardSeconds=provider_seconds+native_seconds)
+            with (output/'calls.jsonl').open('a') as file:
+                file.write(json.dumps(record)+'\n'); file.flush(); os.fsync(file.fileno())
+            records.append(record)
+            if item['arm'] == 'initial-high':
+                initial[item['family']] = record
+            sys.stdout.write(f' DONE correct={observation["correct"]} status={terminal.status}\n'); sys.stdout.flush()
+    finally:
+        worker.close()
     _report(encoded, records, output)
 
 
@@ -119,7 +130,7 @@ def _report(encoded, records, output):
         raise RuntimeError('duplicate response IDs')
     report = {'planSha256': digest(encoded), 'completedCalls': len(records), 'retries': 0,
               'scope': 'direct Scheme prediction and native-feedback transfer; not code generation or weight training'}
-    for arm in ('initial-none', 'initial-high', 'transfer-fresh', 'transfer-feedback'):
+    for arm in ('initial-none', 'initial-high', 'transfer-fresh', 'transfer-history', 'transfer-feedback'):
         rows = [row for row in records if row['arm'] == arm]
         report[arm] = {'attempts': len(rows),
                       'completed': sum(row['responseStatus'] == 'completed' for row in rows),
@@ -137,5 +148,8 @@ def _report(encoded, records, output):
                 reasoningTokens=sum(reasoning) if all(value is not None for value in reasoning) else None)
         else:
             report[arm]['usageAvailability'] = 'incomplete; cost unknown'
+    report['teachingContrast'] = {'scope': 'native feedback versus identical initial task/answer history',
+        'accuracyCountDifference': report['transfer-feedback']['correct']-report['transfer-history']['correct'],
+        'attemptsPerCondition': report['transfer-history']['attempts']}
     (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
-    sys.stdout.write('STUDY-OK 24 calls; bounded six-family pilot\n'); sys.stdout.flush()
+    sys.stdout.write(f'STUDY-OK {len(records)} calls; bounded six-family pilot\n'); sys.stdout.flush()

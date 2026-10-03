@@ -30,3 +30,19 @@ def test_normalized_guard_preserves_raw_output_and_rejects_ambiguity(tmp_path):
     result = score_candidate(tmp_path, tmp_path/'unused', raw, tmp_path/'guard', normalize=True)
     assert result['transportAmbiguousOrAbsent'] and not result['correct']
     assert (tmp_path/'guard/raw-output.txt').read_text() == raw
+
+
+def test_explicit_literal_and_assertion_conflict_is_not_hidden_by_priority():
+    raw = "(check-equal? result '(a))\n```scheme\n'(b)\n```"
+    assert prediction_from_output(raw) is None
+
+
+def test_equal_transport_wrappers_and_code_explanation_do_not_create_false_conflict():
+    raw = "```scheme\n(list (canonical '((1 2))))\n```\n```scheme\n'(((1 2)))\n```\n(check-equal? result '(((1 2))))"
+    assert prediction_from_output(raw)
+    assert prediction_from_output("```scheme\n'(a b)\n```\n```scheme\n(quote (a b))\n```")
+
+
+def test_placeholder_is_task_incomplete_not_a_semantic_prediction():
+    assert prediction_from_output("(check-equal? result '?)") is None
+    assert prediction_from_output("(check-equal? result '((1 ?)))") is None

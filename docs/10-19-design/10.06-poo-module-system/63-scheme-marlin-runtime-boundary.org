@@ -296,3 +296,18 @@ There is no observed transfer accuracy gain, and this post hoc analysis cannot
 replace predeclared model acceptance. Program generation, full POO composition,
 reliable semantic feedback transfer and business benefit remain open. MRR Rust
 admission stays deferred. See [[file:model-scheme-validation-record.org][execution ledger and evidence]].
+
+* 2026-10-03 Direct model integration qualification boundary
+
+The semantic ABI remains Version 1; version is explicit metadata, not a file or
+module suffix. Direct validation now declares compiler-derived ASCENT runtime
+project sources and core/types, with framework-source assumptions listed.
+Inert transport separates candidate completion from native semantic comparison;
+model text is never evaluated. Trusted native task loading and real dependency
+progress must meet the unchanged five-second watchdog.
+
+See [[file:model-scheme-validation-record.org][the model validation record]].
+Original 0/24 acceptance and post hoc 5/6 observations remain historical results.
+New source/transport protocol acceptance, isolated teaching benefit, complete
+POO/program generation and business outcomes remain open. Current engineering
+checks and exact submitted-head CI are separate gates. MRR Rust remains last.

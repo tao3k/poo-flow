@@ -57,3 +57,26 @@ def test_provider_stream_retains_raw_events_and_requires_a_terminal_record(tmp_p
         assert not path.exists()
     archived = [json.loads(line) for line in path.with_suffix('.events.jsonl').read_text().splitlines()]
     assert archived[1]['delta'] == '((11 13))'
+
+
+def test_native_computation_has_no_interactive_stdin(tmp_path):
+    import sys
+    from poo_flow_testing.model_study.direct.native import native_run
+    script = "import sys; assert sys.stdin.read() == ''; print('MODULE-OK noninteractive'); print('HARNESS-OK noninteractive'); print('OK')"
+    assert 'HARNESS-OK noninteractive' in native_run(
+        tmp_path, [sys.executable, '-c', script], tmp_path/'native.log')
+
+
+def test_history_control_differs_only_by_current_native_observation(tmp_path):
+    from poo_flow_testing.model_study.direct.live import _request
+    source = "(def implementation 'source)\n(import :std/test :gerbil-ascent/program/scheme-language)\n(def task 'transfer)"
+    (tmp_path/'join-transfer.input.ss').write_text(source)
+    (tmp_path/'join-initial.input.ss').write_text(source.replace('transfer', 'initial'))
+    plan = {'model': 'offline', 'maxInputBytes': 10000, 'maxOutputTokens': 128}
+    item = {'case': 'join-transfer', 'family': 'join', 'reasoningEffort': 'high'}
+    initial = {'join': {'raw': '(quote ())', 'observation': {'correct': False, 'witness': 'native fixture'}}}
+    history = _request(plan, tmp_path, dict(item, arm='transfer-history'), initial)
+    feedback = _request(plan, tmp_path, dict(item, arm='transfer-feedback'), initial)
+    assert history['input'][:2] == feedback['input'][:2]
+    assert feedback['input'][2]['content'] == json.dumps(initial['join']['observation'], sort_keys=True)+'\n'+history['input'][2]['content']
+    assert history['reasoning'] == feedback['reasoning']

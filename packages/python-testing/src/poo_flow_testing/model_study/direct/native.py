@@ -8,7 +8,7 @@ from .tasks import DIRECT_DATA_ALPHABET, digest
 
 def native_run(root, command, log):
     with log.open('w') as output:
-        with subprocess.Popen(command, cwd=root, stdout=subprocess.PIPE,
+        with subprocess.Popen(command, cwd=root, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT, text=True, bufsize=1) as process:
             for line in process.stdout:
                 output.write(line); output.flush()
@@ -33,13 +33,19 @@ def _candidate_bounds(candidate):
             'invalidCharacterIndex': invalid}
 
 
-def score_candidate(root, expected, candidate, destination, program=None, *, normalize=False):
+def score_candidate(root, expected, candidate, destination, program=None, *, normalize=False, worker=None, case=None):
     destination.mkdir(parents=True, exist_ok=False)
     computation = {}
     if program is not None:
-        text = native_run(root, ['just', 'model-understanding-compute', str(program)],
-                          destination/'current-compute.log')
-        actual = text.split('HARNESS-OK direct-compute')[0].splitlines()[-1]+'\n'
+        if worker is None:
+            text = native_run(root, ['just', 'model-understanding-compute', str(program)],
+                              destination/'current-compute.log')
+            lines = text.splitlines()
+            actual = lines[lines.index('HARNESS-OK direct-compute')-1]+'\n'
+        else:
+            fresh = worker.compute(case)
+            actual = fresh['nativeDatum']
+            (destination/'current-compute.log').write_text(json.dumps(fresh, sort_keys=True)+'\n')
         if actual != expected.read_text():
             raise ValueError('current native computation changed; frozen oracle no longer applies')
         current = destination/'current-expected.sexp'; current.write_text(actual)
@@ -61,8 +67,15 @@ def score_candidate(root, expected, candidate, destination, program=None, *, nor
     if bounds['inputBytes'] > 8192 or bounds['maximumDepth'] > 64 or bounds['invalidCharacterIndex'] is not None:
         return {'readable': False, 'correct': False, 'transportRejected': True,
                 'candidateSha256': digest(candidate.encode()), 'bounds': bounds, **computation}
-    text = native_run(root, ['just', 'model-understanding-score', str(expected),
-                            str(candidate_path)], destination / 'native-score.log')
-    result = json.loads(next(line for line in text.splitlines() if line.startswith('{')))
+    if worker is None:
+        text = native_run(root, ['just', 'model-understanding-score', str(expected),
+                                str(candidate_path)], destination / 'native-score.log')
+        result = json.loads(next(line for line in text.splitlines() if line.startswith('{')))
+    else:
+        result = worker.compute(case, candidate_path)
+        (destination/'native-score.log').write_text(json.dumps(result, sort_keys=True)+'\n')
+        if result.pop('nativeDatum') != expected.read_text():
+            raise ValueError('native task changed during candidate observation')
+        result.pop('case')
     return dict(result, candidateSha256=digest(candidate.encode()),
                 expectedSha256=digest(expected.read_bytes()), **computation)
