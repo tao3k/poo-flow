@@ -364,3 +364,23 @@ POO_FLOW_RUNTIME_C_ABI_BUILD_DIR=/path/to/cache uv run poo-flow-runtime-probe
 
 The runtime tests include gates for hot binding load, steady rebuild, repeated
 program invocation, and resume-path binding reuse.
+
+* MRR snapshot resource
+
+=MrrSnapshotResource= connects an already projected =RuntimeGraphPlan= to the
+trusted =mrr-data-poo-flow= worker for the bounded =poo-flow.static-edges.v1=
+profile. The POO Flow runtime owner supplies the worker path, local protection
+directory, environment, source, and revision. =protect= saves a snapshot locally;
+=publish= requires remote acknowledgement; =pending_roots= and =sync_pending=
+support replay after an offline period. =query_tool= fixes the snapshot scope
+before exposing a no-argument tool to an agent.
+
+This adapter checks worker receipts and transport bounds. It does not compile
+MRR property queries, choose a physical plan, or admit semantic results. The
+MRR Query layer owns those decisions; MRR Data supplies the snapshot and
+physical storage interfaces. The static-edge profile is a separate legacy
+runtime path, not the Healthcare GQL caller.
+
+Typed Python runtime plans are materialized into C ABI graph handles before
+validation or handoff. This keeps Python's execution model aligned with the
+upstream ABI instead of creating a parallel graph protocol.
