@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Scheme 模型验证执行记录
+#+date: 2026-10-03
+#+status: 原生预检完成；新模型批次等待单独预算授权
+
+* 本轮实现与范围
+
+验证目标见 [[file:model-scheme-understanding-validation.org][Scheme 理解、Reasoning 与真实计算协议]]。
+本轮实现为 =model_study.direct_understanding= CLI；任务源码由
+=t/model-study/direct-understanding/= 所有，Python 只负责编排、记录和独立核对。
+
+| 任务族 | 初始任务 | 迁移任务 |
+| join | 两条边连接的关系投影 | 带环及分支的新输入 |
+| closure | 递归可达闭包 | 带环的新闭包，包括正长度自可达 |
+| negation | 分层否定筛除 | 新拓扑与新的被阻断事实 |
+| capture | 构造时词法捕获与调用次数 | 新标识符及构造后变量变化 |
+| diagnostic | 未绑定 head 变量的位置 | 未定义 body 关系的位置 |
+| withdrawal | 保持旧快照并替换 source | 新 source 替换下两个快照的结果 |
+
+这是实际 Scheme 程序的结果预测和反馈迁移试验。尚不验证任意程序生成、
+完整 POO 组合能力、所有业务任务或在线权重训练。三份实际 ASCENT 模块
+作为源码材料，未提供全部传递依赖；不能据此宣称覆盖完整代码库。
+
+模型输入由实际模块源码、事实输入和标准 =check-equal?= 未填期望值任务
+组成；无新增自然语言语义教程、RULES、few-shot 解答或原生计算答案。
+供应商仍以文本消息承载这些源码；不宣称 API 在技术上没有输入上下文。
+
+* 原生计算与实时观察
+
+12 个任务均实际执行 Scheme =relational-program=、准入、求解及 session
+更新；结果经独立有限算法/既有资格契约交叉核对，全数通过。
+每个成功回执要求 MODULE-OK、HARNESS-OK、最终 OK。
+有 5 秒真实输出静默门限、独立 heap fence 和进程超时。
+
+模型产物只通过 Scheme reader 读取为数据，支持单个预测 datum 或标准
+=check-equal? result= 的 quoted datum，绝不求值模型文本。
+字节、字符及深度边界在读取前检查；实际 reader 失败诊断保留。
+
+Guard 在收到候选后重新执行当前任务，确认计算仍绑定原任务/真值，
+再在 Scheme 中计算首个差异路径及反例。反馈绑定当前程序、候选、
+计算日志和源版本，首次作答之前不向模型提供原生答案。
+实时复算、错误反例和 reader 失败的本地回执已通过。
+真实模型接收反馈和迁移效果尚未测量；生产 ABI 的模型教学接口仍开放。
+
+* 新批次冻结计划
+
+[[file:evidence/direct-scheme-understanding-20261003/plan.json][计划与源/输入/实现哈希]]：
+=910359b8a90c29ea77485f4dcff80fa7cc63ac0af1f8870b501848701ef27506=。
+
+| 条件 | 次数 | 模型输入 |
+| initial-none | 6 | 实际源码及初始任务；Reasoning none |
+| initial-high | 6 | 相同源码及初始任务；Reasoning high |
+| transfer-fresh | 6 | 实际源码及新任务；Reasoning high |
+| transfer-feedback | 6 | 初始任务、实际模型候选、当次计算反馈及新任务；Reasoning high |
+
+条件顺序在任务族间交替；没有 seed repair、同题重试或失败自动重跑。
+迁移对照比较的是“历史上下文加计算反馈”的整体作用，未将历史上下文
+与反馈各自的作用隔离；不得报告为单独识别出的教学因果收益。
+每条件只有六个任务族样本；不据此推广总体可靠性。
+
+新增调用上限 24、零重试、每次 4096 输出 token（包含思考）、每次输入
+98304 字节上限。按输入 USD 0.30/M、输出 USD 1.20/M 的高峰价格和
+保守字节上界，最大估算 USD 0.8257536，申请总费用上限 USD 1。
+不使用缓存/非高峰优惠估计。价格见
+[[https://api-docs.deepseek.com/quick_start/pricing/][官方定价]]，核对日期 2026-10-03。
+Reasoning 与输出上限的接口语义见
+[[https://api-docs.deepseek.com/api/create-response/][官方 Responses API]]。
+
+此前批准的 48 次已经用尽，且旧实验已退出设计验收。
+本批当前付费调用为 0；等待单独授权，不能复用旧预算自动执行。
+
+* 记录与资格边界
+
+每个请求在调用前保存原始请求和 attempt；每个流事件逐条落盘；响应、
+usage、Reasoning 事件、原生复算、观察、耗时与结果分别保存。
+缺少终态时停止，保留已收到的事件；费用不可得时记录 unknown。
+一个冻结计划只能声明一次付费批次，不能换目录自动重跑。
+
+本轮 Python 测试与项目检查：32 项通过。
+成功及失败预检分别归档；错误模块路径和模块职责过大的失败保留，
+不能作为通过回执。流事件保留及缺少终态的离线测试使用合成数据，
+不计入模型能力成绩。
+
+| 门限 | 当前结果 |
+| 12 个 Scheme 任务原生计算/独立核对 | 通过 |
+| 真实复算后的差异反例和 reader 诊断 | 通过 |
+| Python 编排、边界及记录的资格检查 | 32 项通过 |
+| 新模型的首次理解/Reasoning 成绩 | 未测量 |
+| 历史上下文加计算反馈的迁移效果 | 未测量 |
+| Scheme 程序生成与完整 POO 组合 | 未覆盖 |
+| 生产 Runtime 实时模型教学及业务效果 | 未闭合 |
+| 当前提交跨平台 CI | 提交后独立核对 |
+| MRR Rust Runtime 接入 | 后置 |
+
+完整原始输入、私有评估键和日志同时保存在 MRR 工作区忽略的
+=.data/research-evidence/direct-scheme-understanding-20261003/=。
+仓库内的记录只陈述已取得的证据，新准确率与收益结果保持空缺。

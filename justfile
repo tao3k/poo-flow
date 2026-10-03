@@ -658,3 +658,11 @@ semantic-worker:
 [group('build')]
 build-semantic-native output:
     python3 bindings/runtime-c/tools/build-semantic-v1.py --output "{{ output }}"
+
+[group('test')]
+model-understanding-compute script:
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi {{ gerbil_test_runtime_options }} "{{ script }}"
+
+[group('test')]
+model-understanding-score expected candidate:
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi {{ gerbil_test_runtime_options }} t/model-study/direct-understanding/prediction-score.ss "{{ expected }}" "{{ candidate }}"
