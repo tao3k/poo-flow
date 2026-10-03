@@ -64,6 +64,9 @@ async def predict(request, key, record, *, emit=lambda _: None):
         except asyncio.TimeoutError as error:
             raise ContentTimeout('five seconds without genuine content while connecting') from error
         try:
+            if response.is_error:
+                body = (await response.aread()).decode('utf-8', 'replace')
+                record['providerError'] = body.replace(key, '[REDACTED]')[:4096]
             response.raise_for_status()
             return await consume_lines(response.aiter_lines(), record, started=started, emit=emit)
         finally:
