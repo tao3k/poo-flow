@@ -1,0 +1,7 @@
+{
+  "base_head": "b77b318483afa68be2e17a626260f8ef01f23d01",
+  "branch": "main",
+  "selection_library_sha256": "cc043a3ae6bb0d76a5f651a58d047aab59c3dd1db1a88045d3dee7dc487bd088",
+  "selection_source_sha256": "f1c9c4b7e42067c7e4ff5cd52c71d27afa6337562fa0e3cef349c3560553700f",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)"
+}

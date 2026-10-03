@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a same-domain cause 1 < effect 3 is admitted; via-b cause 4 >= effect 3 is refuted; family complete, exclusive, exhausted, no unknowns, exactly one admitted, so via-a is necessary. Temporal precedence alone does not prove physical causation.\"\n}",
+  "elapsed_seconds": 12.530021416998352,
+  "first_content_seconds": 1.1277661670028465,
+  "max_content_gap_seconds": 1.1277661670028465,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 2783,
+      "totalTokens": 2997
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 2783,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+}

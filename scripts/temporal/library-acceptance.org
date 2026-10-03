@@ -1,0 +1,98 @@
+#+TITLE: Temporal Library Basic acceptance on Python Runtime
+
+* Scope
+This gate qualifies the Library contracts that an application can compose.
+An external application's business dispatch, delivery acknowledgment and domain
+rules are separate application work. They are not prerequisites for this gate.
+
+The supported native profiles are =finite-hypothesis-v2= and
+=finite-behavior-v1=. Python transports inert model literals to the fixed
+Scheme evaluator; the model never supplies executable Python/Scheme, approval
+keys, or a trusted admission flag. Public Scheme construction remains POO-native
+and functional. The Python facade exposes the runtime consumption boundary.
+
+* Required contracts
+| Contract | Acceptance evidence |
+|----------+---------------------|
+| Python Library Basic | Entire =tests/unit/test_*.py= inventory: plans/graphs, Funflow Scheme projection, sync/async execution, streaming, state/checkpoints, durable manifests, authorized evidence, typed runtime-v0 and Bundle v1 interfaces |
+| Public Python facade | Publication, signed request, evaluator, selection stores and budget coordinator are importable from =poo_flow_runtime= |
+| Native semantic admission | Host-approved source digest; fixed native replay; unfinished/unknown results cannot issue a handoff or evaluator signature |
+| Genuine model reasoning | 20 frozen tasks, two independent calls each; finite hypotheses, bounded behavior, literal model generation, time axes, authority rejection, late retraction and POO API |
+| Authority separation | Independent host authorizer/evaluator keys; both forged signatures rejected by actual stores |
+| Atomic publication | Pointer/effect consistency, scope binding, competing writers, nonce identity, rollback, process exit and authenticated recovery |
+| Budget | Required grant, parent/child conservation, concurrent reservations, lease tamper, duration overrun, crash consumption and replay without another debit |
+| Late evidence | Authenticated native root and withdrawal, version two recovery in both adapter directions |
+| Evidence integrity | All planned calls remain in the denominator; wrong task binding and false green receipts rejected; every required test module present; no skipped tests |
+
+Each admitted real-model case runs a fresh native assessment and signature replay
+through the Python Library, then publishes through Python and C and recovers
+through the other adapter. Unknown and unfinished cases exercise rejection.
+Model-generated literals are checked against an independently frozen native
+reference. Correct text alone does not establish runtime acceptance.
+
+* Run
+Use the qualified Gerbil/parser dependency environment with native artifacts for
+the public Funflow profiles and durable manifest modules. Build the actual C
+artifacts with =bazelisk build //bindings/runtime-c:runtime_c_shared
+//bindings/runtime-c/bundle-v1:bundle_v1_shared= and set
+=POO_FLOW_RUNTIME_V0_LIBRARY= and =POO_FLOW_BUNDLE_V1_LIBRARY= to those output
+files. Missing native prerequisites cannot produce an accepted receipt. The Justfile entrypoint
+uses the package's locked development environment, including pytest and the
+pinned httpx real-model transport dependency.
+
+#+begin_src sh
+just check-temporal-library /private/tmp/temporal-library-fresh \
+  /Users/guangtao/ghq/github.com/tao3k/agent-semantic-protocols/.env
+#+end_src
+
+The output directory must be fresh. =check_library.py= freezes owned sources,
+runs every Python unit module with native evaluator tests enabled, invokes DeepSeek
+directly using the configured endpoint/model/effort, audits the complete model
+receipt, and rejects source or native artifact drift. The native manifest also binds the
+compiled CFFI extension and configured runtime-v0/Bundle shared libraries. A reference receipt may be supplied using
+=--reference-receipt= to reuse independently frozen native reference inputs;
+each successful model-to-runtime path still performs fresh native evaluation.
+
+Real-model first content and every subsequent content gap must be within five
+seconds. Connection metadata, pings and usage do not count as model progress.
+Library loading emits actual module load/import progress on stderr while
+projection data stays on stdout; the loader is bounded to 90 seconds. Native
+evaluation has its own five-second output watchdog and total bound.
+Transport negative controls intentionally wait for that full rejection deadline;
+pytest is not wrapped in another identical timer that would kill the assertion.
+The test stage retains a 900-second total bound. No timer heartbeats are emitted.
+
+=receipt.json= accepts only when every required test passes without skips,
+all real-model calls pass the frozen rubric and runtime paths, and sources are
+unchanged. Failed stage logs and individual model failures remain in the output.
+Credentials and model thinking text are not retained.
+
+* Evidence boundary
+This is finite local Library acceptance. It does not establish arbitrary model
+correctness, physical causal truth, an unbounded theorem engine, rollback-proof
+databases, remote CI or deployment. The optional ASCENT provider qualification
+is retained separately; this Basic gate does not imply a new Python provider
+execution API or a real-model ASCENT proof study. Broader provider profiles are
+reported as extensions rather than silently included in this acceptance.
+
+* Qualified local receipt
+[[file:../../t/qualification/temporal-library-basic/receipts/2026-10-03-python-deepseek-v1/README.org][2026-10-03 Python Library and genuine DeepSeek receipt]] records 348 passing
+unit cases across 65 modules, zero skips, 40/40 genuine model calls and 52
+Python/C publication/recovery paths. The dedicated pinned Java/TLC integration passed all four cases. The separately installed wheel passed
+25 publication/budget cases and negotiated its bundled runtime-v0 ABI.
+
+The model first-content and maximum content gap were both 2.279 seconds.
+Model response latency was median 8.575 seconds and p95 29.100 seconds.
+Complete cold-start acceptance attempts, including native checks and signature
+replay, were median 70.895 seconds and maximum 183.696 seconds. These times
+are retained separately. This native qualification build uses disabled Scheme
+optimization and debug configuration; this receipt establishes functional and
+protocol acceptance. Production startup and throughput require their own
+measured targets and optimized-build qualification.
+
+The dedicated TLC integration gate consumes explicitly configured
+=POO_FLOW_TLC_JAVA=, =POO_FLOW_TLC_JAR= and =POO_FLOW_TLC_RUNTIME_ARTIFACTS=.
+Run =just check-temporal-library-tlc /private/tmp/library-tlc-fresh= after
+setting those owner toolchain paths. This gate verifies the complete private
+snapshot, missing-import rejection, owner pin rejection and a missing-native-
+edge counterexample. TLC may require permission to bind its local Java ports.

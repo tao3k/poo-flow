@@ -181,6 +181,12 @@ behavior or remote CI. No remote push is included.
 
 
 * Design audit and remaining integration scope
+The current acceptance target is the Library on Python Runtime, including
+genuine model use of the finite native evaluator and authenticated publication
+contracts. [[file:../../scripts/temporal/library-acceptance.org][Temporal Library Basic acceptance]] defines its mandatory gates.
+External business integration belongs to the consuming application and is not
+a remaining condition for Basic Library acceptance.
+
 [[file:framework.org][The design closure audit]] reconciles the public interfaces with the six
 qualified finite contracts. Scoped authenticated affine conversion, bounded
 point/interval constraint networks and both hypothesis family modes are

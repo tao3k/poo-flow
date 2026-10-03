@@ -713,6 +713,19 @@ check-temporal-closure pins directory:
 check-temporal-model-study directory env_file:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 -u scripts/temporal/model_study.py --output {{ quote(directory) }} --provider deepseek --env-file {{ quote(env_file) }} --repeats 2
 
+# Temporal Library Basic: mandatory Python contracts and two genuine DeepSeek corpus passes.
+check-temporal-library directory env_file:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q uv run --locked --project packages/python-runtime python -u scripts/temporal/check_library.py --output {{ quote(directory) }} --env-file {{ quote(env_file) }} --repeats 2
+
+# Dedicated Python Library TLC integration; host must configure its pinned toolchain.
+check-temporal-library-tlc directory:
+    test -n "${POO_FLOW_TLC_JAVA:?configure pinned Java}"
+    test -n "${POO_FLOW_TLC_JAR:?configure pinned TLC JAR}"
+    test -n "${POO_FLOW_TLC_RUNTIME_ARTIFACTS:?configure runtime artifacts}"
+    test ! -e {{ quote(directory) }}
+    mkdir -p {{ quote(directory) }}
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" uv run --locked --project packages/python-runtime python -m pytest -o addopts= -vv -s --junitxml={{ quote(directory) }}/tests.xml packages/python-runtime/tests/integration/test_tla_bundle.py
+
 # Optional committed ASCENT provider; requires the qualified POO dependency build.
 check-temporal-ascent-provider repository directory:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}/.gerbil/lib:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 scripts/temporal/run_with_progress.py --timeout 480 -- python3 -u scripts/temporal/check_ascent.py {{ quote(repository) }} {{ quote(directory) }} --qualify

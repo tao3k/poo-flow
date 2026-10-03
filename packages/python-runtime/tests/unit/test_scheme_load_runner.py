@@ -5,11 +5,14 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from pathlib import Path
+import pytest
 
 from poo_flow_runtime._scheme_load_runner import (
     _direct_scheme_loader_env,
     _scheme_loader_commands,
+    _run_scheme_loader,
 )
 
 
@@ -47,6 +50,7 @@ def test_declared_bazel_environment_selects_direct_gxi_first(
     (gerbil_path / "lib" / "poo-flow").mkdir(parents=True)
     monkeypatch.setenv("GERBIL_PATH", str(gerbil_path))
     monkeypatch.setenv("GERBIL_LOADPATH", str(gerbil_path / "lib"))
+    monkeypatch.delenv("POO_FLOW_SCHEME_LOAD_PROGRESS", raising=False)
     runner = tmp_path / "runner.ss"
 
     commands = _scheme_loader_commands(tmp_path / "source-workspace", runner)
@@ -56,3 +60,30 @@ def test_declared_bazel_environment_selects_direct_gxi_first(
     assert commands[0].env["GERBIL_PATH"] == str(gerbil_path)
     assert commands[1].argv == ("gxpkg", "env", "gxi", str(runner))
     assert commands[1].env is None
+
+
+def test_progress_keeps_projection_stdout_separate_and_bounds_execution(tmp_path, monkeypatch):
+    monkeypatch.setenv('POO_FLOW_SCHEME_LOAD_PROGRESS', '1')
+    calls = []
+    def execute(argv, **options):
+        calls.append((argv, options))
+        return subprocess.CompletedProcess(argv, 0, stdout='((schema "projection"))', stderr=None)
+    monkeypatch.setattr(subprocess, 'run', execute)
+    result = _run_scheme_loader(tmp_path / 'module.ss', tmp_path, tmp_path / 'runner.ss')
+    argv, options = calls[0]
+    assert '-e' in argv and 'runtime-preload-module!' in argv[argv.index('-e') + 1]
+    assert '(current-error-port)' in argv[argv.index('-e') + 1]
+    assert options['stdout'] == subprocess.PIPE and options['stderr'] is None
+    assert options['timeout'] == 90
+    assert result.stdout == '((schema "projection"))'
+
+
+def test_expired_loader_does_not_retry_package_fallback(tmp_path, monkeypatch):
+    calls = []
+    def execute(argv, **options):
+        calls.append(argv)
+        raise subprocess.TimeoutExpired(argv, options['timeout'])
+    monkeypatch.setattr(subprocess, 'run', execute)
+    with pytest.raises(subprocess.TimeoutExpired):
+        _run_scheme_loader(tmp_path / 'module.ss', tmp_path, tmp_path / 'runner.ss')
+    assert len(calls) == 1

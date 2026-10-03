@@ -1,0 +1,8 @@
+{
+  "GERBIL_PATH": "/private/tmp/poo-library-flow-native-v2/native",
+  "GERBIL_LOADPATH": "/private/tmp/poo-library-flow-native-v2/native/lib:/private/tmp/poo-temporal-ascent-final-v1/native/lib:/private/tmp/poo-temporal-closure/lib:/private/tmp/parser-pr13-clean-gerbil/lib:/Users/guangtao/ghq/github.com/tao3k/poo-flow/.gerbil/lib:/Users/guangtao/ghq/github.com/tao3k:/Users/guangtao/ghq/github.com/tao3k/poo-flow/core:/Users/guangtao/ghq/github.com/tao3k/poo-flow",
+  "GAMBOPT": "max-heap=1G,debug=q",
+  "POO_FLOW_SCHEME_LOAD_PROGRESS": "1",
+  "POO_FLOW_RUNTIME_V0_LIBRARY": "/Users/guangtao/Library/Caches/bazel/_bazel_guangtao/cc7a81a2c448d32c96701082e6396c24/execroot/_main/bazel-out/darwin_arm64-fastbuild/bin/bindings/runtime-c/libruntime_c_shared.dylib",
+  "POO_FLOW_BUNDLE_V1_LIBRARY": "/Users/guangtao/Library/Caches/bazel/_bazel_guangtao/cc7a81a2c448d32c96701082e6396c24/execroot/_main/bazel-out/darwin_arm64-fastbuild/bin/bindings/runtime-c/bundle-v1/libbundle_v1_shared.dylib"
+}

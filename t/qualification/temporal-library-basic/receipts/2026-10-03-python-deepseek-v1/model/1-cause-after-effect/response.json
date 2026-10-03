@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is visited: same-domain cause care/cause at 5 is not strictly before effect care/effect at 3, so the cause-at/after-effect rule refutes it. Finite semantics only; no fairness, infinite progress, or model authority is established.\"}",
+  "elapsed_seconds": 4.263606292006443,
+  "first_content_seconds": 0.5260397500096587,
+  "max_content_gap_seconds": 0.5260397500096587,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 854,
+      "totalTokens": 1068
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 854,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+}

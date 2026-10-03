@@ -1,0 +1,66 @@
+#+TITLE: Python Library Basic qualification — 2026-10-03
+
+* Result
+=receipt.json= is accepted. The current finite Library profile is qualified on
+Python Runtime with actual DeepSeek calls, independently of external business
+delivery. The source tree was based on =b77b3184= plus the owned changes bound
+by =sources.json=. The committed source hashes identify those exact changes.
+
+| Gate | Result |
+|------+--------|
+| Complete Python unit inventory | 348 passed across 65 modules; 0 failures/errors/skips |
+| Python TLC integration | 4 passed; 0 skipped; complete snapshot, missing import, owner pin, native missing-edge controls |
+| Installed wheel | 25 publication/budget cases passed; runtime-v0 ABI 0.1 negotiated from bundled library |
+| Actual DeepSeek | deepseek-v4-flash, max effort; 40/40; first corpus pass 20/20 |
+| Real publication/recovery | 52 paths, Python→C and C→Python; forged signatures denied, budgets consumed once, replay authenticated |
+| Model progress | first content and maximum content gap 2.279s; unchanged 5s threshold |
+| Drift checks | owned source and configured native artifact manifests unchanged |
+
+* Fixes and prerequisites
+Temporal publication now uses a typed out-of-line CFFI binding. The former
+ctypes consumer violated the existing production boundary. Scheme projection
+loading gained actual module progress on stderr and bounded execution, with
+controlled child exit in progress mode. Durable fixtures preserve the configured
+Gerbil path and use the actual compiled Scheme modules.
+
+The focused runtime-v0 and Bundle v1 libraries were built using their real
+Bazel targets. Their previously skipped cases were executed. The native loader
+prefix contains 97 owned Scheme sources; =scheme-loader-build.json= records
+source and artifact hashes, separately rechecked after qualification.
+
+* Evidence
+- =tests.xml= is the complete unit receipt. =tests.log.gz= preserves raw output.
+- =model/= contains prompts, first responses, per-call results, frozen reference
+  and driver snapshots, and compressed redacted transport events. No repair
+  feedback was supplied; every planned call remains in the denominator.
+- =native-artifacts.json.gz= binds 9245 configured artifacts, including the CFFI
+  extension and actual runtime-v0/Bundle shared libraries.
+- =build-metadata.json= records the C publication binary/source and compiler.
+- =tlc/= records the pinned Java/TLC integration and source/artifact hashes.
+- =installed-wheel/= records wheel/installed binary hashes and JUnit results.
+- =archive-index.json= hashes archived evidence files. Private signing keys,
+  API credentials and model thinking text are excluded.
+
+The failed diagnostic unit trial is retained under =diagnostics/= (286 passed,
+5 failed, 8 skipped). It precedes the CFFI/fixture fixes and native prerequisite
+build. Its result was not counted as qualification. =tlc-sandbox-denied.xml= retains
+the initial TLC trial: two model checks could not bind Java local RMI ports
+under the default sandbox. The permission-enabled run passed all four cases. The initial identical outer
+five-second pytest timer interrupted an intentional transport rejection test;
+actual model/native watchdogs and the bounded test stage replaced that race.
+
+* Timing and scope
+Model response median/p95: 8.575s / 29.100s. Complete cold-start attempts:
+median 70.895s, maximum 183.696s. Scheme qualification compilation uses
+optimization disabled and debug settings. Functional/protocol acceptance and
+production performance qualification are separate evidence.
+
+This receipt covers finite-hypothesis-v2, finite-behavior-v1 and the Library
+contracts listed in the acceptance matrix. Optional ASCENT real-model study,
+additional provider profiles, arbitrary reasoning, physical causal truth,
+remote CI and external business effects require their own evidence.
+
+* Reproduce
+Use the qualified Gerbil/parser environment and the actual Bazel runtime-v0
+and Bundle artifacts in =native-environment.json=. Follow
+[[file:../../../../../scripts/temporal/library-acceptance.org][the maintained Library acceptance instructions]].

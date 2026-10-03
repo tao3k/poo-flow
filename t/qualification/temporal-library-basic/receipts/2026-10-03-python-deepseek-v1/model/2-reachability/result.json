@@ -1,0 +1,60 @@
+{
+  "case": "reachability",
+  "repeat": 2,
+  "capability": "behavior",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Within Horizon 2, a finite schedule can prescribe then administer, reaching administration=given; no-op or other schedules do not, so the reachability property is mixed across schedules and therefore possible. ExpectedOutcomes is ignored.\"}",
+    "elapsed_seconds": 7.971132708000368,
+    "first_content_seconds": 1.0065738749981392,
+    "max_content_gap_seconds": 1.0065738749981392,
+    "usage": {
+      "last": {
+        "inputTokens": 251,
+        "cachedInputTokens": 640,
+        "outputTokens": 1382,
+        "totalTokens": 1633
+      },
+      "provider": {
+        "input_tokens": 251,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1382,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:71845243689f2924465dacdb22886174dcce2ba5060bf99f848abc68481201aa"
+  },
+  "errors": [],
+  "publication_native": {
+    "proof": "sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96",
+    "model": "sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c",
+    "exhausted": true,
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,14:reachability-2,71:sha256:4d2c8889b2ff322e143c311acef79dad3b1157cb2b1cce59633043f67640ef96,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:cf437d026a73b8724b75e094ab6a582862849077625c5505eaa8f1eca921f524,71:sha256:2ed78dcb6b92f05790584cb8c2a932fd568406d16145e6a5abba1d740f80823c,20:reachability-2-nonce,6:assert,1:0,10:1791038967,",
+    "classification": "possible",
+    "admitted": true
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 98.30903470799967
+}

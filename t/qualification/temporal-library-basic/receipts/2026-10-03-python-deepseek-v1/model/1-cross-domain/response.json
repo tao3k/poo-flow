@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Via-a links remote care/cause to local care/effect; different clock domains make it unknown. The family also contains an unknown member, so necessity cannot hold. Precedence does not prove causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+  "elapsed_seconds": 6.095300250002765,
+  "first_content_seconds": 0.7253547500004061,
+  "max_content_gap_seconds": 0.7253547500004061,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 1225,
+      "totalTokens": 1439
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1225,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+}

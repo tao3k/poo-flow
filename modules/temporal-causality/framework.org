@@ -657,7 +657,12 @@ its semantic or authority scope. [[file:closure.org][The ledger]] retains the ex
 | Trajectory and Impact | =trajectory/=, =impact/=; series/contrast/scope/refresh tests | supplied-series arithmetic and declared-assumption audit implemented; effect identification is separate |
 | Evidence use and candidate exchange | =evidence/=, =candidates/= and GQL scalar checker | structural exchange and optional ASCENT observed-precedence adapter implemented; live GQL transport remains open |
 
-** Actual integration work still open
+** Library Basic acceptance and additional provider profiles
+
+[[file:../../scripts/temporal/library-acceptance.org][The Python Runtime Library gate]] qualifies the existing finite evaluator,
+authority, budget, publication and recovery contracts with genuine model calls.
+External business delivery is owned by applications and is not a condition for
+this Basic acceptance profile.
 
 1. *Additional live candidate-provider profiles.* The optional ASCENT
    =ascent-observed-precedence-v1= adapter runs the pinned native solver,
@@ -669,7 +674,9 @@ its semantic or authority scope. [[file:closure.org][The ledger]] retains the ex
    scalar consistency checker; live GQL transport, combined-provider execution,
    Why-Not and broader proof profiles remain open. Required providers are never
    omitted to make an exchange reviewable.
-2. *External business effect execution, if required by the application.* The
+** Application effect-executor extension
+
+   *External business effect execution, if required by the application.* The
    current =temporal_effect_v1= row is an authenticated durable publication
    receipt committed with the pointer. It is not an external service/device
    acknowledgment. A dispatcher must separately define effect identity,
@@ -680,8 +687,8 @@ its semantic or authority scope. [[file:closure.org][The ledger]] retains the ex
 
 These integrations belong behind named POO-native/functional handoffs. They
 must not replace the public core with an alist, record or patch-language DSL.
-The second item extends the current SQLite publication profile; it is not a
-failure of its existing atomic commit contract.
+The application executor extends the current SQLite publication profile. Basic
+Library acceptance covers the Library's existing atomic commit contract.
 
 ** Explicit premises and extensions
 

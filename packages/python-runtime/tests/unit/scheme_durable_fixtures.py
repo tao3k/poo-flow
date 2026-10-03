@@ -25,14 +25,24 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
         pytest.skip("package-local Gerbil build output is not available")
 
     env = os.environ.copy()
-    env["GERBIL_LOADPATH"] = ".gerbil/lib"
+    env.setdefault("GERBIL_LOADPATH", str(repo_root / ".gerbil" / "lib"))
+    from poo_flow_runtime._scheme_load_runner import scheme_string
+
+    preload = repo_root / "packages/python-runtime/src/poo_flow_runtime/projections/runtime-preload.ss"
+    modules = ("policy", "policy-manifest", "store", "store-backend", "runtime-manifest")
+    progress = "(load " + scheme_string(str(preload)) + ") (parameterize ((current-output-port (current-error-port))) " + " ".join(
+        '(runtime-preload-module! "poo-flow/modules/memory-core/durable/' + module + '")' for module in modules
+    ) + ' (runtime-preload-module! "poo-flow/scripts/temporal/exit-child-process"))'
     result = subprocess.run(
         [
             "gxi",
             "-e",
+            progress,
+            "-e",
             (
                 "(begin "
-                "(import :poo-flow/modules/memory-core/durable/policy "
+                "(import :poo-flow/scripts/temporal/exit-child-process "
+                ":poo-flow/modules/memory-core/durable/policy "
                 ":poo-flow/modules/memory-core/durable/policy-manifest "
                 ":poo-flow/modules/memory-core/durable/store "
                 ":poo-flow/modules/memory-core/durable/store-backend "
@@ -48,13 +58,16 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
                 "(poo-flow-durable-runtime-manifest-string "
                 "policy "
                 "poo-flow-durable-runtime-store-contract/default "
-                "poo-flow-durable-runtime-store-backend/default)))"
+                "poo-flow-durable-runtime-store-backend/default)) "
+                "(temporal-child-process-exit! 0))"
             ),
         ],
         cwd=repo_root,
         env=env,
         check=True,
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=None if env.get("POO_FLOW_SCHEME_LOAD_PROGRESS") == "1" else subprocess.PIPE,
+        timeout=90,
     )
     policy_manifest, runtime_envelope = result.stdout.split(
         _SCHEME_PAYLOAD_SEPARATOR,

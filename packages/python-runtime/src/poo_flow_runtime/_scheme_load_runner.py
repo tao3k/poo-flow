@@ -107,9 +107,10 @@ def _run_scheme_loader(
                 cwd=workdir,
                 env=command.env,
                 check=True,
+                timeout=90,
                 text=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=None if _scheme_loader_progress_enabled() else subprocess.PIPE,
             )
         except subprocess.CalledProcessError as exc:
             detail = (exc.stderr or exc.stdout or "").strip()
@@ -124,14 +125,32 @@ def _scheme_loader_commands(
     runner_path: Path,
 ) -> tuple[_SchemeLoaderCommand, ...]:
     direct_env = _direct_scheme_loader_env(workdir)
+    arguments = (str(runner_path),)
+    if _scheme_loader_progress_enabled():
+        preload_path = Path(__file__).with_name('projections') / 'runtime-preload.ss'
+        modules = ('core/profile-composition/selection-syntax',
+                   'poo-flow/src/scenario/composition-syntax',
+                   'core/profile-composition/profile-bundle',
+                   'poo-flow/src/scenario/profile-root',
+                   'poo-flow/modules/funflow/profile-library',
+                   'poo-flow/modules/funflow/runtime-load-projection',
+                   'poo-flow/scripts/temporal/exit-child-process')
+        preload = '(load ' + scheme_string(str(preload_path)) + ') (parameterize ((current-output-port (current-error-port))) ' + ' '.join(
+            '(runtime-preload-module! ' + scheme_string(module) + ')' for module in modules) + ')'
+        evaluate = '(begin (import :poo-flow/scripts/temporal/exit-child-process) (load ' + scheme_string(str(runner_path)) + ') (temporal-child-process-exit! 0))'
+        arguments = ('-e', preload, '-e', evaluate)
     fallback = _SchemeLoaderCommand(
-        ("gxpkg", "env", "gxi", str(runner_path)),
+        ("gxpkg", "env", "gxi", *arguments),
         None,
     )
     if direct_env is None:
         return (fallback,)
-    direct = _SchemeLoaderCommand(("gxi", str(runner_path)), direct_env)
+    direct = _SchemeLoaderCommand(("gxi", *arguments), direct_env)
     return (direct, fallback)
+
+
+def _scheme_loader_progress_enabled() -> bool:
+    return os.environ.get('POO_FLOW_SCHEME_LOAD_PROGRESS', '') == '1'
 
 
 def _direct_scheme_loader_env(workdir: Path) -> dict[str, str] | None:

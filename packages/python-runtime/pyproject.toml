@@ -23,6 +23,7 @@ poo-flow-jsonschema-contract = "poo_flow_runtime.json_schema_contract:main"
 [dependency-groups]
 dev = [
   "pytest>=8.0",
+  "httpx==0.28.1",
   "python-lang-project-harness[pytest] ; python_full_version >= '3.12'",
 ]
 

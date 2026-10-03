@@ -211,11 +211,35 @@ ffibuilder.cdef(
     """
 )
 
+ffibuilder.cdef("""
+    typedef int (*poo_flow_temporal_verify_v1)(void *, uint32_t, const uint8_t *, size_t, const uint8_t *);
+    typedef int (*poo_flow_temporal_sign_v1)(void *, const uint8_t *, size_t, uint8_t *);
+    typedef struct poo_flow_temporal_store_v1 poo_flow_temporal_store_v1;
+    typedef struct {
+      const char *subject, *scope, *predecessor, *revision, *proof, *policy;
+      const char *generation, *cut, *projection, *journal, *model, *nonce, *operation;
+      uint64_t expected_version, expires_unix;
+      uint8_t authorization_signature[32], evaluation_signature[32];
+    } poo_flow_temporal_publish_v1;
+    typedef struct { uint32_t status; uint64_t version; uint8_t effect_signature[32]; } poo_flow_temporal_effect_v1;
+    typedef struct {
+      void *library;
+      int (*open)(const char *, poo_flow_temporal_verify_v1, poo_flow_temporal_sign_v1, void *, poo_flow_temporal_store_v1 **);
+      int (*require_budget)(poo_flow_temporal_store_v1 *, const char *);
+      void (*close)(poo_flow_temporal_store_v1 *);
+      int (*payload)(const poo_flow_temporal_publish_v1 *, uint8_t *, size_t, size_t *);
+      uint32_t (*publish)(poo_flow_temporal_store_v1 *, const poo_flow_temporal_publish_v1 *, poo_flow_temporal_effect_v1 *);
+      uint32_t (*observe)(poo_flow_temporal_store_v1 *, const char *, const char *, uint8_t *, size_t, size_t *, poo_flow_temporal_effect_v1 *);
+    } poo_flow_python_temporal_api_v1;
+    int poo_flow_python_temporal_bind_v1(const char *, poo_flow_python_temporal_api_v1 *);
+    void poo_flow_python_temporal_unbind_v1(poo_flow_python_temporal_api_v1 *);
+""")
+
 native_dir = Path(__file__).resolve().parent
 runtime_c = native_dir.parents[4] / "bindings" / "runtime-c"
 ffibuilder.set_source(
     "poo_flow_runtime._native._runtime_v0_cffi",
-    '#include "runtime_v0_shim.c"',
+    '#include "runtime_v0_shim.c"\n#include "temporal_v1_shim.c"',
     include_dirs=[str(native_dir), str(runtime_c / "include")],
 )
 

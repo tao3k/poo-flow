@@ -1,0 +1,60 @@
+{
+  "case": "cause-after-effect",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is visited: same-domain cause care/cause at 5 is not strictly before effect care/effect at 3, so the cause-at/after-effect rule refutes it. Finite semantics only; no fairness, infinite progress, or model authority is established.\"}",
+    "elapsed_seconds": 4.263606292006443,
+    "first_content_seconds": 0.5260397500096587,
+    "max_content_gap_seconds": 0.5260397500096587,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 854,
+        "totalTokens": 1068
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 854,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+  },
+  "errors": [],
+  "publication_native": {
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,20:cause-after-effect-1,71:sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:7ca96892671ebf492a2d4b97f44f51e8bd7f5d112623e11df092fe813352594b,71:sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc,26:cause-after-effect-1-nonce,6:assert,1:0,10:1791037277,",
+    "exhausted": true,
+    "model": "sha256:fd2c62f2c34d0a5bc7cc217ed8fdff51b5bca540a075048d58acd6902898eccc",
+    "proof": "sha256:987844b92333e355144b1bb1683b08dcba20ff1c714aa10f94665f75cb06bef1",
+    "admitted": true,
+    "classification": "refuted"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 29.685432417012635
+}

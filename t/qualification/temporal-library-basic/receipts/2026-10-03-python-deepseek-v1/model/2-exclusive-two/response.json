@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because local cause time 1 is before effect time 3. via-b is also admitted (2 < 3), so the family has more than one admitted member; via-a is therefore possible, not necessary.\"}",
+  "elapsed_seconds": 5.011165499992785,
+  "first_content_seconds": 1.7552613749867305,
+  "max_content_gap_seconds": 1.7552613749867305,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 727,
+      "totalTokens": 941
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 727,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+}

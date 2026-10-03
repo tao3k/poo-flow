@@ -6,6 +6,12 @@
 
 This package is the Python runtime consumer for POO Flow runtime bindings.
 
+Temporal Library Basic acceptance is documented in
+[[file:../../scripts/temporal/library-acceptance.org][the Python Runtime and genuine DeepSeek acceptance matrix]]. It covers native
+finite evaluation, separated host authority, budgeted atomic publication,
+recovery and late retraction. External business delivery is owned by the
+application consuming this Library.
+
 It does not own the ABI. The C surface lives under =bindings/runtime-c=.
 Production code compiles and loads that binding through out-of-line CFFI API
 mode so the package validates the same runtime handoff contract that Rust,

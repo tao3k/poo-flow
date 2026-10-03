@@ -1,0 +1,19 @@
+{
+  "cases": "sha256:a81461a22deefa6dfeb7d3a75acf56d1bdde3e5aa226b898f9d4be239a1267d6",
+  "references": "sha256:62d618b110353e944c12eacf32f85e1945ef7bb3572e9a3ed22cd381954fb3c7",
+  "schema": "sha256:546f7e1218ea9e455fe3f6ed3189093a3c77b2c632d305f545c673e22ee28a65",
+  "late_fixture": "sha256:d736a3a3adff02f8bf49abbc11d10bf975c674410bfb5e09750183d5280de101",
+  "driver": "sha256:18baa4dc2771fb8afbafea5c5122a9a0aa3dc738269137cc93168d9cd4a77d20",
+  "transport": "sha256:1522b6832b7b5a006b4e7e5be65f1242c615abfba3599857cd2e7321970fb02b",
+  "common_transport": "sha256:9a8bc889c4fc30f092b7f01b5a116870445d9cc954c00e13dce9925065dc0465",
+  "provider": "deepseek",
+  "reference_receipt": "t/qualification/temporal-model-study/receipts/2026-10-03-deepseek-v6",
+  "first_token_timeout": 5,
+  "max_tokens": 32768,
+  "total_seconds": 180,
+  "repeats": 2,
+  "pass_threshold": 1.0,
+  "repair": false,
+  "model": "deepseek-v4-flash",
+  "effort": "max"
+}

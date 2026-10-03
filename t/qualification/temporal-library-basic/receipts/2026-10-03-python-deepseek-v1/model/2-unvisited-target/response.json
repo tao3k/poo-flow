@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"unknown\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Sorted hypotheses are via-a then via-b. With exploration limit 1, only via-a is visited; via-b is unvisited, so classification is unknown. Temporal precedence alone does not prove causation, the model lacks publication authority, and no fairness or infinite progress is established.\"\n}",
+  "elapsed_seconds": 29.100218375009717,
+  "first_content_seconds": 2.277961708008661,
+  "max_content_gap_seconds": 2.277961708008661,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 5834,
+      "totalTokens": 6048
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 5834,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:941585d502794b6ad057789237f93b8e7fa5647c50de03ab103db5cafe667c14"
+}
