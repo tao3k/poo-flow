@@ -32,14 +32,13 @@ immutable plan digest. A bare low-level executor uses reference mode; configured
 native execution requires both the Scheme binding and a real control session.
 
 =SemanticRuntime.call("temporal.solve", task)= evaluates the existing finite
-ASCENT temporal semantics. =validate_model_answer(task, output)= parses inert
-JSON and recomputes the Scheme answer, returning =consistent= or =contradicted=.
-=render_temporal_answer(task, renderer)= and its async counterpart run model
-IO in Python and return only a consistent candidate; contradicted answers raise
-a typed rejection after recomputing against the current task.
-This is a rejection API, not a real-time model teaching implementation. The
-historical prompted answer-supply experiment is withdrawn as design acceptance;
-no-Prompt model integration and real-time teaching remain open.
+ASCENT temporal semantics. =observe_model_answer(task, output)= parses inert
+JSON and recomputes Scheme evidence, returning =consistent= or =contradicted=.
+=predict_temporal_answer(task, predictor)= and its async counterpart pass only
+the task to model IO and return its candidate with a fresh Scheme observation.
+A contradiction is reported as evidence, without retry or effect authorization.
+The historical prompted answer-supply experiment is withdrawn as design
+acceptance; no-Prompt model integration and real-time teaching remain open.
 Caller-declared source labels are not authenticated. Admission and answer
 consistency do not grant effect authorization.
 
