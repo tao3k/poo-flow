@@ -119,7 +119,7 @@
   "2026-10-04-json-source-pilot/public-input-evidence.json": "sha256:ae468eba95d66ab1369390ad9b555956d84cba9c875da8e1a3deca415b742b53",
   "2026-10-04-json-source-pilot/report.json": "sha256:d53ac6ab07afcbdde8834b20de6fc546596fe86901defa23626ca5971b3c8724",
   "2026-10-04-json-source-pilot/requests.json": "sha256:c37273ff1eff41508061c2d6a6c95c84ddfa698a95cc0e6b382774aac116f4fd",
-  "README.org": "sha256:0eea76704fa2bd305367e157d9068c0f77c00dd29e9a3e9408b48615aa77487b",
+  "README.org": "sha256:1581e30a934a53b0ab379812c31377a5c6846363605707224a6e9d3a832a1f53",
   "model-failures.json": "sha256:03e23efdc0d5324c2ac08d59a355e85453e266746dfab378c49dacaf2bbe7348",
   "summary.json": "sha256:f2d3cf9216e00c565125f0576d5de5a1b0ffb47a79f5c197b1c27add93aa0950"
 }

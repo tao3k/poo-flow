@@ -49,3 +49,13 @@ path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtim
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = [
+  "t/qualification/semantic-abi/**/*.xml",
+  "t/qualification/semantic-abi/**/*.log.gz",
+  "t/qualification/temporal-library-basic/integration/tests.xml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
