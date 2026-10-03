@@ -178,3 +178,24 @@ all 40 connection failures. The maintained live entry point retains exact source
 snapshots automatically. This closes this finite model acceptance gate locally;
 it does not establish unrestricted modeling, general theorem transport, deployed
 behavior or remote CI. No remote push is included.
+
+
+* Design audit and remaining integration scope
+[[file:framework.org][The design closure audit]] reconciles the public interfaces with the six
+qualified finite contracts. Scoped authenticated affine conversion, bounded
+point/interval constraint networks and both hypothesis family modes are
+implemented; earlier open-status prose for these features was stale.
+
+The closed runtime effect is an atomic SQLite pointer plus signed durable
+publication receipt. Live provider-proof-to-Temporal admission remains an
+integration gap; external business delivery/acknowledgment requires an added
+effect-executor contract if selected by an application. Complete source truth,
+hidden dependency inventories, whole-database rollback resistance, cross-host
+consensus and unrestricted theorem/behavior semantics are separate premises or
+extension profiles. The 40/40 model receipt does not close those contracts.
+
+The design audit refreshed the focused source-authority, finite time-network and
+hypothesis-model gate: 20 cases across three modules passed with =MODULE-OK=,
+=HARNESS-OK=, final =OK= and process exit 0, under the five-second progress
+watchdog and 90-second total bound. No Scheme/runtime implementation changed
+in this audit; these checks resolve the stale design-status claims.

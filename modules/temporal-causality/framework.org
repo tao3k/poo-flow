@@ -52,7 +52,7 @@ an identity suitable for immutable evidence and replay.
 
 | Type family | Mathematical role | Admission rule | Current owner/status |
 |-------------+-------------------+----------------+----------------------|
-| Clock domain | Coordinate space with role and provenance | Roles are open symbols; compare inside a domain, while cross-domain conversion requires explicit evidence | =types.ss= has clock-domain POO value; conversion evidence open |
+| Clock domain | Coordinate space with role and provenance | Roles are open symbols; compare inside a domain, while cross-domain conversion requires explicit evidence | =time/authority-{types,objects,funs}.ss= implements scoped source-authenticated positive affine conversion; calibration truth remains source-owned |
 | Instant | Clock-indexed coordinate with observation modality | Modalities are open symbols; only =observed= is currently admissible as known, with no ambient clock reads | =time/{types,objects,funs}.ss= executable |
 | Interval | Ordered endpoints with explicit closure | Same-domain endpoints; empty interval is representable | =time/{types,objects,funs}.ss= executable |
 | Temporal relation | Partial comparison, not a Boolean total order | Instants use five-valued comparison; proper observed interval extents use the thirteen Allen endpoint relations | =time/funs.ss= executable; interval closure and uncertainty remain separate |
@@ -87,8 +87,13 @@ The relation concerns interval *extents*: endpoint openness still governs
 membership, and no relation is inferred for a point or empty extent.  Those
 return =degenerate=; unobserved endpoints return =unknown= and distinct clock
 domains return =incomparable=.  The focused test enumerates all thirteen
-relations and these three fail-closed states.  Constraint propagation over
-networks of interval relations remains unimplemented.
+relations and these three fail-closed states. =time/network-funs.ss= implements
+exact constraint checking over declared finite point/interval alternatives,
+with independent world/node limits, witnesses, unknown counts and frontiers.
+A witness establishes only =consistent-with-inventory=; it does not establish
+exhaustion or source completeness. Inconsistency requires exhaustive exploration
+without unknown assignments. Unbounded symbolic Allen propagation is not part
+of this admitted finite profile.
 
 ** Bounded time observation
 
@@ -107,9 +112,11 @@ domain, the pure comparison is =before= iff =u < b=, =after= iff =l > b=,
 =after= requires =l_1 > u_2=; overlapping intervals remain =unknown= unless
 both are the same point.  This rule never selects a favorable endpoint to
 assert a policy decision.  The focused =check-temporal-time= gate covers
-crossing, disjoint, invalid bounds and distinct domains.  The layer does not
-yet turn this structural judgment into a policy proof, watermark closure or
-duration budget.
+crossing, disjoint, invalid bounds and distinct domains. The structural
+comparison alone grants no policy authority. The separate
+=authority-funs.ss= verifies source assertions and watermark coverage;
+=budget-funs.ss= and the runtime coordinator handle signed duration accounting.
+These explicit handoffs do not turn a numeric bound into source truth.
 
 For two bounded observations on the same monotonic clock, a numeric duration
 is emitted only when the earliest possible end is at or after the latest
@@ -159,25 +166,33 @@ evidence is insufficient.  =Necessary= is available only after exhaustive
 inspection of a caller-declared complete exclusive family, with one admitted
 candidate and no unknowns.  This is a restricted uniqueness judgment, not an
 actual-cause theorem.  The model does not invent mechanisms without a
-hypothesis vocabulary.  The TLA+ hypothesis exploration currently checks the
-exclusive mode; an overlapping behavior-space projection remains open.
+hypothesis vocabulary. The native/TLA literal projection and finite
+correspondence check both
+exclusive and overlapping family modes. Guarded mechanisms and intervention
+schedules belong to the separate =finite-behavior-v1= profile; their bounded
+worlds are not unrestricted counterfactual or actual-cause semantics.
 
 * Composition and ownership
 
 #+begin_src text
-Domain Lambda ──> POO observations / hypotheses / obligations
-                       │
-                       v
-   time/  ──> temporal-causality model / event graph / query
-                       │                    │
-                       v                    v
-               TLA+ source projection    GQL / ASCENT candidate inputs
-                       │
-                       v
-               TLC finite behavioral receipt
-                       │
-                       v
-               optional Lean correspondence
+Domain Lambda / source owner
+        │ POO observations, assumptions, authenticated evidence
+        v
+Time / immutable evidence cuts / typed model and query
+        │                          │
+        │                          └─> owned TLA projection ─> finite TLC checks
+        │                              Lean laws: separate identity/projection premises
+        v
+Native evaluation replay and finite admission
+        │
+        v
+Host policy authorization and signed duration grant
+        │
+        v
+Runtime C / Python: atomic SQLite pointer + publication receipt
+
+GQL / ASCENT ─> candidate exchange ─> separate checking and source admission
+External business delivery ─> requires a separate effect executor contract
 #+end_src
 
 =time/= owns clock-indexed primitives.  The Temporal Module owns model
@@ -563,7 +578,8 @@ Runtime C and Python execute scope/version CAS, authenticate issuer signatures,
 atomically commit pointer/effect and authenticate observations. The trusted host
 must only sign evaluation assertions after native admission. Runtime signatures
 prove issuer assertions; model-relative evaluation and real-world source
-completeness remain separate. See =closure.org= for remaining required gates.
+completeness remain separate. See =closure.org= for exact local qualification
+and the design closure audit below for open integration and extension contracts.
 
 
 * Model proposal and host authority contract (2026-10-03)
@@ -620,3 +636,63 @@ call to pass the same rubric and its applicable publication path. Cross-host
 coordination, unbounded fairness, arbitrary-source theorem transport and
 real-world source completeness require separate contracts and evidence. The
 current exact outcome is recorded in [[file:closure.org][the closure ledger]].
+
+
+* Design closure audit (2026-10-03)
+
+This audit separates the admitted finite core, structural integrations and future
+extensions. The six qualified finite contracts are not a claim that every
+research question in this document has an implemented end-to-end evaluator.
+The independent 40-call model study checks use of that core; it does not expand
+its semantic or authority scope. [[file:closure.org][The ledger]] retains the execution receipts.
+
+| Contract | Current implementation / executable gate | Closure judgment |
+|----------+------------------------------------------+------------------|
+| Time, uncertainty, source assertion and finite constraints | =time/interface.ss=; source-authority and time-network tests | finite affine/point/interval profile closed; source facts remain owner assertions |
+| Evidence cuts and invalidation | =revisions/= and =truth-maintenance/=; revision, dependency and projection tests | inventory-bound replay/scheduling closed; hidden dependency completeness is not inferred |
+| Classification and finite dynamics | =funs.ss= and =behavior/=; model/behavior tests plus bound TLC correspondence | exclusive/overlapping hypotheses and finite intervention schedules closed; fairness none |
+| Conclusion revision and admission | =conclusions/=; evaluation/publication and late-reconciliation tests | two named native evaluators closed; arbitrary claim/proof labels cannot admit |
+| Authorized durable publication | Python selection store and C selection v1; host/runtime tests and actual signed commit/recovery paths | SQLite pointer and signed publication record closed; external action delivery is separate |
+| Source/formal correspondence | owned TLA bundle/correspondence and Lean identity/projection laws | admitted finite inputs checked; no universal interpreter refinement claim |
+| Trajectory and Impact | =trajectory/=, =impact/=; series/contrast/scope/refresh tests | supplied-series arithmetic and declared-assumption audit implemented; effect identification is separate |
+| Evidence use and candidate exchange | =evidence/=, =candidates/= and GQL scalar checker | structural receipt/reviewability closed; live proof-to-admission adapter remains open |
+
+** Actual integration work still open
+
+1. *Live candidate-provider verification.* The GQL bridge binds declared Query,
+   ElementSpace revision and receipt fields, and its scalar checker validates
+   supplied rows. There is no live ASCENT proof-checker-to-=CandidateCheck=
+   integration in this slice. The next adapter must bind exact source snapshot,
+   query/program identity, completed native result and independent proof-checker
+   basis. =bounded=, =unsupported=, stale, mismatched or incomplete inputs must
+   remain nonreviewable/nonadmitted. A declared revision or row digest cannot
+   attest actual Provider execution or source coverage. Qualification needs an
+   actual provider run and changed-snapshot, incomplete-result and forged-basis
+   rejection, followed by independent Temporal source/cut admission.
+2. *External business effect execution, if required by the application.* The
+   current =temporal_effect_v1= row is an authenticated durable publication
+   receipt committed with the pointer. It is not an external service/device
+   acknowledgment. A dispatcher must separately define effect identity,
+   authorized payload, delivery attempts, acknowledgment, replay/deduplication,
+   failure and compensation. Qualification needs a chosen real target and
+   crash/restart tests around the delivery/acknowledgment boundary. Pointer CAS
+   and database replay do not prove exactly-once external execution.
+
+These integrations belong behind named POO-native/functional handoffs. They
+must not replace the public core with an alist, record or patch-language DSL.
+The second item extends the current SQLite publication profile; it is not a
+failure of its existing atomic commit contract.
+
+** Explicit premises and extensions
+
+Source calibration, physical truth, complete hidden dependencies, key/host
+integrity and malicious whole-database rollback are trust premises requiring
+outside evidence or a separate monotonic authority. They cannot be closed by
+renaming a digest or treating model agreement as verification.
+
+Cross-host budget consensus, unrestricted symbolic interval domains, full
+assumption-set belief revision, arbitrary theorem evaluators, fair infinite
+progress and empirically identified dynamic effects need separate named
+profiles and gates. Their absence is not covered by the finite receipts above.
+Current closure means that all required transitions of the admitted finite
+profile have implementations, rejecting controls and local execution evidence.
