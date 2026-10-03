@@ -46,7 +46,8 @@ async def consume_lines(lines, record, *, emit=lambda _: None, idle_seconds=5.0,
             terminal = True
             break
     record['seconds'] = time.monotonic() - started
-    if not terminal or record.get('responseStatus') != 'completed' or not record['raw'].strip():
+    if (not terminal or record.get('responseStatus') != 'completed'
+            or not record['raw'].strip() or not record.get('responseId')):
         raise RuntimeError('provider omitted a complete content result')
     return record['raw']
 

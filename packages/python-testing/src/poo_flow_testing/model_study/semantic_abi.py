@@ -12,6 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 import shlex
+import statistics
 import subprocess
 import sys
 import time
@@ -219,6 +220,14 @@ def execute(root, library, output, key):
                   'sourceFreezeIntact': all(sha(Path(p).read_bytes()) == h for p, h in plan['sources'].items())}
         if not report['sourceFreezeIntact']:
             raise RuntimeError('source changed during real-model acceptance')
+        for api in ('sync', 'async'):
+            group = [r for r in records if r['api'] == api]
+            report[api] = {'attempts': len(group), 'passed': sum(r['passed'] for r in group),
+                           'medianCallSeconds': statistics.median(r['callSeconds'] for r in group) if group else None}
+        first = [r['contentGapsSeconds'][0] for r in records if r.get('contentGapsSeconds')]
+        gaps = [gap for r in records for gap in r.get('contentGapsSeconds', [])[1:]]
+        report['firstContentMaxSeconds'] = max(first, default=None)
+        report['contentGapMaxSeconds'] = max(gaps, default=None)
         write(output/'report.json', report)
     print(json.dumps(report), flush=True)
     return 0 if report['failed'] == 0 and report['unattempted'] == 0 else 1
