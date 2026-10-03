@@ -383,3 +383,12 @@ runtime path, not the Healthcare GQL caller.
 Typed Python runtime plans are materialized into C ABI graph handles before
 validation or handoff. This keeps Python's execution model aligned with the
 upstream ABI instead of creating a parallel graph protocol.
+
+* Current semantic ABI live receipt
+
+The [[file:../../t/qualification/semantic-abi/README.org][2026-10-04 installed Library qualification]]
+uses the current ABI, with the retired Temporal study code and old copied
+source archive removed. All 34 focused installed Runtime/producer checks pass.
+48 real DeepSeek responses meet the five-second content gate, but only 4/48
+predictions match native semantics. The model correctness gate is FAILED;
+ABI rejection and transport success do not close it.

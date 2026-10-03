@@ -332,3 +332,23 @@ SHA256 =cb1715f709ba428cc7dee3d6850eb8f569a6a673baa797a9d8850895360d2f4f=；实�
 [[file:evidence/direct-scheme-understanding-20261003/current-plan/qualification.json][工程资格与失败日志哈希]]
 及原始完整输入/回放/SDK 夹具输出在 MRR ignored archive 中保存。
 本计划 Provider 调用 0；原有授权不复用。
+
+* 2026-10-04 current ABI live Library acceptance
+
+Retired Temporal adapters, prompted study/replay code and copied legacy source
+archives are removed from the active tree. Current acceptance uses a new wheel
+and =SemanticRuntime= semantic ABI version 1, rebuilt against ASCENT 0176c061.
+See [[file:../../../t/qualification/semantic-abi/README.org][the versioned engineering and live-provider receipts]].
+
+The isolated installed wheel passes 34 focused Runtime/producer checks without
+a Gerbil executable. Two new, frozen, non-thinking DeepSeek pilots complete
+48 responses with no timeout or API retry. The JSON-source pilot is correct
+3/24; direct Scheme call input on new tasks is correct 1/24. The ABI emits
+47 fresh observations and rejects one malformed/non-inert JSON output.
+The longest first content latency is 1.279 seconds, below the unchanged five
+second gate. Model prediction accuracy is 4/48 and the model gate remains FAILED.
+
+These receipts qualify the bounded current Darwin Library integration and
+fail-closed observation path. They do not qualify max-effort reasoning, general
+Scheme comprehension, real-time feedback transfer, external business or the
+whole control ABI. Source labels remain caller declarations, without authority.
