@@ -1,0 +1,45 @@
+{
+  "case": "declared-cause",
+  "repeat": 1,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a's cause care/cause is declared, not observed, so via-a is unknown. via-b is admitted because observed local 2 precedes observed local 3, but the family has an unknown member, and precedence does not prove causation.\"}",
+    "elapsed_seconds": 8.642609000002267,
+    "first_content_seconds": 0.6029656250029802,
+    "max_content_gap_seconds": 0.6029656250029802,
+    "usage": {
+      "last": {
+        "inputTokens": 215,
+        "cachedInputTokens": 640,
+        "outputTokens": 1859,
+        "totalTokens": 2074
+      },
+      "provider": {
+        "input_tokens": 215,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 1859,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+  },
+  "errors": [],
+  "publication_native": {
+    "publication": false,
+    "exhausted": true,
+    "proof": "sha256:3fb6721ab5af518e8b43bc36883aec7c6d74fc6b34256008a9505c589f390285",
+    "model": "sha256:082c786e80ba7ff6c5c77a6e19e6cb5c081ec19250d651287512964f51338bfb",
+    "classification": "unknown",
+    "admitted": false
+  },
+  "admission_rejected": true,
+  "attempt_elapsed_seconds": 30.74111470898788
+}

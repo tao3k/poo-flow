@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: same local clock domain cause time 1 < effect time 3. The family is complete, has no unknowns, and has exactly one admitted member (via-b is refuted because 4 >= 3), but FamilySemantics is overlapping-mechanisms, so it is not exclusive; therefore via-a is possible, not necessary. Precedence does not prove causation, the model cannot authorize, and no fairness or infinite progress is established.\"}",
+  "elapsed_seconds": 10.588075915991794,
+  "first_content_seconds": 1.3289629579958273,
+  "max_content_gap_seconds": 1.3289629579958273,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 1981,
+      "totalTokens": 2195
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1981,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:7b266e4dcf65f12a77406f792401ca7692138c283e376aab80eac4a787d29cb4"
+}

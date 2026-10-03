@@ -12,6 +12,7 @@ import selectors
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import NamedTuple
 
@@ -121,17 +122,26 @@ def _run_scheme_loader(
     )
 
 
+_SCHEME_LOAD_TOTAL_SECONDS = 90.0
+
+
 def _run_with_native_progress(command, workdir):
     """Preserve the data stdout and forward real native diagnostics immediately."""
     process = subprocess.Popen(command.argv, cwd=workdir, env=command.env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    deadline = time.monotonic() + _SCHEME_LOAD_TOTAL_SECONDS
     output = {process.stdout: bytearray(), process.stderr: bytearray()}
     try:
         with selectors.DefaultSelector() as selector:
             for stream in output:
                 selector.register(stream, selectors.EVENT_READ)
             while selector.get_map():
-                events = selector.select(timeout=5)
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise RuntimeError('Scheme projection exceeded its total time limit')
+                events = selector.select(timeout=min(5, remaining))
+                if not events and time.monotonic() >= deadline:
+                    raise RuntimeError('Scheme projection exceeded its total time limit')
                 if not events:
                     raise RuntimeError('Scheme projection emitted no real output for five seconds')
                 for key, _ in events:
@@ -142,7 +152,10 @@ def _run_with_native_progress(command, workdir):
                     output[key.fileobj].extend(chunk)
                     if key.fileobj is process.stderr:
                         sys.stderr.write(chunk.decode('utf-8', 'replace')); sys.stderr.flush()
-        status = process.wait(timeout=5)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError('Scheme projection exceeded its total time limit')
+        status = process.wait(timeout=min(5, remaining))
         stdout = output[process.stdout].decode('utf-8')
         stderr = output[process.stderr].decode('utf-8', 'replace')
         if status:

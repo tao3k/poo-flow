@@ -56,3 +56,35 @@ def test_declared_bazel_environment_selects_direct_gxi_first(
     assert commands[0].env["GERBIL_PATH"] == str(gerbil_path)
     assert commands[1].argv == ("gxpkg", "env", "gxi", "-:max-heap=1G,debug=q", str(runner))
     assert commands[1].env is None
+
+
+def test_native_progress_keeps_datum_and_diagnostics_separate(tmp_path, capsys):
+    import sys
+    from poo_flow_runtime._scheme_load_runner import (
+        _SchemeLoaderCommand, _run_with_native_progress,
+    )
+
+    command = _SchemeLoaderCommand(
+        (sys.executable, '-c',
+         "import sys; print('MODULE-OK test', file=sys.stderr); print('(datum)')"),
+        None,
+    )
+    result = _run_with_native_progress(command, tmp_path)
+    assert result.stdout == '(datum)\n'
+    assert result.stderr == 'MODULE-OK test\n'
+    assert capsys.readouterr().err == result.stderr
+
+
+def test_total_deadline_stops_child_even_with_continuous_output(tmp_path, monkeypatch):
+    import sys
+    import pytest
+    import poo_flow_runtime._scheme_load_runner as runner
+
+    monkeypatch.setattr(runner, '_SCHEME_LOAD_TOTAL_SECONDS', 0.2)
+    command = runner._SchemeLoaderCommand(
+        (sys.executable, '-u', '-c',
+         "import time\nwhile True:\n print('datum'); time.sleep(0.01)"),
+        None,
+    )
+    with pytest.raises(RuntimeError, match='total time limit'):
+        runner._run_with_native_progress(command, tmp_path)

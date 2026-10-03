@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"The intervention clamps prescription to none from step 0 and persists, so prescribe cannot write prescription=issued. Thus administer's guard is never satisfied and administration=given is unreachable in all finite schedules up to Horizon 2; reachability is false across all schedules, hence refuted.\"}",
+  "elapsed_seconds": 10.049134874992887,
+  "first_content_seconds": 1.021290709002642,
+  "max_content_gap_seconds": 1.021290709002642,
+  "usage": {
+    "last": {
+      "inputTokens": 157,
+      "cachedInputTokens": 768,
+      "outputTokens": 1866,
+      "totalTokens": 2023
+    },
+    "provider": {
+      "input_tokens": 157,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 768,
+      "output_tokens": 1866,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+}

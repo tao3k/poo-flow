@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because care/cause at local time 1 strictly precedes care/effect at local time 3 in the same domain. via-b is refuted because care/alternative at local time 4 is not before care/effect at local time 3. The family is complete, exclusive, exhausted, has no unknown members, and exactly one admitted member, so via-a is necessary. Temporal precedence does not prove physical causation, the model cannot authorize, and no fairness or infinite progress is established.\"}",
+  "elapsed_seconds": 13.462562540997169,
+  "first_content_seconds": 1.2855723329994362,
+  "max_content_gap_seconds": 1.2855723329994362,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 2702,
+      "totalTokens": 2916
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 2702,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:057d25c40e66cd88882ad0a7986aab3f62b283b54cbbd02569d66bafc6a3607f"
+}

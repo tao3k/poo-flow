@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Reachability goal administration=given is false in all admitted schedules. Only administer can set administration=given, and it requires prescription=issued. The step-0 intervention persistently clamps prescription=none, so prescribe cannot set prescription=issued. Thus no schedule up to Horizon=2 reaches the goal; all false means refuted.\"}",
+  "elapsed_seconds": 19.050830791005865,
+  "first_content_seconds": 2.278775333004887,
+  "max_content_gap_seconds": 2.278775333004887,
+  "usage": {
+    "last": {
+      "inputTokens": 157,
+      "cachedInputTokens": 768,
+      "outputTokens": 3492,
+      "totalTokens": 3649
+    },
+    "provider": {
+      "input_tokens": 157,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 768,
+      "output_tokens": 3492,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+}

@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because the observed same-domain cause at time 1 precedes the effect at time 3, but FamilyComplete is FALSE, so it is not necessary; therefore possible. Temporal precedence does not prove causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+  "elapsed_seconds": 5.429464582994115,
+  "first_content_seconds": 1.2167067499976838,
+  "max_content_gap_seconds": 1.2167067499976838,
+  "usage": {
+    "last": {
+      "inputTokens": 214,
+      "cachedInputTokens": 640,
+      "outputTokens": 993,
+      "totalTokens": 1207
+    },
+    "provider": {
+      "input_tokens": 214,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 993,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+}

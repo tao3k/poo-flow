@@ -1,0 +1,60 @@
+{
+  "case": "incomplete-family",
+  "repeat": 2,
+  "capability": "classification",
+  "status": "passed",
+  "response": {
+    "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted because the observed same-domain cause at time 1 precedes the effect at time 3, but FamilyComplete is FALSE, so it is not necessary; therefore possible. Temporal precedence does not prove causation, the model cannot authorize effects, and no fairness or infinite progress is established.\"}",
+    "elapsed_seconds": 5.429464582994115,
+    "first_content_seconds": 1.2167067499976838,
+    "max_content_gap_seconds": 1.2167067499976838,
+    "usage": {
+      "last": {
+        "inputTokens": 214,
+        "cachedInputTokens": 640,
+        "outputTokens": 993,
+        "totalTokens": 1207
+      },
+      "provider": {
+        "input_tokens": 214,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 640,
+        "output_tokens": 993,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+  },
+  "errors": [],
+  "publication_native": {
+    "exhausted": true,
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,19:incomplete-family-2,71:sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:c6ff61a9d50c46f16986de698512b071bcf620ec763a1cc8133068096effdebb,71:sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0,25:incomplete-family-2-nonce,6:assert,1:0,10:1791038687,",
+    "model": "sha256:4058dae189d677ae0756e66b875b36713102e8ee3b98c01d9f087ad82103eae0",
+    "proof": "sha256:b94439dd37c7d40e63a280eb1dea36d3fbff9fc8c661ed9ac86f2bef924e98da",
+    "admitted": true,
+    "classification": "possible"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 84.64269416699244
+}

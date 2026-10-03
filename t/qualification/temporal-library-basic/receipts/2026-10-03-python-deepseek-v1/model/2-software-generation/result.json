@@ -1,0 +1,68 @@
+{
+  "case": "software-generation",
+  "repeat": 2,
+  "capability": "generation",
+  "status": "passed",
+  "response": {
+    "text": "{\n  \"classification\": \"necessary\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"---- MODULE TemporalComposition ----\\nModelIdentity == \\\"software-generation\\\"\\nClockDomains == {<<\\\"local\\\", \\\"logical-version\\\">>}\\nObservations == {<<\\\"build\\\", \\\"local\\\", 1, \\\"ledger\\\", \\\"observed\\\">>, <<\\\"release\\\", \\\"local\\\", 2, \\\"ledger\\\", \\\"observed\\\">>}\\nHypotheses == {<<\\\"via-a\\\", \\\"build\\\", \\\"release\\\">>}\\nConstraints == {}\\nFamilyComplete == TRUE\\nFamilySemantics == \\\"exclusive-explanations\\\"\\n====\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"via-a has an observed same-domain cause build at 1 strictly before effect release at 2, so it is admitted; the family is complete, exclusive, singleton with no unknowns and exactly one admitted member, so via-a is necessary. Precedence alone does not prove physical causation; no authority or fairness is established.\"\n}",
+    "elapsed_seconds": 32.76841366699955,
+    "first_content_seconds": 1.5076013749931008,
+    "max_content_gap_seconds": 1.5076013749931008,
+    "usage": {
+      "last": {
+        "inputTokens": 230,
+        "cachedInputTokens": 768,
+        "outputTokens": 7565,
+        "totalTokens": 7795
+      },
+      "provider": {
+        "input_tokens": 230,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 768,
+        "output_tokens": 7565,
+        "service_tier": "standard"
+      }
+    },
+    "resolved": {
+      "model": "deepseek-v4-flash",
+      "modelProvider": "deepseek",
+      "reasoningEffort": "max",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "prompt_digest": "sha256:d9520e8bc4c3e84e77c453a34be956ed896b5c204fdbbb1648d9673bfead492c"
+  },
+  "generated_native": {
+    "publication": false,
+    "exhausted": true,
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "admitted": true,
+    "classification": "necessary"
+  },
+  "errors": [],
+  "publication_native": {
+    "publication": "28:poo-flow.temporal.publish.v1,11:model-study,12:finite-study,0:,21:software-generation-2,71:sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54,17:host-study-policy,17:frozen-generation,10:frozen-cut,17:native-projection,71:sha256:d4852fdc0f3e3984910dbf2b6b4abf734e761f0b992a6d1dccd49f6c1c6ba613,71:sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3,27:software-generation-2-nonce,6:assert,1:0,10:1791039571,",
+    "exhausted": true,
+    "model": "sha256:67c4ba6ad95268ed57150e59d42d174c43f63f6e0568a7a2633a2bd745aeabb3",
+    "proof": "sha256:e9d9330c36b7ac2a85f2ded2c48a355c57a72423d6a6fa7ad452da52d1a8ec54",
+    "admitted": true,
+    "classification": "necessary"
+  },
+  "runtime": [
+    {
+      "writer": "python",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "native",
+      "committed": true,
+      "recovered": true,
+      "forged_authority_denied": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "attempt_elapsed_seconds": 168.043539374994
+}

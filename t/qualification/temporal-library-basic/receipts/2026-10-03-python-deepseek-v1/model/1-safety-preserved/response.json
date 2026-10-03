@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Safety condition control-measurement=baseline holds initially, and no mechanism writes control-measurement, so it holds in every state of every finite schedule up to Horizon. Therefore the property is necessary.\"}",
+  "elapsed_seconds": 4.820012416996178,
+  "first_content_seconds": 0.6766086669958895,
+  "max_content_gap_seconds": 0.6766086669958895,
+  "usage": {
+    "last": {
+      "inputTokens": 255,
+      "cachedInputTokens": 640,
+      "outputTokens": 825,
+      "totalTokens": 1080
+    },
+    "provider": {
+      "input_tokens": 255,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 825,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:4c178fa1dc25af98696c40c3b7d30a22c29ce27ede014b7d0c28f7966cff63de"
+}

@@ -1,0 +1,28 @@
+{
+  "text": "{\n  \"classification\": \"possible\",\n  \"precedence_proves_causation\": false,\n  \"model_can_authorize\": false,\n  \"fair_infinite_progress\": false,\n  \"operation\": \"none\",\n  \"source\": \"\",\n  \"axes\": {\n    \"source_generation\": \"\",\n    \"valid_time\": \"\",\n    \"knowledge_time\": \"\",\n    \"causal_cut\": \"\"\n  },\n  \"api_symbols\": [],\n  \"reason\": \"Bounded-progress goal administration=given by Deadline 2 is mixed: no-op schedules do not reach it, while prescribe then administer reaches it by step 2. Thus classification is possible; no fairness or infinite progress is established.\"\n}",
+  "elapsed_seconds": 6.492844167005387,
+  "first_content_seconds": 0.6502108330023475,
+  "max_content_gap_seconds": 0.6502108330023475,
+  "usage": {
+    "last": {
+      "inputTokens": 253,
+      "cachedInputTokens": 640,
+      "outputTokens": 1218,
+      "totalTokens": 1471
+    },
+    "provider": {
+      "input_tokens": 253,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 640,
+      "output_tokens": 1218,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:fb75dc19a1fcf8d923ed5f2acd0a1abe3ca30f5ea6fd208564da584ce9c6d708"
+}

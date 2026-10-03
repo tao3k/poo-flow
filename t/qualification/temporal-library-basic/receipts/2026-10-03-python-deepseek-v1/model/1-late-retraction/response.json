@@ -1,0 +1,28 @@
+{
+  "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"retract\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Late replacement evidence invalidates the prior admitted support and the host confirms it; propose retraction of the prior necessary conclusion, not execution.\"}",
+  "elapsed_seconds": 3.0460922909987858,
+  "first_content_seconds": 1.121626666004886,
+  "max_content_gap_seconds": 1.121626666004886,
+  "usage": {
+    "last": {
+      "inputTokens": 210,
+      "cachedInputTokens": 512,
+      "outputTokens": 433,
+      "totalTokens": 643
+    },
+    "provider": {
+      "input_tokens": 210,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 512,
+      "output_tokens": 433,
+      "service_tier": "standard"
+    }
+  },
+  "resolved": {
+    "model": "deepseek-v4-flash",
+    "modelProvider": "deepseek",
+    "reasoningEffort": "max",
+    "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+  },
+  "prompt_digest": "sha256:4160581c6ee24a3be4cd78e8df07c8122855ace4774b4958b5af07787be67ae0"
+}
