@@ -26,7 +26,7 @@ def prepare(root, ascent, output):
     output.mkdir(parents=True, exist_ok=False)
     context = '\n'.join(f';;; file: {module}\n'+(ascent / module).read_text()
                         for module in DIRECT_MODULES)
-    manifest = {'schema': 'poo-flow.direct-scheme-understanding-plan.v2',
+    manifest = {'schema': 'poo-flow.direct-scheme-understanding-plan', 'version': 1,
         'model': 'deepseek-flash', 'maxCalls': 24, 'retries': 0,
         'maxInputBytes': 98304, 'maxOutputTokens': 8192, 'budgetCeilingUsd': 1,
         'conservativeMaximumUsd': 24*(98304*.3+8192*1.2)/1_000_000,

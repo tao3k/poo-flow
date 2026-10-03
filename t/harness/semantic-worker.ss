@@ -65,14 +65,14 @@
    :gerbil-ascent/interface/request
    :poo-flow/modules/temporal-causality/ascent-exchange
    :poo-flow/src/graph/algorithms
-   :poo-flow/src/ffi/semantic-v1))
-(displayln "MODULE-OK semantic-v1")
+   :poo-flow/src/ffi/semantic))
+(displayln "MODULE-OK semantic")
 (displayln "HARNESS-OK semantic-worker")
 (displayln "READY") (force-output)
 (let loop ()
   (let (line (read-line))
     (unless (eof-object? line)
-      (displayln (poo-flow/src/ffi/semantic-v1#semantic-call "temporal.solve" line))
+      (displayln (poo-flow/src/ffi/semantic#semantic-call "temporal.solve" line))
       (force-output)
       (loop))))
 (displayln "OK") (force-output)

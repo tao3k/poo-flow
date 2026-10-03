@@ -52,9 +52,9 @@ byte projection; Scheme objects remain inside the native boundary.
 
 * Implemented interface and package
 
-=bindings/runtime-c/include/poo_flow/semantic_v1.h= defines owned result bytes,
+=bindings/runtime-c/include/poo_flow/semantic.h= defines owned result bytes,
 borrowed bounded input, explicit release, open/call/close and typed errors.
-=src/ffi/semantic-v1.ss= owns descriptor and projections. Operations:
+=src/ffi/semantic.ss= owns descriptor and projections. Operations:
 
 - =temporal.solve=: result status, rows, frontier, source/lens/root-bound digest,
   native verification and evidence verdicts.

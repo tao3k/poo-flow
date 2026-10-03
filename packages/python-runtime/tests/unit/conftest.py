@@ -9,7 +9,7 @@ from poo_flow_runtime.semantic_runtime import SemanticRuntime, SemanticRuntimeEr
 
 @pytest.fixture(scope='session')
 def runtime():
-    configured = os.environ.get('POO_FLOW_SEMANTIC_V1_LIBRARY')
+    configured = os.environ.get('POO_FLOW_SEMANTIC_LIBRARY')
     if not configured:
         pytest.skip('semantic AOT artifact must be explicitly configured')
     path = Path(configured)

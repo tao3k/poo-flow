@@ -653,11 +653,11 @@ test-ascent-temporal:
 # Persistent worker baseline for matched semantic transport measurements.
 [group('test')]
 semantic-worker:
-    {{ gerbil_darwin_env }} GERBIL_PATH="${GERBIL_PATH:-{{ justfile_directory() }}/.gerbil}" GERBIL_LOADPATH="${GERBIL_LOADPATH:-{{ justfile_directory() }}/.gerbil/lib}" timeout --foreground --signal=TERM --kill-after=5s 120s gxi {{ gerbil_test_runtime_options }} t/harness/semantic-v1-worker.ss
+    {{ gerbil_darwin_env }} GERBIL_PATH="${GERBIL_PATH:-{{ justfile_directory() }}/.gerbil}" GERBIL_LOADPATH="${GERBIL_LOADPATH:-{{ justfile_directory() }}/.gerbil/lib}" timeout --foreground --signal=TERM --kill-after=5s 120s gxi {{ gerbil_test_runtime_options }} t/harness/semantic-worker.ss
 
 [group('build')]
 build-semantic-native output:
-    python3 bindings/runtime-c/tools/build-semantic-v1.py --output "{{ output }}"
+    python3 bindings/runtime-c/tools/build-semantic.py --output "{{ output }}"
 
 [group('test')]
 model-understanding-compute script:

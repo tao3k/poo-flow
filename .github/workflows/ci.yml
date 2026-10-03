@@ -154,8 +154,8 @@ jobs:
           mkdir -p .ci/semantic
           extension=so
           if [ "$RUNNER_OS" = macOS ]; then extension=dylib; fi
-          python3 bindings/runtime-c/tools/build-semantic-v1.py \
-            --output ".ci/semantic/libpoo_flow_semantic_v1.$extension"
+          python3 bindings/runtime-c/tools/build-semantic.py \
+            --output ".ci/semantic/libpoo_flow_semantic.$extension"
 
       - name: Upload immutable semantic AOT producer artifact
         if: runner.os == 'Linux'
@@ -163,8 +163,8 @@ jobs:
         with:
           name: poo-flow-semantic-native-linux
           path: |
-            .ci/semantic/libpoo_flow_semantic_v1.so
-            .ci/semantic/libpoo_flow_semantic_v1.so.json
+            .ci/semantic/libpoo_flow_semantic.so
+            .ci/semantic/libpoo_flow_semantic.so.json
 
       - name: Run the single native unit-test entrypoint
         env:

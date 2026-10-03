@@ -39,7 +39,7 @@ def main() -> None:
         if developer.is_dir():
             os.environ['DEVELOPER_DIR'] = str(developer)
     output = args.output.resolve()
-    stage = output.parent / "semantic-v1-build"
+    stage = output.parent / "semantic-build"
     stage.mkdir(parents=True, exist_ok=True)
     home = Path(run(["gxi", "-e", "(displayln (gerbil-home))"], capture=True).strip())
     gsc = str(home / "bin/gsc")
@@ -51,8 +51,8 @@ def main() -> None:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
-         "src/ffi/semantic-v1.ss"])
-    expression = '''(let* ((ctx (import-module "src/ffi/semantic-v1.ss"))
+         "src/ffi/semantic.ss"])
+    expression = '''(let* ((ctx (import-module "src/ffi/semantic.ss"))
                            (deps (gxc#find-runtime-module-deps ctx)))
                       (for-each (lambda (dep)
                         (displayln (expander-context-id dep) "\\t"
@@ -79,7 +79,7 @@ def main() -> None:
             target = stage / f"module-{len(user)}.scm"
             shutil.copyfile(source, target)
             user.append(target)
-    linker = stage / "semantic-v1_.c"
+    linker = stage / "semantic_.c"
     run([gsc, "-link", "-o", str(linker),
          *[str(p.with_suffix('.c')) for p in system], *map(str, user)])
     text = linker.read_text()
@@ -110,7 +110,7 @@ def main() -> None:
                f"-DPOO_FLOW_SEMANTIC_LINKER={define('___LINKER_ID')} "
                f"-I{ROOT / 'bindings/runtime-c/include'}")
     run([gsc, "-cc-options", options, "-obj", "-o", str(host_object),
-         str(ROOT / 'bindings/runtime-c/src/semantic_v1_host.c')])
+         str(ROOT / 'bindings/runtime-c/src/semantic_host.c')])
     flags = shlex.split((home / "lib/libgerbil.ldd").read_text().strip().strip("()"))
     shared = ["-shared"]
     if platform.system() == "Darwin":
@@ -118,11 +118,11 @@ def main() -> None:
     run([os.environ.get('CC', 'cc'), *shared, '-o', str(output),
          *map(str, objects), str(link_object), str(host_object),
          '-L', str(home / 'lib'), '-lgambit', *flags])
-    manifest = {"schema": "poo-flow.semantic-aot-artifact.v1", "modules": inputs,
+    manifest = {"schema": "poo-flow.semantic-aot-artifact", "version": 1, "modules": inputs,
                 "artifactSha256": hashlib.sha256(output.read_bytes()).hexdigest(),
-                "sourceSha256": hashlib.sha256((ROOT / 'src/ffi/semantic-v1.ss').read_bytes()).hexdigest(),
-                "hostSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/src/semantic_v1_host.c').read_bytes()).hexdigest(),
-                "headerSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/include/poo_flow/semantic_v1.h').read_bytes()).hexdigest(),
+                "sourceSha256": hashlib.sha256((ROOT / 'src/ffi/semantic.ss').read_bytes()).hexdigest(),
+                "hostSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/src/semantic_host.c').read_bytes()).hexdigest(),
+                "headerSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/include/poo_flow/semantic.h').read_bytes()).hexdigest(),
                 "compilerSha256": hashlib.sha256(Path(gsc).read_bytes()).hexdigest()}
     output.with_suffix(output.suffix + '.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(f"BUILD-OK {output} {manifest['artifactSha256']}", flush=True)

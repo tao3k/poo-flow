@@ -68,7 +68,7 @@
          (binding (hex-encode (sha256 (string->utf8
                                       (call-with-output-string
                                        (lambda (port) (write projection port))))))))
-    (hash (schema "poo-flow.semantic-result.v1")
+    (hash (schema "poo-flow.semantic-result")
           (operation "temporal.solve") (status (symbol->string (temporal-status answer)))
           (rows (wire (temporal-rows answer)))
           (frontier (wire (temporal-frontier answer)))
@@ -101,7 +101,7 @@
                        (observed (hash-get candidate "status"))))
                 (else (row-difference (hash-get answer 'rows)
                                       (hash-get candidate "rows") 0)))))
-    (hash (schema "poo-flow.semantic-observation.v1") (operation "temporal.observe")
+    (hash (schema "poo-flow.semantic-observation") (operation "temporal.observe")
           (verdict (if difference "contradicted" "consistent"))
           (candidateValid valid) (difference difference)
           (bindingDigest (hash-get answer 'bindingDigest))
@@ -124,14 +124,14 @@
                                 (equal? (hash-get candidate "status") (hash-get answer 'status))
                                 (equal? (hash-get candidate "rows") (hash-get answer 'rows)))))
              (json->string
-              (hash (schema "poo-flow.semantic-result.v1") (operation "temporal.verify")
+              (hash (schema "poo-flow.semantic-result") (operation "temporal.verify")
                     (verdict (if matches "consistent" "contradicted"))
                     (status (hash-get answer 'status))
                     (bindingDigest (hash-get answer 'bindingDigest))
                     (verification (hash-get answer 'verification))))))
           ((string=? operation "descriptor")
            (json->string
-            (hash (schema "poo-flow.semantic-descriptor.v1") (abiVersion 1)
+            (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1)
                   (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
@@ -204,7 +204,7 @@
            (digest (hex-encode (sha256 (string->utf8 payload)))))
       (for-each (lambda (id) (hash-put! successors id (poo-flow-graph-outgoing-ids graph id))) ids)
       (for-each (lambda (id) (hash-put! static-successors id (poo-flow-graph-outgoing-ids static-graph id))) ids)
-      (hash (schema "poo-flow.semantic-result.v1") (operation "graph.admit")
+      (hash (schema "poo-flow.semantic-result") (operation "graph.admit")
             (status "admitted") (planDigest digest) (successors successors)
             (staticSuccessors static-successors)
             (receipt (string-append "poo-flow-receipt.v1\nkind=scheme-graph-admission\nplan-digest="
@@ -252,12 +252,12 @@
                              label)
                            (required routes label))) labels))))
              (else (error "unknown graph transition mode"))))))
-    (hash (schema "poo-flow.semantic-result.v1") (operation "graph.targets")
+    (hash (schema "poo-flow.semantic-result") (operation "graph.targets")
           (planDigest digest) (targets targets) (verification "valid"))))
 
 (def (semantic-error exception)
   (json->string
-   (hash (schema "poo-flow.semantic-error.v1")
+   (hash (schema "poo-flow.semantic-error")
          (message (call-with-output-string
                    (lambda (p) (display-exception exception p)))))))
 
@@ -286,6 +286,6 @@ C
   "poo_flow_semantic_evaluate" "extern"
   (with-exception-catcher
    (lambda (exception)
-     (poo-flow/src/ffi/semantic-v1#set-result! result 4 (string->utf8
-                    (poo-flow/src/ffi/semantic-v1#semantic-error exception))))
-   (lambda () (poo-flow/src/ffi/semantic-v1#set-result! result 0 (string->utf8 (poo-flow/src/ffi/semantic-v1#semantic-call operation payload)))))))
+     (poo-flow/src/ffi/semantic#set-result! result 4 (string->utf8
+                    (poo-flow/src/ffi/semantic#semantic-error exception))))
+   (lambda () (poo-flow/src/ffi/semantic#set-result! result 0 (string->utf8 (poo-flow/src/ffi/semantic#semantic-call operation payload)))))))

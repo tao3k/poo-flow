@@ -35,10 +35,11 @@ class SemanticRuntime:
     def bundled(cls) -> SemanticRuntime:
         """Open the optional wheel artifact using its producer digest."""
         import sys
-        name = 'libpoo_flow_semantic_v1.dylib' if sys.platform == 'darwin' else 'libpoo_flow_semantic_v1.so'
+        name = 'libpoo_flow_semantic.dylib' if sys.platform == 'darwin' else 'libpoo_flow_semantic.so'
         path = Path(__file__).parent / '_native' / 'lib' / name
         manifest = json.loads(Path(str(path) + '.json').read_text())
-        if manifest.get('schema') != 'poo-flow.semantic-aot-artifact.v1':
+        if (manifest.get('schema') != 'poo-flow.semantic-aot-artifact'
+                or manifest.get('version') != 1):
             raise SemanticRuntimeError('invalid semantic artifact manifest', status=6)
         return cls(path, expected_digest=manifest['artifactSha256'])
 
@@ -60,7 +61,7 @@ class SemanticRuntime:
                 raise SemanticRuntimeError('semantic AOT initialization failed', status=status)
             initialized = True
             self.descriptor = self.call('descriptor', {})
-            if (self.descriptor.get('schema') != 'poo-flow.semantic-descriptor.v1'
+            if (self.descriptor.get('schema') != 'poo-flow.semantic-descriptor'
                     or self.descriptor.get('abiVersion') != 1):
                 raise SemanticRuntimeError('semantic ABI descriptor mismatch', status=6)
         except BaseException:

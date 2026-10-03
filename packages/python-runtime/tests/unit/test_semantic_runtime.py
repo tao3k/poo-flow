@@ -89,7 +89,7 @@ def test_semantic_native_owner_thread_and_raw_input_guards(runtime):
     assert status == 3
     assert runtime.call('descriptor', {})['abiVersion'] == 1
     with pytest.raises(SemanticRuntimeError):
-        SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_V1_LIBRARY'],
+        SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_LIBRARY'],
                         expected_digest=runtime.artifact_digest)
 
 
@@ -187,7 +187,7 @@ def test_semantic_native_rejects_duplicate_nodes_and_unknown_action_binding(runt
 def test_semantic_native_queue_bound_and_digest_rejection(runtime):
     import threading
     with pytest.raises(SemanticRuntimeError, match='digest mismatch'):
-        SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_V1_LIBRARY'], expected_digest='0'*64)
+        SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_LIBRARY'], expected_digest='0'*64)
     entered = threading.Event(); release = threading.Event()
     def block_owner():
         entered.set()

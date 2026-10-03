@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 15
     env:
       POO_FLOW_RUNTIME_V0_LIBRARY: ${{ github.workspace }}/.ci/runtime-c/libpoo_flow_runtime_v0.so
-      POO_FLOW_SEMANTIC_V1_LIBRARY: ${{ github.workspace }}/.ci/semantic/libpoo_flow_semantic_v1.so
+      POO_FLOW_SEMANTIC_LIBRARY: ${{ github.workspace }}/.ci/semantic/libpoo_flow_semantic.so
       PROJECTION_HANDOFF_DIR: .ci/python-wheel-projection
       PROJECTION_ARTIFACT: .ci/python-wheel-projection/wheel_smoke.ss.poo-flow-projection.sexp
 
@@ -63,12 +63,12 @@ jobs:
           python3 - <<'PY'
           import hashlib, json, os
           from pathlib import Path
-          library = Path(os.environ['POO_FLOW_SEMANTIC_V1_LIBRARY'])
+          library = Path(os.environ['POO_FLOW_SEMANTIC_LIBRARY'])
           manifest = json.loads(Path(str(library) + '.json').read_text())
           assert hashlib.sha256(library.read_bytes()).hexdigest() == manifest['artifactSha256']
-          assert hashlib.sha256(Path('src/ffi/semantic-v1.ss').read_bytes()).hexdigest() == manifest['sourceSha256']
-          assert hashlib.sha256(Path('bindings/runtime-c/src/semantic_v1_host.c').read_bytes()).hexdigest() == manifest['hostSha256']
-          assert hashlib.sha256(Path('bindings/runtime-c/include/poo_flow/semantic_v1.h').read_bytes()).hexdigest() == manifest['headerSha256']
+          assert hashlib.sha256(Path('src/ffi/semantic.ss').read_bytes()).hexdigest() == manifest['sourceSha256']
+          assert hashlib.sha256(Path('bindings/runtime-c/src/semantic_host.c').read_bytes()).hexdigest() == manifest['hostSha256']
+          assert hashlib.sha256(Path('bindings/runtime-c/include/poo_flow/semantic.h').read_bytes()).hexdigest() == manifest['headerSha256']
           PY
 
       - name: Verify producer handoffs
@@ -187,7 +187,7 @@ jobs:
       - name: Install wheel in clean environment
         run: |
           set -euo pipefail
-          unset POO_FLOW_RUNTIME_V0_LIBRARY POO_FLOW_SEMANTIC_V1_LIBRARY
+          unset POO_FLOW_RUNTIME_V0_LIBRARY POO_FLOW_SEMANTIC_LIBRARY
           python -m venv "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke"
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m pip install \
             dist/python-runtime-wheel/*.whl
