@@ -76,3 +76,19 @@ def test_authenticated_late_retraction_commits_and_recovers_in_both_runtimes(tmp
         assert recovered.observe('subject', 'scope').version == 2
         assert c.remaining('worker') == 1000
         recovered.close(); c.close()
+
+
+def test_read_only_unknown_assessment_cannot_issue_handoff_or_signature():
+    repo = Path(__file__).resolve().parents[4]
+    source = (repo / 'packages/python-runtime/tests/fixtures/temporal-host-model.tla').read_text().replace(
+        '"care/cause", "local"', '"care/cause", "remote"').encode()
+    issuer = NativeTemporalEvaluator(repo, source, 'sha256:' + hashlib.sha256(source).hexdigest(),
+        evaluator_key=KEYS[1], gerbil_environment=dict(os.environ))
+    context = dict(subject='subject', scope='scope', cut='cut', projection='projection', policy='policy', generation='generation')
+    result = issuer.assess(**context, query='query', target='via-a', output=emit,
+        publication=dict(revision='root', journal='journal', nonce='nonce', expires=2000000000))
+    assert result['classification'] == 'unknown' and result['admitted'] is False
+    assert result['publication'] is False
+    p = publication(proof=result['proof'], model=result['model'])
+    with pytest.raises(ValueError, match='not admitted'):
+        issuer.attest(p, query='query', target='via-a', output=emit)

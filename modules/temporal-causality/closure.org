@@ -42,7 +42,7 @@ also requires =POO_FLOW_TLC_JAVA=, =POO_FLOW_TLC_JAR= and
 |------+----------------------|
 | =check-temporal-native-closure= | 19 modules, 97 cases; =MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0 |
 | =check-temporal-runtime-publication= | 25 tests pass against actual C and Python adapters; C11 strict compile also passes |
-| =check-temporal-host-evaluator= | 2 tests pass: native signature issuance for both adapters; authenticated late retraction, budgeted commit, signed observation and opposite-adapter restart/replay |
+| =check-temporal-host-evaluator= | 3 cases pass (existing 2 plus focused unknown-denial case): native signature issuance for both adapters; authenticated late retraction, budgeted commit, signed observation and opposite-adapter restart/replay |
 | =check-temporal-correspondence= | both hypothesis v2 and behavior v1 checked receipts pass real TLC and model/step/config/authority relabeling controls |
 | =check-temporal-frozen-tlc-bundle= | 4 tests pass: complete bundle, ambient import/Java-option exclusion, owner pins/path boundaries, complete step table and missing-edge rejection |
 | =check-temporal-frozen-corpus= | regenerated native inputs: all 56 hypothesis and 24 behavior bundles pass through native POO and private frozen TLC backend |
@@ -121,3 +121,22 @@ consistency under the trusted host execution premise.
   monotonic authority; signed stored fields alone do not prevent it.
 - Progress is bounded with fairness =none=. No fair infinite-progress,
   unrestricted source-interpreter or actual-causation claim is issued.
+
+* Real-model acceptance remains open
+
+[[file:../../t/qualification/temporal-model-study/report.org][The frozen real-model study]] used actual =gpt-6-sol=, medium effort, for twenty
+capability cases with two independent calls each. Result: 12/40 passed, 28/40
+failed the five-second genuine-progress deadline, no observed semantic or
+publication failures among completed calls. First-shot acceptance is 9/20;
+16 C/Python writer/recovery paths passed. Description-to-model and late-proposal
+calls have no successful real-model receipt. The owner reconfirmed the five-second
+bound. The real-model gate remains failed; native framework qualification above
+is a separate evidence boundary.
+
+=just check-temporal-model-study FRESH_DIRECTORY MODEL_CATALOG= is the maintained
+live entry point. =python3 scripts/temporal/model_study_receipt.py
+ t/qualification/temporal-model-study/receipts/2026-10-03-gpt-6-sol= audits the
+retained failed study and deliberately exits 1. The host evaluator now also has
+an unknown-assessment/signature-denial test: the three host cases passed in the
+existing two-case gate and focused new-case gate. Six model transport/receipt
+controls passed. No remote push or exact-head CI is claimed for this work.

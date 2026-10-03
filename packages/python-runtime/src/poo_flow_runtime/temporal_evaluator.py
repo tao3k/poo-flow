@@ -32,12 +32,18 @@ class NativeTemporalEvaluator:
         self._env = dict(gerbil_environment)
         self._gxi = gxi
 
-    def evaluate(self, *, subject, scope, cut, projection, policy, generation,
+    def assess(self, *, subject, scope, cut, projection, policy, generation,
                  query, profile='finite-hypothesis-v2', target=None, limit=False, node_limit=10000,
-                 output=lambda data: None):
+                 publication=None, output=lambda data: None):
+        """Read-only native assessment, including unknown/incomplete results.
+
+        An optional host publication descriptor prepares an inert native root
+        handoff only for admitted results; this method never signs or publishes.
+        """
         request = dict(source=self._source, subject=subject, scope=scope, cut=cut, projection=projection,
                        policy=policy, generation=generation, query=query, profile=profile,
-                       target=target, limit=limit, node_limit=node_limit)
+                       target=target, limit=limit, node_limit=node_limit,
+                       publication=False if publication is None else publication)
         with tempfile.TemporaryDirectory(prefix='poo-native-evaluation-') as directory:
             path = Path(directory) / 'request.json'
             path.write_text(json.dumps(request, ensure_ascii=False), encoding='utf-8')
@@ -73,9 +79,13 @@ class NativeTemporalEvaluator:
             if len(results) != 1:
                 raise ValueError('native evaluator receipt missing or duplicated')
             result = json.loads(results[0])
-            if result.get('admitted') is not True or result.get('exhausted') is not True:
-                raise ValueError('unfinished or unknown evaluation is not admitted')
             return result
+
+    def evaluate(self, **request):
+        result = self.assess(**request)
+        if result.get('admitted') is not True or result.get('exhausted') is not True:
+            raise ValueError('unfinished or unknown evaluation is not admitted')
+        return result
 
     def attest(self, publication: Publication, *, query, profile='finite-hypothesis-v2',
                target=None, limit=False, node_limit=10000, output=lambda data: None):

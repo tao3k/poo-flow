@@ -10,7 +10,11 @@
         (only-in :poo-flow/modules/temporal-causality/objects poo-flow-temporal-query)
         (only-in :poo-flow/modules/temporal-causality/behavior/objects poo-flow-temporal-behavior-query)
         (only-in :poo-flow/modules/temporal-causality/conclusions/evaluation-funs
-                 poo-flow-temporal-evaluate poo-flow-temporal-evaluation-replay))
+                 poo-flow-temporal-evaluate poo-flow-temporal-evaluation-replay)
+        (only-in :poo-flow/modules/temporal-causality/conclusions/funs
+                 poo-flow-temporal-conclusion-root poo-flow-temporal-conclusion-journal)
+        (only-in :poo-flow/modules/temporal-causality/conclusions/publication-funs
+                 poo-flow-temporal-publication poo-flow-temporal-publication-replay))
 (export main)
 (def (main request-path)
   (let* ((request (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
@@ -33,4 +37,18 @@
     (for-each (lambda (pair) (hash-put! result (car pair) (.ref evaluation (cdr pair))))
       '(("proof" . identity) ("model" . model-digest) ("admitted" . admitted?) ("exhausted" . exhausted?)))
     (hash-put! result "classification" (symbol->string (.ref evaluation 'classification)))
+    (let (descriptor (hash-get request "publication"))
+      (hash-put! result "publication" #f)
+      (when (and descriptor (.ref evaluation 'admitted?))
+        (let* ((revision (poo-flow-temporal-conclusion-root
+                          (hash-get descriptor "revision")
+                          (.ref evaluation 'subject) (.ref evaluation 'scope)
+                          (.ref evaluation 'cut) (.ref evaluation 'projection)
+                          (.ref evaluation 'policy) (.ref evaluation 'generation)
+                          (symbol->string (.ref evaluation 'classification)) (.ref evaluation 'identity)))
+               (journal (poo-flow-temporal-conclusion-journal (hash-get descriptor "journal") (list revision)))
+               (handoff (poo-flow-temporal-publication journal revision model
+                          (hash-get descriptor "nonce") (hash-get descriptor "expires") evaluation: evaluation)))
+          (poo-flow-temporal-publication-replay handoff journal revision model evaluation: evaluation)
+          (hash-put! result "publication" (.ref handoff 'wire-payload)))))
     (display "POO-EVALUATION ") (write-json (current-output-port) result) (newline) (force-output)))

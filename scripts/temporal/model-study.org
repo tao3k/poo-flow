@@ -1,0 +1,93 @@
+#+title: Real model finite Temporal capability acceptance
+
+* Boundary and target
+This is a frozen, first-shot capability study of =gpt-6-sol= with medium effort,
+using the installed authenticated Codex transport. It is separate from native
+engine, TLC, Lean, remote CI and deployed-service qualification. Transport is
+implemented with the documented [[https://developers.openai.com/codex/app-server][Codex app-server]] JSON protocol.
+The subscription transport returns token receipts, not a monetary price receipt;
+unknown cost must remain unknown.
+
+The model receives only the supplied finite semantics, task and inert source.
+Each call starts a new ephemeral conversation. Shell, web, browser, computer,
+apps, memory, plugins, hooks and delegation features are disabled. Tool or approval
+requests and nonmessage/reasoning items reject the call. No answer feedback,
+repair loop, prompt adaptation or filesystem retrieval is permitted. This is an
+installed Codex inference-context study, not a context-free raw API experiment.
+
+Only actual request acknowledgements and turn/message/reasoning/token progress
+refresh the five-second progress deadline. Stderr, account state and Hook
+notifications do not refresh it. A turn has a sixty-second total bound. First content and subsequent genuine
+progress both retain the five-second deadline; there is no longer first-content
+exception. The owner explicitly reconfirmed this bound after the first study.
+
+* Frozen corpus and rubric
+The runner writes =cases.json=, =schema.json= and independent native
+=references.json= before the first scored model call. =freeze.json= binds these
+files, driver, transport, late fixture, model, effort, repeats and threshold.
+Human-declared reference classes are cross-checked with the native evaluator.
+
+| Capability | Cases | Rule |
+|------------+-------+------|
+| Hypothesis classification | 10 | exact necessary/possible/refuted/unknown |
+| Finite behavior | 4 | safety, reachability, persistent clamp, bounded progress |
+| Description to model | 2 | literal parser admission and canonical native model digest |
+| Distinct time axes | 1 | generation, valid time, knowledge time, causal cut |
+| Forged authority | 1 | model assertion cannot authorize effects |
+| Late evidence | 1 | propose retraction; replay owned native late journal fixture |
+| POO public API | 1 | native model/query/classifier helpers |
+
+Two independent calls per case yield forty planned calls. First-shot is the
+first repeat of each case. Every planned call remains in the denominator.
+Semantic failures, transport failures and pipeline failures remain distinct.
+The threshold is 100% on this finite corpus, including all checked authority
+fields. Free-text reasons are retained but are not graded by another model.
+
+Generation answers must match an independently constructed reference after
+native projection; text equality is unnecessary. The output is inert TLA
+literal data only. Native parsing does not execute generated Scheme or Python.
+No model-provided proof, signature or classification can directly issue a grant.
+
+* Real publication chain
+For matching, exhausted and admitted results, the native POO host prepares an
+inert revision/journal/publication envelope. =NativeTemporalEvaluator.attest=
+replays native admission before the host signs the evaluation. A separate
+host-owned authorizer signs only after exact rubric agreement. Three distinct
+random host keys stay outside the model context.
+
+Both Python and Runtime C execute SQLite publication with a signed conservative
+500 ms budget grant. Both reject forged authorizer/evaluator signatures, observe
+an absent pointer before authorization, commit an authenticated pointer/effect,
+reopen with the other adapter, replay without a second debit and verify exact
+payloads and receipt signatures. Each run owns fresh local databases.
+Unknown and unexhausted results cannot produce a handoff or admission signature.
+The late case replays the owned authenticated late fixture, publishes the root
+then retracts to version two and verifies cross-adapter recovery.
+
+* Reproduction
+Requires the qualified Gerbil/parser modules in the selected environment,
+=gxi=, the installed logged-in =codex=, Python, and a C11 compiler with SQLite.
+Use a fresh output directory; the runner refuses an existing directory.
+#+begin_src sh
+PYTHONPATH=packages/python-runtime/src python3 -u scripts/temporal/model_study.py \
+  --output /private/tmp/poo-temporal-live-study-new \
+  --model gpt-6-sol --effort medium --repeats 2
+#+end_src
+Set =GERBIL_PATH=, =GERBIL_LOADPATH= and =GAMBOPT=max-heap=1G,debug=q= to the
+qualified native environment. An optional =--catalog= accepts a model metadata
+snapshot only; do not copy authentication tokens into a study directory.
+
+* Limits
+These twenty cases measure instruction-conditioned finite semantic use. They
+are not a population accuracy estimate, physical causal proof, an arbitrary TLA
+interpreter theorem, adversarial security proof, deployment acceptance or remote
+CI. They do not establish arbitrary witness synthesis, broad domain modeling,
+large-scale reliability, infinite fairness or production latency guarantees.
+Generation has two bounded examples; no broad modeling claim follows from them.
+The model is never granted publication keys. The selected publication authority
+belongs to the host policy and native admission, not to the model.
+
+The maintained runner exits nonzero when any planned case fails the rubric or
+transport/publication gates. Latency summaries describe completed calls only;
+failed calls can have unreported token usage, so reported tokens are not a complete
+billing total. Raw per-call responses retain their provider usage fields.

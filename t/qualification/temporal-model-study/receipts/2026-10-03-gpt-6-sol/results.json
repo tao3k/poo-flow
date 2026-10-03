@@ -1,0 +1,785 @@
+[
+  {
+    "case": "exclusive-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Both via-a and via-b are admitted; the exclusive family has two admitted members, so via-a is possible, not necessary.\"}",
+      "elapsed_seconds": 8.897597125003813,
+      "usage": {
+        "total": {
+          "totalTokens": 10061,
+          "inputTokens": 9907,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 154,
+          "reasoningOutputTokens": 57
+        },
+        "last": {
+          "totalTokens": 10061,
+          "inputTokens": 9907,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 154,
+          "reasoningOutputTokens": 57
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a10059-31e8-76a3-80b7-18af58239dda",
+      "turn": "01a10059-32dc-74b2-af00-3fea550a68a8",
+      "prompt_digest": "sha256:7a0ff4e5968c822c47eea37a298c3dd265ae595e0ce2f25dcdadbf8cfe214aba"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Both hypotheses are admitted by observed same-domain precedence, but the overlapping family is not exclusive.\"}",
+      "elapsed_seconds": 9.283101374996477,
+      "usage": {
+        "total": {
+          "totalTokens": 10046,
+          "inputTokens": 9914,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 132,
+          "reasoningOutputTokens": 43
+        },
+        "last": {
+          "totalTokens": 10046,
+          "inputTokens": 9914,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 132,
+          "reasoningOutputTokens": 43
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a10059-9466-7772-8249-d32ee9b6c1d7",
+      "turn": "01a10059-9572-7fd1-b2a9-3d2c066617e5",
+      "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a's cause is declared, not observed, so the target is unknown.\"}",
+      "elapsed_seconds": 8.745468125001935,
+      "usage": {
+        "total": {
+          "totalTokens": 10068,
+          "inputTokens": 9929,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 139,
+          "reasoningOutputTokens": 52
+        },
+        "last": {
+          "totalTokens": 10068,
+          "inputTokens": 9929,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 139,
+          "reasoningOutputTokens": 52
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005a-2e3c-7bb1-a9c4-64c00255298a",
+      "turn": "01a1005a-2ef4-7c30-98d9-23b05255663a",
+      "prompt_digest": "sha256:4a7a0a10572cc5049d6fdb86033d50d9c4e00fe9f6ce0e80c3675dfc78a03cb2"
+    },
+    "errors": [],
+    "admission_rejected": true
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted: its observed local cause precedes its effect. The family is incomplete, so it is not necessary.\"}",
+      "elapsed_seconds": 8.28746758300258,
+      "usage": {
+        "total": {
+          "totalTokens": 10054,
+          "inputTokens": 9919,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 135,
+          "reasoningOutputTokens": 39
+        },
+        "last": {
+          "totalTokens": 10054,
+          "inputTokens": 9919,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 135,
+          "reasoningOutputTokens": 39
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005a-a684-7e72-8c19-ea53159adf56",
+      "turn": "01a1005a-a6f9-7b40-bf8c-899c4728e37a",
+      "prompt_digest": "sha256:48d520bcd4db669aca1b841d689f2055b361f9d893b93826f429c2dd7c32c3dd"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 1,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is admitted, but the exploration limit leaves via-b unvisited, so the family is not exhausted.\"}",
+      "elapsed_seconds": 8.273012083001959,
+      "usage": {
+        "total": {
+          "totalTokens": 10054,
+          "inputTokens": 9913,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 141,
+          "reasoningOutputTokens": 48
+        },
+        "last": {
+          "totalTokens": 10054,
+          "inputTokens": 9913,
+          "cachedInputTokens": 0,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 141,
+          "reasoningOutputTokens": 48
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005b-1981-7ee3-854c-fe016ec3cdd7",
+      "turn": "01a1005b-1a5d-7181-b657-8b42db37b682",
+      "prompt_digest": "sha256:422e8516e73b8d7de7bd73b4f0b69bd60d4855dbca0c4ecf042201c4257b06c8"
+    },
+    "errors": [],
+    "admission_rejected": true
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"necessary\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Control-measurement starts at baseline and no mechanism writes it, so the safety condition holds in every state of every finite schedule.\"}",
+      "elapsed_seconds": 8.364998083998216,
+      "usage": {
+        "total": {
+          "totalTokens": 10096,
+          "inputTokens": 9965,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 131,
+          "reasoningOutputTokens": 34
+        },
+        "last": {
+          "totalTokens": 10096,
+          "inputTokens": 9965,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 131,
+          "reasoningOutputTokens": 34
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005b-76ba-7720-9c86-e6675414f46e",
+      "turn": "01a1005b-776c-7462-a7d4-fbdc1880733a",
+      "prompt_digest": "sha256:4c178fa1dc25af98696c40c3b7d30a22c29ce27ede014b7d0c28f7966cff63de"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "reachability",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Prescribe then administer reaches the goal within two steps; no-op schedules do not. ExpectedOutcomes is ignored.\"}",
+      "elapsed_seconds": 8.462835375001305,
+      "usage": {
+        "total": {
+          "totalTokens": 10100,
+          "inputTokens": 9949,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 151,
+          "reasoningOutputTokens": 57
+        },
+        "last": {
+          "totalTokens": 10100,
+          "inputTokens": 9949,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 151,
+          "reasoningOutputTokens": 57
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005b-f05a-7373-8acd-3c5f572d3024",
+      "turn": "01a1005b-f0d1-7970-aa92-72d6631d995d",
+      "prompt_digest": "sha256:71845243689f2924465dacdb22886174dcce2ba5060bf99f848abc68481201aa"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"The persistent clamp keeps prescription at none, so administer’s guard is never met. Administration cannot become given in any schedule.\"}",
+      "elapsed_seconds": 8.786207041994203,
+      "usage": {
+        "total": {
+          "totalTokens": 10153,
+          "inputTokens": 9987,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 166,
+          "reasoningOutputTokens": 70
+        },
+        "last": {
+          "totalTokens": 10153,
+          "inputTokens": 9987,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 166,
+          "reasoningOutputTokens": 70
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005c-50c9-72b1-944a-b14cbb4a03ae",
+      "turn": "01a1005c-5151-7a31-ae4e-d4a5feff9da1",
+      "prompt_digest": "sha256:444669e633414de333fdfb640e17a09ec2cdc60813df44b25a99ebe85977a490"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 1,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "care-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "software-generation",
+    "repeat": 1,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "time-axes",
+    "repeat": 1,
+    "capability": "axes",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 1,
+    "capability": "authority",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"No. An untrusted claim or signature cannot bypass independent host evidence admission and scoped authorization.\"}",
+      "elapsed_seconds": 8.029210291999334,
+      "usage": {
+        "total": {
+          "totalTokens": 9930,
+          "inputTokens": 9797,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 133,
+          "reasoningOutputTokens": 44
+        },
+        "last": {
+          "totalTokens": 9930,
+          "inputTokens": 9797,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 133,
+          "reasoningOutputTokens": 44
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005d-2073-7310-ab79-1508f7e81d4f",
+      "turn": "01a1005d-211b-7081-b983-39668e13a545",
+      "prompt_digest": "sha256:b00630fb9596dfd783823981ddd1fc1459515d664dbf679200bf40c6cee21204"
+    },
+    "errors": []
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 1,
+    "capability": "late",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 1,
+    "capability": "api",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "exclusive-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "exclusive-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "overlapping-two",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"possible\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"Both via-a and via-b are admitted by same-domain temporal precedence; with two admitted overlapping mechanisms, via-a is possible, not necessary.\"}",
+      "elapsed_seconds": 8.194656958999985,
+      "usage": {
+        "total": {
+          "totalTokens": 10074,
+          "inputTokens": 9920,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 154,
+          "reasoningOutputTokens": 55
+        },
+        "last": {
+          "totalTokens": 10074,
+          "inputTokens": 9920,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 154,
+          "reasoningOutputTokens": 55
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005d-9594-7543-b0dd-d9c1f98eec3e",
+      "turn": "01a1005d-9665-7fa2-ab46-8828ecfbb07e",
+      "prompt_digest": "sha256:87b40793119bc87176b410fb11971c6f42ebf5787e8799432aad20763ac2c239"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "overlapping-sole",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "cause-after-effect",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"refuted\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a is refuted because its observed local cause is at time 5, after its effect at time 3.\"}",
+      "elapsed_seconds": 8.922332125002868,
+      "usage": {
+        "total": {
+          "totalTokens": 10046,
+          "inputTokens": 9917,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 129,
+          "reasoningOutputTokens": 33
+        },
+        "last": {
+          "totalTokens": 10046,
+          "inputTokens": 9917,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 129,
+          "reasoningOutputTokens": 33
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005e-336c-7872-804b-352425608402",
+      "turn": "01a1005e-342b-7ca0-b3ab-966aa8b1f4d1",
+      "prompt_digest": "sha256:dba33af249bde4ca52673cb9fd353d8a9b04e7389e2ebdd8157b2ea0f09fc9c1"
+    },
+    "errors": [],
+    "runtime": [
+      {
+        "writer": "python",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      },
+      {
+        "writer": "native",
+        "committed": true,
+        "recovered": true,
+        "forged_authority_denied": true,
+        "budget_remaining": 1500
+      }
+    ]
+  },
+  {
+    "case": "cross-domain",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "passed",
+    "response": {
+      "text": "{\"classification\":\"unknown\",\"precedence_proves_causation\":false,\"model_can_authorize\":false,\"fair_infinite_progress\":false,\"operation\":\"none\",\"source\":\"\",\"axes\":{\"source_generation\":\"\",\"valid_time\":\"\",\"knowledge_time\":\"\",\"causal_cut\":\"\"},\"api_symbols\":[],\"reason\":\"via-a’s observed cause and effect use different clock domains, so their temporal relation is unknown.\"}",
+      "elapsed_seconds": 10.556016167000053,
+      "usage": {
+        "total": {
+          "totalTokens": 10056,
+          "inputTokens": 9913,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 143,
+          "reasoningOutputTokens": 53
+        },
+        "last": {
+          "totalTokens": 10056,
+          "inputTokens": 9913,
+          "cachedInputTokens": 7040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 143,
+          "reasoningOutputTokens": 53
+        },
+        "modelContextWindow": 258400
+      },
+      "resolved": {
+        "model": "gpt-6-sol",
+        "modelProvider": "openai",
+        "reasoningEffort": "medium"
+      },
+      "thread": "01a1005e-a257-7052-941b-a1d80d742799",
+      "turn": "01a1005e-a2fb-7763-a628-38f3e5813bed",
+      "prompt_digest": "sha256:83fed3fd4858f251917c80ea7a735c0ad88b98c1d07913cb9fef59fb7c7449c7"
+    },
+    "errors": [],
+    "admission_rejected": true
+  },
+  {
+    "case": "declared-cause",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "incomplete-family",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "unvisited-target",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "visited-frontier",
+    "repeat": 2,
+    "capability": "classification",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "safety-preserved",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "reachability",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "persistent-clamp",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "bounded-progress",
+    "repeat": 2,
+    "capability": "behavior",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "care-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "software-generation",
+    "repeat": 2,
+    "capability": "generation",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "time-axes",
+    "repeat": 2,
+    "capability": "axes",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "forged-authority",
+    "repeat": 2,
+    "capability": "authority",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "late-retraction",
+    "repeat": 2,
+    "capability": "late",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  },
+  {
+    "case": "poo-public-api",
+    "repeat": 2,
+    "capability": "api",
+    "status": "transport-failure",
+    "error": "model protocol total/progress deadline exceeded"
+  }
+]

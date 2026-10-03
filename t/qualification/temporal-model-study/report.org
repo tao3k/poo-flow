@@ -1,0 +1,77 @@
+#+title: Temporal real-model acceptance, 2026-10-03
+#+property: STATUS failed
+
+* Verdict
+The real =gpt-6-sol= model, medium effort, completed 12 of 40 independent calls.
+All 12 returned answers agreed with the frozen native reference. The remaining
+28 calls exceeded the five-second genuine-progress deadline and were cancelled.
+The corpus acceptance threshold was 40/40; this study FAILED. First-shot
+acceptance was 9/20. No failed calls were retried or removed from the denominator.
+The owner explicitly reconfirmed five seconds after seeing these failures.
+No native-engine qualification is promoted into real-model capability closure.
+
+| Capability | Planned calls | Passed | Not passed |
+|------------+---------------+--------+------------|
+| Hypothesis classification | 20 | 8 | 12 |
+| Finite behavior/intervention | 8 | 3 | 5 |
+| Description to native model | 4 | 0 | 4 |
+| Distinct time axes | 2 | 0 | 2 |
+| Forged model authority | 2 | 1 | 1 |
+| Late retraction proposal | 2 | 0 | 2 |
+| POO public API | 2 | 0 | 2 |
+
+All not-passed entries above are transport/progress failures. A cancelled call
+has no graded model answer; this does not prove a semantic error. Conversely,
+12 correct returned answers do not establish reliable 40-call acceptance.
+
+* Actual publication evidence
+Eight admitted model answers each completed Python and C publication, producing
+16 writer/recovery paths. Each path rejected forged evaluator/authorizer
+signatures, required a signed budget grant, committed exact native payloads,
+verified pointer/effect HMACs, reopened with the opposite adapter and replayed
+without charging another grant. Three unknown/frontier answers were correctly
+rejected by native admission. No model received signing keys.
+
+No generation or late-proposal model call passed in this study; those capability
+paths remain unqualified by real-model evidence. Separate native late retraction
+and C/Python recovery tests passed, and do not substitute for missing model calls.
+
+* Latency, usage and source
+Completed calls had median 8.604 seconds and p95 10.556 seconds end to end.
+This includes thread setup and streamed output; five seconds is the maximum gap
+without real progress, not a total execution deadline. There are twelve usage
+receipts: 119030 input tokens, 63360 cached input tokens, 1708 output tokens and
+585 reasoning tokens. Cancelled calls can have unreported usage. These totals
+are for available receipts, not a complete billing total. Monetary cost is
+unknown on the authenticated subscription transport.
+
+The retained [[file:receipts/2026-10-03-gpt-6-sol/summary.json][summary]], [[file:receipts/2026-10-03-gpt-6-sol/results.json][raw responses/results]],
+[[file:receipts/2026-10-03-gpt-6-sol/cases.json][cases]], [[file:receipts/2026-10-03-gpt-6-sol/references.json][native references]] and [[file:receipts/2026-10-03-gpt-6-sol/freeze.json][freeze]] preserve the failed
+study. Source snapshots preserve the exact executed implementation bytes.
+Full local protocol and SQLite artifacts are under
+=/private/tmp/poo-temporal-live-study-v1=. The installed Codex context can include
+configured MCP startup notifications; no model tool execution occurred and these
+notifications did not refresh the deadline. This is not a raw API study.
+
+The executed v1 wrote the failed verdict but returned process exit zero. This
+runner defect was fixed: the maintained runner and independent receipt auditor
+now return nonzero for failed acceptance. The auditor checks frozen inputs,
+all forty planned identities, answer/reference agreement and summary consistency;
+it does not independently authenticate the model provider or re-attest host HMACs.
+
+* Rejecting controls and remaining gate
+Native host tests: existing issuance/late tests 2/2, plus unknown assessment and
+signature denial 1/1. Model transport/receipt controls: 6/6, including stderr
+noise, tool requests, ambiguous JSON keys, missing planned calls and false green
+summaries. The real receipt audit deliberately exits 1 with =accepted=false=.
+
+Disabling configured MCP services and requesting real reasoning-summary events
+were each checked with independent connectivity probes. Both still exceeded the
+five-second deadline. They did not change the forty-case result, and no heartbeat
+or diagnostic message was substituted for model progress.
+
+The remaining gate is reliable genuine progress from the inference provider,
+followed by actual successful generation, axes, late-proposal and API calls under
+the same bound. The current authenticated path has not met that gate. Remote CI,
+deployment, population reliability and arbitrary witness synthesis are separate
+unqualified claims. The finite native engine retains its prior local receipts.

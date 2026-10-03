@@ -1,0 +1,60 @@
+{
+  "total": 40,
+  "counts": {
+    "passed": 12,
+    "semantic-failure": 0,
+    "transport-failure": 28,
+    "pipeline-failure": 0
+  },
+  "first_shot_passes": 9,
+  "first_shot_total": 20,
+  "model": "gpt-6-sol",
+  "effort": "medium",
+  "model_calls_completed": 12,
+  "latency_median_seconds": 8.60415175000162,
+  "cost": null,
+  "cost_reason": "authenticated subscription transport does not return per-call monetary cost",
+  "runtime_pairs": 16,
+  "threshold": 1.0,
+  "accepted": false,
+  "no_repair": true,
+  "latency_p95_seconds": 10.556016167000053,
+  "capabilities": {
+    "api": {
+      "total": 2,
+      "passed": 0
+    },
+    "authority": {
+      "total": 2,
+      "passed": 1
+    },
+    "axes": {
+      "total": 2,
+      "passed": 0
+    },
+    "behavior": {
+      "total": 8,
+      "passed": 3
+    },
+    "classification": {
+      "total": 20,
+      "passed": 8
+    },
+    "generation": {
+      "total": 4,
+      "passed": 0
+    },
+    "late": {
+      "total": 2,
+      "passed": 0
+    }
+  },
+  "tokens": {
+    "inputTokens": 119030,
+    "cachedInputTokens": 63360,
+    "outputTokens": 1708,
+    "reasoningOutputTokens": 585,
+    "totalTokens": 120738
+  },
+  "usage_receipts": 12
+}

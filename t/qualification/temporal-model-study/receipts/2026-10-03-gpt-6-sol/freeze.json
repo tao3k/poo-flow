@@ -1,0 +1,13 @@
+{
+  "cases": "sha256:425c3f16f9c8d99da574545e55581599382a81bfe964610b8e47834ad5d929e6",
+  "references": "sha256:62d618b110353e944c12eacf32f85e1945ef7bb3572e9a3ed22cd381954fb3c7",
+  "schema": "sha256:546f7e1218ea9e455fe3f6ed3189093a3c77b2c632d305f545c673e22ee28a65",
+  "late_fixture": "sha256:d736a3a3adff02f8bf49abbc11d10bf975c674410bfb5e09750183d5280de101",
+  "driver": "sha256:1475d81b0c0c204277c549af4332c41d392f64ef5b097545021fac206db3fb7f",
+  "transport": "sha256:d018d87a2544671f04e7376a4872baff427a598874f921eeff2dca6b3a6b8879",
+  "repeats": 2,
+  "pass_threshold": 1.0,
+  "repair": false,
+  "model": "gpt-6-sol",
+  "effort": "medium"
+}

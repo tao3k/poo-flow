@@ -1,0 +1,25 @@
+{
+  "run": "real-model-v1",
+  "first_token_timeout_seconds": 5,
+  "subsequent_progress_timeout_seconds": 5,
+  "original_process_exit": 0,
+  "acceptance_verdict": false,
+  "exit_note": "executed v1 stored failed verdict but returned zero; maintained runner now exits nonzero for a failed verdict",
+  "scope": "local installed Codex context; no model tool execution; not raw API or remote CI",
+  "latency_scope": "completed model calls only",
+  "token_scope": "12 usage receipts; cancelled calls may have unreported usage",
+  "raw_transport_directory": "/private/tmp/poo-temporal-live-study-v1",
+  "source_snapshots": [
+    "model_study.py.txt",
+    "model_study_transport.py.txt"
+  ],
+  "semantic_failures": 0,
+  "pipeline_failures": 0,
+  "remaining": [
+    "first-content reliability",
+    "generation",
+    "time axes",
+    "late retraction model proposal",
+    "public API model response"
+  ]
+}
