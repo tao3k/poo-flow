@@ -120,13 +120,21 @@ def execute(root, library, output, key):
         cold = time.monotonic() - started
         if cold > 5 or runtime.descriptor['abiVersion'] != 1:
             raise RuntimeError('native startup failed the current ABI/five-second gate')
-        private = {name: runtime.call('temporal.solve', task) for name, task in tasks.items()}
+        print('NATIVE-READY semantic ABI 1', flush=True)
+        private = {}
+        for name, task in tasks.items():
+            solving = time.monotonic()
+            private[name] = runtime.call('temporal.solve', task)
+            if time.monotonic() - solving > 5:
+                raise RuntimeError('native solve exceeded five seconds')
+            print('NATIVE-SOLVE', name, private[name]['status'], flush=True)
         write(output/'native-private.json', private)
         controls = []
         for name, task in tasks.items():
             bad = runtime.observe_model_answer(task, '{"status":"invented","rows":[]}')
             assert bad['verdict'] == 'contradicted', name
             controls.append({'case': name, 'observation': bad})
+            print('NEGATIVE-CONTROL', name, bad['verdict'], flush=True)
         chain = tasks['chain']
         candidate = json.dumps({k: private['chain'][k] for k in ('status', 'rows')})
         changed = deepcopy(chain)
