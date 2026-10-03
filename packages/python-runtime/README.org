@@ -16,44 +16,33 @@ The package is managed by =uv=. It provides a Python API and a command-line
 probe for the current C ABI. Future ALALEX validation runtime code should plug
 into this package and consume the same =poo_flow_runtime= API.
 
-The validation runtime API is intentionally small and dependency-free. It
-validates a manifest, plans a runtime handoff, and returns receipts from the
-upstream C ABI binding. Scheme remains the owner of flow, graph, policy-family,
-and strategy-combinator semantics.
+Scheme owns flow composition, graph, policy-family and strategy-combinator
+semantics. The installed runtime-v0 C ABI owns the control lane: negotiation,
+sessions, arenas, mediation and evidence. It has no graph-plan handle API.
 
-The package also includes a dependency-free runtime graph executor. It models
-the compiled-plan execution substrate that Scheme can target: START/END,
-node actions, edges, conditional routing, reducers, and step limits. It is not
-the public graph authoring UI. Cross-language runtime handoff remains owned by
-the C ABI, including opaque graph plan handles.
+The package also contains a Python graph executor with START/END, routing,
+reducers and step limits. =RuntimeGraphProgram.reference()= selects this
+reference implementation. Its =runtime-graph-domain-validation= receipt is
+generated locally by Python; it is not a C ABI or Scheme validation receipt.
+A negotiated native session does not change that execution owner.
+=RuntimeGraphProgram= with a native backend therefore rejects execution before
+calling actions until a Scheme graph execution boundary is implemented and
+qualified. The low-level control-lane session remains independently usable.
 
-Typed Python runtime plans are materialized into C ABI graph handles before
-validation or handoff. This keeps Python's execution model aligned with the
-upstream ABI instead of creating a parallel graph protocol.
-
-C ABI receipt bytes are parsed through the package receipt API before runtime
-code inspects fields such as =kind=, =nodes=, or =plan-digest=. Higher-level
-runtime APIs expose typed receipt helpers while preserving raw bytes for low
-level ABI checks.
-
-The local C probe build is cached when the compiled shared library is newer
-than the ABI header and probe source. The command-line probe forces a rebuild so
-manual smoke checks always exercise the current C source.
+The architecture correction and delivery gates are recorded in
+[[file:../../docs/10-19-design/10.06-poo-module-system/python-scheme-runtime-foundation.org][Python/Scheme Runtime foundation]].
 
 Runtime graph programs can return an execution trace for local debugging and
 ALALEX validation. The trace is process-local observability; it does not replace
 the C ABI receipt boundary.
 
-Each runtime graph execution carries the C ABI graph validation receipt used for
-that run. The typed execution result exposes the receipt and plan digest next to
-the local trace.
+Each reference graph execution carries its local domain receipt and plan digest
+next to the local trace. These identify the reference plan, not native execution
+or authenticated source data.
 
 Run:
 
 #+begin_src sh
-uv run --project packages/python-runtime poo-flow-runtime-probe
-uv run --project packages/python-runtime poo-flow-runtime-validate
-uv run --project packages/python-runtime poo-flow-runtime-program-probe
 uv run --project packages/python-runtime poo-flow-jsonschema-contract --help
 uv run --project packages/python-runtime pytest packages/python-runtime/tests
 #+end_src

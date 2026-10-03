@@ -65,7 +65,11 @@ class RuntimeGraphExecution:
 
 
 class RuntimeGraphProgram:
-    """Runtime graph program validated through the upstream C ABI."""
+    """Python reference graph program with a local domain receipt.
+
+    The installed runtime-v0 control lane does not execute graph semantics.
+    Native graph execution is unavailable until its Scheme boundary is qualified.
+    """
 
     def __init__(
         self,
@@ -392,6 +396,11 @@ class RuntimeGraphProgram:
     def _validated_plan(self) -> tuple[bytes, str | None]:
         if self.runtime.backend == "native":
             self.runtime.require_native_context()
+            raise RuntimeGraphError(
+                "native graph execution is unavailable: runtime-v0 negotiates "
+                "the control lane but does not execute Scheme graph semantics; "
+                "use RuntimeGraphProgram.reference() for Python execution"
+            )
         receipt = self.describe()
         return receipt, parse_runtime_receipt(receipt).plan_digest
 
