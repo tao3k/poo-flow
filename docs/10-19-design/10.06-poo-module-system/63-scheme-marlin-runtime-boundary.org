@@ -270,3 +270,7 @@ withdrawn as acceptance evidence for the user's no-Prompt architecture. The
 existing contradiction gate rejects output but does not teach the model. ABI
 receipts remain scoped engineering evidence; model integration and real-time
 teaching closure remain open, and MRR Rust admission remains deferred.
+
+The primary model acceptance contract is
+[[file:model-scheme-understanding-validation.org][Scheme understanding, reasoning and real computation validation]].
+Native correctness and output rejection alone cannot close this model gate.

@@ -6,6 +6,13 @@
 
 * Design correction: no preset Prompt and real-time teaching
 
+The primary acceptance target is now specified in
+[[file:model-scheme-understanding-validation.org][model Scheme understanding, reasoning and real computation validation]].
+It explains why the historical Prompt was produced, prohibits preset semantic
+guidance and answer supply, and requires direct validation of the model's own
+Scheme/logic understanding and reasoning. Native-only correctness cannot close
+that model gate.
+
 The user prohibits preset Prompts and requires semantic guards to teach in real
 time. The historical 48-call experiment violates that criterion: both arms
 received preset natural-language RULES, and the native arm additionally received
