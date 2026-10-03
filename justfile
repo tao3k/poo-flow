@@ -712,3 +712,7 @@ check-temporal-closure pins directory:
 # Real-model capability acceptance; requires configured DeepSeek ENV and a fresh output directory.
 check-temporal-model-study directory env_file:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 -u scripts/temporal/model_study.py --output {{ quote(directory) }} --provider deepseek --env-file {{ quote(env_file) }} --repeats 2
+
+# Optional committed ASCENT provider; requires the qualified POO dependency build.
+check-temporal-ascent-provider repository directory:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-runtime/src" GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ poo_flow_library_path }}:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}/.gerbil/lib:{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ justfile_directory() }}" GAMBOPT=max-heap=1G,debug=q python3 scripts/temporal/run_with_progress.py --timeout 480 -- python3 -u scripts/temporal/check_ascent.py {{ quote(repository) }} {{ quote(directory) }} --qualify

@@ -187,8 +187,10 @@ point/interval constraint networks and both hypothesis family modes are
 implemented; earlier open-status prose for these features was stale.
 
 The closed runtime effect is an atomic SQLite pointer plus signed durable
-publication receipt. Live provider-proof-to-Temporal admission remains an
-integration gap; external business delivery/acknowledgment requires an added
+publication receipt. The optional single-source ASCENT observed-precedence
+proof-to-admission adapter is now locally qualified below. Live GQL transport
+and broader provider proof profiles remain integration work; external business
+delivery/acknowledgment requires an added
 effect-executor contract if selected by an application. Complete source truth,
 hidden dependency inventories, whole-database rollback resistance, cross-host
 consensus and unrestricted theorem/behavior semantics are separate premises or
@@ -199,3 +201,41 @@ hypothesis-model gate: 20 cases across three modules passed with =MODULE-OK=,
 =HARNESS-OK=, final =OK= and process exit 0, under the five-second progress
 watchdog and 90-second total bound. No Scheme/runtime implementation changed
 in this audit; these checks resolve the stale design-status claims.
+
+
+* Native ASCENT proof-to-admission qualification (2026-10-03)
+
+[[file:../../t/qualification/temporal-ascent-provider/receipt.json][The retained receipt]] binds provider source
+=74f0046bb6137b4fce22db5ae398b9812734c137= and the owned Scheme/qualification
+source hashes. =check-temporal-ascent-provider= archives that committed source,
+compiles into a fresh private native prefix, checks real interface/object
+artifacts, executes the independent positive proof checker, authenticates the
+model/query/cut/generation binding and invokes native Temporal admission.
+The normal package build exports the pure POO request API; the ASCENT runtime
+is an explicit optional source build, without changing package dependency pins.
+
+31 cases across three modules passed with =MODULE-OK=, =HARNESS-OK=, final =OK=
+and process exit 0. Ten new cases cover actual execution/publication, forged
+source authority, expired/missing coverage, changed cut/generation/model,
+forged proof roots, exhausted proof work, incomplete native results, empty
+positive results, required GQL absence and an unvisited Temporal frontier.
+The genuine admitted handoff was independently re-evaluated by the fixed host
+issuer and committed by each runtime. Python-to-C and C-to-Python recovery
+retained the signed pointer, replayed without another debit and left 1500 of
+2000 budget units after one 500-unit grant. Forged authorization/evaluation
+signatures and missing budget were denied by both writers.
+
+The fresh combined build/test/runtime gate passed in
+=/private/tmp/poo-temporal-ascent-final-v1= with the unchanged five-second output
+watchdog, 1 GiB managed-heap fence and 180-second native harness bound. Clang
+with C =-O0= qualifies semantics here, not an optimized performance result.
+Earlier failed local build/execution logs remain under the corresponding
+=/private/tmp/poo-temporal-ascent-*= paths and are not passing evidence. The
+request constructor bug was a POO slot/parameter name collision; all owned
+constructors now use explicit =*-value= parameters to avoid self-referencing
+slots. Native proof checking does not grant host authorization or budget.
+
+This closes the declared observed-precedence profile locally. Live GQL,
+combined-provider execution, Why-Not/absence profiles and external business
+execution remain outside it. No new real-model study, remote CI, push or
+production deployment is included in this receipt.

@@ -1,0 +1,63 @@
+{
+  "schema": "poo-flow.temporal-ascent-provider.qualification.v1",
+  "provider_pin": "74f0046bb6137b4fce22db5ae398b9812734c137",
+  "boundary": "ascent-observed-precedence-v1; single declared source; finite model-relative admission",
+  "scheme_optimization": false,
+  "c_optimization": "-O0",
+  "native_compiler": "/usr/bin/clang",
+  "owned_sources_sha256": {
+    "modules/temporal-causality/candidates/ascent/types.ss": "f410fc2e0c81d97f77e5855efe08931167490dbfc5dc8d55b34a16e70d5b2113",
+    "modules/temporal-causality/candidates/ascent/objects.ss": "a0d604374207a21724e5bec7dec446823d0d02b8f66151cf517b2a22ce4915b9",
+    "modules/temporal-causality/candidates/ascent/funs.ss": "2f07170a907b9dcf7ec8ae031041bc91d23927a4bcf491a9fb813c66bc05e584",
+    "modules/temporal-causality/candidates/ascent/interface.ss": "cac3e31e54503f0427e6d76e41eefbfe66f45083821efa5beebae8599a2e3e5d",
+    "modules/temporal-causality/candidates/ascent/runtime.ss": "75f97a9776c6879bc3f768c5601f9a1d252a04d525a7fad93e94dcf96df357f6",
+    "modules/temporal-causality/candidates/interface.ss": "823ea9330c6799eb20aa2d8afa2a8740ea9fb683750ff637b69c635c0fcd90f2",
+    "modules/temporal-causality/interface.ss": "d44fb2ec038deec4def71b5607c8f6113264b76253dbb138f1e88a5fb88cb436"
+  },
+  "qualification_sources_sha256": {
+    "scripts/temporal/check_ascent.py": "f159afba765de04c95fa38a217ad6ffd21809bdfaacc669d58786ab68a743dec",
+    "scripts/temporal/check_ascent_runtime.py": "dfe0e79e5b73f4566961b9f5d4c46e2019b837a1831b5e389f6b4d0362ae49cc",
+    "t/temporal-ascent-provider-test.ss": "18df3e6c3cd7a46770b37330add08673f5aa216617e8d9908c737639d56a2cb9",
+    "packages/python-runtime/tests/fixtures/temporal-ascent-model.tla": "2224300cf172cc025b6c826eae438a4f5b5b7a0b77495ba9f56bc30fa642ea7a"
+  },
+  "native_modules": [
+    "t/temporal-ascent-provider-test.ss",
+    "t/temporal-candidate-exchange-test.ss",
+    "t/temporal-model-test.ss"
+  ],
+  "native_cases": 31,
+  "native_gate_sha256": "27ac25a701479d0cad43123835565cd650757dcbb6b59da89556391407e848be",
+  "process_exit": 0,
+  "maximum_output_silence_seconds": 5,
+  "native_total_bound_seconds": 180,
+  "handoff": {
+    "publication": "28:poo-flow.temporal.publish.v1,7:subject,5:scope,0:,4:root,71:sha256:3daf5ae1c34a741c71208ddc4587aa8e654ab3d46e3a25553c778eb7902afe51,6:policy,19:ascent-generation/1,3:cut,10:projection,71:sha256:4a65b88c95953626662c889bec884edaba1b92e30a167b37b8fb34aff6ae50fb,71:sha256:ea0d014231ecc921f2102f043010d3a693563ebd94254084336bea39735567cd,5:nonce,6:assert,1:0,10:2000000000,",
+    "binding": "sha256:500e410812d788f6e9ee16f1fc6b65620120d6d7a6cbabe08aaac0be2db885aa",
+    "provider_pin": "74f0046bb6137b4fce22db5ae398b9812734c137"
+  },
+  "runtimes": [
+    {
+      "writer": "python",
+      "reader": "c",
+      "committed": true,
+      "recovered": true,
+      "budget_remaining": 1500
+    },
+    {
+      "writer": "c",
+      "reader": "python",
+      "committed": true,
+      "recovered": true,
+      "budget_remaining": 1500
+    }
+  ],
+  "runtime_controls": [
+    "forged authorization/evaluation denied",
+    "budget grant required",
+    "signed pointer observation",
+    "replay without another debit"
+  ],
+  "local_output": "/private/tmp/poo-temporal-ascent-final-v1",
+  "remote_ci": false,
+  "deployed": false
+}

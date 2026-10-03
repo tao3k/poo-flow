@@ -88,7 +88,9 @@
     "modules/temporal-causality/interface.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
- (exclude-modules '("modules/nono-sandbox/_nono.ss"
+ ;; Optional pinned ASCENT runtime is built by check-temporal-ascent-provider.
+ (exclude-modules '("modules/temporal-causality/candidates/ascent/runtime.ss"
+                    "modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"
                     "observe-contribute-import.ss"
                     "performance-tests.ss"

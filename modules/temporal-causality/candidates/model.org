@@ -131,10 +131,40 @@ the native digest as a scalar row digest.  A future native exporter must
 prove an explicit query/snapshot mapping.  Even a local scalar =valid= check
 does not attest Provider execution or source authenticity.
 
-ASCENT owns positive-rule Why/Why-Not proof generation and replay for a
-finite relation snapshot.  Its adapter must require the native result to
-complete, run the independent proof checker on the exact snapshot/program,
-and pass the verifier basis into =CandidateCheck=.  A bounded or unsupported
-proof cannot be recorded as a valid proof check.  Temporal then separately
-checks source coverage, current revision and premise admission.  No such
-live provider adapter exists in this slice.
+* Native ASCENT observed-precedence adapter
+
+=ascent/interface.ss= exports pure POO request and source-binding constructors.
+=ascent/runtime.ss= is the explicit optional native execution boundary:
+=poo-flow-ascent-candidate-execute!=, =poo-flow-ascent-candidate-verify= and
+=poo-flow-ascent-candidate-admission=. Its fixed positive program checks an
+observed cause and effect in one declared clock domain with strict precedence.
+The caller supplies a POO model, query and candidate scope, not a rule DSL.
+
+The source binding includes the canonical model digest, target query and
+exploration limit, cut, generation and immutable provider pin
+=74f0046bb6137b4fce22db5ae398b9812734c137=. That binding is the native snapshot
+identity. Execution quotas are separately bound by the request digest. The
+verifier rebuilds the exact snapshot/program and invokes ASCENT's independent
+positive proof checker. Its basis digest includes canonical proof nodes and
+roots. Incomplete native results, incomplete proof, an empty positive result,
+and missing required providers stay pending; forged complete proof is rejected.
+This profile makes no Why-Not or closed nonmembership claim.
+
+A reviewable exchange still has =admitted? #f=. The separate admission entry
+requires a source-owner assertion for =candidate-source-model-binding=,
+valid at the supplied knowledge instant, matching the single declared source
+and scope coverage. It then invokes Temporal's native evaluator. That evaluator
+retains family and frontier rules; a provider proof cannot override them.
+Source-owner assertions do not establish physical causation or hidden coverage.
+Admission does not sign an authorization, grant budget or execute publication.
+
+The runtime adapter is excluded from the ordinary package build. Its dependency
+is optional because the provider's package-level ASP pin differs from this
+repository's pin. =just check-temporal-ascent-provider REPOSITORY FRESH_DIRECTORY=
+archives only the pinned committed source and compiles its native import closure
+into a private prefix using the caller's qualified POO dependency environment.
+It does not install or mutate a provider checkout or replace global dependencies.
+This qualifies this explicit source build, not general package resolution.
+
+Live GQL transport, combined GQL/ASCENT execution, additional proof profiles and
+external business delivery remain separate integration work.

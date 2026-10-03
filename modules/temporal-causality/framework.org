@@ -655,20 +655,20 @@ its semantic or authority scope. [[file:closure.org][The ledger]] retains the ex
 | Authorized durable publication | Python selection store and C selection v1; host/runtime tests and actual signed commit/recovery paths | SQLite pointer and signed publication record closed; external action delivery is separate |
 | Source/formal correspondence | owned TLA bundle/correspondence and Lean identity/projection laws | admitted finite inputs checked; no universal interpreter refinement claim |
 | Trajectory and Impact | =trajectory/=, =impact/=; series/contrast/scope/refresh tests | supplied-series arithmetic and declared-assumption audit implemented; effect identification is separate |
-| Evidence use and candidate exchange | =evidence/=, =candidates/= and GQL scalar checker | structural receipt/reviewability closed; live proof-to-admission adapter remains open |
+| Evidence use and candidate exchange | =evidence/=, =candidates/= and GQL scalar checker | structural exchange and optional ASCENT observed-precedence adapter implemented; live GQL transport remains open |
 
 ** Actual integration work still open
 
-1. *Live candidate-provider verification.* The GQL bridge binds declared Query,
-   ElementSpace revision and receipt fields, and its scalar checker validates
-   supplied rows. There is no live ASCENT proof-checker-to-=CandidateCheck=
-   integration in this slice. The next adapter must bind exact source snapshot,
-   query/program identity, completed native result and independent proof-checker
-   basis. =bounded=, =unsupported=, stale, mismatched or incomplete inputs must
-   remain nonreviewable/nonadmitted. A declared revision or row digest cannot
-   attest actual Provider execution or source coverage. Qualification needs an
-   actual provider run and changed-snapshot, incomplete-result and forged-basis
-   rejection, followed by independent Temporal source/cut admission.
+1. *Additional live candidate-provider profiles.* The optional ASCENT
+   =ascent-observed-precedence-v1= adapter runs the pinned native solver,
+   independently checks the exact positive proof, authenticates the model/cut
+   source binding, and invokes Temporal admission. See
+   [[file:candidates/model.org][the adapter contract and qualification entrypoint]]. It supports one declared
+   source and observed same-domain strict precedence only. Empty positive
+   results do not prove absence. GQL remains a structural bridge and local
+   scalar consistency checker; live GQL transport, combined-provider execution,
+   Why-Not and broader proof profiles remain open. Required providers are never
+   omitted to make an exchange reviewable.
 2. *External business effect execution, if required by the application.* The
    current =temporal_effect_v1= row is an authenticated durable publication
    receipt committed with the pointer. It is not an external service/device
