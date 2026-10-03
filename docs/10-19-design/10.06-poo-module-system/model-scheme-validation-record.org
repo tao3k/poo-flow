@@ -319,3 +319,16 @@ none 的显式引用值）；这只是接口回放，旧严格 0/24 与第一轮
 none/high 与 fresh/history/feedback 观察，迁移条件次序覆盖六种
 排列。教学的主对照为 feedback 减 history，fresh 用作上下文整体
 效果对照；六族 pilot 不等于完整程序生成/POO 组合或总体业务收益。
+
+** 当前冻结验收计划：待明确付费/源码外发授权
+
+[[file:evidence/direct-scheme-understanding-20261003/current-plan/plan.json][Version 1 冻结计划]]
+SHA256 =cb1715f709ba428cc7dee3d6850eb8f569a6a673baa797a9d8850895360d2f4f=；实现提交 =93239d600f9a24e2c8122e08116f927b5e39989d=。
+17 个实际项目模块、12 个任务、30 次调用（6 none、24 high）、
+零重试；最大输出含 Reasoning 8192 token，新增费用上限 USD 4，
+高峰单价保守估算上界 USD 3.833856。提交头及说明元数据从已通过的
+预检计划刷新；源码、任务、producer、scorer、worker 字节未改变。
+
+[[file:evidence/direct-scheme-understanding-20261003/current-plan/qualification.json][工程资格与失败日志哈希]]
+及原始完整输入/回放/SDK 夹具输出在 MRR ignored archive 中保存。
+本计划 Provider 调用 0；原有授权不复用。
