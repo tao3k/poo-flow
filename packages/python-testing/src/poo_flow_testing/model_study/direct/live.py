@@ -94,7 +94,8 @@ def live(root, preview, output, approved_digest, ascent=None):
             client, request, output/f'{index:02d}.response.json')
         native_started = time.perf_counter()
         observation = score_candidate(root, preview/'private'/f"{item['case']}.sexp", raw,
-                                      output/f'{index:02d}.guard', preview/f"{item['case']}.ss")
+                                      output/f'{index:02d}.guard', preview/f"{item['case']}.ss",
+                                      normalize=True)
         native_seconds = time.perf_counter()-native_started
         observation.update({'taskSha256': next(case['inputSha256'] for case in plan['cases']
                                               if case['id'] == item['case']),

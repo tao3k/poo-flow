@@ -1,0 +1,27 @@
+NORMALIZED GUARD 1
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/join-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 13))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-normalized-guard-1-20261003/current-expected.sexp" "/private/tmp/poo-normalized-guard-1-20261003/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"witness":"#f","readable":true}
+HARNESS-OK model-understanding-score
+OK
+{"candidateSha256": "512827b6dc10850da26a61fbe56e40a045e47ae3aea897ccaf3b154e893d6d18", "correct": true, "currentComputeSha256": "1573cfc4b7d782300902f85f99dec49d35a37ade67814f04560d2a37e0753037", "expectedSha256": "30699241c79653d9bd7f4979fb9783e116b72532640d0140dbc6f27b2ee6eef0", "programSha256": "2699737ccaebe4529e74cd34ca048642a7c20b1f4a97ad5559cb20ade802d0ef", "rawCandidateSha256": "a5bbfefe44af7088b85b4c10fecdf6fdc2c19b0459f48e0269f975574238fc4a", "readable": true, "witness": "#f"}
+NORMALIZED GUARD 19
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/diagnostic-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(invalid-body (rule 0 body 1))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-normalized-guard-19-20261003/current-expected.sexp" "/private/tmp/poo-normalized-guard-19-20261003/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"readable":true,"witness":"((result car) (expected invalid-body observed invalid-dependencies))","correct":false}
+HARNESS-OK model-understanding-score
+OK
+{"candidateSha256": "a196bccabbef6d744b1df5a7522e9c925fcb1782d64e1e2c6d1c1dfcb3b1f060", "correct": false, "currentComputeSha256": "93bdfc394554147835b6e6905d5e6df40c23cb5114f17bdb3469f607307543a2", "expectedSha256": "3316e1a5ec75f5fc89e5719fc28e079f739fda3bd7fb2a0018b55661c216c3ba", "programSha256": "a1562945c55767e0a6385ca7020507b2c271628088a220834cdcaed29553fd06", "rawCandidateSha256": "508478908218f60efbd8a0a85ea0d39a1b46488498227d0652c996e2c4b0116f", "readable": true, "witness": "((result car) (expected invalid-body observed invalid-dependencies))"}
+NORMALIZED-GUARD-OK actual saved correct/incorrect candidates, no model calls

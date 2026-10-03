@@ -33,7 +33,7 @@ def _candidate_bounds(candidate):
             'invalidCharacterIndex': invalid}
 
 
-def score_candidate(root, expected, candidate, destination, program=None):
+def score_candidate(root, expected, candidate, destination, program=None, *, normalize=False):
     destination.mkdir(parents=True, exist_ok=False)
     computation = {}
     if program is not None:
@@ -46,6 +46,15 @@ def score_candidate(root, expected, candidate, destination, program=None):
         expected = current
         computation = {'programSha256': digest(program.read_bytes()),
                        'currentComputeSha256': digest((destination/'current-compute.log').read_bytes())}
+    if normalize:
+        from ..prediction_transport import prediction_from_output
+        raw = candidate
+        (destination/'raw-output.txt').write_text(raw)
+        candidate = prediction_from_output(raw)
+        computation['rawCandidateSha256'] = digest(raw.encode())
+        if candidate is None:
+            return {'readable': False, 'correct': False, 'transportRejected': True,
+                    'transportAmbiguousOrAbsent': True, **computation}
     candidate_path = destination / 'candidate.sexp'
     candidate_path.write_text(candidate)
     bounds = _candidate_bounds(candidate)

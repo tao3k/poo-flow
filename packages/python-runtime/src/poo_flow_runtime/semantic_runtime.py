@@ -120,32 +120,45 @@ class SemanticRuntime:
             raise SemanticRuntimeError('model output must be a JSON object', status=3)
         return self.call('temporal.verify', {'task': task, 'candidate': candidate})
 
-    def render_temporal_answer(self, task: Mapping[str, Any], renderer) -> dict[str, Any]:
-        """Run Python-owned model IO and return only a Scheme-consistent candidate.
-
-        Recompute against the caller's current task after model IO. The renderer
-        receives a native result, never a Scheme evaluator or authority token.
-        """
-        native = self.call('temporal.solve', task)
-        output = renderer(native)
-        receipt = self.validate_model_answer(task, output)
-        if receipt['verdict'] != 'consistent':
-            raise SemanticRuntimeError('model answer contradicted current Scheme result', status=8)
-        return {'candidate': json.loads(output), 'receipt': receipt}
-
-    async def arender_temporal_answer(self, task: Mapping[str, Any], renderer) -> dict[str, Any]:
-        native = await self.acall('temporal.solve', task)
-        output = await renderer(native)
+    def observe_model_answer(self, task: Mapping[str, Any], output: str) -> dict[str, Any]:
+        """Compute current Scheme evidence after an inert model prediction."""
         try:
             candidate = json.loads(output, object_pairs_hook=_unique_json_pairs)
         except (ValueError, TypeError) as error:
             raise SemanticRuntimeError('model output is not inert JSON', status=3) from error
-        if not isinstance(candidate, dict):
-            raise SemanticRuntimeError('model output must be a JSON object', status=3)
-        receipt = await self.acall('temporal.verify', {'task': task, 'candidate': candidate})
-        if receipt['verdict'] != 'consistent':
-            raise SemanticRuntimeError('model answer contradicted current Scheme result', status=8)
-        return {'candidate': candidate, 'receipt': receipt}
+        return self.call('temporal.observe', {'task': task, 'candidate': candidate})
+
+    def predict_temporal_answer(self, task: Mapping[str, Any], predictor,
+                                *, observation_sink=None) -> dict[str, Any]:
+        """Give model IO task data; return fresh Scheme feedback without retry.
+
+        The callback receives a detached task, with no solved answer. Scheme
+        computes evidence against the caller's current task after model IO.
+        A contradiction is an observation, never permission to execute effects.
+        """
+        supplied = json.loads(json.dumps(task, allow_nan=False))
+        output = predictor(supplied)
+        receipt = self.observe_model_answer(task, output)
+        result = {'candidate': json.loads(output), 'receipt': receipt,
+                  'artifactDigest': self.artifact_digest}
+        if observation_sink is not None:
+            observation_sink(json.loads(json.dumps(result)))
+        return result
+
+    async def apredict_temporal_answer(self, task: Mapping[str, Any], predictor,
+                                      *, observation_sink=None) -> dict[str, Any]:
+        supplied = json.loads(json.dumps(task, allow_nan=False))
+        output = await predictor(supplied)
+        try:
+            candidate = json.loads(output, object_pairs_hook=_unique_json_pairs)
+        except (ValueError, TypeError) as error:
+            raise SemanticRuntimeError('model output is not inert JSON', status=3) from error
+        receipt = await self.acall('temporal.observe', {'task': task, 'candidate': candidate})
+        result = {'candidate': candidate, 'receipt': receipt,
+                  'artifactDigest': self.artifact_digest}
+        if observation_sink is not None:
+            await observation_sink(json.loads(json.dumps(result)))
+        return result
 
     def _graph_projection(self, plan, bindings):
         # Bind the full runtime projection, including action/router/reducer names.

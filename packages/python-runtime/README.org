@@ -337,6 +337,19 @@ executor = create_tool_call_loop(
 )
 #+end_src
 
+* Scheme observations after model predictions
+
+The optional semantic AOT artifact supports =temporal.observe=.
+=SemanticRuntime.predict_temporal_answer(task, predictor)= passes a detached
+task to caller-owned model IO. =apredict_temporal_answer= supports async IO.
+No solved answer is supplied to the predictor. After IO, Scheme recomputes
+against the current task and returns a digest-bound status/row difference.
+
+The returned candidate and observation remain data. A contradiction supplies
+current computation evidence, grants no effects and causes no model retry.
+Provider inputs and any later feedback transfer remain the caller's explicit
+IO. Model learning must be measured separately from receipt correctness.
+
 * Runtime C ABI cache
 
 The runtime C ABI probe shared library is cached outside the package-local

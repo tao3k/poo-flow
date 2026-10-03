@@ -66,6 +66,9 @@ borrowed bounded input, explicit release, open/call/close and typed errors.
   consumes Scheme-produced static successors, including START.
 - =temporal.verify=: recompute the source-bound native answer and compare the
   candidate's exact canonical status/rows. Returns consistent or contradicted.
+- =temporal.observe=: compute a source-bound status/row counterexample after
+  model IO, with candidate validity and an exact request digest. No tutorial
+  or native answer is supplied to the model before this computation.
 
 Temporal requests are bounded to 128 events/members, 256 parent edges and
 horizon 1024. The C host rejects wrong-thread calls, malformed UTF-8, NUL, depth >64, input
@@ -122,14 +125,30 @@ measures neither autonomous tool selection nor general agent/business accuracy.
 The corpus is small and curated. Lower provider-stream latency in this run is
 not a general performance guarantee or combined Runtime+provider latency.
 
+* Direct prediction and computed observation
+
+=predict_temporal_answer= and =apredict_temporal_answer= give a detached task
+to Python-owned model IO. They do not compute or supply a native answer before
+the model's prediction. After IO, =temporal.observe= recomputes the caller's
+current source through the existing Scheme temporal owner and produces the
+first status or row difference. Invalid candidate shapes remain contradictions.
+The receipt binds the current semantic projection and exact request bytes.
+Python transports the candidate and receipt; Scheme owns the comparison.
+
+These APIs return contradictions as observations without retries or effect
+authorization. A downstream consumer can carry the receipt into a later task.
+There is no claim of model learning or business benefit from this plumbing.
+The direct Scheme study separately measures actual provider behavior.
+
 * Existing rejection gate: not real-time teaching
 
 Both native-assisted failures fabricated three rows when the correct native
 answer was empty. Correct tool output alone did not guarantee correct model
-output. The delivered correction is =temporal.verify= plus
-=SemanticRuntime.validate_model_answer=, plus enforced synchronous/asynchronous
-=render_temporal_answer= entrypoints, keeping the LLM answer as inert data
-until the Scheme owner recomputes it against the current source.
+output. The historical correction used =temporal.verify= and answer-rendering
+entrypoints. Those rendering entrypoints have now been removed from the active
+Runtime: supplying a solved answer does not qualify direct comprehension.
+=SemanticRuntime.validate_model_answer= remains available for inert archived
+responses; direct model IO uses the task-first prediction/observation APIs.
 
 [[file:evidence/python-scheme-runtime-20261003/final-gate.json][Offline final-answer gate]]
 replays all 48 archived answers without a provider call. The gate records

@@ -68,27 +68,21 @@ def main():
     plan = json.loads((args.study / 'plan.json').read_text())
     records = [json.loads(line) for line in (args.study / 'calls.jsonl').read_text().splitlines()]
     analysis = analyze(plan, records)
-    from poo_flow_runtime.semantic_runtime import SemanticRuntime, SemanticRuntimeError
+    from poo_flow_runtime.semantic_runtime import SemanticRuntime
     digest = hashlib.sha256(args.library.read_bytes()).hexdigest()
     cases = {case['id']: case for case in plan['corpus']}
     replay = []
     with SemanticRuntime(args.library, expected_digest=digest) as runtime:
         for index, row in enumerate(records):
             task = cases[row['case']]['request']
-            try:
-                rendered = runtime.render_temporal_answer(task, lambda _: row['raw'])
-                result = rendered['receipt']
-                accepted = True
-            except SemanticRuntimeError as error:
-                assert error.status == 8, error
-                result = runtime.validate_model_answer(task, row['raw'])
-                accepted = False
+            result = runtime.validate_model_answer(task, row['raw'])
+            accepted = result['verdict'] == 'consistent'
             assert accepted == row['correct'], row
             replay.append(dict(case=row['case'], repeat=row['repeat'], arm=row['arm'],
                                responseId=row['responseId'], correct=row['correct'], **result))
             sys.stdout.write(f'REPLAY {index+1}/48 {row["arm"]} {result["verdict"]}\n'); sys.stdout.flush()
     gate = {'schema': 'poo-flow.runtime-final-answer-gate.v1', 'artifactSha256': digest,
-            'paidCalls': 0, 'pipeline': 'render_temporal_answer', 'records': replay}
+            'paidCalls': 0, 'pipeline': 'validate_model_answer (historical response replay only)', 'records': replay}
     for arm in ('plain', 'native'):
         rows = [row for row in replay if row['arm'] == arm]
         accepted = [row for row in rows if row['verdict'] == 'consistent']

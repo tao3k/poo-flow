@@ -10,7 +10,8 @@ from .tasks import DIRECT_FAMILIES, DIRECT_MODULES, digest, task_program, expect
 from .native import native_run
 
 def producer_hashes():
-    files = [*Path(__file__).parent.glob('*.py'), Path(__file__).parent.parent/'direct_understanding.py']
+    files = [*Path(__file__).parent.glob('*.py'), Path(__file__).parent.parent/'direct_understanding.py',
+             Path(__file__).parent.parent/'prediction_transport.py']
     return {str(path.relative_to(Path(__file__).parent.parent)): digest(path.read_bytes())
             for path in sorted(files)}
 
@@ -39,7 +40,8 @@ def prepare(root, ascent, output):
         'scorerSha256': digest((root/'t/model-study/direct-understanding/prediction-score.ss').read_bytes()),
         'inputContract': 'actual module source and Scheme check-equal? task with missing expected datum; no semantic instructions',
         'sourceClosure': 'three named modules only; dependencies are not all presented',
-        'outputContract': 'one inert datum or check-equal? result quoted-datum; never evaluated',
+        'outputContract': 'unique inert datum or check-equal? result quoted-datum; explanations stripped without oracle selection; never evaluated',
+        'transportContract': 'bounded unique prediction extraction; ambiguity and EOF reject',
         'cases': [], 'order': []}
     imports = ''
     for module in (':gerbil-ascent/program/scheme-language',):

@@ -274,3 +274,25 @@ teaching closure remain open, and MRR Rust admission remains deferred.
 The primary model acceptance contract is
 [[file:model-scheme-understanding-validation.org][Scheme understanding, reasoning and real computation validation]].
 Native correctness and output rejection alone cannot close this model gate.
+
+* 2026-10-03 Direct prediction and current computation observation
+
+Active Runtime answer-rendering entrypoints have been removed. Model IO
+receives a detached task; =temporal.observe= computes a fresh Scheme-owned
+status/row difference after the candidate arrives. The Runtime can deliver the
+observation and artifact binding through a caller-owned sink, without a preset
+semantic tutorial, solved-answer prefill, automatic model retry or effect grant.
+
+Local qualification: 332 Runtime checks and 37 testing-package checks pass.
+The installed wheel performs observation delivery, a real control session and
+Scheme graph admission followed by Python IO without a Gerbil executable.
+This is bounded engineering evidence on the current Darwin host; exact-head
+cross-platform CI is tracked separately.
+
+The new 24-call study completes with zero model retries. Its frozen strict
+transport accepts no answers. Supplementary native verification after inert
+extraction observes initial high Reasoning 5/6 and both transfer arms 5/6.
+There is no observed transfer accuracy gain, and this post hoc analysis cannot
+replace predeclared model acceptance. Program generation, full POO composition,
+reliable semantic feedback transfer and business benefit remain open. MRR Rust
+admission stays deferred. See [[file:model-scheme-validation-record.org][execution ledger and evidence]].

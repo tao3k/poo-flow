@@ -3,40 +3,16 @@
 from __future__ import annotations
 import asyncio
 from copy import deepcopy
-import hashlib
 import os
-from pathlib import Path
 import pytest
 from poo_flow_runtime.semantic_runtime import SemanticRuntime, SemanticRuntimeError
 
 
-def temporal_request():
-    return {'lens': {'generation': 1, 'clock': 'clock', 'start': 0, 'end': 10,
-                     'asOf': 10, 'cut': 'cut', 'members': ['a', 'b', 'c'],
-                     'horizon': 8, 'closed': True},
-            'source': {'identity': 'source', 'generation': 1, 'clock': 'clock',
-                       'events': [['a', 1, 1], ['b', 2, 2], ['c', 3, 3]],
-                       'parents': [['a', 'b'], ['b', 'c']]}, 'root': 'a'}
-
-
-@pytest.fixture(scope='module')
-def runtime():
-    configured = os.environ.get('POO_FLOW_SEMANTIC_V1_LIBRARY')
-    if not configured:
-        pytest.skip('semantic AOT artifact must be explicitly configured')
-    path = Path(configured)
-    with SemanticRuntime(path, expected_digest=hashlib.sha256(path.read_bytes()).hexdigest()) as value:
-        yield value
-    with pytest.raises(SemanticRuntimeError, match='closed'):
-        value.call('descriptor', {})
-    value.close()
-    result = value._ffi.new('poo_flow_semantic_result *')
-    assert value._lib.poo_flow_python_semantic_call(b'descriptor', b'{}', 2, result) == 1
-    assert value._lib.poo_flow_python_semantic_open(str(path).encode()) == 1
+from semantic_cases import temporal_request
 
 
 def test_semantic_native_descriptor(runtime):
-    assert runtime.descriptor['operations'] == ['temporal.solve', 'graph.admit', 'temporal.verify', 'graph.targets']
+    assert runtime.descriptor['operations'] == ['temporal.solve', 'graph.admit', 'temporal.verify', 'graph.targets', 'temporal.observe']
     assert runtime.descriptor['threading'] == 'single-owner-thread'
 
 
@@ -231,24 +207,13 @@ def test_semantic_native_queue_bound_and_digest_rejection(runtime):
     assert runtime.call('descriptor', {})['abiVersion'] == 1
 
 
-def test_semantic_model_pipeline_rejects_hallucination_and_source_change(runtime):
-    import json
+def test_semantic_answer_validation_binds_current_source(runtime):
     task = temporal_request()
-    def correct(native):
-        return json.dumps({key: native[key] for key in ('status', 'rows')})
-    assert runtime.render_temporal_answer(task, correct)['receipt']['verdict'] == 'consistent'
-    with pytest.raises(SemanticRuntimeError) as error:
-        runtime.render_temporal_answer(task, lambda _: '{"status":"complete","rows":[]}')
-    assert error.value.status == 8
-    def withdraw(native):
-        task['source']['parents'] = []
-        return correct(native)
-    with pytest.raises(SemanticRuntimeError):
-        runtime.render_temporal_answer(task, withdraw)
-    async def renderer(native):
-        await asyncio.sleep(0)
-        return correct(native)
-    assert asyncio.run(runtime.arender_temporal_answer(task, renderer))['candidate']['rows'] == []
+    output = '{"status":"complete","rows":[["a","b"],["a","c"]]}'
+    assert runtime.validate_model_answer(task, output)['verdict'] == 'consistent'
+    assert runtime.validate_model_answer(task, '{"status":"complete","rows":[]}')['verdict'] == 'contradicted'
+    task['source']['parents'].clear()
+    assert runtime.validate_model_answer(task, output)['verdict'] == 'contradicted'
 
 
 def test_semantic_native_rejects_excess_finite_domain_before_solver(runtime):

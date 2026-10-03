@@ -8,6 +8,7 @@
   (call-with-input-file path
     (lambda (port)
       (let (value (read port))
+        (when (eof-object? value) (error "missing prediction datum"))
         (unless (eof-object? (read port)) (error "extra datum"))
         (let (value (if (and (list? value) (= (length value) 3)
                             (eq? (car value) 'check-equal?) (eq? (cadr value) 'result))
