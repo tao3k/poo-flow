@@ -239,28 +239,6 @@ jobs:
           build: true
           build-args: PooFlowSessionProof
 
-  org-memory-rust:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
-    name: Orgize-backed Memory candidate port
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout poo-flow
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Build and run exact-byte Orgize candidate tests
-        run: |
-          set -euo pipefail
-          rustup toolchain install 1.95.0 --profile minimal
-          cargo +1.95.0 test --locked \
-            --manifest-path bindings/rust-runtime/Cargo.toml \
-            --features org-memory --test org_memory --no-run
-          timeout --foreground --signal=TERM --kill-after=1s 45s \
-            python3 bindings/rust-runtime/tools/watch.py \
-              cargo +1.95.0 test --locked \
-                --manifest-path bindings/rust-runtime/Cargo.toml \
-                --features org-memory --test org_memory -- --nocapture
-
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Lean module / ${{ matrix.owner }}

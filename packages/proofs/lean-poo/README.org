@@ -49,11 +49,10 @@ both focused proof gates.
 The PR CI runs this library and its axiom audit in the independent =Session
 and WorkTree LeanPoo proof= job; the Linux native job runs the TLA+ cases.
 
-For Org-backed Memory, the next POO Flow proof boundary is the typed
-[[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Org Memory load receipt]]: exact document bytes and parser/Element/query-pack
-identity, source-local record anchor, WorkTree cut, current Session policy,
-and expected Memory head revision.  A new Lean module here should prove
-accepted-load identity and stale-source/pack/closed-Session refusals; TLA+
-should exercise reload, revoke, close and two-writer publication.  Orgize's
-parser and query-pack correctness stays with Orgize.  Neither existing proof
-is evidence that the POO Flow loader already exists.
+For Org-backed Memory, the [[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Scheme selection boundary]] consumes an Orgize
+Scheme graph and named query. =OrgMemory.lean= proves that a pure POO Flow
+intent preserves its selected source, requires current scope, grant, policy
+and head, and grants neither semantic admission nor publication. The host
+must still authenticate graph/query identity against exact Org bytes and the
+WorkTree cut. TLA+ should exercise reload, revoke, close and two-writer
+publication once that adapter exists. Orgize owns parser and query correctness.

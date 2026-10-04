@@ -98,25 +98,6 @@ MRR result identity, source completeness, causal derivation, Temporal current
 applicability and IFC flow authorization are distinct gates. No MRR generation
 is converted into an integer Temporal generation by this transport.
 
-* Org Memory exact-byte candidate port
-
-Feature =org-memory= pins Orgize PR #21 at
-=16d2a8c3ac168d73b890262b29b756d4b4ec3361=. The bounded
-=load_org_memory_candidates= port checks a host-supplied current WorkTree cut
-and exact Org byte digest, parses those bytes through Orgize's Scheme-AOT
-parser, and executes one Orgize-owned named Element query. Its typed receipt
-retains the project and WorkTree identities, source path/cut, parser and graph
-digests, query rule digest, and source-backed candidate spans. The source is
-limited to 1 MiB and the result to 4096 candidates.
-
-The host must authenticate the Git source cut and recheck it after selection.
-The POO Flow Memory module defines a POO shape for this source-bound receipt;
-trusted Rust-to-POO transport remains to be wired. The Session module derives
-a pure selection intent; it checks current scope, query grant,
-parser/graph/query versions, Memory store policy, Session
-activity, read grant and expected head revision. This port does not perform
-MRR semantic admission, immutable storage or compare-and-swap publication.
-
 * Native MRR result integration
 
 Feature =mrr-transport= pins MRR =3ce31dac2dc58ab780ed06fa88103de501355692=.
