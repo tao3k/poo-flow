@@ -92,16 +92,12 @@ Its current admission routine validates identity and result shape/type/resources
 then hashes the candidate. It does not independently re-execute the backend or
 validate a causal derivation. The receipt must retain that claim scope.
 
-MRR Data's =mrr-data-poo-flow/src/property_source.rs= supplies verified physical
-snapshot restoration/execution and returns original compilation, root, candidate
-and admission values. Its own source compilation, bundle binding and admission
-orchestration still duplicate the new MRR-owned seam. MRR Data currently pins
-MRR =c4328064ab0bf5eca39dc2f79fbf890b6b99f7c9=; that Git tree does not contain
-=crates/mrr-property-source/src/source_query.rs=. Therefore consuming the new
-seam first requires an explicit immutable pin/lock migration and its tests.
-Neither Rust checkout has a Temporal C runtime consumer found in this audit.
-POO =bindings/rust-ir= is a build-time function IR crate; MRR =mrr-gerbil= is a
-build-time native projection driver. Neither qualifies a Temporal runtime FFI.
+The earlier property-source worker has been removed. Current MRR Data uses
+=execute_restored_property_query_handoff= with the immutable MRR Scheme v2
+pin and original compilation/admission values. POO's native Rust runtime
+consumes the bounded typed handoff; its joined original-GQL physical fixture
+has a separate local acceptance receipt. This audit's older pin and worker
+findings are superseded by =mrr-integration-architecture.org=.
 
 Existing Temporal candidate documentation intentionally leaves the MRR bridge's
 receipt incomplete until original result bytes and an explicit query/snapshot

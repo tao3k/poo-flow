@@ -2192,7 +2192,7 @@ dependencies = [
 [[package]]
 name = "mrr-data-content"
 version = "0.1.0"
-source = "git+https://github.com/tao3k/mrr-data.git?rev=bdc81a1c9f4289cf3c434f3473985e6911340246#bdc81a1c9f4289cf3c434f3473985e6911340246"
+source = "git+https://github.com/tao3k/mrr-data.git?rev=21e853dad5c5c120ca54cfd619efb855e94a4f3b#21e853dad5c5c120ca54cfd619efb855e94a4f3b"
 dependencies = [
  "cid",
  "meta-relational-reasoning",
@@ -2202,7 +2202,7 @@ dependencies = [
 [[package]]
 name = "mrr-data-core"
 version = "0.1.0"
-source = "git+https://github.com/tao3k/mrr-data.git?rev=bdc81a1c9f4289cf3c434f3473985e6911340246#bdc81a1c9f4289cf3c434f3473985e6911340246"
+source = "git+https://github.com/tao3k/mrr-data.git?rev=21e853dad5c5c120ca54cfd619efb855e94a4f3b#21e853dad5c5c120ca54cfd619efb855e94a4f3b"
 dependencies = [
  "cid",
  "meta-relational-reasoning",
@@ -2217,7 +2217,7 @@ dependencies = [
 [[package]]
 name = "mrr-data-datafusion"
 version = "0.1.0"
-source = "git+https://github.com/tao3k/mrr-data.git?rev=bdc81a1c9f4289cf3c434f3473985e6911340246#bdc81a1c9f4289cf3c434f3473985e6911340246"
+source = "git+https://github.com/tao3k/mrr-data.git?rev=21e853dad5c5c120ca54cfd619efb855e94a4f3b#21e853dad5c5c120ca54cfd619efb855e94a4f3b"
 dependencies = [
  "arrow-array",
  "arrow-ipc",
@@ -2231,7 +2231,7 @@ dependencies = [
 [[package]]
 name = "mrr-data-profile"
 version = "0.1.0"
-source = "git+https://github.com/tao3k/mrr-data.git?rev=bdc81a1c9f4289cf3c434f3473985e6911340246#bdc81a1c9f4289cf3c434f3473985e6911340246"
+source = "git+https://github.com/tao3k/mrr-data.git?rev=21e853dad5c5c120ca54cfd619efb855e94a4f3b#21e853dad5c5c120ca54cfd619efb855e94a4f3b"
 
 [[package]]
 name = "mrr-frontends"

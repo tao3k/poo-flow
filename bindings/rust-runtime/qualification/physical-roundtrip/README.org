@@ -26,7 +26,8 @@ Set =MRR_NATIVE_PROGRESS=1= for genuine native frontend stage output and
 performance measurements belong to ASP Scheme's benchmark API.
 
 This package does not claim remote S3 recovery, a real-model correction lifecycle,
-Legacy worker JSON migration, IFC publication or complete G0--G5 closure.
+IFC publication or complete G0--G5 closure. The Legacy worker and its Python
+adapter have been removed; remote publication/recovery have no replacement here.
 
 * Local acceptance
 
@@ -57,3 +58,23 @@ repository does not constitute another execution. The model consumes a frozen
 projection of the physical result and replays native classification. It does
 not issue a fresh physical query or exercise correction/re-query, current cut
 fences, IFC publication or source authentication. Those gates remain open.
+
+* Removal revision verification
+
+The active MRR Data pin is =21e853dad5c5c120ca54cfd619efb855e94a4f3b=,
+which removes the Legacy worker. Its locked optimized build succeeds. However,
+its physical run failed the unchanged five-second genuine-progress watchdog
+after =mrr-native: runtime initialization started=. One explicit diagnostic
+repeat with the prior configured Gerbil prefix/load path failed at the same
+point. Neither invocation produced a physical receipt or oracle. Both failure
+logs are archived beside the earlier successful evidence. A bounded stack
+sampling attempt also timed out and did not identify the root cause.
+
+This head is not physically runtime-qualified. Host compilation contention was
+observed but has not been established as the cause. The original successful
+physical/model receipts still qualify their recorded =bdc81a1c= projection;
+they do not close this failed initialization gate. No paid model call was made
+for the removal revision. Python resource/export removal is independently
+verified by five existing tool-node tests with the project harness and direct
+import/export checks. An optional core test compilation was stopped to release
+the shared build lock; it is not a test pass.

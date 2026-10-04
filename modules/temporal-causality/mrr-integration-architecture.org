@@ -61,13 +61,15 @@ Cold/warm restored-property tests and the native POO transport test exercise
 these two seams separately. They do not yet qualify one original GQL event/time
 query through physical execution into Temporal. G0 remains open for that joined
 scenario, source compilation receipt and receiver-owned root/cut correspondence.
-The legacy static-edge worker still uses its previous JSON envelope and is not
-part of this new native handoff; its direct migration remains outstanding.
+The Legacy static-edge worker has been removed together with its Python
+resource, test entrypoints and JSON receipts. The new native handoff is the
+qualified read-only library path; remote publication/recovery remain open.
 
 * Original GQL physical read-only acceptance slice
 
-The [[file:../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][independent qualification package]] now pins MRR =9ee5ace= and
-MRR Data =bdc81a1c=. It executes an original GQL event/position query from the
+The [[file:../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][independent qualification package]] initially pinned MRR =9ee5ace= and
+MRR Data =bdc81a1c=. The active Data pin is now =21e853da= after Legacy
+removal; the earlier model receipt retains its initial frozen projection. It executes an original GQL event/position query from the
 source compiler through verified Arrow restoration and real DataFusion Int64
 execution, preserves the complete original Scheme v2 result/receipt, and reaches
 native Temporal classification. Independent source, root, catalog, query, row,
@@ -84,7 +86,7 @@ intact ASP artifact freeze. See the archived Scheme receipts linked above.
 This closes the named local synthetic original-GQL-to-Temporal read-only path.
 It does not close complete G0: authoritative source/cut correspondence, physical
 cross-process envelope, deployed executor trust and external recovery remain
-separate. The Legacy static-edge JSON worker is still pending direct migration.
+separate. The Legacy static-edge JSON worker and its callers have been removed.
 G1--G5 correction, current applicability, reverse facts and IFC publication are
 not established by this acceptance. The earlier failed cold p95 benchmark stays
 failed; no new performance qualification was run.
@@ -98,7 +100,6 @@ failed; no new performance qualification was run.
 | =mrr-revision/src/{api,snapshot}.rs= | Canonical external revision identities, one generation and no conflicting logical source in a snapshot | A host correspondence binds temporal cuts to these identities; no clock/generation coercion |
 | =mrr-lineage/src/api.rs= | Acyclic graph admission and reverse reachability over supplied edges | Impact schedules reevaluation; it cannot decide whether alternative support survives |
 | =mrr-agentic-ai-context/src/state.rs= | Context elements with declared dependencies and temporal FactId references | Export applicability evidence as explicit dependencies and check it at consumption |
-| =mrr-data-poo-flow/src/worker.rs= | Static-edge physical query then candidate admission; response keeps rows and admission digest | Export the complete original typed transport and physical evidence before general Temporal use |
 
 MRR =docs/architecture/0033-poo-query-provider.org= still describes a declared
 Scheme projection with integer generation matching Temporal and snapshot digest
@@ -368,3 +369,26 @@ a current permit merely because its historical commit receipt still exists.
 - [[file:integration-readiness-audit.org][Pinned runtime and real-model qualification boundaries]]
 - [[file:../../bindings/rust-runtime/README.org][Native Rust adapter and delivered MRR observation profile]]
 - [[file:../../bindings/runtime-c/include/poo_flow/temporal_store.h][Current first-root publication ABI]]
+
+* Direct Legacy removal
+
+The retired static-edge worker, Python resource and public exports, copied
+consumer harness, CLI consumer option, CI entries and JSON acceptance receipt
+have been removed. There is no compatibility shim or fallback. MRR Data keeps
+its generic snapshot/cache/S3 interfaces and original typed Scheme v2 handoff.
+The physical qualifier now selects the removal revision explicitly rather than
+leaving an active build on the old worker tree. Remote publication/recovery and
+G1--G5 remain independent implementation/qualification gates.
+
+The Python runtime source passes five existing tool-node checks with the project
+harness enabled; direct import/export inspection confirms the retired module
+and all three resource names are absent. MRR Data framework checks pass 16/16
+with lint/format/docs checks and locked workspace resolution. This removal
+did not trigger another paid model batch; the prior frozen model receipt
+continues to refer to its recorded immutable physical projection.
+
+The active =21e853da= removal pin builds, but physical initialization exceeded
+the five-second progress gate in both the first run and one explicit SDK
+environment diagnostic. Their failure logs are archived; no new physical
+receipt was accepted. The root cause remains unestablished. The earlier
+=bdc81a1c= successful physical/model receipts do not qualify this head.

@@ -14,9 +14,9 @@ license = "Apache-2.0 AND LGPL-2.1-or-later"
 poo-flow-rust-runtime = { path = "../..", features = ["mrr-transport"] }
 meta-relational-reasoning = { git = "https://github.com/tao3k/meta-relational-reasoning.git", rev = "9ee5ace469e7a9319c74b8be0308e9062a47e587", default-features = false }
 mrr-property-source = { git = "https://github.com/tao3k/meta-relational-reasoning.git", rev = "9ee5ace469e7a9319c74b8be0308e9062a47e587" }
-mrr-data-core = { git = "https://github.com/tao3k/mrr-data.git", rev = "bdc81a1c9f4289cf3c434f3473985e6911340246", features = ["content-identity"] }
-mrr-data-content = { git = "https://github.com/tao3k/mrr-data.git", rev = "bdc81a1c9f4289cf3c434f3473985e6911340246", features = ["snapshot"] }
-mrr-data-datafusion = { git = "https://github.com/tao3k/mrr-data.git", rev = "bdc81a1c9f4289cf3c434f3473985e6911340246" }
+mrr-data-core = { git = "https://github.com/tao3k/mrr-data.git", rev = "21e853dad5c5c120ca54cfd619efb855e94a4f3b", features = ["content-identity"] }
+mrr-data-content = { git = "https://github.com/tao3k/mrr-data.git", rev = "21e853dad5c5c120ca54cfd619efb855e94a4f3b", features = ["snapshot"] }
+mrr-data-datafusion = { git = "https://github.com/tao3k/mrr-data.git", rev = "21e853dad5c5c120ca54cfd619efb855e94a4f3b" }
 arrow-array = "58.4.0"
 arrow-schema = "58.4.0"
 arrow-ipc = "58.4.0"
