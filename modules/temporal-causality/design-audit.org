@@ -326,3 +326,11 @@ source/coverage, general lifecycle refinement and D8 remain open. The crash gate
 sends SIGKILL after commit and opens a new store to recover pointer and receipt;
 it does not qualify power loss or storage hardware. See
 [[file:../../t/qualification/temporal-library-basic/publication-runtime/receipt.json][the exact installed-wheel receipt]]. No real-model calls were made in this slice.
+
+* Current integration readiness audit
+
+[[file:integration-readiness-audit.org][The cross-layer closure audit]] records the current RFC/IFC gaps,
+profile-specific Python/DeepSeek evidence, exact Rust MRR/MRR Data source heads,
+and the R1--R4 integration gates. Read-only Rust transport may proceed against
+the qualified basic profile; historical receipt recovery is not a current
+applicability or information-flow authorization receipt.
