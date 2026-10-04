@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 //! Bounded Rust transport to the POO-owned native semantic engine.
 //! All unsafe calls stay on one OS thread. No classification is implemented here.
+pub mod wire;
+use crate::wire::Value;
 use libloading::Library;
-use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
     ffi::{CString, c_char},
@@ -168,7 +169,7 @@ impl SemanticRuntime {
             return Err(Error::InvalidInput);
         }
         let op = CString::new(operation).map_err(|_| Error::InvalidInput)?;
-        let data = serde_json::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
         if data.len() > 1_048_576 {
             return Err(Error::InvalidInput);
         }
@@ -245,22 +246,22 @@ impl Native {
         let symbol_error = |e: libloading::Error| Error::Transport(e.to_string());
         let open = unsafe {
             *library
-                .get::<Open>(b"poo_flow_semantic_open\0")
+                .get::<Open>(b"poo_flow_semantic_v2_open\0")
                 .map_err(symbol_error)?
         };
         let close = unsafe {
             *library
-                .get::<Open>(b"poo_flow_semantic_close\0")
+                .get::<Open>(b"poo_flow_semantic_v2_close\0")
                 .map_err(symbol_error)?
         };
         let call = unsafe {
             *library
-                .get::<Call>(b"poo_flow_semantic_call\0")
+                .get::<Call>(b"poo_flow_semantic_v2_call\0")
                 .map_err(symbol_error)?
         };
         let release = unsafe {
             *library
-                .get::<Release>(b"poo_flow_semantic_result_release\0")
+                .get::<Release>(b"poo_flow_semantic_v2_result_release\0")
                 .map_err(symbol_error)?
         };
         // Keep Gambit code mapped for process lifetime, including after terminal close.
@@ -294,10 +295,10 @@ impl Native {
                     String::from_utf8_lossy(bytes).into_owned(),
                 ))
             } else {
-                serde_json::from_slice(bytes)
+                wire::from_slice(bytes)
                     .map_err(|e| Error::Transport(e.to_string()))
                     .and_then(|value: Value| {
-                        if value.is_object() {
+                        if value.as_object().is_some() {
                             Ok(value)
                         } else {
                             Err(Error::Transport("nonobject native result".into()))

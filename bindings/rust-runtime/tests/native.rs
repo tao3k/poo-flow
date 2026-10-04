@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 use poo_flow_rust_runtime::{Error, SemanticRuntime};
-use serde_json::{Value, json};
+use poo_flow_rust_runtime::{
+    datum,
+    wire::{self, Value},
+};
 use std::{sync::Arc, time::Duration};
 
 #[test]
@@ -14,9 +17,9 @@ fn native_python_differential_and_lifetime() {
         Err(Error::DigestMismatch)
     ));
     let runtime = Arc::new(SemanticRuntime::open(&path, &digest, 64).unwrap());
-    let descriptor = runtime.call("descriptor", &json!({})).unwrap();
+    let descriptor = runtime.call("descriptor", &datum!({})).unwrap();
     assert_eq!(descriptor["threading"], "single-owner-thread");
-    let cases: Value = serde_json::from_slice(&std::fs::read(fixture).unwrap()).unwrap();
+    let cases: Value = wire::from_slice(&std::fs::read(fixture).unwrap()).unwrap();
     for case in cases.as_array().unwrap() {
         println!("DIFFERENTIAL {}", case["name"]);
         let result = runtime
@@ -27,18 +30,18 @@ fn native_python_differential_and_lifetime() {
         assert_eq!(result, case["expected"]);
     }
     assert!(matches!(
-        runtime.call("$host.temporal.source.register", &json!({})),
+        runtime.call("$host.temporal.source.register", &datum!({})),
         Err(Error::InvalidInput)
     ));
     assert!(
         runtime
-            .call("temporal.family.classify", &json!({}))
+            .call("temporal.family.classify", &datum!({}))
             .is_err()
     );
-    assert!(runtime.call("descriptor", &json!({})).is_ok());
+    assert!(runtime.call("descriptor", &datum!({})).is_ok());
     assert_eq!(
         runtime
-            .call("descriptor", &json!({"padding": "x".repeat(1_048_576)}))
+            .call("descriptor", &datum!({"padding": "x".repeat(1_048_576)}))
             .unwrap_err(),
         Error::InvalidInput
     );
@@ -58,10 +61,10 @@ fn native_python_differential_and_lifetime() {
                     *const u8,
                     usize,
                     *mut RawResult,
-                ) -> i32>(b"poo_flow_semantic_call\0")
+                ) -> i32>(b"poo_flow_semantic_v2_call\0")
                 .unwrap();
         let release = library
-            .get::<unsafe extern "C" fn(*mut RawResult)>(b"poo_flow_semantic_result_release\0")
+            .get::<unsafe extern "C" fn(*mut RawResult)>(b"poo_flow_semantic_v2_result_release\0")
             .unwrap();
         let mut result = RawResult {
             status: 0,
@@ -76,7 +79,7 @@ fn native_python_differential_and_lifetime() {
     let mut pending = Vec::new();
     let mut rejected = 0;
     for _ in 0..8192 {
-        match runtime.submit("descriptor", &json!({})) {
+        match runtime.submit("descriptor", &datum!({})) {
             Ok(call) => pending.push(call),
             Err(Error::QueueFull) => rejected += 1,
             Err(e) => panic!("unexpected queue error: {e}"),
@@ -93,7 +96,7 @@ fn native_python_differential_and_lifetime() {
     let handles: Vec<_> = (0..8)
         .map(|_| {
             let r = runtime.clone();
-            std::thread::spawn(move || r.call("descriptor", &json!({})).unwrap())
+            std::thread::spawn(move || r.call("descriptor", &datum!({})).unwrap())
         })
         .collect();
     for handle in handles {
@@ -102,7 +105,7 @@ fn native_python_differential_and_lifetime() {
     runtime.close().unwrap();
     runtime.close().unwrap();
     assert_eq!(
-        runtime.call("descriptor", &json!({})).unwrap_err(),
+        runtime.call("descriptor", &datum!({})).unwrap_err(),
         Error::Closed
     );
     assert!(matches!(

@@ -47,7 +47,7 @@ class BuildPyWithRuntime(build_py):
             semantic_source = Path(semantic).resolve()
             semantic_name = "libpoo_flow_semantic.dylib" if system == "Darwin" else "libpoo_flow_semantic.so"
             shutil.copy2(semantic_source, target / semantic_name)
-            shutil.copy2(Path(str(semantic_source) + ".json"), target / (semantic_name + ".json"))
+            shutil.copy2(Path(str(semantic_source) + ".ss"), target / (semantic_name + ".ss"))
 
 
 setup(

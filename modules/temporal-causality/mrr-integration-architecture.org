@@ -1,0 +1,316 @@
+#+title: Temporal and MRR Bidirectional Integration Architecture
+#+date: [2026-10-04]
+#+property: STATUS proposed-contracts-narrow-native-bridge-implemented
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Decision and evidence boundary
+
+Integrate the whole Temporal evidence/conclusion lifecycle with MRR through
+versioned semantic projections. Temporal owns temporal interpretation, evidence
+revision, proof admission and conclusion applicability. MRR owns typed relational
+admission, query identity, semantic snapshots and lineage. MRR Data owns physical
+restoration and execution. Runtime owns durable transactions and effects under
+explicit authority. Public semantic construction remains POO-native and
+functional; Rust transports owner values and calls the existing native runtime.
+
+This is the next design contract, not a report of complete implementation.
+Inspected sources: POO Flow =9ad77d307dfcd83cf6e503aa57c29cce6c0f1ce5=,
+MRR PR #9 =3ce31dac2dc58ab780ed06fa88103de501355692=,
+MRR Data PR #12 =d36337b703c0a1f5bd0fa1eaaa62d11178e6507f=.
+The latter pins MRR =e9f87c3744b0d38709c479edc1b2143ef5ec9bbd=;
+the two MRR versions must be reconciled explicitly before physical acceptance.
+Remote refresh additionally found MRR =e441909339f1ff9e4504793da208fbe063b52913=
+and MRR Data =96b7ea91a44f3a5cf8669c6b96c068e208cb5c08=. Their intervening
+changes concern Context proofs and backend lifecycle; the query-result, revision,
+lineage and static-edge worker seams cited below are unchanged.
+
+At the inspected POO head, the [[file:../../bindings/rust-runtime/src/mrr.rs][native bridge]] verifies original MRR typed transport against an
+authentic bound query, projects exactly =event:String, position:Integer= and
+calls native finite-family classification. It uses a typed candidate fixture;
+it has no physical query execution, reverse fact export or durable correction
+loop. The successful Rust real-model batch exercises native family tools, not
+this complete cross-repository lifecycle. See [[file:integration-readiness-audit.org][the evidence audit]].
+
+* Audited seams and necessary corrections
+
+| Source seam at the pinned MRR/MRR Data revisions | Actual guarantee | Design consequence |
+|------------------------------------------------+------------------+--------------------|
+| =mrr-property-source/src/source_query.rs= | Original GQL source compilation, catalog/snapshot binding and candidate admission | Preserve the original compilation and bound query throughout execution |
+| =meta-relational-reasoning/src/query_result.rs= | Typed row/identity/budget admission and original transport re-admission | A valid result digest alone proves neither backend execution nor exhaustive answers |
+| =mrr-revision/src/{api,snapshot}.rs= | Canonical external revision identities, one generation and no conflicting logical source in a snapshot | A host correspondence binds temporal cuts to these identities; no clock/generation coercion |
+| =mrr-lineage/src/api.rs= | Acyclic graph admission and reverse reachability over supplied edges | Impact schedules reevaluation; it cannot decide whether alternative support survives |
+| =mrr-agentic-ai-context/src/state.rs= | Context elements with declared dependencies and temporal FactId references | Export applicability evidence as explicit dependencies and check it at consumption |
+| =mrr-data-poo-flow/src/worker.rs= | Static-edge physical query then candidate admission; response keeps rows and admission digest | Export the complete original typed transport and physical evidence before general Temporal use |
+
+MRR =docs/architecture/0033-poo-query-provider.org= still describes a declared
+Scheme projection with integer generation matching Temporal and snapshot digest
+equal to cut digest. Those equalities must not govern the new native bridge:
+native MRR generation is a semantic identity; Temporal host generation is a
+separate integer; a snapshot and causal cut have different denotations. That
+upstream document needs an owner update alongside the next MRR change.
+
+MRR lineage =Derivation::new= checks output metadata and support identifiers;
+it does not replay a rule over independently authenticated supporting facts.
+=impact= traverses predecessors of every supplied edge kind and returns fields
+named =directly_invalidated= and =transitively_invalidated=. At the Temporal
+boundary these mean /candidate reevaluation frontier/. It neither encodes
+AND/OR support semantics nor proves the graph contains every dependency.
+=why_one_witness= selects one outgoing edge at each visited node; it cannot be
+used as a complete conjunctive premise certificate. Preserve owner scope.
+
+* One loop, two immutable histories
+
+#+begin_example
+source revisions -> Temporal evidence journal -> as-of cut + projection
+                         |                              |
+                         |                         MRR snapshot/catalog
+                         |                              |
+                         |                 MRR Data physical query/execution
+                         |                              |
+                         +<- checked correspondence <- original typed result
+                         |                 + derivation/coverage evidence
+                  Temporal proof replay
+                         |
+               immutable conclusion revision
+                         |
+               MRR conclusion/receipt facts -> query / Context references
+                         |
+              current-applicability check -> authorized runtime publication
+
+source/policy/clock/coverage change -> dirty frontier -> reevaluate -> new revision
+#+end_example
+
+Keep historical facts and receipts immutable. Distinguish an as-of query from
+a current query explicitly. An old statement that a classification held at a
+past cut can remain true while its eligibility for a current decision is stale.
+A tombstone withdraws a current conclusion; it does not erase history.
+
+Prevent self-authentication in the return path. Export a conclusion as a claim
+with its proof and dependencies, never relabel it as an independent observation.
+A query consuming that claim retains its original premise closure. Reimporting
+the same claim under a different MRR ID must not manufacture a second support.
+Use a checked origin mapping and reject circular support without a separately
+admitted recursive interpretation. G0--G2 below accept only acyclic proof use.
+
+* Direct Scheme ABI migration
+
+The user subsequently required removal of project JSON transport and benchmark
+artifacts. The replacement semantic ABI is version 2 with inert Scheme data;
+Rust consumes original native MRR candidate/receipt values and re-admits them
+through the MRR owner. The older JSON exporter remains an upstream MRR feature,
+but POO no longer uses it. Physical cross-process exchange must implement a
+versioned native projection at the owning boundary, retaining original identity
+and admission semantics; it must not reintroduce JSON as a compatibility lane.
+ASP Scheme benchmark API owns new measurement and receipts. DeepSeek HTTP
+encoding is confined to the provider adapter. Historical receipts qualify only
+the old producer artifact.
+
+* Identity, clocks and the correspondence contract
+
+Proposed =TemporalMrrCorrespondence= is a POO-owned admitted value. The wire
+encoding is a projection of that value, not a public construction DSL. Its
+checker binds the following independently named fields:
+
+- Profile/schema version, producer/checker artifact and canonical encoding.
+- Source owner, source identity, exact revision inventory and root content ID.
+- Journal identity, admission cut, optional valid-time selector and projection.
+- Temporal host generation and native MRR GenerationId, stored separately.
+- Original parser/compiler/source receipt, query binding, both catalogs,
+  SemanticSnapshot, ordered result digest and row count.
+- Clock domain/role and coordinate interpretation; explicit conversion proof
+  when supported. No use of generation or receipt arrival time as event time.
+- Policy, principal/scope, dependency inventory and coverage evidence references.
+
+The host supplies the trust root for registration; a digest binds bytes but
+does not authenticate that host or source. Map one logical projected source to
+one content revision per MRR snapshot. If a Temporal cut has competing revision
+heads, project an explicit conflict inventory under one source revision, or
+reject the requested single-valued profile. Do not let snapshot canonicalization
+silently choose one temporal branch.
+
+Derive exported MRR IDs from a versioned, domain-separated canonical mapping
+through MRR identity constructors. Keep an explicit map back to immutable POO
+revision and proof identities. Use source namespace plus logical event identity;
+two providers using the text "event-1" must not collide. Preserve original MRR
+row ordering and duplicates in its receipt. A Temporal projection may reject or
+explicitly account for duplicates; it must retain the untouched original value.
+
+Changing the cut, valid-time selector, profile, policy or clock mapping creates
+a new correspondence even if the projected cell values happen to be equal.
+Multi-source queries bind the complete source revision vector, not one latest
+integer. Resource budget is execution metadata; it cannot change model truth
+or turn a truncated enumeration into a complete one.
+
+* Typed relation profiles
+
+These are proposed semantic relation families. Names below are explanatory,
+not new callable APIs. POO defines their meaning; an admitted versioned MRR
+catalog defines field types and authority. Start with the existing scalar ABI
+and add new native profiles only with their own differential acceptance.
+
+| Family | Essential payload | Admission requirement |
+|--------+-------------------+-----------------------|
+| Observation revision | Source/event/revision, observed/declared/missing kind, predecessor, coordinate or interval, clock | Explicit provenance and distinction between observation and assumption |
+| Evidence cut | Journal, admission selector, valid-time selector, visible revision set, conflict status | Replay from the immutable journal; no caller-authored selected heads |
+| Coverage | Source/partition set, scope, frontier, query/program, completion status | Owner evidence for the exact closed domain; a watermark alone is insufficient |
+| Conclusion revision | Subject, predecessor, profile, model/query, classification, cut/projection, proof | Native owner proof admission; immutable revisions including tombstones |
+| Support group | Conclusion, derivation identity, conjunctive premise set, alternative group, polarity | Resolvable premises and independently checked derivation semantics |
+| Applicability | Conclusion, source vector, policy/authority epoch, scope, selection version, status | Checked current-state binding at the intended use boundary |
+
+Intervals require explicit endpoint/inclusivity and uncertainty semantics.
+Cross-clock relations require a checked conversion profile. Missing evidence
+must remain represented as missing; never synthesize zero coordinates or a
+negative fact. Precedence, causal dependence, derivation dependence and effect
+authorization remain distinct relation types.
+
+Preserve Temporal family-relative =possible/necessary/refuted/unknown= in its
+profile. Do not cast =necessary= to MRR TRUE without the interpretation and
+admitted proof premises. MRR truth states TRUE, FALSE, UNKNOWN, INCOMPLETE,
+STALE and CONFLICT also remain distinct. A budget stop is INCOMPLETE; source
+coverage gaps are UNKNOWN; obsolete applicability is STALE. An empty backend
+answer establishes FALSE only with a checked bounded closed-world argument.
+
+* Evidence admission and physical execution
+
+Proposed admission is staged: source-bound -> typed-result-admitted ->
+projection-checked -> proof-admitted -> currently-applicable -> authorized-use.
+Every stage preserves earlier evidence and states exactly what it established.
+Failure or missing evidence leaves the later stage unavailable.
+
+For a physical roundtrip, use MRR's original source compiler/binder, execute
+against the exact restored MRR Data root, retain the physical execution record,
+export original candidate plus receipt, and re-admit with the same authentic
+bound query. The correspondence checker then verifies the supported projection.
+Backend trust must be explicit: either a trusted pinned executor is the stated
+premise, or an independently replayable derivation is required. A hash of an
+execution report is not proof that the execution happened correctly.
+
+Coverage has three independent gates: source inventory, query evaluation and
+Temporal hypothesis/behavior enumeration. Completion at one gate does not
+close the others. Unbounded source discovery, unsupported projection, truncated
+rows and exhausted budgets produce typed non-completion outcomes.
+
+A physical-empty answer is valid transport but cannot enter today's nonempty
+event/position profile. Add an explicit empty/absence profile only with coverage
+and nonmembership evidence; do not weaken the existing rejection implicitly.
+
+* Late evidence, alternative support and recursion
+
+1. Admit a source correction/retraction into a new immutable journal revision.
+   Advance the registered current source fence and mark dependent current
+   selections dirty before making the new current view visible.
+2. Compute the affected frontier from a bound dependency inventory. Include
+   positive facts, absence scopes, clock conversions, source coverage, policy,
+   valid-time selector and authority leases. Unknown inventory completeness
+   forces conservative scope-wide invalidation; "unaffected" is only relative
+   to the admitted inventory.
+3. Reevaluate support groups. For supports ={a,b}= OR ={c}=, removing =a=
+   invalidates the first derivation; the conclusion survives if =c= remains
+   admissible. Issue a revised proof and revision for the new cut even when
+   the displayed classification stays unchanged. Invalidation is scheduling,
+   not a proof of refutation or retraction.
+4. For positive recursion, stabilize the impacted SCC from surviving external
+   support under a named checked evaluator. An isolated cycle must not sustain
+   itself after its last external premise is removed. MRR's present lineage
+   DAG cannot directly represent cyclic justification semantics: store finite
+   proof witnesses separately from the dependency SCC graph.
+5. Negation/aggregation requires a declared stratification or another explicit
+   interpretation and scope-complete evidence. Non-stratified or unsupported
+   programs stay unsupported. A budget stop keeps current selection dirty;
+   it cannot publish either the old answer as current or a new FALSE.
+
+Steps 3--5 require new executable gates. The existing Temporal reverse index
+and MRR impact traversal implement useful frontiers, not this stabilization
+algorithm. Before incremental reuse is qualified, full recomputation of the
+affected declared scope is the reference implementation and test oracle.
+
+* Durable publication, current reads and Context
+
+The existing SQLite store atomically commits one initial pointer and historical
+receipt. Extend it only after durable proof material is resolvable and replayable.
+Proposed =read-current= must verify selected revision, dependency source vector,
+policy/grant fence and scope; return applicable, stale/dirty, conflicted or
+unavailable explicitly. Historical receipt lookup remains a separate operation.
+
+Use one local coordinator transaction for source-fence advance, dirty selection
+state and durable outbox entry. Content-addressed MRR materialization can happen
+before this transaction and remain unselected until commit. Publish a new
+selection only after its immutable snapshot/proof is available and all expected
+fences still match. Outbox replay is idempotent by immutable operation identity;
+reordered deliveries cannot move the current frontier backwards. This is a
+proposed runtime extension, not functionality of the current first-root store.
+
+For remote source owners, "current" means relative to an admitted source vector
+and freshness policy. Global instantaneous freshness requires a source-owner
+lease/fence protocol; do not claim distributed atomicity across SQLite, MRR Data
+and remote providers. A current read alone also cannot authorize a later effect:
+the effect executor must consume/recheck the bound authority and freshness fence
+at its commit boundary. Unsupported external fencing leaves that effect gate open.
+
+Export Temporal receipts into MRR Context as exact FactId references with their
+dependency closure. Context selection checks applicability for its actor/task/
+policy and destination before materialization and again where required at use.
+A source update invalidates eligibility for future reuse; it cannot erase bytes
+already disclosed to a model. IFC labels, provenance, leases and declassification
+need an explicit POO flow decision. Context evidence admission, Temporal proof
+admission and information-flow permission are separate checks bound to one
+payload; none can be inferred from a model's agreement with tool output.
+
+* Rust layout and optimization constraints
+
+Keep =bindings/rust-runtime= the native lifetime/queue/transport adapter. Keep
+query admission in MRR and physical IO in MRR Data. Add POO-native projection,
+correspondence and applicability objects in the Temporal module; expose only
+bounded ABI operations required by the runtime. Trusted registration/publication
+must remain host capabilities separate from model-callable read-only tools.
+
+Cache immutable compilation separately from snapshot-bound query results and
+proof/applicability state. Keys include the relevant original identities,
+projection/profile, source vector and policy scope. Reusing proof bytes never
+reuses an expired applicability decision. Bound total bytes, rows, cells, depth,
+support edges and queued work before expensive allocation; reject partial
+transfers rather than silently admitting their prefix.
+
+Measure cold/warm physical bytes, native queue delay, proof time, copied bytes
+and peak memory separately. Optimize affected-frontier work only after comparison
+with full recomputation. Current native timeout abandons a response, not the
+owner-thread execution; cancellation must preserve terminal native lifetime and
+bounded admission. Performance claims need measured workloads and exact pins.
+
+* Delivery gates and falsifiable acceptance
+
+| Gate | Owned change | Required evidence |
+|------+--------------+-------------------|
+| G0 physical read-only | MRR Data original typed transport; immutable MRR pin migration; POO correspondence check | Original GQL -> restored physical root -> original MRR receipt -> native Temporal; changed root/source/query/catalog/row and empty answer controls |
+| G1 reverse projection | POO conclusion/cut/receipt relation profile; MRR typed fact admission | Roundtrip preserves original identities, conflict/tombstone/history and classification scope; forged proof and self-support reject |
+| G2 acyclic revision lifecycle | POO support groups and durable journal; runtime dirty/current fences; MRR Context dependency use | Late correction, dual supports, last-support removal, absence dependency, policy expiry, stale Context and as-of replay |
+| G3 recursive/absence profiles | Named evaluator plus SCC/coverage certificates and POO replay | External-support removal breaks cycles; unsupported negation rejects; incremental results equal full recomputation; budget leaves dirty |
+| G4 authorized publication | Runtime replacement/tombstone CAS, resolvable proof journal, IFC and effect fences | Concurrent source update vs commit, policy revocation, outbox reorder/duplicate, crash at every durable boundary, stale effect reject |
+| G5 real-model lifecycle | Frozen model task/tool profiles over the implemented gates | Real physical query, correction and re-query; model consumes stale/incomplete/refuted outcomes correctly; five-second genuine-content watchdog, no hidden retries |
+
+G0 is the next implementation slice; G1 and G2 turn the current one-way adapter
+into the first useful lifecycle integration. G3 and G4 must qualify before
+general causal-maintenance or authorized-effect claims. Real-model read-only
+acceptance remains valid for its original profile and does not substitute for
+these deterministic negative/race gates.
+
+Mandatory scenario: two independent derivations establish a claim at cut A;
+a late correction removes one at cut B; the claim remains with a changed proof;
+removing the last support at cut C makes the current selection unavailable until
+reevaluation establishes the appropriate unknown/refuted/retracted outcome.
+Historical queries at A and B must reproduce their original results. Repeat
+with an absence premise invalidated by a newly arriving event, a valid-time-only
+change, a conflicting source branch and an expired policy. No case may preserve
+a current permit merely because its historical commit receipt still exists.
+
+* References within this repository
+
+- [[file:framework.org][Temporal framework and existing revision/projection contracts]]
+- [[file:design-audit.org][D1--D8 design decisions and remaining implementation gates]]
+- [[file:integration-readiness-audit.org][Pinned runtime and real-model qualification boundaries]]
+- [[file:../../bindings/rust-runtime/README.org][Native Rust adapter and delivered MRR observation profile]]
+- [[file:../../bindings/runtime-c/include/poo_flow/temporal_store.h][Current first-root publication ABI]]

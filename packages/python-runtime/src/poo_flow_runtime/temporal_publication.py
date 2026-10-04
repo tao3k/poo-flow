@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import hashlib
-import json
+from . import scheme_wire as wire
 from pathlib import Path
 import threading
 from types import MappingProxyType
@@ -38,9 +38,8 @@ def _number(value):
     return value
 
 
-def _json(value):
-    return json.dumps(value, ensure_ascii=False, allow_nan=False,
-                      sort_keys=True, separators=(',', ':')).encode()
+def _datum(value):
+    return wire.dumps(value).encode()
 
 
 def _receipt(out):
@@ -109,12 +108,12 @@ class TemporalPublicationStore:
     def register_source(self, runtime, scope, task):
         # Freeze caller input before queueing; native source update and durable
         # fence update cannot be separated by another local semantic operation.
-        data = _json({'scope': scope, 'task': task})
+        data = _datum({'scope': scope, 'task': task})
         def register():
             with self._lock:
                 handle = self._open()
                 result = runtime._call(b'$host.temporal.source.register', data, control=True)
-                snapshot = json.loads(data)['scope']
+                snapshot = wire.loads(data)['scope']
                 _check(lib.poo_flow_temporal_store_source(handle, _text(snapshot['identity']),
                     _text(result['sourceDigest']), _number(snapshot['generation'])))
                 return result
@@ -127,11 +126,11 @@ class TemporalPublicationStore:
         if expected_revision != '':
             _text(expected_revision)
         key = _text(idempotency_key)
-        data = _json({'task': task, 'sourceIdentity': source_identity,
+        data = _datum({'task': task, 'sourceIdentity': source_identity,
                       'sourceDigest': source_digest, 'conclusionIdentity': conclusion_identity})
         if len(data) > 1048576:
             raise ValueError('semantic input exceeds maximum bytes')
-        request = 'sha256:' + hashlib.sha256(_json([json.loads(data), version,
+        request = 'sha256:' + hashlib.sha256(_datum(["poo-flow.temporal-publication-request.v2", wire.loads(data), version,
                                                   expected_revision, fence])).hexdigest()
         def commit():
             with self._lock:

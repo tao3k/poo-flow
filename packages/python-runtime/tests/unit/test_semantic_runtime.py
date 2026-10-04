@@ -78,7 +78,7 @@ def test_semantic_native_owner_thread_and_raw_input_guards(runtime):
     result = ffi.new('poo_flow_semantic_result *')
     assert lib.poo_flow_python_semantic_call(b'descriptor', b'{}', 2, result) == 2
     assert lib.poo_flow_python_semantic_close() == 2
-    for data in [b'\xff', b'{\0}', b'[' * 65 + b']' * 65]:
+    for data in [b'\xff', b'{\0}', b'(' * 65 + b')' * 65]:
         status = runtime._worker.submit(lib.poo_flow_python_semantic_call,
                                          b'descriptor', data, len(data), result).result()
         assert status == 3
@@ -87,7 +87,7 @@ def test_semantic_native_owner_thread_and_raw_input_guards(runtime):
     status = runtime._worker.submit(lib.poo_flow_python_semantic_call,
                                      b'\xff', b'{}', 2, result).result()
     assert status == 3
-    assert runtime.call('descriptor', {})['abiVersion'] == 1
+    assert runtime.call('descriptor', {})['abiVersion'] == 2
     with pytest.raises(SemanticRuntimeError):
         SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_LIBRARY'],
                         expected_digest=runtime.artifact_digest)
@@ -127,22 +127,22 @@ def test_semantic_native_graph_rejects_invalid_endpoint_before_io(runtime):
 
 
 def test_semantic_native_final_model_answer_is_revalidated(runtime):
-    import json
+    from poo_flow_runtime import scheme_wire as wire
     task = temporal_request()
     candidate = {'status': 'complete', 'rows': [['a', 'b'], ['a', 'c']]}
-    accepted = runtime.validate_model_answer(task, json.dumps(candidate))
+    accepted = runtime.validate_model_answer(task, wire.dumps(candidate))
     assert accepted['verdict'] == 'consistent'
     task['source']['parents'] = []
-    rejected = runtime.validate_model_answer(task, json.dumps(candidate))
+    rejected = runtime.validate_model_answer(task, wire.dumps(candidate))
     assert rejected['verdict'] == 'contradicted'
     assert rejected['bindingDigest'] != accepted['bindingDigest']
-    assert runtime.validate_model_answer(task, '{"status":"complete","rows":[]}')['verdict'] == 'consistent'
-    with pytest.raises(SemanticRuntimeError, match='inert JSON'):
+    assert runtime.validate_model_answer(task, '(object ("rows" (list)) ("status" "complete"))')['verdict'] == 'consistent'
+    with pytest.raises(SemanticRuntimeError, match='inert Scheme datum'):
         runtime.validate_model_answer(task, '(system "echo unsafe")')
-    with pytest.raises(SemanticRuntimeError, match='inert JSON'):
-        runtime.validate_model_answer(task, '{"status":"complete","status":"partial","rows":[]}')
+    with pytest.raises(SemanticRuntimeError, match='inert Scheme datum'):
+        runtime.validate_model_answer(task, '(object ("status" "complete") ("status" "partial") ("rows" (list)))')
     assert runtime.validate_model_answer(task,
-        '{"status":"complete","rows":[],"authorized":true}')['verdict'] == 'contradicted'
+        '(object ("authorized" #t) ("rows" (list)) ("status" "complete"))')['verdict'] == 'contradicted'
 
 
 def test_semantic_native_async_cancellation_discards_queued_call(runtime):
@@ -204,14 +204,14 @@ def test_semantic_native_queue_bound_and_digest_rejection(runtime):
             assert future.cancel()
     finally:
         release.set(); blocker.result()
-    assert runtime.call('descriptor', {})['abiVersion'] == 1
+    assert runtime.call('descriptor', {})['abiVersion'] == 2
 
 
 def test_semantic_answer_validation_binds_current_source(runtime):
     task = temporal_request()
-    output = '{"status":"complete","rows":[["a","b"],["a","c"]]}'
+    output = '(object ("rows" (list (list "a" "b") (list "a" "c"))) ("status" "complete"))'
     assert runtime.validate_model_answer(task, output)['verdict'] == 'consistent'
-    assert runtime.validate_model_answer(task, '{"status":"complete","rows":[]}')['verdict'] == 'contradicted'
+    assert runtime.validate_model_answer(task, '(object ("rows" (list)) ("status" "complete"))')['verdict'] == 'contradicted'
     task['source']['parents'].clear()
     assert runtime.validate_model_answer(task, output)['verdict'] == 'contradicted'
 
@@ -256,3 +256,20 @@ def test_semantic_native_routes_and_dynamic_targets_are_scheme_owned(runtime):
         assert asyncio.run(program.ainvoke({'label': 'no'}))['answer'] == 'left'
         with pytest.raises(SemanticRuntimeError):
             program.invoke({'label': 'unknown'})
+
+
+def test_semantic_abi_v2_rejects_legacy_json_and_reader_extensions(runtime):
+    import ctypes
+    native = ctypes.CDLL(os.environ['POO_FLOW_SEMANTIC_LIBRARY'])
+    with pytest.raises(AttributeError):
+        getattr(native, 'poo_flow_semantic_open')
+    assert runtime.descriptor['wireFormat'] == 'scheme-datum-v2'
+    for data in [b'{}', b'#.(exit)', b'#0=(list #0#)', b'(object ("a" 1) ("a" 2))']:
+        result = runtime._ffi.new('poo_flow_semantic_result *')
+        status = runtime._worker.submit(runtime._lib.poo_flow_python_semantic_call,
+            b'descriptor', data, len(data), result).result()
+        try:
+            assert status == 4
+        finally:
+            runtime._lib.poo_flow_python_semantic_release(result)
+    assert runtime.call('descriptor', {})['abiVersion'] == 2

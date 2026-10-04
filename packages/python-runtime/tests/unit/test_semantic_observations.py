@@ -8,7 +8,7 @@ from poo_flow_runtime.semantic_runtime import SemanticRuntimeError
 from semantic_cases import temporal_request
 
 def test_direct_prediction_receives_task_and_native_difference(runtime):
-    import json
+    from poo_flow_runtime import scheme_wire as wire
     task = temporal_request()
     calls = []
     def predict(supplied):
@@ -16,7 +16,7 @@ def test_direct_prediction_receives_task_and_native_difference(runtime):
         assert supplied == task
         assert 'rows' not in supplied and 'bindingDigest' not in supplied
         supplied['source']['parents'].clear()
-        return '{"status":"complete","rows":[]}'
+        return '(object ("rows" (list)) ("status" "complete"))'
     observed = []
     def deliver(event):
         observed.append(deepcopy(event))
@@ -29,7 +29,7 @@ def test_direct_prediction_receives_task_and_native_difference(runtime):
     assert feedback['verdict'] == 'contradicted'
     assert feedback['difference'] == {'kind': 'missing-row', 'index': 0, 'expected': ['a', 'b']}
     assert len(feedback['requestDigest']) == 64
-    correct = runtime.observe_model_answer(task, json.dumps({'status': 'complete', 'rows': [['a', 'b'], ['a', 'c']]}))
+    correct = runtime.observe_model_answer(task, wire.dumps({'status': 'complete', 'rows': [['a', 'b'], ['a', 'c']]}))
     assert correct['verdict'] == 'consistent' and correct['difference'] is False
     assert correct['bindingDigest'] == feedback['bindingDigest']
 
@@ -39,14 +39,14 @@ def test_direct_prediction_recomputes_current_source_and_async(runtime):
     def change_source(supplied):
         task['source']['parents'].clear()
         task['source']['generation'] = task['lens']['generation'] = 2
-        return '{"status":"complete","rows":[["a","b"],["a","c"]]}'
+        return '(object ("rows" (list (list "a" "b") (list "a" "c"))) ("status" "complete"))'
     prior = runtime.call('temporal.solve', task)
     receipt = runtime.predict_temporal_answer(task, change_source)['receipt']
     assert receipt['bindingDigest'] != prior['bindingDigest']
     assert receipt['difference'] == {'kind': 'extra-row', 'index': 0, 'observed': ['a', 'b']}
     async def predict(supplied):
         assert supplied == task
-        return '{"status":"complete","rows":[]}'
+        return '(object ("rows" (list)) ("status" "complete"))'
     observed = []
     async def deliver(event):
         observed.append(event)
@@ -55,17 +55,17 @@ def test_direct_prediction_recomputes_current_source_and_async(runtime):
 
 
 @pytest.mark.parametrize('output,kind', [
-    ('{"status":"partial","rows":[]}', 'status-mismatch'),
-    ('{"status":"complete","rows":[["a","z"]]}', 'row-mismatch'),
-    ('{"status":"complete","rows":"bad"}', 'candidate-shape'),
-    ('[]', 'candidate-shape'),
+    ('(object ("rows" (list)) ("status" "partial"))', 'status-mismatch'),
+    ('(object ("rows" (list (list "a" "z"))) ("status" "complete"))', 'row-mismatch'),
+    ('(object ("rows" "bad") ("status" "complete"))', 'candidate-shape'),
+    ('(list)', 'candidate-shape'),
 ])
 def test_native_observation_failure_contract(runtime, output, kind):
     assert runtime.observe_model_answer(temporal_request(), output)['difference']['kind'] == kind
 
 
-def test_native_observation_rejects_duplicate_json_fields(runtime):
-    with pytest.raises(SemanticRuntimeError, match='inert JSON'):
-        runtime.observe_model_answer(temporal_request(), '{"rows":[],"rows":[],"status":"complete"}')
+def test_native_observation_rejects_duplicate_scheme_fields(runtime):
+    with pytest.raises(SemanticRuntimeError, match='inert Scheme datum'):
+        runtime.observe_model_answer(temporal_request(), '(object ("rows" (list)) ("rows" (list)) ("status" "complete"))')
 
 

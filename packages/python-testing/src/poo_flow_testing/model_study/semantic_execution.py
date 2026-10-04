@@ -19,6 +19,7 @@ from .semantic_reporting import report_progress
 
 def execute(root, library, output, key):
     from poo_flow_runtime.semantic_runtime import SemanticRuntime
+    from poo_flow_runtime import scheme_wire as wire
     import poo_flow_runtime.semantic_runtime as implementation
     runtime_source = Path(implementation.__file__).resolve()
     if sha(runtime_source.read_bytes()) != sha((root/'packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py').read_bytes()):
@@ -38,9 +39,9 @@ def execute(root, library, output, key):
     records = []
     with SemanticRuntime(library, expected_digest=plan['artifactSha256']) as runtime:
         cold = time.monotonic() - started
-        if cold > 5 or runtime.descriptor['abiVersion'] != 1:
+        if cold > 5 or runtime.descriptor['abiVersion'] != 2:
             raise RuntimeError('native startup failed the current ABI/five-second gate')
-        report_progress('NATIVE-READY semantic ABI 1')
+        report_progress('NATIVE-READY semantic ABI 2')
         private = {}
         for name, task in tasks.items():
             solving = time.monotonic()
@@ -51,12 +52,12 @@ def execute(root, library, output, key):
         write(output/'native-private.json', private)
         controls = []
         for name, task in tasks.items():
-            bad = runtime.observe_model_answer(task, '{"status":"invented","rows":[]}')
+            bad = runtime.observe_model_answer(task, wire.dumps({'status':'invented','rows':[]}))
             assert bad['verdict'] == 'contradicted', name
             controls.append({'case': name, 'observation': bad})
             report_progress(f'NEGATIVE-CONTROL {name} {bad["verdict"]}')
         chain = tasks['chain']
-        candidate = json.dumps({k: private['chain'][k] for k in ('status', 'rows')})
+        candidate = wire.dumps({k: private['chain'][k] for k in ('status', 'rows')})
         changed = deepcopy(chain)
         changed['source']['parents'].clear()
         stale = runtime.observe_model_answer(changed, candidate)
@@ -85,7 +86,7 @@ def execute(root, library, output, key):
             async def timed_predictor(supplied):
                 result = await predictor(supplied)
                 native_started[0] = time.monotonic()
-                return result
+                return wire.dumps(json.loads(result))
             try:
                 if item['api'] == 'sync':
                     result = runtime.predict_temporal_answer(task, lambda supplied: asyncio.run(timed_predictor(supplied)),
@@ -101,7 +102,7 @@ def execute(root, library, output, key):
                 rebound = deepcopy(task)
                 rebound['source']['generation'] += 10
                 rebound['lens']['generation'] += 10
-                observation = runtime.observe_model_answer(rebound, record['raw'])
+                observation = runtime.observe_model_answer(rebound, wire.dumps(json.loads(record['raw'])))
                 assert observation['bindingDigest'] != result['receipt']['bindingDigest']
                 record['sourceRebinding'] = observation
                 record['passed'] = result['receipt']['verdict'] == 'consistent'

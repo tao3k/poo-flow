@@ -5,7 +5,6 @@
 from __future__ import annotations
 import argparse
 import hashlib
-import json
 import os
 from pathlib import Path
 import platform
@@ -17,6 +16,8 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "packages/python-runtime/src/poo_flow_runtime"))
+from scheme_wire import dumps
 
 
 def run(argv: list[str], *, capture: bool = False) -> str:
@@ -60,7 +61,7 @@ def main() -> None:
                    "modules/temporal-causality/conclusions/objects.ss",
                    "modules/temporal-causality/conclusions/funs.ss",
                    "modules/temporal-causality/admission/interface.ss",
-                   "src/ffi/temporal-admission.ss"]:
+                   "src/ffi/temporal-admission.ss", "src/ffi/scheme-wire.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
@@ -131,13 +132,13 @@ def main() -> None:
     run([os.environ.get('CC', 'cc'), *shared, '-o', str(output),
          *map(str, objects), str(link_object), str(host_object),
          '-L', str(home / 'lib'), '-lgambit', *flags])
-    manifest = {"schema": "poo-flow.semantic-aot-artifact", "version": 1, "modules": inputs,
+    manifest = {"schema": "poo-flow.semantic-aot-artifact", "version": 2, "modules": inputs,
                 "artifactSha256": hashlib.sha256(output.read_bytes()).hexdigest(),
                 "sourceSha256": hashlib.sha256((ROOT / 'src/ffi/semantic.ss').read_bytes()).hexdigest(),
                 "hostSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/src/semantic_host.c').read_bytes()).hexdigest(),
                 "headerSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/include/poo_flow/semantic.h').read_bytes()).hexdigest(),
                 "compilerSha256": hashlib.sha256(Path(gsc).read_bytes()).hexdigest()}
-    output.with_suffix(output.suffix + '.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    output.with_suffix(output.suffix + '.ss').write_text(dumps(manifest) + '\n')
     print(f"BUILD-OK {output} {manifest['artifactSha256']}", flush=True)
 
 

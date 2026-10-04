@@ -565,7 +565,6 @@ version = "0.1.0"
 dependencies = [
  "libloading",
  "meta-relational-reasoning",
- "serde_json",
  "sha2",
 ]
 

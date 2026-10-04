@@ -666,3 +666,13 @@ model-understanding-compute script:
 [group('test')]
 model-understanding-score expected candidate:
     {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gxi {{ gerbil_test_runtime_options }} t/model-study/direct-understanding/prediction-score.ss "{{ expected }}" "{{ candidate }}"
+
+# Explicit installed-artifact acceptance; ASP Scheme owns measurement and receipts.
+[group('test')]
+benchmark-temporal-mrr:
+    just test-file t/qualification/temporal-mrr-native/native-test.ss
+
+# Paid model samples run once; ASP measures each, without repeated p95 sampling.
+[group('test')]
+qualify-temporal-model python binary library oracle env_file output:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-model-native/scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"

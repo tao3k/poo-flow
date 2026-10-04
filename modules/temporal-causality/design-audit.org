@@ -358,7 +358,7 @@ The user explicitly authorized the frozen synthetic task/native-result payload.
 The Rust finite-family tool study then passed 4/4 roundtrips and 8 completed real
 DeepSeek responses with no retries, no failure and a preserved source freeze.
 Each provider phase retained the five-second genuine-content watchdog. See
-[[file:../../t/qualification/temporal-library-basic/rust-model-family/report.json][the frozen model receipt]]. This qualifies read-only forced-tool task fidelity and
+[[file:../../t/qualification/temporal-library-basic/rust-model-family/historical.org][the frozen model receipt]]. This qualifies read-only forced-tool task fidelity and
 result consumption for the new family/Rust path, not unaided prediction,
 MRR physical execution, source authenticity, root admission or publication.
 
@@ -381,6 +381,6 @@ stronger gates remain separately open.
 The exact linked MRR/POO operational gate passed two integration tests: original
 MRR transport projection at 0.24s and 21-result native Rust regression at 0.90s.
 The five-second output watchdog did not trigger. See
-[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/receipt.json][the exact MRR dependency/source/native-artifact receipt]]. CI now builds and runs
+[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/historical.org][the exact MRR dependency/source/native-artifact receipt]]. CI now builds and runs
 the =mrr-transport= feature against the same native producer artifact. The initial
 macOS system-linker failure is retained separately from test execution.

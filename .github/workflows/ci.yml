@@ -164,7 +164,7 @@ jobs:
           name: poo-flow-semantic-native-linux
           path: |
             .ci/semantic/libpoo_flow_semantic.so
-            .ci/semantic/libpoo_flow_semantic.so.json
+            .ci/semantic/libpoo_flow_semantic.so.ss
 
       - name: Run the single native unit-test entrypoint
         env:

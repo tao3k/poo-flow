@@ -3,7 +3,7 @@
 """Generate current installed-Python/native fixtures; run in a separate process."""
 import argparse
 import hashlib
-import json
+from poo_flow_runtime.scheme_wire import dumps
 from pathlib import Path
 import sys
 
@@ -27,14 +27,16 @@ with SemanticRuntime(args.library, expected_digest=hashlib.sha256(args.library.r
             if mode == 'unknown': task['model']['observations'][0]['modality'] = 'declared'
             result = runtime.classify_temporal_family(task)
             cases.append(dict(name=vocabulary+'-'+mode, operation='temporal.family.classify', payload=task, expected=result))
+            print('PYTHON-NATIVE-COMPLETED', vocabulary, mode, 'classify', flush=True)
             payload = {'task': task, 'candidate': result}
             cases.append(dict(name=vocabulary+'-'+mode+'-observe', operation='temporal.family.observe', payload=payload,
                               expected=runtime.call('temporal.family.observe', payload)))
+            print('PYTHON-NATIVE-COMPLETED', vocabulary, mode, 'observe', flush=True)
     lens = {'lens': {'generation': 1, 'clock': 'c', 'start': 0, 'end': 5,
                     'asOf': 5, 'cut': 'cut', 'members': ['a', 'b'], 'horizon': 8, 'closed': True},
             'source': {'identity': 'source', 'generation': 1, 'clock': 'c',
                        'events': [['a', 1, 1], ['b', 2, 2]], 'parents': [['a', 'b']]}, 'root': 'a'}
     result = runtime.call('temporal.solve', lens)
     cases.append(dict(name='lens-solve', operation='temporal.solve', payload=lens, expected=result))
-args.output.write_text(json.dumps(cases, indent=2) + '\n')
+args.output.write_text(dumps(cases) + '\n')
 print(f'PYTHON-NATIVE-ORACLE {len(cases)} results', flush=True)

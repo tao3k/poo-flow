@@ -10,18 +10,11 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import hashlib
-import json
+from . import scheme_wire as wire
 from pathlib import Path
 from types import MappingProxyType
 import threading
 from typing import Any, Mapping
-
-
-def _unique_json_pairs(pairs):
-    result = dict(pairs)
-    if len(result) != len(pairs):
-        raise ValueError('duplicate JSON object key')
-    return result
 
 
 class SemanticRuntimeError(RuntimeError):
@@ -37,9 +30,9 @@ class SemanticRuntime:
         import sys
         name = 'libpoo_flow_semantic.dylib' if sys.platform == 'darwin' else 'libpoo_flow_semantic.so'
         path = Path(__file__).parent / '_native' / 'lib' / name
-        manifest = json.loads(Path(str(path) + '.json').read_text())
+        manifest = wire.loads(Path(str(path) + '.ss').read_text())
         if (manifest.get('schema') != 'poo-flow.semantic-aot-artifact'
-                or manifest.get('version') != 1):
+                or manifest.get('version') != 2):
             raise SemanticRuntimeError('invalid semantic artifact manifest', status=6)
         return cls(path, expected_digest=manifest['artifactSha256'])
 
@@ -62,7 +55,7 @@ class SemanticRuntime:
             initialized = True
             self.descriptor = self.call('descriptor', {})
             if (self.descriptor.get('schema') != 'poo-flow.semantic-descriptor'
-                    or self.descriptor.get('abiVersion') != 1):
+                    or self.descriptor.get('abiVersion') != 2):
                 raise SemanticRuntimeError('semantic ABI descriptor mismatch', status=6)
         except BaseException:
             if initialized:
@@ -111,8 +104,7 @@ class SemanticRuntime:
             raise ValueError('invalid semantic operation')
         if operation.startswith('$') and not control:
             raise ValueError('host control operation is not a semantic call')
-        data = json.dumps(payload, ensure_ascii=False, allow_nan=False,
-                          separators=(',', ':')).encode('utf-8')
+        data = wire.dumps(payload).encode('utf-8')
         if len(data) > 1048576:
             raise ValueError('semantic input exceeds maximum bytes')
         return self._submit_host(lambda: self._call(operation.encode(), data, control=control))
@@ -143,7 +135,7 @@ class SemanticRuntime:
             if status:
                 raise SemanticRuntimeError(raw.decode('utf-8', 'replace') or
                                            'semantic native call failed', status=status)
-            decoded = json.loads(raw)
+            decoded = wire.loads(raw)
             if not isinstance(decoded, dict):
                 raise SemanticRuntimeError('invalid semantic result shape', status=6)
             return decoded
@@ -158,19 +150,19 @@ class SemanticRuntime:
 
     def validate_model_answer(self, task: Mapping[str, Any], output: str) -> dict[str, Any]:
         try:
-            candidate = json.loads(output, object_pairs_hook=_unique_json_pairs)
+            candidate = wire.loads(output)
         except (ValueError, TypeError) as error:
-            raise SemanticRuntimeError('model output is not inert JSON', status=3) from error
+            raise SemanticRuntimeError('model output is not inert Scheme datum', status=3) from error
         if not isinstance(candidate, dict):
-            raise SemanticRuntimeError('model output must be a JSON object', status=3)
+            raise SemanticRuntimeError('model output must be a Scheme object', status=3)
         return self.call('temporal.verify', {'task': task, 'candidate': candidate})
 
     def observe_model_answer(self, task: Mapping[str, Any], output: str) -> dict[str, Any]:
         """Compute current Scheme evidence after an inert model prediction."""
         try:
-            candidate = json.loads(output, object_pairs_hook=_unique_json_pairs)
+            candidate = wire.loads(output)
         except (ValueError, TypeError) as error:
-            raise SemanticRuntimeError('model output is not inert JSON', status=3) from error
+            raise SemanticRuntimeError('model output is not inert Scheme datum', status=3) from error
         return self.call('temporal.observe', {'task': task, 'candidate': candidate})
 
     def predict_temporal_answer(self, task: Mapping[str, Any], predictor,
@@ -181,28 +173,28 @@ class SemanticRuntime:
         computes evidence against the caller's current task after model IO.
         A contradiction is an observation, never permission to execute effects.
         """
-        supplied = json.loads(json.dumps(task, allow_nan=False))
+        supplied = wire.loads(wire.dumps(task))
         output = predictor(supplied)
         receipt = self.observe_model_answer(task, output)
-        result = {'candidate': json.loads(output), 'receipt': receipt,
+        result = {'candidate': wire.loads(output), 'receipt': receipt,
                   'artifactDigest': self.artifact_digest}
         if observation_sink is not None:
-            observation_sink(json.loads(json.dumps(result)))
+            observation_sink(wire.loads(wire.dumps(result)))
         return result
 
     async def apredict_temporal_answer(self, task: Mapping[str, Any], predictor,
                                       *, observation_sink=None) -> dict[str, Any]:
-        supplied = json.loads(json.dumps(task, allow_nan=False))
+        supplied = wire.loads(wire.dumps(task))
         output = await predictor(supplied)
         try:
-            candidate = json.loads(output, object_pairs_hook=_unique_json_pairs)
+            candidate = wire.loads(output)
         except (ValueError, TypeError) as error:
-            raise SemanticRuntimeError('model output is not inert JSON', status=3) from error
+            raise SemanticRuntimeError('model output is not inert Scheme datum', status=3) from error
         receipt = await self.acall('temporal.observe', {'task': task, 'candidate': candidate})
         result = {'candidate': candidate, 'receipt': receipt,
                   'artifactDigest': self.artifact_digest}
         if observation_sink is not None:
-            await observation_sink(json.loads(json.dumps(result)))
+            await observation_sink(wire.loads(wire.dumps(result)))
         return result
 
     def _graph_projection(self, plan, bindings):
@@ -223,7 +215,7 @@ class SemanticRuntime:
         result = self.call('graph.admit', payload)
         if result.get('status') != 'admitted' or result.get('operation') != 'graph.admit':
             raise SemanticRuntimeError('Scheme graph admission rejected', status=4)
-        encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(',', ':'))
+        encoded = wire.dumps(payload)
         return _SemanticGraphBinding(self, encoded, result['planDigest'],
             result['receipt'].encode('utf-8'), MappingProxyType({
                 key: tuple(values) for key, values in result['staticSuccessors'].items()}))

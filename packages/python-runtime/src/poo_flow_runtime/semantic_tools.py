@@ -1,20 +1,28 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Bind read-only model tool calls to caller-owned tasks before invoking Scheme."""
+"""Provider JSON adapter only; native runtime transport is Scheme datum ABI v2."""
 from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from .semantic_runtime import SemanticRuntime, SemanticRuntimeError, _unique_json_pairs
+from .semantic_runtime import SemanticRuntime, SemanticRuntimeError
+from . import scheme_wire as wire
+
+
+def _unique_json_pairs(pairs):
+    result = dict(pairs)
+    if len(result) != len(pairs):
+        raise ValueError("duplicate provider object key")
+    return result
 
 
 def temporal_tool_definition() -> dict[str, Any]:
     """Describe the read-only Temporal operation; Runtime owns argument validation."""
     return {'type': 'function', 'name': 'poo_flow_temporal_solve',
             'description': 'Evaluate the supplied caller task through the Temporal Library.',
-            'parameters': {'type': 'object', 'required': ['task'],
+            'parameters': {'type': 'object', 'required': ['datum'],
                            'additionalProperties': False,
-                           'properties': {'task': {'type': 'object'}}}}
+                           'properties': {'datum': {'type': 'string'}}}}
 
 
 def _bound_task(task: Mapping[str, Any], call: Mapping[str, Any]) -> dict[str, Any]:
@@ -26,13 +34,13 @@ def _bound_task(task: Mapping[str, Any], call: Mapping[str, Any]) -> dict[str, A
         raise SemanticRuntimeError('invalid Temporal tool argument size', status=3)
     try:
         arguments = json.loads(raw, object_pairs_hook=_unique_json_pairs)
-        if not isinstance(arguments, dict) or set(arguments) != {'task'}:
-            raise ValueError('tool requires exactly one task')
-        expected = json.dumps(dict(task), sort_keys=True, separators=(',', ':'), allow_nan=False)
-        actual = json.dumps(arguments['task'], sort_keys=True, separators=(',', ':'), allow_nan=False)
+        if not isinstance(arguments, dict) or set(arguments) != {'datum'} or not isinstance(arguments['datum'], str):
+            raise ValueError('tool requires exactly one Scheme datum string')
+        expected = wire.dumps(dict(task))
+        actual = wire.dumps(wire.loads(arguments['datum']))
         if expected != actual:
             raise ValueError('model task differs from the caller current task')
-        return json.loads(expected)
+        return wire.loads(expected)
     except (ValueError, TypeError) as error:
         raise SemanticRuntimeError('Temporal tool task binding rejected', status=3) from error
 

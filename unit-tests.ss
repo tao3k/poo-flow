@@ -40,6 +40,8 @@
       +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
            ignoreDirectories: '("t/qualification/ascent-integration"
+                                ;; Explicit installed native artifact/performance gate.
+                                "t/qualification/temporal-mrr-native"
                                 "packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "core"

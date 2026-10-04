@@ -3,11 +3,14 @@
 //! Original MRR result -> explicit same-domain observation projection -> POO.
 //! Native MRR owns result admission. The host owns the temporal correspondence.
 use crate::{Error, SemanticRuntime};
-use meta_relational_reasoning::{
-    self as mrr, CatalogBoundQuery, QueryResultLimits, QueryResultValue, Value as MrrValue,
-    ValueSchema, VerifiedQueryResultTransport,
+use crate::{
+    datum,
+    wire::{self, Value},
 };
-use serde_json::{Value, json};
+use meta_relational_reasoning::{
+    self as mrr, CandidateQueryResult, CatalogBoundQuery, QueryResultAdmissionReceipt,
+    QueryResultLimits, QueryResultValue, Value as MrrValue, ValueSchema,
+};
 use sha2::{Digest, Sha256};
 use std::num::NonZeroUsize;
 
@@ -25,7 +28,8 @@ pub struct ObservationScope {
 
 #[derive(Debug)]
 pub enum MrrBridgeError {
-    Transport(mrr::QueryResultTransportError),
+    Admission(mrr::QueryResultAdmissionError),
+    ReceiptMismatch,
     UnsupportedProjection,
     InvalidScope,
     InvalidModel,
@@ -38,26 +42,45 @@ impl std::fmt::Display for MrrBridgeError {
 }
 impl std::error::Error for MrrBridgeError {}
 
+/// Native owner values retained after receiver-side re-admission. No serialized DTO.
+#[derive(Debug)]
+pub struct AdmittedMrrResult {
+    candidate: CandidateQueryResult,
+    receipt: QueryResultAdmissionReceipt,
+}
+impl AdmittedMrrResult {
+    pub fn candidate(&self) -> &CandidateQueryResult {
+        &self.candidate
+    }
+    pub fn receipt(&self) -> &QueryResultAdmissionReceipt {
+        &self.receipt
+    }
+}
+
 /// Holds the original re-admitted MRR candidate and receipt, without relabeling it.
 #[derive(Debug)]
 pub struct MrrObservationEvidence {
-    original: VerifiedQueryResultTransport,
+    original: AdmittedMrrResult,
     observations: Vec<Value>,
     correspondence: Value,
     scope: ObservationScope,
 }
 impl MrrObservationEvidence {
-    /// Re-admit exact original bytes against the authentic caller-owned query.
+    /// Re-admit original native owner values against the authentic caller-owned query.
     /// Supported columns are exactly `event` String and `position` Integer.
     /// Null, Node, Relation, List, duplicates, extra columns and >128 rows reject.
     pub fn verify(
         query: &CatalogBoundQuery,
-        bytes: &[u8],
+        candidate: &CandidateQueryResult,
+        receipt: &QueryResultAdmissionReceipt,
         limits: QueryResultLimits,
         max_bytes: NonZeroUsize,
         scope: ObservationScope,
     ) -> Result<Self, MrrBridgeError> {
-        if bytes.len() > 1_048_576 || max_bytes.get() > 1_048_576 {
+        if max_bytes.get() > 1_048_576
+            || candidate.rows().len() > 128
+            || candidate.columns().len() != 2
+        {
             return Err(MrrBridgeError::UnsupportedProjection);
         }
         let text = |v: &str| !v.is_empty() && v.len() <= 128 && !v.chars().any(char::is_control);
@@ -74,9 +97,41 @@ impl MrrObservationEvidence {
         {
             return Err(MrrBridgeError::InvalidScope);
         }
-        let original = mrr::verify_query_result_transport(query, bytes, limits, max_bytes)
-            .map_err(MrrBridgeError::Transport)?;
-        let candidate = original.candidate();
+        // Bound supported cells before owner digest computation or cloning.
+        let mut cell_bytes = 0usize;
+        for row in candidate.rows() {
+            if row.len() != 2 {
+                return Err(MrrBridgeError::UnsupportedProjection);
+            }
+            for cell in row {
+                let length = match cell {
+                    QueryResultValue::Scalar {
+                        schema: ValueSchema::String,
+                        value: MrrValue::String(v),
+                    } => v.len(),
+                    QueryResultValue::Scalar {
+                        schema: ValueSchema::Integer,
+                        value: MrrValue::Integer(_),
+                    } => 8,
+                    _ => return Err(MrrBridgeError::UnsupportedProjection),
+                };
+                cell_bytes = cell_bytes
+                    .checked_add(length)
+                    .ok_or(MrrBridgeError::UnsupportedProjection)?;
+                if cell_bytes > max_bytes.get() {
+                    return Err(MrrBridgeError::UnsupportedProjection);
+                }
+            }
+        }
+        let checked = mrr::admit_query_result_candidate(query, candidate, limits)
+            .map_err(MrrBridgeError::Admission)?;
+        if &checked != receipt {
+            return Err(MrrBridgeError::ReceiptMismatch);
+        }
+        let original = AdmittedMrrResult {
+            candidate: candidate.clone(),
+            receipt: receipt.clone(),
+        };
         if candidate.columns()
             != [
                 mrr::Binding::new("event").unwrap(),
@@ -90,8 +145,8 @@ impl MrrObservationEvidence {
         let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
         let receipt = original.receipt();
         let binding = receipt.binding();
-        let correspondence = json!({
-            "schema": "poo-flow.mrr-observation-correspondence.v1",
+        let correspondence = datum!({
+            "schema": "poo-flow.mrr-observation-correspondence.v2",
             "claim": "host-declared-same-domain-observation-projection",
             "mrrQueryBindingDigest": hex(binding.query_binding_digest()),
             "mrrGeneration": binding.generation().to_string(),
@@ -99,14 +154,14 @@ impl MrrObservationEvidence {
             "mrrEntityCatalogDigest": hex(binding.entity_catalog_digest().as_bytes()),
             "mrrSnapshotDigest": hex(binding.snapshot_digest()),
             "mrrResultDigest": hex(receipt.digest()), "mrrRowCount": receipt.row_count(),
-            "sourceIdentity": scope.source_identity, "temporalGeneration": scope.temporal_generation,
-            "cut": scope.cut, "projection": scope.projection, "policy": scope.policy,
-            "clockDomain": scope.clock_domain, "sourceAuthenticated": false,
+            "sourceIdentity": &scope.source_identity, "temporalGeneration": scope.temporal_generation,
+            "cut": &scope.cut, "projection": &scope.projection, "policy": &scope.policy,
+            "clockDomain": &scope.clock_domain, "sourceAuthenticated": false,
             "actionAuthorized": false, "coverageVerified": false
         });
         let provenance = format!(
             "sha256:{:x}",
-            Sha256::digest(serde_json::to_vec(&correspondence).unwrap())
+            Sha256::digest(wire::to_vec(&correspondence).unwrap())
         );
         let mut ids = std::collections::BTreeSet::new();
         let mut observations = Vec::new();
@@ -128,8 +183,8 @@ impl MrrObservationEvidence {
                 return Err(MrrBridgeError::UnsupportedProjection);
             }
             observations.push(
-                json!({"identity":event,"domain":scope.clock_domain,"position":position,
-                "provenance":provenance,"modality":"observed"}),
+                datum!({"identity":event,"domain":&scope.clock_domain,"position":position,
+                "provenance":&provenance,"modality":"observed"}),
             );
         }
         Ok(Self {
@@ -139,7 +194,7 @@ impl MrrObservationEvidence {
             scope,
         })
     }
-    pub fn original(&self) -> &VerifiedQueryResultTransport {
+    pub fn original(&self) -> &AdmittedMrrResult {
         &self.original
     }
     pub fn correspondence(&self) -> &Value {
@@ -158,8 +213,8 @@ impl MrrObservationEvidence {
         let object = model.as_object_mut().ok_or(MrrBridgeError::InvalidModel)?;
         if object.contains_key("observations")
             || object.get("domains")
-                != Some(&json!([
-            {"identity":self.scope.clock_domain,"role":"event-time"}]))
+                != Some(&datum!([
+            {"identity":&self.scope.clock_domain,"role":"event-time"}]))
         {
             return Err(MrrBridgeError::InvalidModel);
         }
@@ -170,7 +225,7 @@ impl MrrObservationEvidence {
         runtime
             .call(
                 "temporal.family.classify",
-                &json!({"profile":"finite-hypothesis-family","model":model,"query":query}),
+                &datum!({"profile":"finite-hypothesis-family","model":model,"query":query}),
             )
             .map_err(MrrBridgeError::Native)
     }

@@ -221,7 +221,7 @@ is zero real-model calls, never a successful acceptance receipt.
 The authorized Rust family real-provider gate subsequently passed 4/4 frozen
 roundtrips, 8 completed responses and no retries. This supersedes the earlier
 blocked execution state for that exact payload; its producer head and claim
-scope remain in [[file:../../t/qualification/temporal-library-basic/rust-model-family/summary.json][the model receipt]].
+scope remain in [[file:../../t/qualification/temporal-library-basic/rust-model-family/historical.org][the model receipt]].
 
 R3 now has an executable original MRR -> explicit host observation correspondence
 -> native POO finite-family seam in =bindings/rust-runtime/src/mrr.rs=.
@@ -232,9 +232,35 @@ event/position profile binds all original identities to source/cut/projection/
 policy/clock and a separate integer Temporal generation. Changed scope invalidates
 POO model identity through observation provenance. No generation coercion or
 digest substitution occurs. Exact native/negative-gate results are in
-[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/receipt.json][the integration receipt]].
+[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/historical.org][the integration receipt]].
 
 Physical MRR Data execution, original GQL parser-source receipts, authenticated
 coverage, generic typed row mapping and R4 lifecycle/IFC gates remain open.
 The frozen real-provider batch exercises Rust native family calls; it does not
 claim a provider -> MRR physical-source -> Temporal publication roundtrip.
+
+* Full integration design follow-up
+
+[[file:mrr-integration-architecture.org][The bidirectional Temporal--MRR architecture]] specifies the next G0--G5
+delivery gates against the active PR trees: physical original-result exchange,
+reverse conclusion projection, acyclic revision/current-applicability lifecycle,
+recursive and absence profiles, authorized publication and real-model lifecycle
+acceptance. It records the old MRR projection document's incompatible identity
+equalities and limits lineage impact to a reevaluation frontier. These contracts
+are proposed; the delivered native event/position slice remains the executable
+boundary until each gate has its own receipt.
+
+* Scheme ABI v2 migration
+
+The transport observations above describe their pinned producer versions. The
+current semantic runtime now exposes only versioned ABI v2 symbols and inert
+Scheme datum transport. Python host publication callbacks and artifact manifests
+also use Scheme data. The Rust MRR bridge re-admits original native typed values
+without the upstream JSON exporter. The 9ad77d30 JSON qualification dumps and
+the Rust Python benchmark driver have been removed.
+
+[[file:../../t/qualification/temporal-library-basic/scheme-abi-v2/README.org][ASP-owned v2 qualification]] records 100 installed Python tests, 21 Rust
+differential results and 4/4 real DeepSeek cases with 8 responses and no retries.
+It separately preserves the failed cold-process p95 gate (1.171178s against
+900ms), despite 20 passing semantic samples. No performance closure or physical
+MRR Data integration follows from the functional/model results.

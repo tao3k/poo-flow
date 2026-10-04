@@ -9,6 +9,8 @@ from pathlib import Path
 import subprocess
 import time
 
+from poo_flow_runtime import scheme_wire as wire
+
 from .semantic_cases import corpus
 from .semantic_plan import configuration, sha, write
 from .semantic_provider import predict
@@ -29,8 +31,9 @@ def prepare(root, library, output, model):
              Path(__file__).with_name('semantic_reporting.py'),
              Path(__file__).with_name('semantic_plan.py'),
              root/'packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py',
-             root/'packages/python-runtime/src/poo_flow_runtime/semantic_tools.py']
-    plan = {'schema': 'poo-flow.semantic-tool-live-plan', 'version': 1,
+             root/'packages/python-runtime/src/poo_flow_runtime/semantic_tools.py',
+             root/'packages/python-runtime/src/poo_flow_runtime/scheme_wire.py']
+    plan = {'schema': 'poo-flow.semantic-tool-live-plan', 'version': 2,
             'head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
             'artifactSha256': sha(library.read_bytes()), 'cases': cases, 'model': model,
             'sources': {str(p): sha(p.read_bytes()) for p in paths},
@@ -46,28 +49,21 @@ def prepare(root, library, output, model):
 def _tool_request(plan, task):
     return {'model': plan['model'], 'reasoning': {'effort': 'none'}, 'temperature': 0.0,
             'max_output_tokens': 2048, 'stream': True,
-            'input': [{'role': 'user', 'content': 'Invoke the read-only Temporal Library tool once with this exact task:\n' + json.dumps(task)}],
+            'input': [{'role': 'user', 'content': 'Invoke the read-only Temporal Library tool once. Copy this exact Scheme task into its datum string:\n' + wire.dumps(task)}],
             'tools': [plan['tool']],
             'tool_choice': {'type': 'function', 'name': 'poo_flow_temporal_solve'}}
 
 
 def _output_request(plan, request, call, result):
-    schema = {'type': 'object', 'additionalProperties': False,
-              'required': ['status', 'rows', 'bindingDigest'], 'properties': {
-                  'status': {'type': 'string'}, 'bindingDigest': {'type': 'string'},
-                  'rows': {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'string'}}}}}
     return {'model': plan['model'], 'reasoning': {'effort': 'none'}, 'temperature': 0.0,
             'max_output_tokens': 2048, 'stream': True,
             'input': request['input'] + [call, {'type': 'function_call_output',
-                    'call_id': call['call_id'], 'output': json.dumps(result)},
-                    {'role': 'user', 'content': 'Return only status, rows and bindingDigest from the Library result as JSON.'}],
-            'text': {'format': {'type': 'json_schema', 'name': 'library_result',
-                                'strict': True, 'schema': schema}}}
+                    'call_id': call['call_id'], 'output': wire.dumps(result)},
+                    {'role': 'user', 'content': 'Return only a Scheme (object ("status" ...) ("rows" (list (list ...) ...)) ("bindingDigest" ...)) datum from the Library result, without Markdown.'}]}
 
 
 async def _roundtrip(runtime, plan, case, api, key, path):
     from poo_flow_runtime.semantic_tools import invoke_temporal_tool, ainvoke_temporal_tool
-    from poo_flow_runtime.semantic_runtime import _unique_json_pairs
     record = {'case': case['id'], 'api': api, 'passed': False, 'tool': {}, 'final': {}}
     task = deepcopy(case['request'])
     request = _tool_request(plan, task)
@@ -93,7 +89,7 @@ async def _roundtrip(runtime, plan, case, api, key, path):
         final_request = _output_request(plan, request, call, result)
         record['finalRequest'] = final_request
         text = await predict(final_request, key, record['final'], emit=lambda _: report_progress('.', end=''))
-        if json.loads(text, object_pairs_hook=_unique_json_pairs) != expected:
+        if wire.loads(text) != expected:
             raise ValueError('model final output differs from actual Library result')
         record['passed'] = True
     except Exception as error:

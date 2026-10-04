@@ -2,8 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; AOT semantic projection: inert JSON enters existing Scheme owners.
-(import :std/ffi :std/encoding/json
+;;; AOT semantic projection: inert Scheme data enters existing Scheme owners.
+(import :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
                  temporal-source-register temporal-family-admit-call)
         (only-in :poo-flow/src/ffi/temporal-family
@@ -113,37 +113,35 @@
           (verification (hash-get answer 'verification)))))
 
 (def (semantic-call operation payload)
-  (let (object (parameterize ((current-json-read-options
-                              (JSONReadOptions object-as-hash: #t)))
-                (string->json payload)))
+  (let (object (scheme-wire-read payload))
     (cond ((string=? operation "$host.temporal.source.register")
-           (json->string (temporal-source-register object)))
+           (scheme-wire-write (temporal-source-register object)))
           ((string=? operation "temporal.family.admit")
-           (json->string (temporal-family-admit-call object)))
+           (scheme-wire-write (temporal-family-admit-call object)))
           ((string=? operation "temporal.family.classify")
-           (json->string (temporal-family-call object)))
+           (scheme-wire-write (temporal-family-call object)))
           ((string=? operation "temporal.family.observe")
-           (json->string (temporal-family-observe object)))
-          ((string=? operation "temporal.solve") (json->string (temporal-call object)))
-          ((string=? operation "graph.admit") (json->string (graph-call object payload)))
-          ((string=? operation "graph.targets") (json->string (graph-targets-call object)))
+           (scheme-wire-write (temporal-family-observe object)))
+          ((string=? operation "temporal.solve") (scheme-wire-write (temporal-call object)))
+          ((string=? operation "graph.admit") (scheme-wire-write (graph-call object payload)))
+          ((string=? operation "graph.targets") (scheme-wire-write (graph-targets-call object)))
           ((string=? operation "temporal.observe")
-           (json->string (temporal-observe object payload)))
+           (scheme-wire-write (temporal-observe object payload)))
           ((string=? operation "temporal.verify")
            (let* ((answer (temporal-call (required object "task")))
                   (candidate (required object "candidate"))
                   (matches (and (hash-table? candidate) (= (hash-length candidate) 2)
                                 (equal? (hash-get candidate "status") (hash-get answer 'status))
                                 (equal? (hash-get candidate "rows") (hash-get answer 'rows)))))
-             (json->string
+             (scheme-wire-write
               (hash (schema "poo-flow.semantic-result") (operation "temporal.verify")
                     (verdict (if matches "consistent" "contradicted"))
                     (status (hash-get answer 'status))
                     (bindingDigest (hash-get answer 'bindingDigest))
                     (verification (hash-get answer 'verification))))))
           ((string=? operation "descriptor")
-           (json->string
-            (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1)
+           (scheme-wire-write
+            (hash (schema "poo-flow.semantic-descriptor") (abiVersion 2) (wireFormat "scheme-datum-v2")
                   (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
@@ -227,8 +225,7 @@
 
 (def (graph-targets-call object)
   (let* ((payload (required object "plan"))
-         (plan (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
-                 (string->json payload)))
+         (plan (scheme-wire-read payload))
          (admission (graph-call plan payload))
          (digest (hash-get admission 'planDigest))
          (source (required object "source"))
@@ -271,7 +268,7 @@
           (planDigest digest) (targets targets) (verification "valid"))))
 
 (def (semantic-error exception)
-  (json->string
+  (scheme-wire-write
    (hash (schema "poo-flow.semantic-error")
          (message (call-with-output-string
                    (lambda (p) (display-exception exception p)))))))

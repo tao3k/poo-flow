@@ -64,10 +64,12 @@ jobs:
       - name: Verify semantic artifact and source binding
         run: |
           python3 - <<'PY'
-          import hashlib, json, os
+          import hashlib, os, sys
+          sys.path.insert(0, "packages/python-runtime/src/poo_flow_runtime")
+          from scheme_wire import loads
           from pathlib import Path
           library = Path(os.environ['POO_FLOW_SEMANTIC_LIBRARY'])
-          manifest = json.loads(Path(str(library) + '.json').read_text())
+          manifest = loads(Path(str(library) + '.ss').read_text())
           assert hashlib.sha256(library.read_bytes()).hexdigest() == manifest['artifactSha256']
           assert hashlib.sha256(Path('src/ffi/semantic.ss').read_bytes()).hexdigest() == manifest['sourceSha256']
           assert hashlib.sha256(Path('bindings/runtime-c/src/semantic_host.c').read_bytes()).hexdigest() == manifest['hostSha256']
@@ -293,11 +295,11 @@ jobs:
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" \
             bindings/rust-runtime/tools/differential.py \
             --library "$POO_FLOW_SEMANTIC_LIBRARY" \
-            --output "$RUNNER_TEMP/poo-rust-oracle.json"
+            --output "$RUNNER_TEMP/poo-rust-oracle.ss"
           export POO_FLOW_SEMANTIC_SHA256
           POO_FLOW_SEMANTIC_SHA256="$(sha256sum "$POO_FLOW_SEMANTIC_LIBRARY" | cut -d ' ' -f 1)"
           export POO_FLOW_RUNTIME_TRACE=1
-          export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.json"
+          export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.ss"
           cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport --no-run
           python bindings/rust-runtime/tools/watch.py \
             cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport -- --nocapture

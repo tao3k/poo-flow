@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #![cfg(feature = "mrr-transport")]
 use meta_relational_reasoning as m;
+use poo_flow_rust_runtime::datum;
 use poo_flow_rust_runtime::{
     SemanticRuntime,
     mrr::{MrrObservationEvidence, ObservationScope},
 };
-use serde_json::json;
 use std::num::NonZeroUsize;
 fn bound(label: &str) -> m::CatalogBoundQuery {
     let rid = m::RelationId::from_canonical_bytes("temporal-observation-relation").unwrap();
@@ -129,12 +129,13 @@ fn candidate(query: &m::CatalogBoundQuery, duplicate: bool) -> m::CandidateQuery
     )
 }
 #[test]
-fn original_mrr_transport_projects_to_real_native_poo() {
+fn original_mrr_values_project_to_real_native_poo() {
     let query = bound("generation-one");
     let rows = candidate(&query, false);
     let cap = NonZeroUsize::new(16384).unwrap();
-    let bytes = m::export_query_result_transport(&query, &rows, limits(), cap).unwrap();
-    let evidence = MrrObservationEvidence::verify(&query, &bytes, limits(), cap, scope()).unwrap();
+    let receipt = m::admit_query_result_candidate(&query, &rows, limits()).unwrap();
+    let evidence =
+        MrrObservationEvidence::verify(&query, &rows, &receipt, limits(), cap, scope()).unwrap();
     assert_eq!(evidence.original().candidate(), &rows);
     assert_eq!(
         evidence.original().receipt().binding().generation(),
@@ -146,40 +147,56 @@ fn original_mrr_transport_projects_to_real_native_poo() {
         query.generation().to_string()
     );
     assert_eq!(evidence.correspondence()["sourceAuthenticated"], false);
-    let changed = String::from_utf8(bytes.clone())
-        .unwrap()
-        .replace("deploy", "forged");
+    let changed = candidate(&query, true);
     assert!(
-        MrrObservationEvidence::verify(&query, changed.as_bytes(), limits(), cap, scope()).is_err()
+        MrrObservationEvidence::verify(&query, &changed, &receipt, limits(), cap, scope()).is_err()
     );
     assert!(
-        MrrObservationEvidence::verify(&bound("generation-two"), &bytes, limits(), cap, scope())
-            .is_err()
+        MrrObservationEvidence::verify(
+            &bound("generation-two"),
+            &rows,
+            &receipt,
+            limits(),
+            cap,
+            scope()
+        )
+        .is_err()
     );
     assert!(
         MrrObservationEvidence::verify(
             &query,
-            &bytes,
+            &rows,
+            &receipt,
             limits(),
             NonZeroUsize::new(1).unwrap(),
             scope()
         )
         .is_err()
     );
-    let duplicates =
-        m::export_query_result_transport(&query, &candidate(&query, true), limits(), cap).unwrap();
-    assert!(MrrObservationEvidence::verify(&query, &duplicates, limits(), cap, scope()).is_err());
+    let duplicates = candidate(&query, true);
+    let duplicate_receipt = m::admit_query_result_candidate(&query, &duplicates, limits()).unwrap();
+    assert!(
+        MrrObservationEvidence::verify(
+            &query,
+            &duplicates,
+            &duplicate_receipt,
+            limits(),
+            cap,
+            scope()
+        )
+        .is_err()
+    );
     let runtime = SemanticRuntime::open(
         std::env::var("POO_FLOW_SEMANTIC_LIBRARY").unwrap(),
         &std::env::var("POO_FLOW_SEMANTIC_SHA256").unwrap(),
         64,
     )
     .unwrap();
-    let model = json!({"identity":"original-mrr-family","mode":"exclusive-explanations","complete":true,
+    let model = datum!({"identity":"original-mrr-family","mode":"exclusive-explanations","complete":true,
         "domains":[{"identity":"clock","role":"event-time"}],"hypotheses":[
             {"identity":"target","cause":"build","effect":"deploy","constraints":[{"identity":"order","relation":"before","left":"build","right":"deploy"}]},
             {"identity":"alternative","cause":"deploy","effect":"deploy","constraints":[{"identity":"reverse","relation":"before","left":"deploy","right":"build"}]}]});
-    let task = json!({"identity":"question","target":"target","limit":false});
+    let task = datum!({"identity":"question","target":"target","limit":false});
     let result = evidence
         .classify(&runtime, model.clone(), task.clone())
         .unwrap();
@@ -187,11 +204,12 @@ fn original_mrr_transport_projects_to_real_native_poo() {
     assert_eq!(result["actionAuthorized"], false);
     assert_eq!(result["sourceAuthenticated"], false);
     let mut forged = model.clone();
-    forged["observations"] = json!([]);
+    forged["observations"] = datum!([]);
     assert!(evidence.classify(&runtime, forged, task.clone()).is_err());
     let mut new_scope = scope();
     new_scope.temporal_generation = 8;
-    let newer = MrrObservationEvidence::verify(&query, &bytes, limits(), cap, new_scope).unwrap();
+    let newer =
+        MrrObservationEvidence::verify(&query, &rows, &receipt, limits(), cap, new_scope).unwrap();
     assert_ne!(
         newer.classify(&runtime, model, task).unwrap()["modelDigest"],
         result["modelDigest"]
