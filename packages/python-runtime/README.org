@@ -57,6 +57,28 @@ fail closed. Receipt classification is assumption-relative; source authenticity
 and action authorization remain false. The exact supported projection and
 local qualification are in [[file:../../modules/temporal-causality/design-audit.org][the engine delivery record]].
 
+Host-pinned source admission is a separate control operation.
+=register_temporal_source(scope, task)= registers canonical domain/observation
+bytes using =poo_flow_semantic_source_register=, not the semantic operation
+router. Do not expose registration as a model tool. The scope binds source
+identity, authority, subject, scope, cut, projection, policy and generation.
+A conflicting registration at the same generation or a rollback is rejected;
+a higher generation retires the old snapshot's applicability. At most 128
+source identities are retained in this process-local registry.
+
+=admit_temporal_family(task, source_identity=..., source_digest=...,
+conclusion_identity=...)= and its async counterpart select the current
+registered snapshot, replay observations and native classification, and return
+an inert immutable root conclusion with generated proof and content-bound revision identities. The
+caller conclusion identity is a request key; a changed proof produces a distinct
+revision identity even for the same request key. Unknown
+classification is rejected. Hypothesis-family completeness is still a caller
+assumption; admission does not prove complete source coverage, causal truth,
+external issuer authenticity or effect authority. The receipt states
+=sourceVerified: true= relative to =host-registered-snapshot=, while
+=sourceAuthenticated= and =actionAuthorized= remain false. Registration is
+volatile and does not implement a durable pointer, correction CAS or recovery.
+
 The semantic runtime has one process-wide lifetime and one owning thread,
 bounded input and queue sizes, explicit native result ownership, and terminal
 cleanup. Each artifact is checked against an expected SHA256 before loading.

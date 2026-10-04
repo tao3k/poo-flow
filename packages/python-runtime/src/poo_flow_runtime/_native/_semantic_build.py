@@ -9,6 +9,8 @@ typedef struct { int32_t status; uint8_t *data; size_t length; } poo_flow_semant
 int32_t poo_flow_python_semantic_open(const char *path);
 int32_t poo_flow_python_semantic_call(const char *operation, const uint8_t *input,
                                     size_t length, poo_flow_semantic_result *result);
+int32_t poo_flow_python_semantic_source_register(const uint8_t *input, size_t length,
+                                                poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_close(void);
 void poo_flow_python_semantic_release(poo_flow_semantic_result *result);
 ''')
@@ -23,6 +25,7 @@ typedef struct { int32_t status; uint8_t *data; size_t length; } poo_flow_semant
 static void *library;
 static int32_t (*open_native)(void);
 static int32_t (*call_native)(const char *, const uint8_t *, size_t, poo_flow_semantic_result *);
+static int32_t (*register_source_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*close_native)(void);
 static void (*release_native)(poo_flow_semantic_result *);
 int32_t poo_flow_python_semantic_open(const char *path) {
@@ -34,6 +37,7 @@ int32_t poo_flow_python_semantic_open(const char *path) {
 #define LOAD(field, name) symbol = dlsym(library, name); if (!symbol) { dlclose(library); library = NULL; pthread_mutex_unlock(&shim_lock); return 6; } memcpy(&field, &symbol, sizeof(field))
   LOAD(open_native, "poo_flow_semantic_open");
   LOAD(call_native, "poo_flow_semantic_call");
+  LOAD(register_source_native, "poo_flow_semantic_source_register");
   LOAD(close_native, "poo_flow_semantic_close");
   LOAD(release_native, "poo_flow_semantic_result_release");
 #undef LOAD
@@ -45,6 +49,13 @@ int32_t poo_flow_python_semantic_call(const char *operation, const uint8_t *inpu
                                     size_t length, poo_flow_semantic_result *result) {
   pthread_mutex_lock(&shim_lock);
   int32_t status = library ? call_native(operation, input, length, result) : 1;
+  pthread_mutex_unlock(&shim_lock);
+  return status;
+}
+int32_t poo_flow_python_semantic_source_register(const uint8_t *input, size_t length,
+                                                poo_flow_semantic_result *result) {
+  pthread_mutex_lock(&shim_lock);
+  int32_t status = library ? register_source_native(input, length, result) : 1;
   pthread_mutex_unlock(&shim_lock);
   return status;
 }

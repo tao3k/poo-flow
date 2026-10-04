@@ -15,7 +15,7 @@
         (only-in :poo-flow/modules/temporal-causality/funs
                  poo-flow-temporal-model poo-flow-temporal-overlapping-model
                  poo-flow-temporal-model-classify))
-(export temporal-family-call temporal-family-observe)
+(export temporal-family-values temporal-family-call temporal-family-observe)
 
 (def (field object key)
   (unless (and (hash-table? object) (hash-key? object key))
@@ -39,7 +39,7 @@
   (for-each (lambda (key) (field object key)) keys)
   object)
 
-(def (temporal-family-call task)
+(def (temporal-family-values task)
   (exact-fields task ["profile" "model" "query"])
   (unless (equal? (field task "profile") "finite-hypothesis-family")
     (error "unsupported temporal semantic profile"))
@@ -87,6 +87,12 @@
          (query (poo-flow-temporal-query
                  (text (field q "identity")) (text (field q "target"))
                  (field q "limit")))
+         )
+    (list model query)))
+
+(def (temporal-family-call task)
+  (let* ((values (temporal-family-values task))
+         (model (car values)) (query (cadr values))
          (receipt (poo-flow-temporal-model-classify model query))
          (binding
           (hex-encode

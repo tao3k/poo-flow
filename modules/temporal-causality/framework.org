@@ -389,6 +389,25 @@ Kleer's assumption-based TMS]] shows why alternative assumption contexts
 need distinct identities.  This slice retains correction branches but does
 not implement full assumption-set labeling or belief revision.
 
+** Host-pinned finite-family conclusion admission
+
+=admission/interface.ss= supplies POO source-snapshot and family-admission
+values. It replays the registered domain/observation inventory, runs the
+finite-family classifier and generates a proof digest and immutable root
+conclusion bound to source cut, valid-time projection, policy and generation.
+Unknown classifications cannot produce a conclusion. This is a proof of the
+supported family-relative classification under declared hypotheses; it does
+not establish an intervention-qualified causal fact or closed source absence.
+
+The Runtime C source-registration control entrypoint maintains a bounded,
+process-local registry. Ordinary semantic calls cannot register sources.
+A higher host generation retires old snapshot applicability; a conflicting
+registration at the same generation or a rollback is rejected. Python uses
+the same control entrypoint on the owner thread. The trust premise is explicit
+host registration, not externally authenticated signatures. External issuer
+verification, complete partition/sequence coverage, correction/retraction
+admission and authorized durable pointer commit remain open.
+
 * Formal programme
 
 The current =packages/proofs/tla/temporal-causality/model.org= gives one finite instance, state machine,

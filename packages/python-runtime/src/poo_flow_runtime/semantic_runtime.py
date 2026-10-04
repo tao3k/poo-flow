@@ -87,9 +87,30 @@ class SemanticRuntime:
                                        candidate: Mapping[str, Any]) -> dict[str, Any]:
         return await self.acall('temporal.family.observe', {'task': task, 'candidate': candidate})
 
-    def _submit(self, operation: str, payload: Mapping[str, Any]):
+    def register_temporal_source(self, scope: Mapping[str, Any],
+                                 task: Mapping[str, Any]) -> dict[str, Any]:
+        """Trusted host control: pin source evidence outside the model call lane."""
+        return self._submit('$host.temporal.source.register', {'scope': scope, 'task': task},
+                            control=True).result()
+
+    def admit_temporal_family(self, task: Mapping[str, Any], *, source_identity: str,
+                              source_digest: str, conclusion_identity: str) -> dict[str, Any]:
+        """Admit an inert conclusion relative to the current host-pinned source."""
+        return self.call('temporal.family.admit', {
+            'task': task, 'sourceIdentity': source_identity, 'sourceDigest': source_digest,
+            'conclusionIdentity': conclusion_identity})
+
+    async def aadmit_temporal_family(self, task: Mapping[str, Any], *, source_identity: str,
+                                    source_digest: str, conclusion_identity: str) -> dict[str, Any]:
+        return await self.acall('temporal.family.admit', {
+            'task': task, 'sourceIdentity': source_identity, 'sourceDigest': source_digest,
+            'conclusionIdentity': conclusion_identity})
+
+    def _submit(self, operation: str, payload: Mapping[str, Any], *, control: bool = False):
         if not isinstance(operation, str) or '\0' in operation or len(operation.encode('utf-8')) > 128:
             raise ValueError('invalid semantic operation')
+        if operation.startswith('$') and not control:
+            raise ValueError('host control operation is not a semantic call')
         data = json.dumps(payload, ensure_ascii=False, allow_nan=False,
                           separators=(',', ':')).encode('utf-8')
         if len(data) > 1048576:
@@ -100,17 +121,20 @@ class SemanticRuntime:
             if not self._slots.acquire(blocking=False):
                 raise SemanticRuntimeError('semantic call queue is full', status=7)
             try:
-                future = self._worker.submit(self._call, operation.encode(), data)
+                future = self._worker.submit(self._call, operation.encode(), data, control=control)
                 future.add_done_callback(lambda _: self._slots.release())
                 return future
             except BaseException:
                 self._slots.release()
                 raise
 
-    def _call(self, operation: bytes, data: bytes) -> dict[str, Any]:
+    def _call(self, operation: bytes, data: bytes, *, control: bool = False) -> dict[str, Any]:
         result = self._ffi.new('poo_flow_semantic_result *')
         try:
-            status = self._lib.poo_flow_python_semantic_call(operation, data, len(data), result)
+            if control:
+                status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
+            else:
+                status = self._lib.poo_flow_python_semantic_call(operation, data, len(data), result)
             raw = bytes(self._ffi.buffer(result.data, result.length)) if result.data != self._ffi.NULL else b''
             if status:
                 raise SemanticRuntimeError(raw.decode('utf-8', 'replace') or

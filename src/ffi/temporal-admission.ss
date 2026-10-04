@@ -1,0 +1,75 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Effectful host registration is separate from pure semantic admission.
+(import (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/src/ffi/temporal-family temporal-family-values)
+        (only-in :poo-flow/modules/temporal-causality/admission/interface
+                 poo-flow-temporal-source-snapshot poo-flow-temporal-family-admit))
+(export temporal-source-register temporal-family-admit-call)
+(def sources (make-hash-table))
+(def (field object key)
+  (unless (and (hash-table? object) (hash-key? object key))
+    (error "missing admission field" key))
+  (hash-ref object key))
+(def (fields object names)
+  (unless (and (hash-table? object) (= (hash-length object) (length names)))
+    (error "invalid admission fields"))
+  (for-each (lambda (key) (field object key)) names))
+(def scope-fields ["identity" "authority" "subject" "scope" "cut" "projection" "policy" "generation"])
+(def (snapshot object)
+  (let* ((scope (field object "scope"))
+         (values (temporal-family-values (field object "task"))))
+    (fields scope scope-fields)
+    (apply poo-flow-temporal-source-snapshot
+           (append (map (lambda (key) (field scope key)) scope-fields)
+                   (list (car values))))))
+
+;;; Called ONLY through the dedicated C control entrypoint. No semantic byte
+;;; operation can replace the registered snapshot or choose its digest.
+(def (temporal-source-register object)
+  (fields object ["scope" "task"])
+  (let* ((source (snapshot object)) (id (.ref source 'identity))
+         (old (hash-get sources id)))
+    (when old
+      (unless (or (> (.ref source 'generation) (.ref old 'generation))
+                  (equal? (.ref source 'semantic-digest) (.ref old 'semantic-digest)))
+        (error "source generation rollback or conflicting registration")))
+    (unless (or old (< (hash-length sources) 128))
+      (error "source registry capacity exceeded"))
+    (hash-put! sources id source)
+    (hash (schema "poo-flow.temporal-source-registration.v1")
+          (sourceDigest (.ref source 'semantic-digest))
+          (generation (.ref source 'generation))
+          (trustBasis "host-registered-snapshot") (sourceAuthenticated #f)
+          (actionAuthorized #f))))
+
+(def (temporal-family-admit-call object)
+  (fields object ["sourceIdentity" "sourceDigest" "task" "conclusionIdentity"])
+  (let* ((source (hash-get sources (field object "sourceIdentity")))
+         (_ (unless (and source (equal? (.ref source 'semantic-digest)
+                                       (field object "sourceDigest")))
+              (error "unregistered or stale source snapshot")))
+         (values (temporal-family-values (field object "task")))
+         (admission (poo-flow-temporal-family-admit
+                     (car values) (cadr values) source (field object "conclusionIdentity")))
+         (revision (.ref admission 'conclusion)))
+    (hash (schema "poo-flow.temporal-family-admission.v1")
+          (claim "family-relative-classification")
+          (trustBasis "host-registered-snapshot") (sourceVerified #t)
+          (sourceAuthenticated #f) (actionAuthorized #f)
+          (admissionDigest (.ref admission 'semantic-digest))
+          (sourceDigest (.ref admission 'source-digest))
+          (modelDigest (.ref admission 'model-digest))
+          (classification (symbol->string (.ref admission 'classification)))
+          (conclusion
+           (hash (identity (.ref revision 'identity))
+                 (subject (.ref revision 'subject-identity))
+                 (scope (.ref revision 'scope-identity))
+                 (cut (.ref revision 'cut-digest))
+                 (projection (.ref revision 'projection-digest))
+                 (policy (.ref revision 'policy-identity))
+                 (generation (.ref revision 'generation-identity))
+                 (operation "assert") (proofDigest (.ref revision 'proof-identity))
+                 (resultDigest (.ref revision 'result-identity)))))))

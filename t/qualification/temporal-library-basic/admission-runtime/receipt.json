@@ -1,0 +1,58 @@
+{
+  "schema": "poo-flow.temporal-admission-runtime-qualification.v1",
+  "date": "2026-10-04",
+  "baseHead": "092d80282ae9fd748b50fa60cec42c5f685b365b",
+  "profile": "finite-hypothesis-family",
+  "trustBasis": "host-registered-snapshot",
+  "claim": "native family-relative proof and inert root conclusion admission against current host-pinned evidence",
+  "artifactSha256": "9025b685425c62b0a8523e8b4e99cba18dfb1400a9601db1984dba0cf9635efa",
+  "wheelSha256": "b9a2d5466813e0ab12856d1756b5a58b2cee1fb77ba2f27f9703d4d7d72ace5e",
+  "sourceFiles": {
+    "modules/temporal-causality/admission/interface.ss": "adaa23bc23192a3f588f72658c688946d94aa43ed7af12ce0ddaf73e8da461c7",
+    "modules/temporal-causality/interface.ss": "2b2d93f06e4ea08a00ef472138bda5a917eff4dd8a20774951984f726121e4f7",
+    "src/ffi/temporal-admission.ss": "a9c183fdaf419fb5ae97b0a6c6b260c51102a985e8aedca586c035b779321c99",
+    "src/ffi/temporal-family.ss": "4d385211b341bea0a31b9b3f9968778d3af82e45c71c6e9399948982884c6a71",
+    "src/ffi/semantic.ss": "1c38a70958871986cfe5968c9605a2741219297b0c7248b599be1953895f42b5",
+    "bindings/runtime-c/include/poo_flow/semantic.h": "4cb7a1ed1d423199e84ccea950d4f879126d8bd257b97456938a31575ae6ef2b",
+    "bindings/runtime-c/src/semantic_host.c": "b26ab209fa1470c76a6d186e8c751f22da419fa5e805ab075688a352f5d21878",
+    "bindings/runtime-c/tools/build-semantic.py": "9bdd024d9709788e5c2bfa34ebe6f0597c3991f4c09ef295a9e996a612f01fe8",
+    "packages/python-runtime/src/poo_flow_runtime/_native/_semantic_build.py": "2ad31d6bf259f9ad30ff753f11dacf023abed89c9948c9f009ecbc1c8cbe3a3d",
+    "packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py": "46def06db33f48d0f8c818fb0816b962191ee14e35d2479f5c27d600ffa3683b",
+    "packages/python-runtime/tests/unit/test_temporal_admission.py": "6cbf04f8e7e621d326b813db8e9a87021a016a86c5f4a6057e17af32646f1db6",
+    ".github/workflows/python-runtime-wheel.yml": "f62f0339760ea49e1e3005532386f8a3ec2629b10750477322c200e01e17ce60"
+  },
+  "tests": {
+    "tests": "78",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.273"
+  },
+  "newAdmissionCases": 18,
+  "installedWheelBundledLibrary": true,
+  "registeredSourceCurrentGeneration": true,
+  "genericSemanticControlBypassRejected": true,
+  "contentBoundRevisionIdentity": true,
+  "sourceAuthenticated": false,
+  "actionAuthorized": false,
+  "realModelCalls": 0,
+  "initialFailure": {
+    "summary": {
+      "tests": "78",
+      "failures": "16",
+      "errors": "0",
+      "skipped": "0",
+      "time": "26.641"
+    },
+    "rootCause": "POO slot self-reference from generation/classification/conclusion value variables",
+    "repair": "Use distinct value variable names; validate through registered native source and conclusion construction"
+  },
+  "limitations": [
+    "Local macOS ARM64 CPython 3.13 installed wheel; remote CI not qualified by this receipt",
+    "Source trust is explicit host registration; no external issuer signatures or partition/sequence completeness",
+    "Volatile registry; no durable pointer, authorized CAS, correction/retraction admission or crash recovery",
+    "Proof binds finite family classification under caller-declared hypotheses; not actual causation or generic TLA/Lean refinement",
+    "C entrypoint exercised via installed CFFI including direct reserved-router, owner-thread and transport guard checks",
+    "Project test plugin disabled to isolate installed wheel; pytest execution is the test evidence"
+  ]
+}

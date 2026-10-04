@@ -4,6 +4,8 @@
 
 ;;; AOT semantic projection: inert JSON enters existing Scheme owners.
 (import :std/ffi :std/encoding/json
+        (only-in :poo-flow/src/ffi/temporal-admission
+                 temporal-source-register temporal-family-admit-call)
         (only-in :poo-flow/src/ffi/temporal-family
                  temporal-family-call temporal-family-observe)
         (only-in :std/crypto/digest sha256)
@@ -114,7 +116,11 @@
   (let (object (parameterize ((current-json-read-options
                               (JSONReadOptions object-as-hash: #t)))
                 (string->json payload)))
-    (cond ((string=? operation "temporal.family.classify")
+    (cond ((string=? operation "$host.temporal.source.register")
+           (json->string (temporal-source-register object)))
+          ((string=? operation "temporal.family.admit")
+           (json->string (temporal-family-admit-call object)))
+          ((string=? operation "temporal.family.classify")
            (json->string (temporal-family-call object)))
           ((string=? operation "temporal.family.observe")
            (json->string (temporal-family-observe object)))
@@ -138,7 +144,7 @@
           ((string=? operation "descriptor")
            (json->string
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1)
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])

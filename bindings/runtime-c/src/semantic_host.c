@@ -65,14 +65,15 @@ int32_t poo_flow_semantic_open(void) {
   pthread_mutex_unlock(&lock);
   return 0;
 }
-int32_t poo_flow_semantic_call(const char *operation, const uint8_t *input,
-                                 size_t length, poo_flow_semantic_result *result) {
+static int32_t semantic_call(const char *operation, const uint8_t *input,
+                             size_t length, poo_flow_semantic_result *result, int control) {
   pthread_mutex_lock(&lock);
   int32_t status;
   if (state != 1) status = 1;
   else if (!pthread_equal(owner, pthread_self())) status = 2;
   else if (!operation || !input || !result || result->data || result->length ||
            !length || length > 1048576 || memchr(input, 0, length) ||
+           (!control && operation[0] == '$') ||
            strnlen(operation, 129) > 128 ||
            !valid_utf8((const uint8_t *)operation, strnlen(operation, 129)) ||
            !valid_utf8(input, length) ||
@@ -89,6 +90,14 @@ int32_t poo_flow_semantic_call(const char *operation, const uint8_t *input,
   if (result && !result->data) result->status = status;
   pthread_mutex_unlock(&lock);
   return status;
+}
+int32_t poo_flow_semantic_call(const char *operation, const uint8_t *input,
+                                 size_t length, poo_flow_semantic_result *result) {
+  return semantic_call(operation, input, length, result, 0);
+}
+int32_t poo_flow_semantic_source_register(const uint8_t *input, size_t length,
+                                           poo_flow_semantic_result *result) {
+  return semantic_call("$host.temporal.source.register", input, length, result, 1);
 }
 int32_t poo_flow_semantic_close(void) {
   pthread_mutex_lock(&lock);

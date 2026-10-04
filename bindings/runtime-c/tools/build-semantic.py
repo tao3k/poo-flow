@@ -55,7 +55,12 @@ def main() -> None:
                    "src/graph/types-core.ss", "src/graph/algorithms-list-support.ss",
                    "src/graph/algorithms.ss", "modules/temporal-causality/types.ss",
                    "modules/temporal-causality/objects.ss", "modules/temporal-causality/funs.ss",
-                   "src/ffi/temporal-family.ss"]:
+                   "src/ffi/temporal-family.ss", "modules/temporal-causality/truth-maintenance/types.ss",
+                   "modules/temporal-causality/conclusions/types.ss",
+                   "modules/temporal-causality/conclusions/objects.ss",
+                   "modules/temporal-causality/conclusions/funs.ss",
+                   "modules/temporal-causality/admission/interface.ss",
+                   "src/ffi/temporal-admission.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",

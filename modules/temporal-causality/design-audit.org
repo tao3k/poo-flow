@@ -265,3 +265,43 @@ This closes the D1 runtime connection for the finite profile and adds D4 result
 fidelity evidence. It does not close source verification, derived-conclusion
 admission, D7 publication or D8 behavior refinement. No real-model calls were
 made in this slice; earlier lens model receipts cannot qualify this new profile.
+
+* Delivered: host-pinned finite-family admission (2026-10-04)
+
+=admission/interface.ss= adds native POO source-snapshot and family-admission
+contracts, exported by the Temporal core interface. The admission function
+replays source/model evidence, classifies the query and generates an immutable
+root conclusion. Its proof identity binds source scope, evidence, assumptions,
+query and explored frontier. Revision identity binds request identity and proof;
+the same request under changed proof cannot reuse the earlier revision identity.
+
+=poo_flow_semantic_source_register= is a distinct C host control entrypoint.
+The generic semantic operation router rejects the reserved host prefix before
+Scheme dispatch, and Python registration uses the dedicated C function on the
+existing owner thread. Registration canonicalizes the domain/observation
+inventory and binds source/authority/subject/scope/cut/projection/policy/generation.
+The registry holds at most 128 source identities; generation rollback and
+same-generation conflicting bytes are rejected. A higher generation retires
+old snapshot applicability without mutating historical result values.
+
+=temporal.family.admit= selects the current registered source by identity and
+digest, replays the requested model and emits a native conclusion only for a
+resolved finite-family classification. No external opaque proof ID is accepted.
+Unknown classification, changed observations/provenance/clock role, missing
+source or stale digest fail admission. Changing hypotheses or query budget
+changes the generated proof; completeness remains a declared family assumption.
+
+This slice establishes result/proof fidelity relative to a host-pinned source.
+It does not authenticate an external issuer or prove partition/sequence
+coverage. Source trust is =host-registered-snapshot=, the registry is volatile,
+and receipts keep =sourceAuthenticated= and =actionAuthorized= false. No active
+pointer, correction/retraction admission, authorized commit, crash recovery or
+external effect is implemented by these entrypoints. The D2/D4/D6 obligations
+outside this local trust premise and the D7 transaction gate remain open.
+
+The initial ABI test exposed slot self-reference from constructor variables
+named like their POO slots; renaming the value variables removed that recursion.
+The regression gate covers registration, native result generation and proof
+identity changes. The final installed wheel passed 78 tests, including 18 new admission cases,
+and the CI wheel gate now includes that file. See [[file:../../t/qualification/temporal-library-basic/admission-runtime/receipt.json][the source/artifact acceptance receipt]] for final qualification
+and the recorded initial failure. No real-model evaluation is claimed here.
