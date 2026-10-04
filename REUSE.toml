@@ -72,6 +72,8 @@ path = [
   "t/qualification/temporal-library-basic/scheme-abi-v2/model/*.ss",
   "t/qualification/temporal-library-basic/scheme-abi-v2/mrr-cold-benchmark.ss",
   "t/qualification/temporal-physical-native/evidence/*",
+  "t/qualification/temporal-current-source/*.log",
+  "t/qualification/temporal-current-source/native-build-freeze.ss",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
