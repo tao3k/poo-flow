@@ -122,6 +122,7 @@ version = "0.1.0"
 source = "git+https://github.com/tao3k/meta-relational-reasoning.git?rev=d5beb4030bf875fa851cddc27789030c551154c3#d5beb4030bf875fa851cddc27789030c551154c3"
 dependencies = [
  "ciborium",
+ "mrr-agentic-ai-context",
  "mrr-bundle",
  "mrr-deduction",
  "mrr-identity",
@@ -135,6 +136,17 @@ dependencies = [
  "mrr-transition",
  "serde",
  "sha2",
+]
+
+[[package]]
+name = "mrr-agentic-ai-context"
+version = "0.1.0"
+source = "git+https://github.com/tao3k/meta-relational-reasoning.git?rev=d5beb4030bf875fa851cddc27789030c551154c3#d5beb4030bf875fa851cddc27789030c551154c3"
+dependencies = [
+ "mrr-identity",
+ "mrr-relation",
+ "mrr-revision",
+ "serde",
 ]
 
 [[package]]

@@ -300,6 +300,8 @@ jobs:
           POO_FLOW_SEMANTIC_SHA256="$(sha256sum "$POO_FLOW_SEMANTIC_LIBRARY" | cut -d ' ' -f 1)"
           export POO_FLOW_RUNTIME_TRACE=1
           export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.ss"
-          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport --no-run
-          python bindings/rust-runtime/tools/watch.py \
-            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport -- --nocapture
+          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context --no-run
+          timeout --foreground --signal=TERM --kill-after=1s 45s python bindings/rust-runtime/tools/watch.py \
+            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context -- --nocapture 2>&1 | tee "$RUNNER_TEMP/poo-mrr-context-runtime.log"
+          grep -F 'MRR Context checked original receipt, policy, temporal fact and current Source; forged/missing/foreign bindings rejected' "$RUNNER_TEMP/poo-mrr-context-runtime.log"
+          grep -Fx 'MRR Context rejected stale native Source after correction' "$RUNNER_TEMP/poo-mrr-context-runtime.log"

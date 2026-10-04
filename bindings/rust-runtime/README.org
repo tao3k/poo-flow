@@ -188,3 +188,39 @@ Family premises, not the original physical MRR candidate/receipt/provider bindin
 MRR Context admission, MRR Data authoritative journal/CAS, provider authentication
 and effect authority remain separate gates. The native and fresh-process Rust
 receipts are in =t/qualification/temporal-family-proof-archive/=.
+
+* Current MRR Context binding
+
+The optional =mrr-context= feature enables the original pinned MRR Context owner
+API. Registered Sources and their native Family admissions retain the original
+re-admitted MRR candidate, receipt, limits and host correspondence. No receipt
+is reconstructed from model text or a Context declaration.
+
+=MrrFamilyAdmission::context_reference= returns an MRR =FactId= and one native
+MRR String value containing the versioned Scheme receipt datum. The FactId is
+computed by MRR from the exact payload bytes. The host declares a one-String
+relation in its source catalog and includes that exact fact in the Context's
+=temporal_receipts=; it must not substitute a claimed digest or free-form text.
+The Context core retains its own native fact/dependency/manifest semantics.
+
+=check_context= rechecks the admitted Context against the supplied current
+bundle/snapshot, rebinds its query, re-admits the retained original MRR candidate
+and compares the entire receipt. It requires the exact receipt fact in both the
+contract and required closure, verifies its payload and policy mapping, then
+asks the native Scheme owner whether the original admission's Source is current.
+Foreign bundle/query/generation, substituted payload, missing reference, policy
+mismatch and stale native Source reject before returning a check receipt.
+
+=context_policy_digest= defines the explicit versioned correspondence: SHA-256
+of the UTF-8 domain =poo-flow.mrr-context-policy.v1= followed by NUL, the policy
+byte length as a big-endian u64, then the native policy token's UTF-8 bytes. This
+binds a host policy identity; it neither interprets nor authenticates that policy.
+Actor/task declarations and provider authenticity remain upstream responsibilities.
+
+This is a point-in-time observation, not a reusable lease or atomic disclosure
+transaction. A subsequent Source update invalidates applicability; consumers
+must recheck before use. MRR Data durable append/current CAS must join that
+recheck to its own transaction. Authority/effect/durability flags remain false.
+Detached archive replay cannot produce a =MrrFamilyAdmission= or current Context
+handle. The production adapter and executable receipts are documented under
+=t/qualification/temporal-mrr-context-binding/=.

@@ -14,6 +14,7 @@ sha2 = "0.10.9"
 [features]
 default = []
 mrr-transport = ["dep:meta-relational-reasoning"]
+mrr-context = ["mrr-transport", "meta-relational-reasoning/agentic-ai-context"]
 [dependencies.meta-relational-reasoning]
 git = "https://github.com/tao3k/meta-relational-reasoning.git"
 rev = "d5beb4030bf875fa851cddc27789030c551154c3"

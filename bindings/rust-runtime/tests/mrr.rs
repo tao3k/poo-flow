@@ -12,7 +12,13 @@ use poo_flow_rust_runtime::{
     },
 };
 use std::num::NonZeroUsize;
-fn bound(label: &str) -> m::CatalogBoundQuery {
+fn source(
+    label: &str,
+) -> (
+    m::ReasoningBundle,
+    m::SemanticSnapshot,
+    m::CatalogBoundQuery,
+) {
     let rid = m::RelationId::from_canonical_bytes("temporal-observation-relation").unwrap();
     let eid = m::EntityId::from_canonical_bytes("temporal-event-type").unwrap();
     let qid = m::QueryId::from_canonical_bytes("original-event-time-query").unwrap();
@@ -62,6 +68,13 @@ fn bound(label: &str) -> m::CatalogBoundQuery {
                 vec![],
             )
             .unwrap(),
+            m::RelationSchema::new(
+                m::RelationId::from_canonical_bytes("poo-temporal-reference").unwrap(),
+                "poo_temporal_reference",
+                vec![m::RelationField::new("receipt", m::ValueSchema::String, false).unwrap()],
+                vec![],
+            )
+            .unwrap(),
         ],
         entities: vec![
             m::EntitySchema::new(
@@ -89,7 +102,11 @@ fn bound(label: &str) -> m::CatalogBoundQuery {
         ],
     )
     .unwrap();
-    m::bind_query_to_catalog(&bundle, qid, &snapshot).unwrap()
+    let query = m::bind_query_to_catalog(&bundle, qid, &snapshot).unwrap();
+    (bundle, snapshot, query)
+}
+fn bound(label: &str) -> m::CatalogBoundQuery {
+    source(label).2
 }
 fn limits() -> m::QueryResultLimits {
     m::QueryResultLimits::new(
@@ -286,6 +303,55 @@ fn original_mrr_values_project_to_real_native_poo() {
             .is_err()
     );
     println!("MRR original evidence admitted against the host-registered current source");
+    #[cfg(feature = "mrr-context")]
+    let context_source = {
+        let original = temporal_context(&historical, "generation-one", None, true, None);
+        let checked = historical
+            .check_context(&runtime, &original.2, &original.0, &original.1)
+            .unwrap();
+        for flag in [
+            "sourceAuthenticated",
+            "actionAuthorized",
+            "runtimeExecuted",
+            "durable",
+        ] {
+            assert_eq!(checked[flag], false);
+        }
+        for wrong in [
+            temporal_context(
+                &historical,
+                "generation-one",
+                Some("forged receipt"),
+                true,
+                None,
+            ),
+            temporal_context(&historical, "generation-one", None, false, None),
+            temporal_context(&historical, "generation-one", None, true, Some([0; 32])),
+            temporal_context(&historical, "foreign-context-generation", None, true, None),
+        ] {
+            assert!(
+                historical
+                    .check_context(&runtime, &wrong.2, &wrong.0, &wrong.1)
+                    .is_err()
+            );
+        }
+        let foreign = temporal_context(
+            &historical,
+            "generation-one",
+            Some("foreign bundle"),
+            true,
+            None,
+        );
+        assert!(
+            historical
+                .check_context(&runtime, &original.2, &foreign.0, &foreign.1)
+                .is_err()
+        );
+        println!(
+            "MRR Context checked original receipt, policy, temporal fact and current Source; forged/missing/foreign bindings rejected"
+        );
+        original
+    };
 
     let corrected_query = bound("generation-two");
     let mut corrected_rows = rows.rows().to_vec();
@@ -314,6 +380,19 @@ fn original_mrr_values_project_to_real_native_poo() {
         .unwrap();
     let stale = historical.current(&runtime).unwrap();
     assert_eq!(stale["status"], "stale");
+    #[cfg(feature = "mrr-context")]
+    assert!(matches!(
+        historical.check_context(
+            &runtime,
+            &context_source.2,
+            &context_source.0,
+            &context_source.1
+        ),
+        Err(poo_flow_rust_runtime::mrr::MrrBridgeError::StaleContextEvidence)
+    ));
+    #[cfg(feature = "mrr-context")]
+    println!("MRR Context rejected stale native Source after correction");
+
     assert_eq!(stale["sourceAuthenticated"], false);
     assert_eq!(stale["actionAuthorized"], false);
     assert_ne!(stale["originalSourceDigest"], stale["currentSourceDigest"]);
@@ -702,4 +781,65 @@ fn replay_archive_after_restart() {
         "Fresh native process replayed complete premises; tamper/cycle/missing/duplicate rejected; current Source untouched"
     );
     runtime.close().unwrap();
+}
+
+#[cfg(feature = "mrr-context")]
+fn temporal_context(
+    admission: &poo_flow_rust_runtime::mrr::MrrFamilyAdmission,
+    generation: &str,
+    payload: Option<&str>,
+    include_reference: bool,
+    policy: Option<[u8; 32]>,
+) -> (
+    m::ReasoningBundle,
+    m::SemanticSnapshot,
+    m::AdmittedAgenticAiContext,
+) {
+    let (source, snapshot, query) = source(generation);
+    let (id, original) = admission.context_reference().unwrap();
+    let mut declaration = source.declaration().clone();
+    declaration.facts.push(m::Fact::new(
+        id,
+        m::RelationId::from_canonical_bytes("poo-temporal-reference").unwrap(),
+        vec![
+            payload
+                .map(|value| m::Value::String(value.into()))
+                .unwrap_or(original),
+        ],
+        m::RelationContext::new(
+            snapshot.generation(),
+            m::RelationAuthority::Entity(m::EntityId::from_canonical_bytes("host").unwrap()),
+            m::FactProvenance::Source(m::EntityId::from_canonical_bytes("host").unwrap()),
+            m::EvidenceCompleteness::Complete,
+            m::FactValidity::Valid,
+        )
+        .unwrap(),
+    ));
+    let bundle = m::ReasoningBundle::admit(declaration).unwrap();
+    let rebound = m::bind_query_to_catalog(&bundle, query.query().id(), &snapshot).unwrap();
+    assert_eq!(rebound, query);
+    let context = m::admit_agentic_ai_context(
+        &bundle,
+        &snapshot,
+        &rebound,
+        m::AgenticAiContextAdmissionRequest {
+            contract: m::AgenticAiContextContract {
+                actor: m::EntityId::from_canonical_bytes("host").unwrap(),
+                task: m::StateId::from_canonical_bytes("context-task").unwrap(),
+                policy_digest: policy.unwrap_or(admission.context_policy_digest().unwrap()),
+                required: vec![],
+                temporal_receipts: if include_reference { vec![id] } else { vec![] },
+                require_complete: true,
+            },
+            roots: vec![id],
+            dependencies: vec![],
+            limits: m::AgenticAiContextLimits {
+                max_elements: NonZeroUsize::new(16).unwrap(),
+                max_dependency_edges: NonZeroUsize::new(32).unwrap(),
+                max_rendered_bytes: NonZeroUsize::new(16384).unwrap(),
+            },
+        },
+    )
+    .unwrap();
+    (bundle, snapshot, context)
 }

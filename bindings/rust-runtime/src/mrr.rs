@@ -36,6 +36,12 @@ pub enum MrrBridgeError {
     InvalidModel,
     InvalidArchive,
     Native(Error),
+    #[cfg(feature = "mrr-context")]
+    Context(mrr::AgenticAiContextAdmissionError),
+    #[cfg(feature = "mrr-context")]
+    ContextBindingMismatch,
+    #[cfg(feature = "mrr-context")]
+    StaleContextEvidence,
 }
 impl std::fmt::Display for MrrBridgeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -45,12 +51,16 @@ impl std::fmt::Display for MrrBridgeError {
 impl std::error::Error for MrrBridgeError {}
 
 /// Native owner values retained after receiver-side re-admission. No serialized DTO.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AdmittedMrrResult {
     candidate: CandidateQueryResult,
     receipt: QueryResultAdmissionReceipt,
+    limits: QueryResultLimits,
 }
 impl AdmittedMrrResult {
+    pub fn limits(&self) -> QueryResultLimits {
+        self.limits
+    }
     pub fn candidate(&self) -> &CandidateQueryResult {
         &self.candidate
     }
@@ -79,6 +89,8 @@ pub struct RegisteredMrrSource {
     registration: Value,
     task: Value,
     source_identity: String,
+    original: AdmittedMrrResult,
+    correspondence: Value,
 }
 impl RegisteredMrrSource {
     pub fn registration(&self) -> &Value {
@@ -99,14 +111,26 @@ impl RegisteredMrrSource {
                 }),
             )
             .map_err(MrrBridgeError::Native)?;
-        Ok(MrrFamilyAdmission { result })
+        Ok(MrrFamilyAdmission {
+            result,
+            original: self.original.clone(),
+            correspondence: self.correspondence.clone(),
+        })
     }
 }
 /// Original native proof receipt; current applicability is checked separately.
 pub struct MrrFamilyAdmission {
     result: Value,
+    original: AdmittedMrrResult,
+    correspondence: Value,
 }
 impl MrrFamilyAdmission {
+    pub fn original(&self) -> &AdmittedMrrResult {
+        &self.original
+    }
+    pub fn correspondence(&self) -> &Value {
+        &self.correspondence
+    }
     pub fn result(&self) -> &Value {
         &self.result
     }
@@ -299,6 +323,8 @@ impl MrrObservationEvidence {
             registration,
             task,
             source_identity: self.scope.source_identity.clone(),
+            original: self.original.clone(),
+            correspondence: self.correspondence.clone(),
         })
     }
     /// Reconstruct original owner values from bounded Scheme v2 bytes, then
@@ -391,6 +417,7 @@ impl MrrObservationEvidence {
         let original = AdmittedMrrResult {
             candidate: candidate.clone(),
             receipt: receipt.clone(),
+            limits,
         };
         if candidate.columns()
             != [
@@ -499,5 +526,89 @@ impl MrrObservationEvidence {
                 &self.classification_request(model, query)?,
             )
             .map_err(MrrBridgeError::Native)
+    }
+}
+
+#[cfg(feature = "mrr-context")]
+impl MrrFamilyAdmission {
+    /// Exact Scheme receipt fact payload; this binds identity, not provider authenticity.
+    pub fn context_reference(&self) -> Result<(mrr::FactId, MrrValue), MrrBridgeError> {
+        let bytes = wire::to_vec(&datum!({
+            "schema": "poo-flow.mrr-context-temporal-reference.v1",
+            "admission": &self.result, "correspondence": &self.correspondence
+        }))
+        .map_err(|_| MrrBridgeError::ContextBindingMismatch)?;
+        let id = mrr::FactId::from_canonical_bytes(&bytes)
+            .map_err(|_| MrrBridgeError::ContextBindingMismatch)?;
+        Ok((
+            id,
+            MrrValue::String(
+                String::from_utf8(bytes).map_err(|_| MrrBridgeError::ContextBindingMismatch)?,
+            ),
+        ))
+    }
+    /// Versioned explicit mapping from the native policy token to Context policy bytes.
+    pub fn context_policy_digest(&self) -> Result<[u8; 32], MrrBridgeError> {
+        let policy = self.result["conclusion"]["policy"]
+            .as_str()
+            .ok_or(MrrBridgeError::ContextBindingMismatch)?;
+        let mut hash = Sha256::new();
+        hash.update(b"poo-flow.mrr-context-policy.v1\0");
+        hash.update((policy.len() as u64).to_be_bytes());
+        hash.update(policy.as_bytes());
+        Ok(hash.finalize().into())
+    }
+    /// Recheck the original MRR result and native current Source at disclosure time.
+    /// The returned receipt is a point-in-time check, never a reusable authority token.
+    pub fn check_context(
+        &self,
+        runtime: &SemanticRuntime,
+        context: &mrr::AdmittedAgenticAiContext,
+        bundle: &mrr::ReasoningBundle,
+        snapshot: &mrr::SemanticSnapshot,
+    ) -> Result<Value, MrrBridgeError> {
+        context
+            .check_source(bundle, snapshot)
+            .map_err(MrrBridgeError::Context)?;
+        let record = context.manifest().record();
+        let query =
+            mrr::bind_query_to_catalog(bundle, record.query, snapshot).map_err(|error| {
+                MrrBridgeError::Context(mrr::AgenticAiContextAdmissionError::QueryBinding(error))
+            })?;
+        let admitted = mrr::admit_query_result_candidate(
+            &query,
+            self.original.candidate(),
+            self.original.limits,
+        )
+        .map_err(MrrBridgeError::Admission)?;
+        if &admitted != self.original.receipt() {
+            return Err(MrrBridgeError::ReceiptMismatch);
+        }
+        let (id, payload) = self.context_reference()?;
+        if !context.state().contract().temporal_receipts.contains(&id)
+            || !context.closure().elements().contains(&id)
+            || context.state().contract().policy_digest != self.context_policy_digest()?
+            || !bundle
+                .facts()
+                .iter()
+                .any(|fact| fact.id() == id && fact.values() == [payload.clone()])
+        {
+            return Err(MrrBridgeError::ContextBindingMismatch);
+        }
+        let current = self.current(runtime)?;
+        if current["status"].as_str() != Some("current") {
+            return Err(MrrBridgeError::StaleContextEvidence);
+        }
+        let manifest = context
+            .manifest()
+            .digest()
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
+        Ok(datum!({"schema": "poo-flow.mrr-context-temporal-check.v1",
+            "contextManifestDigest": manifest, "temporalFact": id.to_string(),
+            "admissionDigest": &self.result["admissionDigest"], "currentSource": current,
+            "sourceAuthenticated": false, "actionAuthorized": false,
+            "runtimeExecuted": false, "durable": false}))
     }
 }

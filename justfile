@@ -314,6 +314,17 @@ test-temporal-family-archive executable library sha256 directory:
     test -s "{{ directory }}/archive.ss"
     test -s "{{ directory }}/replayed.ss"
 
+# Require real Context binding and stale-Source checks in the native MRR ABI run.
+[group('test')]
+test-temporal-mrr-context executable library sha256 directory:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    just --justfile "{{ justfile_directory() }}/justfile" test-temporal-family-archive "{{ executable }}" "{{ library }}" "{{ sha256 }}" "{{ directory }}" 2>&1 | tee "$log"
+    grep -F 'MRR Context checked original receipt, policy, temporal fact and current Source; forged/missing/foreign bindings rejected' "$log" >/dev/null
+    grep -Fx 'MRR Context rejected stale native Source after correction' "$log" >/dev/null
+
 # Check the declared ASCENT package through POO Flow's Observability Case.
 [group('test')]
 test-ascent-integration:

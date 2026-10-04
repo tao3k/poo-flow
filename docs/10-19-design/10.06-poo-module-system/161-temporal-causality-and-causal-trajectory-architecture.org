@@ -880,3 +880,20 @@ authoritative journal/CAS transaction still need their own integration. A valid
 historical proof is insufficient for current-pointer publication or effects.
 See =bindings/rust-runtime/README.org= and
 =t/qualification/temporal-family-proof-archive/= for executable evidence.
+
+* MRR Context current binding adapter
+
+The Rust Library's optional =mrr-context= adapter now joins a native Family
+admission to the original pinned MRR Context facade. It retains the original
+MRR result/receipt and host correspondence, uses an exact Scheme receipt fact
+as a typed temporal reference, rechecks Context source/query/policy bindings,
+and asks Scheme for current Source applicability before disclosure.
+
+This adds structural and point-in-time current checks; it supplies no provider
+authentication, policy authorization or atomic disclosure guarantee. Source
+correction makes the previous Context evidence stale. MRR Data must still own
+an authoritative journal and a transaction that joins its current CAS to fresh
+applicability checks. The Context core consumes existing typed fact references
+and receives no new Temporal ontology or Rust ASCENT evaluator.
+See =t/qualification/temporal-mrr-context-binding/= for the bounded real-owner
+integration test and its open gates.
