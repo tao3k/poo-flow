@@ -146,6 +146,11 @@ jobs:
       - name: Build native Gerbil package
         run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
+      - name: Run the single native unit-test entrypoint
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env ./unit-tests.ss
+
       - name: Build Scheme semantic AOT byte boundary
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
@@ -165,11 +170,6 @@ jobs:
           path: |
             .ci/semantic/libpoo_flow_semantic.so
             .ci/semantic/libpoo_flow_semantic.so.ss
-
-      - name: Run the single native unit-test entrypoint
-        env:
-          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
-        run: gerbil env ./unit-tests.ss
 
       - name: Run declared ASCENT package integration
         if: runner.os == 'Linux'
