@@ -5,7 +5,7 @@
 ;;; AOT semantic projection: inert Scheme data enters existing Scheme owners.
 (import :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
-                 temporal-source-register temporal-family-admit-call)
+                 temporal-source-register temporal-family-admit-call temporal-family-current-call)
         (only-in :poo-flow/src/ffi/temporal-family
                  temporal-family-call temporal-family-observe)
         (only-in :std/crypto/digest sha256)
@@ -118,6 +118,8 @@
            (scheme-wire-write (temporal-source-register object)))
           ((string=? operation "temporal.family.admit")
            (scheme-wire-write (temporal-family-admit-call object)))
+          ((string=? operation "temporal.family.current")
+           (scheme-wire-write (temporal-family-current-call object)))
           ((string=? operation "temporal.family.classify")
            (scheme-wire-write (temporal-family-call object)))
           ((string=? operation "temporal.family.observe")
@@ -142,7 +144,7 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 2) (wireFormat "scheme-datum-v2")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])

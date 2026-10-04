@@ -31,6 +31,42 @@ adapter have been removed; remote publication/recovery have no replacement here.
 
 * Local acceptance
 
+** Current-source correction implementation
+
+The native Temporal owner now retains and replays the original family admission
+premises. Dedicated host source registration selects the current snapshot;
+=temporal.family.current= accepts only an existing admission digest. Rust sends
+the verified original observations and forwards the native decision. It does
+not decide currentness. Historical admissions remain immutable, and the bounded
+128-entry admission registry rejects new entries at capacity while preserving
+idempotent replay. Physical roots and host-declared Temporal cuts are separate.
+
+The parent native regression passes under the unchanged five-second genuine
+progress and 45-second total limits with artifact
+=35903771a26d2d4cdba0ee6b56d7b703476735deaf3c5e17bda758c3d6c5b5e0=.
+It exercises necessary/current, corrected evidence making history stale,
+refuted/current readmission, rollback, foreign handles, forged current requests
+and capacity. Earlier admission failures are retained; distinct lexical values
+replace same-name lazy POO slot inputs.
+
+The physical qualifier implements a second Arrow root, an actual re-query of
+the same original GQL, original corrected MRR transport, cross-root substitution
+controls, source replacement and readmission. This new physical scenario is
+currently unqualified: repeated runs fail the five-second watchdog inside MRR
+runtime initialization, before the source query returns. A bounded Gambit heap
+does not turn the failure into a pass. Archived initialization failures remain
+separate from the preceding successful physical revision and from the passing
+parent native regression. No new model call or benchmark was performed.
+
+Public Scheme cases are also an open gate: the final upstream =gerbil test=
+startup attempt fails the same five-second watchdog. Static gxtest compilation
+encounters missing installed tool objects and host fork resource refusal, both
+recorded independently. Neither attempted route is a public test pass.
+
+Evidence for this slice is under =t/qualification/temporal-current-source/=.
+Source authentication, linked withdrawal journals, authoritative multi-source
+cuts, durable CAS/IFC publication and recovery remain open architecture gates.
+
 ** MRR dispatch and native Scheme inference revision
 
 The active immutable graph pins MRR

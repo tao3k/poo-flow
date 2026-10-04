@@ -66,7 +66,87 @@ pub struct MrrObservationEvidence {
     correspondence: Value,
     scope: ObservationScope,
 }
+
+/// Explicit host-selected authority and decision scope, outside model input.
+pub struct SourceRegistrationContext {
+    pub authority: String,
+    pub subject: String,
+    pub scope: String,
+}
+/// Handle for the registered native source version and original verified task.
+pub struct RegisteredMrrSource {
+    registration: Value,
+    task: Value,
+    source_identity: String,
+}
+impl RegisteredMrrSource {
+    pub fn registration(&self) -> &Value {
+        &self.registration
+    }
+    pub fn admit(
+        &self,
+        runtime: &SemanticRuntime,
+        conclusion_identity: &str,
+    ) -> Result<MrrFamilyAdmission, MrrBridgeError> {
+        let result = runtime
+            .call(
+                "temporal.family.admit",
+                &datum!({
+                    "sourceIdentity": &self.source_identity,
+                    "sourceDigest": &self.registration["sourceDigest"],
+                    "task": &self.task, "conclusionIdentity": conclusion_identity
+                }),
+            )
+            .map_err(MrrBridgeError::Native)?;
+        Ok(MrrFamilyAdmission { result })
+    }
+}
+/// Original native proof receipt; current applicability is checked separately.
+pub struct MrrFamilyAdmission {
+    result: Value,
+}
+impl MrrFamilyAdmission {
+    pub fn result(&self) -> &Value {
+        &self.result
+    }
+    pub fn current(&self, runtime: &SemanticRuntime) -> Result<Value, MrrBridgeError> {
+        runtime
+            .call(
+                "temporal.family.current",
+                &datum!({
+                    "admissionDigest": &self.result["admissionDigest"]
+                }),
+            )
+            .map_err(MrrBridgeError::Native)
+    }
+}
 impl MrrObservationEvidence {
+    /// Register only observations reconstructed from original MRR owner values.
+    /// Native Scheme owns the snapshot digest and monotonic current-source fence.
+    pub fn register_current(
+        &self,
+        runtime: &SemanticRuntime,
+        model: Value,
+        query: Value,
+        context: SourceRegistrationContext,
+    ) -> Result<RegisteredMrrSource, MrrBridgeError> {
+        let task = self.classification_request(model, query)?;
+        let registration = runtime
+            .register_source(&datum!({
+                "scope": { "identity": &self.scope.source_identity,
+                    "authority": context.authority, "subject": context.subject,
+                    "scope": context.scope, "cut": &self.scope.cut,
+                    "projection": &self.scope.projection, "policy": &self.scope.policy,
+                    "generation": self.scope.temporal_generation },
+                "task": &task
+            }))
+            .map_err(MrrBridgeError::Native)?;
+        Ok(RegisteredMrrSource {
+            registration,
+            task,
+            source_identity: self.scope.source_identity.clone(),
+        })
+    }
     /// Reconstruct original owner values from bounded Scheme v2 bytes, then
     /// check the host's Temporal projection. The query must come from the
     /// authentic source binder; transport bytes do not authenticate execution.

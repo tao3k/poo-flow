@@ -61,6 +61,10 @@ def main() -> None:
                    "modules/temporal-causality/conclusions/objects.ss",
                    "modules/temporal-causality/conclusions/funs.ss",
                    "modules/temporal-causality/admission/interface.ss",
+                   "modules/temporal-causality/applicability/types.ss",
+                   "modules/temporal-causality/applicability/objects.ss",
+                   "modules/temporal-causality/applicability/funs.ss",
+                   "modules/temporal-causality/applicability/interface.ss",
                    "src/ffi/temporal-admission.ss", "src/ffi/scheme-wire.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",

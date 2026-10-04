@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Native Temporal current-source evidence
+
+This slice retains the original native family admission, replays its premises,
+and compares it with a host-selected current source. The Scheme owner decides
+current/stale; the Rust library controls the native owner queue and forwards
+verified original MRR observations. Every authority/effect flag remains false.
+
+=native-test.ss= delegates to upstream gxtest's =main=. Its four cases in
+=t/temporal-applicability-test.ss= use the public =poo-flow-test-case= helper.
+Compile through the official Gerbil compiler, with native dependency inputs
+selected explicitly. Run the executable through a five-second genuine-output
+watchdog and a 45-second total deadline, passing =-v 5= and the original test
+file. Discovery, assertions, Case profiles, reporting and status remain gxtest
+owned. A compiled binary alone is not a passing test result.
+
+=rust-native.log= records the passing real ABI regression. It includes original
+necessary/current, correction making historical evidence stale, refuted/current
+readmission, anti-rollback, forged-request rejection and bounded history. Its
+native library freeze is =native-build-freeze.ss=. Admission failures before
+the distinct lexical POO slot bindings were fixed remain archived.
+
+The interpreted Scheme startup failures and physical MRR initialization
+failures are separate failed gates. They are not replaced by the passing ABI
+regression. In particular, the new physical Arrow correction/re-query scenario
+cannot be claimed accepted until its entire original GQL/MRR/Data/Temporal
+path passes the same limits. No paid model call or performance benchmark was
+made for this slice. ASP Scheme owns any future benchmark measurement.
+
+The final public =gerbil test= attempt also fails the five-second startup gate;
+=public-gxtest-failed.log= records it. Static gxtest qualification is not a pass:
+the installed SDK lacks tools/env and tools/gxtest static objects; a temporary
+SDK compiled their unchanged upstream Scheme compiler outputs, but the host
+again refused to fork during final compilation. =gxtest-static-build-failed.log=
+retains that failure. No installed SDK file was changed. A stale core/types
+object lock from an earlier interrupted attempt had no active holder and was
+removed from the temporary package SDK; that only unblocked compilation.
+
+These host-declared read-only checks do not authenticate the source, fence a
+subsequent effect, prove physical evaluation or implement withdrawal journals,
+authoritative multi-source cuts, durable CAS/IFC publication and recovery.

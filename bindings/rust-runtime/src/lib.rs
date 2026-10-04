@@ -40,6 +40,7 @@ use std::sync::atomic::Ordering;
 type Reply = mpsc::Sender<Result<Value, Error>>;
 enum Command {
     Call(CString, Vec<u8>, Reply),
+    Register(Vec<u8>, Reply),
     Close(mpsc::Sender<Result<(), Error>>),
 }
 struct State {
@@ -120,7 +121,17 @@ impl SemanticRuntime {
                         while let Ok(command) = receiver.recv() {
                             match command {
                                 Command::Call(op, data, reply) => {
-                                    let _ = reply.send(native.call(&op, &data));
+                                    let result = native.call(&op, &data);
+                                    trace(&format!(
+                                        "native-call-returned={}",
+                                        op.to_string_lossy()
+                                    ));
+                                    let _ = reply.send(result);
+                                }
+                                Command::Register(data, reply) => {
+                                    let result = native.register(&data);
+                                    trace("source-registration-returned");
+                                    let _ = reply.send(result);
                                 }
                                 Command::Close(reply) => {
                                     let status = unsafe { (native.close)() };
@@ -161,7 +172,7 @@ impl SemanticRuntime {
             }
         }
     }
-    /// Queue a supported read-only operation. Queue saturation rejects immediately.
+    /// Queue a supported semantic operation. Queue saturation rejects immediately.
     /// Dropping a pending response does not interrupt an already running native call.
     pub fn submit(&self, operation: &str, payload: &Value) -> Result<Pending, Error> {
         if !matches!(
@@ -172,6 +183,8 @@ impl SemanticRuntime {
                 | "temporal.observe"
                 | "temporal.family.classify"
                 | "temporal.family.observe"
+                | "temporal.family.admit"
+                | "temporal.family.current"
         ) {
             return Err(Error::InvalidInput);
         }
@@ -193,6 +206,28 @@ impl SemanticRuntime {
     }
     pub fn call(&self, operation: &str, payload: &Value) -> Result<Value, Error> {
         self.submit(operation, payload)?.wait()
+    }
+    /// Host control entrypoint: choose source state independently of model tools.
+    /// This declares the host trust premise; it does not authenticate a provider.
+    pub fn register_source(&self, payload: &Value) -> Result<Value, Error> {
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        if data.len() > 1_048_576 {
+            return Err(Error::InvalidInput);
+        }
+        let (tx, rx) = mpsc::channel();
+        {
+            let state = self.state.lock().map_err(|_| Error::Closed)?;
+            state
+                .sender
+                .as_ref()
+                .ok_or(Error::Closed)?
+                .try_send(Command::Register(data, tx))
+                .map_err(|e| match e {
+                    mpsc::TrySendError::Full(_) => Error::QueueFull,
+                    mpsc::TrySendError::Disconnected(_) => Error::Closed,
+                })?;
+        }
+        rx.recv().map_err(|_| Error::Closed)?
     }
     pub fn close(&self) -> Result<(), Error> {
         let mut state = self.state.lock().map_err(|_| Error::Closed)?;
@@ -238,12 +273,14 @@ struct NativeResult {
 }
 type Open = unsafe extern "C" fn() -> i32;
 type Call = unsafe extern "C" fn(*const c_char, *const u8, usize, *mut NativeResult) -> i32;
+type Register = unsafe extern "C" fn(*const u8, usize, *mut NativeResult) -> i32;
 type Release = unsafe extern "C" fn(*mut NativeResult);
 struct Native {
     _library: std::mem::ManuallyDrop<Library>,
     open: Open,
     close: Open,
     call: Call,
+    register: Register,
     release: Release,
 }
 impl Native {
@@ -271,23 +308,38 @@ impl Native {
                 .get::<Release>(b"poo_flow_semantic_v2_result_release\0")
                 .map_err(symbol_error)?
         };
+        let register = unsafe {
+            *library
+                .get::<Register>(b"poo_flow_semantic_v2_source_register\0")
+                .map_err(symbol_error)?
+        };
         // Keep Gambit code mapped for process lifetime, including after terminal close.
         Ok(Self {
             _library: std::mem::ManuallyDrop::new(library),
             open,
             close,
             call,
+            register,
             release,
         })
     }
     fn call(&self, op: &CString, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe {
+            (self.call)(op.as_ptr(), input.as_ptr(), input.len(), result)
+        })
+    }
+    fn register(&self, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe { (self.register)(input.as_ptr(), input.len(), result) })
+    }
+    // Both entrypoints execute only on the native owner with borrowed inputs.
+    fn response(&self, invoke: impl FnOnce(&mut NativeResult) -> i32) -> Result<Value, Error> {
         let mut result = NativeResult {
             status: 0,
             data: std::ptr::null_mut(),
             length: 0,
         };
         // SAFETY: valid borrowed input and zero-initialized result, on native owner.
-        let status = unsafe { (self.call)(op.as_ptr(), input.as_ptr(), input.len(), &mut result) };
+        let status = invoke(&mut result);
         let response = if result.data.is_null() {
             Err(Error::Native(status, "empty native result".into()))
         } else if result.length > 16_777_216 {

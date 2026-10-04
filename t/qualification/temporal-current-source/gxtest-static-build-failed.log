@@ -1,0 +1,86 @@
+error: unable to execute tool 'ld'
+collect2: error: ld returned 255 exit status
+te/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__object.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__support__repr.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__support__json.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__support__io.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__mop.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__applicability__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__applicability__objects.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__conclusions__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__conclusions__objects.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__truth-maintenance__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__conclusions__funs.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__utilities__product-syntax.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__graph__types-core.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__objects.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__funs.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__admission__interface.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__modules__temporal-causality__applicability__funs.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__utilities__functional.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__user-interface__selection-flags.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__module-system__source__objects.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__module-system__schema__relations.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__module-system__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__module-system__objects.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__authoring__semantic-module.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__module-system__config.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__authoring__module-interface.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__authoring__module-imports.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__user-interface__module-selection.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__user-interface__profile-core.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__user-interface__profile-policy.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__types.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__funcs.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__io.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__number.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__type.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__support__debug.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/clan__poo__debug.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__slot-debug.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__debug.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__testing-case.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/core__observability__output.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/asp-gerbil-scheme__src__testing__import-footprint-reader.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/asp-gerbil-scheme__src__build-api__core-capacity.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/asp-gerbil-scheme__src__testing__extension.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__src__testing__testing-extension.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__testing-api.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__t__temporal-applicability-test.scm:
+/private/tmp/mrr-clean-graph-sdk/lib/static/poo-flow__t__qualification__temporal-current-source__native-test.scm:
+/private/tmp/poo-current-source-scheme-test__exe.scm:
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: fork: Resource temporarily unavailable
+/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/bin/gambuild-C: line 350: -I: command not found
+*** ERROR IN ##main -- target compilation or link failed while compiling "/private/tmp/poo-current-source-scheme-test__exe_.c"
+#f*** ERROR IN gxc#compile-executable-module/separate -- 
+*** ERROR IN ?
+--- Syntax Error: Compilation error; process exit with nonzero status
+--- Context: 
+ at (compile-exe t/qualification/temporal-current-source/native-test.ss)
+... form:   ("/private/tmp/poo-gsc-noninteractive"
+             "-obj"
+             "-cc-options"
+             "-I /private/tmp/poo-gxtest-sdk/lib/static -I /private/tmp/mrr-clean-graph-sdk/lib/static"
+             "/private/tmp/poo-current-source-scheme-test__exe_.c")
+... detail: 17920

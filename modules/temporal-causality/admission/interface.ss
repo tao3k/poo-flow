@@ -19,7 +19,7 @@
 (export PooFlowTemporalSourceSnapshot PooFlowTemporalFamilyAdmission
         poo-flow-temporal-source-snapshot? poo-flow-temporal-family-admission?
         poo-flow-temporal-source-snapshot poo-flow-temporal-source-snapshot-replay
-        poo-flow-temporal-family-admit)
+        poo-flow-temporal-family-admit poo-flow-temporal-family-admission-replay)
 
 (def (text? v) (and (string? v) (< 0 (string-length v) 129)))
 (def (slots? v names)
@@ -37,12 +37,17 @@
 (def (poo-flow-temporal-source-snapshot? v) (element? PooFlowTemporalSourceSnapshot v))
 (def (admission-shape? v)
   (and (slots? v '(kind semantic-digest source-digest model-digest query-identity
-                        classification conclusion source-authenticated? action-authorized?))
+                        classification conclusion source model query conclusion-identity
+                        source-authenticated? action-authorized?))
        (eq? (.ref v 'kind) 'poo-flow.temporal-causality.family-admission.v1)
        (every string? (map (lambda (s) (.ref v s))
                           '(semantic-digest source-digest model-digest query-identity)))
        (memq (.ref v 'classification) '(possible necessary refuted))
        (poo-flow-temporal-conclusion-revision? (.ref v 'conclusion))
+       (poo-flow-temporal-source-snapshot? (.ref v 'source))
+       (poo-flow-temporal-model? (.ref v 'model))
+       (poo-flow-temporal-query? (.ref v 'query))
+       (text? (.ref v 'conclusion-identity))
        (eq? (.ref v 'source-authenticated?) #f)
        (eq? (.ref v 'action-authorized?) #f)))
 (define-type (PooFlowTemporalFamilyAdmission @ Type.) .element?: admission-shape?)
@@ -110,11 +115,35 @@
            revision-id (.ref source 'subject-identity) (.ref source 'scope-identity)
            (.ref source 'cut-digest) (.ref source 'projection-digest)
            (.ref source 'policy-identity) (number->string (.ref source 'generation))
-           proof proof)))
+           proof proof))
+         ;; POO slots are lazy: retain lexical inputs under distinct names.
+         (source-value source) (model-value model) (query-value query))
     (validate PooFlowTemporalFamilyAdmission
       (.o kind: 'poo-flow.temporal-causality.family-admission.v1
           semantic-digest: (digest (list proof conclusion-id))
           source-digest: (.ref source 'semantic-digest)
           model-digest: (.ref model 'semantic-digest)
           query-identity: (.ref query 'identity) classification: classification-value
-          conclusion: conclusion-value source-authenticated?: #f action-authorized?: #f))))
+          conclusion: conclusion-value source: source-value model: model-value query: query-value
+          conclusion-identity: conclusion-id
+          source-authenticated?: #f action-authorized?: #f))))
+
+;;; Replay original premises; a caller-authored digest or classification is not proof.
+(def (poo-flow-temporal-family-admission-replay admission)
+  (unless (poo-flow-temporal-family-admission? admission)
+    (error "invalid family admission"))
+  (let (canonical
+        (poo-flow-temporal-family-admit
+         (.ref admission 'model) (.ref admission 'query) (.ref admission 'source)
+         (.ref admission 'conclusion-identity)))
+    (unless (and
+             (every (lambda (slot) (equal? (.ref canonical slot) (.ref admission slot)))
+                    '(semantic-digest source-digest model-digest query-identity classification))
+             (every (lambda (slot)
+                      (equal? (.ref (.ref canonical 'conclusion) slot)
+                              (.ref (.ref admission 'conclusion) slot)))
+                    '(identity subject-identity scope-identity cut-digest projection-digest
+                      policy-identity generation-identity operation predecessor-identity
+                      result-identity proof-identity invalidation-index-digest)))
+      (error "family admission differs from replayed premises"))
+    canonical))

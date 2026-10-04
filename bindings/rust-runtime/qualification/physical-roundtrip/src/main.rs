@@ -8,7 +8,7 @@ use mrr_data_content::{ContentBlock, ContentCodec, ContentStore, MemoryContentSt
 use mrr_data_core as d;
 use poo_flow_rust_runtime::{
     SemanticRuntime, datum,
-    mrr::{MrrObservationEvidence, ObservationScope},
+    mrr::{MrrObservationEvidence, ObservationScope, SourceRegistrationContext},
 };
 use sha2::{Digest, Sha256};
 use std::{num::NonZeroUsize, sync::Arc};
@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             d::CoverageDescriptor::new(d::CoverageKind::Complete, d::raw_cid(coverage))?,
         )
         .with_entities(vec![d::EntityDescriptor::new(
-            entity,
+            entity.clone(),
             3,
             vec![d::BatchDescriptor::new(
                 d::raw_cid(&node_bytes),
@@ -305,9 +305,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             limits,
             cap,
             ObservationScope {
-                source_identity: "qualification:temporal-events:revision-1".into(),
+                source_identity: "qualification:temporal-events".into(),
                 temporal_generation: 1,
-                cut: snapshot.cid().to_string(),
+                cut: "temporal-fixture-cut-1".into(),
                 projection: "event-position.v1".into(),
                 policy: "read-only-fixture".into(),
                 clock_domain: "clock".into()
@@ -324,9 +324,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         limits,
         cap,
         ObservationScope {
-            source_identity: "qualification:temporal-events:revision-1".into(),
+            source_identity: "qualification:temporal-events".into(),
             temporal_generation: 1,
-            cut: snapshot.cid().to_string(),
+            cut: "temporal-fixture-cut-1".into(),
             projection: "event-position.v1".into(),
             policy: "read-only-fixture".into(),
             clock_domain: "clock".into(),
@@ -345,10 +345,143 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         {"identity":"alternative","cause":"deploy","effect":"deploy","constraints":[{"identity":"reverse","relation":"before","left":"deploy","right":"build"}]}]});
     let task = datum!({"identity":"question","target":"target","limit":false});
     let request = evidence.classification_request(model.clone(), task.clone())?;
-    let result = evidence.classify(&runtime, model, task)?;
+    let result = evidence.classify(&runtime, model.clone(), task.clone())?;
     assert_eq!(result["classification"], "necessary");
     assert_eq!(result["sourceAuthenticated"], false);
     assert_eq!(result["actionAuthorized"], false);
+    let context = || SourceRegistrationContext {
+        authority: "qualification-host".into(),
+        subject: "deployment".into(),
+        scope: "read-only-fixture".into(),
+    };
+    let registered = evidence.register_current(&runtime, model.clone(), task.clone(), context())?;
+    let historical = registered.admit(&runtime, "physical-conclusion-1")?;
+    assert_eq!(historical.current(&runtime)?["status"], "current");
+    println!("Original physical receipt admitted against registered source state");
+
+    // Restore and execute a genuinely changed immutable physical revision.
+    let corrected_generation =
+        m::GenerationId::from_canonical_bytes(b"temporal-physical-generation-2")?;
+    let corrected_semantic = fixture(m::SemanticSnapshot::admit(
+        corrected_generation,
+        vec![fixture(m::RevisionBinding::admit(
+            fixture(m::ExternalRevisionIdentity::new(
+                "qualification",
+                "temporal-events",
+                "revision-2",
+            ))?,
+            corrected_generation,
+        ))?],
+    ))?;
+    let corrected_source = mrr_property_source::compile_property_source_query(
+        "temporal.gql",
+        SOURCE,
+        &digest,
+    )?
+    .bind(&relations, &entities, &corrected_semantic)?;
+    let corrected_nodes = RecordBatch::try_new(
+        nodes.schema(),
+        vec![
+            Arc::new(StringArray::from(vec![
+                id("build"),
+                id("deploy"),
+                id("end"),
+            ])),
+            Arc::new(StringArray::from(vec!["build", "deploy", "end"])),
+            Arc::new(Int64Array::from(vec![3, 2, 4])),
+        ],
+    )?;
+    let corrected_node_bytes = ipc(&corrected_nodes);
+    let corrected_snapshot = d::SnapshotBlock::encode(d::SnapshotManifest::admit(
+        d::SnapshotManifestRequest::new(
+            corrected_semantic,
+            &relations,
+            &entities,
+            snapshot.manifest().relations().to_vec(),
+            d::CoverageDescriptor::new(d::CoverageKind::Complete, d::raw_cid(coverage))?,
+        )
+        .with_entities(vec![d::EntityDescriptor::new(
+            entity,
+            3,
+            vec![d::BatchDescriptor::new(
+                d::raw_cid(&corrected_node_bytes),
+                3,
+                corrected_node_bytes.len() as u64,
+            )?],
+        )?]),
+    )?)?;
+    assert_ne!(corrected_snapshot.cid(), snapshot.cid());
+    store.put(ContentBlock::new(ContentCodec::Raw, &corrected_node_bytes))?;
+    store.put(ContentBlock::new(
+        ContentCodec::DagCbor,
+        corrected_snapshot.bytes(),
+    ))?;
+    let corrected_restored = mrr_data_content::restore_snapshot_local(
+        &store,
+        corrected_snapshot.cid(),
+        &relations,
+        &entities,
+        mrr_data_content::SnapshotTransferLimits::new(65536, 8, 1048576, 2097152),
+    )
+    .await?;
+    let corrected_backend = mrr_data_datafusion::RestoredPropertyBackend {
+        restored: &corrected_restored,
+        relation_catalog: &relations,
+        entity_catalog: &entities,
+        limits: backend.limits,
+    };
+    // An original query cannot execute against a substituted revision.
+    assert!(
+        source
+            .execute_with(&corrected_backend, limits)
+            .await
+            .is_err()
+    );
+    let corrected_execution = corrected_source
+        .execute_with(&corrected_backend, limits)
+        .await?;
+    let corrected_handoff =
+        d::DataQueryResultHandoff::export_execution(&corrected_execution, limits, cap)?;
+    let corrected_expected = d::bind_data_query(
+        corrected_source.query(),
+        &corrected_snapshot,
+        &mrr_data_datafusion::datafusion_engine_profile()?,
+    )?;
+    corrected_handoff.verify(&corrected_expected, limits, cap)?;
+    assert!(corrected_handoff.verify(&expected, limits, cap).is_err());
+    assert!(handoff.verify(&corrected_expected, limits, cap).is_err());
+    let corrected_evidence = MrrObservationEvidence::verify_transport(
+        corrected_source.query(),
+        corrected_handoff.result_bytes(),
+        limits,
+        cap,
+        ObservationScope {
+            source_identity: "qualification:temporal-events".into(),
+            temporal_generation: 2,
+            cut: "temporal-fixture-cut-2".into(),
+            projection: "event-position.v1".into(),
+            policy: "read-only-fixture".into(),
+            clock_domain: "clock".into(),
+        },
+    )?;
+    let current_source =
+        corrected_evidence.register_current(&runtime, model.clone(), task.clone(), context())?;
+    let stale = historical.current(&runtime)?;
+    assert_eq!(stale["status"], "stale");
+    assert_eq!(historical.result()["classification"], "necessary");
+    assert!(registered.admit(&runtime, "stale-conclusion").is_err());
+    let revised = current_source.admit(&runtime, "physical-conclusion-2")?;
+    let current = revised.current(&runtime)?;
+    assert_eq!(revised.result()["classification"], "refuted");
+    assert_eq!(current["status"], "current");
+    assert_eq!(current["sourceAuthenticated"], false);
+    assert_eq!(current["actionAuthorized"], false);
+    assert!(
+        evidence
+            .register_current(&runtime, model, task, context())
+            .is_err()
+    );
+    println!("PHYSICAL-CORRECTION -> MRR-REQUERY -> HISTORICAL-STALE -> NATIVE-READMISSION OK");
     runtime.close()?;
     if let Some(path) = std::env::var_os("POO_FLOW_PHYSICAL_RECEIPT") {
         let original_transport = poo_flow_rust_runtime::wire::from_slice(handoff.result_bytes())?;
@@ -368,6 +501,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "mrrGeneration":generation.to_string(),"temporalGeneration":1,
             "nativeResultDigest":hex(admitted.receipt().digest()),
             "originalMrrTransport":original_transport,"temporalRequest":request.clone(),"temporalResult":result.clone(),
+            "historicalAdmission":historical.result(), "historicalApplicability":stale,
+            "correctedRoot":corrected_snapshot.cid().to_string(),
+            "temporalCut":"temporal-fixture-cut-1", "correctedTemporalCut":"temporal-fixture-cut-2",
+            "correctedMrrGeneration":corrected_generation.to_string(),
+            "correctedMrrTransport":poo_flow_rust_runtime::wire::from_slice(corrected_handoff.result_bytes())?,
+            "correctedAdmission":revised.result(), "currentApplicability":current,
             "executionPremise":"trusted-pinned-local-datafusion-executor",
             "sourceAuthenticated":false,"actionAuthorized":false,"coverageVerified":false});
         let mut output = std::fs::OpenOptions::new()

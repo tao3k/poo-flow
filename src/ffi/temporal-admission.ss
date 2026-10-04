@@ -6,9 +6,12 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/ffi/temporal-family temporal-family-values)
         (only-in :poo-flow/modules/temporal-causality/admission/interface
-                 poo-flow-temporal-source-snapshot poo-flow-temporal-family-admit))
-(export temporal-source-register temporal-family-admit-call)
+                 poo-flow-temporal-source-snapshot poo-flow-temporal-family-admit)
+        (only-in :poo-flow/modules/temporal-causality/applicability/funs
+                 poo-flow-temporal-family-applicability))
+(export temporal-source-register temporal-family-admit-call temporal-family-current-call)
 (def sources (make-hash-table))
+(def admissions (make-hash-table))
 (def (field object key)
   (unless (and (hash-table? object) (hash-key? object key))
     (error "missing admission field" key))
@@ -55,6 +58,10 @@
          (admission (poo-flow-temporal-family-admit
                      (car values) (cadr values) source (field object "conclusionIdentity")))
          (revision (.ref admission 'conclusion)))
+    (let (id (.ref admission 'semantic-digest))
+      (unless (or (hash-key? admissions id) (< (hash-length admissions) 128))
+        (error "admission history capacity exceeded"))
+      (hash-put! admissions id admission))
     (hash (schema "poo-flow.temporal-family-admission.v1")
           (claim "family-relative-classification")
           (trustBasis "host-registered-snapshot") (sourceVerified #t)
@@ -73,3 +80,19 @@
                  (generation (.ref revision 'generation-identity))
                  (operation "assert") (proofDigest (.ref revision 'proof-identity))
                  (resultDigest (.ref revision 'result-identity)))))))
+
+;;; The registry selects current source state on the owner thread. Payloads
+;;; cannot supply a replacement current digest or rewrite historical proofs.
+(def (temporal-family-current-call object)
+  (fields object ["admissionDigest"])
+  (let* ((admission (hash-get admissions (field object "admissionDigest")))
+         (_ (unless admission (error "unknown historical family admission")))
+         (source (hash-get sources (.ref (.ref admission 'source) 'identity)))
+         (applicability (poo-flow-temporal-family-applicability admission source)))
+    (hash (schema "poo-flow.temporal-family-applicability.v1")
+          (admissionDigest (.ref applicability 'admission-digest))
+          (originalSourceDigest (.ref applicability 'original-source-digest))
+          (currentSourceDigest (.ref applicability 'current-source-digest))
+          (status (symbol->string (.ref applicability 'status)))
+          (trustBasis "host-registered-snapshot")
+          (sourceAuthenticated #f) (actionAuthorized #f))))

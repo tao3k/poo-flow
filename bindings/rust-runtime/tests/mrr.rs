@@ -5,7 +5,7 @@ use meta_relational_reasoning as m;
 use poo_flow_rust_runtime::datum;
 use poo_flow_rust_runtime::{
     SemanticRuntime,
-    mrr::{MrrObservationEvidence, ObservationScope},
+    mrr::{MrrObservationEvidence, ObservationScope, SourceRegistrationContext},
 };
 use std::num::NonZeroUsize;
 fn bound(label: &str) -> m::CatalogBoundQuery {
@@ -256,9 +256,116 @@ fn original_mrr_values_project_to_real_native_poo() {
     let newer =
         MrrObservationEvidence::verify(&query, &rows, &receipt, limits(), cap, new_scope).unwrap();
     assert_ne!(
-        newer.classify(&runtime, model, task).unwrap()["modelDigest"],
+        newer
+            .classify(&runtime, model.clone(), task.clone())
+            .unwrap()["modelDigest"],
         result["modelDigest"]
     );
+    let context = || SourceRegistrationContext {
+        authority: "fixture-host".into(),
+        subject: "deployment".into(),
+        scope: "read-only".into(),
+    };
+    let registered = evidence
+        .register_current(&runtime, model.clone(), task.clone(), context())
+        .unwrap();
+    let historical = registered.admit(&runtime, "deployment-conclusion").unwrap();
+    assert_eq!(historical.result()["classification"], "necessary");
+    assert_eq!(historical.current(&runtime).unwrap()["status"], "current");
+    assert!(
+        runtime
+            .call("$host.temporal.source.register", &datum!({}))
+            .is_err()
+    );
+    println!("MRR original evidence admitted against the host-registered current source");
+
+    let corrected_query = bound("generation-two");
+    let mut corrected_rows = rows.rows().to_vec();
+    corrected_rows[0][1] =
+        m::QueryResultValue::scalar(m::ValueSchema::Integer, m::Value::Integer(3));
+    let corrected = m::CandidateQueryResult::new(
+        m::QueryResultBinding::for_query(&corrected_query),
+        rows.columns().to_vec(),
+        corrected_rows,
+    );
+    let corrected_transport =
+        m::export_query_result_transport(&corrected_query, &corrected, limits(), cap).unwrap();
+    let mut corrected_scope = scope();
+    corrected_scope.temporal_generation = 8;
+    corrected_scope.cut = "cut-8".into();
+    let corrected_evidence = MrrObservationEvidence::verify_transport(
+        &corrected_query,
+        &corrected_transport,
+        limits(),
+        cap,
+        corrected_scope,
+    )
+    .unwrap();
+    let revised_source = corrected_evidence
+        .register_current(&runtime, model.clone(), task.clone(), context())
+        .unwrap();
+    let stale = historical.current(&runtime).unwrap();
+    assert_eq!(stale["status"], "stale");
+    assert_eq!(stale["sourceAuthenticated"], false);
+    assert_eq!(stale["actionAuthorized"], false);
+    assert_ne!(stale["originalSourceDigest"], stale["currentSourceDigest"]);
+    assert_eq!(historical.result()["classification"], "necessary");
+    assert!(registered.admit(&runtime, "stale-admission").is_err());
+    assert!(
+        evidence
+            .register_current(&runtime, model.clone(), task.clone(), context())
+            .is_err()
+    );
+    assert!(
+        runtime
+            .call(
+                "temporal.family.current",
+                &datum!({"admissionDigest":"forged"})
+            )
+            .is_err()
+    );
+    assert!(
+        runtime
+            .call(
+                "temporal.family.current",
+                &datum!({
+                    "admissionDigest": &historical.result()["admissionDigest"],
+                    "currentSourceDigest": &registered.registration()["sourceDigest"]
+                })
+            )
+            .is_err()
+    );
+    let revised = revised_source
+        .admit(&runtime, "deployment-conclusion-revised")
+        .unwrap();
+    assert_eq!(revised.result()["classification"], "refuted");
+    assert_eq!(revised.current(&runtime).unwrap()["status"], "current");
+    assert_ne!(
+        historical.result()["admissionDigest"],
+        revised.result()["admissionDigest"]
+    );
+    // Duplicate host delivery is idempotent and cannot restore the old current source.
+    let repeated = corrected_evidence
+        .register_current(&runtime, model, task, context())
+        .unwrap();
+    assert_eq!(repeated.registration(), revised_source.registration());
+    assert_eq!(historical.current(&runtime).unwrap()["status"], "stale");
+    println!("MRR-CORRECTION -> HISTORICAL-STALE -> NATIVE-READMISSION verified");
+    for index in 0..126 {
+        revised_source
+            .admit(&runtime, &format!("history-{index}"))
+            .unwrap();
+        if (index + 1) % 16 == 0 {
+            println!("Native immutable admission entries completed={}", index + 3);
+        }
+    }
+    assert!(revised_source.admit(&runtime, "history-overflow").is_err());
+    let repeat = revised_source
+        .admit(&runtime, "deployment-conclusion-revised")
+        .unwrap();
+    assert_eq!(repeat.result(), revised.result());
+    assert_eq!(historical.current(&runtime).unwrap()["status"], "stale");
+    println!("Native history capacity rejects new entries and preserves idempotent replay");
     println!("MRR-ORIGINAL-RECEIPT -> HOST-CORRESPONDENCE -> NATIVE-POO verified");
     runtime.close().unwrap();
 }

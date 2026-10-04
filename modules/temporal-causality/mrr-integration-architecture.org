@@ -115,6 +115,34 @@ receiver still independently selects root and query, verifies Scheme v2 and
 invokes the native Temporal library. Current-cut correspondence, correction,
 reverse facts, IFC publication and durable recovery remain separate contracts.
 
+* Executable current-source and correction/re-query slice
+
+The Library now exposes a POO-native family applicability value and a pure
+checker. A family admission retains its original model, query and source
+snapshot; replay reconstructs the classification/proof and checks the immutable
+conclusion fields. Current applicability compares that replayed admission with
+an independently selected source snapshot. Generation, policy, authority or
+observation changes stale the old admission even when visible result labels
+are unchanged. A foreign logical source cannot establish currentness.
+
+The native ABI archives bounded original admissions and selects the current
+source from its host-control registry on the owner thread. A wire payload
+cannot supply its own current digest. Rust's dedicated registration command
+uses the existing C control entrypoint and the same bounded queue. MRR original
+candidate/receipt values remain intact; Rust does not implement a second
+applicability evaluator.
+
+The joined qualification scenario creates a second immutable Arrow root,
+executes a newly bound original GQL query through MRR's Backend port and Data,
+checks both original result handoffs and rejects cross-root/cross-generation
+substitutions. It then registers the corrected source and re-admits the native
+family proof. Old classification remains historical; current selection reports
+stale. This is single-source, host-registered, read-only Library qualification.
+It does not establish source authentication, authoritative causal-cut
+correspondence, a linked durable conclusion journal or atomic publication.
+G0's external authority and G1--G5's withdrawal, selection CAS, reverse export,
+IFC and crash/recovery obligations remain separate.
+
 * Audited seams and necessary corrections
 
 | Source seam at the pinned MRR/MRR Data revisions | Actual guarantee | Design consequence |

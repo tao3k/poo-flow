@@ -37,6 +37,30 @@ The =semantic_call= binary accepts one bounded Scheme datum object with exactly
 and POO_FLOW_SEMANTIC_SHA256. It outputs only the original native Scheme datum object;
 no Rust-created causal receipt, source authenticity or effect permit is added.
 
+* Host source registration and current reads
+
+=MrrObservationEvidence::register_current= builds source observations only from
+the original re-admitted MRR result. The explicit =SourceRegistrationContext=
+supplies the host's authority, subject and use scope. Registration goes through
+the dedicated C control entrypoint on the same bounded owner queue; a semantic
+or model operation cannot invoke that entrypoint. Native Scheme owns the source
+digest and rejects generation rollback and conflicting same-generation state.
+
+=RegisteredMrrSource::admit= checks the exact registered source version and
+retains the original native proof receipt. =MrrFamilyAdmission::current= asks
+Scheme to replay that proof and compare it with the independently registered
+current source. The returned =current/stale= status concerns that read's host
+snapshot. A corrected source does not overwrite the historical classification.
+It must be queried, projected and admitted again. Unknown admissions, forged
+current-state payloads and stale source handles fail closed. Native history is
+bounded to 128 distinct admissions; an existing admission remains idempotent
+at capacity, and no entry is evicted silently.
+
+The host registration is an explicit trust premise, not provider authentication.
+Current reads do not fence a later effect. Multi-source correspondence, durable
+current pointers, conclusion predecessor journals, withdrawal/absence coverage,
+atomic IFC publication and crash recovery require their separate gates.
+
 * Acceptance
 
 Run =tools/differential.py= with the installed qualified Python wheel and
