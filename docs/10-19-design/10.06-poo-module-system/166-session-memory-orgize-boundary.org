@@ -3,6 +3,12 @@
 
 #+title: 10.06.166 Session, Memory and Orgize source boundary
 
+The revised temporal model is
+[[file:167-temporal-revisit-evidence-design.org][167 Revisiting Evidence Across Time]]. This document keeps the source
+selection and cross-WorkTree handoff constraints. Its Memory head and durable
+publication sections are earlier proposals, not a decision that all review,
+verification, and learning must pass through one Memory store.
+
 * Status and ownership
 
 Design contract with a direct Scheme selection slice; runtime publication and

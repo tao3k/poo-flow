@@ -3,6 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * 10.06.43 Session Memory Durable Policy RFC
+The temporal revisit redesign is
+[[file:167-temporal-revisit-evidence-design.org][167 Revisiting Evidence Across Time]]. The Memory store/job and promotion
+parts below are historical proposals pending that redesign; Session recovery
+and checkpoint questions remain open on their own terms. A due review, a
+recorded outcome, and current evidence support are separate decisions.
+
 The current source-selection and scope contract is
 [[file:166-session-memory-orgize-boundary.org][Session, Memory and Orgize source boundary]]. This RFC retains the durable
 recovery design. For Org-backed Memory, Orgize's source-backed Org document,
