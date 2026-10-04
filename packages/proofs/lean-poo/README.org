@@ -46,6 +46,8 @@ The models are abstract.  They have not been refined against the Scheme
 storage.  The finite [[file:../tla/session-context/README.org][TLA+ checks]] cover concurrency and deliberately
 broken guards at their own bounded scope.  Run =just check-session-proof= for
 both focused proof gates.
+The PR CI runs this library and its axiom audit in the independent =Session
+and WorkTree LeanPoo proof= job; the Linux native job runs the TLA+ cases.
 
 For Org-backed Memory, the next POO Flow proof boundary is the typed
 [[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Org Memory load receipt]]: exact document bytes and parser/Element/query-pack
