@@ -18,7 +18,8 @@
                  poo-flow-temporal-invalidation-plan-value))
 (export temporal-source-register temporal-family-admit-call temporal-family-current-call
         temporal-family-revision-root-call temporal-family-revision-change-call
-        temporal-family-journal-call)
+        temporal-family-journal-call temporal-family-revisions temporal-journal-receipt
+        temporal-frontier-value temporal-revision-receipt)
 (def sources (make-hash-table))
 (def admissions (make-hash-table))
 (def revisions (make-hash-table))
@@ -130,8 +131,8 @@
     (unless (or (hash-key? revisions id) (< (hash-length revisions) 128))
       (error "revision history capacity exceeded"))
     (hash-put! revisions id canonical)
-    (revision-receipt canonical)))
-(def (revision-receipt canonical)
+    (temporal-revision-receipt canonical)))
+(def (temporal-revision-receipt canonical)
   (hash (schema "poo-flow.temporal-family-revision.v1")
         (revisionDigest (.ref canonical 'semantic-digest))
         (admissionDigest (.ref (.ref canonical 'admission) 'semantic-digest))
@@ -143,43 +144,47 @@
   (fields object ["admissionDigest"])
   (retain-revision (poo-flow-temporal-family-revision-root
                     (known admissions (field object "admissionDigest")))))
+(def (temporal-frontier-value frontier)
+  (fields frontier ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
+                    "previousProjection" "revisedProjection" "changedSubjects"
+                    "affectedConclusions" "inventoryComplete" "trigger"])
+  (unless (and (andmap (lambda (key) (bounded-text? (field frontier key)))
+                      ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
+                       "previousProjection" "revisedProjection"])
+               (bounded-identities? (field frontier "changedSubjects"))
+               (bounded-identities? (field frontier "affectedConclusions")))
+    (error "frontier identity bounds rejected"))
+  (let (trigger (field frontier "trigger"))
+    (unless (member trigger '("premise-delta" "valid-time-reprojection"))
+      (error "invalid frontier trigger"))
+    (poo-flow-temporal-invalidation-plan-value
+     (field frontier "indexIdentity") (field frontier "indexDigest")
+     (field frontier "previousCut") (field frontier "revisedCut")
+     (field frontier "previousProjection") (field frontier "revisedProjection")
+     (field frontier "changedSubjects") (field frontier "affectedConclusions")
+     (field frontier "inventoryComplete") (string->symbol trigger))))
 (def (temporal-family-revision-change-call object)
   (fields object ["previousDigest" "admissionDigest" "operation" "frontier"])
-  (let* ((operation (field object "operation")) (frontier (field object "frontier")))
+  (let (operation (field object "operation"))
     (unless (member operation '("correct" "retract")) (error "invalid revision operation"))
-    (fields frontier ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
-                      "previousProjection" "revisedProjection" "changedSubjects"
-                      "affectedConclusions" "inventoryComplete" "trigger"])
-    (unless (and (andmap (lambda (key) (bounded-text? (field frontier key)))
-                        ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
-                         "previousProjection" "revisedProjection"])
-                 (bounded-identities? (field frontier "changedSubjects"))
-                 (bounded-identities? (field frontier "affectedConclusions")))
-      (error "frontier identity bounds rejected"))
-    (let (trigger (field frontier "trigger"))
-      (unless (member trigger '("premise-delta" "valid-time-reprojection"))
-        (error "invalid frontier trigger"))
-      (retain-revision
-       (poo-flow-temporal-family-revision-change
-        (known revisions (field object "previousDigest"))
-        (known admissions (field object "admissionDigest"))
-        (poo-flow-temporal-invalidation-plan-value
-         (field frontier "indexIdentity") (field frontier "indexDigest")
-         (field frontier "previousCut") (field frontier "revisedCut")
-         (field frontier "previousProjection") (field frontier "revisedProjection")
-         (field frontier "changedSubjects") (field frontier "affectedConclusions")
-         (field frontier "inventoryComplete") (string->symbol trigger))
-        (string->symbol operation))))))
+    (retain-revision
+     (poo-flow-temporal-family-revision-change
+      (known revisions (field object "previousDigest"))
+      (known admissions (field object "admissionDigest"))
+      (temporal-frontier-value (field object "frontier")) (string->symbol operation)))))
+(def (temporal-family-revisions ids)
+  (unless (and (bounded-identities? ids) (pair? ids)) (error "journal inventory bound"))
+  (map (lambda (id) (known revisions id)) ids))
+(def (temporal-journal-receipt identity values)
+  (let (journal (poo-flow-temporal-family-revision-journal identity values))
+    (hash (schema "poo-flow.temporal-family-journal.v1")
+          (identity (.ref journal 'identity)) (journalDigest (.ref journal 'semantic-digest))
+          (revisions (map revision-wire (.ref journal 'revisions)))
+          (entries (map (lambda (value) (temporal-revision-receipt
+                         (poo-flow-temporal-family-revision-replay value))) values))
+          (sourceAuthenticated #f) (runtimeExecuted #f) (actionAuthorized #f) (durable #f))))
 (def (temporal-family-journal-call object)
   (fields object ["identity" "revisionDigests"])
-  (let (ids (field object "revisionDigests"))
-    (unless (and (bounded-text? (field object "identity"))
-                 (bounded-identities? ids) (pair? ids)) (error "journal inventory bound"))
-    (let (journal (poo-flow-temporal-family-revision-journal
-                  (field object "identity") (map (lambda (id) (known revisions id)) ids)))
-      (hash (schema "poo-flow.temporal-family-journal.v1")
-            (identity (.ref journal 'identity)) (journalDigest (.ref journal 'semantic-digest))
-            (revisions (map revision-wire (.ref journal 'revisions)))
-            (entries (map (lambda (id) (revision-receipt
-                           (poo-flow-temporal-family-revision-replay (known revisions id)))) ids))
-            (sourceAuthenticated #f) (runtimeExecuted #f) (actionAuthorized #f) (durable #f)))))
+  (unless (bounded-text? (field object "identity")) (error "journal identity bound"))
+  (temporal-journal-receipt (field object "identity")
+                          (temporal-family-revisions (field object "revisionDigests"))))

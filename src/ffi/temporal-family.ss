@@ -15,7 +15,7 @@
         (only-in :poo-flow/modules/temporal-causality/funs
                  poo-flow-temporal-model poo-flow-temporal-overlapping-model
                  poo-flow-temporal-model-classify))
-(export temporal-family-values temporal-family-call temporal-family-observe)
+(export temporal-family-values temporal-family-task temporal-family-call temporal-family-observe)
 
 (def (field object key)
   (unless (and (hash-table? object) (hash-key? object key))
@@ -137,3 +137,23 @@
           (bindingDigest (hash-get expected 'bindingDigest))
           (modelDigest (hash-get expected 'modelDigest))
           (sourceAuthenticated #f) (actionAuthorized #f))))
+
+;;; Reify the original native premises, never a derived classification DTO.
+(def (temporal-family-task model query)
+  (hash (profile "finite-hypothesis-family")
+        (model (hash (identity (.ref model 'identity))
+          (mode (symbol->string (.ref model 'family-semantics)))
+          (complete (.ref model 'family-complete?))
+          (domains (map (lambda (d) (hash (identity (.ref d 'identity))
+                                         (role (symbol->string (.ref d 'clock-role))))) (.ref model 'domains)))
+          (observations (map (lambda (o) (hash (identity (.ref o 'identity))
+             (domain (.ref o 'domain-identity)) (position (.ref o 'logical-position))
+             (provenance (.ref o 'provenance-identity)) (modality (symbol->string (.ref o 'modality)))))
+             (.ref model 'observations)))
+          (hypotheses (map (lambda (h) (hash (identity (.ref h 'identity))
+             (cause (.ref h 'cause-observation-id)) (effect (.ref h 'effect-observation-id))
+             (constraints (map (lambda (c) (hash (identity (.ref c 'identity))
+                 (relation (symbol->string (.ref c 'relation))) (left (.ref c 'left-observation-id))
+                 (right (.ref c 'right-observation-id)))) (.ref h 'constraints))))) (.ref model 'hypotheses)))))
+        (query (hash (identity (.ref query 'identity)) (target (.ref query 'hypothesis-identity))
+                     (limit (.ref query 'exploration-limit))))))

@@ -7,6 +7,8 @@
         (only-in :poo-flow/src/ffi/temporal-admission
                  temporal-source-register temporal-family-admit-call temporal-family-current-call
                  temporal-family-revision-root-call temporal-family-revision-change-call temporal-family-journal-call)
+        (only-in :poo-flow/src/ffi/temporal-archive
+                 temporal-family-archive-export-call temporal-family-archive-replay-call)
         (only-in :poo-flow/src/ffi/temporal-family
                  temporal-family-call temporal-family-observe)
         (only-in :std/crypto/digest sha256)
@@ -127,6 +129,10 @@
            (scheme-wire-write (temporal-family-revision-change-call object)))
           ((string=? operation "temporal.family.journal")
            (scheme-wire-write (temporal-family-journal-call object)))
+          ((string=? operation "temporal.family.archive.export")
+           (scheme-wire-write (temporal-family-archive-export-call object)))
+          ((string=? operation "temporal.family.archive.replay")
+           (scheme-wire-write (temporal-family-archive-replay-call object)))
           ((string=? operation "temporal.family.classify")
            (scheme-wire-write (temporal-family-call object)))
           ((string=? operation "temporal.family.observe")
@@ -151,14 +157,14 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 2) (wireFormat "scheme-datum-v2")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])
                   (maximumFamilyDomains 32) (maximumFamilyObservations 128)
                   (maximumFamilyHypotheses 128) (maximumFamilyConstraints 256)
                   (maximumFamilyRevisionHistory 128) (maximumFamilyJournalEntries 128)
-                  (familyJournalPersistence "in-process-only") (frontierTrust "caller-declared")
+                  (familyJournalPersistence "in-process-only") (familyArchiveProfile "full-family-premises-read-only-replay") (frontierTrust "caller-declared")
                   (threading "single-owner-thread")
                   (sourceAuthority "caller-declared-not-authenticated"))))
           (else (error "unsupported semantic operation" operation)))))

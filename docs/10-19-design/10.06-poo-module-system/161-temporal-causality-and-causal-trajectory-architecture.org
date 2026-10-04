@@ -865,3 +865,18 @@ requires a fresh, exact Cedar decision at the effect boundary.
   contract DSL;
 - replacing Provider/Profile multi-dispatch with a central symbolic =case=;
 - implementing a second Healthcare graph runtime or query language.
+
+* Detached Family history replay boundary
+
+The Library now projects a native =PooFlowTemporalFamilyArchive= through the
+Scheme C ABI. Its full Family Model/Query/Source/Frontier premises allow the Rust
+Library adapter to replay a correction/retraction graph in a fresh process with
+an independently retained digest. Native replay reconstructs proofs and canonical
+history; it does not select a current Source or restore runtime handles.
+
+This closes the Family history transport/replay gate only. Original physical MRR
+receipt/provider admission, MRR Context current applicability and MRR Data's
+authoritative journal/CAS transaction still need their own integration. A valid
+historical proof is insufficient for current-pointer publication or effects.
+See =bindings/rust-runtime/README.org= and
+=t/qualification/temporal-family-proof-archive/= for executable evidence.

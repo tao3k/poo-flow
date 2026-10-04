@@ -188,6 +188,8 @@ impl SemanticRuntime {
                 | "temporal.family.revision.root"
                 | "temporal.family.revision.change"
                 | "temporal.family.journal"
+                | "temporal.family.archive.export"
+                | "temporal.family.archive.replay"
         ) {
             return Err(Error::InvalidInput);
         }

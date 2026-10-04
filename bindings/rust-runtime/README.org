@@ -157,8 +157,34 @@ The descriptor advertises =temporal.family.revision.root=,
 =temporal.family.revision.change= and =temporal.family.journal=. These use the
 existing Scheme datum v2 transport and single owner thread. Handles live only
 in that native process. The projected journal is a read-only receipt, not a
-restartable proof archive; complete premises must be transported and replayed
-before MRR Data may persist authoritative history or publish a current pointer.
+restartable proof archive. The archive API below transports and replays Family
+premises; MRR Data authoritative persistence and pointer publication remain open.
 =durable=, =runtimeExecuted=, =sourceAuthenticated= and =actionAuthorized= are
 false. Current Source applicability is independently checked by =current=;
 a historical revision/journal receipt never establishes current eligibility.
+
+* Complete Family premise archive and detached replay
+
+=MrrFamilyRevision::archive= exports a bounded native =PooFlowTemporalFamilyArchive=.
+Its Scheme datum contains every admission Model/Query, original Source Model and
+scope, Frontier, operation, predecessor and expected revision envelope. Native
+POO constructors replay admissions and the whole graph before returning its
+canonical digest. The exported archive fits a subsequent 1 MiB ABI replay request
+and contains 1--128 revisions.
+
+=MrrFamilyProofArchive::from_bytes= parses inert Scheme bytes and requires an
+independently retained expected digest. It does not establish proof validity.
+=replay= calls =temporal.family.archive.replay=: Scheme reconstructs all premises,
+checks admission/proof/revision/journal/archive digests, and returns a read-only
+receipt. Entry order is immaterial; duplicates, missing predecessors, cycles and
+tampered premises reject. =temporal.family.archive.export= and =.replay= are
+advertised by the native descriptor.
+
+Replay uses local maps only. It registers no current Source, restores no handles,
+and grants no authorization, effects or durability. The caller must retain the
+expected digest through a trusted channel; accepting a payload's own digest as
+that anchor establishes no authenticity. This archive is complete relative to
+Family premises, not the original physical MRR candidate/receipt/provider binding.
+MRR Context admission, MRR Data authoritative journal/CAS, provider authentication
+and effect authority remain separate gates. The native and fresh-process Rust
+receipts are in =t/qualification/temporal-family-proof-archive/=.

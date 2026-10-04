@@ -98,4 +98,33 @@
     (poo-flow-test-case "missing predecessor inventory cannot masquerade as complete journal"
       (let* ((root (poo-flow-temporal-family-revision-root (admit 7 1))) (next (admit 8 3))
              (changed (poo-flow-temporal-family-revision-change root next (frontier root next #t) 'retract)))
-        (check-exception (poo-flow-temporal-family-revision-journal "history" (list changed)) true)))))
+        (check-exception (poo-flow-temporal-family-revision-journal "history" (list changed)) true)))
+    (poo-flow-test-case "native archive replays a canonical full premise graph"
+      (let* ((root (poo-flow-temporal-family-revision-root (admit 7 1)))
+             (next (admit 8 3))
+             (changed (poo-flow-temporal-family-revision-change root next (frontier root next #t) 'retract))
+             (archive (poo-flow-temporal-family-archive "archive" (list changed root)))
+             (ordered (poo-flow-temporal-family-archive "archive" (list root changed)))
+             (replayed (poo-flow-temporal-family-archive-replay archive)))
+        (check (poo-flow-temporal-family-archive? archive) => #t)
+        (check (.ref archive 'semantic-digest) => (.ref ordered 'semantic-digest))
+        (check (.ref replayed 'semantic-digest) => (.ref archive 'semantic-digest))
+        (check (length (.ref replayed 'family-revisions)) => 2)
+        (check (.ref replayed 'durable?) => #f)
+        (check (.ref replayed 'source-authenticated?) => #f)
+        (check (.ref replayed 'action-authorized?) => #f)))
+    (poo-flow-test-case "archive rejects forged hashes and incomplete history"
+      (let* ((root (poo-flow-temporal-family-revision-root (admit 7 1)))
+             (next (admit 8 3))
+             (changed (poo-flow-temporal-family-revision-change root next (frontier root next #t) 'retract))
+             (archive (poo-flow-temporal-family-archive "archive" (list root changed))))
+        (check-exception (poo-flow-temporal-family-archive "archive" (list changed)) true)
+        (check-exception (poo-flow-temporal-family-archive-replay
+                          (.o (:: @ archive) semantic-digest: "forged")) true)
+        (check-exception (poo-flow-temporal-family-archive-replay
+                          (.o (:: @ archive) journal:
+                            (.o (:: @ (.ref archive 'journal)) revisions:
+                              (list (.o (:: @ (.ref root 'revision)) proof-identity: "forged")
+                                    (.ref changed 'revision))))) true)
+        (check-exception (poo-flow-temporal-family-archive-replay
+                          (.o (:: @ archive) journal: (.o (:: @ (.ref archive 'journal)) semantic-digest: "forged"))) true)))))

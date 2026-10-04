@@ -6,8 +6,9 @@ use poo_flow_rust_runtime::datum;
 use poo_flow_rust_runtime::{
     SemanticRuntime,
     mrr::{
-        FamilyRevisionFrontier, FamilyRevisionOperation, FamilyRevisionTrigger, MrrFamilyRevision,
-        MrrObservationEvidence, ObservationScope, SourceRegistrationContext,
+        FamilyRevisionFrontier, FamilyRevisionOperation, FamilyRevisionTrigger,
+        MrrFamilyProofArchive, MrrFamilyRevision, MrrObservationEvidence, ObservationScope,
+        SourceRegistrationContext,
     },
 };
 use std::num::NonZeroUsize;
@@ -133,6 +134,10 @@ fn candidate(query: &m::CatalogBoundQuery, duplicate: bool) -> m::CandidateQuery
 }
 #[test]
 fn original_mrr_values_project_to_real_native_poo() {
+    if std::env::var_os("POO_FLOW_ARCHIVE_REPLAY_ONLY").is_some() {
+        replay_archive_after_restart();
+        return;
+    }
     let query = bound("generation-one");
     println!("MRR source query binding reconstructed");
     let rows = candidate(&query, false);
@@ -502,6 +507,27 @@ fn original_mrr_values_project_to_real_native_poo() {
         withdrawn.result()
     );
     println!("MRR original admission -> native proof-bound tombstone -> replayed journal verified");
+    let archive = MrrFamilyRevision::archive(
+        &runtime,
+        "original-family-archive",
+        &[&root, &corrected_revision, &withdrawn],
+    )
+    .unwrap();
+    let replayed = archive.replay(&runtime).unwrap();
+    assert_eq!(replayed["archiveDigest"].as_str(), Some(archive.digest()));
+    assert_eq!(
+        replayed["journal"]["revisions"].as_array().unwrap().len(),
+        3
+    );
+    let archive_dir = std::env::var_os("POO_FLOW_ARCHIVE_DIRECTORY")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("poo-family-archive-{}", std::process::id()))
+        });
+    std::fs::create_dir_all(&archive_dir).unwrap();
+    std::fs::write(archive_dir.join("archive.ss"), archive.to_bytes().unwrap()).unwrap();
+    let archive_digest = archive.digest().to_owned();
+    println!("Complete Family premises exported and replayed against native digest");
     // Duplicate host delivery is idempotent and cannot restore the old current source.
     let repeated = corrected_evidence
         .register_current(&runtime, model, task, context())
@@ -534,5 +560,146 @@ fn original_mrr_values_project_to_real_native_poo() {
     assert_eq!(historical.current(&runtime).unwrap()["status"], "stale");
     println!("Native history capacity rejects new entries and preserves idempotent replay");
     println!("MRR-ORIGINAL-RECEIPT -> HOST-CORRESPONDENCE -> NATIVE-POO verified");
+    runtime.close().unwrap();
+    let child = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "original_mrr_values_project_to_real_native_poo",
+            "--nocapture",
+            "--test-threads=1",
+        ])
+        .env("POO_FLOW_ARCHIVE_REPLAY_ONLY", "1")
+        .env("POO_FLOW_ARCHIVE_DIRECTORY", &archive_dir)
+        .env("POO_FLOW_ARCHIVE_EXPECTED_DIGEST", archive_digest)
+        .status()
+        .unwrap();
+    assert!(child.success());
+    println!("Fresh-process full Family proof archive replay verified");
+}
+
+fn replay_archive_after_restart() {
+    let archive_dir =
+        std::path::PathBuf::from(std::env::var("POO_FLOW_ARCHIVE_DIRECTORY").unwrap());
+    let bytes = std::fs::read(archive_dir.join("archive.ss")).unwrap();
+    let expected = std::env::var("POO_FLOW_ARCHIVE_EXPECTED_DIGEST").unwrap();
+    let archive = MrrFamilyProofArchive::from_bytes(&bytes, &expected).unwrap();
+    assert!(
+        MrrFamilyProofArchive::from_bytes(&bytes, &format!("sha256:{}", "0".repeat(64))).is_err()
+    );
+    let runtime = SemanticRuntime::open(
+        std::env::var("POO_FLOW_SEMANTIC_LIBRARY").unwrap(),
+        &std::env::var("POO_FLOW_SEMANTIC_SHA256").unwrap(),
+        64,
+    )
+    .unwrap();
+    let replayed = archive.replay(&runtime).unwrap();
+    assert_eq!(replayed["archiveDigest"].as_str(), Some(expected.as_str()));
+    for flag in [
+        "currentSourceSelected",
+        "handlesRestored",
+        "sourceAuthenticated",
+        "actionAuthorized",
+        "runtimeExecuted",
+        "durable",
+    ] {
+        assert_eq!(replayed[flag], false);
+    }
+    let entries = archive.value()["entries"].as_array().unwrap();
+    for entry in entries {
+        assert!(
+            runtime
+                .call(
+                    "temporal.family.current",
+                    &datum!({"admissionDigest": &entry["admissionDigest"]})
+                )
+                .is_err()
+        );
+        assert!(
+            runtime
+                .call(
+                    "temporal.family.revision.root",
+                    &datum!({"admissionDigest": &entry["admissionDigest"]})
+                )
+                .is_err()
+        );
+    }
+    let reject = |value: poo_flow_rust_runtime::wire::Value| {
+        assert!(
+            runtime
+                .call(
+                    "temporal.family.archive.replay",
+                    &datum!({"archive": value, "expectedDigest": &expected})
+                )
+                .is_err()
+        );
+    };
+    let root_index = entries
+        .iter()
+        .position(|e| e["operation"] == "assert")
+        .unwrap();
+    let changed_index = entries
+        .iter()
+        .position(|e| e["operation"] == "correct")
+        .unwrap();
+    let replace_entries = |items| {
+        let mut value = archive.value().clone();
+        value["entries"] = poo_flow_rust_runtime::wire::Value::Array(items);
+        value
+    };
+    let mut tampered = entries.clone();
+    tampered[root_index]["task"]["query"]["identity"] = datum!("foreign-query");
+    tampered[root_index]["source"]["task"]["query"]["identity"] = datum!("foreign-query");
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    let mut observations = tampered[root_index]["task"]["model"]["observations"]
+        .as_array()
+        .unwrap()
+        .clone();
+    observations[0]["position"] = datum!(17);
+    tampered[root_index]["task"]["model"]["observations"] =
+        poo_flow_rust_runtime::wire::Value::Array(observations);
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered[root_index]["revision"]["proofDigest"] = datum!("forged");
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered[root_index]["source"]["task"]["query"]["identity"] = datum!("ignored-query");
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered[root_index]["source"]["scope"]["policy"] = datum!("foreign-policy");
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered[changed_index]["frontier"]["inventoryComplete"] = datum!(false);
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered[changed_index]["predecessorDigest"] =
+        tampered[changed_index]["revisionDigest"].clone();
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered.remove(root_index);
+    reject(replace_entries(tampered));
+    let mut tampered = entries.clone();
+    tampered.push(entries[root_index].clone());
+    reject(replace_entries(tampered));
+    let mut reversed = entries.clone();
+    reversed.reverse();
+    let reordered = runtime
+        .call(
+            "temporal.family.archive.replay",
+            &datum!({
+                "archive": replace_entries(reversed), "expectedDigest": &expected
+            }),
+        )
+        .unwrap();
+    assert_eq!(reordered, replayed);
+    assert_eq!(archive.replay(&runtime).unwrap(), replayed);
+    std::fs::write(
+        archive_dir.join("replayed.ss"),
+        poo_flow_rust_runtime::wire::to_vec(&replayed).unwrap(),
+    )
+    .unwrap();
+    println!(
+        "Fresh native process replayed complete premises; tamper/cycle/missing/duplicate rejected; current Source untouched"
+    );
     runtime.close().unwrap();
 }

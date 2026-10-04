@@ -34,6 +34,7 @@ pub enum MrrBridgeError {
     UnsupportedProjection,
     InvalidScope,
     InvalidModel,
+    InvalidArchive,
     Native(Error),
 }
 impl std::fmt::Display for MrrBridgeError {
@@ -189,6 +190,25 @@ impl MrrFamilyRevision {
                 "inventoryComplete": frontier.inventory_complete, "trigger": trigger }
         })).map(|result| Self { result }).map_err(MrrBridgeError::Native)
     }
+    /// Export complete native Family premises with a caller-retained digest anchor.
+    pub fn archive(
+        runtime: &SemanticRuntime,
+        identity: &str,
+        revisions: &[&Self],
+    ) -> Result<MrrFamilyProofArchive, MrrBridgeError> {
+        let archive = runtime.call("temporal.family.archive.export", &datum!({
+            "identity": identity,
+            "revisionDigests": revisions.iter().map(|v| v.result["revisionDigest"].clone()).collect::<Vec<_>>()
+        })).map_err(MrrBridgeError::Native)?;
+        let expected_digest = archive["archiveDigest"]
+            .as_str()
+            .ok_or(MrrBridgeError::InvalidArchive)?
+            .to_owned();
+        Ok(MrrFamilyProofArchive {
+            archive,
+            expected_digest,
+        })
+    }
     /// Replay every retained original proof and validate the supplied graph inventory.
     /// The returned native journal is read-only and has no durable/current CAS claim.
     pub fn journal(
@@ -199,6 +219,59 @@ impl MrrFamilyRevision {
         runtime.call("temporal.family.journal", &datum!({"identity": identity,
             "revisionDigests": revisions.iter().map(|v| v.result["revisionDigest"].clone()).collect::<Vec<_>>()
         })).map_err(MrrBridgeError::Native)
+    }
+}
+/// Complete Family proof premises. Loading bytes is inert, never proof admission.
+/// Native replay recomputes the graph against the separately retained digest.
+/// Original physical MRR source authentication is outside this Family archive.
+pub struct MrrFamilyProofArchive {
+    archive: Value,
+    expected_digest: String,
+}
+impl MrrFamilyProofArchive {
+    pub fn digest(&self) -> &str {
+        &self.expected_digest
+    }
+    pub fn value(&self) -> &Value {
+        &self.archive
+    }
+    pub fn to_bytes(&self) -> Result<Vec<u8>, MrrBridgeError> {
+        let bytes = wire::to_vec(&self.archive).map_err(|_| MrrBridgeError::InvalidArchive)?;
+        if bytes.len() > 1_048_576 {
+            return Err(MrrBridgeError::InvalidArchive);
+        }
+        Ok(bytes)
+    }
+    pub fn from_bytes(bytes: &[u8], expected_digest: &str) -> Result<Self, MrrBridgeError> {
+        if bytes.is_empty()
+            || bytes.len() > 1_048_576
+            || expected_digest.len() != 71
+            || !expected_digest.starts_with("sha256:")
+            || !expected_digest.as_bytes()[7..]
+                .iter()
+                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(c))
+        {
+            return Err(MrrBridgeError::InvalidArchive);
+        }
+        let archive = wire::from_slice(bytes).map_err(|_| MrrBridgeError::InvalidArchive)?;
+        if archive["archiveDigest"].as_str() != Some(expected_digest) {
+            return Err(MrrBridgeError::InvalidArchive);
+        }
+        Ok(Self {
+            archive,
+            expected_digest: expected_digest.to_owned(),
+        })
+    }
+    /// Read-only historical replay. Does not register current Source or handles.
+    pub fn replay(&self, runtime: &SemanticRuntime) -> Result<Value, MrrBridgeError> {
+        runtime
+            .call(
+                "temporal.family.archive.replay",
+                &datum!({
+                    "archive": &self.archive, "expectedDigest": &self.expected_digest
+                }),
+            )
+            .map_err(MrrBridgeError::Native)
     }
 }
 impl MrrObservationEvidence {

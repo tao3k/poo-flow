@@ -9,13 +9,15 @@
         (only-in :poo-flow/modules/temporal-causality/admission/interface
                  poo-flow-temporal-family-admission-replay)
         (only-in :poo-flow/modules/temporal-causality/conclusions/funs
-                 poo-flow-temporal-conclusion-change poo-flow-temporal-conclusion-journal)
+                 poo-flow-temporal-conclusion-change poo-flow-temporal-conclusion-journal
+                 poo-flow-temporal-conclusion-journal-replay)
         (only-in :poo-flow/modules/temporal-causality/lifecycle/types
-                 poo-flow-temporal-family-revision?)
+                 poo-flow-temporal-family-revision? poo-flow-temporal-family-archive?)
         (only-in :poo-flow/modules/temporal-causality/lifecycle/objects
-                 poo-flow-temporal-family-revision-value))
+                 poo-flow-temporal-family-revision-value poo-flow-temporal-family-archive-value))
 (export poo-flow-temporal-family-revision-root poo-flow-temporal-family-revision-change
-        poo-flow-temporal-family-revision-replay poo-flow-temporal-family-revision-journal)
+        poo-flow-temporal-family-revision-replay poo-flow-temporal-family-revision-journal
+        poo-flow-temporal-family-archive poo-flow-temporal-family-archive-replay)
 (def revision-slots
   '(identity subject-identity scope-identity cut-digest projection-digest policy-identity
     generation-identity operation predecessor-identity result-identity proof-identity
@@ -91,3 +93,28 @@
   (poo-flow-temporal-conclusion-journal
    identity (map (lambda (value)
                    (.ref (poo-flow-temporal-family-revision-replay value) 'revision)) values)))
+
+;;; A pure POO archive owns complete Family proof premises and a canonical graph.
+;;; Projection onto persistent bytes belongs to the explicit ABI boundary.
+(def (poo-flow-temporal-family-archive identity values)
+  (unless (and (string? identity) (< 0 (string-length identity) 129)
+               (list? values) (<= 1 (length values) 128))
+    (error "family archive identity or inventory bound"))
+  (let* ((canonical (list-sort
+                    (lambda (a b) (string<? (.ref a 'semantic-digest) (.ref b 'semantic-digest)))
+                    (map poo-flow-temporal-family-revision-replay values)))
+         (journal (poo-flow-temporal-family-revision-journal identity canonical)))
+    (poo-flow-temporal-family-archive-value identity
+     (digest (list 'poo-flow.temporal-family-archive.v1 identity
+                   (.ref journal 'semantic-digest)
+                   (map (lambda (v) (.ref v 'semantic-digest)) canonical))) canonical journal)))
+(def (poo-flow-temporal-family-archive-replay value)
+  (unless (poo-flow-temporal-family-archive? value) (error "invalid family archive"))
+  (poo-flow-temporal-conclusion-journal-replay (.ref value 'journal))
+  (let (canonical (poo-flow-temporal-family-archive
+                   (.ref value 'identity) (.ref value 'family-revisions)))
+    (unless (and (equal? (.ref canonical 'semantic-digest) (.ref value 'semantic-digest))
+                 (equal? (.ref (.ref canonical 'journal) 'semantic-digest)
+                         (.ref (.ref value 'journal) 'semantic-digest)))
+      (error "family archive binding mismatch"))
+    canonical))
