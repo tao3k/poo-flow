@@ -47,10 +47,20 @@ the same upstream runner, matching Gerbil's interpreter initialization.
 
 The rebuilt entry also exposes optional =POO_FLOW_TEST_PROGRESS= completion
 events after static initialization and after expander initialization. These
-are completed stages, not timer output. The strict run still timed out before
-the first entry event: =gxtest-before-entry-failed.log=. None of the four cases
-ran, and static startup qualification remains open. Completing the link or
-repairing source discovery does not replace this failed runtime gate.
+are completed stages, not timer output. The first diagnostic run timed out
+without an entry event: =gxtest-before-entry-failed.log=. Inspection subsequently
+found that its static entry was cached from before the diagnostics were added.
+That log remains a failed run but does not establish a pre-entry blocking
+location. Native process sampling observed expander dynamic module loading.
+
+Recompiling the entry with official =gxc -O -static= before =compile-exe=
+produced the current diagnostics. The strict run then passed all four public
+cases with =CASE-OK=, final upstream =OK= and exit status zero.
+=gxtest-native-passed.log= retains the output, and =gxtest-build-freeze.ss=
+records current entry/source/compiler-output and executable digests. The
+five-second genuine-progress and 45-second total limits were unchanged.
+This closes local native public-case qualification, not interpreted cold
+startup, the physical MRR/Data roundtrip or a latency benchmark.
 
 These host-declared read-only checks do not authenticate the source, fence a
 subsequent effect, prove physical evaluation or implement withdrawal journals,

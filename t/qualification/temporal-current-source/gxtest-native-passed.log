@@ -1,0 +1,17 @@
+poo-test: static module initialization completed
+poo-test: official expander initialization completed
+HARNESS ("/private/tmp/poo-pr34-failure-fix/t/temporal-applicability-test.ss")
+MODULE /private/tmp/poo-pr34-failure-fix/t/temporal-applicability-test.ss
+SUITE replayed family proof and current source applicability
+CASE current source replays original premises
+CASE-OK current source replays original premises
+CASE generation policy authority and corrected rows stale history
+CASE-OK generation policy authority and corrected rows stale history
+CASE foreign logical source cannot establish currentness
+CASE-OK foreign logical source cannot establish currentness
+CASE forged proof fields and source digest fail replay
+CASE-OK forged proof fields and source digest fail replay
+SUITE-OK replayed family proof and current source applicability
+MODULE-OK /private/tmp/poo-pr34-failure-fix/t/temporal-applicability-test.ss
+HARNESS-OK ("/private/tmp/poo-pr34-failure-fix/t/temporal-applicability-test.ss")
+OK
