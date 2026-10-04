@@ -112,3 +112,17 @@ def test_compiler_project_dependency_sources_are_supplied_and_missing_files_fail
     (ascent/'candidate/reasoning.ss').unlink()
     with pytest.raises(FileNotFoundError):
         project_sources(root, ascent, manifest)
+
+
+def test_tool_arguments_are_real_content_but_metadata_and_reasoning_are_not():
+    async def lines():
+        yield line('response.function_call_arguments.delta', delta='{"task":{}}')
+        yield line('response.completed', response={'id': 'tool', 'status': 'completed',
+                   'output': [{'type': 'function_call', 'name': 'poo_flow_temporal_solve',
+                               'call_id': 'call', 'arguments': '{"task":{}}'}]})
+    record = {}
+    assert asyncio.run(consume_lines(lines(), record,
+           content_event='response.function_call_arguments.delta')) == '{"task":{}}'
+    assert len(record['toolCalls']) == 1
+    with pytest.raises(ValueError, match='genuine content'):
+        asyncio.run(consume_lines(lines(), {}, content_event='response.reasoning_text.delta'))

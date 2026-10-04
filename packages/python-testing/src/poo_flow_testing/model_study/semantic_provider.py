@@ -11,7 +11,10 @@ class ContentTimeout(RuntimeError):
 
 
 async def consume_lines(lines, record, *, emit=lambda _: None, idle_seconds=5.0,
-                        started=None, total_seconds=90.0):
+                        started=None, total_seconds=90.0, content_event='response.output_text.delta'):
+    if content_event not in ('response.output_text.delta', 'response.function_call_arguments.delta'):
+        raise ValueError('only text or function arguments count as genuine content')
+    record['progressKind'] = content_event
     started = time.monotonic() if started is None else started
     last = started
     record.update(raw='', events=[], contentGapsSeconds=[])
@@ -33,7 +36,7 @@ async def consume_lines(lines, record, *, emit=lambda _: None, idle_seconds=5.0,
         now = time.monotonic()
         kind = event.get('type', '')
         record['events'].append({'type': kind, 'seconds': now - started})
-        if kind == 'response.output_text.delta' and event.get('delta'):
+        if kind == content_event and event.get('delta'):
             record['raw'] += event['delta']
             if event['delta'].strip():
                 record['contentGapsSeconds'].append(now - last)
@@ -43,6 +46,9 @@ async def consume_lines(lines, record, *, emit=lambda _: None, idle_seconds=5.0,
             response = event['response']
             record.update(responseId=response.get('id'), responseModel=response.get('model'),
                           responseStatus=response.get('status'), usage=response.get('usage'))
+            if content_event == 'response.function_call_arguments.delta':
+                record['toolCalls'] = [item for item in response.get('output', [])
+                                       if item.get('type') == 'function_call']
             terminal = True
             break
     record['seconds'] = time.monotonic() - started
@@ -52,7 +58,8 @@ async def consume_lines(lines, record, *, emit=lambda _: None, idle_seconds=5.0,
     return record['raw']
 
 
-async def predict(request, key, record, *, emit=lambda _: None):
+async def predict(request, key, record, *, emit=lambda _: None,
+                  content_event='response.output_text.delta'):
     import httpx
     started = time.monotonic()
     async with httpx.AsyncClient(timeout=httpx.Timeout(5.0), follow_redirects=False) as client:
@@ -68,6 +75,6 @@ async def predict(request, key, record, *, emit=lambda _: None):
                 body = (await response.aread()).decode('utf-8', 'replace')
                 record['providerError'] = body.replace(key, '[REDACTED]')[:4096]
             response.raise_for_status()
-            return await consume_lines(response.aiter_lines(), record, started=started, emit=emit)
+            return await consume_lines(response.aiter_lines(), record, started=started, emit=emit, content_event=content_event)
         finally:
             await context.__aexit__(None, None, None)
