@@ -13,6 +13,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -20,8 +21,13 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def run(argv: list[str], *, capture: bool = False) -> str:
     print(f"BUILD {argv[0]} {argv[1:3]}", flush=True)
-    return subprocess.run(argv, cwd=ROOT, check=True, text=True,
-                          stdout=subprocess.PIPE if capture else None).stdout or ""
+    result = subprocess.run(argv, cwd=ROOT, text=True,
+                            stdout=subprocess.PIPE if capture else None)
+    if result.returncode and capture:
+        sys.stdout.write(result.stdout or "")
+        sys.stdout.flush()
+    result.check_returncode()
+    return result.stdout or ""
 
 
 def main() -> None:
