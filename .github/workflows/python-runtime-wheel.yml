@@ -284,3 +284,20 @@ jobs:
           name: poo-flow-runtime-wheel
           path: dist/python-runtime-wheel/*.whl
           if-no-files-found: error
+
+      - name: Verify Rust consumer against installed Python and native producer
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.95.0 --profile minimal
+          "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m pip install pytest
+          "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" \
+            bindings/rust-runtime/tools/differential.py \
+            --library "$POO_FLOW_SEMANTIC_LIBRARY" \
+            --output "$RUNNER_TEMP/poo-rust-oracle.json"
+          export POO_FLOW_SEMANTIC_SHA256
+          POO_FLOW_SEMANTIC_SHA256="$(sha256sum "$POO_FLOW_SEMANTIC_LIBRARY" | cut -d ' ' -f 1)"
+          export POO_FLOW_RUNTIME_TRACE=1
+          export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.json"
+          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --no-run
+          python bindings/rust-runtime/tools/watch.py \
+            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml -- --nocapture

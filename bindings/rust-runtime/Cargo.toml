@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+[package]
+name = "poo-flow-rust-runtime"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+publish = false
+[dependencies]
+libloading = "0.8.9"
+sha2 = "0.10.9"
+serde_json = "1.0.150"

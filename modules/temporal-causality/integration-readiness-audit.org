@@ -185,3 +185,33 @@ first-root CAS, abstract TLC, or a successful read-only model tool batch.
 These are proposed optimization experiments, not demonstrated performance gains.
 Do not add another Temporal solver or causal authority inside MRR. The next
 concrete integration slice is R1/R2 followed by R3; R4 gates stronger claims.
+
+* Live PR reconciliation during Rust implementation
+
+The original audit above intentionally records the local Rust checkout heads.
+Subsequent live inspection found MRR Data PR #12 at
+=d36337b703c0a1f5bd0fa1eaaa62d11178e6507f= with MRR pin
+=e9f87c3744b0d38709c479edc1b2143ef5ec9bbd=, and MRR PR #9 at
+=3ce31dac2dc58ab780ed06fa88103de501355692=. These PR trees differ from
+the local main trees; the local pin/duplication observations cannot be applied
+as if they describe the active PR. Preserve both identities rather than
+resetting main or copying a different branch's consumer over the PR.
+
+The latest MRR PR already exports =export_query_result_transport= and
+=verify_query_result_transport=. Transport includes original ordered typed rows,
+query/catalog/snapshot/generation bindings, count and result digest. Receiving
+MRR re-admits against its authentic bound query. Reuse these functions, not a
+new JSON validator that fabricates a MRR receipt. Their row/type/identity claim
+still does not authenticate physical execution or causal derivation. The latest
+MRR Context crate consumes temporal fact references without defining a clock
+or causal solver; its extracted evidence proof does not close POO's IFC label,
+declassification or Temporal applicability gates.
+
+=bindings/rust-runtime= now implements the POO-owned read-only native consumer.
+Dedicated owner thread, bounded queue, exact artifact digest, allocator-matched
+release and terminal native close are checked against a real native artifact.
+It consumes finite lens/family operations and no trusted registration/publication
+operations. MRR original-result mapping, cross-generation correspondence and
+Rust durable publication are still subsequent gates. The new model study is
+separately permission-gated by automatic approval review; a rejected invocation
+is zero real-model calls, never a successful acceptance receipt.

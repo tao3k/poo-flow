@@ -1,0 +1,72 @@
+{
+  "schema": "poo-flow.rust-runtime-qualification.v1",
+  "date": "2026-10-04",
+  "baseHead": "8221781fae6e1f1c3dfcc87c88c24ff5c83a6ce6",
+  "sourceFiles": {
+    "bindings/rust-runtime/Cargo.toml": "d8c6549cf230a7d2282211daf945ef59d024af63c79315c0d4569e9aa6618032",
+    "bindings/rust-runtime/Cargo.lock": "0e0e1f91cdfbee15bb6021ad7e0fdb426c340e789982f4d77ada843b1bacbc31",
+    "bindings/rust-runtime/README.org": "06218d8664af244b674264bb3bbb8d42855382697e6646ba5044861d0690f5c2",
+    "bindings/rust-runtime/tools/model_roundtrip.py": "26aed7325a66b48ea60cfcb29be71595d378f61dd129231405b5b6d5df4e9806",
+    "bindings/rust-runtime/tools/watch.py": "bef8e506ed4834d48420e3e908da5f389d3462a50f7f8a4f20aa13360e2e4098",
+    "bindings/rust-runtime/tools/differential.py": "69efaedec1ac7ab1972fc0c4b14892d8791cab29d27e8ded56051537cee37a5f",
+    "bindings/rust-runtime/tests/native.rs": "283c6dff231249d723a2ed4ac0b7838950e312ec413c6d7637a403cac64182a4",
+    "bindings/rust-runtime/src/lib.rs": "b598c1b713fe792121c76cb0c50630748f794c4188c62ba898fb162209d1643a",
+    "bindings/rust-runtime/src/bin/semantic_call.rs": "0938760afdf1a07e5ee3d059bfb0e9e2c6b6fbffa8c07e9694ac7af1e48d6ef6"
+  },
+  "nativeArtifactSha256": "9025b685425c62b0a8523e8b4e99cba18dfb1400a9601db1984dba0cf9635efa",
+  "binarySha256": "c38a54819076024561515207e1dd27430d751757c54b397b3df09d711a45643e",
+  "oracleSha256": "e72094d87af8bedd3e71dab40284cba554e5d4e807d690798cf908828582e5be",
+  "rustVersion": "1.95.0",
+  "buildProfile": "release",
+  "platform": "macOS ARM64",
+  "tests": {
+    "integrationTests": 1,
+    "differentialResults": 21,
+    "failures": 0,
+    "seconds": 1.24,
+    "queueSaturationRequests": 8192,
+    "queueRejected": 8128,
+    "externalAdapterCliExactMatch": true,
+    "clippyAllTargetsWarningsDenied": true,
+    "outputWatchdogSeconds": 5,
+    "outputWatchdogTriggered": false
+  },
+  "checked": [
+    "artifact mismatch rejected",
+    "native output equality with installed Python/C/POO for two vocabularies and lens",
+    "native input rejection does not poison next call",
+    "reserved host operations denied",
+    "oversize request denied",
+    "raw ABI wrong-thread call denied",
+    "bounded queue immediate rejection",
+    "eight parallel callers served by one native owner",
+    "terminal close and process-global reopening guard"
+  ],
+  "realModelCalls": 0,
+  "modelAcceptance": "blocked-by-automatic-approval-review-pending-user-payload-authorization",
+  "initialFailures": [
+    {
+      "scope": "unoptimized debug whole-artifact checksum startup",
+      "exitCode": 124,
+      "watchdogSeconds": 5,
+      "count": 2,
+      "repair": "stream artifact hashing through 64 KiB buffer; qualify optimized deployment build; retain actual digest/load/open stage trace, no heartbeats",
+      "failureLogSha256": "35aeba7d18fcafe7fb294b5fd65caecd124c997ba09b043e968641e91bb356fd"
+    }
+  ],
+  "upstreamObservations": {
+    "mrrPr9": "3ce31dac2dc58ab780ed06fa88103de501355692",
+    "mrrDataPr12": "d36337b703c0a1f5bd0fa1eaaa62d11178e6507f",
+    "mrrDataPinnedMrr": "e9f87c3744b0d38709c479edc1b2143ef5ec9bbd",
+    "originalTransportAlreadyAvailableInMrrPr": true
+  },
+  "limitations": [
+    "Local release test; remote Rust CI pending",
+    "Read-only lens/family transport only; no source registration, root admission or publication in Rust",
+    "Trusted immutable artifact path; digest is not issuer authentication or protection against hostile path replacement",
+    "Caller timeout abandons result; no asynchronous native interruption; close drains accepted work",
+    "MRR original-query/source/cut/generation mapping and physical export not implemented by this crate",
+    "Historical model tool pass does not qualify this new Rust/family consumer",
+    "No IFC flow permit, source authenticity, actual-cause claim or generic temporal refinement"
+  ]
+}

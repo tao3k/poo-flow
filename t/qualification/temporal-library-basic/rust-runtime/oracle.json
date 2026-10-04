@@ -1,0 +1,1914 @@
+[
+  {
+    "name": "release-necessary",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "release",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "build",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "deploy",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "build",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "build",
+                "right": "deploy"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "deploy",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "deploy",
+                "right": "build"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "classification": "necessary",
+      "admissible": [
+        "a-target"
+      ],
+      "unexplored": [],
+      "assumption": "exclusive-explanations",
+      "exhausted": true,
+      "profile": "finite-hypothesis-family",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "0489086453584377c58caf4ca021d5cb9897f7dc43a094397f37ef1be0f40c6d",
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "unknown": [],
+      "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+      "sourceAuthenticated": false
+    }
+  },
+  {
+    "name": "release-necessary-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "release",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "build",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "deploy",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "build",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "build",
+                  "right": "deploy"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "deploy",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "deploy",
+                  "right": "build"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "classification": "necessary",
+        "admissible": [
+          "a-target"
+        ],
+        "unexplored": [],
+        "assumption": "exclusive-explanations",
+        "exhausted": true,
+        "profile": "finite-hypothesis-family",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "0489086453584377c58caf4ca021d5cb9897f7dc43a094397f37ef1be0f40c6d",
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "unknown": [],
+        "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+        "sourceAuthenticated": false
+      }
+    },
+    "expected": {
+      "claim": "finite-family-result-fidelity",
+      "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "actionAuthorized": false,
+      "bindingDigest": "0489086453584377c58caf4ca021d5cb9897f7dc43a094397f37ef1be0f40c6d",
+      "sourceAuthenticated": false
+    }
+  },
+  {
+    "name": "release-overlap",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "release",
+        "mode": "overlapping-mechanisms",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "build",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "deploy",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "build",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "build",
+                "right": "deploy"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "deploy",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "deploy",
+                "right": "build"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "170cc89f0a53c128cdaa9f34ceb43356bcba57ef313a94ae552e2c62bd678dad",
+      "modelDigest": "sha256:5e19e17b10a790974d2f986bcd58a59039e83aec86b8d22fb4ac4b29d0bb124d",
+      "unknown": [],
+      "sourceAuthenticated": false,
+      "unexplored": [],
+      "admissible": [
+        "a-target"
+      ],
+      "classification": "possible",
+      "profile": "finite-hypothesis-family",
+      "exhausted": true,
+      "assumption": "overlapping-mechanisms",
+      "familyComplete": true
+    }
+  },
+  {
+    "name": "release-overlap-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "release",
+          "mode": "overlapping-mechanisms",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "build",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "deploy",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "build",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "build",
+                  "right": "deploy"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "deploy",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "deploy",
+                  "right": "build"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "170cc89f0a53c128cdaa9f34ceb43356bcba57ef313a94ae552e2c62bd678dad",
+        "modelDigest": "sha256:5e19e17b10a790974d2f986bcd58a59039e83aec86b8d22fb4ac4b29d0bb124d",
+        "unknown": [],
+        "sourceAuthenticated": false,
+        "unexplored": [],
+        "admissible": [
+          "a-target"
+        ],
+        "classification": "possible",
+        "profile": "finite-hypothesis-family",
+        "exhausted": true,
+        "assumption": "overlapping-mechanisms",
+        "familyComplete": true
+      }
+    },
+    "expected": {
+      "bindingDigest": "170cc89f0a53c128cdaa9f34ceb43356bcba57ef313a94ae552e2c62bd678dad",
+      "sourceAuthenticated": false,
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "modelDigest": "sha256:5e19e17b10a790974d2f986bcd58a59039e83aec86b8d22fb4ac4b29d0bb124d",
+      "claim": "finite-family-result-fidelity",
+      "actionAuthorized": false
+    }
+  },
+  {
+    "name": "release-incomplete",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "release",
+        "mode": "exclusive-explanations",
+        "complete": false,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "build",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "deploy",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "build",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "build",
+                "right": "deploy"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "deploy",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "deploy",
+                "right": "build"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "27155d18e4b737244c6e9d93dbcb766ad2029ebefa199979b20f7e0e664acdd3",
+      "familyComplete": false,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "unknown": [],
+      "modelDigest": "sha256:78c67473ccdb750326605b95ba1f0e6a000907c972de460d0fc02cfcb2f13a1e",
+      "admissible": [
+        "a-target"
+      ],
+      "classification": "possible",
+      "sourceAuthenticated": false,
+      "unexplored": [],
+      "assumption": "exclusive-explanations",
+      "exhausted": true,
+      "profile": "finite-hypothesis-family",
+      "actionAuthorized": false
+    }
+  },
+  {
+    "name": "release-incomplete-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "release",
+          "mode": "exclusive-explanations",
+          "complete": false,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "build",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "deploy",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "build",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "build",
+                  "right": "deploy"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "deploy",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "deploy",
+                  "right": "build"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "27155d18e4b737244c6e9d93dbcb766ad2029ebefa199979b20f7e0e664acdd3",
+        "familyComplete": false,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "unknown": [],
+        "modelDigest": "sha256:78c67473ccdb750326605b95ba1f0e6a000907c972de460d0fc02cfcb2f13a1e",
+        "admissible": [
+          "a-target"
+        ],
+        "classification": "possible",
+        "sourceAuthenticated": false,
+        "unexplored": [],
+        "assumption": "exclusive-explanations",
+        "exhausted": true,
+        "profile": "finite-hypothesis-family",
+        "actionAuthorized": false
+      }
+    },
+    "expected": {
+      "modelDigest": "sha256:78c67473ccdb750326605b95ba1f0e6a000907c972de460d0fc02cfcb2f13a1e",
+      "claim": "finite-family-result-fidelity",
+      "actionAuthorized": false,
+      "sourceAuthenticated": false,
+      "bindingDigest": "27155d18e4b737244c6e9d93dbcb766ad2029ebefa199979b20f7e0e664acdd3",
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1"
+    }
+  },
+  {
+    "name": "release-budget",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "release",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "build",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "deploy",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "build",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "build",
+                "right": "deploy"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "deploy",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "deploy",
+                "right": "build"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": 1
+      }
+    },
+    "expected": {
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [],
+      "bindingDigest": "8300cf702f8afc91ea0ee9ce54111b2383f4e9b860baeee6b3660d25a9b700a8",
+      "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+      "unknown": [],
+      "sourceAuthenticated": false,
+      "unexplored": [
+        "z-alternative"
+      ],
+      "classification": "possible",
+      "admissible": [
+        "a-target"
+      ],
+      "profile": "finite-hypothesis-family",
+      "exhausted": false,
+      "assumption": "exclusive-explanations"
+    }
+  },
+  {
+    "name": "release-budget-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "release",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "build",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "deploy",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "build",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "build",
+                  "right": "deploy"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "deploy",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "deploy",
+                  "right": "build"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": 1
+        }
+      },
+      "candidate": {
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [],
+        "bindingDigest": "8300cf702f8afc91ea0ee9ce54111b2383f4e9b860baeee6b3660d25a9b700a8",
+        "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+        "unknown": [],
+        "sourceAuthenticated": false,
+        "unexplored": [
+          "z-alternative"
+        ],
+        "classification": "possible",
+        "admissible": [
+          "a-target"
+        ],
+        "profile": "finite-hypothesis-family",
+        "exhausted": false,
+        "assumption": "exclusive-explanations"
+      }
+    },
+    "expected": {
+      "claim": "finite-family-result-fidelity",
+      "modelDigest": "sha256:f86f968e7fd794d769953dedf83022ddbee1083f5745c8864b0b35a4edb424d4",
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "actionAuthorized": false,
+      "sourceAuthenticated": false,
+      "bindingDigest": "8300cf702f8afc91ea0ee9ce54111b2383f4e9b860baeee6b3660d25a9b700a8"
+    }
+  },
+  {
+    "name": "release-unknown",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "release",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "build",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "declared"
+          },
+          {
+            "identity": "deploy",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "build",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "build",
+                "right": "deploy"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "deploy",
+            "effect": "deploy",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "deploy",
+                "right": "build"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "0f37265711211bbeb02f6a0dc462068c026215ff1b12789ff31f4a62488979cc",
+      "modelDigest": "sha256:5ade6903bd09f9af3dd862bde0e544441fcad099c6bd15f162536021c19fb615",
+      "unknown": [
+        "a-target"
+      ],
+      "sourceAuthenticated": false,
+      "unexplored": [],
+      "classification": "unknown",
+      "admissible": [],
+      "profile": "finite-hypothesis-family",
+      "exhausted": true,
+      "assumption": "exclusive-explanations"
+    }
+  },
+  {
+    "name": "release-unknown-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "release",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "build",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "declared"
+            },
+            {
+              "identity": "deploy",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "build",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "build",
+                  "right": "deploy"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "deploy",
+              "effect": "deploy",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "deploy",
+                  "right": "build"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "0f37265711211bbeb02f6a0dc462068c026215ff1b12789ff31f4a62488979cc",
+        "modelDigest": "sha256:5ade6903bd09f9af3dd862bde0e544441fcad099c6bd15f162536021c19fb615",
+        "unknown": [
+          "a-target"
+        ],
+        "sourceAuthenticated": false,
+        "unexplored": [],
+        "classification": "unknown",
+        "admissible": [],
+        "profile": "finite-hypothesis-family",
+        "exhausted": true,
+        "assumption": "exclusive-explanations"
+      }
+    },
+    "expected": {
+      "modelDigest": "sha256:5ade6903bd09f9af3dd862bde0e544441fcad099c6bd15f162536021c19fb615",
+      "claim": "finite-family-result-fidelity",
+      "actionAuthorized": false,
+      "bindingDigest": "0f37265711211bbeb02f6a0dc462068c026215ff1b12789ff31f4a62488979cc",
+      "sourceAuthenticated": false,
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1"
+    }
+  },
+  {
+    "name": "medication-necessary",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "medication",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "order",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "administer",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "order",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "order",
+                "right": "administer"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "administer",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "administer",
+                "right": "order"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "assumption": "exclusive-explanations",
+      "exhausted": true,
+      "profile": "finite-hypothesis-family",
+      "admissible": [
+        "a-target"
+      ],
+      "classification": "necessary",
+      "sourceAuthenticated": false,
+      "unexplored": [],
+      "unknown": [],
+      "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "ee42cac26fac188ed0d1c919465ebefac90138cd9b044012c49d92a055291077",
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1"
+    }
+  },
+  {
+    "name": "medication-necessary-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "medication",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "order",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "administer",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "order",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "order",
+                  "right": "administer"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "administer",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "administer",
+                  "right": "order"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "assumption": "exclusive-explanations",
+        "exhausted": true,
+        "profile": "finite-hypothesis-family",
+        "admissible": [
+          "a-target"
+        ],
+        "classification": "necessary",
+        "sourceAuthenticated": false,
+        "unexplored": [],
+        "unknown": [],
+        "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "ee42cac26fac188ed0d1c919465ebefac90138cd9b044012c49d92a055291077",
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1"
+      }
+    },
+    "expected": {
+      "actionAuthorized": false,
+      "bindingDigest": "ee42cac26fac188ed0d1c919465ebefac90138cd9b044012c49d92a055291077",
+      "sourceAuthenticated": false,
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357",
+      "claim": "finite-family-result-fidelity"
+    }
+  },
+  {
+    "name": "medication-overlap",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "medication",
+        "mode": "overlapping-mechanisms",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "order",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "administer",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "order",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "order",
+                "right": "administer"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "administer",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "administer",
+                "right": "order"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "profile": "finite-hypothesis-family",
+      "exhausted": true,
+      "assumption": "overlapping-mechanisms",
+      "sourceAuthenticated": false,
+      "unexplored": [],
+      "admissible": [
+        "a-target"
+      ],
+      "classification": "possible",
+      "modelDigest": "sha256:351bf40dd2dde8bcf3f99b5d69460c32b3ec7487381ab9d89c4977ad8b4b0a3d",
+      "familyComplete": true,
+      "unknown": [],
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "a35857c0e7c4cce446f910bb1c3384f7b72472248a302ae1711a32bae3e0c3f9"
+    }
+  },
+  {
+    "name": "medication-overlap-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "medication",
+          "mode": "overlapping-mechanisms",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "order",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "administer",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "order",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "order",
+                  "right": "administer"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "administer",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "administer",
+                  "right": "order"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "profile": "finite-hypothesis-family",
+        "exhausted": true,
+        "assumption": "overlapping-mechanisms",
+        "sourceAuthenticated": false,
+        "unexplored": [],
+        "admissible": [
+          "a-target"
+        ],
+        "classification": "possible",
+        "modelDigest": "sha256:351bf40dd2dde8bcf3f99b5d69460c32b3ec7487381ab9d89c4977ad8b4b0a3d",
+        "familyComplete": true,
+        "unknown": [],
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "a35857c0e7c4cce446f910bb1c3384f7b72472248a302ae1711a32bae3e0c3f9"
+      }
+    },
+    "expected": {
+      "claim": "finite-family-result-fidelity",
+      "modelDigest": "sha256:351bf40dd2dde8bcf3f99b5d69460c32b3ec7487381ab9d89c4977ad8b4b0a3d",
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "actionAuthorized": false,
+      "bindingDigest": "a35857c0e7c4cce446f910bb1c3384f7b72472248a302ae1711a32bae3e0c3f9",
+      "sourceAuthenticated": false
+    }
+  },
+  {
+    "name": "medication-incomplete",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "medication",
+        "mode": "exclusive-explanations",
+        "complete": false,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "order",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "administer",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "order",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "order",
+                "right": "administer"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "administer",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "administer",
+                "right": "order"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "sourceAuthenticated": false,
+      "classification": "possible",
+      "admissible": [
+        "a-target"
+      ],
+      "unexplored": [],
+      "exhausted": true,
+      "profile": "finite-hypothesis-family",
+      "assumption": "exclusive-explanations",
+      "familyComplete": false,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "1f3610b1804e6c2caab2105a5f58da347ff0a2ae2f646684ec5022af831023c8",
+      "unknown": [],
+      "modelDigest": "sha256:a946b72dbd6997c805cd85376a8c071ff90b0a335be8922058a98a586fc1710e"
+    }
+  },
+  {
+    "name": "medication-incomplete-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "medication",
+          "mode": "exclusive-explanations",
+          "complete": false,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "order",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "administer",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "order",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "order",
+                  "right": "administer"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "administer",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "administer",
+                  "right": "order"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "sourceAuthenticated": false,
+        "classification": "possible",
+        "admissible": [
+          "a-target"
+        ],
+        "unexplored": [],
+        "exhausted": true,
+        "profile": "finite-hypothesis-family",
+        "assumption": "exclusive-explanations",
+        "familyComplete": false,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "1f3610b1804e6c2caab2105a5f58da347ff0a2ae2f646684ec5022af831023c8",
+        "unknown": [],
+        "modelDigest": "sha256:a946b72dbd6997c805cd85376a8c071ff90b0a335be8922058a98a586fc1710e"
+      }
+    },
+    "expected": {
+      "bindingDigest": "1f3610b1804e6c2caab2105a5f58da347ff0a2ae2f646684ec5022af831023c8",
+      "sourceAuthenticated": false,
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "modelDigest": "sha256:a946b72dbd6997c805cd85376a8c071ff90b0a335be8922058a98a586fc1710e",
+      "claim": "finite-family-result-fidelity",
+      "actionAuthorized": false
+    }
+  },
+  {
+    "name": "medication-budget",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "medication",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "order",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "observed"
+          },
+          {
+            "identity": "administer",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "order",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "order",
+                "right": "administer"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "administer",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "administer",
+                "right": "order"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": 1
+      }
+    },
+    "expected": {
+      "unknown": [],
+      "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357",
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "actionAuthorized": false,
+      "refuted": [],
+      "bindingDigest": "0a47f5d15a09358deb1a5bbb72cce3bf3a410d7602457e8f3766c0c00c08f676",
+      "exhausted": false,
+      "profile": "finite-hypothesis-family",
+      "assumption": "exclusive-explanations",
+      "sourceAuthenticated": false,
+      "classification": "possible",
+      "admissible": [
+        "a-target"
+      ],
+      "unexplored": [
+        "z-alternative"
+      ]
+    }
+  },
+  {
+    "name": "medication-budget-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "medication",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "order",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "observed"
+            },
+            {
+              "identity": "administer",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "order",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "order",
+                  "right": "administer"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "administer",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "administer",
+                  "right": "order"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": 1
+        }
+      },
+      "candidate": {
+        "unknown": [],
+        "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357",
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "actionAuthorized": false,
+        "refuted": [],
+        "bindingDigest": "0a47f5d15a09358deb1a5bbb72cce3bf3a410d7602457e8f3766c0c00c08f676",
+        "exhausted": false,
+        "profile": "finite-hypothesis-family",
+        "assumption": "exclusive-explanations",
+        "sourceAuthenticated": false,
+        "classification": "possible",
+        "admissible": [
+          "a-target"
+        ],
+        "unexplored": [
+          "z-alternative"
+        ]
+      }
+    },
+    "expected": {
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "actionAuthorized": false,
+      "sourceAuthenticated": false,
+      "bindingDigest": "0a47f5d15a09358deb1a5bbb72cce3bf3a410d7602457e8f3766c0c00c08f676",
+      "claim": "finite-family-result-fidelity",
+      "modelDigest": "sha256:cb65c1696b3973511f7b1670f8bf57c935062235c93f02760fd80dfbd37db357"
+    }
+  },
+  {
+    "name": "medication-unknown",
+    "operation": "temporal.family.classify",
+    "payload": {
+      "profile": "finite-hypothesis-family",
+      "model": {
+        "identity": "medication",
+        "mode": "exclusive-explanations",
+        "complete": true,
+        "domains": [
+          {
+            "identity": "clock",
+            "role": "event-time"
+          }
+        ],
+        "observations": [
+          {
+            "identity": "order",
+            "domain": "clock",
+            "position": 1,
+            "provenance": "source-a",
+            "modality": "declared"
+          },
+          {
+            "identity": "administer",
+            "domain": "clock",
+            "position": 2,
+            "provenance": "source-b",
+            "modality": "observed"
+          }
+        ],
+        "hypotheses": [
+          {
+            "identity": "a-target",
+            "cause": "order",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "order",
+                "relation": "before",
+                "left": "order",
+                "right": "administer"
+              }
+            ]
+          },
+          {
+            "identity": "z-alternative",
+            "cause": "administer",
+            "effect": "administer",
+            "constraints": [
+              {
+                "identity": "reverse",
+                "relation": "before",
+                "left": "administer",
+                "right": "order"
+              }
+            ]
+          }
+        ]
+      },
+      "query": {
+        "identity": "question",
+        "target": "a-target",
+        "limit": false
+      }
+    },
+    "expected": {
+      "unexplored": [],
+      "classification": "unknown",
+      "admissible": [],
+      "assumption": "exclusive-explanations",
+      "profile": "finite-hypothesis-family",
+      "actionAuthorized": false,
+      "exhausted": true,
+      "refuted": [
+        "z-alternative"
+      ],
+      "bindingDigest": "cfd3ded541b71ca161a31e48226aef1af1b53399ca2e090876d883e75c74b854",
+      "familyComplete": true,
+      "schema": "poo-flow.temporal-family-result.v1",
+      "modelDigest": "sha256:8f344f19dcd29eac8fff8397cea516d03eda416663001ffcb4e09d8a5be00d16",
+      "unknown": [
+        "a-target"
+      ],
+      "sourceAuthenticated": false
+    }
+  },
+  {
+    "name": "medication-unknown-observe",
+    "operation": "temporal.family.observe",
+    "payload": {
+      "task": {
+        "profile": "finite-hypothesis-family",
+        "model": {
+          "identity": "medication",
+          "mode": "exclusive-explanations",
+          "complete": true,
+          "domains": [
+            {
+              "identity": "clock",
+              "role": "event-time"
+            }
+          ],
+          "observations": [
+            {
+              "identity": "order",
+              "domain": "clock",
+              "position": 1,
+              "provenance": "source-a",
+              "modality": "declared"
+            },
+            {
+              "identity": "administer",
+              "domain": "clock",
+              "position": 2,
+              "provenance": "source-b",
+              "modality": "observed"
+            }
+          ],
+          "hypotheses": [
+            {
+              "identity": "a-target",
+              "cause": "order",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "order",
+                  "relation": "before",
+                  "left": "order",
+                  "right": "administer"
+                }
+              ]
+            },
+            {
+              "identity": "z-alternative",
+              "cause": "administer",
+              "effect": "administer",
+              "constraints": [
+                {
+                  "identity": "reverse",
+                  "relation": "before",
+                  "left": "administer",
+                  "right": "order"
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "identity": "question",
+          "target": "a-target",
+          "limit": false
+        }
+      },
+      "candidate": {
+        "unexplored": [],
+        "classification": "unknown",
+        "admissible": [],
+        "assumption": "exclusive-explanations",
+        "profile": "finite-hypothesis-family",
+        "actionAuthorized": false,
+        "exhausted": true,
+        "refuted": [
+          "z-alternative"
+        ],
+        "bindingDigest": "cfd3ded541b71ca161a31e48226aef1af1b53399ca2e090876d883e75c74b854",
+        "familyComplete": true,
+        "schema": "poo-flow.temporal-family-result.v1",
+        "modelDigest": "sha256:8f344f19dcd29eac8fff8397cea516d03eda416663001ffcb4e09d8a5be00d16",
+        "unknown": [
+          "a-target"
+        ],
+        "sourceAuthenticated": false
+      }
+    },
+    "expected": {
+      "actionAuthorized": false,
+      "sourceAuthenticated": false,
+      "bindingDigest": "cfd3ded541b71ca161a31e48226aef1af1b53399ca2e090876d883e75c74b854",
+      "verdict": "consistent",
+      "schema": "poo-flow.temporal-family-observation.v1",
+      "modelDigest": "sha256:8f344f19dcd29eac8fff8397cea516d03eda416663001ffcb4e09d8a5be00d16",
+      "claim": "finite-family-result-fidelity"
+    }
+  },
+  {
+    "name": "lens-solve",
+    "operation": "temporal.solve",
+    "payload": {
+      "lens": {
+        "generation": 1,
+        "clock": "c",
+        "start": 0,
+        "end": 5,
+        "asOf": 5,
+        "cut": "cut",
+        "members": [
+          "a",
+          "b"
+        ],
+        "horizon": 8,
+        "closed": true
+      },
+      "source": {
+        "identity": "source",
+        "generation": 1,
+        "clock": "c",
+        "events": [
+          [
+            "a",
+            1,
+            1
+          ],
+          [
+            "b",
+            2,
+            2
+          ]
+        ],
+        "parents": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      },
+      "root": "a"
+    },
+    "expected": {
+      "frontier": [],
+      "operation": "temporal.solve",
+      "evidence": [
+        "valid",
+        "valid"
+      ],
+      "status": "complete",
+      "bindingDigest": "95fe1d912c2109d8135ce5a164b19ec60772e40f1a24ead9fcf90ad08509c505",
+      "schema": "poo-flow.semantic-result",
+      "rows": [
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "verification": "valid"
+    }
+  }
+]

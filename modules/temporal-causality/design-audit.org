@@ -334,3 +334,20 @@ profile-specific Python/DeepSeek evidence, exact Rust MRR/MRR Data source heads,
 and the R1--R4 integration gates. Read-only Rust transport may proceed against
 the qualified basic profile; historical receipt recovery is not a current
 applicability or information-flow authorization receipt.
+
+* Delivered: bounded Rust read-only Runtime consumer
+
+=bindings/rust-runtime= consumes the original semantic C ABI on a dedicated
+owner thread. The qualified release build matches 21 current installed-Python
+native results across finite-family/lens profiles. It checks queue saturation,
+concurrent callers, allocator release, wrong-thread rejection and terminal close.
+See [[file:../../t/qualification/temporal-library-basic/rust-runtime/receipt.json][the exact source/artifact receipt]]. Two debug-startup silent watchdog failures
+remain recorded; the release gate passed at 1.24s with five-second silence limit.
+The crate makes no independent causal decisions or model effect grants.
+
+The Rust model-family study was rejected before execution by automatic approval
+review and awaits explicit payload authorization. It has zero model calls and
+no claimed pass. Live MRR PR inspection found an existing original-row transport
+and receiver-side re-admission; remaining query/source/cut/generation mapping
+must use that original owner interface. Neither full MRR integration nor Rust
+publication/IFC/current-applicability gates are closed by this delivery.

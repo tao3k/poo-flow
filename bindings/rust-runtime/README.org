@@ -1,0 +1,64 @@
+#+title: POO Flow Rust Runtime Consumer
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Contract
+
+This Rust crate consumes =runtime-c/semantic.h=. Native POO/Scheme remains the
+semantic owner. Supported operations are descriptor, temporal.solve/verify/observe
+and temporal.family.classify/observe. Host registration, admission, publication
+and arbitrary operation dispatch are not exposed by this read-only consumer.
+
+=SemanticRuntime::open(path, expected_sha256, capacity)= checks a trusted host's
+artifact digest, then opens it on one dedicated OS thread. Use an immutable
+host-controlled artifact path: digest verification is not issuer authentication
+and does not prevent a hostile filesystem rewrite during dynamic loading.
+Artifact hashing streams through a 64 KiB buffer. Qualify the release build;
+unoptimized debug hashing is not a deployment timing receipt. Optional
+POO_FLOW_RUNTIME_TRACE records completed digest/load/open stages only.
+Capacity must be 1..64, input bytes at most 1 MiB and consumed output at most
+16 MiB. Pending queue saturation fails immediately. The queue holds at most
+capacity pending requests plus one active request. Returned values are owned JSON;
+native allocation is released on the owner thread before replying.
+
+Native lifetime is process-global and thread-affine. =close= drains accepted
+requests, closes once and joins the owner. Native code remains mapped for the
+process lifetime, preserving Gambit's terminal-close contract. A second open
+cannot reopen a closed native instance. Callers may share the Rust handle across
+threads, including through Arc, but native pointers never leave the worker.
+=Pending::wait_timeout= bounds only response waiting; it cannot interrupt native
+execution. Close/drop may wait for a native call to finish. Read-only cancellation
+is response abandonment, not solver interruption or a closed-frontier claim.
+
+The =semantic_call= binary accepts one bounded JSON object with exactly
+=operation= and =payload= on stdin. The host supplies POO_FLOW_SEMANTIC_LIBRARY
+and POO_FLOW_SEMANTIC_SHA256. It outputs only the original native JSON object;
+no Rust-created causal receipt, source authenticity or effect permit is added.
+
+* Acceptance
+
+Run =tools/differential.py= with the installed qualified Python wheel and
+native artifact to generate a fresh oracle in its own process. The Rust native
+test requires that artifact path/hash and POO_FLOW_RUST_DIFFERENTIAL. It compares
+21 exact lens/family results across two vocabularies and open/budget profiles,
+then checks errors do not poison future calls, queue saturation, concurrent
+callers, terminal close and failed reopening. The CI wheel workflow runs this
+against the same native producer artifact and installed wheel.
+
+=tools/model_roundtrip.py= separately freezes four synthetic family tasks and
+runs at most eight real provider requests with the existing five-second genuine
+content watchdog, no retries. It checks exact tool task arguments, Rust/native
+output against the installed-Python oracle and model consumption of that output.
+It sends no repository source or ENV contents; API credentials authenticate the
+provider request. Running this study requires authorization to send its payload.
+A blocked or failed study is not a model acceptance pass.
+
+* MRR boundary
+
+This crate belongs to POO's runtime port. MRR continues to own query/catalog/
+generation/result admission. MRR Data owns verified physical snapshot execution.
+MRR result identity, source completeness, causal derivation, Temporal current
+applicability and IFC flow authorization are distinct gates. No MRR generation
+is converted into an integer Temporal generation by this transport.
