@@ -15,6 +15,15 @@ watchdog and a 45-second total deadline, passing =-v 5= and the original test
 file. Discovery, assertions, Case profiles, reporting and status remain gxtest
 owned. A compiled binary alone is not a passing test result.
 
+Always compile the entry module before linking its executable:
+#+begin_src sh
+gxc -O -static t/qualification/temporal-current-source/native-test.ss
+#+end_src
+Then use official =compile-exe= and =execute-pending-compile-jobs!=. Linking
+alone can reuse installed static code that predates a source edit. The entry's
+static compiler output must contain the current completion diagnostics, and
+the run must enable =POO_FLOW_TEST_PROGRESS= to expose those real boundaries.
+
 =rust-native.log= records the passing real ABI regression. It includes original
 necessary/current, correction making historical evidence stale, refuted/current
 readmission, anti-rollback, forged-request rejection and bounded history. Its
