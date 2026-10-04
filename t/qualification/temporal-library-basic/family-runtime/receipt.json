@@ -1,0 +1,42 @@
+{
+  "schema": "poo-flow.temporal-family-runtime-qualification.v1",
+  "date": "2026-10-04",
+  "baseHead": "261f3af931a0f1c782053a02aa75f7e7431762be",
+  "profile": "finite-hypothesis-family",
+  "nativeArtifactSha256": "2121ce8cdd018a2a774036f62c03691768a595feeb9fd750ed7d6f3a1313bd7e",
+  "wheelSha256": "c6c6b0a4836878109dc05069425c778cb647c45133627387757cc6d80ed9e8c4",
+  "sourceFiles": {
+    "src/ffi/semantic.ss": "01e284008187a93ff248a00c0606043679a25a6ca68645c0123e286f8810ca89",
+    "src/ffi/temporal-family.ss": "fa450bb84f94f06edd9ea8d80d1e4b9acc5aeda48d26ef0849ed9d5fa0813e7e",
+    "modules/temporal-causality/types.ss": "0cae3ad7774042c2aeae59ef51efad20229d625df7fbe0e2eab78a71a34a87bb",
+    "modules/temporal-causality/objects.ss": "8dabf9c3655aa2ce59fb92d8a7dfbfb1ac2ea1ee16ea52d09d6898b986f35c63",
+    "modules/temporal-causality/funs.ss": "45a488f215ccdd0e22335777903a8f4a4957e0e352e19fd5acb2c05e5c539813",
+    "bindings/runtime-c/tools/build-semantic.py": "698d30fb1089109ae65966e46a5dffde1b4bacb23aedb7ca8822afcfa170c012",
+    "packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py": "04b277c4c09105e69e43c04795a3fb27377800679fb5cecc4aaeac1106d0afbd",
+    "packages/python-runtime/tests/unit/test_temporal_family.py": "5df974a70e0d4e4e289d3bc81843902ca53d8dc2f07f3afd5daa38c6f796adf9"
+  },
+  "tests": {
+    "tests": "60",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3.471"
+  },
+  "installedPackage": true,
+  "syncAsyncParity": true,
+  "vocabularies": [
+    "software-release",
+    "medication"
+  ],
+  "claim": "native finite-family execution and current-model result fidelity",
+  "sourceAuthenticated": false,
+  "actionAuthorized": false,
+  "tlcRefinement": false,
+  "realModelCalls": 0,
+  "limitations": [
+    "Local macOS ARM64 CPython 3.13 wheel; remote CI not qualified by this receipt",
+    "No authenticated coverage, clock conversion, conclusion publication or general behavior interpreter",
+    "New profile tested through native C ABI by installed Python CFFI; no independent C consumer test",
+    "Test plugin harness disabled to isolate installed artifact; pytest execution is the evidence"
+  ]
+}

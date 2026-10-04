@@ -168,6 +168,7 @@ jobs:
             packages/python-runtime/tests/unit/test_semantic_runtime.py \
             packages/python-runtime/tests/unit/test_semantic_observations.py \
             packages/python-runtime/tests/unit/test_semantic_tools.py \
+            packages/python-runtime/tests/unit/test_temporal_family.py \
             packages/python-runtime/tests/unit/test_mrr_snapshot_resource.py
 
       - name: Test Python module case catalog

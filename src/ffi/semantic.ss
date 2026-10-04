@@ -4,6 +4,8 @@
 
 ;;; AOT semantic projection: inert JSON enters existing Scheme owners.
 (import :std/ffi :std/encoding/json
+        (only-in :poo-flow/src/ffi/temporal-family
+                 temporal-family-call temporal-family-observe)
         (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         (only-in :gerbil/core call-with-output-string display-exception)
@@ -112,7 +114,11 @@
   (let (object (parameterize ((current-json-read-options
                               (JSONReadOptions object-as-hash: #t)))
                 (string->json payload)))
-    (cond ((string=? operation "temporal.solve") (json->string (temporal-call object)))
+    (cond ((string=? operation "temporal.family.classify")
+           (json->string (temporal-family-call object)))
+          ((string=? operation "temporal.family.observe")
+           (json->string (temporal-family-observe object)))
+          ((string=? operation "temporal.solve") (json->string (temporal-call object)))
           ((string=? operation "graph.admit") (json->string (graph-call object payload)))
           ((string=? operation "graph.targets") (json->string (graph-targets-call object)))
           ((string=? operation "temporal.observe")
@@ -132,9 +138,12 @@
           ((string=? operation "descriptor")
            (json->string
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1)
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
+                  (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])
+                  (maximumFamilyDomains 32) (maximumFamilyObservations 128)
+                  (maximumFamilyHypotheses 128) (maximumFamilyConstraints 256)
                   (threading "single-owner-thread")
                   (sourceAuthority "caller-declared-not-authenticated"))))
           (else (error "unsupported semantic operation" operation)))))

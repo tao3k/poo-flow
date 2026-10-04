@@ -71,6 +71,22 @@ class SemanticRuntime:
             self._closed = True
             raise
 
+    def classify_temporal_family(self, task: Mapping[str, Any]) -> dict[str, Any]:
+        """Classify the finite POO hypothesis family in the native Scheme engine."""
+        return self.call('temporal.family.classify', task)
+
+    async def aclassify_temporal_family(self, task: Mapping[str, Any]) -> dict[str, Any]:
+        return await self.acall('temporal.family.classify', task)
+
+    def observe_temporal_family(self, task: Mapping[str, Any],
+                                candidate: Mapping[str, Any]) -> dict[str, Any]:
+        """Replay a family result; this does not authenticate evidence or authorize IO."""
+        return self.call('temporal.family.observe', {'task': task, 'candidate': candidate})
+
+    async def aobserve_temporal_family(self, task: Mapping[str, Any],
+                                       candidate: Mapping[str, Any]) -> dict[str, Any]:
+        return await self.acall('temporal.family.observe', {'task': task, 'candidate': candidate})
+
     def _submit(self, operation: str, payload: Mapping[str, Any]):
         if not isinstance(operation, str) or '\0' in operation or len(operation.encode('utf-8')) > 128:
             raise ValueError('invalid semantic operation')

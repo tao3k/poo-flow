@@ -42,6 +42,21 @@ acceptance; no-Prompt model integration and real-time teaching remain open.
 Caller-declared source labels are not authenticated. Admission and answer
 consistency do not grant effect authorization.
 
+The finite hypothesis-family engine is a separate native profile.
+=classify_temporal_family(task)= and =aclassify_temporal_family(task)= invoke
+=temporal.family.classify=; =observe_temporal_family(task, candidate)= and its
+async counterpart replay the whole current result through Scheme. The task
+contains =profile: finite-hypothesis-family=, a model with =identity=,
+=domains=, =observations=, =hypotheses=, =complete= and =mode=, and a query
+with =identity=, =target= and =limit=. Wire objects are projections of existing
+POO values, not an alternative engine. =limit: false= exhausts the finite
+family; a positive integer permits an unexplored frontier. Model mode is
+=exclusive-explanations= or =overlapping-mechanisms=. The native descriptor
+publishes inventory bounds. Extra fields and unsupported profiles/relations
+fail closed. Receipt classification is assumption-relative; source authenticity
+and action authorization remain false. The exact supported projection and
+local qualification are in [[file:../../modules/temporal-causality/design-audit.org][the engine delivery record]].
+
 The semantic runtime has one process-wide lifetime and one owning thread,
 bounded input and queue sizes, explicit native result ownership, and terminal
 cleanup. Each artifact is checked against an expected SHA256 before loading.

@@ -12,9 +12,10 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 The [[file:../../../modules/temporal-causality/design-audit.org][2026-10-04 engine design audit]] resolves eight extension decisions and
 records their owners and executable exit gates. Its accepted design rules do
-not upgrade bounded slices to full engine closure. In particular the C/Python
-=temporal.solve= ABI qualifies the ASCENT finite lens, not the hypothesis-family
-engine or authorized conclusion publication.
+not upgrade bounded slices to full engine closure. The C/Python =temporal.solve= ABI qualifies the ASCENT finite lens.
+The separate =temporal.family.classify/observe= bridge now executes the
+finite hypothesis-family engine with current-model fidelity checking;
+authorized conclusion publication remains open.
 
 The module-local research contract is
 =modules/temporal-causality/framework.org=.  It defines the broader temporal

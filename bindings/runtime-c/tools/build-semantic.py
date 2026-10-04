@@ -53,7 +53,9 @@ def main() -> None:
     compiler = [str(home / "bin/gxc"), "-:max-heap=1G,debug=q", "-V"]
     for source in ["src/utilities/product-syntax.ss", "src/utilities/final-projection-syntax.ss",
                    "src/graph/types-core.ss", "src/graph/algorithms-list-support.ss",
-                   "src/graph/algorithms.ss"]:
+                   "src/graph/algorithms.ss", "modules/temporal-causality/types.ss",
+                   "modules/temporal-causality/objects.ss", "modules/temporal-causality/funs.ss",
+                   "src/ffi/temporal-family.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
