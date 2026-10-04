@@ -1,0 +1,21 @@
+timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_SEMANTIC_LIBRARY="/private/tmp/poo-abi2-native/libpoo_flow_semantic.dylib" POO_FLOW_SEMANTIC_SHA256="cd05897a66cf2b60d9e2bbb66ae1b463cbe800a516ddb282eb3d93583402e939" POO_FLOW_PHYSICAL_RECEIPT="/private/tmp/poo-physical-gql-receipt-first.ss" python3 bindings/rust-runtime/tools/watch.py "/private/tmp/mrr-data-temporal-target/debug/poo-temporal-physical-roundtrip"
+mrr-native: runtime initialization started
+mrr-native: runtime initialization returned
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Original GQL compiled with source receipt; source substitution rejected
+Exact immutable root and Arrow children restored
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Independent root, catalog, row, query and wire-budget substitutions rejected
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Physical empty answer is valid MRR transport and rejected by the nonempty Temporal profile
+Physical GQL result and original MRR receipt re-admitted by Temporal receiver
+GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V2 -> NATIVE TEMPORAL OK

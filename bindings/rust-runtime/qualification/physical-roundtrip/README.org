@@ -1,0 +1,56 @@
+#+title: Original GQL physical read-only Temporal qualification
+
+This independent qualification package compiles one original GQL source with
+MRR's source compiler, keeps its compilation receipt and bound query, restores
+an immutable three-event Arrow snapshot, runs DataFusion, verifies the complete
+original Scheme v2 candidate/receipt and calls the native POO Temporal runtime.
+The scenario rejects independent source digest, root, catalog, row, query and
+wire-budget substitutions. The event/position profile has no null coercion.
+
+MRR and MRR Data dependencies are immutable Git pins in Cargo.toml/Cargo.lock.
+The runtime is the parent library under test. The physical executor is trusted;
+this is a bounded synthetic inventory, not independently proved query evaluation,
+authenticated production evidence or effect authorization. Coverage and current
+cut applicability beyond the fixture remain unqualified. The emitted Scheme
+receipt retains the original result transport, not merely its digest.
+
+Build with the configured MRR native Gerbil environment, including the SDK's
+real Gambit compiler and relocation settings. The runtime library and its digest
+must match an independently qualified native ABI v2 artifact. Run the binary
+through =bindings/rust-runtime/tools/watch.py=; a five-second silence fails.
+Set =MRR_NATIVE_PROGRESS=1= for genuine native frontend stage output and
+=POO_FLOW_PHYSICAL_RECEIPT= to an output .ss path. This is semantic qualification;
+performance measurements belong to ASP Scheme's benchmark API.
+
+This package does not claim remote S3 recovery, a real-model correction lifecycle,
+Legacy worker JSON migration, IFC publication or complete G0--G5 closure.
+
+* Local acceptance
+
+The original GQL roundtrip completed successfully under the five-second
+actual-output watchdog and 45-second total deadline. Source, root, catalog,
+query, row and wire-budget controls rejected; an actual empty physical answer
+was valid MRR transport and rejected by the nonempty Temporal profile.
+The separate native bridge regression passed in 0.50s. MRR Data integer tests
+passed 20/20 in 0.17s; DataFusion and the parent Rust runtime Clippy passed with
+warnings denied. These elapsed test observations are not performance benchmarks.
+
+A single frozen real DeepSeek model scenario then passed, with two completed
+requests and zero retries. The configured model was =deepseek-v4-flash=; this
+receipt does not retain the provider's separate served-model identifier. First
+genuine content gaps were 0.73895s (tool arguments) and 0.265105s (final text),
+with no larger gap. Native replay took 0.883084s. ASP Scheme owns the single-run
+measurement and batch receipt; the artifact freeze remained intact.
+
+The provider received only synthetic build@1/deploy@2 observations, finite
+hypotheses, hashes and native result flags. Original GQL and full physical/MRR
+receipts remained local. Automatic approval initially rejected the call due to
+suspected sensitive egress; inspection of the exact payload proved those fields
+were absent, and a subsequent approval allowed the first actual batch.
+
+Archived Scheme receipts are in =t/qualification/temporal-physical-native/evidence=.
+Their frozen paths describe the executed artifacts; copying receipts to the
+repository does not constitute another execution. The model consumes a frozen
+projection of the physical result and replays native classification. It does
+not issue a fresh physical query or exercise correction/re-query, current cut
+fences, IFC publication or source authentication. Those gates remain open.

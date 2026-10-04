@@ -71,7 +71,7 @@ async def run():
                 child.kill();await child.wait();raise
             if child.returncode:raise ValueError('Rust consumer failed: '+stderr.decode())
             result=wire.loads(stdout);r['nativeSeconds']=time.monotonic()-start;r['nativeResult']=result
-            if result!=case['expected']:raise ValueError('Rust native result differs from frozen installed-Python oracle')
+            if result!=case['expected']:raise ValueError('Rust native result differs from frozen native oracle')
             fields=['classification','bindingDigest','modelDigest','exhausted','sourceAuthenticated','actionAuthorized']
             expected={k:result[k] for k in fields}
             final=dict(model=model,reasoning={'effort':'none'},temperature=0.0,max_output_tokens=2048,stream=True,

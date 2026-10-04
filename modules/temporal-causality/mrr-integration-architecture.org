@@ -64,6 +64,31 @@ scenario, source compilation receipt and receiver-owned root/cut correspondence.
 The legacy static-edge worker still uses its previous JSON envelope and is not
 part of this new native handoff; its direct migration remains outstanding.
 
+* Original GQL physical read-only acceptance slice
+
+The [[file:../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][independent qualification package]] now pins MRR =9ee5ace= and
+MRR Data =bdc81a1c=. It executes an original GQL event/position query from the
+source compiler through verified Arrow restoration and real DataFusion Int64
+execution, preserves the complete original Scheme v2 result/receipt, and reaches
+native Temporal classification. Independent source, root, catalog, query, row,
+wire budget and physical-empty controls passed. No host integer coercion occurs.
+
+=MrrObservationEvidence::classification_request= constructs the exact native
+request from verified evidence; =classify= uses the same function. External model
+adapters can freeze this value without supplying observations or another clock
+through the input model. A single real DeepSeek scenario consumed this frozen
+physical projection, replayed native classification and preserved the false
+source-authentication/effect-authorization flags; two calls, no retry and an
+intact ASP artifact freeze. See the archived Scheme receipts linked above.
+
+This closes the named local synthetic original-GQL-to-Temporal read-only path.
+It does not close complete G0: authoritative source/cut correspondence, physical
+cross-process envelope, deployed executor trust and external recovery remain
+separate. The Legacy static-edge JSON worker is still pending direct migration.
+G1--G5 correction, current applicability, reverse facts and IFC publication are
+not established by this acceptance. The earlier failed cold p95 benchmark stays
+failed; no new performance qualification was run.
+
 * Audited seams and necessary corrections
 
 | Source seam at the pinned MRR/MRR Data revisions | Actual guarantee | Design consequence |

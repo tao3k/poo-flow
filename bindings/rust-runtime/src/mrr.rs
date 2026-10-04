@@ -230,9 +230,11 @@ impl MrrObservationEvidence {
     /// Supply a bounded POO family definition with no observations; observations
     /// come exclusively from the re-admitted MRR rows, never a model response.
     /// This returns family-relative classification, not a causal/effect permit.
-    pub fn classify(
+    /// Construct the exact read-only native request from verified owner evidence.
+    /// External adapters may freeze this value for a tool call; they cannot
+    /// override observations or select another clock domain through the model.
+    pub fn classification_request(
         &self,
-        runtime: &SemanticRuntime,
         mut model: Value,
         query: Value,
     ) -> Result<Value, MrrBridgeError> {
@@ -248,10 +250,19 @@ impl MrrObservationEvidence {
             "observations".into(),
             Value::Array(self.observations.clone()),
         );
+        Ok(datum!({"profile":"finite-hypothesis-family","model":model,"query":query}))
+    }
+
+    pub fn classify(
+        &self,
+        runtime: &SemanticRuntime,
+        model: Value,
+        query: Value,
+    ) -> Result<Value, MrrBridgeError> {
         runtime
             .call(
                 "temporal.family.classify",
-                &datum!({"profile":"finite-hypothesis-family","model":model,"query":query}),
+                &self.classification_request(model, query)?,
             )
             .map_err(MrrBridgeError::Native)
     }

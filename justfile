@@ -676,3 +676,12 @@ benchmark-temporal-mrr:
 [group('test')]
 qualify-temporal-model python binary library oracle env_file output:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-model-native/scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"
+
+# Read-only physical semantic qualification; no performance sampling or model spend.
+[group('test')]
+qualify-temporal-physical binary library digest output:
+    timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ digest }}" POO_FLOW_PHYSICAL_RECEIPT="{{ output }}" python3 bindings/rust-runtime/tools/watch.py "{{ binary }}"
+
+[group('test')]
+qualify-temporal-physical-model python binary library oracle env_file output:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 60s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-physical-native/model-scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"
