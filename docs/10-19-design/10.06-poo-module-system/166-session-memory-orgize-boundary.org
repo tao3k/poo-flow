@@ -8,20 +8,74 @@
 Design contract, not a claim that the runtime adapters exist. This refines the
 memory source selection in [[file:43-session-memory-recovery-rfc.org][RFC 43]]. POO Flow owns =modules/session= lifecycle and
 =modules/memory-core= policy, scoped memory heads, and durable job intents.
-Orgize owns parsing Org source into a lossless tree, Org Element graph, and
-named structural query candidates. MRR owns semantic Query/Content/Context
-admission. MRR Data stores and retrieves immutable bytes. The runtime owns
+For Org-backed Memory, the Org document and its Orgize Element graph are the
+canonical source model; the Memory store catalog is a policy/backend projection,
+not a second document grammar. Orgize owns parsing Org source into a lossless
+tree, the Org Element graph, and named structural queries. MRR owns semantic
+Query/Content/Context admission. MRR Data stores and retrieves immutable bytes. The runtime owns
 physical scheduling, compare-and-swap (CAS), and external effects. MRR Data
 must not acquire a second Session or Memory policy registry.
 
 | Owner | Input | Output | Decision it may make |
 |-------+-------+--------+----------------------|
-| Orgize | Org bytes, parser/query version | spans, elements, structural candidate pack | syntax and structural match |
+| Orgize | exact Org bytes, parser/graph/query versions | source-backed Element graph, spans and named query results | Org syntax, structure and source-local query admission |
 | POO Flow Session | Project/WorkTree/Task/Session identity, policy, head | turn, lineage and publication intents | scope, C4 policy order and lifecycle |
 | POO Flow Memory | source receipts, memory policy, scoped head | recall and consolidation intents, visibility/lease receipts | whether memory may enter a scope |
 | MRR | candidates, source and capability evidence | admitted semantic Context receipt | semantic validity and provenance |
 | MRR Data | immutable artifacts and physical queries | content identity and retrieved bytes | storage integrity |
 | runtime | accepted intents and expected revisions | scheduled effects and CAS result | physical execution |
+
+* Org-native Memory source and load
+
+The old Scheme-only Memory design preceded Orgize's Scheme-generated parser.
+At the pinned [[https://github.com/tao3k/orgize/pull/21][Orgize PR #21]] cut, =Org::parse= and =parse_org_aot= use the generated
+Org event algorithm; =OrgAotDocument= carries a lossless tree and Element graph.
+Named =scheme :org-elements-query= declarations compile to a Rust query pack;
+=query_with_pack= rejects a stale graph digest, unknown query, invalid scope,
+or unsupported rule. =org_source_digest= hashes the exact UTF-8 bytes. These
+capabilities should be the common substrate for Memory authoring, loading,
+recall selection, and source edits. POO Flow must not implement another Org
+parser or reinterpret headings as a private Memory grammar.
+
+An Org-backed Memory load has three different stages:
+
+1. The runtime acquires exact bytes under a WorkTree source cut and records the
+   repository/document identity, byte digest, and current read authority.
+2. Orgize parses those bytes and evaluates a named Element query or Contract
+   pack. Its output is a source-backed candidate view, including the parser
+   digest, Element graph digest, query/pack identity, record ID, exact byte
+   range, and source digest. Record IDs are local to one parsed document; a
+   durable reference always includes the document/source identity. A caller
+   must record a digest of the selected query pack because the graph digest
+   alone does not identify the individual query rules.
+3. POO Flow =memory-core= and =session= apply the current scope, C4 policy,
+   capability, bounds, and lifecycle to that view. MRR admits any semantic
+   Content/Context claim. The runtime may then persist immutable bytes and
+   conditionally publish the POO Flow owned Memory head.
+
+The existing =src/semantic/orgize-interface.ss= exposes Orgize's
+parser-independent Scheme Element/Contract runtime. It does not acquire Org
+bytes or turn an =OrgAotDocument= into a source-bound Memory load receipt.
+That loader/projection is the first implementation gap. POO Flow's current
+=memory-store-spec= and Session memory intent accept store refs and recall keys
+without an Org document/query identity; for Org-backed Memory those inputs
+must be resolved through the load receipt before recall or publication. The
+Orgize receipt is a required source input, not an optional enrichment added
+after an independent Memory selection.
+
+Use Orgize's existing Org headings, properties, named Element queries, and
+Contract blocks for the initial source format. If Memory needs syntax that
+these cannot express, add an Orgize-owned Org feature with an explicit AOT
+projection and compatibility gate. Do not create a POO Flow-only parser or a
+second unversioned Memory text format. Non-Org inputs can have their own
+explicit source adapters; they cannot masquerade as an Org-backed receipt.
+
+"Load" does not mean that a parser match is authorized memory or that a
+retrieved old artifact is current. A Session recall/resume must recheck the
+document bytes, parser/query pack, WorkTree cut, current capability, and
+consumed Memory head revision. Changed source or policy yields a stale load
+and a fresh parse/query/admission cycle. A syntax error or missing source is
+a typed refusal; it does not fall back to a previous parsed graph.
 
 * Scope and source selection
 
@@ -41,14 +95,17 @@ Flow builds and verifies its explicit C4 policy graph using LeanPoo's verified
 linearization before resolving scope and Memory policy.
 
 For each selected Org source, preserve its bytes hash, parser/query pack
-version, exact span and source cut. Run an Orgize named query to collect
-structural candidates. POO Flow filters them by current scope and Memory
-policy, then asks MRR to admit semantic claims and Content/Context closure.
+version, exact span and source cut. Run an Orgize named query on the same
+loaded document to collect structural candidates. POO Flow filters them by
+current scope and Memory policy, then asks MRR to admit semantic claims and
+Content/Context closure.
 Only an admitted receipt may become a Memory publication intent. This order
 prevents parser matches from being mistaken for semantic facts or permissions.
 The current Orgize AOT query surface has one relation at a time with structural
-predicates; joins, negation, ordering and aggregation remain an adapter or
-query-engine design gate. POO Flow PR #34 pins the stacked
+predicates; joins, negation, ordering and aggregation remain a query design
+gate. Some higher-level Contract consumers still use an older registry
+interpreter, so that path cannot be assumed to use the Scheme AOT pack.
+POO Flow PR #34 pins the stacked
 [[https://github.com/tao3k/orgize/pull/21][Orgize PR #21]] head =16d2a8c3ac168d73b890262b29b756d4b4ec3361=;
 the [[https://github.com/tao3k/orgize/blob/16d2a8c3ac168d73b890262b29b756d4b4ec3361/languages/org/v1/modules/org-elements/aot.ss][Scheme AOT source]] belongs to that exact dependency cut.
 
@@ -70,13 +127,13 @@ constructors, with bounded =->alist= projection only at runtime/ABI edges:
 
 | Proposed value | Owner | Required binding | Refusal before handoff |
 |----------------+-------+------------------+------------------------|
-| Org source candidate | Orgize parser plus POO Flow source adapter | Org bytes digest, parser/query pack REV, named query ID, exact span/element ID, WorkTree source cut | missing or ambiguous source/span, stale parser pack |
-| Memory selection intent | =modules/memory-core= with =modules/session= policy | Project/WorkTree/Task/Session scope, policy and C4 order certificate, candidate digest, current capability, expected scope-head revision, budget and attempt ID | foreign scope, denied candidate, stale cut/policy/head |
+| Org Memory load receipt | Orgize parser/query plus POO Flow source adapter | document identity, exact Org bytes digest, parser and Element graph digests, query pack digest and ID, exact span/element ID, WorkTree source cut | parse error, missing or ambiguous source/span, stale graph or query pack |
+| Memory selection intent | =modules/memory-core= with =modules/session= policy | Org Memory load receipt, Project/WorkTree/Task/Session scope, policy and C4 order certificate, current capability, expected scope-head revision, budget and attempt ID | foreign scope, denied candidate, stale load/cut/policy/head |
 | Semantic admission reference | MRR Query/Content/Context owner | selected candidate and source cut, query/result or explicit roots, complete Content closure and Context manifest digest | missing rows/closure, mixed generation, invalid provenance |
 | Proposed head transition | POO Flow Session/Memory owners | old/new head digests, consumed shared-head revisions, exact admission references and idempotency key | terminal Session, changed authority/cut, reused attempt with changed payload |
 | Physical publication receipt | runtime | immutable artifact identity and retrievability, expected-head CAS result, effect reconciliation | losing CAS, unavailable artifact or uncertain effect |
 
-The candidate and intent carry =runtime-executed? #f= and grant no disclosure
+The load receipt and intent carry =runtime-executed? #f= and grant no disclosure
 or effect. A temporal family revision may be cited as causal evidence when
 Memory selection depends on it; its =semantic-digest=, source generation,
 =cut-digest=, =projection-digest= and =policy-identity= must agree with the
@@ -85,7 +142,7 @@ frontier and fresh MRR admission before a new Memory head proposal. It does
 not automatically withdraw an already published head, and its pure journal
 does not replace runtime CAS or a durable effect ledger.
 
-The implementation order is: (1) project source-preserving Orgize candidates;
+The implementation order is: (1) load exact Org bytes and project source-preserving Orgize candidates;
 (2) validate POO Flow scope, C4 and Memory policy into a pure intent; (3)
 admit MRR semantics at the same cut; (4) persist and verify immutable bytes;
 (5) recheck current authorization, source and expected revision; (6) publish
@@ -124,6 +181,10 @@ are returned to the target for review or policy-guided resolution.
 | two workers publish against one revision | at most one head transition succeeds |
 | WorkTree path/branch is reused for a new identity | old private state is not inherited |
 | source heading is nested | no C4 policy edge is inferred from nesting |
+| an Org document changes after parsing or its query pack changes | the old load receipt is refused and the document is reparsed and requeried |
+| a record ID is reused in another Org document | it cannot address the old Memory candidate without the original document and bytes digest |
+| a source query is absent, stale, or syntactically invalid | no fallback to an old graph or unversioned recall key |
+| Session resumes after its Org Memory source changes | recall is withheld until current load, policy and semantic admission succeed |
 | temporal family revision is stale after correction | old Memory proposal is refused until frontier and semantic admission are replayed |
 | only a process log or old receipt hash is available | no current Memory publication or source authority is inferred |
 
@@ -136,9 +197,15 @@ well as proof and build receipts.
 
 The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
 pure guards and finite concurrent transitions for Session and WorkTree heads.
-They do not prove Scheme/runtime refinement, actual Orgize query binding,
-semantic admission, physical storage/CAS, recovery or large-scale behavior.
-Implementation should first add a typed, source-preserving Orgize candidate
+The next POO Flow owned proof slice must model Org Memory load identity,
+stale graph/query-pack rejection, source changes during Session resume, and
+two writers against one Memory head; Lean should state the accepted-load
+identity and refusal laws, while TLA+ explores reload/revoke/close/CAS
+interleavings. Orgize owns parser, Element and query-pack conformance tests.
+The existing models do not prove Scheme/runtime refinement, actual Orgize
+query binding, semantic admission, physical storage/CAS, recovery or
+large-scale behavior.
+Implementation should first add a typed, source-preserving Org Memory load
 adapter and POO Flow Memory policy/intent projection, then connect MRR
 admission and runtime publication. Qualify the resulting path with controlled
 A/B cases against the existing direct-source path before claiming an

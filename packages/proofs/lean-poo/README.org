@@ -46,3 +46,12 @@ The models are abstract.  They have not been refined against the Scheme
 storage.  The finite [[file:../tla/session-context/README.org][TLA+ checks]] cover concurrency and deliberately
 broken guards at their own bounded scope.  Run =just check-session-proof= for
 both focused proof gates.
+
+For Org-backed Memory, the next POO Flow proof boundary is the typed
+[[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Org Memory load receipt]]: exact document bytes and parser/Element/query-pack
+identity, source-local record anchor, WorkTree cut, current Session policy,
+and expected Memory head revision.  A new Lean module here should prove
+accepted-load identity and stale-source/pack/closed-Session refusals; TLA+
+should exercise reload, revoke, close and two-writer publication.  Orgize's
+parser and query-pack correctness stays with Orgize.  Neither existing proof
+is evidence that the POO Flow loader already exists.

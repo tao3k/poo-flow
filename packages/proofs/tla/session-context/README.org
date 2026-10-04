@@ -14,3 +14,9 @@ These checks do not prove a production Scheme/runtime refinement, actual
 memory sharing authorization, physical CAS, effect reconciliation, or semantic
 admission of MRR Context references.  Their scope is the explicit finite
 transition relation in these two models.
+
+An Org-backed Memory load model belongs in this POO Flow proof directory after
+the source-bound loader contract is implemented.  It should cover source-byte
+or query-pack change between parse and commit, stale Session resume, revoked
+read/publish grants, and competing Memory-head writers.  The current models
+carry abstract source cuts but do not model an Orgize document or query pack.
