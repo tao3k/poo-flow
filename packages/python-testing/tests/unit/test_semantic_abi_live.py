@@ -72,6 +72,7 @@ def test_request_contains_only_current_task_source_and_transport_contract():
     for case in cases:
         request = request_for(case['request'], {'source.ss': '(def actual-source 1)'}, 'configured-model')
         assert request['model'] == 'configured-model'
+        assert request['temperature'] == 0.0
         assert len(request['input']) == 1
         supplied = request['input'][0]['content']
         assert '(def actual-source 1)' in supplied

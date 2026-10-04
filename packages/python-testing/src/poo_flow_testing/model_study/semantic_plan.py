@@ -55,7 +55,7 @@ def request_for(task, sources, model):
                 'arrays of two event IDs, without an execution-status wrapper, prose\n'
                 'or stringifying nested arrays.\n')
     return {'model': model, 'input': [{'role': 'user', 'content': content}],
-            'reasoning': {'effort': 'none'}, 'max_output_tokens': 1024,
+            'reasoning': {'effort': 'none'}, 'temperature': 0.0, 'max_output_tokens': 1024,
             'text': {'format': {'type': 'json_schema', 'name': 'temporal_candidate',
                                 'strict': True, 'schema': schema}}, 'stream': True}
 
@@ -93,7 +93,7 @@ def prepare(root, library, ascent, output, model):
     requests = {case['id']: request_for(case['request'], sources, model) for case in tasks}
     plan = {'schema': 'poo-flow.semantic-abi-live-plan', 'version': 1,
             'head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
-            'artifactSha256': digest, 'model': model, 'reasoningEffort': 'none',
+            'artifactSha256': digest, 'model': model, 'reasoningEffort': 'none', 'temperature': 0.0,
             'inputRepresentation': 'compiler-enumerated project runtime source closure and plain JSON task',
             'modelSourceSha256': {name: sha(value.encode()) for name, value in sources.items()},
             'platformModules': [m['module'] for m in manifest['modules']
