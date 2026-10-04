@@ -8,7 +8,7 @@
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in :std/list/list filter)
-        (only-in :gerbil-parser/languages/tla-plus/v1/parser parse-tla-plus-v1)
+        (only-in :gerbil-parser/languages/tla-plus/parser parse-tla-plus)
         (only-in :gerbil-parser/src/runtime/artifact
                  parse-artifact-ref parse-artifact-success?
                  parse-artifact-roundtrip)
@@ -39,7 +39,7 @@
 (def (poo-flow-tla-parse-source source)
   (unless (string? source)
     (error "TLA+ source must be a string" source))
-  (let (artifact (parse-tla-plus-v1 source))
+  (let (artifact (parse-tla-plus source))
     (unless (parse-artifact-success? artifact)
       (error "gerbil-parser rejected TLA+ source"
              (parse-artifact-ref artifact 'diagnostics)))

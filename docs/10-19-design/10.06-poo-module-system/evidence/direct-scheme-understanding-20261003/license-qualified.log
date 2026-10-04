@@ -1,0 +1,16 @@
+python3 packages/automation/check_license_contract.py
+license-contract: ok (2771 project files, 2 submodules excluded, Apache-2.0 AND LGPL-2.1-or-later)
+python3 -m unittest discover -s packages/automation/tests -p 'test_*.py'
+..........gerbil-native-pin: fetching 9189c225dce5e7b7bcfd07f653c49815ce05887d into /var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/tmpkewkcb_k/cached
+From file:///var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/tmpkewkcb_k/source
+ * branch            9189c225dce5e7b7bcfd07f653c49815ce05887d -> FETCH_HEAD
+gerbil-native-pin: ready 9189c225dce5e7b7bcfd07f653c49815ce05887d
+gerbil-native-pin: fetching 9189c225dce5e7b7bcfd07f653c49815ce05887d into /var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/tmpkewkcb_k/fresh
+From file:///var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/tmpkewkcb_k/source
+ * branch            9189c225dce5e7b7bcfd07f653c49815ce05887d -> FETCH_HEAD
+gerbil-native-pin: ready 9189c225dce5e7b7bcfd07f653c49815ce05887d
+.
+----------------------------------------------------------------------
+Ran 11 tests in 1.999s
+
+OK

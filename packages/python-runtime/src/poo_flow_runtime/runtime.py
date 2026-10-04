@@ -20,6 +20,7 @@ class RuntimeGraphRuntime:
     metadata: Mapping[str, Any] = field(default_factory=dict)
     backend: Literal["native", "reference"] = "native"
     native_context: Any = None
+    semantic_context: Any = None
 
     def __post_init__(self) -> None:
         if self.backend not in ("native", "reference"):
@@ -28,6 +29,8 @@ class RuntimeGraphRuntime:
             raise RuntimeGraphRuntimeError(
                 "reference backend cannot carry a native runtime context"
             )
+        if self.backend == "reference" and self.semantic_context is not None:
+            raise RuntimeGraphRuntimeError("reference backend cannot carry a semantic context")
 
     @classmethod
     def reference(cls, **kwargs: Any) -> "RuntimeGraphRuntime":

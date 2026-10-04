@@ -1,0 +1,307 @@
+Building wheel...
+running bdist_wheel
+running build
+running build_py
+copying src/poo_flow_runtime/semantic_runtime.py -> build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime
+running egg_info
+writing src/poo_flow_runtime.egg-info/PKG-INFO
+writing dependency_links to src/poo_flow_runtime.egg-info/dependency_links.txt
+writing entry points to src/poo_flow_runtime.egg-info/entry_points.txt
+writing requirements to src/poo_flow_runtime.egg-info/requires.txt
+writing top-level names to src/poo_flow_runtime.egg-info/top_level.txt
+reading manifest file 'src/poo_flow_runtime.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file 'src/poo_flow_runtime.egg-info/SOURCES.txt'
+running build_ext
+generating cffi module 'build/temp.macosx-11.0-arm64-cpython-313/poo_flow_runtime._native._semantic_cffi.c'
+already up-to-date
+generating cffi module 'build/temp.macosx-11.0-arm64-cpython-313/poo_flow_runtime._native._runtime_v0_cffi.c'
+already up-to-date
+installing to build/bdist.macosx-11.0-arm64/wheel
+running install
+running install_lib
+creating build/bdist.macosx-11.0-arm64/wheel
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_funflow_runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_receipts.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/durable.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/durable_adapter.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_executor.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_load_runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_protocol_person_abi_schema.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/build_profile.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_diagnostics.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/compat
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/compat/langgraph
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/compat/langgraph/checkpoint
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/checkpoint/memory.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph/checkpoint
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/checkpoint/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph/checkpoint
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/graph.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/constants.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/types.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/compiled.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/_helpers.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/langgraph/state.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat/langgraph
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/compat/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/compat
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/receipts.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/durable_turso_backend.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/prebuilt.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_load_artifact.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/funflow.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_program_runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_state.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_stream.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_gates.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/crewai.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/tools.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_load.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/json_schema_contract.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/native_evidence_sink.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_factory.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/stores.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/batched_evidence_store.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_load_aot.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/scheme_load_aot.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/projections
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/projections/runtime_load_imports.json -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/projections
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/projections/wheel_smoke.ss -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/projections
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/checkpoints.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_command.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/semantic_runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/batched_evidence.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_funflow_cicd.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/builder.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_context.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/subgraphs.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/event_stream.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/materialization.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_funflow_types.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_anyio_runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_scheme_load_once.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_receipt.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_large_state_copy_workload.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/large_state_copy.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_projection.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_large_state_copy_receipt.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/langgraph_alignment.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_benchmark_capacity.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/composition_cases.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_large_state_copy_runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_anyio_runtime_runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_arrival.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_burst_lifecycle_measurement.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/anyio_runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_measurement.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_scheme_load_aot_types.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/scheme_load_aot.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_scheme_load_aot_cases.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_burst_lifecycle_workload.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_planner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_burst_lifecycle_runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/burst_lifecycle.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/composition.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_large_state_copy_sampling.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/_composition_lifecycle_workload.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/benchmarks/composition_lifecycle.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/evidence_model.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/scheme_projection_artifact.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/messages.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/durable_policy.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/program.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/durable_envelope.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/py.typed -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_model.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_load_cache.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_graph_types.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_runtime_language_receipts.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_protocol_person_abi_vector.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_funflow_scheme_projection.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/protocol_person_abi.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/runtime_graph.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_program_resolution.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_protocol_person_abi_receipt.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/evidence.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_build_profile_parse.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_scheme_datum.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/_runtime_v0_cffi.abi3.so -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/benchmark.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/session.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/arena_model.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/_build.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/loader.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime/_native/lib
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/lib/libpoo_flow_semantic_v1.dylib -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native/lib
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/lib/libpoo_flow_semantic_v1.dylib.json -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native/lib
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/lib/libpoo_flow_runtime_v0.dylib -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native/lib
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/errors.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/_semantic_build.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/evidence.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/_semantic_cffi.abi3.so -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_runtime/_native/arena.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime/_native
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/runner.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/registry.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/crewai.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/model.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/comparison.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/cli.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/common.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/langchain.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/langgraph.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/report.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+copying build/lib.macosx-11.0-arm64-cpython-313/poo_flow_benchmarks/poo_flow.py -> build/bdist.macosx-11.0-arm64/wheel/./poo_flow_benchmarks
+running install_egg_info
+Copying src/poo_flow_runtime.egg-info to build/bdist.macosx-11.0-arm64/wheel/./poo_flow_runtime-0.1.0-py3.13.egg-info
+running install_scripts
+creating build/bdist.macosx-11.0-arm64/wheel/poo_flow_runtime-0.1.0.dist-info/WHEEL
+creating '/private/tmp/poo-observe-wheel-20261003/.tmp-bdlyw5ft/poo_flow_runtime-0.1.0-cp313-cp313-macosx_26_0_arm64.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+adding 'poo_flow_benchmarks/__init__.py'
+adding 'poo_flow_benchmarks/__main__.py'
+adding 'poo_flow_benchmarks/cli.py'
+adding 'poo_flow_benchmarks/common.py'
+adding 'poo_flow_benchmarks/comparison.py'
+adding 'poo_flow_benchmarks/crewai.py'
+adding 'poo_flow_benchmarks/langchain.py'
+adding 'poo_flow_benchmarks/langgraph.py'
+adding 'poo_flow_benchmarks/model.py'
+adding 'poo_flow_benchmarks/poo_flow.py'
+adding 'poo_flow_benchmarks/registry.py'
+adding 'poo_flow_benchmarks/report.py'
+adding 'poo_flow_benchmarks/runner.py'
+adding 'poo_flow_runtime/__init__.py'
+adding 'poo_flow_runtime/_anyio_runtime.py'
+adding 'poo_flow_runtime/_build_profile_command.py'
+adding 'poo_flow_runtime/_build_profile_diagnostics.py'
+adding 'poo_flow_runtime/_build_profile_gates.py'
+adding 'poo_flow_runtime/_build_profile_model.py'
+adding 'poo_flow_runtime/_build_profile_parse.py'
+adding 'poo_flow_runtime/_build_profile_receipts.py'
+adding 'poo_flow_runtime/_funflow_cicd.py'
+adding 'poo_flow_runtime/_funflow_runtime.py'
+adding 'poo_flow_runtime/_funflow_scheme_projection.py'
+adding 'poo_flow_runtime/_funflow_types.py'
+adding 'poo_flow_runtime/_program_resolution.py'
+adding 'poo_flow_runtime/_program_runtime.py'
+adding 'poo_flow_runtime/_protocol_person_abi_receipt.py'
+adding 'poo_flow_runtime/_protocol_person_abi_schema.py'
+adding 'poo_flow_runtime/_protocol_person_abi_vector.py'
+adding 'poo_flow_runtime/_runtime_graph_context.py'
+adding 'poo_flow_runtime/_runtime_graph_executor.py'
+adding 'poo_flow_runtime/_runtime_graph_factory.py'
+adding 'poo_flow_runtime/_runtime_graph_state.py'
+adding 'poo_flow_runtime/_runtime_graph_stream.py'
+adding 'poo_flow_runtime/_runtime_graph_types.py'
+adding 'poo_flow_runtime/_runtime_language_receipts.py'
+adding 'poo_flow_runtime/_scheme_datum.py'
+adding 'poo_flow_runtime/_scheme_load.py'
+adding 'poo_flow_runtime/_scheme_load_aot.py'
+adding 'poo_flow_runtime/_scheme_load_artifact.py'
+adding 'poo_flow_runtime/_scheme_load_cache.py'
+adding 'poo_flow_runtime/_scheme_load_runner.py'
+adding 'poo_flow_runtime/batched_evidence.py'
+adding 'poo_flow_runtime/batched_evidence_store.py'
+adding 'poo_flow_runtime/build_profile.py'
+adding 'poo_flow_runtime/builder.py'
+adding 'poo_flow_runtime/checkpoints.py'
+adding 'poo_flow_runtime/crewai.py'
+adding 'poo_flow_runtime/durable.py'
+adding 'poo_flow_runtime/durable_adapter.py'
+adding 'poo_flow_runtime/durable_envelope.py'
+adding 'poo_flow_runtime/durable_policy.py'
+adding 'poo_flow_runtime/durable_turso_backend.py'
+adding 'poo_flow_runtime/event_stream.py'
+adding 'poo_flow_runtime/evidence.py'
+adding 'poo_flow_runtime/evidence_model.py'
+adding 'poo_flow_runtime/funflow.py'
+adding 'poo_flow_runtime/json_schema_contract.py'
+adding 'poo_flow_runtime/materialization.py'
+adding 'poo_flow_runtime/messages.py'
+adding 'poo_flow_runtime/native_evidence_sink.py'
+adding 'poo_flow_runtime/prebuilt.py'
+adding 'poo_flow_runtime/program.py'
+adding 'poo_flow_runtime/protocol_person_abi.py'
+adding 'poo_flow_runtime/py.typed'
+adding 'poo_flow_runtime/receipts.py'
+adding 'poo_flow_runtime/runtime.py'
+adding 'poo_flow_runtime/runtime_graph.py'
+adding 'poo_flow_runtime/scheme_load_aot.py'
+adding 'poo_flow_runtime/scheme_projection_artifact.py'
+adding 'poo_flow_runtime/semantic_runtime.py'
+adding 'poo_flow_runtime/stores.py'
+adding 'poo_flow_runtime/subgraphs.py'
+adding 'poo_flow_runtime/tools.py'
+adding 'poo_flow_runtime/_native/__init__.py'
+adding 'poo_flow_runtime/_native/_build.py'
+adding 'poo_flow_runtime/_native/_runtime_v0_cffi.abi3.so'
+adding 'poo_flow_runtime/_native/_semantic_build.py'
+adding 'poo_flow_runtime/_native/_semantic_cffi.abi3.so'
+adding 'poo_flow_runtime/_native/arena.py'
+adding 'poo_flow_runtime/_native/arena_model.py'
+adding 'poo_flow_runtime/_native/benchmark.py'
+adding 'poo_flow_runtime/_native/errors.py'
+adding 'poo_flow_runtime/_native/evidence.py'
+adding 'poo_flow_runtime/_native/loader.py'
+adding 'poo_flow_runtime/_native/session.py'
+adding 'poo_flow_runtime/_native/lib/libpoo_flow_runtime_v0.dylib'
+adding 'poo_flow_runtime/_native/lib/libpoo_flow_semantic_v1.dylib'
+adding 'poo_flow_runtime/_native/lib/libpoo_flow_semantic_v1.dylib.json'
+adding 'poo_flow_runtime/benchmarks/__init__.py'
+adding 'poo_flow_runtime/benchmarks/__main__.py'
+adding 'poo_flow_runtime/benchmarks/_anyio_runtime_runner.py'
+adding 'poo_flow_runtime/benchmarks/_benchmark_capacity.py'
+adding 'poo_flow_runtime/benchmarks/_burst_lifecycle_measurement.py'
+adding 'poo_flow_runtime/benchmarks/_burst_lifecycle_runner.py'
+adding 'poo_flow_runtime/benchmarks/_burst_lifecycle_workload.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_arrival.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_measurement.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_planner.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_projection.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_receipt.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_runner.py'
+adding 'poo_flow_runtime/benchmarks/_composition_lifecycle_workload.py'
+adding 'poo_flow_runtime/benchmarks/_large_state_copy_receipt.py'
+adding 'poo_flow_runtime/benchmarks/_large_state_copy_runner.py'
+adding 'poo_flow_runtime/benchmarks/_large_state_copy_sampling.py'
+adding 'poo_flow_runtime/benchmarks/_large_state_copy_workload.py'
+adding 'poo_flow_runtime/benchmarks/_scheme_load_aot_cases.py'
+adding 'poo_flow_runtime/benchmarks/_scheme_load_aot_types.py'
+adding 'poo_flow_runtime/benchmarks/_scheme_load_once.py'
+adding 'poo_flow_runtime/benchmarks/anyio_runtime.py'
+adding 'poo_flow_runtime/benchmarks/burst_lifecycle.py'
+adding 'poo_flow_runtime/benchmarks/composition.py'
+adding 'poo_flow_runtime/benchmarks/composition_cases.py'
+adding 'poo_flow_runtime/benchmarks/composition_lifecycle.py'
+adding 'poo_flow_runtime/benchmarks/langgraph_alignment.py'
+adding 'poo_flow_runtime/benchmarks/large_state_copy.py'
+adding 'poo_flow_runtime/benchmarks/scheme_load_aot.py'
+adding 'poo_flow_runtime/compat/__init__.py'
+adding 'poo_flow_runtime/compat/langgraph/__init__.py'
+adding 'poo_flow_runtime/compat/langgraph/_helpers.py'
+adding 'poo_flow_runtime/compat/langgraph/compiled.py'
+adding 'poo_flow_runtime/compat/langgraph/constants.py'
+adding 'poo_flow_runtime/compat/langgraph/graph.py'
+adding 'poo_flow_runtime/compat/langgraph/state.py'
+adding 'poo_flow_runtime/compat/langgraph/types.py'
+adding 'poo_flow_runtime/compat/langgraph/checkpoint/__init__.py'
+adding 'poo_flow_runtime/compat/langgraph/checkpoint/memory.py'
+adding 'poo_flow_runtime/projections/runtime_load_imports.json'
+adding 'poo_flow_runtime/projections/wheel_smoke.ss'
+adding 'poo_flow_runtime-0.1.0.dist-info/licenses/LICENSE'
+adding 'poo_flow_runtime-0.1.0.dist-info/METADATA'
+adding 'poo_flow_runtime-0.1.0.dist-info/WHEEL'
+adding 'poo_flow_runtime-0.1.0.dist-info/entry_points.txt'
+adding 'poo_flow_runtime-0.1.0.dist-info/top_level.txt'
+adding 'poo_flow_runtime-0.1.0.dist-info/RECORD'
+removing build/bdist.macosx-11.0-arm64/wheel
+Successfully built /private/tmp/poo-observe-wheel-20261003/poo_flow_runtime-0.1.0-cp313-cp313-macosx_26_0_arm64.whl

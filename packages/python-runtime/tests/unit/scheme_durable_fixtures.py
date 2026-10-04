@@ -25,10 +25,11 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
         pytest.skip("package-local Gerbil build output is not available")
 
     env = os.environ.copy()
-    env["GERBIL_LOADPATH"] = ".gerbil/lib"
+    env.setdefault("GERBIL_LOADPATH", ".gerbil/lib")
     result = subprocess.run(
         [
             "gxi",
+            "-:max-heap=1G,debug=q",
             "-e",
             (
                 "(begin "
@@ -55,6 +56,7 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
         env=env,
         check=True,
         capture_output=True,
+        timeout=90,
     )
     policy_manifest, runtime_envelope = result.stdout.split(
         _SCHEME_PAYLOAD_SEPARATOR,

@@ -1,0 +1,42 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.11, pytest-9.1.1, pluggy-1.6.0 -- /private/tmp/poo-plan-audit-20261002/packages/python-testing/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/poo-plan-audit-20261002/packages/python-testing
+configfile: pyproject.toml
+plugins: python-lang-project-harness-0.1.0, anyio-4.15.1
+collecting ... collected 31 items
+
+packages/python-testing/python-project-harness PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_independent_closure_oracle_handles_cycles_and_positive_length_paths PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_unapproved_new_batch_stops_before_output_or_provider_import PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_candidate_reader_extensions_stop_before_native_loading[#.(system "unsafe")] PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_candidate_reader_extensions_stop_before_native_loading[((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))] PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_provider_stream_retains_raw_events_and_requires_a_terminal_record[True] r.PASSED
+packages/python-testing/tests/unit/test_direct_understanding.py::test_provider_stream_retains_raw_events_and_requires_a_terminal_record[False] r.PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_frozen_corpus_and_strict_score PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_model_arms_share_prompt_and_tool_arm_adds_only_observation PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_typed_observation_preserves_boolean_and_scope PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_runtime_guard_withholds_native_denied_model_claims PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_stratified_observation_keeps_candidate_scope_and_guards_model_claim PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_live_study_requires_exact_ascent_dependency_pin PASSED
+packages/python-testing/tests/unit/test_model_study.py::test_scheme_answer_filter_allows_symbols_without_reader_directives PASSED
+packages/python-testing/tests/unit/test_registry.py::test_catalog_selects_single_part_and_cross_module_cases PASSED
+packages/python-testing/tests/unit/test_registry.py::test_registry_rejects_ambiguous_declarations PASSED
+packages/python-testing/tests/unit/test_registry.py::test_coverage_lists_unregistered_public_modules PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_repairs_share_seed_and_hold_out_semantic_discriminators PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_seven_state_score_detects_guard_and_blocked_failures PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_archive_verifies_bytes_and_preserves_failed_run PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_temporary_archive_is_rejected_before_calls PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_repair_preview_rejects_modified_prompt_before_any_call PASSED
+packages/python-testing/tests/unit/test_repair_study.py::test_archive_cannot_be_nested_in_inputs PASSED
+packages/python-testing/tests/unit/test_runtime_accuracy.py::test_historical_plan_remains_the_exact_approved_frozen_batch PASSED
+packages/python-testing/tests/unit/test_runtime_accuracy.py::test_retired_prompted_producer_cannot_make_provider_calls PASSED
+packages/python-testing/tests/unit/test_runtime_accuracy.py::test_score_does_not_credit_missing_rows_or_duplicate_facts PASSED
+packages/python-testing/tests/unit/test_support_study.py::test_paired_calls_hold_out_update_states_and_preserve_raw_requests PASSED
+packages/python-testing/tests/unit/test_support_study.py::test_native_validity_does_not_make_wrong_task_results_correct PASSED
+packages/python-testing/tests/unit/test_support_study.py::test_preview_rejects_modified_bytes_before_live_calls PASSED
+packages/python-testing/tests/unit/test_support_study.py::test_rejected_receipt_cannot_test_generation_binding PASSED
+packages/python-testing/tests/unit/test_unit_cases.py::test_unit_case[ascent.candidate-boundary] PASSED
+packages/python-testing/tests/unit/test_unit_cases.py::test_unit_case[runtime.graph-transport] PASSED
+
+============================== 32 passed in 0.96s ==============================

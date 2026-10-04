@@ -7,11 +7,12 @@
 (import (only-in :clan/poo/object .o)
         (only-in "objects.ss"
                  PooFlowQuery. PooFlowQueryElementSpace.
-                 PooFlowGqlQueryLanguage.
+                 PooFlowGqlQueryLanguage. PooFlowSchemeGqlQueryLanguage.
                  PooFlowQueryResultContract.)
         (only-in "funs.ss" poo-flow-query-admit)
         (only-in "gql.ss" poo-flow-query->gql)
         (only-in "contracts.ss" poo-flow-query-bind-execution-receipt)
+        (only-in "scheme-select.ss" poo-flow-query-select-scheme-nodes)
         (only-in "results/objects.ss"
                  PooFlowQueryResultCell. PooFlowQueryResultRow.
                  PooFlowQueryResultSet.)
@@ -26,7 +27,8 @@
       identity: 'poo-flow/modules/query
       query: PooFlowQuery.
       languages:
-      (.o gql: PooFlowGqlQueryLanguage.)
+      (.o gql: PooFlowGqlQueryLanguage.
+          scheme-gql: PooFlowSchemeGqlQueryLanguage.)
       element-space: PooFlowQueryElementSpace.
       result-contract: PooFlowQueryResultContract.
       result-cell: PooFlowQueryResultCell.
@@ -36,6 +38,7 @@
       .admit-query: poo-flow-query-admit
       .project-gql: poo-flow-query->gql
       .bind-execution-receipt: poo-flow-query-bind-execution-receipt
+      .select-scheme-nodes: poo-flow-query-select-scheme-nodes
       .result-cell: poo-flow-query-result-cell
       .result-row: poo-flow-query-result-row
       .result-set: poo-flow-query-result-set))

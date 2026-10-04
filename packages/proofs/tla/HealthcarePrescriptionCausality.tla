@@ -10,8 +10,8 @@ Bounded Healthcare refinement for the wrong-prescription Case.  Observed past
 facts, prospective actions and counterfactual candidates remain distinct.
 Cedar authorization is deliberately absent; actionAuthority must stay false.
 
-Definitions stay on one physical line because gerbil-parser's native
-tla-plus.native-core.v1 contract deliberately excludes multiline layout.
+These definitions stay on one physical line for reviewability; the parser's
+layout grammar also admits multiline junction lists.
 *)
 
 VARIABLES phase, oldOrderActive, pastAdministrationRecorded, errorDiscovered, postDiscoveryOldOrderCommit, reassessmentRequired, reassessed, correctionIssued, correctionHasNewIdentity, counterfactualObserved, actionAuthority

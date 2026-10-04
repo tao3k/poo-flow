@@ -14,6 +14,7 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "pkgconfig/poo-flow-runtime-v0.pc",
     "include/poo_flow/scheme_native_v1.h",
+    "include/poo_flow/semantic.h",
     "t/validate-runtime-v0-symbol-surface.ss",
 ])
 

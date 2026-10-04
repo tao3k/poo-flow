@@ -137,6 +137,44 @@
        "WHERE s.identity = 'healthcare'\n"
        "RETURN s.identity, c.id, p.identity\n")))
 
+   (poo-flow-test-case "selects POO nodes with the Scheme GQL syntax slice"
+     (let* ((scheme-program
+             (.o (:: @ PooFlowGqlQueryProgram.)
+                 identity: 'signal-selection
+                 match:
+                 (.o (:: @ GqlQueryPath.)
+                     start: (.o (:: @ GqlQueryNode.)
+                                binding: 'signal label: 'Signal))
+                 project:
+                 (.o (:: @ GqlQueryProjection.)
+                     expression:
+                     (.o (:: @ GqlQueryProperty.)
+                         binding: 'signal property: 'identity))))
+            (scheme-query
+             (.o (:: @ Query)
+                 language: PooFlowSchemeGqlQueryLanguage.
+                 program: scheme-program))
+            (result
+             (poo-flow-query-select-scheme-nodes
+              scheme-query
+              (list (.o label: 'Signal identity: 'record)
+                    (.o label: 'Other identity: 'ignored)))))
+       (check (.ref result 'rows) => '((record)))
+       (check (.ref result 'executed-in-scheme?) => #t)
+       (check (.ref result 'external-provenance-verified?) => #f)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ Query)
+             language: PooFlowSchemeGqlQueryLanguage.)
+         (list (.o label: 'Scenario identity: "healthcare")))
+        true)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ scheme-query) result-bound: 1)
+         (list (.o label: 'Signal identity: 'first)
+               (.o label: 'Signal identity: 'second)))
+        true)))
+
    (poo-flow-test-case "escapes GQL string literals without transferring parser ownership"
      (let (escaped
            (.o (:: @ CaseProfileProgram)
@@ -193,6 +231,24 @@
        (check (.ref receipt 'runtime-executed?) => #t)
        (check (.ref receipt 'mutation-authority?) => #f)
        (check (.ref receipt 'action-authority?) => #f)))
+
+   (poo-flow-test-case "does not reuse another Query's admission receipt"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (wrong-admission
+             (.o (:: @ admission) query-identity: 'other-query))
+            (candidate
+             (poo-flow-query-execution-candidate
+              'test 'healthcare/case-profile-relations "1"
+              "sha256:space-v1"
+              (poo-flow-query-source-content-identity Query)
+              'gerbil-parser "sha256:provenance-v1"
+              "sha256:result-v1" 3 #t))
+            (receipt
+             (poo-flow-query-bind-execution-receipt
+              TestQueryProvider Query wrong-admission candidate)))
+       (check (.ref receipt 'admitted?) => #f)
+       (check (.ref receipt 'diagnostics)
+              => '((query-admission-identity-mismatch)))))
 
    (poo-flow-test-case "rejects drifted or over-bound Provider evidence"
      (let* ((admission (poo-flow-query-admit Query QuerySpace))

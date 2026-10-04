@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+[project]
+name = "poo-flow-testing"
+version = "0.1.0"
+description = "Module and cross-module case testing for POO Flow."
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+license-files = ["LICENSE"]
+readme = { file = "README.org", content-type = "text/plain" }
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+live = ["openai>=2.29,<3", "httpx>=0.28,<0.29"]
+runtime = ["poo-flow-runtime==0.1.0"]
+
+[project.scripts]
+poo-flow-test-cases = "poo_flow_testing.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "python-lang-project-harness[pytest] ; python_full_version >= '3.12'",
+]
+
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"poo_flow_testing.ascent" = ["attempt.ss", "finite_attempt.ss", "stratified_attempt.ss"]
+"poo_flow_testing.model_study.scheme_source" = ["*.ss", "*.sexp"]
+"poo_flow_testing.temporal" = ["attempt.ss"]
+"poo_flow_testing.model_study" = ["cases.json", "scheme_questions.json"]
+
+[tool.pytest.ini_options]
+addopts = ["--python-project-harness"]
+testpaths = ["tests"]
+pythonpath = ["src", "../python-runtime/src"]
+
+[tool.uv.sources]
+poo-flow-runtime = { path = "../python-runtime" }
+python-lang-project-harness = { git = "https://github.com/tao3k/python-lang-project-harness" }

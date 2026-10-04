@@ -20,6 +20,7 @@ from poo_flow_runtime._native.session import (
 from poo_flow_runtime._native.arena import NativeEvent, NativeMediation
 from poo_flow_runtime import (
     RuntimeGraphProgram,
+    RuntimeGraphError,
     RuntimeGraphRegistries,
     RuntimeGraphRuntime,
     TursoAuthorizedEffectEvidenceStore,
@@ -127,7 +128,7 @@ def test_native_arena_roundtrip_is_batched_zero_copy_and_recyclable() -> None:
         evidence.close()
 
 
-def test_runtime_graph_program_binds_execution_to_negotiated_native_context() -> None:
+def test_native_control_session_does_not_claim_scheme_graph_execution() -> None:
     pytest.importorskip("poo_flow_runtime._native._runtime_v0_cffi")
     library = _repo_library()
     if not library.is_file():
@@ -143,10 +144,8 @@ def test_runtime_graph_program_binds_execution_to_negotiated_native_context() ->
             runtime=runtime,
         )
 
-        execution = program.invoke_with_trace({"value": 1})
-
-        assert execution.state == {"value": 2}
-        assert execution.plan_digest is not None
+        with pytest.raises(RuntimeGraphError, match="native graph execution is unavailable"):
+            program.invoke_with_trace({"value": 1})
 
 
 def test_native_mediation_replay_and_root_fork_fail_closed() -> None:

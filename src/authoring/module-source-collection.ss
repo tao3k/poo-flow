@@ -424,12 +424,14 @@
 
 (def (make-poo-flow-contribution-module-load-path identity-value
                                                   source-root-value)
-  (extend-poo-flow-module-load-path
-   poo-flow-default-module-load-path
+  ;; A selected contribution owns its module names. Its source must win a
+  ;; collision with a maintained module of the same name.
+  (make-poo-flow-module-load-path
    identity-value
-   (list
-    (make-poo-flow-contribution-module-source
-     identity-value source-root-value))))
+   (cons (make-poo-flow-contribution-module-source
+          identity-value source-root-value)
+         (poo-flow-module-load-path-collections
+          poo-flow-default-module-load-path))))
 
 (def (make-poo-flow-user-interface-module-source identity-value
                                                   user-interface-root-value)

@@ -444,6 +444,14 @@ The implementation must distinguish at least:
 
 * Implementation checklist
 
+The Temporal Module's =time/watermark-*= files now represent source,
+partition, sequence range and an uncertain watermark coordinate as a POO
+value.  Its pure query yields only a structural =coverage-claimed= result
+when the complete uncertainty interval lies at or beyond the requested cut.
+It does not authenticate the source coverage receipt, implement late-event
+reconciliation, or publish a cut.  The ingress and runtime obligations below
+therefore remain open.
+
 - [ ] Define event, delivery, and processing-attempt identity schemas.
 - [ ] Define immutable event envelopes and provenance admission.
 - [ ] Define payload and schema integrity checks.

@@ -253,3 +253,68 @@ The subsequent AC-07 implementation plan may change only the Python runtime
 package, its focused tests and wheel build, runtime-C packaging hooks needed to
 publish existing projection artifacts, and AC-07 status/qualification docs.
 Existing unrelated CLI/build/CI changes remain outside the feature commit.
+
+* 2026-10-03 Python / Scheme semantic foundation qualification
+
+The [[file:python-scheme-runtime-foundation.org][implemented foundation and qualification receipt]] supersedes the
+control-lane-only graph guard for qualified native programs. Scheme owns finite
+temporal solving, final candidate consistency and POO graph topology admission
+through the semantic AOT byte ABI. Python remains the production Runtime owner
+of scheduler, IO, reducers and storage. A real control session and semantic
+context are required before native program actions run.
+
+The linked closure matrix bounds this supplement to implemented operations,
+owned-result lifetime, artifact/package transport and the 48-call real-model
+study. Final answer rejection is recorded separately from accepted accuracy and
+coverage. This supplement does not freeze the entire control ABI, authenticate
+caller source labels, grant effects or qualify all protocol-person requirements.
+MRR Rust integration follows the Python/Scheme and exact-head qualification.
+
+* No-Prompt / real-time teaching correction
+
+The 48-call study used preset rules and supplied native solved answers. It is
+withdrawn as acceptance evidence for the user's no-Prompt architecture. The
+existing contradiction gate rejects output but does not teach the model. ABI
+receipts remain scoped engineering evidence; model integration and real-time
+teaching closure remain open, and MRR Rust admission remains deferred.
+
+The primary model acceptance contract is
+[[file:model-scheme-understanding-validation.org][Scheme understanding, reasoning and real computation validation]].
+Native correctness and output rejection alone cannot close this model gate.
+
+* 2026-10-03 Direct prediction and current computation observation
+
+Active Runtime answer-rendering entrypoints have been removed. Model IO
+receives a detached task; =temporal.observe= computes a fresh Scheme-owned
+status/row difference after the candidate arrives. The Runtime can deliver the
+observation and artifact binding through a caller-owned sink, without a preset
+semantic tutorial, solved-answer prefill, automatic model retry or effect grant.
+
+Local qualification: 332 Runtime checks and 37 testing-package checks pass.
+The installed wheel performs observation delivery, a real control session and
+Scheme graph admission followed by Python IO without a Gerbil executable.
+This is bounded engineering evidence on the current Darwin host; exact-head
+cross-platform CI is tracked separately.
+
+The new 24-call study completes with zero model retries. Its frozen strict
+transport accepts no answers. Supplementary native verification after inert
+extraction observes initial high Reasoning 5/6 and both transfer arms 5/6.
+There is no observed transfer accuracy gain, and this post hoc analysis cannot
+replace predeclared model acceptance. Program generation, full POO composition,
+reliable semantic feedback transfer and business benefit remain open. MRR Rust
+admission stays deferred. See [[file:model-scheme-validation-record.org][execution ledger and evidence]].
+
+* 2026-10-03 Direct model integration qualification boundary
+
+The semantic ABI remains Version 1; version is explicit metadata, not a file or
+module suffix. Direct validation now declares compiler-derived ASCENT runtime
+project sources and core/types, with framework-source assumptions listed.
+Inert transport separates candidate completion from native semantic comparison;
+model text is never evaluated. Trusted native task loading and real dependency
+progress must meet the unchanged five-second watchdog.
+
+See [[file:model-scheme-validation-record.org][the model validation record]].
+Original 0/24 acceptance and post hoc 5/6 observations remain historical results.
+New source/transport protocol acceptance, isolated teaching benefit, complete
+POO/program generation and business outcomes remain open. Current engineering
+checks and exact submitted-head CI are separate gates. MRR Rust remains last.

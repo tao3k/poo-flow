@@ -1,0 +1,49 @@
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gxi ['-:max-heap=1G,debug=q', '-e']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-link', '-o']
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-0.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-1.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-2.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-3.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-4.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-5.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-6.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-7.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-8.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-9.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-10.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-11.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-12.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-13.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-14.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-15.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-16.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-17.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-18.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-19.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-20.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-21.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-22.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-23.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-24.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-25.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-26.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-27.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-28.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-29.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-30.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-31.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-32.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-33.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-34.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-35.scm:
+/private/tmp/poo-semantic-v1-20261003/semantic-v1-build/module-36.scm:
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC -D___LIBRARY']
+BUILD /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc ['-cc-options', '-fPIC -D___VERSION=409008 -DPOO_FLOW_SEMANTIC_LINKER=___LNK_semantic_2d_v1__ -I/private/tmp/poo-plan-audit-20261002/bindings/runtime-c/include']
+BUILD /usr/bin/clang ['-dynamiclib', '-Wl,-no_compact_unwind']
+ld: warning: ignoring duplicate libraries: '-lcrypto', '-lm'
+BUILD-OK /private/tmp/poo-semantic-v1-20261003/libpoo_flow_semantic_observe_v1.dylib 8a92dcdfba6243d906f19d24bf7d3adb4b8d1ce50cd8fbfcaee0b8c83851e841

@@ -39,7 +39,8 @@
     (testing-interface-add-profile
       +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
-           ignoreDirectories: '("packages/lambda-episteme"
+           ignoreDirectories: '("t/qualification/ascent-integration"
+                                "packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "core"
                                 "t/performance"
@@ -54,6 +55,8 @@
                                 "t/qualification/healthcare-fhirpath-syntax"
                                 "t/qualification/healthcare-hl7v2-migration"
                                 "t/qualification/healthcare-standard-migration-assurance"
+                                ;; TLC runs behind its dedicated qualification gate.
+                                "t/qualification/tla-plus-interface/external"
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
     +poo-flow-serial-test-selectors+))

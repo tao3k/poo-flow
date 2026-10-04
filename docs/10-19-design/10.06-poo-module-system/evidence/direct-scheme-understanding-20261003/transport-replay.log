@@ -1,0 +1,258 @@
+REPLAY START 0 initial-none
+REPLAY DONE False
+REPLAY START 1 initial-high
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/join-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 13))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/01.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/01.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"witness":"#f","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 2 transfer-fresh
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/join-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 43) (42 41) (42 44) (43 42))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/02.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/02.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"readable":true,"witness":"#f","correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 3 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/join-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 43) (42 41) (42 44) (43 42))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/03.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/03.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"readable":true,"witness":"#f"}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 4 initial-high
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/closure-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 12) (11 13) (11 14) (12 13))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/04.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/04.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"witness":"#f","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 5 initial-none
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/closure-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 12) (11 13) (11 14) (12 13))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/05.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/05.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":false,"witness":"((result) (expected ((11 12) (11 13) (11 14) (12 13)) observed ?))","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE False
+REPLAY START 6 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/closure-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 41) (41 42) (41 43) (41 44) (42 41) (42 42) (42 43) (42 44) (43 41) (43 42) (43 43) (43 44))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/06.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/06.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"#f","readable":true,"correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 7 transfer-fresh
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/closure-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 41) (41 42) (41 43) (41 44) (42 41) (42 42) (42 43) (42 44) (43 41) (43 42) (43 43) (43 44))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/07.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/07.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"witness":"#f","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 8 initial-none
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/negation-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 12) (11 14))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/08.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/08.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":false,"readable":true,"witness":"((result) (expected ((11 12) (11 14)) observed ?))"}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE False
+REPLAY START 9 initial-high
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/negation-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((11 12) (11 14))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/09.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/09.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"#f","readable":true,"correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 10 transfer-fresh
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/negation-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 42) (43 41) (43 44))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/10.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/10.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"readable":true,"witness":"#f"}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 11 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/negation-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+((41 42) (43 41) (43 44))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/11.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/11.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"readable":true,"witness":"#f"}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 12 initial-high
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/capture-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(1 ((gate11)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/12.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/12.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"witness":"#f","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 13 initial-none
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/capture-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(1 ((gate11)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/13.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/13.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"((result cdr car car) (expected (gate11) observed gate11))","readable":true,"correct":false}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE False
+REPLAY START 14 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/capture-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(1 ((gate41)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/14.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/14.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"#f","readable":true,"correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 15 transfer-fresh
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/capture-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(1 ((gate41)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/15.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/15.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"readable":true,"witness":"#f","correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 16 initial-none
+REPLAY DONE False
+REPLAY START 17 initial-high
+REPLAY DONE False
+REPLAY START 18 transfer-fresh
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/diagnostic-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(invalid-body (rule 0 body 1))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/18.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/18.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"#f","readable":true,"correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 19 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/diagnostic-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(invalid-body (rule 0 body 1))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/19.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/19.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":false,"witness":"((result car) (expected invalid-body observed invalid-dependencies))","readable":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE False
+REPLAY START 20 initial-high
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/withdrawal-initial.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(((11 12) (11 14)) ((11 12) (12 13)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/20.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/20.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"correct":true,"readable":true,"witness":"#f"}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 21 initial-none
+REPLAY DONE False
+REPLAY START 22 transfer-feedback
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/withdrawal-transfer.ss"
+IMPORT :gerbil-ascent/program/scheme-language
+MODULE-OK :gerbil-ascent/program/scheme-language
+(((41 42) (43 41) (43 44)) ((41 42) (42 43) (43 41)))
+HARNESS-OK direct-compute
+OK
+env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q t/model-study/direct-understanding/prediction-score.ss "/private/tmp/poo-direct-understanding-transport-replay-20261003/22.guard/current-expected.sexp" "/private/tmp/poo-direct-understanding-transport-replay-20261003/22.guard/candidate.sexp"
+MODULE-OK :std/encoding/json
+{"witness":"#f","readable":true,"correct":true}
+HARNESS-OK model-understanding-score
+OK
+REPLAY DONE True
+REPLAY START 23 transfer-fresh
+REPLAY DONE False
+REPLAY-OK {"scope": "post hoc inert prediction extraction, no new provider calls; original scores immutable", "paidCalls": 0, "extractorSha256": "d300fc93bd016ebb3b5d75fec7e8dc642e9e3ec4470e82e579d07bef014b34cb", "initial-none": {"attempts": 6, "extractable": 3, "correct": 0, "incomplete": 1}, "initial-high": {"attempts": 6, "extractable": 5, "correct": 5, "incomplete": 1}, "transfer-fresh": {"attempts": 6, "extractable": 5, "correct": 5, "incomplete": 1}, "transfer-feedback": {"attempts": 6, "extractable": 6, "correct": 5, "incomplete": 0}}

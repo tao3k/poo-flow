@@ -55,15 +55,18 @@ an identity suitable for immutable evidence and replay.
 | Clock domain | Coordinate space with role and provenance | Roles are open symbols; compare inside a domain, while cross-domain conversion requires explicit evidence | =types.ss= has clock-domain POO value; conversion evidence open |
 | Instant | Clock-indexed coordinate with observation modality | Modalities are open symbols; only =observed= is currently admissible as known, with no ambient clock reads | =time/{types,objects,funs}.ss= executable |
 | Interval | Ordered endpoints with explicit closure | Same-domain endpoints; empty interval is representable | =time/{types,objects,funs}.ss= executable |
-| Temporal relation | Partial comparison, not a Boolean total order | =before/equal/after/unknown/incomparable= for instants | =time/funs.ss= executable, Allen interval relations open |
-| Multi-time observation | Event, ingress and processing times plus provenance | Never silently coerce one role to another | =time/{types,objects}.ss= has optional distinct axes; watermark semantics remain open |
+| Temporal relation | Partial comparison, not a Boolean total order | Instants use five-valued comparison; proper observed interval extents use the thirteen Allen endpoint relations | =time/funs.ss= executable; interval closure and uncertainty remain separate |
+| Multi-time observation | Event, ingress and processing times plus provenance | Never silently coerce one role to another | =time/{types,objects}.ss= has optional distinct axes |
+| Uncertain time observation | One observed coordinate enclosed by a finite interval, with source, acquisition, precision and receipt identities | Bounds are observed, same-domain and ordered; crossing a decision boundary is unknown | =time/uncertainty-{types,objects,funs}.ss= and =t/temporal-time-test.ss= executable; external receipt authenticity remains open |
+| Monotonic duration | Conservative elapsed-time bounds between two clock observations | Only same-domain ordered monotonic observations yield a numeric range | =time/uncertainty-{types,objects,funs}.ss= executable; distributed budget delegation remains open |
+| Source watermark | Scoped assertion over source, partition, sequence range and uncertain event-time bound | Structural coverage cannot close a cut without source-owner receipt verification | =time/watermark-{types,objects,funs}.ss= executable; late-event reconciliation and authentic coverage remain open |
 | Evidence revision | Immutable assertion, correction or retraction with valid interval and admission instant | Predecessors must be same-subject, earlier on one declared admission domain; branches remain visible | =revisions/{types,objects,funs}.ss= executable |
 | As-of evidence cut | Beliefs admitted by one explicit transaction-time cut, optionally filtered at a valid-time instant | Conflicting heads, unknown validity and incomparable clocks are distinct outcomes | =revisions/funs.ss= executable |
 | Reverse dependency plan | Cut-bound derivations with subject and conclusion premises | Complete inventory is an explicit scoped assertion; a partial index cannot certify unaffected conclusions | =truth-maintenance/{types,objects,funs}.ss= executable scheduler |
 | Conclusion revision | Immutable assertion, correction or retraction with proof identity, cut and supersession | A change requires a scoped-complete affected frontier and a distinct revised cut; proof semantics remain evaluator-owned | =conclusions/{types,objects,funs}.ss= executable provenance envelope |
-| Active selection | Versioned observation and pure CAS preparation | Observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= executable planner; runtime handoff open |
+| Active selection | Versioned observation and pure CAS preparation | Journal graph/digest and plan inputs replay; observed version and selected predecessor must match; a ready plan still requires atomic runtime commit and capability | =conclusions/funs.ss= executable planner; runtime handoff open |
 | Causal event and cut | Committed event graph and as-of projection | Future/counterfactual elements cannot enter the committed cut | =types/objects/funs.ss= executable first slice |
-| Candidate hypothesis | Proposed cause, effect and constraints | Temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
+| Candidate hypothesis | Proposed cause, effect and constraints | Explicit exclusive or overlapping family semantics; temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
 | Candidate exchange | Exact cut/provider receipt and separate checker assertion | Reviewable requires current, complete, checked required providers; it never grants admission | =candidates/{types,objects,funs}.ss= executable; [[file:candidates/model.org][module-local model]] |
 | Temporal query | Target, assumptions, evidence snapshot and optional operational scope | Resource limits belong to query execution, not model truth | current query supports candidate limit or =#f= for full finite family |
 | Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; TLC correspondence open |
@@ -76,6 +79,60 @@ missing data from being mistaken for concurrent events.  Interval membership
 returns the same uncertainty states and respects open or closed endpoints.
 An elapsed duration requires monotonic clocks and cannot be inferred from a
 wall-clock or logical-version coordinate alone.
+
+For two proper observed intervals on the same domain,
+=poo-flow-temporal-interval-extent-relation= classifies their ordered endpoints
+into [[https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf][Allen's thirteen basic relations]].
+The relation concerns interval *extents*: endpoint openness still governs
+membership, and no relation is inferred for a point or empty extent.  Those
+return =degenerate=; unobserved endpoints return =unknown= and distinct clock
+domains return =incomparable=.  The focused test enumerates all thirteen
+relations and these three fail-closed states.  Constraint propagation over
+networks of interval relations remains unimplemented.
+
+** Bounded time observation
+
+An immutable =PooFlowTemporalBoundedObservation= records a source, clock role,
+observed lower and upper instants, precision, acquisition instant, receipt,
+optional attestation identity, attempt and schema.  Its semantic digest covers
+the complete field tuple, including each instant's domain, coordinate,
+provenance and modality.  Replay recomputes that digest before a comparison.
+The constructor validates structure but cannot authenticate a clock source,
+receipt or attestation; those remain source-owner obligations.
+
+For an observation interval =[l,u]= and observed boundary =b= on the same
+domain, the pure comparison is =before= iff =u < b=, =after= iff =l > b=,
+=equal= iff =l = u = b=, and =unknown= otherwise.  A different domain is
+=incomparable=.  For two observations, =before= requires =u_1 < l_2= and
+=after= requires =l_1 > u_2=; overlapping intervals remain =unknown= unless
+both are the same point.  This rule never selects a favorable endpoint to
+assert a policy decision.  The focused =check-temporal-time= gate covers
+crossing, disjoint, invalid bounds and distinct domains.  The layer does not
+yet turn this structural judgment into a policy proof, watermark closure or
+duration budget.
+
+For two bounded observations on the same monotonic clock, a numeric duration
+is emitted only when the earliest possible end is at or after the latest
+possible start.  Its lower bound is =end.lower - start.upper= and upper bound
+is =end.upper - start.lower=.  Overlapping ranges return =unknown=, a fully
+earlier end returns =reversed=, and distinct domains or unsupported clock
+roles are explicit.  The POO duration assessment retains both observation
+digests; replay recomputes its status and bounds.  This is elapsed coordinate
+arithmetic, not a policy deadline, clock attestation or runtime budget spend.
+
+** Source watermark claim
+
+A =PooFlowTemporalWatermark= binds source, partition, inclusive sequence range,
+bounded event-time observation, issuer, coverage receipt identity, late-event
+policy identity and receipt identity.  Its digest covers every field and the
+observation digest.  For a cut boundary =b= in the watermark domain, an
+in-scope query yields =coverage-claimed= only if the watermark's *lower*
+possible coordinate is at least =b=.  If its upper coordinate is below =b=,
+the result is =not-covered=; a crossing interval is =unknown=.  Out-of-scope
+sequences and partitions remain =outside-scope=, and clock-domain mismatch is
+=incomparable=.  This is a pure structural assertion.  The source owner must
+authenticate the named coverage receipt and enforce the late-event policy
+before a runtime closes or revises an immutable causal cut.
 
 * Model and query separation
 
@@ -91,14 +148,19 @@ checking scope: =0= derives the effective bound from the candidate set,
 while a positive number requests an early stop.  Full possible-world semantics requires a separate behavior
 model with explicit interventions, environment actions and observation map.
 
-Classification is relative to the declared hypothesis family.  For target
+Classification is relative to the declared hypothesis family.  The
+=poo-flow-temporal-model= constructor declares exclusive explanations;
+=poo-flow-temporal-overlapping-model= declares potentially coexisting
+mechanisms.  Both use the same finite constraint checker, and the family mode
+enters the model digest and classification receipt.  For target
 =h=, =refuted= means a known constraint fails; =possible= means the candidate
 passes known constraints; =unknown= means it has not been explored or its
 evidence is insufficient.  =Necessary= is available only after exhaustive
 inspection of a caller-declared complete exclusive family, with one admitted
 candidate and no unknowns.  This is a restricted uniqueness judgment, not an
 actual-cause theorem.  The model does not invent mechanisms without a
-hypothesis vocabulary.
+hypothesis vocabulary.  The TLA+ hypothesis exploration currently checks the
+exclusive mode; an overlapping behavior-space projection remains open.
 
 * Composition and ownership
 
@@ -335,6 +397,15 @@ are broader:
 
 - *Temporal soundness*: every admitted native comparison follows from
   observed coordinates in one domain or validated conversion evidence.
+- *Bounded-time arithmetic*: =PooFlowProof.PooC4.TemporalBoundedTime= proves
+  that a definite-before or definite-after judgment holds for every coordinate
+  inside the stated interval, a crossing boundary permits neither definite
+  judgment, and two overlapping bounded observations cannot have a definite
+  before/after order.  It also proves that pairwise definite order holds for
+  every coordinate selected from each interval, and that a watermark lower
+  bound at or beyond a cut bounds every possible watermark coordinate.
+  This is an abstract numeric proof, not
+  Scheme refinement or source receipt authentication.
 - *Uncertainty preservation*: absent, declared, retracted or incomparable
   evidence cannot become a positive causal or authority claim.
 - *Cut monotonicity under append-only evidence*: an unchanged evidence prefix
@@ -359,6 +430,31 @@ are broader:
 
 Finite TLC state exploration is an executable counterexample search.  It
 supports a claim only for an exact source, configuration and finite scope.
+=modules/tla-plus/checked-source-{types,objects,funs}.ss= now wraps the
+parser-owned TLC qualification in a POO receipt.  It checks the parsed root
+source digest, config digest, TLC launcher and output digests, final state
+counts and empty queue.  Its v2 digest also binds the sorted names and bytes
+of every local =.tla= file in the root source directory, checking that
+inventory before and after TLC.  This conservatively includes sibling
+imports; the focused regression changes an imported module while keeping the
+root source unchanged.  External =TLA_LIBRARY= modules, standard modules in
+the TLC distribution, and the full toolchain artifact remain outside this
+receipt's source-set binding.  CI separately verifies the pinned TLC JAR's
+SHA-256.  The receipt
+states =semantic-refinement? #f= and =action-authorized? #f=.  It cannot prove
+that the checked behavior model refines the POO model, or guard against a
+hostile concurrent rewrite of the same source path during TLC execution.
+The focused checked-source gate also projects the two maintained finite
+hypothesis-family data modules through the parser-owned POO projection,
+classifies each with unbounded native traversal, verifies that its matching
+TLC configuration names that exact classification, and runs TLC on both
+cases.  The same gate also generates three small same-domain families with
+two admissible causes, one refuted alternative and a refuted target.  It
+derives each TLC expectation from the projected POO classification and checks
+the independently interpreted TLA+ case.  This is finite differential
+evidence for those five inputs only; it does not establish a general
+native/TLA+ refinement theorem or cover bounded exploration order,
+overlapping families or interventions.
 Progress needs explicit fairness and environmental assumptions.  Lean can
 eventually establish generic laws across admitted models; current Lean
 temporal theorems concern a narrower event/cut model and do not discharge
@@ -366,23 +462,26 @@ the new projection/refinement obligations.
 
 * Work remaining for a complete framework
 
-1. Extend the temporal type layer with verified clock conversions,
-   watermark and completeness semantics over the existing
-   event/ingress/processing axes, durations, interval relations, and
-   partial-order constraints.  Align it with RFC 45-70 and 45-72.
+1. Extend the bounded observation layer with source-verified clock
+   conversions and authenticated watermark/completeness semantics over the
+   existing event/ingress/processing axes, distributed duration budgets,
+   interval constraint propagation, and partial-order constraints.  Align it
+   with RFC 45-70 and 45-72.
 2. Bind reevaluation proof admission to immutable conclusion revisions and
    an authorized runtime active-pointer transition under RFC 45-73.  The
    evidence journal, as-of cuts, reverse index, conclusion journal and pure
    CAS plan are executable; proof admission, signed observations, atomic
    publication and effect receipts remain open.
-3. Generalize hypothesis families to overlapping mechanisms, interventions
-   and behavior spaces.  Keep candidate generation, assumption admission and
-   causal attribution distinct.
+3. Extend the now-explicit overlapping hypothesis-family mode with actual
+   interventions and behavior spaces.  Keep candidate generation, assumption
+   admission and causal attribution distinct.
 4. Define property and query objects for safety, reachability and progress;
    generate or interpret TLA+ transitions from the semantic model rather than
    exposing a caller-authored =Next= API.
-5. Bind checked TLA+ source/configuration and TLC outputs to typed POO
-   receipts; prove or differentially check the native/TLA+ projection.
+5. Extend the typed checked-source receipt from its local source-set binding
+   to a proved or differentially checked native/TLA+ projection.  The receipt
+   currently binds TLC's own finite run, not the POO state-transition
+   interpretation.
 6. Extend Lean proofs from event/cut facts to generic temporal relations,
    source projection and trace refinement.  The abstract future-append cut
    lemma is now in the Temporal proof target; retain bounded TLC as separate

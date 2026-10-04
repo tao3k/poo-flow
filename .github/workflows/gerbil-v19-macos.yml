@@ -52,9 +52,6 @@ jobs:
       - name: Checkout POO Flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Check out Core source owner
-        run: git submodule update --init core
-
       - name: Install shared Darwin dependencies
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
@@ -113,6 +110,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          python3 packages/automation/gerbil_dependency_pin.py prepare-native --package-root "$GITHUB_WORKSPACE/.gerbil/pkg"
           if [[ "${{ steps.dependency-cache.outputs.cache-hit }}" == "true" ]]; then
             gerbil env gerbil interactive -e \
               '(begin (import :asp-gerbil-scheme/benchmark-api) (displayln "asp-benchmark-cache-ready"))'

@@ -54,7 +54,8 @@ def test_scheme_projection_rows_reuse_warm_cache(tmp_path, monkeypatch) -> None:
     _runtime_projection_fixture(tmp_path)
     source = _source_fixture(tmp_path)
     calls: list[tuple[str, ...]] = []
-    monkeypatch.setattr(scheme_runner.subprocess, "run", _fake_scheme_run(calls))
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: _fake_scheme_run(calls)(command.argv))
 
     first = scheme_load.load_projection_rows(source, cwd=tmp_path)
     second = scheme_load.load_projection_rows(source, cwd=tmp_path)
@@ -70,7 +71,8 @@ def test_scheme_projection_cache_invalidates_when_source_changes(
     _runtime_projection_fixture(tmp_path)
     source = _source_fixture(tmp_path)
     calls: list[tuple[str, ...]] = []
-    monkeypatch.setattr(scheme_runner.subprocess, "run", _fake_scheme_run(calls))
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: _fake_scheme_run(calls)(command.argv))
 
     scheme_load.load_projection_rows(source, cwd=tmp_path)
     source.write_text(
@@ -102,7 +104,8 @@ def test_scheme_projection_cache_can_be_disabled(tmp_path, monkeypatch) -> None:
     _runtime_projection_fixture(tmp_path)
     source = _source_fixture(tmp_path)
     calls: list[tuple[str, ...]] = []
-    monkeypatch.setattr(scheme_runner.subprocess, "run", _fake_scheme_run(calls))
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: _fake_scheme_run(calls)(command.argv))
     monkeypatch.setenv("POO_FLOW_SCHEME_LOAD_CACHE", "0")
 
     scheme_load.load_projection_rows(source, cwd=tmp_path)
@@ -117,7 +120,8 @@ def test_scheme_projection_prefers_direct_gerbil_runner(tmp_path, monkeypatch) -
     (tmp_path / ".gerbil" / "lib" / "poo-flow").mkdir(parents=True)
     source = _source_fixture(tmp_path)
     calls: list[tuple[str, ...]] = []
-    monkeypatch.setattr(scheme_runner.subprocess, "run", _fake_scheme_run(calls))
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: _fake_scheme_run(calls)(command.argv))
 
     scheme_load.load_projection_rows(source, cwd=tmp_path, cache=False)
 

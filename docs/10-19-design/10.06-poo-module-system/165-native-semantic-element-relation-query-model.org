@@ -76,6 +76,14 @@ peer languages.  =gerbil-parser= remains the parser owner.  The live gate must
 prove that the pure projection is byte-equal to the maintained Case source and
 that this source parses and roundtrips exactly.
 
+The =scheme-gql= slot selects a bounded local execution mode for the same
+parser-owned GQL AST. =modules/query/scheme-select.ss= uses the functional
+projection helpers to evaluate only a single labelled node, optional property
+equality and projected properties over POO nodes. It rejects path joins and
+more than the Query's result bound. This local result records Scheme execution
+but never claims external source provenance or a Provider receipt. The Exchange
+signing Case uses this mode to pass conditional selected signals to ASCENT.
+
 * Capability and escalation boundary
 
 GQL is selected because the current Healthcare queries are graph pattern

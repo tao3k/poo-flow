@@ -10,6 +10,8 @@ path = [
   "**/LICENSE",
   "LICENSES/**",
   ".bazelversion",
+  "core/.github/workflows/ci.yml",
+  "core/.gitignore",
   "VERSION",
   "ORG_ZHIXING_REV",
   "*.lock",
@@ -25,6 +27,34 @@ path = [
   "**/static/**",
   "packages/proofs/lean/lean-toolchain",
   "packages/proofs/lean-poo/lean-toolchain",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/direct-scheme-understanding-20261003/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/ascent-exchange-20261003/qualification.log"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.jsonl", "docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.log"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = [
+  "t/qualification/semantic-abi/**/*.xml",
+  "t/qualification/semantic-abi/**/*.log.gz",
+  "t/qualification/temporal-library-basic/integration/tests.xml",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"

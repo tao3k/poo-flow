@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Current semantic ABI Library qualification
+#+date: 2026-10-04
+
+* Engineering evidence
+The current SemanticRuntime interface uses semantic ABI Version 1. Retired
+Temporal adapters, prompted producer, replay utilities and copied old source
+archive have been removed from the active tree. Historical versions remain
+in Git history and are not current qualification evidence.
+
+The final AOT artifact is rebuilt against ASCENT pin 0176c061. Its digest is
+a98f918aac998d09ad6d9cd9fc23d89511996becb70eb87a5c084aff340d079c.
+A newly built CPython 3.13 Darwin arm64 wheel is installed in an isolated
+environment. With Gerbil absent from PATH, 34 focused Runtime and producer
+checks pass with no skips. Current native source checks additionally pass
+28 cases, including the project harness. Build logs, producer manifest,
+dependency hashes, tests and wheel digest are retained here.
+
+* Real provider evidence and failed model gate
+Both frozen pilots use the configured deepseek-v4-flash via DeepSeek Responses,
+with reasoning effort none, a five-second non-whitespace content watchdog,
+a 90-second total ceiling, no retries, no semantic tutorial and no solved answer.
+The first pilot embeds public Scheme source in JSON. The second uses actual
+Scheme source and a literal semantic-call result projection, with new node
+identities, times, generations and source/cut identities. Each pilot freezes
+24 calls across synchronous and asynchronous prediction. The second pilot is
+a representation experiment on new tasks; it does not repair the first answers.
+
+48 provider responses complete. The first pilot has 3/24 correct predictions;
+the second has 1/24. The native layer produces 47 fresh observations and rejects
+one output as non-inert JSON. All 47 observed candidates are also checked against
+a changed current source generation; two batches of 13 negative controls pass.
+The failed model gate remains FAILED. Passing transport or rejecting bad answers
+does not turn the 4/48 prediction accuracy into model acceptance. No accuracy
+improvement from direct source rendering was observed in this bounded pilot.
+
+The longest first content latency is 1.279 seconds and inter-content gap 0.311
+seconds. There are no timeouts or API retries. This is not a max-effort reasoning
+qualification or a demonstration of feedback transfer/real-time teaching.
+No business IO or effect authorization is granted by candidate consistency.
+
+* Privacy and reproducibility
+Only two byte-identical publicly hosted source files, synthetic graph data and
+mechanical output contracts are supplied to the provider. Public repository
+visibility and exact file hashes are checked in public-input-evidence.json.
+The .env file, API key and private reasoning content are never archived. Plans,
+requests, final candidates, event type/timing receipts, native observations,
+private native evaluation keys and failures are retained with their source heads.
+Each folder preserves its original frozen producer hashes; use its recorded Git
+head to reproduce that producer. The archive index hashes every retained file.
+
+Responses parameters and stream kinds follow the
+[[https://api-docs.deepseek.com/guides/responses_api/][DeepSeek Responses contract]] and
+[[https://api-docs.deepseek.com/api/create-response/][reasoning effort definitions]].

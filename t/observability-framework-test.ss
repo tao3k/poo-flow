@@ -58,27 +58,21 @@
 (def +framework-timeout-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/framework-timeout
-      memory-policy:
-      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
-           sample-interval-milliseconds: 1)
+      sample-interval-milliseconds: 1
       max-duration-milliseconds: 20))
 
 (def +framework-memory-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/framework-memory
-      memory-policy:
-      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
-           heap-limit-bytes: 0
-           sample-interval-milliseconds: 1)))
+      heap-limit-bytes: 0
+      sample-interval-milliseconds: 1))
 
 (def +framework-retained-allocation-case-profile+
   (.o (:: @ poo-flow-testing-case-profile-prototype)
       identity: 'testing/retained-allocation
-      memory-policy:
-      (.cc (.ref poo-flow-default-testing-case-profile 'memory-policy)
-           live-growth-limit-bytes: 8388608
-           sample-interval-milliseconds: 10
-           collect-before-sample?: #t)
+      live-growth-limit-bytes: 8388608
+      sample-interval-milliseconds: 10
+      collect-before-sample?: #t
       max-duration-milliseconds: 2000))
 
 (def observability-framework-test
@@ -97,11 +91,11 @@
                          'max-duration-milliseconds) 2000)
       (check-equal? (+ 2 3) 5))
 
-    (poo-flow-test-case "POO Case rejects an invalid memory policy slot"
+    (poo-flow-test-case "POO Case rejects an invalid heap limit slot"
       (check-equal?
        (poo-flow-testing-case-profile?
         (.cc poo-flow-default-testing-case-profile
-             memory-policy: (.o label: 'invalid)))
+             heap-limit-bytes: -1))
        #f))
 
     (poo-flow-test-case "duration receipt has a native POO contract"

@@ -12,8 +12,8 @@ Cedar evaluation is deliberately absent. This specification checks only
 pre-threat observation, threat lifecycle, Governance admission, enterprise
 security-evidence closure, and fail-closed Provider handoff.
 
-Definitions stay on one physical line because gerbil-parser's native
-tla-plus.native-core.v1 contract deliberately excludes multiline layout.
+These definitions stay on one physical line for reviewability; the parser's
+layout grammar also admits multiline junction lists.
 *)
 
 VARIABLES threatPhase, preconditionObserved, evidenceBound, assessmentBound, governanceAdmitted, threatIntelligenceBound, securityGraphClosed, separationOfDuties, enterpriseAssuranceBound, providerBound, residualAccepted, actionAuthority

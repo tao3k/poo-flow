@@ -5,6 +5,7 @@
 """Public package facade for the POO Flow Python runtime."""
 
 from .builder import RuntimeGraphBuilder
+from .semantic_runtime import SemanticRuntime, SemanticRuntimeError
 from .crewai import (
     CrewAIAgentSpec,
     CrewAIFlowResult,
@@ -119,8 +120,11 @@ from .stores import (
 )
 from .subgraphs import RuntimeGraphSubgraph
 from .tools import RuntimeGraphTool, RuntimeGraphToolError, RuntimeGraphToolNode
+from .mrr_snapshot_resource import MrrReceipt, MrrResourceError, MrrSnapshotResource
 
 __all__ = (
+    "SemanticRuntime",
+    "SemanticRuntimeError",
     "RuntimeGraphBindings",
     "BatchedEvidenceLeaf",
     "BatchedMerkleProof",
@@ -166,6 +170,9 @@ __all__ = (
     "RuntimeGraphTool",
     "RuntimeGraphToolError",
     "RuntimeGraphToolNode",
+    "MrrReceipt",
+    "MrrResourceError",
+    "MrrSnapshotResource",
     "add_messages",
     "ai_message",
     "create_tool_call_loop",
