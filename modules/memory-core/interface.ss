@@ -15,7 +15,8 @@
         "durable/store-operation.ss"
         "durable/store-operation-bridge.ss"
         "durable/recovery-scenario.ss"
-        "durable/artifact-policy.ss")
+        "durable/artifact-policy.ss"
+        "org-load.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "funs.ss")
@@ -26,4 +27,5 @@
         (import: "durable/store-operation.ss")
         (import: "durable/store-operation-bridge.ss")
         (import: "durable/recovery-scenario.ss")
-        (import: "durable/artifact-policy.ss"))
+        (import: "durable/artifact-policy.ss")
+        (import: "org-load.ss"))

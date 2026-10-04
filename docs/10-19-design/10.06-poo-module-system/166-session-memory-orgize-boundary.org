@@ -112,11 +112,20 @@ the [[https://github.com/tao3k/orgize/blob/16d2a8c3ac168d73b890262b29b756d4b4ec3
 * Typed handoff to implement
 
 The current =src/semantic/orgize-interface.ss= reexports Orgize runtime
-interfaces; it does not yet project a source-cut-bound AOT candidate into
-=modules/memory-core=. Session policy validation already reports memory
-catalog intents and store refs, and the Memory catalog marks
-=runtime-executed= false. These are useful inputs, but neither is a shared
-WorkTree head. The new
+interfaces. An optional Rust =org-memory= port now checks exact Org bytes,
+the caller-supplied current source cut and one Orgize named query, then
+returns source-backed candidate spans. =modules/memory-core/org-load.ss=
+represents that candidate identity as a POO receipt;
+=modules/session/org-memory-selection.ss= derives a pure selection intent
+against current scope, query/parser/graph versions, grant, Session state and
+expected head revision. This is a first implementation slice, not an
+authenticated loader: host source authority is a premise, the Scheme receipt
+still needs a trusted Rust-to-POO transport, and no candidate has MRR semantic
+admission or physical publication authority. The pinned Orgize query pack
+currently has task/headline queries; an Org Memory-specific named query remains
+an Orgize-owned gate. Session policy validation already reports memory catalog
+intents and store refs, and the Memory catalog marks =runtime-executed= false.
+These are useful inputs, but none is a shared WorkTree head. The new
 =modules/temporal-causality/lifecycle= API on PR #34 creates, changes and
 replays pure family revisions with a semantic digest, predecessor and
 invalidation frontier. The newer =b68f6800= Rust Library binding can invoke
@@ -202,11 +211,12 @@ historical log hashes grant no current source or effect authority.
 
 The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
 pure guards and finite concurrent transitions for Session and WorkTree heads.
-The next POO Flow owned proof slice must model Org Memory load identity,
-stale graph/query-pack rejection, source changes during Session resume, and
-two writers against one Memory head; Lean should state the accepted-load
-identity and refusal laws, while TLA+ explores reload/revoke/close/CAS
-interleavings. Orgize owns parser, Element and query-pack conformance tests.
+The new =OrgMemory.lean= slice states accepted-load identity and refusal laws
+for foreign WorkTree, changed bytes/cut, stale parser/graph/query rule,
+revoked read, inactive Session and changed expected head. It is a pure model
+over supplied current facts. The next POO Flow owned TLA+ slice must explore
+reload/revoke/close/CAS interleavings, including two writers against one
+Memory head. Orgize owns parser, Element and query-pack conformance tests.
 The existing models do not prove Scheme/runtime refinement, actual Orgize
 query binding, semantic admission, physical storage/CAS, recovery or
 large-scale behavior.

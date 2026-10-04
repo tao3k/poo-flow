@@ -20,5 +20,6 @@ lean_lib PooFlowTemporalPooProof where
 lean_lib PooFlowSessionProof where
   roots := #[`PooFlowSessionProof.Lifecycle,
              `PooFlowSessionProof.SharedContext,
+             `PooFlowSessionProof.OrgMemory,
              `PooFlowSessionProof.PolicyC4,
              `PooFlowSessionProof.AxiomAudit]

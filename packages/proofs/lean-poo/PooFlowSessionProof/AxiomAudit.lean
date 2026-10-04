@@ -1,5 +1,6 @@
 import PooFlowSessionProof.Lifecycle
 import PooFlowSessionProof.SharedContext
+import PooFlowSessionProof.OrgMemory
 import PooFlowSessionProof.PolicyC4
 import Lean.Util.CollectAxioms
 import Lean.Elab.Command
@@ -15,6 +16,8 @@ run_cmd do
       `PooFlowSessionProof.Lifecycle.accepted_query_use_has_exact_session_turn_cut,
       `PooFlowSessionProof.SharedContext.authorized_tasks_share_current_worktree_head,
       `PooFlowSessionProof.SharedContext.accepted_transfer_advances_only_target,
+      `PooFlowSessionProof.OrgMemory.accepted_selection_preserves_source_without_publication,
+      `PooFlowSessionProof.OrgMemory.changed_bytes_refused,
       `PooFlowSessionProof.PolicyC4.member_requires_graph_ancestry] do
     unless environment.contains required do
       throwError "Required Session theorem was not loaded: {required}"

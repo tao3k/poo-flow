@@ -15,8 +15,14 @@ sha2 = "0.10.9"
 default = []
 mrr-transport = ["dep:meta-relational-reasoning"]
 mrr-context = ["mrr-transport", "meta-relational-reasoning/agentic-ai-context"]
+org-memory = ["dep:orgize"]
 [dependencies.meta-relational-reasoning]
 git = "https://github.com/tao3k/meta-relational-reasoning.git"
 rev = "d5beb4030bf875fa851cddc27789030c551154c3"
+optional = true
+default-features = false
+[dependencies.orgize]
+git = "https://github.com/tao3k/orgize.git"
+rev = "16d2a8c3ac168d73b890262b29b756d4b4ec3361"
 optional = true
 default-features = false
