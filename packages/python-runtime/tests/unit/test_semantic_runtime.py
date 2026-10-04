@@ -12,7 +12,22 @@ from semantic_cases import temporal_request
 
 
 def test_semantic_native_descriptor(runtime):
-    assert runtime.descriptor['operations'] == ['temporal.solve', 'graph.admit', 'temporal.verify', 'graph.targets', 'temporal.observe', 'temporal.family.classify', 'temporal.family.observe', 'temporal.family.admit']
+    assert runtime.descriptor['operations'] == [
+        'temporal.solve',
+        'graph.admit',
+        'temporal.verify',
+        'graph.targets',
+        'temporal.observe',
+        'temporal.family.classify',
+        'temporal.family.observe',
+        'temporal.family.admit',
+        'temporal.family.current',
+        'temporal.family.revision.root',
+        'temporal.family.revision.change',
+        'temporal.family.journal',
+        'temporal.family.archive.export',
+        'temporal.family.archive.replay',
+    ]
     assert runtime.descriptor['threading'] == 'single-owner-thread'
 
 
