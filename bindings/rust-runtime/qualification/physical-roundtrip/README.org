@@ -79,9 +79,9 @@ verified by five existing tool-node tests with the project harness and direct
 import/export checks. An optional core test compilation was stopped to release
 the shared build lock; it is not a test pass.
 
-* Current immutable native closure
+* Earlier bounded immutable native closure
 
-The current locked build and physical run pass the unchanged five-second
+The earlier locked build and physical run pass the unchanged five-second
 actual-progress watchdog and 45-second total deadline. Dependencies are MRR
 =ea80f9b97bde2faf4c125286659799c4c50a0f54=, MRR Data
 =e93a7074f8746a55c53e19b85ecf26ffcb6ef3e4= and native builder
@@ -114,3 +114,42 @@ These results qualify the bounded local read-only chain. Current-cut fences,
 correction/re-query, production recovery, IFC effect publication and the cold
 latency gate remain outside this receipt. No speedup is inferred from the build
 or test durations, and the previously failed cold-p95 target is not reclassified.
+
+* Clean SDK and Cargo package source closure
+
+The final locked graph uses MRR
+=a7450879af27d08ec1cafd1b43e9375d5ac6af52= and MRR Data
+=95894330a8d9a7ece7544e2195f3f5a48c097af4=. The native builder remains
+=6ccabe001f4f28af3e79de491e67c2ac9669b7cf=. Fresh dependency installation uses
+POO =2b8006de38e91e6316bbfe0dcc81eb57ab3618a4=, parser
+=a3fe7846a7b1c544897d6537142e5e203d4b05d3= and Orgize
+=16d2a8c3ac168d73b890262b29b756d4b4ec3361=. Native and Bazel declarations
+agree, and the strict Bazel lock replay passes. SDK Git heads and installation
+tags agree; installed source checkouts remain clean. MRR inherits parser
+acquisition through its sole direct POO dependency.
+
+The earlier SDK had prebuilt MRR static modules and therefore did not qualify
+a fresh Cargo package build. The clean replay exposed a missing
+=gql-profile.scm= before AOT staging. MRR now delegates its canonical
+=build.ss= PackageSpec to Gerbil in =OUT_DIR/gerbil-package= and places that
+library first for staging. All four MRR modules in the final compiler-owned
+program manifest originate there. Both the actual isolated build and its
+complete configured submission Clippy gate pass.
+
+The final immutable build and physical run pass with the unchanged five-second
+actual-progress watchdog and 45-second total deadline. The original typed MRR
+transport, substitution controls, valid empty-result control and native
+Temporal admission are retained in =clean-graph-receipt.ss=,
+=clean-graph-oracle.ss= and =clean-graph-physical.log=. The Scheme
+=clean-graph-build-freeze.ss= records actual dependency pins, SDK identities,
+four static-module hashes, source hashes, binary hash and evidence hashes.
+
+The dependency ownership suite's final clean-SDK replay passes all three cases
+and exits successfully in 4.578141 seconds. Earlier cold import/exit attempts
+returned 124 despite their final =OK=; their failure logs remain archived and
+are not counted as passes. Successful replay does not establish the cold-p95
+latency gate. Installation and build logs remain separate from test receipts.
+
+This remains read-only library qualification. It makes no new provider call,
+does not refresh the historical model score, and does not close current-cut,
+correction/re-query, production recovery or IFC effect publication gates.

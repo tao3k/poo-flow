@@ -1,0 +1,1086 @@
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/tools/gxtest.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/core.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/core.ssi
+mrr-test: evaluation started gerbil/core
+mrr-test: evaluation returned gerbil/core
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/util.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/gambit.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/gambit.ssi
+mrr-test: runtime load started gerbil/runtime/util~1
+mrr-test: import started (:gerbil/core/contract Interface)
+mrr-test: import returned (:gerbil/core/contract Interface)
+mrr-test: import started (:gerbil/core/contract TypedDefinitions)
+mrr-test: import returned (:gerbil/core/contract TypedDefinitions)
+mrr-test: runtime load returned gerbil/runtime/util~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/util.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/table.ssi
+mrr-test: runtime load started gerbil/runtime/table~1
+mrr-test: runtime load returned gerbil/runtime/table~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/table.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/control.ssi
+mrr-test: runtime load started gerbil/runtime/control~1
+mrr-test: runtime load returned gerbil/runtime/control~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/control.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/system.ssi
+mrr-test: runtime load started gerbil/runtime/system~1
+mrr-test: runtime load returned gerbil/runtime/system~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/system.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/c3.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/c3.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/mop.ssi
+mrr-test: runtime load started gerbil/runtime/mop~1
+mrr-test: runtime load returned gerbil/runtime/mop~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/mop.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/mop-system-classes.ssi
+mrr-test: runtime load started gerbil/runtime/mop-system-classes~1
+mrr-test: runtime load returned gerbil/runtime/mop-system-classes~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/mop-system-classes.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/error.ssi
+mrr-test: runtime load started gerbil/runtime/error~1
+mrr-test: runtime load returned gerbil/runtime/error~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/error.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/interface.ssi
+mrr-test: runtime load started gerbil/runtime/interface~1
+mrr-test: runtime load returned gerbil/runtime/interface~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/hash.ssi
+mrr-test: runtime load started gerbil/runtime/hash~1
+mrr-test: runtime load returned gerbil/runtime/hash~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/hash.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/thread.ssi
+mrr-test: runtime load started gerbil/runtime/thread~1
+mrr-test: runtime load returned gerbil/runtime/thread~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/thread.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/syntax.ssi
+mrr-test: runtime load started gerbil/runtime/syntax~1
+mrr-test: runtime load returned gerbil/runtime/syntax~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/syntax.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/eval.ssi
+mrr-test: runtime load started gerbil/runtime/eval~1
+mrr-test: runtime load returned gerbil/runtime/eval~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/eval.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/repl.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/repl.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/loader.ssi
+mrr-test: runtime load started gerbil/runtime/loader~1
+mrr-test: runtime load returned gerbil/runtime/loader~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/loader.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/init.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime/init.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/runtime.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/common.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/core/expander.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/core/expander.ssi
+mrr-test: runtime load started gerbil/expander/common~1
+mrr-test: runtime load returned gerbil/expander/common~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/common.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/stx.ssi
+mrr-test: runtime load started gerbil/expander/stx~1
+mrr-test: runtime load returned gerbil/expander/stx~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/stx.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/core.ssi
+mrr-test: runtime load started gerbil/expander/core~1
+mrr-test: runtime load returned gerbil/expander/core~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/core.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/top.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/top.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/module.ssi
+mrr-test: runtime load started gerbil/expander/module~1
+mrr-test: runtime load returned gerbil/expander/module~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/module.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/compile.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/compile.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/root.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/root.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/stxcase.ssi
+mrr-test: runtime load started gerbil/expander/stxcase~1
+mrr-test: runtime load returned gerbil/expander/stxcase~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/stxcase.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/init.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander/init.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/expander.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/cli/getopt.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/error.ssi
+mrr-test: evaluation started gerbil/expander
+mrr-test: evaluation started gerbil/core
+mrr-test: evaluation returned gerbil/core
+mrr-test: runtime load started gerbil/expander/common~0
+mrr-test: runtime load returned gerbil/expander/common~0
+mrr-test: runtime load started gerbil/expander/stx~0
+mrr-test: runtime load returned gerbil/expander/stx~0
+mrr-test: runtime load started gerbil/expander/core~0
+mrr-test: runtime load returned gerbil/expander/core~0
+mrr-test: runtime load started gerbil/expander/top~0
+mrr-test: runtime load returned gerbil/expander/top~0
+mrr-test: runtime load started gerbil/expander/module~0
+mrr-test: runtime load returned gerbil/expander/module~0
+mrr-test: runtime load started gerbil/expander/compile~0
+mrr-test: runtime load returned gerbil/expander/compile~0
+mrr-test: runtime load started gerbil/expander/root~0
+mrr-test: runtime load returned gerbil/expander/root~0
+mrr-test: runtime load started gerbil/expander/stxcase~0
+mrr-test: runtime load returned gerbil/expander/stxcase~0
+mrr-test: runtime load started gerbil/runtime/gambit~0
+mrr-test: runtime load returned gerbil/runtime/gambit~0
+mrr-test: runtime load started gerbil/runtime/util~0
+mrr-test: runtime load returned gerbil/runtime/util~0
+mrr-test: runtime load started gerbil/runtime/table~0
+mrr-test: runtime load returned gerbil/runtime/table~0
+mrr-test: runtime load started gerbil/runtime/control~0
+mrr-test: runtime load returned gerbil/runtime/control~0
+mrr-test: runtime load started gerbil/runtime/system~0
+mrr-test: runtime load returned gerbil/runtime/system~0
+mrr-test: runtime load started gerbil/runtime/c3~0
+mrr-test: runtime load returned gerbil/runtime/c3~0
+mrr-test: runtime load started gerbil/runtime/mop~0
+mrr-test: runtime load returned gerbil/runtime/mop~0
+mrr-test: runtime load started gerbil/runtime/mop-system-classes~0
+mrr-test: runtime load returned gerbil/runtime/mop-system-classes~0
+mrr-test: runtime load started gerbil/runtime/error~0
+mrr-test: runtime load returned gerbil/runtime/error~0
+mrr-test: runtime load started gerbil/runtime/interface~0
+mrr-test: runtime load returned gerbil/runtime/interface~0
+mrr-test: runtime load started gerbil/runtime/hash~0
+mrr-test: runtime load returned gerbil/runtime/hash~0
+mrr-test: runtime load started gerbil/runtime/thread~0
+mrr-test: runtime load returned gerbil/runtime/thread~0
+mrr-test: runtime load started gerbil/runtime/syntax~0
+mrr-test: runtime load returned gerbil/runtime/syntax~0
+mrr-test: runtime load started gerbil/runtime/eval~0
+mrr-test: runtime load returned gerbil/runtime/eval~0
+mrr-test: runtime load started gerbil/runtime/repl~0
+mrr-test: runtime load returned gerbil/runtime/repl~0
+mrr-test: evaluation returned gerbil/expander
+mrr-test: runtime load started std/error~1
+mrr-test: runtime load returned std/error~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/error.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/interface.ssi
+mrr-test: runtime load started std/interface~1
+mrr-test: runtime load returned std/interface~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/base.ssi
+mrr-test: runtime load started std/io/interface/base~1
+mrr-test: runtime load returned std/io/interface/base~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/base.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/bio.ssi
+mrr-test: runtime load started std/io/interface/bio~1
+mrr-test: runtime load returned std/io/interface/bio~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/bio.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/socket.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/sockopt.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/ffi.ssi
+mrr-test: evaluation started gerbil/expander
+mrr-test: evaluation returned gerbil/expander
+mrr-test: runtime load started std/ffi~1
+mrr-test: runtime load returned std/ffi~1
+mrr-test: evaluation started std/ffi~C-struct
+mrr-test: evaluation started gerbil/base
+mrr-test: evaluation returned gerbil/base
+mrr-test: evaluation returned std/ffi~C-struct
+mrr-test: import started #<syntax #13 e: :gerbil/core/contract>
+mrr-test: import returned #<syntax #13 e: :gerbil/core/contract>
+mrr-test: runtime load started std/ffi~2
+mrr-test: runtime load returned std/ffi~2
+mrr-test: evaluation started std/ffi~FFIMethods
+mrr-test: evaluation returned std/ffi~FFIMethods
+mrr-test: runtime load started std/ffi~3
+mrr-test: import started :std/error
+mrr-test: import returned :std/error
+mrr-test: runtime load returned std/ffi~3
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/ffi.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/error.ssi
+mrr-test: runtime load started std/os/error~1
+mrr-test: runtime load returned std/os/error~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/error.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/device.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/time/timeout.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/time/time.ssi
+mrr-test: runtime load started std/time/time~1
+mrr-test: runtime load returned std/time/time~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/time/time.ssi
+mrr-test: runtime load started std/time/timeout~1
+mrr-test: runtime load returned std/time/timeout~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/time/timeout.ssi
+mrr-test: runtime load started std/os/device~1
+mrr-test: runtime load returned std/os/device~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/device.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/socket.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/fcntl.ssi
+mrr-test: runtime load started std/os/fcntl~1
+mrr-test: runtime load returned std/os/fcntl~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/fcntl.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/sockaddr.ssi
+mrr-test: runtime load started std/os/sockaddr~1
+mrr-test: import started :std/ffi
+mrr-test: import returned :std/ffi
+mrr-test: runtime load returned std/os/sockaddr~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/sockaddr.ssi
+mrr-test: runtime load started std/os/socket~1
+mrr-test: runtime load returned std/os/socket~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/socket.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/time.ssi
+mrr-test: runtime load started std/os/time~1
+mrr-test: runtime load returned std/os/time~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/time.ssi
+mrr-test: runtime load started std/os/sockopt~1
+mrr-test: runtime load returned std/os/sockopt~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/sockopt.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/types.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/utf8.ssi
+mrr-test: runtime load started std/string/utf8~1
+mrr-test: runtime load returned std/string/utf8~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/utf8.ssi
+mrr-test: runtime load started std/net/address/types~1
+mrr-test: runtime load returned std/net/address/types~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/types.ssi
+mrr-test: runtime load started std/io/interface/socket~1
+mrr-test: runtime load returned std/io/interface/socket~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface/socket.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/types.ssi
+mrr-test: runtime load started std/io/bio/types~1
+mrr-test: runtime load returned std/io/bio/types~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/types.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/buffer.ssi
+mrr-test: runtime load started std/io/bio/buffer~1
+mrr-test: runtime load returned std/io/bio/buffer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/buffer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/cache.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/interface.ssi
+mrr-test: runtime load started std/iter/interface~1
+mrr-test: runtime load returned std/iter/interface~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/iterators.ssi
+mrr-test: runtime load started std/iter/iterators~1
+mrr-test: runtime load returned std/iter/iterators~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/iterators.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/macros.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/list-builder.ssi
+mrr-test: runtime load started std/list/list-builder~1
+mrr-test: runtime load returned std/list/list-builder~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/list-builder.ssi
+mrr-test: runtime load started std/iter/macros~1
+mrr-test: runtime load returned std/iter/macros~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/macros.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter/api.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/iter.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/cache.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/sync/spinlock.ssi
+mrr-test: runtime load started std/sync/spinlock~1
+mrr-test: runtime load returned std/sync/spinlock~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/sync/spinlock.ssi
+mrr-test: runtime load started std/cache~1
+mrr-test: runtime load returned std/cache~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/cache.ssi
+mrr-test: runtime load started std/io/bio/cache~1
+mrr-test: runtime load returned std/io/bio/cache~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/cache.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/macros.ssi
+mrr-test: runtime load started std/io/bio/macros~1
+mrr-test: runtime load returned std/io/bio/macros~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/macros.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/input.ssi
+mrr-test: runtime load started std/io/bio/input~1
+mrr-test: runtime load returned std/io/bio/input~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/input.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/delimited.ssi
+mrr-test: runtime load started std/io/bio/delimited~1
+mrr-test: runtime load returned std/io/bio/delimited~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/delimited.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/reader.ssi
+mrr-test: runtime load started std/io/bio/reader~1
+mrr-test: import started :std/io/bio/macros
+mrr-test: import returned :std/io/bio/macros
+mrr-test: runtime load returned std/io/bio/reader~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/reader.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/output.ssi
+mrr-test: runtime load started std/io/bio/output~1
+mrr-test: runtime load returned std/io/bio/output~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/output.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/writer.ssi
+mrr-test: runtime load started std/io/bio/writer~1
+mrr-test: runtime load returned std/io/bio/writer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/writer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/memory.ssi
+mrr-test: runtime load started std/io/bio/memory~1
+mrr-test: runtime load returned std/io/bio/memory~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/memory.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/srcsnk.ssi
+mrr-test: runtime load started std/io/bio/srcsnk~1
+mrr-test: runtime load returned std/io/bio/srcsnk~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/srcsnk.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/port.ssi
+mrr-test: runtime load started std/io/bio/port~1
+mrr-test: runtime load returned std/io/bio/port~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/port.ssi
+mrr-test: runtime load started std/io/bio/api~1
+mrr-test: runtime load returned std/io/bio/api~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/bio/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/scan.ssi
+mrr-test: runtime load started std/serde/scan~1
+mrr-test: runtime load returned std/serde/scan~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/scan.ssi
+mrr-test: runtime load started std/serde/interface~1
+mrr-test: runtime load returned std/serde/interface~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/interface.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/serialize.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/scanner.ssi
+mrr-test: runtime load started std/serde/scanner~1
+mrr-test: runtime load returned std/serde/scanner~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/scanner.ssi
+mrr-test: runtime load started std/serde/serialize~1
+mrr-test: import started :std/serde/interface
+mrr-test: import returned :std/serde/interface
+mrr-test: runtime load returned std/serde/serialize~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/serialize.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/deserialize.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/hash/types.ssi
+mrr-test: runtime load started std/hash/types~1
+mrr-test: runtime load returned std/hash/types~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/hash/types.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/util.ssi
+mrr-test: runtime load started std/serde/util~1
+mrr-test: runtime load returned std/serde/util~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/util.ssi
+mrr-test: runtime load started std/serde/deserialize~1
+mrr-test: runtime load returned std/serde/deserialize~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/deserialize.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/env.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/ascii.ssi
+mrr-test: runtime load started std/format/ascii~1
+mrr-test: runtime load returned std/format/ascii~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/ascii.ssi
+mrr-test: runtime load started std/format/env~1
+mrr-test: runtime load returned std/format/env~1
+mrr-test: runtime load started std/format/env~2
+mrr-test: runtime load returned std/format/env~2
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/env.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/ioutil.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/interned.ssi
+mrr-test: runtime load started std/serde/interned~1
+mrr-test: runtime load returned std/serde/interned~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/serde/interned.ssi
+mrr-test: import started #<syntax #14 e: :std/number/writer>
+mrr-test: import started #<syntax #15 e: :std/number/misc>
+mrr-test: import started #<syntax #16 e: :std/list/list>
+mrr-test: runtime load started std/list/list~1
+mrr-test: runtime load returned std/list/list~1
+mrr-test: import returned #<syntax #16 e: :std/list/list>
+mrr-test: runtime load started std/number/misc~1
+mrr-test: runtime load returned std/number/misc~1
+mrr-test: import returned #<syntax #15 e: :std/number/misc>
+mrr-test: import started #<syntax #17 e: :std/text/parser/char-set>
+mrr-test: runtime load started std/text/parser/char-set~1
+mrr-test: runtime load returned std/text/parser/char-set~1
+mrr-test: import returned #<syntax #17 e: :std/text/parser/char-set>
+mrr-test: runtime load started std/number/writer~1
+mrr-test: runtime load returned std/number/writer~1
+mrr-test: import returned #<syntax #14 e: :std/number/writer>
+mrr-test: runtime load started std/format/ioutil~1
+mrr-test: runtime load returned std/format/ioutil~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/ioutil.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/writer.ssi
+mrr-test: runtime load started std/format/writer~1
+mrr-test: runtime load returned std/format/writer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/writer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/reader.ssi
+mrr-test: runtime load started std/format/reader~1
+mrr-test: runtime load returned std/format/reader~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/reader.ssi
+mrr-test: runtime load started std/format/io~1
+mrr-test: runtime load returned std/format/io~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/format.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/format-string.ssi
+mrr-test: runtime load started std/format/format-string~1
+mrr-test: runtime load returned std/format/format-string~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/format-string.ssi
+mrr-test: runtime load started std/format/format~1
+mrr-test: runtime load returned std/format/format~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/format.ssi
+mrr-test: evaluation started std/format/format-string
+mrr-test: evaluation returned std/format/format-string
+mrr-test: import started #<syntax #18 e: :std/format/env>
+mrr-test: import returned #<syntax #18 e: :std/format/env>
+mrr-test: evaluation started std/format/env~integer-conversions
+mrr-test: evaluation returned std/format/env~integer-conversions
+mrr-test: runtime load started std/format/api~1
+mrr-test: runtime load returned std/format/api~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format/api.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/format.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/hash/misc.ssi
+mrr-test: runtime load started std/hash/misc~1
+mrr-test: runtime load returned std/hash/misc~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/hash/misc.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/list.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/list.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/misc.ssi
+mrr-test: runtime load started std/string/misc~1
+mrr-test: runtime load returned std/string/misc~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/misc.ssi
+mrr-test: runtime load started std/cli/getopt~1
+mrr-test: runtime load returned std/cli/getopt~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/cli/getopt.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/text/pregexp.ssi
+mrr-test: runtime load started std/text/pregexp~1
+mrr-test: runtime load returned std/text/pregexp~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/text/pregexp.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test/base.ssi
+mrr-test: runtime load started std/test/base~1
+mrr-test: runtime load returned std/test/base~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test/base.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/tools/env.ssi
+mrr-test: import started #<syntax #19 e: :std/cli/getopt>
+mrr-test: import returned #<syntax #19 e: :std/cli/getopt>
+mrr-test: runtime load started gerbil/tools/env~1
+mrr-test: runtime load returned gerbil/tools/env~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/tools/env.ssi
+mrr-test: runtime load started gerbil/tools/gxtest~1
+mrr-test: runtime load returned gerbil/tools/gxtest~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/gerbil/tools/gxtest.ssi
+mrr-test: import started t/dependency-contract-test.ss
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test/unit.ssi
+mrr-test: runtime load started std/test/unit~1
+mrr-test: runtime load returned std/test/unit~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test/unit.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/test.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/clan/poo/object.ssi
+mrr-test: import started #<syntax #20 e: :gerbil/core/runtime>
+mrr-test: import returned #<syntax #20 e: :gerbil/core/runtime>
+mrr-test: import started #<syntax #21 e: :std/list/list>
+mrr-test: import returned #<syntax #21 e: :std/list/list>
+mrr-test: import started #<syntax #22 e: :std/list/list-builder>
+mrr-test: import returned #<syntax #22 e: :std/list/list-builder>
+mrr-test: import started #<syntax #23 e: :std/error>
+mrr-test: import returned #<syntax #23 e: :std/error>
+mrr-test: import started #<syntax #24 e: :std/hash/misc>
+mrr-test: import returned #<syntax #24 e: :std/hash/misc>
+mrr-test: import started #<syntax #25 e: :std/list/list-builder>
+mrr-test: import returned #<syntax #25 e: :std/list/list-builder>
+mrr-test: import started #<syntax #26 e: :std/list/list>
+mrr-test: import returned #<syntax #26 e: :std/list/list>
+mrr-test: import started #<syntax #27 e: :std/string/symbol>
+mrr-test: runtime load started std/string/symbol~1
+mrr-test: runtime load returned std/string/symbol~1
+mrr-test: import returned #<syntax #27 e: :std/string/symbol>
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/stxparam.ssi
+mrr-test: runtime load started std/stxparam~2
+mrr-test: runtime load returned std/stxparam~2
+mrr-test: runtime load started std/stxparam~1
+mrr-test: runtime load returned std/stxparam~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/stxparam.ssi
+mrr-test: import started #<syntax #28 e: :std/values>
+mrr-test: runtime load started std/values~1
+mrr-test: runtime load returned std/values~1
+mrr-test: import returned #<syntax #28 e: :std/values>
+mrr-test: import started #<syntax #29 e: :gerbil/runtime/c3>
+mrr-test: import returned #<syntax #29 e: :gerbil/runtime/c3>
+mrr-test: import started #<syntax #30 e: :clan/poo/support/base>
+mrr-test: import started #<syntax #31 e: :std/error>
+mrr-test: import returned #<syntax #31 e: :std/error>
+mrr-test: import started #<syntax #32 e: :std/func>
+mrr-test: runtime load started std/func~1
+mrr-test: runtime load returned std/func~1
+mrr-test: import returned #<syntax #32 e: :std/func>
+mrr-test: runtime load started clan/poo/support/base~1
+mrr-test: runtime load returned clan/poo/support/base~1
+mrr-test: import returned #<syntax #30 e: :clan/poo/support/base>
+mrr-test: evaluation started std/list/list-builder
+mrr-test: evaluation returned std/list/list-builder
+mrr-test: evaluation started std/iter
+mrr-test: evaluation returned std/iter
+mrr-test: evaluation started std/list/list
+mrr-test: evaluation returned std/list/list
+mrr-test: runtime load started clan/poo/object~1
+mrr-test: runtime load returned clan/poo/object~1
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/clan/poo/object.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/clan/poo/mop.ssi
+mrr-test: import started #<syntax #33 e: :std/error>
+mrr-test: import returned #<syntax #33 e: :std/error>
+mrr-test: import started #<syntax #34 e: :std/list/list-builder>
+mrr-test: import returned #<syntax #34 e: :std/list/list-builder>
+mrr-test: import started #<syntax #35 e: :std/list/list>
+mrr-test: import returned #<syntax #35 e: :std/list/list>
+mrr-test: import started #<syntax #36 e: :std/list/walist>
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/alist.ssi
+mrr-test: runtime load started std/list/alist~1
+mrr-test: runtime load returned std/list/alist~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/alist.ssi
+mrr-test: runtime load started std/list/walist~1
+mrr-test: runtime load returned std/list/walist~1
+mrr-test: import returned #<syntax #36 e: :std/list/walist>
+mrr-test: import started #<syntax #37 e: :std/values>
+mrr-test: import returned #<syntax #37 e: :std/values>
+mrr-test: import started #<syntax #38 e: :std/func>
+mrr-test: import returned #<syntax #38 e: :std/func>
+mrr-test: import started #<syntax #39 e: :clan/poo/support/base>
+mrr-test: import returned #<syntax #39 e: :clan/poo/support/base>
+mrr-test: import started #<syntax #40 e: :clan/poo/support/io>
+mrr-test: import started #<syntax #41 e: :std/assert>
+mrr-test: import started #<syntax #42 e: :gerbil/expander>
+mrr-test: import returned #<syntax #42 e: :gerbil/expander>
+mrr-test: evaluation started gerbil/expander
+mrr-test: evaluation returned gerbil/expander
+mrr-test: runtime load started std/assert~1
+mrr-test: runtime load returned std/assert~1
+mrr-test: import returned #<syntax #41 e: :std/assert>
+mrr-test: import started #<syntax #43 e: :std/vector/u8vector>
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/number/misc.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/number/misc.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/hex.ssi
+mrr-test: runtime load started std/encoding/hex~1
+mrr-test: runtime load returned std/encoding/hex~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/hex.ssi
+mrr-test: runtime load started std/vector/u8vector~1
+mrr-test: runtime load returned std/vector/u8vector~1
+mrr-test: import returned #<syntax #43 e: :std/vector/u8vector>
+mrr-test: import started #<syntax #44 e: :std/number/misc>
+mrr-test: import returned #<syntax #44 e: :std/number/misc>
+mrr-test: import returned #<syntax #40 e: :clan/poo/support/io>
+mrr-test: import started #<syntax #45 e: :clan/poo/support/json>
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/env.ssi
+mrr-test: runtime load started std/encoding/json/env~1
+mrr-test: runtime load returned std/encoding/json/env~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/env.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/parser.ssi
+mrr-test: runtime load started std/net/address/parser~1
+mrr-test: runtime load returned std/net/address/parser~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/parser.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/stringer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/stringer.ssi
+mrr-test: runtime load started std/string/stringer~1
+mrr-test: runtime load returned std/string/stringer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/string/stringer.ssi
+mrr-test: runtime load started std/net/address/stringer~1
+mrr-test: runtime load returned std/net/address/stringer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/stringer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/resolver.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/random.ssi
+mrr-test: runtime load started std/list/random~1
+mrr-test: runtime load returned std/list/random~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/random.ssi
+mrr-test: runtime load started std/net/address/resolver~1
+mrr-test: runtime load returned std/net/address/resolver~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/resolver.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/serde.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/serde.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address/api.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/net/address.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/sync/rwlock.ssi
+mrr-test: runtime load started std/sync/rwlock~1
+mrr-test: runtime load returned std/sync/rwlock~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/sync/rwlock.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/types.ssi
+mrr-test: runtime load started std/io/socket/types~1
+mrr-test: runtime load returned std/io/socket/types~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/types.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/sockaddr.ssi
+mrr-test: runtime load started std/io/socket/sockaddr~1
+mrr-test: runtime load returned std/io/socket/sockaddr~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/sockaddr.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/socket.ssi
+mrr-test: runtime load started std/io/socket/socket~1
+mrr-test: runtime load returned std/io/socket/socket~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/socket.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/basic.ssi
+mrr-test: runtime load started std/io/socket/basic~1
+mrr-test: runtime load returned std/io/socket/basic~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/basic.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/client.ssi
+mrr-test: runtime load started std/io/socket/client~1
+mrr-test: runtime load returned std/io/socket/client~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/client.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/stream.ssi
+mrr-test: runtime load started std/io/socket/stream~1
+mrr-test: runtime load returned std/io/socket/stream~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/stream.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/server.ssi
+mrr-test: runtime load started std/io/socket/server~1
+mrr-test: runtime load returned std/io/socket/server~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/server.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/datagram.ssi
+mrr-test: runtime load started std/io/socket/datagram~1
+mrr-test: runtime load returned std/io/socket/datagram~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/datagram.ssi
+mrr-test: runtime load started std/io/socket/api~1
+mrr-test: runtime load returned std/io/socket/api~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/socket/api.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/dummy.ssi
+mrr-test: runtime load started std/io/dummy~1
+mrr-test: runtime load returned std/io/dummy~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/dummy.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/counter.ssi
+mrr-test: runtime load started std/io/counter~1
+mrr-test: runtime load returned std/io/counter~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/counter.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/delimited.ssi
+mrr-test: runtime load started std/io/delimited~1
+mrr-test: runtime load returned std/io/delimited~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/delimited.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/detachable.ssi
+mrr-test: runtime load started std/io/detachable~1
+mrr-test: runtime load returned std/io/detachable~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/detachable.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/file.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/file.ssi
+mrr-test: runtime load started std/os/file~1
+mrr-test: runtime load returned std/os/file~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/file.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/flock.ssi
+mrr-test: import started #<syntax #46 e: :std/os/file>
+mrr-test: import returned #<syntax #46 e: :std/os/file>
+mrr-test: runtime load started std/os/flock~1
+mrr-test: runtime load returned std/os/flock~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/os/flock.ssi
+mrr-test: runtime load started std/io/file~1
+mrr-test: runtime load returned std/io/file~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/file.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/util.ssi
+mrr-test: runtime load started std/io/util~1
+mrr-test: runtime load returned std/io/util~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/util.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/tempfile.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/random.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/libcrypto.ssi
+mrr-test: runtime load started std/crypto/libcrypto~1
+mrr-test: runtime load returned std/crypto/libcrypto~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/libcrypto.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/error.ssi
+mrr-test: runtime load started std/crypto/error~1
+mrr-test: runtime load returned std/crypto/error~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/error.ssi
+mrr-test: runtime load started std/crypto/random~1
+mrr-test: runtime load returned std/crypto/random~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/crypto/random.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/base64.ssi
+mrr-test: runtime load started std/encoding/base64~1
+mrr-test: runtime load returned std/encoding/base64~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/base64.ssi
+mrr-test: runtime load started std/io/tempfile~1
+mrr-test: runtime load returned std/io/tempfile~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/tempfile.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io/api.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/writer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/walist.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/walist.ssi
+mrr-test: runtime load started std/encoding/json/writer~1
+mrr-test: runtime load returned std/encoding/json/writer~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/writer.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/reader.ssi
+mrr-test: import started #<syntax #47 e: :std/text/parser/char-set>
+mrr-test: import returned #<syntax #47 e: :std/text/parser/char-set>
+mrr-test: import started #<syntax #48 e: :std/text/parser/ll1>
+mrr-test: import started #<syntax #49 e: :std/text/parser/base>
+mrr-test: runtime load started std/text/parser/base~1
+mrr-test: runtime load returned std/text/parser/base~1
+mrr-test: import returned #<syntax #49 e: :std/text/parser/base>
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/vector/u8vector.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/vector/u8vector.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/text/parser/char-set.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/text/parser/char-set.ssi
+mrr-test: evaluation started std/number/misc
+mrr-test: evaluation returned std/number/misc
+mrr-test: runtime load started std/text/parser/ll1~1
+mrr-test: runtime load returned std/text/parser/ll1~1
+mrr-test: import returned #<syntax #48 e: :std/text/parser/ll1>
+mrr-test: runtime load started std/encoding/json/reader~1
+mrr-test: runtime load returned std/encoding/json/reader~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/reader.ssi
+mrr-test: runtime load started std/encoding/json/io~1
+mrr-test: runtime load returned std/encoding/json/io~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/io.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/util.ssi
+mrr-test: import started /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/plist.ssi
+mrr-test: runtime load started std/list/plist~1
+mrr-test: runtime load returned std/list/plist~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/list/plist.ssi
+mrr-test: import started #<syntax #50 e: :std/misc/ports>
+mrr-test: runtime load started std/misc/ports~1
+mrr-test: runtime load returned std/misc/ports~1
+mrr-test: import returned #<syntax #50 e: :std/misc/ports>
+mrr-test: runtime load started std/encoding/json/util~1
+mrr-test: runtime load returned std/encoding/json/util~1
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/util.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json/api.ssi
+mrr-test: import returned /opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/2591dcd/lib/std/encoding/json.ssi
+mrr-test: import returned #<syntax #45 e: :clan/poo/support/json>
+mrr-test: import started #<syntax #51 e: :clan/poo/support/syntax>
+mrr-test: runtime load started clan/poo/support/syntax~1
+mrr-test: runtime load returned clan/poo/support/syntax~1
+mrr-test: import returned #<syntax #51 e: :clan/poo/support/syntax>
+mrr-test: import started #<syntax #52 e: :clan/poo/support/repr>
+mrr-test: import returned #<syntax #52 e: :clan/poo/support/repr>
+mrr-test: import started #<syntax #53 e: :clan/poo/object>
+mrr-test: import returned #<syntax #53 e: :clan/poo/object>
+mrr-test: import started #<syntax #54 e: :gerbil/core>
+mrr-test: import returned #<syntax #54 e: :gerbil/core>
+mrr-test: import started #<syntax #55 e: :clan/poo/brace>
+mrr-test: import started #<syntax #56 e: :gerbil/core>
+mrr-test: import returned #<syntax #56 e: :gerbil/core>
+mrr-test: import started #<syntax #57 e: :clan/poo/object>
+mrr-test: import returned #<syntax #57 e: :clan/poo/object>
+mrr-test: runtime load started clan/poo/brace~1
+mrr-test: runtime load returned clan/poo/brace~1
+mrr-test: import returned #<syntax #55 e: :clan/poo/brace>
+mrr-test: runtime load started clan/poo/mop~1
+mrr-test: runtime load returned clan/poo/mop~1
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/clan/poo/mop.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/interface.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/types.ssi
+mrr-test: import started #<syntax #58 e: :clan/poo/object>
+mrr-test: import returned #<syntax #58 e: :clan/poo/object>
+mrr-test: import started #<syntax #59 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #59 e: :clan/poo/mop>
+mrr-test: import started #<syntax #60 e: :gerbil/core>
+mrr-test: import returned #<syntax #60 e: :gerbil/core>
+mrr-test: import started #<syntax #61 e: :core/poo-clos/interface>
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/types.ssi
+mrr-test: import started #<syntax #62 e: :clan/poo/object>
+mrr-test: import returned #<syntax #62 e: :clan/poo/object>
+mrr-test: import started #<syntax #63 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #63 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/types.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/objects.ssi
+mrr-test: import started #<syntax #64 e: :clan/poo/object>
+mrr-test: import returned #<syntax #64 e: :clan/poo/object>
+mrr-test: import started #<syntax #65 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #65 e: :clan/poo/mop>
+mrr-test: import started #<syntax #66 e: :std/hash/misc>
+mrr-test: import returned #<syntax #66 e: :std/hash/misc>
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/funcs.ssi
+mrr-test: import started #<syntax #67 e: :std/list/plist>
+mrr-test: import returned #<syntax #67 e: :std/list/plist>
+mrr-test: import started #<syntax #68 e: :gerbil/runtime/hash>
+mrr-test: import returned #<syntax #68 e: :gerbil/runtime/hash>
+mrr-test: import started #<syntax #69 e: :std/hash/misc>
+mrr-test: import returned #<syntax #69 e: :std/hash/misc>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/funcs.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/objects.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/generic-evolution.ssi
+mrr-test: import started #<syntax #70 e: :clan/poo/object>
+mrr-test: import returned #<syntax #70 e: :clan/poo/object>
+mrr-test: import started #<syntax #71 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #71 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/generic-evolution.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/classes.ssi
+mrr-test: import started #<syntax #72 e: :clan/poo/object>
+mrr-test: import returned #<syntax #72 e: :clan/poo/object>
+mrr-test: import started #<syntax #73 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #73 e: :clan/poo/mop>
+mrr-test: import started #<syntax #74 e: :std/hash/misc>
+mrr-test: import returned #<syntax #74 e: :std/hash/misc>
+mrr-test: import started #<syntax #75 e: :std/list/list>
+mrr-test: import returned #<syntax #75 e: :std/list/list>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/classes.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/model.ssi
+mrr-test: import started #<syntax #76 e: :clan/poo/object>
+mrr-test: import returned #<syntax #76 e: :clan/poo/object>
+mrr-test: import started #<syntax #77 e: :core/poo-clos/types>
+mrr-test: import returned #<syntax #77 e: :core/poo-clos/types>
+mrr-test: import started #<syntax #78 e: :core/poo-clos/classes>
+mrr-test: import returned #<syntax #78 e: :core/poo-clos/classes>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/model.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/evolution.ssi
+mrr-test: import started #<syntax #79 e: :clan/poo/object>
+mrr-test: import returned #<syntax #79 e: :clan/poo/object>
+mrr-test: import started #<syntax #80 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #80 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/evolution.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/lifecycle.ssi
+mrr-test: import started #<syntax #81 e: :clan/poo/object>
+mrr-test: import returned #<syntax #81 e: :clan/poo/object>
+mrr-test: import started #<syntax #82 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #82 e: :clan/poo/mop>
+mrr-test: import started #<syntax #83 e: :std/hash/misc>
+mrr-test: import returned #<syntax #83 e: :std/hash/misc>
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/dispatch.ssi
+mrr-test: import started #<syntax #84 e: :clan/poo/object>
+mrr-test: import returned #<syntax #84 e: :clan/poo/object>
+mrr-test: import started #<syntax #85 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #85 e: :clan/poo/mop>
+mrr-test: import started #<syntax #86 e: :std/list/list>
+mrr-test: import returned #<syntax #86 e: :std/list/list>
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/method-combination.ssi
+mrr-test: import started #<syntax #87 e: :clan/poo/object>
+mrr-test: import returned #<syntax #87 e: :clan/poo/object>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/method-combination.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/dispatch.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/instance-state.ssi
+mrr-test: import started #<syntax #88 e: :clan/poo/object>
+mrr-test: import returned #<syntax #88 e: :clan/poo/object>
+mrr-test: import started #<syntax #89 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #89 e: :clan/poo/mop>
+mrr-test: import started #<syntax #90 e: :std/hash/misc>
+mrr-test: import returned #<syntax #90 e: :std/hash/misc>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/instance-state.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/lifecycle.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/reflection.ssi
+mrr-test: import started #<syntax #91 e: :clan/poo/object>
+mrr-test: import returned #<syntax #91 e: :clan/poo/object>
+mrr-test: import started #<syntax #92 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #92 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/reflection.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/load-form.ssi
+mrr-test: import started #<syntax #93 e: :clan/poo/object>
+mrr-test: import returned #<syntax #93 e: :clan/poo/object>
+mrr-test: import started #<syntax #94 e: :std/list/list>
+mrr-test: import returned #<syntax #94 e: :std/list/list>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/load-form.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/mop.ssi
+mrr-test: import started #<syntax #95 e: :clan/poo/object>
+mrr-test: import returned #<syntax #95 e: :clan/poo/object>
+mrr-test: import started #<syntax #96 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #96 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/mop.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/syntax.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/lambda-list.ssi
+mrr-test: import started #<syntax #97 e: :clan/poo/object>
+mrr-test: import returned #<syntax #97 e: :clan/poo/object>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/lambda-list.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/declaration-ir.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/declaration-ir-core.ssi
+mrr-test: runtime load started core/poo-clos/declaration-ir-core~1
+mrr-test: runtime load returned core/poo-clos/declaration-ir-core~1
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/declaration-ir-core.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/class-declaration-ir.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/class-declaration-ir.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/method-combination-declaration-ir.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/method-combination-declaration-ir.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/declaration-ir.ssi
+mrr-test: evaluation started gerbil/expander
+mrr-test: evaluation returned gerbil/expander
+mrr-test: evaluation started core/poo-clos/declaration-ir
+mrr-test: runtime load started core/poo-clos/declaration-ir-core~0
+mrr-test: runtime load returned core/poo-clos/declaration-ir-core~0
+mrr-test: runtime load started core/poo-clos/class-declaration-ir~0
+mrr-test: runtime load returned core/poo-clos/class-declaration-ir~0
+mrr-test: runtime load started core/poo-clos/method-combination-declaration-ir~0
+mrr-test: runtime load returned core/poo-clos/method-combination-declaration-ir~0
+mrr-test: evaluation returned core/poo-clos/declaration-ir
+mrr-test: runtime load started core/poo-clos/syntax~1
+mrr-test: runtime load returned core/poo-clos/syntax~1
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/syntax.ssi
+mrr-test: import returned #<syntax #61 e: :core/poo-clos/interface>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/types.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/objects.ssi
+mrr-test: import started #<syntax #98 e: :clan/poo/object>
+mrr-test: import returned #<syntax #98 e: :clan/poo/object>
+mrr-test: import started #<syntax #99 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #99 e: :clan/poo/mop>
+mrr-test: import started #<syntax #100 e: :gerbil-parser/languages/gql/iso-39075-2024/query-syntax>
+mrr-test: import started #<syntax #101 e: :clan/poo/object>
+mrr-test: import returned #<syntax #101 e: :clan/poo/object>
+mrr-test: import started #<syntax #102 e: :gerbil/core>
+mrr-test: import returned #<syntax #102 e: :gerbil/core>
+mrr-test: import started #<syntax #103 e: :std/string/misc>
+mrr-test: import returned #<syntax #103 e: :std/string/misc>
+mrr-test: import returned #<syntax #100 e: :gerbil-parser/languages/gql/iso-39075-2024/query-syntax>
+mrr-test: import started #<syntax #104 e: :poo-flow/modules/query/types>
+mrr-test: import returned #<syntax #104 e: :poo-flow/modules/query/types>
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/interface.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/core/poo-clos/interface.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/objects.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/gql.ssi
+mrr-test: import started #<syntax #105 e: :clan/poo/object>
+mrr-test: import returned #<syntax #105 e: :clan/poo/object>
+mrr-test: import started #<syntax #106 e: :gerbil-parser/languages/gql/iso-39075-2024/query-syntax>
+mrr-test: import returned #<syntax #106 e: :gerbil-parser/languages/gql/iso-39075-2024/query-syntax>
+mrr-test: import started #<syntax #107 e: :poo-flow/modules/query/objects>
+mrr-test: import returned #<syntax #107 e: :poo-flow/modules/query/objects>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/gql.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/funs.ssi
+mrr-test: import started #<syntax #108 e: :clan/poo/object>
+mrr-test: import returned #<syntax #108 e: :clan/poo/object>
+mrr-test: import started #<syntax #109 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #109 e: :clan/poo/mop>
+mrr-test: import started #<syntax #110 e: :gerbil/core>
+mrr-test: import returned #<syntax #110 e: :gerbil/core>
+mrr-test: import started #<syntax #111 e: :poo-flow/modules/query/types>
+mrr-test: import returned #<syntax #111 e: :poo-flow/modules/query/types>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/funs.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/contracts.ssi
+mrr-test: import started #<syntax #112 e: :clan/poo/object>
+mrr-test: import returned #<syntax #112 e: :clan/poo/object>
+mrr-test: import started #<syntax #113 e: :std/crypto/digest>
+mrr-test: runtime load started std/crypto/digest~1
+mrr-test: runtime load returned std/crypto/digest~1
+mrr-test: import returned #<syntax #113 e: :std/crypto/digest>
+mrr-test: import started #<syntax #114 e: :std/encoding/hex>
+mrr-test: import returned #<syntax #114 e: :std/encoding/hex>
+mrr-test: import started #<syntax #115 e: :poo-flow/modules/query/types>
+mrr-test: import returned #<syntax #115 e: :poo-flow/modules/query/types>
+mrr-test: import started #<syntax #116 e: :poo-flow/modules/query/objects>
+mrr-test: import returned #<syntax #116 e: :poo-flow/modules/query/objects>
+mrr-test: import started #<syntax #117 e: :poo-flow/modules/query/gql>
+mrr-test: import returned #<syntax #117 e: :poo-flow/modules/query/gql>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/contracts.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/scheme-select.ssi
+mrr-test: import started #<syntax #118 e: :clan/poo/object>
+mrr-test: import returned #<syntax #118 e: :clan/poo/object>
+mrr-test: import started #<syntax #119 e: :poo-flow/src/utilities/functional>
+mrr-test: import started #<syntax #120 e: :std/list/list>
+mrr-test: import returned #<syntax #120 e: :std/list/list>
+mrr-test: import started #<syntax #121 e: :std/string/misc>
+mrr-test: import returned #<syntax #121 e: :std/string/misc>
+mrr-test: import returned #<syntax #119 e: :poo-flow/src/utilities/functional>
+mrr-test: import started #<syntax #122 e: :poo-flow/modules/query/types>
+mrr-test: import returned #<syntax #122 e: :poo-flow/modules/query/types>
+mrr-test: import started #<syntax #123 e: :poo-flow/modules/query/contracts>
+mrr-test: import returned #<syntax #123 e: :poo-flow/modules/query/contracts>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/scheme-select.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/interface.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/types.ssi
+mrr-test: import started #<syntax #124 e: :clan/poo/object>
+mrr-test: import returned #<syntax #124 e: :clan/poo/object>
+mrr-test: import started #<syntax #125 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #125 e: :clan/poo/mop>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/types.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/objects.ssi
+mrr-test: import started #<syntax #126 e: :clan/poo/object>
+mrr-test: import returned #<syntax #126 e: :clan/poo/object>
+mrr-test: import started #<syntax #127 e: :clan/poo/mop>
+mrr-test: import returned #<syntax #127 e: :clan/poo/mop>
+mrr-test: import started #<syntax #128 e: :poo-flow/modules/query/results/types>
+mrr-test: import returned #<syntax #128 e: :poo-flow/modules/query/results/types>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/objects.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/funs.ssi
+mrr-test: import started #<syntax #129 e: :clan/poo/object>
+mrr-test: import returned #<syntax #129 e: :clan/poo/object>
+mrr-test: import started #<syntax #130 e: :std/crypto/digest>
+mrr-test: import returned #<syntax #130 e: :std/crypto/digest>
+mrr-test: import started #<syntax #131 e: :std/encoding/hex>
+mrr-test: import returned #<syntax #131 e: :std/encoding/hex>
+mrr-test: import started #<syntax #132 e: :std/list/list>
+mrr-test: import returned #<syntax #132 e: :std/list/list>
+mrr-test: import started #<syntax #133 e: :poo-flow/modules/query/types>
+mrr-test: import returned #<syntax #133 e: :poo-flow/modules/query/types>
+mrr-test: import started #<syntax #134 e: :poo-flow/modules/query/results/types>
+mrr-test: import returned #<syntax #134 e: :poo-flow/modules/query/results/types>
+mrr-test: import started #<syntax #135 e: :poo-flow/modules/query/results/objects>
+mrr-test: import returned #<syntax #135 e: :poo-flow/modules/query/results/objects>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/funs.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/results/interface.ssi
+mrr-test: import started /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/config.ssi
+mrr-test: import started #<syntax #136 e: :clan/poo/object>
+mrr-test: import returned #<syntax #136 e: :clan/poo/object>
+mrr-test: import started #<syntax #137 e: :poo-flow/modules/query/objects>
+mrr-test: import returned #<syntax #137 e: :poo-flow/modules/query/objects>
+mrr-test: import started #<syntax #138 e: :poo-flow/modules/query/funs>
+mrr-test: import returned #<syntax #138 e: :poo-flow/modules/query/funs>
+mrr-test: import started #<syntax #139 e: :poo-flow/modules/query/gql>
+mrr-test: import returned #<syntax #139 e: :poo-flow/modules/query/gql>
+mrr-test: import started #<syntax #140 e: :poo-flow/modules/query/contracts>
+mrr-test: import returned #<syntax #140 e: :poo-flow/modules/query/contracts>
+mrr-test: import started #<syntax #141 e: :poo-flow/modules/query/scheme-select>
+mrr-test: import returned #<syntax #141 e: :poo-flow/modules/query/scheme-select>
+mrr-test: import started #<syntax #142 e: :poo-flow/modules/query/results/objects>
+mrr-test: import returned #<syntax #142 e: :poo-flow/modules/query/results/objects>
+mrr-test: import started #<syntax #143 e: :poo-flow/modules/query/results/funs>
+mrr-test: import returned #<syntax #143 e: :poo-flow/modules/query/results/funs>
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/config.ssi
+mrr-test: import returned /private/tmp/mrr-clean-graph-sdk/lib/poo-flow/modules/query/interface.ssi
+mrr-test: import returned t/dependency-contract-test.ss
+mrr-test: evaluation started meta-relational-reasoning/t/dependency-contract-test
+mrr-test: evaluation started gerbil/core
+mrr-test: evaluation returned gerbil/core
+mrr-test: runtime load started clan/poo/support/base~0
+mrr-test: runtime load returned clan/poo/support/base~0
+mrr-test: runtime load started clan/poo/object~0
+mrr-test: runtime load returned clan/poo/object~0
+mrr-test: runtime load started clan/poo/support/io~0
+mrr-test: runtime load returned clan/poo/support/io~0
+mrr-test: runtime load started clan/poo/support/json~0
+mrr-test: runtime load returned clan/poo/support/json~0
+mrr-test: runtime load started clan/poo/support/repr~0
+mrr-test: runtime load returned clan/poo/support/repr~0
+mrr-test: runtime load started clan/poo/mop~0
+mrr-test: runtime load returned clan/poo/mop~0
+mrr-test: runtime load started core/poo-clos/types~0
+mrr-test: runtime load returned core/poo-clos/types~0
+mrr-test: runtime load started core/poo-clos/funcs~0
+mrr-test: runtime load returned core/poo-clos/funcs~0
+mrr-test: runtime load started core/poo-clos/objects~0
+mrr-test: runtime load returned core/poo-clos/objects~0
+mrr-test: runtime load started core/poo-clos/generic-evolution~0
+mrr-test: runtime load returned core/poo-clos/generic-evolution~0
+mrr-test: runtime load started core/poo-clos/classes~0
+mrr-test: runtime load returned core/poo-clos/classes~0
+mrr-test: runtime load started core/poo-clos/model~0
+mrr-test: runtime load returned core/poo-clos/model~0
+mrr-test: runtime load started core/poo-clos/evolution~0
+mrr-test: runtime load returned core/poo-clos/evolution~0
+mrr-test: runtime load started core/poo-clos/method-combination~0
+mrr-test: runtime load returned core/poo-clos/method-combination~0
+mrr-test: runtime load started core/poo-clos/dispatch~0
+mrr-test: runtime load returned core/poo-clos/dispatch~0
+mrr-test: runtime load started core/poo-clos/instance-state~0
+mrr-test: runtime load returned core/poo-clos/instance-state~0
+mrr-test: runtime load started core/poo-clos/lifecycle~0
+mrr-test: runtime load returned core/poo-clos/lifecycle~0
+mrr-test: runtime load started core/poo-clos/reflection~0
+mrr-test: runtime load returned core/poo-clos/reflection~0
+mrr-test: runtime load started core/poo-clos/load-form~0
+mrr-test: runtime load returned core/poo-clos/load-form~0
+mrr-test: runtime load started core/poo-clos/mop~0
+mrr-test: runtime load returned core/poo-clos/mop~0
+mrr-test: runtime load started core/poo-clos/lambda-list~0
+mrr-test: runtime load returned core/poo-clos/lambda-list~0
+mrr-test: runtime load started poo-flow/modules/query/types~0
+mrr-test: runtime load returned poo-flow/modules/query/types~0
+mrr-test: runtime load started gerbil-parser/languages/gql/iso-39075-2024/query-syntax~0
+mrr-test: runtime load returned gerbil-parser/languages/gql/iso-39075-2024/query-syntax~0
+mrr-test: runtime load started poo-flow/modules/query/objects~0
+mrr-test: runtime load returned poo-flow/modules/query/objects~0
+mrr-test: runtime load started poo-flow/modules/query/gql~0
+mrr-test: runtime load returned poo-flow/modules/query/gql~0
+mrr-test: runtime load started poo-flow/modules/query/funs~0
+mrr-test: runtime load returned poo-flow/modules/query/funs~0
+mrr-test: runtime load started poo-flow/modules/query/contracts~0
+mrr-test: runtime load returned poo-flow/modules/query/contracts~0
+mrr-test: runtime load started poo-flow/src/utilities/functional~0
+mrr-test: runtime load returned poo-flow/src/utilities/functional~0
+mrr-test: runtime load started poo-flow/modules/query/scheme-select~0
+mrr-test: runtime load returned poo-flow/modules/query/scheme-select~0
+mrr-test: runtime load started poo-flow/modules/query/results/types~0
+mrr-test: runtime load returned poo-flow/modules/query/results/types~0
+mrr-test: runtime load started poo-flow/modules/query/results/objects~0
+mrr-test: runtime load returned poo-flow/modules/query/results/objects~0
+mrr-test: runtime load started poo-flow/modules/query/results/funs~0
+mrr-test: runtime load returned poo-flow/modules/query/results/funs~0
+mrr-test: runtime load started poo-flow/modules/query/config~0
+mrr-test: runtime load returned poo-flow/modules/query/config~0
+mrr-test: evaluation returned meta-relational-reasoning/t/dependency-contract-test
+HARNESS ("t/dependency-contract-test.ss")
+MODULE t/dependency-contract-test.ss
+SUITE package dependency ownership
+CASE POO Flow is the sole direct library dependency
+CASE-OK POO Flow is the sole direct library dependency
+CASE Parser and ASP acquisition remain inherited from POO Flow
+CASE-OK Parser and ASP acquisition remain inherited from POO Flow
+CASE POO Flow common Query admits a generation-bound library value
+CASE-OK POO Flow common Query admits a generation-bound library value
+SUITE-OK package dependency ownership
+MODULE-OK t/dependency-contract-test.ss
+HARNESS-OK ("t/dependency-contract-test.ss")
+OK
+NATIVE-FAIL: five seconds without output or 45s batch limit
