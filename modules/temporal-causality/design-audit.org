@@ -305,3 +305,24 @@ The regression gate covers registration, native result generation and proof
 identity changes. The final installed wheel passed 78 tests, including 18 new admission cases,
 and the CI wheel gate now includes that file. See [[file:../../t/qualification/temporal-library-basic/admission-runtime/receipt.json][the source/artifact acceptance receipt]] for final qualification
 and the recorded initial failure. No real-model evaluation is claimed here.
+
+* Delivered: durable authorized first-root selection (2026-10-04)
+
+Runtime C =temporal_store= implements a local SQLite WAL/FULL transaction port;
+Python =TemporalPublicationStore= uses its typed CFFI ABI. Native POO admission
+and C submission share the semantic owner queue; Python performs no classification.
+The durable source generation/digest and scoped host authorization policy/fence
+are rechecked at the same transaction point as empty-pointer CAS, version increment
+and immutable receipt insertion. Failed receipt writes roll back the pointer.
+Competing connections admit at most one initial root. Identical committed retries
+recover the original receipt; later source/grant retirement cannot erase it.
+
+This closes a concrete D7 first-root local selection slice. The host explicitly
+authorizes local selection; this is not Cedar or signed external permit verification.
+It does not extend the existing correction/retraction POO prepare protocol or claim
+its generic refinement. Initial =assert= selection requires version zero and an
+empty predecessor. Business effects, correction/retraction, externally authenticated
+source/coverage, general lifecycle refinement and D8 remain open. The crash gate
+sends SIGKILL after commit and opens a new store to recover pointer and receipt;
+it does not qualify power loss or storage hardware. See
+[[file:../../t/qualification/temporal-library-basic/publication-runtime/receipt.json][the exact installed-wheel receipt]]. No real-model calls were made in this slice.

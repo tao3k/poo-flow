@@ -452,3 +452,27 @@ roundtrips and 48/48 provider responses. Model final output preserves the actual
 status, rows and source binding. This qualifies a forced read-only tool route;
 unaided source prediction remains FAILED and autonomous tool choice is untested.
 See [[file:../../t/qualification/semantic-abi/README.org][the bounded receipts and deadlines]].
+
+* Temporal durable first-root selection
+
+=poo_flow_runtime.temporal_publication.TemporalPublicationStore= is a trusted
+host port backed by the Runtime C SQLite transaction library. Build requires
+SQLite development headers and library. Create a store at an absolute local
+file, =register_source(runtime, scope, task)=, then install an explicit
+=authorize_selection(subject=..., scope=..., policy=..., authority=...,
+fence=...)= host grant. =publish(runtime, task, source_identity=...,
+source_digest=..., conclusion_identity=..., idempotency_key=...,
+authorization_fence=...)= replays native POO admission and selects its first root.
+
+Source digest/generation, scoped policy/fence, empty predecessor and version zero
+are checked in one C transaction with pointer version increment and immutable
+receipt insertion. =recover(key)= works without Scheme; an identical committed
+request returns its original receipt after later revocation. A different request
+under the same key fails. The receipt authorizes local selection only and keeps
+=externalEffectAuthorized= false. Close stores explicitly or use a context manager.
+
+The host APIs must not be offered to models as tools. Source authenticity,
+Cedar/signed external permits, correction/retraction, external effects and general
+POO/TLA refinement remain outside this first-root profile. SQLite WAL with FULL
+synchronous mode and process-crash recovery are exercised; power-loss/storage
+hardware behavior is not qualified by these local tests.

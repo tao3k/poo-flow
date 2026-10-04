@@ -115,13 +115,17 @@ class SemanticRuntime:
                           separators=(',', ':')).encode('utf-8')
         if len(data) > 1048576:
             raise ValueError('semantic input exceeds maximum bytes')
+        return self._submit_host(lambda: self._call(operation.encode(), data, control=control))
+
+    def _submit_host(self, callback):
+        """Queue one trusted host operation on the native owner thread."""
         with self._lock:
             if self._closed:
                 raise SemanticRuntimeError('semantic runtime is closed', status=1)
             if not self._slots.acquire(blocking=False):
                 raise SemanticRuntimeError('semantic call queue is full', status=7)
             try:
-                future = self._worker.submit(self._call, operation.encode(), data, control=control)
+                future = self._worker.submit(callback)
                 future.add_done_callback(lambda _: self._slots.release())
                 return future
             except BaseException:

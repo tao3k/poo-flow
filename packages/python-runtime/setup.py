@@ -52,6 +52,7 @@ class BuildPyWithRuntime(build_py):
 
 setup(
     cffi_modules=["src/poo_flow_runtime/_native/_build.py:ffibuilder",
-                  "src/poo_flow_runtime/_native/_semantic_build.py:ffibuilder"],
+                  "src/poo_flow_runtime/_native/_semantic_build.py:ffibuilder",
+                  "src/poo_flow_runtime/_native/_temporal_store_build.py:ffibuilder"],
     cmdclass={"build_py": BuildPyWithRuntime},
 )

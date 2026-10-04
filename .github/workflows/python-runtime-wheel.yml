@@ -29,6 +29,9 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
 
+      - name: Install SQLite development headers
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
       - name: Set up Python
         uses: actions/setup-python@v6.0.0
         with:
@@ -170,6 +173,7 @@ jobs:
             packages/python-runtime/tests/unit/test_semantic_tools.py \
             packages/python-runtime/tests/unit/test_temporal_family.py \
             packages/python-runtime/tests/unit/test_temporal_admission.py \
+            packages/python-runtime/tests/unit/test_temporal_publication.py \
             packages/python-runtime/tests/unit/test_mrr_snapshot_resource.py
 
       - name: Test Python module case catalog
