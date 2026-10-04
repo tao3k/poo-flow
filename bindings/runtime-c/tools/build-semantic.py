@@ -70,7 +70,7 @@ def main() -> None:
                    "modules/temporal-causality/lifecycle/objects.ss",
                    "modules/temporal-causality/lifecycle/funs.ss",
                    "modules/temporal-causality/lifecycle/interface.ss",
-                   "src/ffi/temporal-admission.ss", "src/ffi/temporal-archive.ss", "src/ffi/scheme-wire.ss"]:
+                   "src/ffi/temporal-admission.ss", "src/ffi/scheme-wire.ss", "src/ffi/temporal-archive.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
