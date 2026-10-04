@@ -1,0 +1,92 @@
+#+title: 10.06.166 Session, Memory and Orgize source boundary
+
+* Status and ownership
+
+Design contract, not a claim that the runtime adapters exist. This refines the
+memory source selection in [[file:43-session-memory-recovery-rfc.org][RFC 43]]. POO Flow owns =modules/session= lifecycle and
+=modules/memory-core= policy, scoped memory heads, and durable job intents.
+Orgize owns parsing Org source into a lossless tree, Org Element graph, and
+named structural query candidates. MRR owns semantic Query/Content/Context
+admission. MRR Data stores and retrieves immutable bytes. The runtime owns
+physical scheduling, compare-and-swap (CAS), and external effects. MRR Data
+must not acquire a second Session or Memory policy registry.
+
+| Owner | Input | Output | Decision it may make |
+|-------+-------+--------+----------------------|
+| Orgize | Org bytes, parser/query version | spans, elements, structural candidate pack | syntax and structural match |
+| POO Flow Session | Project/WorkTree/Task/Session identity, policy, head | turn, lineage and publication intents | scope, C4 policy order and lifecycle |
+| POO Flow Memory | source receipts, memory policy, scoped head | recall and consolidation intents, visibility/lease receipts | whether memory may enter a scope |
+| MRR | candidates, source and capability evidence | admitted semantic Context receipt | semantic validity and provenance |
+| MRR Data | immutable artifacts and physical queries | content identity and retrieved bytes | storage integrity |
+| runtime | accepted intents and expected revisions | scheduled effects and CAS result | physical execution |
+
+* Scope and source selection
+
+The containment relation is Project -> many WorkTrees -> Tasks -> Sessions.
+Each WorkTree has a stable lifecycle identity independent of its path, Git
+branch, and HEAD. A request binds a WorkTree source cut: repository identity,
+HEAD, index, and relevant dirty/untracked inputs. A Project may have many
+WorkTrees; each C4 policy calculation selects a finite, bounded graph for one
+request. Project memory can be published for explicitly authorized consumers;
+WorkTree memory is shared by its Tasks and Sessions; Task and Session overlays
+remain narrower. Visibility is checked at each direct read and publication.
+
+Git ancestry, Org heading nesting, Session lineage, and C4 policy inheritance
+are four distinct relations. Orgize's =child-of= and =descendant-of= yield
+structural candidates only. A source heading does not create a C4 parent. POO
+Flow builds and verifies its explicit C4 policy graph using LeanPoo's verified
+linearization before resolving scope and Memory policy.
+
+For each selected Org source, preserve its bytes hash, parser/query pack
+version, exact span and source cut. Run an Orgize named query to collect
+structural candidates. POO Flow filters them by current scope and Memory
+policy, then asks MRR to admit semantic claims and Content/Context closure.
+Only an admitted receipt may become a Memory publication intent. This order
+prevents parser matches from being mistaken for semantic facts or permissions.
+The current Orgize AOT query surface has one relation at a time with structural
+predicates; joins, negation, ordering and aggregation remain an adapter or
+query-engine design gate. POO Flow PR #34 pins the stacked
+[[https://github.com/tao3k/orgize/pull/21][Orgize PR #21]] head =16d2a8c3ac168d73b890262b29b756d4b4ec3361=;
+the [[https://github.com/tao3k/orgize/blob/16d2a8c3ac168d73b890262b29b756d4b4ec3361/languages/org/v1/modules/org-elements/aot.ss][Scheme AOT source]] belongs to that exact dependency cut.
+
+* Durable publication and recovery
+
+Memory extraction/consolidation is a versioned job intent with source cut,
+policy revision, idempotency key, lease and budget. It may create immutable
+artifacts without moving a visible head. After MRR admission and physical
+retrieval/integrity checks, the runtime CASes the POO Flow owned scope head
+against its expected revision. On a lost CAS, stale source cut, revoked grant,
+or closed Session, retry from current policy and source; do not expose an
+unadmitted candidate. Replaying the same accepted intent must preserve its
+identity and avoid repeating external effects. This is a required runtime
+contract, not established by the present design proofs.
+
+Cross-WorkTree sharing uses explicit propose -> project publication or targeted
+grant -> target validation/import -> target-head CAS. The source and target
+cuts, capability, policy revision, and provenance remain in the import
+receipt. A source WorkTree head is never read directly by a foreign WorkTree;
+publication does not merge Git state or automatically merge Context. Conflicts
+are returned to the target for review or policy-guided resolution.
+
+* Acceptance cases and gates
+
+| Case | Required result |
+|------+-----------------|
+| WorkTree A has Tasks A1/A2 and three Sessions | authorized readers see one current A shared head, with narrower overlays |
+| WorkTree B has Task B1 and one Session | B cannot directly read A private head |
+| A publishes to B with current cuts and grant | B validates semantic applicability and CASes only B head |
+| A source cut or B target cut changes | import is refused and revalidated |
+| permission is revoked before read or commit | access and publication are refused |
+| two workers publish against one revision | at most one head transition succeeds |
+| WorkTree path/branch is reused for a new identity | old private state is not inherited |
+| source heading is nested | no C4 policy edge is inferred from nesting |
+
+The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
+pure guards and finite concurrent transitions for Session and WorkTree heads.
+They do not prove Scheme/runtime refinement, actual Orgize query binding,
+semantic admission, physical storage/CAS, recovery or large-scale behavior.
+Implementation should first add a typed, source-preserving Orgize candidate
+adapter and POO Flow Memory policy/intent projection, then connect MRR
+admission and runtime publication. Qualify the resulting path with controlled
+A/B cases against the existing direct-source path before claiming an
+improvement.

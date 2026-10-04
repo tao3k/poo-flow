@@ -521,6 +521,19 @@ check-temporal-conclusion-selection-tlc:
 check-temporal-poo-lean:
     cd "{{ temporal_poo_proof_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 120s lake build PooFlowTemporalPooProof
 
+# Session lifecycle, WorkTree sharing, and explicit C4 policy proofs belong to
+# POO Flow. MRR receipts are external inputs to these contracts.
+[group('check')]
+check-session-poo-lean:
+    cd "{{ temporal_poo_proof_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 120s lake build PooFlowSessionProof
+
+[group('check')]
+check-session-context-tla:
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" PYTHONPATH="{{ justfile_directory() }}/packages/proofs/python/src" python3 -m poo_flow_proof.session_context_tla --receipt "{{ justfile_directory() }}/.ci/session-context/tla-receipt.json"
+
+[group('check')]
+check-session-proof: check-session-poo-lean check-session-context-tla
+
 [group('check')]
 check-native-semantic-query-model: check-native-semantic-query-lean check-native-semantic-query-tla
     mkdir -p "$(dirname "{{ semantic_query_tlc_receipt }}")"
@@ -529,7 +542,7 @@ check-native-semantic-query-model: check-native-semantic-query-lean check-native
 # Full aggregation is an explicit integration qualification, never the default
 # local or pull-request proof gate.
 [group('check')]
-check-lean-all:
+check-lean-all: check-temporal-poo-lean check-session-poo-lean
     cd "{{ lean_proof_dir }}" && lake build PooFlowProof
 
 # Preserve the focused syntax-only gate for parser development.
