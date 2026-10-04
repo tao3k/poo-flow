@@ -12,6 +12,7 @@ import shlex
 import subprocess
 
 from .semantic_cases import corpus
+from .semantic_sources import project_sources
 
 
 def sha(data):
@@ -42,26 +43,17 @@ def request_for(task, sources, model):
                   'rows': {'type': 'array', 'items': {
                       'type': 'array', 'items': {'type': 'string'},
                       'minItems': 2, 'maxItems': 2}}}}
-    content = ('Evaluate the final Scheme expression using the supplied implementation.\n'
-               'Follow each guard, conditional, loop and filter literally; do not guess\n'
-               'the result from function names or from a graph traversal alone.\n'
-               'Preserve strict versus inclusive comparisons and loop stopping tests\n'
-               'exactly as written, including which branch supplies the returned rows.\n'
-               'Return only the resulting JSON object with its status and rows fields.\n'
-               'The status is the returned Temporal status. Rows must remain arrays of\n'
-               'two event IDs; do not serialize rows into strings or convert object\n'
-               'fields into key/value rows. Do not include an execution-status wrapper.\n\n')
-    content += '\n\n'.join(';;; SOURCE ' + name + '\n' + source
+    content = '\n\n'.join(';;; SOURCE ' + name + '\n' + source
                             for name, source in sources.items())
-    payload = json.dumps(task, ensure_ascii=False, separators=(',', ':'))
-    literal = json.dumps(payload, ensure_ascii=False)
-    content += ('\n\n(parameterize ((current-json-read-options\n'
-                '                  (JSONReadOptions object-as-hash: #t)))\n'
-                '  (let ((result (string->json\n'
-                '                  (semantic-call "temporal.solve" ' + literal + '))))\n'
-                '    (json->string\n'
-                '      (hash (status (hash-get result "status"))\n'
-                '            (rows (hash-get result "rows"))))))\n')
+    content += ('\n\n;;; TASK JSON\n' + json.dumps(task, ensure_ascii=False, indent=2)
+                + '\n\n;;; EVALUATION\n'
+                'Treat TASK JSON as the task hash table passed to this expression:\n'
+                '(semantic-call "temporal.solve" (json->string task))\n'
+                'Evaluate using the supplied implementation, following guards, loops,\n'
+                'filters and strict/inclusive comparisons literally. Return only the\n'
+                'status and rows fields of the resulting JSON object. Keep rows as\n'
+                'arrays of two event IDs, without an execution-status wrapper, prose\n'
+                'or stringifying nested arrays.\n')
     return {'model': model, 'input': [{'role': 'user', 'content': content}],
             'reasoning': {'effort': 'none'}, 'max_output_tokens': 1024,
             'text': {'format': {'type': 'json_schema', 'name': 'temporal_candidate',
@@ -70,17 +62,18 @@ def request_for(task, sources, model):
 
 def prepare(root, library, ascent, output, model):
     output.mkdir(parents=True, exist_ok=False)
-    sources = {'src/ffi/semantic.ss': (root/'src/ffi/semantic.ss').read_text(),
-               'gerbil-ascent/temporal/lens.ss': (ascent/'temporal/lens.ss').read_text()}
+    manifest = json.loads(Path(str(library)+'.json').read_text())
+    sources = project_sources(root, ascent, manifest)
     source_paths = [Path(__file__), Path(__file__).with_name('semantic_abi.py'),
                     Path(__file__).with_name('semantic_execution.py'), Path(__file__).with_name('semantic_cases.py'),
                     Path(__file__).with_name('semantic_provider.py'),
                     Path(__file__).with_name('semantic_reporting.py'),
+                    Path(__file__).with_name('semantic_sources.py'),
+                    ascent/'program/scheme-language.ss',
                     root/'packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py',
                     root/'packages/python-runtime/src/poo_flow_runtime/_native/_semantic_build.py',
                     root/'src/ffi/semantic.ss', root/'bindings/runtime-c/src/semantic_host.c',
                     root/'bindings/runtime-c/include/poo_flow/semantic.h', ascent/'temporal/lens.ss']
-    manifest = json.loads(Path(str(library)+'.json').read_text())
     for module in manifest['modules']:
         name = module['module']
         if name.startswith('gerbil-ascent/'):
@@ -101,7 +94,10 @@ def prepare(root, library, ascent, output, model):
     plan = {'schema': 'poo-flow.semantic-abi-live-plan', 'version': 1,
             'head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
             'artifactSha256': digest, 'model': model, 'reasoningEffort': 'none',
-            'inputRepresentation': 'explicit output contract, public Scheme source and literal semantic-call result projection',
+            'inputRepresentation': 'compiler-enumerated project runtime source closure and plain JSON task',
+            'modelSourceSha256': {name: sha(value.encode()) for name, value in sources.items()},
+            'platformModules': [m['module'] for m in manifest['modules']
+                                if m['module'].startswith(('gerbil/', 'std/', 'clan/'))],
             'contentIdleSeconds': 5, 'totalCallSeconds': 90,
             'maximumCalls': 24, 'retries': 0, 'cases': tasks,
             'order': [{'case': c['id'], 'api': api} for c in tasks for api in ('sync', 'async')],

@@ -38,22 +38,22 @@ def corpus():
             item['lens']['end'] = 3
         elif name == 'unknown-time':
             item['source']['events'][1][1] = 'unknown'
-        rename = {'a': 'r7', 'b': 's4', 'c': 't9'}
+        rename = {'a': 'u', 'b': 'v', 'c': 'w'}
         item['root'] = rename[item['root']]
         item['lens']['members'] = [rename[n] for n in item['lens']['members']]
-        item['lens']['generation'] += 40
-        item['source']['generation'] += 40
-        item['source']['identity'] = 'contract-source-' + name
-        item['lens']['cut'] = 'contract-cut-' + name
+        item['lens']['generation'] += 60
+        item['source']['generation'] += 60
+        item['source']['identity'] = 'closure-source-' + name
+        item['lens']['cut'] = 'closure-cut-' + name
         for field in ('start', 'end', 'asOf'):
-            item['lens'][field] += 17
+            item['lens'][field] += 53
         for event in item['source']['events']:
             event[0] = rename[event[0]]
             if isinstance(event[1], int):
-                event[1] += 17
+                event[1] += 53
             elif isinstance(event[1], list):
-                event[1][1:] = [bound + 17 for bound in event[1][1:]]
-            event[2] += 17
+                event[1][1:] = [bound + 53 for bound in event[1][1:]]
+            event[2] += 53
         item['source']['parents'] = [[rename[x] for x in edge] for edge in item['source']['parents']]
         cases.append({'id': name, 'request': item})
     return cases

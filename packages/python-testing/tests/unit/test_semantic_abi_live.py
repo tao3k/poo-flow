@@ -76,8 +76,8 @@ def test_request_contains_only_current_task_source_and_transport_contract():
         supplied = request['input'][0]['content']
         assert '(def actual-source 1)' in supplied
         assert '(semantic-call "temporal.solve" ' in supplied
-        payload = json.dumps(case['request'], ensure_ascii=False, separators=(',', ':'))
-        assert json.dumps(payload, ensure_ascii=False) in supplied
+        payload = supplied.split(';;; TASK JSON\n', 1)[1].split(';;; EVALUATION', 1)[0]
+        assert json.loads(payload) == case['request']
         assert 'expected' not in supplied and 'native-private' not in supplied
         assert 'instructions' not in request and 'tools' not in request
     cases[0]['request']['source']['parents'].clear()
@@ -88,3 +88,26 @@ def test_configuration_reads_literals_without_executing_shell(tmp_path):
     path = tmp_path/'env'
     path.write_text('export DEEPSEEK_API_KEY="literal-key"\nANTHROPIC_MODEL=deepseek-v4-flash\nUNRELATED=$(touch unsafe)\n')
     assert configuration(path) == {'DEEPSEEK_API_KEY': 'literal-key', 'ANTHROPIC_MODEL': 'deepseek-v4-flash'}
+
+
+def test_compiler_project_dependency_sources_are_supplied_and_missing_files_fail(tmp_path):
+    from poo_flow_testing.model_study.semantic_sources import project_sources
+    root = tmp_path / 'root'
+    ascent = tmp_path / 'ascent'
+    files = {root/'src/ffi/semantic.ss': '(def semantic-call actual)',
+             root/'core/types.ss': '(def project-type actual)',
+             ascent/'temporal/lens.ss': '(def temporal-solve actual)',
+             ascent/'candidate/reasoning.ss': '(def reasoning-attempt actual)',
+             ascent/'program/scheme-language.ss': '(export actual-facade)'}
+    for path, value in files.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(value)
+    manifest = {'modules': [{'module': name} for name in
+                ('core/types', 'gerbil-ascent/temporal/lens',
+                 'gerbil-ascent/candidate/reasoning', 'std/encoding/json')]}
+    sources = project_sources(root, ascent, manifest)
+    assert sources['gerbil-ascent/candidate/reasoning.ss'] == '(def reasoning-attempt actual)'
+    assert sources['gerbil-ascent/program/scheme-language.ss'] == '(export actual-facade)'
+    (ascent/'candidate/reasoning.ss').unlink()
+    with pytest.raises(FileNotFoundError):
+        project_sources(root, ascent, manifest)
