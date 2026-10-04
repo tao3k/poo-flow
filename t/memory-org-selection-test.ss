@@ -7,9 +7,8 @@
         (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/semantic/orgize-interface
-                 make-org-element-graph-view org-named-element-query-id)
-        (only-in :orgize/languages/org/v1/modules/org-elements/generated/query-source
-                 org-element-queries)
+                 make-org-element-graph-view org-element-query
+                 org-elements property descendant-of)
         :poo-flow/modules/session/config
         :poo-flow/modules/memory-core/config
         :poo-flow/modules/memory-core/org-selection
@@ -17,8 +16,8 @@
 
 (export memory-org-selection-test)
 
-;;; The graph and named query are Orgize POO values. POO Flow does not parse
-;;; Org text, manufacture an Element query, or reimplement its Memory state.
+;;; The fixture uses Orgize's public Scheme query DSL. POO Flow does not parse
+;;; Org text or reimplement Element query or Memory semantics.
 (def org-graph
   (make-org-element-graph-view
    (list (.o id: 0 parent: #f kind: "org-data" todo-type: #f)
@@ -30,18 +29,15 @@
    (lambda (record name)
      (and (equal? name "todo-type") (.ref record 'todo-type)))))
 
-(def (named-query query-id)
-  (let loop ((remaining org-element-queries))
-    (cond
-     ((null? remaining) (error "missing Orgize named query" query-id))
-     ((equal? (org-named-element-query-id (car remaining)) query-id)
-      (car remaining))
-     (else (loop (cdr remaining))))))
+(def org-query
+  (org-element-query "tasks.open"
+    (org-elements headline (property todo-type "todo")
+                  (descendant-of scope))))
 
 (def org-selection
   (poo-flow-memory-org-select
    "project-one" "worktree-a" "notes/memory.org" "cut-a"
-   "bytes-sha256" org-graph (named-query "tasks.open") 0))
+   "bytes-sha256" org-graph org-query 0))
 
 (def org-store
   (poo-flow-memory-store-spec
