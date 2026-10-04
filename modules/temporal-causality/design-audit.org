@@ -351,3 +351,36 @@ no claimed pass. Live MRR PR inspection found an existing original-row transport
 and receiver-side re-admission; remaining query/source/cut/generation mapping
 must use that original owner interface. Neither full MRR integration nor Rust
 publication/IFC/current-applicability gates are closed by this delivery.
+
+* Delivered: authorized Rust real-model acceptance and native MRR observation seam
+
+The user explicitly authorized the frozen synthetic task/native-result payload.
+The Rust finite-family tool study then passed 4/4 roundtrips and 8 completed real
+DeepSeek responses with no retries, no failure and a preserved source freeze.
+Each provider phase retained the five-second genuine-content watchdog. See
+[[file:../../t/qualification/temporal-library-basic/rust-model-family/report.json][the frozen model receipt]]. This qualifies read-only forced-tool task fidelity and
+result consumption for the new family/Rust path, not unaided prediction,
+MRR physical execution, source authenticity, root admission or publication.
+
+Feature =mrr-transport= fixes the original MRR facade at
+=3ce31dac2dc58ab780ed06fa88103de501355692=. Original transport is re-admitted
+by MRR against the host's CatalogBoundQuery and its original receipt is retained.
+The narrow event:String/position:Integer projection binds an explicit host
+source/cut/projection/policy/clock and separate Temporal generation to all MRR
+receipt identities. Its correspondence digest becomes POO observation provenance;
+changed mapping cannot silently reuse the model digest. Caller-supplied
+observations and unsupported shapes are rejected. MRR content generation is
+never converted into a Temporal time or integer generation.
+
+The typed observation seam calls the existing native POO classifier. It does
+not implement a Rust classifier, claim verified source coverage, or fabricate
+MRR parser/proof receipts. Physical source execution, GQL parser-source receipt
+transport, source authentication, generic projection profiles and the D6/D7/IFC
+stronger gates remain separately open.
+
+The exact linked MRR/POO operational gate passed two integration tests: original
+MRR transport projection at 0.24s and 21-result native Rust regression at 0.90s.
+The five-second output watchdog did not trigger. See
+[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/receipt.json][the exact MRR dependency/source/native-artifact receipt]]. CI now builds and runs
+the =mrr-transport= feature against the same native producer artifact. The initial
+macOS system-linker failure is retained separately from test execution.

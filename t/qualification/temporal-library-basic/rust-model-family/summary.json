@@ -1,0 +1,15 @@
+{
+  "schema": "poo-flow.rust-family-model-summary.v1",
+  "producerHead": "24081c15cd2f1b01490bb9235b9a177ce8889bfd",
+  "roundtrips": 4,
+  "passed": 4,
+  "failed": 0,
+  "providerResponses": 8,
+  "retries": 0,
+  "sourceFreezeIntact": true,
+  "firstContentMaxSeconds": 1.5116587499996967,
+  "contentGapMaxSeconds": 0.4755849590001162,
+  "nativeMaxSeconds": 0.2776202500008367,
+  "contentIdleLimitSeconds": 5,
+  "scope": "forced read-only finite-family tool argument fidelity, actual Rust/C/POO execution and consumption; not unaided prediction, native MRR result mapping, source authenticity, admission, publication or IFC permits"
+}

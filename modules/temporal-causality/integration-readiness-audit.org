@@ -215,3 +215,26 @@ operations. MRR original-result mapping, cross-generation correspondence and
 Rust durable publication are still subsequent gates. The new model study is
 separately permission-gated by automatic approval review; a rejected invocation
 is zero real-model calls, never a successful acceptance receipt.
+
+* Current delivered native MRR slice
+
+The authorized Rust family real-provider gate subsequently passed 4/4 frozen
+roundtrips, 8 completed responses and no retries. This supersedes the earlier
+blocked execution state for that exact payload; its producer head and claim
+scope remain in [[file:../../t/qualification/temporal-library-basic/rust-model-family/summary.json][the model receipt]].
+
+R3 now has an executable original MRR -> explicit host observation correspondence
+-> native POO finite-family seam in =bindings/rust-runtime/src/mrr.rs=.
+The upstream facade is pinned at PR #9 head =3ce31dac...=; no MRR implementation
+or MRR Data PR was overwritten. The receiving side uses native MRR transport
+verification and retains the original candidate/receipt. The narrowly supported
+event/position profile binds all original identities to source/cut/projection/
+policy/clock and a separate integer Temporal generation. Changed scope invalidates
+POO model identity through observation provenance. No generation coercion or
+digest substitution occurs. Exact native/negative-gate results are in
+[[file:../../t/qualification/temporal-library-basic/rust-mrr-runtime/receipt.json][the integration receipt]].
+
+Physical MRR Data execution, original GQL parser-source receipts, authenticated
+coverage, generic typed row mapping and R4 lifecycle/IFC gates remain open.
+The frozen real-provider batch exercises Rust native family calls; it does not
+claim a provider -> MRR physical-source -> Temporal publication roundtrip.

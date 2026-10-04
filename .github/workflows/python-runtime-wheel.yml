@@ -298,6 +298,6 @@ jobs:
           POO_FLOW_SEMANTIC_SHA256="$(sha256sum "$POO_FLOW_SEMANTIC_LIBRARY" | cut -d ' ' -f 1)"
           export POO_FLOW_RUNTIME_TRACE=1
           export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.json"
-          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --no-run
+          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport --no-run
           python bindings/rust-runtime/tools/watch.py \
-            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml -- --nocapture
+            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-transport -- --nocapture

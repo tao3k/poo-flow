@@ -4,10 +4,19 @@
 name = "poo-flow-rust-runtime"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.95"
 license = "Apache-2.0 AND LGPL-2.1-or-later"
 publish = false
 [dependencies]
 libloading = "0.8.9"
 sha2 = "0.10.9"
 serde_json = "1.0.150"
+
+[features]
+default = []
+mrr-transport = ["dep:meta-relational-reasoning"]
+[dependencies.meta-relational-reasoning]
+git = "https://github.com/tao3k/meta-relational-reasoning.git"
+rev = "3ce31dac2dc58ab780ed06fa88103de501355692"
+optional = true
+default-features = false

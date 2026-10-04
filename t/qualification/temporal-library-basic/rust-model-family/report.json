@@ -1,0 +1,12 @@
+{
+  "schema": "poo-flow.rust-family-tool-acceptance.v1",
+  "planSha256": "9074d2dc747756d5a9be50fcac84db24a3d88473ebaadbc530bf4add8215f231",
+  "roundtrips": 4,
+  "passed": 4,
+  "failed": 0,
+  "retries": 0,
+  "nativeCalls": 4,
+  "providerResponses": 8,
+  "sourceFreezeIntact": true,
+  "scope": "forced read-only finite-family tool fidelity and consumption through Rust/C/POO; no unaided prediction, source authenticity, admission, publication or IFC permit"
+}
