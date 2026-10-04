@@ -400,3 +400,18 @@ Fourteen answers are correct; ten semantic errors are rejected by the native
 ABI. The model gate remains FAILED. The five-second content deadline and zero
 retry rule remain unchanged; see
 [[file:../../t/qualification/semantic-abi/README.org][the retained qualification evidence]].
+
+* Bound read-only model tool calls
+=poo_flow_runtime.semantic_tools= exposes =temporal_tool_definition=,
+=invoke_temporal_tool= and =ainvoke_temporal_tool=. The model submits a structured
+function call for the caller's current task. The Library validates operation,
+argument identity and exact task data before executing native =temporal.solve=.
+Stale source generations, replacement facts, duplicate JSON keys and added
+fields are rejected. The helper returns the actual engine result and artifact
+digest, suitable for a paired provider =function_call_output=.
+
+The installed-wheel real DeepSeek qualification passes 24/24 sync/async tool
+roundtrips and 48/48 provider responses. Model final output preserves the actual
+status, rows and source binding. This qualifies a forced read-only tool route;
+unaided source prediction remains FAILED and autonomous tool choice is untested.
+See [[file:../../t/qualification/semantic-abi/README.org][the bounded receipts and deadlines]].

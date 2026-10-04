@@ -93,3 +93,48 @@ are recorded, while their private content is discarded. The deadline is kept
 unchanged; none of these timeouts is counted as correct or retried. This result
 bounds this configuration and does not prove that every thinking model is slow.
 Previous failures remain immutable evidence, including the original 4/48 pilots.
+
+* Project source closure and zero-temperature prediction studies
+The compiler-enumerated project runtime sources and imported empty facade are
+now supplied: 32 files, 406322 bytes. Each file is byte-matched to a Git blob in
+public pinned repositories. Gerbil, stdlib and clan/poo remain platform imports;
+the manifest retains these native platform dependencies. This fixes omitted
+project implementation inputs, not a general interpreter for all Scheme code.
+TASK JSON is supplied plainly with the current semantic-call operation, avoiding
+the earlier doubly encoded operand. Missing project source files fail preparation.
+The fresh source-closure batch scores 11/24; a separately frozen temperature-zero
+batch with new identities/times/generations scores 12/24. Both retain all errors,
+24 native observations/rebindings and 13 negative controls. The source-prediction
+gate remains FAILED. Low temperature does not guarantee deterministic outputs.
+Large request JSON files are archived losslessly as requests.json.gz; decompress
+before checking their original request hashes against the frozen plan.
+
+* Real model to Library to model read-only roundtrip
+The new semantic_tools Library surface binds one function call to the caller's
+current task before invoking temporal.solve through the current native ABI.
+Operation identity, exactly one task argument, duplicate fields, source changes,
+source generation changes, numeric-type changes and extra fields are guarded.
+Caller-declared source identities still confer no admission or effect authority.
+Sync and async helpers use the native Scheme owner thread. The native tests
+include stale-task rejection and async parity, and CI explicitly runs them.
+
+The frozen forced-tool batch passes 24/24 roundtrips and 48/48 real DeepSeek
+responses, with no retries, timeouts or skipped cases. Every task is checked
+against caller data, every native result is returned through a paired actual
+function_call_output, and the model's final JSON must preserve status, rows and
+bindingDigest exactly. All 49 installed Runtime/producer checks and 48 Testing
+unit/harness checks pass. These scores measure read-only tool argument fidelity,
+actual Library execution and faithful consumption of the tool output. They do
+not measure unaided source understanding or autonomous selection of a tool.
+The source-prediction failures remain separate, unchanged evidence.
+
+Each model phase retains the five-second genuine-content deadline. The tool
+phase measures non-whitespace function_call_arguments deltas; the final phase
+measures output_text deltas. Metadata and reasoning events cannot reset either
+deadline. First content takes at most 1.294 seconds; subsequent gaps at most
+0.225 seconds; native execution at most 0.094 seconds. The installed wheel SHA256
+is 4f9e1cfaefe19c465a03f2497e9b0584e7d8826b1b3bc63880dc2400cfc4ac59.
+The native artifact remains 248f3f5966783f852fc1819d17276d73856aa2fafff481c82d5a841a9943cb06.
+Original frozen producer head 128ead00 and scope are recorded in the plan.
+Function-call item pairing and stream events follow the
+[[https://api-docs.deepseek.com/guides/responses_api/][official DeepSeek Responses contract]].

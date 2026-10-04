@@ -150,3 +150,19 @@ rejected. All 41 installed checks and 46 Testing unit/harness checks pass.
 A separate four-case =reasoning.effort: low= diagnostic fails the unchanged
 five-second first-content deadline in every case. See
 [[file:../../t/qualification/semantic-abi/README.org][retained failure-repair evidence]]; the model gate remains FAILED.
+
+* Real Library tool roundtrip acceptance
+=python -m poo_flow_testing.model_study.semantic_tool_live= freezes 24 sync/async
+roundtrips (maximum 48 calls) through the installed Library and actual DeepSeek
+function calls. Required arguments are checked against caller-owned data; the
+native result is passed back as a paired tool output and final JSON is checked
+for exact status, rows and bindingDigest. Five-second content deadlines measure
+actual argument deltas in the tool phase and text deltas in the final phase;
+reasoning/metadata do not count. The current forced read-only route passes 24/24.
+Its score is distinct from failed unaided source-prediction studies.
+
+#+begin_src sh
+python -m poo_flow_testing.model_study.semantic_tool_live \
+  --poo-root /path/to/poo-flow --library /path/to/libpoo_flow_semantic.dylib \
+  --env-file /path/to/config.env --output /path/to/new/receipts --live
+#+end_src

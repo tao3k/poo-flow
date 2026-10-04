@@ -54,6 +54,7 @@ SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
 path = [
   "t/qualification/semantic-abi/**/*.xml",
   "t/qualification/semantic-abi/**/*.log.gz",
+  "t/qualification/semantic-abi/**/*.json.gz",
     "t/qualification/semantic-abi/**/paid-batch-claim",
   "t/qualification/temporal-library-basic/integration/tests.xml",
 ]

@@ -29,5 +29,17 @@
     "passed": 14,
     "calls": 24,
     "modelGate": "FAILED"
+  },
+  "currentLibraryToolRoundtrip": {
+    "summary": "2026-10-04-tool-roundtrip-abi/summary.json",
+    "gate": "PASSED",
+    "roundtrips": 24,
+    "responses": 48
+  },
+  "currentSourcePrediction": {
+    "gate": "FAILED",
+    "correct": 12,
+    "calls": 24,
+    "report": "2026-10-04-temperature-zero-abi/report.json"
   }
 }
