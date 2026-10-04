@@ -439,8 +439,61 @@ with lint/format/docs checks and locked workspace resolution. This removal
 did not trigger another paid model batch; the prior frozen model receipt
 continues to refer to its recorded immutable physical projection.
 
-The active =21e853da= removal pin builds, but physical initialization exceeded
+The historical =21e853da= removal pin built, but physical initialization exceeded
 the five-second progress gate in both the first run and one explicit SDK
 environment diagnostic. Their failure logs are archived; no new physical
 receipt was accepted. The root cause remains unestablished. The earlier
 =bdc81a1c= successful physical/model receipts do not qualify this head.
+
+* Proof-bound Family revision Library slice
+
+The public =lifecycle/interface= connects a replayed Family admission to the
+existing immutable conclusion envelopes. =family-revision-root= retains the
+admission's original proof. =family-revision-change= replays both admissions,
+requires the same logical Source, model, query and claim, an advancing Source
+generation, and a complete scoped invalidation frontier bound to both cuts and
+projections. Classification equality does not reuse the historical proof:
+correction produces a new proof-bound revision with an explicit predecessor.
+
+=retract= requires a previously possible/necessary admission and a newly
+replayed refuted admission for that same Family query. The resulting tombstone
+retains the refutation proof and all predecessors. Invalidation alone cannot
+produce it. =family-revision-replay= reconstructs every predecessor and checks
+the proof, revision and digest bindings; =family-revision-journal= also checks
+the supplied journal inventory through the existing conclusion graph validator.
+Omitting a predecessor or continuing a withdrawn branch rejects admission.
+
+This is pure Scheme Library behavior. The frontier's completeness and Source
+cut remain caller premises; there is no authenticated index/current-cut
+correspondence, durable append, support stabilization, native ABI journal
+transport, current-pointer CAS or effect execution. Retraction is query scoped;
+it does not establish that all independent supports for a business claim have
+been removed. Runtime-executed, Source-authenticated and action-authorized
+flags remain false. G1--G5 retain their independent gates.
+
+The later =9bf708ec= pinned physical qualification supersedes the historical
+initialization failure for its recorded read-only graph: Data =707f4353= and
+MRR =d5beb403=. Its successful receipt is in
+[[file:../../t/qualification/temporal-current-source/README.org][the current-source qualification archive]]. It does not qualify this new lifecycle
+slice's ABI transport, durable journal or publication behavior.
+
+The next ownership sequence is:
+1. POO extends the native Scheme ABI with proof-bound revision/journal transport
+   and replay refusal receipts; Rust forwards the original typed identities.
+2. MRR projects admitted revisions into Context with explicit classification,
+   predecessor and Source scope. It must preserve multiple independent support
+   groups and keep dirty/current eligibility separate from historical validity.
+3. MRR Data Backend/Protocols persist the proof journal before a current-pointer
+   replacement or tombstone CAS. Crash/replay/concurrent-cut and policy tests
+   qualify this boundary before any effect fence or real-model lifecycle gate.
+
+Each step requires its own pinned cross-runtime receipt. The Library slice
+does not supply those receipts or choose a business-level current winner.
+
+The native public Library qualification passed 11/11 Cases (seven lifecycle,
+four current-source regressions), final =OK= and exit 0 under five-second
+genuine-progress and 45-second total gates. The frozen Scheme receipt and
+original output are in the qualification archive linked above. Four earlier
+discovery timeouts remain archived; bounded, completed official dependency
+imports resolved the observed silent loading stage. No business or model calls
+were used to substitute for these Library checks.

@@ -7,7 +7,7 @@
         "revisions/interface.ss" "truth-maintenance/interface.ss"
         "conclusions/interface.ss" "trajectory/interface.ss" "impact/interface.ss"
         "evidence/interface.ss" "candidates/interface.ss" "admission/interface.ss"
-        "applicability/interface.ss")
+        "applicability/interface.ss" "lifecycle/interface.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "funs.ss")
@@ -18,4 +18,4 @@
         (import: "conclusions/interface.ss")
         (import: "trajectory/interface.ss" "impact/interface.ss"
                  "evidence/interface.ss" "candidates/interface.ss" "admission/interface.ss"
-                 "applicability/interface.ss"))
+                 "applicability/interface.ss" "lifecycle/interface.ss"))
