@@ -392,3 +392,11 @@ source archive removed. All 34 focused installed Runtime/producer checks pass.
 48 real DeepSeek responses meet the five-second content gate, but only 4/48
 predictions match native semantics. The model correctness gate is FAILED;
 ABI rejection and transport success do not close it.
+
+The subsequent failure-repair qualification builds and installs a fresh wheel:
+41 installed Runtime/producer checks pass without skips, and a new 24-call
+DeepSeek batch exercises both current prediction APIs and observation sinks.
+Fourteen answers are correct; ten semantic errors are rejected by the native
+ABI. The model gate remains FAILED. The five-second content deadline and zero
+retry rule remain unchanged; see
+[[file:../../t/qualification/semantic-abi/README.org][the retained qualification evidence]].

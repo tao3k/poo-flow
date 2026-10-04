@@ -22,5 +22,12 @@
   "firstContentMaxSeconds": 1.278647582992562,
   "contentGapMaxSeconds": 0.31053345900727436,
   "scope": "current semantic ABI installed Darwin arm64 Library engineering qualified; real-model correctness gate FAILED; no max-effort reasoning, full Scheme capability, real-time teaching, external business or control ABI freeze claim",
-  "modelGate": "failed"
+  "modelGate": "failed",
+  "latestFailureFix": {
+    "producerHead": "c8b491bfb91001183e78df4930d0bc38f3a5e17b",
+    "summary": "2026-10-04-output-contract-build/summary.json",
+    "passed": 14,
+    "calls": 24,
+    "modelGate": "FAILED"
+  }
 }

@@ -54,3 +54,42 @@ head to reproduce that producer. The archive index hashes every retained file.
 Responses parameters and stream kinds follow the
 [[https://api-docs.deepseek.com/guides/responses_api/][DeepSeek Responses contract]] and
 [[https://api-docs.deepseek.com/api/create-response/][reasoning effort definitions]].
+
+* 2026-10-04 failure repair and fresh installed ABI acceptance
+The Python Testing project harness failed on bare print calls and, after their
+removal, on the mixed ownership/size of the producer module. Planning, execution
+and CLI reporting now have separate owners. All 46 Testing unit/harness checks
+pass. The compiler build runner also preserves captured failure diagnostics.
+
+The request now explicitly asks for the value of the final expression, preserving
+Temporal status, row arrays, comparisons and control flow. These are generic
+execution/output instructions, not supplied answers or a Temporal semantic guide.
+The output schema includes the actual ABI's unknown status. Two output-contract
+diagnostics on previous frozen tasks score 8/12 and 10/12. They are diagnostics
+scored against retained native keys, not new native ABI acceptance.
+
+A fresh native library (248f3f5966783f852fc1819d17276d73856aa2fafff481c82d5a841a9943cb06)
+and CPython wheel are built and installed independently. Core types and all 26
+ASCENT modules/facades are compiled from the pinned sources. Runtime v0 is built
+locally with Clang from the checked contract header; this is not a new Bazel
+producer qualification. All 41 installed Runtime/producer checks pass, with no
+skips and Gerbil absent from PATH.
+
+The final frozen batch uses new event identities, time positions, generations
+and source/cut identities, through both sync and async current Runtime APIs.
+It completes 24/24 provider calls, native observations, observation deliveries
+and generation rebindings. Thirteen negative controls pass. Exactly 14/24 model
+answers are consistent; ten semantic contradictions remain and are rejected.
+First content takes at most 0.876 seconds; inter-content gaps at most 0.272 seconds.
+There are no retries or timeouts in this batch. The model gate remains FAILED.
+The producer head, plan, requests, raw answers, native keys and ten failures are
+retained in 2026-10-04-output-contract-abi; build/test receipts are in
+2026-10-04-output-contract-build. This does not claim independent semantic proof
+or successful generalization from the diagnostic tasks.
+
+A separately frozen four-case diagnostic with reasoning effort low fails every
+case at the five-second first-content deadline. Reasoning event types/timings
+are recorded, while their private content is discarded. The deadline is kept
+unchanged; none of these timeouts is counted as correct or retried. This result
+bounds this configuration and does not prove that every thinking model is slow.
+Previous failures remain immutable evidence, including the original 4/48 pilots.

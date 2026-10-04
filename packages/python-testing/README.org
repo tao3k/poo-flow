@@ -119,8 +119,8 @@ durable verified evidence archives for any approved live run.
 
 =model_study.semantic_abi= consumes current =SemanticRuntime= APIs. It freezes
 twelve task variants and 24 calls across synchronous and asynchronous prediction.
-Model input contains actual Scheme source, task data and an inert JSON output
-schema. It contains no solved answer or semantic tutorial. Each fresh answer
+Model input contains actual Scheme source, task data, a generic literal
+execution/output contract and an inert JSON output schema. It contains no solved answer or semantic tutorial. Each fresh answer
 passes through =temporal.observe= and a caller-owned observation sink.
 
 Five seconds without non-whitespace content fails, including before the first
@@ -141,3 +141,12 @@ Use the =live= extra and the current Runtime package. The output directory must
 be new; its exclusive batch claim prevents accidental duplicate paid execution.
 ABI observation counts, model correctness and failed transport counts are
 reported separately. Admission and answer consistency confer no effect authority.
+
+The producer ownership is =semantic_plan= (configuration, requests, freezing),
+=semantic_execution= (installed Library calls and native observations),
+=semantic_reporting= (actual flushed CLI progress), and =semantic_abi= (CLI).
+The latest fresh installed-ABI batch scores 14/24; ten semantic failures remain
+rejected. All 41 installed checks and 46 Testing unit/harness checks pass.
+A separate four-case =reasoning.effort: low= diagnostic fails the unchanged
+five-second first-content deadline in every case. See
+[[file:../../t/qualification/semantic-abi/README.org][retained failure-repair evidence]]; the model gate remains FAILED.
