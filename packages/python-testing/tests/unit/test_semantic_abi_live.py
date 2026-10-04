@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+"""Exercise content deadlines, frozen request boundaries and literal configuration."""
 import asyncio
 import json
 
 import pytest
 
-from poo_flow_testing.model_study.semantic_abi import configuration, request_for
+from poo_flow_testing.model_study.semantic_plan import configuration, request_for
 from poo_flow_testing.model_study.semantic_cases import corpus
 from poo_flow_testing.model_study.semantic_provider import ContentTimeout, consume_lines
 
