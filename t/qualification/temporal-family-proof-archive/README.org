@@ -23,15 +23,11 @@ Rust test rather than treating a frozen historical receipt as a fresh pass.
 Build the native library with =bindings/runtime-c/tools/build-semantic.py= and
 compile the Rust =mrr= integration test with =--release --features mrr-transport=.
 Use the MRR devenv profile, immutable pins from =bindings/rust-runtime/Cargo.lock=,
-and clean Gerbil compiler/SDK flags. Run the fresh executable with:
+and clean Gerbil compiler/SDK flags. Run the fresh executable through the project
+entrypoint (all paths are absolute):
 #+begin_src sh
-MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 \
-POO_FLOW_ARCHIVE_DIRECTORY=/absolute/output/directory \
-POO_FLOW_SEMANTIC_LIBRARY=/absolute/libsemantic.dylib \
-POO_FLOW_SEMANTIC_SHA256=verified_artifact_hash \
-timeout --foreground --signal=TERM --kill-after=1s 45s \
-python3 bindings/rust-runtime/tools/watch.py "$fresh_executable" \
---exact original_mrr_values_project_to_real_native_poo --nocapture --test-threads=1
+just test-temporal-family-archive "$fresh_executable" "$native_library" \
+  "$verified_artifact_sha256" "$archive_directory"
 #+end_src
 The parent passes the expected digest separately to the child test process.
 Both parent and child must execute one real test and finish successfully. The
@@ -40,8 +36,10 @@ loader hash progress. No timer output or deadline widening is used.
 
 The public POO cases use =poo-flow-test-case= and the original upstream gxtest
 runner. Compile changed modules/tests and the existing native entry before
-linking with official =compile-exe=. Pass =-v 5= and absolute original test paths
-under the same watchdog/deadline. A default-verbosity run with only Module/OK
+linking with official =compile-exe=. Run =just test-temporal-family-native
+/absolute/fresh-native-executable=. It applies =gerbil_test_runtime_options= before
+imports, passes =-v 5= and absolute test paths, and requires exactly 13 Case passes
+plus both Module passes, final OK, and no error markers under the same deadlines. A default-verbosity run with only Module/OK
 output is insufficient to qualify individual cases; earlier such local runs
 remain unqualified in the freeze.
 

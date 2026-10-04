@@ -283,6 +283,37 @@ test-file path:
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
 
+# Run the compiler-owned native Temporal suite with heap fencing and Case receipts.
+[group('test')]
+test-temporal-family-native executable:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -x "{{ executable }}"
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    POO_FLOW_TEST_PROGRESS=1 GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/bindings/rust-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 "{{ justfile_directory() }}/t/temporal-applicability-test.ss" "{{ justfile_directory() }}/t/temporal-lifecycle-test.ss" 2>&1 | tee "$log"
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 13
+    grep -Eq '^MODULE-OK .*temporal-applicability-test.ss$' "$log"
+    grep -Eq '^MODULE-OK .*temporal-lifecycle-test.ss$' "$log"
+    grep -Eq '^HARNESS-OK ' "$log"
+    grep -Eq '^OK$' "$log"
+
+# Verify original MRR owner values and fresh-process archive replay through the ABI.
+[group('test')]
+test-temporal-family-archive executable library sha256 directory:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -x "{{ executable }}"
+    test -f "{{ library }}"
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 POO_FLOW_ARCHIVE_DIRECTORY="{{ directory }}" POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ sha256 }}" timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/bindings/rust-runtime/tools/watch.py" "{{ executable }}" --exact original_mrr_values_project_to_real_native_poo --nocapture --test-threads=1 2>&1 | tee "$log"
+    test "$(grep -Ec '^test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;' "$log" || true)" = 2
+    grep -Eq '^Fresh-process full Family proof archive replay verified$' "$log"
+    test -s "{{ directory }}/archive.ss"
+    test -s "{{ directory }}/replayed.ss"
+
 # Check the declared ASCENT package through POO Flow's Observability Case.
 [group('test')]
 test-ascent-integration:
