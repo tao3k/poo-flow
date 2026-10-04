@@ -827,6 +827,14 @@ requires a fresh, exact Cedar decision at the effect boundary.
    and bound-query evidence with the original POO execution binding.  It may
    not reconstruct a Query model or invent parser, source, provenance or
    semantic-revision identities from the result receipt.
+  A separate bounded synthetic read-only chain now passes original GQL
+   compilation, immutable Arrow recovery, original MRR Scheme v2 receipt
+   admission and native finite-family Temporal classification. Its exact pins
+   and evidence are recorded in
+   [[file:../../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][physical roundtrip qualification]].
+   This does not yet bind the Healthcare candidate-path queries above or close
+   current-cut fences, correction/re-query, deployed recovery and IFC effect
+   publication. Historical model receipts are not a fresh model run at these pins.
 - [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
    native parser qualification and byte-exact roundtrip are closed.
 - [X] Run official TLC model exhaustion through the explicit devenv-backed

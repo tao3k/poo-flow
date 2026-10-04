@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
-import json
+from poo_flow_runtime import scheme_wire as wire
 
 import pytest
 
@@ -72,7 +72,7 @@ def test_source_registration_is_not_available_through_semantic_model_lane(runtim
     task, scope = family_task(), source_scope('source-control-guard')
     with pytest.raises(ValueError, match='host control'):
         runtime.call('$host.temporal.source.register', {'task': task, 'scope': scope})
-    data = json.dumps({'task': task, 'scope': scope}).encode()
+    data = wire.dumps({'task': task, 'scope': scope}).encode()
     def bypass_python_guard():
         result = runtime._ffi.new('poo_flow_semantic_result *')
         try:
@@ -161,13 +161,13 @@ def test_registered_source_permutation_and_async_admission(runtime):
 
 
 def test_source_control_preserves_native_owner_thread_and_transport_guards(runtime):
-    data = json.dumps({'task': family_task(), 'scope': source_scope('source-wrong-thread')}).encode()
+    data = wire.dumps({'task': family_task(), 'scope': source_scope('source-wrong-thread')}).encode()
     result = runtime._ffi.new('poo_flow_semantic_result *')
     assert runtime._lib.poo_flow_python_semantic_source_register(data, len(data), result) == 2
     def reject_transport():
         result = runtime._ffi.new('poo_flow_semantic_result *')
         try:
-            return runtime._lib.poo_flow_python_semantic_source_register(b'{}\0', 3, result)
+            return runtime._lib.poo_flow_python_semantic_source_register(b'(object)\0', 9, result)
         finally:
             runtime._lib.poo_flow_python_semantic_release(result)
     assert runtime._worker.submit(reject_transport).result() == 3

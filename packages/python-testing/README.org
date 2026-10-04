@@ -115,54 +115,31 @@ The [[file:docs/model-study-shared-seed-repair.org][shared-seed repair protocol]
 compares two frozen erroneous candidates at a four-call cap and requires
 durable verified evidence archives for any approved live run.
 
-* Current semantic ABI live acceptance
+* Scheme semantic ABI acceptance
 
-=model_study.semantic_abi= consumes current =SemanticRuntime= APIs. It freezes
-twelve task variants and 24 calls across synchronous and asynchronous prediction.
-Model input contains actual Scheme source, task data, a generic literal
-execution/output contract and an inert JSON output schema. It contains no solved answer or semantic tutorial. Each fresh answer
-passes through =temporal.observe= and a caller-owned observation sink.
+The obsolete JSON source-prediction producer and its CLI have been removed.
+Historical evidence under =t/qualification/semantic-abi= retains its original
+failure boundary and is not current ABI qualification.
 
-Five seconds without non-whitespace content fails, including before the first
-content event. Metadata and private reasoning cannot reset the deadline. The
-producer disables retries, preserves failures and checks source and artifact
-hashes before and after the batch. The frozen transport configuration uses
-=reasoning.effort: none= for this latency-constrained ABI acceptance; it is not
-a max-effort reasoning or real-time teaching experiment.
+Current frozen physical model cases are owned by the ASP Scheme benchmark
+scenario in =bindings/rust-runtime=. The HTTP adapter reads literal provider
+configuration, preserves raw responses, makes at most two calls for one case,
+and performs no retry or repair. Five seconds without real content remains a
+failure. Native observations do not grant effect authority.
 
-#+begin_src sh
-python -m poo_flow_testing.model_study.semantic_abi \
-  --poo-root /path/to/poo-flow --ascent-root /path/to/pinned/ascent \
-  --library /path/to/libpoo_flow_semantic.dylib \
-  --env-file /path/to/config.env --output /path/to/new/receipt --live
-#+end_src
+* Real Library tool roundtrip evidence
 
-Use the =live= extra and the current Runtime package. The output directory must
-be new; its exclusive batch claim prevents accidental duplicate paid execution.
-ABI observation counts, model correctness and failed transport counts are
-reported separately. Admission and answer consistency confer no effect authority.
+The old Python batch producers have been removed. Historical 24/24 tool
+roundtrip evidence remains archived and does not qualify current code.
+Current model case freezing, measurements and receipts belong to the ASP
+Scheme benchmark scenario. The Python adapter is only the external HTTP
+boundary and uses Scheme semantic task/result transport and receipts.
 
-The producer ownership is =semantic_plan= (configuration, requests, freezing),
-=semantic_execution= (installed Library calls and native observations),
-=semantic_reporting= (actual flushed CLI progress), and =semantic_abi= (CLI).
-The latest fresh installed-ABI batch scores 14/24; ten semantic failures remain
-rejected. All 41 installed checks and 46 Testing unit/harness checks pass.
-A separate four-case =reasoning.effort: low= diagnostic fails the unchanged
-five-second first-content deadline in every case. See
-[[file:../../t/qualification/semantic-abi/README.org][retained failure-repair evidence]]; the model gate remains FAILED.
+* Verification progress
 
-* Real Library tool roundtrip acceptance
-=python -m poo_flow_testing.model_study.semantic_tool_live= freezes 24 sync/async
-roundtrips (maximum 48 calls) through the installed Library and actual DeepSeek
-function calls. Required arguments are checked against caller-owned data; the
-native result is passed back as a paired tool output and final JSON is checked
-for exact status, rows and bindingDigest. Five-second content deadlines measure
-actual argument deltas in the tool phase and text deltas in the final phase;
-reasoning/metadata do not count. The current forced read-only route passes 24/24.
-Its score is distinct from failed unaided source-prediction studies.
-
-#+begin_src sh
-python -m poo_flow_testing.model_study.semantic_tool_live \
-  --poo-root /path/to/poo-flow --library /path/to/libpoo_flow_semantic.dylib \
-  --env-file /path/to/config.env --output /path/to/new/receipts --live
-#+end_src
+=python -m poo_flow_testing.verification_progress= runs pytest with the normal
+project gates and reports completed =python_lang_parser.parse_python_file=
+calls. It preserves existing profiling callbacks and restores them afterward.
+Use it inside the five-second output watchdog when the full parser gate would
+otherwise provide no per-file progress. It does not change gate findings,
+assertions, test selection or deadlines.

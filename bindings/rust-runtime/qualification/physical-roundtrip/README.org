@@ -59,9 +59,9 @@ projection of the physical result and replays native classification. It does
 not issue a fresh physical query or exercise correction/re-query, current cut
 fences, IFC publication or source authentication. Those gates remain open.
 
-* Removal revision verification
+* Historical removal revision failure
 
-The active MRR Data pin is =21e853dad5c5c120ca54cfd619efb855e94a4f3b=,
+At MRR Data =21e853dad5c5c120ca54cfd619efb855e94a4f3b=,
 which removes the Legacy worker. Its locked optimized build succeeds. However,
 its physical run failed the unchanged five-second genuine-progress watchdog
 after =mrr-native: runtime initialization started=. One explicit diagnostic
@@ -70,7 +70,7 @@ point. Neither invocation produced a physical receipt or oracle. Both failure
 logs are archived beside the earlier successful evidence. A bounded stack
 sampling attempt also timed out and did not identify the root cause.
 
-This head is not physically runtime-qualified. Host compilation contention was
+That historical revision was not physically runtime-qualified. Host compilation contention was
 observed but has not been established as the cause. The original successful
 physical/model receipts still qualify their recorded =bdc81a1c= projection;
 they do not close this failed initialization gate. No paid model call was made
@@ -78,3 +78,39 @@ for the removal revision. Python resource/export removal is independently
 verified by five existing tool-node tests with the project harness and direct
 import/export checks. An optional core test compilation was stopped to release
 the shared build lock; it is not a test pass.
+
+* Current immutable native closure
+
+The current locked build and physical run pass the unchanged five-second
+actual-progress watchdog and 45-second total deadline. Dependencies are MRR
+=ea80f9b97bde2faf4c125286659799c4c50a0f54=, MRR Data
+=e93a7074f8746a55c53e19b85ecf26ffcb6ef3e4= and native builder
+=6ccabe001f4f28af3e79de491e67c2ac9669b7cf=. The selected parser SDK source is
+=a3fe7846a7b1c544897d6537142e5e203d4b05d3=. The SDK package's older copied tag
+metadata is not used as source identity; the frozen record uses its Git HEAD.
+
+MRR declares that parser version, watches SDK selection changes and passes
+explicit native header inputs to the upstream builder. Header-only changes
+invalidate the native object cache; the focused cache scenario and upstream
+Clippy pass. MRR's complete configured submission Clippy gate also passes.
+The qualifier rejects local dependency patches and obtains its receipt pins
+from the validated Cargo lock instead of historical hard-coded values.
+
+=native-closure-receipt.ss= and =native-closure-build-freeze.ss= in the evidence
+directory retain actual dependency identities, original MRR transport, binary
+hash and source hashes. The physical log records source/root/catalog/row/query/
+wire controls, the valid empty transport control and native Temporal admission.
+Earlier failed startup logs remain preserved; they are not converted to passes.
+
+The Python Runtime harness plus native source-admission controls pass 19/19;
+Testing provider/configuration controls plus its harness pass 7/7. The reporting
+entrypoint logs only actual completed parser calls, never timed heartbeat output.
+The earlier silent harness failures and import diagnostic remain separate from
+these completed runs. Obsolete JSON prediction and Python batch producer CLIs
+are removed; ASP Scheme owns current model freezing and receipts. This revision
+makes no new paid provider call and does not refresh the historical model score.
+
+These results qualify the bounded local read-only chain. Current-cut fences,
+correction/re-query, production recovery, IFC effect publication and the cold
+latency gate remain outside this receipt. No speedup is inferred from the build
+or test durations, and the previously failed cold-p95 target is not reclassified.

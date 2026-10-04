@@ -1,0 +1,236 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.11, pytest-9.1.1, pluggy-1.6.0 -- /private/tmp/poo-pr34-failure-fix/packages/python-testing/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/poo-pr34-failure-fix/packages/python-runtime
+configfile: pyproject.toml
+plugins: python-lang-project-harness-0.1.0, anyio-4.15.1
+collecting ... collected 18 items
+
+packages/python-runtime/python-project-harness <- ../../python-project-harness HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/setup.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/__main__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/cli.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/common.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/comparison.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/crewai.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/langchain.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/langgraph.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/model.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/poo_flow.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/registry.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/report.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_benchmarks/runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_anyio_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_command.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_diagnostics.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_gates.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_model.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_parse.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_build_profile_receipts.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_funflow_cicd.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_funflow_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_funflow_scheme_projection.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_funflow_types.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/_build.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/_semantic_build.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/_temporal_store_build.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/arena.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/arena_model.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/errors.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/evidence.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/loader.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_native/session.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_program_resolution.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_program_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_protocol_person_abi_receipt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_protocol_person_abi_schema.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_protocol_person_abi_vector.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_context.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_executor.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_factory.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_state.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_stream.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_graph_types.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_runtime_language_receipts.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_datum.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_load.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_load_aot.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_load_artifact.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_load_cache.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/_scheme_load_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/batched_evidence.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/batched_evidence_store.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/__main__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_anyio_runtime_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_benchmark_capacity.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_burst_lifecycle_measurement.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_burst_lifecycle_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_burst_lifecycle_workload.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_arrival.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_measurement.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_planner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_projection.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_receipt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_composition_lifecycle_workload.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_large_state_copy_receipt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_large_state_copy_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_large_state_copy_sampling.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_large_state_copy_workload.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_scheme_load_aot_cases.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_scheme_load_aot_types.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/_scheme_load_once.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/anyio_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/burst_lifecycle.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/composition.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/composition_cases.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/composition_lifecycle.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/langgraph_alignment.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/large_state_copy.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/benchmarks/scheme_load_aot.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/build_profile.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/builder.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/checkpoints.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/_helpers.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/checkpoint/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/checkpoint/memory.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/compiled.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/constants.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/graph.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/state.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/compat/langgraph/types.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/crewai.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/durable.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/durable_adapter.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/durable_envelope.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/durable_policy.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/durable_turso_backend.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/event_stream.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/evidence.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/evidence_model.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/funflow.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/json_schema_contract.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/materialization.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/messages.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/native_evidence_sink.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/prebuilt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/program.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/protocol_person_abi.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/receipts.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/runtime_graph.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/scheme_load_aot.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/scheme_projection_artifact.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/scheme_wire.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/semantic_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/semantic_tools.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/stores.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/subgraphs.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/temporal_publication.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/src/poo_flow_runtime/tools.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/conftest.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/checkpoint/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/checkpoint/memory.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/constants.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/graph/__init__.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/graph/state.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/langgraph_shim/langgraph/types.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/program/test_program_core.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/program/test_program_routing.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/scheme_durable_fixtures.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/semantic_cases.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_anyio_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_anyio_runtime_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_anyio_runtime_helpers.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_authorized_effect_evidence.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_batched_merkle_evidence.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_build_profile_command.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_build_profile_diagnostics.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_build_profile_tool.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_builder_prebuilt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_burst_capacity_policy.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_burst_lifecycle_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_checkpoints.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_composition_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_composition_lifecycle_arrival.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_composition_lifecycle_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_composition_lifecycle_workload.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_crewai_alignment.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_durable_adapter.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_durable_adapter_receipt.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_durable_adapter_time_travel.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_durable_policy.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_event_stream.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_framework_benchmark_registry.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_funflow_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_json_schema_contract.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_langgraph_alignment_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_langgraph_alignment_completion.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_langgraph_compat.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_langgraph_upstream_derived.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_langgraph_upstream_shim.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_large_state_copy_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_large_state_copy_timing.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_materialization.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_messages_tools.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_native_bundle_v1.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_native_runtime_reconciliation.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_native_runtime_v0.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_program_events.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_protocol_person_abi.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_receipts.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_runtime_context.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_runtime_graph.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_runtime_language_receipts.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_runtime_optional_backends.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_runtime_public_surface.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_case_alignment.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_durable_fixture_environment.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_durable_manifest.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_durable_runtime_envelope.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_load_aot_benchmark.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_load_aot_command.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_load_artifact.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_load_cache.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_load_runner.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_scheme_wire.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_semantic_observations.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_semantic_runtime.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_semantic_tools.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_stores.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_stream_modes.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_subgraph_streaming.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_subgraphs.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_temporal_admission.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_temporal_family.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_temporal_publication.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tests/unit/test_turso_durable.py
+HARNESS PARSE COMPLETE /private/tmp/poo-pr34-failure-fix/packages/python-runtime/tools/generate-runtime-imports.py
+PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_host_snapshot_admits_native_recomputed_inert_conclusion PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[position] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[provenance] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[modality] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[domain] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[role] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_model_cannot_replace_registered_observation_inventory[missing] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_source_registration_is_not_available_through_semantic_model_lane PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_new_source_revision_withdraws_old_applicability_without_mutating_old_result PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_conflicting_registration_cannot_replace_same_generation[cut] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_conflicting_registration_cannot_replace_same_generation[projection] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_conflicting_registration_cannot_replace_same_generation[policy] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_conflicting_registration_cannot_replace_same_generation[authority] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_conflicting_registration_cannot_replace_same_generation[evidence] PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_unknown_classification_cannot_produce_conclusion PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_hypotheses_are_assumptions_and_budget_changes_proof_not_source_snapshot PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_registered_source_permutation_and_async_admission PASSED
+packages/python-runtime/tests/unit/test_temporal_admission.py::test_source_control_preserves_native_owner_thread_and_transport_guards PASSED
+
+============================= 19 passed in 11.58s ==============================

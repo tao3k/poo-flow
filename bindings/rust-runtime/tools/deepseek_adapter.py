@@ -13,7 +13,7 @@ import time
 
 root = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root / 'packages/python-testing/src'))
-from poo_flow_testing.model_study.semantic_plan import configuration
+from poo_flow_testing.model_study.semantic_config import configuration
 from poo_flow_runtime import scheme_wire as wire
 from poo_flow_testing.model_study.semantic_provider import predict
 

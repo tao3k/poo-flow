@@ -100,8 +100,8 @@ withdrawn as acceptance evidence for the no-Prompt / real-time teaching design.
 =runtime_transport= compares the same source/lens/answers and
 bindings over both transports. It establishes equality, not a warm speed gain.
 The retired prompted producer and response replay utilities have been removed.
-=model_study.semantic_abi= qualifies fresh model predictions through
-=SemanticRuntime.predict_temporal_answer= and its async counterpart using
-=temporal.observe=. It freezes current sources, native artifact, task order and
-request hashes, with a five-second genuine content watchdog and no retries.
+The obsolete JSON =model_study.semantic_abi= producer has been removed.
+Current frozen physical model cases use the ASP Scheme benchmark owner and
+Scheme transport. Historical prediction scores do not qualify this producer.
+The five-second genuine content watchdog and no-retry rule remain in force.
 The worker remains an experiment transport; ASCENT publishes no separate ABI.
