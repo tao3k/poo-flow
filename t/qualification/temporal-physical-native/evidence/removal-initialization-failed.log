@@ -1,4 +1,0 @@
-timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_SEMANTIC_LIBRARY="/private/tmp/poo-abi2-native/libpoo_flow_semantic.dylib" POO_FLOW_SEMANTIC_SHA256="cd05897a66cf2b60d9e2bbb66ae1b463cbe800a516ddb282eb3d93583402e939" POO_FLOW_PHYSICAL_RECEIPT="/private/tmp/poo-no-legacy-physical-receipt.ss" python3 bindings/rust-runtime/tools/watch.py "/private/tmp/mrr-data-temporal-target/debug/poo-temporal-physical-roundtrip"
-mrr-native: runtime initialization started
-FAIL: five seconds without test progress
-error: recipe `qualify-temporal-physical` failed on line 683 with exit code 124

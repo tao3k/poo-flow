@@ -39,13 +39,7 @@ SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
 
 [[annotations]]
-path = ["docs/10-19-design/10.06-poo-module-system/evidence/ascent-exchange-20261003/qualification.log"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
-SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
-
-[[annotations]]
-path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.jsonl", "docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.log"]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.jsonl"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
@@ -72,11 +66,9 @@ path = [
   "t/qualification/temporal-library-basic/scheme-abi-v2/model/*.ss",
   "t/qualification/temporal-library-basic/scheme-abi-v2/mrr-cold-benchmark.ss",
   "t/qualification/temporal-physical-native/evidence/*",
-  "t/qualification/temporal-current-source/*.log",
   "t/qualification/temporal-current-source/native-build-freeze.ss",
   "t/qualification/temporal-current-source/physical-pinned-receipt.ss",
   "t/qualification/temporal-current-source/physical-pinned-oracle.ss",
-  "t/qualification/temporal-family-lifecycle-abi/*.log",
   "t/qualification/temporal-family-lifecycle-abi/native-artifact.ss",
 ]
 precedence = "aggregate"

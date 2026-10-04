@@ -1,4 +1,0 @@
-IMPORT :clan/poo/object
-IMPORT-OK :clan/poo/object
-IMPORT :clan/poo/mop
-NATIVE-FAIL: five seconds without output or 45s batch limit

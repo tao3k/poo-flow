@@ -10,6 +10,7 @@ from .checks.cross import runtime_ascent_candidate
 from .checks.evidence import evidence_assessment
 from .checks.model_study import native_fixtures
 from .checks.runtime import graph_transport
+from .checks.session import check_tla_model
 from .model import CaseSpec, ModulePart
 from .registry import CaseRegistry
 
@@ -50,4 +51,10 @@ def build_catalog() -> CaseRegistry:
                  "native"),
         native_fixtures,
     )
+    catalog.register(CaseSpec("session.tla-lifecycle",
+                              (ModulePart("session", "proof/tla/lifecycle"),), "native"),
+                     lambda context: check_tla_model(context, "ContextSession"))
+    catalog.register(CaseSpec("session.tla-worktree",
+                              (ModulePart("session", "proof/tla/worktree"),), "native"),
+                     lambda context: check_tla_model(context, "WorktreeContext"))
     return catalog

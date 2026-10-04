@@ -211,6 +211,7 @@ jobs:
           gerbil env just check-temporal-invalidation-tlc
           gerbil env just check-temporal-evidence-tlc
           gerbil env just check-temporal-conclusion-selection-tlc
+          gerbil env just check-session-context-tla
 
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'
@@ -220,6 +221,34 @@ jobs:
           gerbil env gxi t/scenarios/performance/ascent-table-expression/scenario.ss
           gerbil env gxi t/scenarios/performance/ascent-table-expression-membership/scenario.ss
           gerbil env gxi t/scenarios/performance/ascent-reachability-closure/scenario.ss
+
+  session-poo-proof:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: Session and WorkTree LeanPoo proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x "$HOME/.elan/bin/lake" ]; then
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              | sh -s -- -y --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          cd packages/proofs/lean-poo
+          "$HOME/.elan/bin/lake" --version
+
+      - name: Build Session and WorkTree proofs with axiom audit
+        working-directory: packages/proofs/lean-poo
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake build PooFlowSessionProof
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

@@ -20,6 +20,9 @@ devenv.local.yaml
 manifest.ss
 version.ss
 
+# Build, test, and qualification output belongs in local/CI artifacts.
+*.log
+
 # Bazel convenience symlinks and output trees.
 /bazel-*
 

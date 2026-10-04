@@ -3,7 +3,7 @@
 
 """Case catalog for POO Flow modules and their compositions."""
 
-from .model import CaseContext, CaseSpec, ModulePart
+from .model import CaseContext, CaseEvidence, CaseSpec, ModulePart
 from .registry import CaseRegistry
 
-__all__ = ["CaseContext", "CaseRegistry", "CaseSpec", "ModulePart"]
+__all__ = ["CaseContext", "CaseEvidence", "CaseRegistry", "CaseSpec", "ModulePart"]

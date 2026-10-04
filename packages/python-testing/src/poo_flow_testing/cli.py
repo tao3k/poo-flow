@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -37,7 +39,24 @@ def parser() -> argparse.ArgumentParser:
     command.add_argument("--composition", choices=("single", "cross"))
     command.add_argument("--mode", choices=("unit", "native", "live"))
     command.add_argument("--module-root", action="append", default=[], metavar="NAME=PATH")
+    command.add_argument("--receipt", type=Path,
+                         help="write a structured result for the selected cases")
     return command
+
+
+def source_state(repository_root: Path) -> tuple[str | None, bool | None]:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repository_root, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False,
+    )
+    if result.returncode != 0:
+        return None, None
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=normal"],
+        cwd=repository_root, text=True, stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL, check=False,
+    )
+    return result.stdout.strip(), bool(status.stdout) if status.returncode == 0 else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -72,18 +91,36 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as error:
         command.error(str(error))
     failed = False
+    results: list[dict[str, object]] = []
     for case in selected:
         if case.spec.mode == "live":
             command.error("interactive live cases use their dedicated CLI")
         started = time.perf_counter()
         try:
-            case.check(context)
+            evidence = case.check(context)
         except Exception as error:
             failed = True
             sys.stdout.write(case.spec.identity + "\tFAIL\t"
-                             + type(error).__name__ + "\n")
+                             + type(error).__name__ + ": " + str(error) + "\n")
+            results.append({"identity": case.spec.identity, "status": "FAIL",
+                            "duration_ms": round((time.perf_counter() - started) * 1000),
+                            "error_type": type(error).__name__, "error": str(error)})
         else:
             elapsed = round(time.perf_counter() - started, 3)
             sys.stdout.write(case.spec.identity + "\tPASS\t"
                              + str(elapsed) + "s\n")
+            results.append({"identity": case.spec.identity, "status": "PASS",
+                            "duration_ms": round((time.perf_counter() - started) * 1000),
+                            "evidence": dict(evidence.details) if evidence else {}})
+        sys.stdout.flush()
+    if args.receipt:
+        receipt = args.receipt.resolve()
+        receipt.parent.mkdir(parents=True, exist_ok=True)
+        revision, dirty = source_state(repository_root)
+        document = {"schema": "poo-flow.testing-cases.v1",
+                    "source_revision": revision, "working_tree_dirty": dirty,
+                    "results": results}
+        temporary = receipt.with_name(receipt.name + ".tmp")
+        temporary.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+        temporary.replace(receipt)
     return 1 if failed else 0

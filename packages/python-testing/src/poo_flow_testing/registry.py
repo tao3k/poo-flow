@@ -9,9 +9,9 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from .model import CaseContext, CaseSpec
+from .model import CaseContext, CaseEvidence, CaseSpec
 
-Check = Callable[[CaseContext], None]
+Check = Callable[[CaseContext], CaseEvidence | None]
 
 
 @dataclass(frozen=True)

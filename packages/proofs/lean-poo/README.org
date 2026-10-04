@@ -1,13 +1,15 @@
-#+TITLE: Temporal LeanPoo Proof Boundary
+#+TITLE: POO Flow LeanPoo Proof Boundaries
 
 #+begin_comment
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
-This independent Lean 4.34 Lake package pins [[https://github.com/tao3k/lean-poo][LeanPoo]] at the revision
-recorded in =lake-manifest.json=.  POO Flow's Cedar-bound proof package uses
-Lean 4.31, so its existing proof graph remains separate.
+This independent Lean 4.34 Lake package pins [[https://github.com/tao3k/lean-poo][LeanPoo]] at the exact
+main revision recorded in =lake-manifest.json=.  POO Flow's Cedar-bound proof
+package uses Lean 4.31, so its existing proof graph remains separate.  The
+Session proofs here belong to POO Flow =modules/session= and its WorkTree
+sharing policy; MRR's Query/Content/Context receipts are external inputs.
 
 =PooFlowTemporalPooProof.TruthMaintenance= interprets a temporal cut as a
 =LeanPoo.Proof.ProofObject= and a changed premise footprint as a =Patch=.
@@ -23,3 +25,35 @@ that a successful version increment makes another proposal against the old
 version stale.  It does not prove the external pointer store is atomic.
 
 Run =just check-temporal-poo-lean= from the repository root.
+
+* Session and shared Context boundary
+
+=PooFlowSessionProof.Lifecycle= proves pure guards for begin, query-use
+binding, and resume: terminal refusal, exact Session/turn/cut agreement, and
+revision advance. =PooFlowSessionProof.SharedContext= proves same-WorkTree
+authorized reads and guards for cross-WorkTree import proposals.  It does not
+establish semantic validity of an MRR Content or Context reference.
+
+=PooFlowSessionProof.PolicyC4= requires a =LeanPoo.C4.VerifiedOrder= for a
+declared policy graph and root.  It proves a finite, duplicate-free order with
+the root first and every included policy node reachable by graph ancestry.
+Project/WorkTree/Task/Session containment and Org heading depth are not C4
+parent edges; the production POO Flow graph-to-proof correspondence remains an
+implementation gate.
+
+The models are abstract.  They have not been refined against the Scheme
+=modules/session= implementation, runtime CAS, MRR admission, or MRR Data
+storage.  The finite [[file:../tla/session-context/README.org][TLA+ checks]] cover concurrency and deliberately
+broken guards at their own bounded scope.  Run =just check-session-proof= for
+both focused proof gates.
+The PR CI runs this library and its axiom audit in the independent =Session
+and WorkTree LeanPoo proof= job; the Linux native job runs the TLA+ cases.
+
+For Org-backed Memory, the next POO Flow proof boundary is the typed
+[[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Org Memory load receipt]]: exact document bytes and parser/Element/query-pack
+identity, source-local record anchor, WorkTree cut, current Session policy,
+and expected Memory head revision.  A new Lean module here should prove
+accepted-load identity and stale-source/pack/closed-Session refusals; TLA+
+should exercise reload, revoke, close and two-writer publication.  Orgize's
+parser and query-pack correctness stays with Orgize.  Neither existing proof
+is evidence that the POO Flow loader already exists.

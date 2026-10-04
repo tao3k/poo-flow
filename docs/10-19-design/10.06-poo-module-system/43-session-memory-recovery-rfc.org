@@ -3,6 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * 10.06.43 Session Memory Durable Policy RFC
+The current source-selection and scope contract is
+[[file:166-session-memory-orgize-boundary.org][Session, Memory and Orgize source boundary]]. This RFC retains the durable
+recovery design. For Org-backed Memory, Orgize's source-backed Org document,
+Element graph and named queries are the canonical syntax and load path;
+=memory-core= is the POO Flow policy and publication owner, not another Org
+parser. The linked contract defines the load receipt and assigns semantic
+admission to MRR. The existing report-only store catalog does not yet
+implement that Org load path.
+
 ** 10.06.43.10 Status
 Draft for discussion.
 
