@@ -1,5 +1,0 @@
-   Compiling poo-flow-rust-runtime v0.1.0 (/private/tmp/poo-pr34-failure-fix/bindings/rust-runtime)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.12s
-  Executable tests/mrr.rs (/private/tmp/mrr-data-temporal-target/debug/deps/mrr-1eee96d35eff3bcd)
-    Checking poo-flow-rust-runtime v0.1.0 (/private/tmp/poo-pr34-failure-fix/bindings/rust-runtime)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.12s

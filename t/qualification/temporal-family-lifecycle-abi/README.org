@@ -26,22 +26,28 @@ artifact hashing and native-call boundaries. Test-stage output follows real
 completed admission/verification work. No synthetic heartbeat or deadline
 widening qualifies a result. A successful build is not a passing runtime gate.
 
-The compiler-owned semantic library manifest, source/executable hashes and
-original runtime log will freeze this exact bounded gate. The previous public
+The compiler-owned semantic library manifest and source/executable hashes
+freeze this exact bounded gate's historical receipt. The previous public
 Scheme 11-case receipt remains historical Library evidence; it does not replace
 this ABI execution.
 
-=runtime-progress-disabled-failed.log= preserves the initial exit-124 failure:
+The =*.log= names below identify historical outputs removed from the source
+checkout. Their raw bytes remain recoverable from PR #34 commit
+=b68f6800=, while =build-freeze.ss= retains their hashes. Those hashes alone
+cannot recheck the raw outputs locally or qualify a newer source cut.
+
+=runtime-progress-disabled-failed.log= recorded the initial exit-124 failure:
 the command omitted the existing Rust loader trace and stopped during artifact
-opening before lifecycle calls. =debug-runtime-passed.log= records the same
+opening before lifecycle calls. =debug-runtime-passed.log= recorded the same
 native library/executable with the existing genuine-progress trace enabled:
 one complete integration test passed, exit 0, under the unchanged five-second
 idle / 45-second wall gates. It is functional debug evidence, not a deployment
 timing receipt. =rust-build-clippy-passed.log= retains successful final compile
 and lint output. =release-build-passed.log= and =release-runtime-passed.log=
-record the separately compiled optimized executable: one complete integration
+recorded the separately compiled optimized executable: one complete integration
 test passed, exit 0, under the same gates. =build-freeze.ss= freezes both
-executables, exact native artifact, sources, locks, watchdog and original logs.
+executables, exact native artifact, sources, locks, watchdog and original log
+hashes.
 =native-artifact.ss= is the compiler-owned Scheme artifact manifest. This is
 one bounded local qualification, not a workload benchmark or a CI pass.
 

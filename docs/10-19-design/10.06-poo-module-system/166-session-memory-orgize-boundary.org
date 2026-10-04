@@ -119,8 +119,10 @@ catalog intents and store refs, and the Memory catalog marks
 WorkTree head. The new
 =modules/temporal-causality/lifecycle= API on PR #34 creates, changes and
 replays pure family revisions with a semantic digest, predecessor and
-invalidation frontier. It explicitly does not persist a journal, publish a
-current pointer, authenticate source or authorize an action.
+invalidation frontier. The newer =b68f6800= Rust Library binding can invoke
+the Scheme owner for proof-bound revisions and a read-only journal receipt.
+Neither path persists a restartable journal, publishes a current pointer,
+authenticates source or authorizes an action.
 
 The next public Scheme interface should expose POO-native values and pure
 constructors, with bounded =->alist= projection only at runtime/ABI edges:
