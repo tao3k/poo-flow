@@ -1,0 +1,24 @@
+mrr-native: runtime initialization started
+mrr-native: runtime initialization returned
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Original GQL compiled with source receipt; source substitution rejected
+Exact immutable root and Arrow children restored
+Original MRR source query dispatched to Data backend and admitted
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Independent root, catalog, row, query and wire-budget substitutions rejected
+mrr-native: operation started on owner thread
+mrr-native: operation returned on owner thread
+Physical empty answer is valid MRR transport and rejected by the nonempty Temporal profile
+Physical GQL result and original MRR receipt re-admitted by Temporal receiver
+NATIVE-PROGRESS artifact-digest-verified
+NATIVE-PROGRESS native-library-loaded
+NATIVE-PROGRESS native-owner-opened
+GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V2 -> NATIVE TEMPORAL OK

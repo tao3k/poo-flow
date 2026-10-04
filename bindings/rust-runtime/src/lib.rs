@@ -72,6 +72,8 @@ impl SemanticRuntime {
         let mut file = std::fs::File::open(&path).map_err(|e| Error::Transport(e.to_string()))?;
         let mut hash = Sha256::new();
         let mut buffer = [0u8; 65_536];
+        let mut hashed_bytes = 0usize;
+        let mut reported_bytes = 0usize;
         loop {
             let length = file
                 .read(&mut buffer)
@@ -80,6 +82,11 @@ impl SemanticRuntime {
                 break;
             }
             hash.update(&buffer[..length]);
+            hashed_bytes += length;
+            if hashed_bytes - reported_bytes >= 1_048_576 {
+                trace(&format!("artifact-bytes-hashed={hashed_bytes}"));
+                reported_bytes = hashed_bytes;
+            }
         }
         if format!("{:x}", hash.finalize()) != expected_sha256 {
             return Err(Error::DigestMismatch);

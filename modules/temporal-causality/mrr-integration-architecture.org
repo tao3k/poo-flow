@@ -91,6 +91,30 @@ G1--G5 correction, current applicability, reverse facts and IFC publication are
 not established by this acceptance. The earlier failed cold p95 benchmark stays
 failed; no new performance qualification was run.
 
+* Native Scheme inference and MRR-owned Backend dispatch
+
+MRR PR #9 now provides the =PropertyQueryBackend= semantic execution port.
+=BoundPropertySourceQuery::execute_with= preserves the original compilation
+receipt and delegates to =CatalogBoundQuery::execute_with=. MRR Data PR #12
+implements that port with =RestoredPropertyBackend=, composing verified physical
+restoration, DataFusion execution and original MRR result projection. MRR admits
+the returned original candidate; Data owns Backend and Protocol implementation.
+The ordinary Data Backend dependency disables native inference and requires no
+Scheme SDK or source parser. The production MRR facade enables native inference.
+
+Rust ASCENT execution is removed from MRR. =mrr-deduction= and =mrr-search=
+project local coordinates to the maintained Scheme ASCENT POO table expression
+through the unique Gambit owner thread; Rust retains typed identities, budgets,
+witness validation and admission. The native finite candidate does not become
+Temporal source authority or an authorized publication.
+
+The physical qualification source now dispatches through the MRR-owned port.
+=DataQueryResultHandoff::export_execution= preserves that original admitted
+candidate and its physical binding without a second query execution. The
+receiver still independently selects root and query, verifies Scheme v2 and
+invokes the native Temporal library. Current-cut correspondence, correction,
+reverse facts, IFC publication and durable recovery remain separate contracts.
+
 * Audited seams and necessary corrections
 
 | Source seam at the pinned MRR/MRR Data revisions | Actual guarantee | Design consequence |

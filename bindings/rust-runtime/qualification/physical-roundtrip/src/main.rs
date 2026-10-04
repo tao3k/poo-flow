@@ -166,24 +166,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         NonZeroUsize::new(256).unwrap(),
     );
     let cap = NonZeroUsize::new(1048576).unwrap();
-    let handoff = mrr_data_datafusion::execute_restored_property_query_handoff(
-        mrr_data_datafusion::RestoredPropertyQuery {
-            query: source.query(),
-            restored: &restored,
-            relation_catalog: &relations,
-            entity_catalog: &entities,
-            limits: mrr_data_datafusion::PropertyQueryLimits {
-                max_input_rows: 128,
-                max_input_bytes: 1048576,
-                max_join_rows: 128,
-                max_output_cells: 256,
-                execution_memory_bytes: 16777216,
-            },
+    let backend = mrr_data_datafusion::RestoredPropertyBackend {
+        restored: &restored,
+        relation_catalog: &relations,
+        entity_catalog: &entities,
+        limits: mrr_data_datafusion::PropertyQueryLimits {
+            max_input_rows: 128,
+            max_input_bytes: 1048576,
+            max_join_rows: 128,
+            max_output_cells: 256,
+            execution_memory_bytes: 16777216,
         },
-        limits,
-        cap,
-    )
-    .await?;
+    };
+    let execution = source.execute_with(&backend, limits).await?;
+    println!("Original MRR source query dispatched to Data backend and admitted");
+    let handoff = d::DataQueryResultHandoff::export_execution(&execution, limits, cap)?;
     let expected = d::bind_data_query(
         source.query(),
         &snapshot,
@@ -288,24 +285,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &empty_digest,
     )?
     .bind(&relations, &entities, &semantic)?;
-    let empty_handoff = mrr_data_datafusion::execute_restored_property_query_handoff(
-        mrr_data_datafusion::RestoredPropertyQuery {
-            query: empty_source.query(),
-            restored: &restored,
-            relation_catalog: &relations,
-            entity_catalog: &entities,
-            limits: mrr_data_datafusion::PropertyQueryLimits {
-                max_input_rows: 128,
-                max_input_bytes: 1048576,
-                max_join_rows: 128,
-                max_output_cells: 256,
-                execution_memory_bytes: 16777216,
-            },
-        },
-        limits,
-        cap,
-    )
-    .await?;
+    let empty_execution = empty_source.execute_with(&backend, limits).await?;
+    let empty_handoff = d::DataQueryResultHandoff::export_execution(&empty_execution, limits, cap)?;
     assert_eq!(
         m::verify_query_result_transport(
             empty_source.query(),

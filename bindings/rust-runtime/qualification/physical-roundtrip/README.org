@@ -31,6 +31,34 @@ adapter have been removed; remote publication/recovery have no replacement here.
 
 * Local acceptance
 
+** MRR dispatch and native Scheme inference revision
+
+The active immutable graph pins MRR
+=8f389fd0aede8d8000197c959da69b6ba3e9bb86= and MRR Data
+=f9be539f0a3896ff56e77fcaa40b7ae57e9ec368=. The source query now calls
+=BoundPropertySourceQuery::execute_with= through MRR's semantic execution port.
+MRR Data's =RestoredPropertyBackend= performs physical execution and returns
+the original candidate with its physical binding. MRR admits that candidate;
+=DataQueryResultHandoff::export_execution= exports the same admitted execution
+without running another query. The valid empty query uses this same path.
+
+The complete original GQL/Arrow/DataFusion/MRR/Scheme-v2/Temporal run passed
+the unchanged five-second genuine-output and 45-second total limits. The
+independent source, root, catalog, query, row and wire-budget controls still
+reject substitutions. The separate parent runtime regression passes with the
+same limits. Its first debug run failed before artifact-digest verification:
+hashing the native artifact did not emit completed-work progress. The runtime
+now reports each completed MiB hash milestone when diagnostic tracing is on;
+it still compares the complete SHA-256 before loading native code. The failed
+run remains archived, and this change is not a latency improvement claim.
+
+The native artifact SHA-256 remains
+=cd05897a66cf2b60d9e2bbb66ae1b463cbe800a516ddb282eb3d93583402e939=.
+The new =mrr-dispatch-receipt.ss= and accompanying logs retain the original
+transport and actual runtime evidence. No model call, benchmark score or
+source/effect authority was added. Remote CI and G0--G5 production gates remain
+separate from these local receipts.
+
 The original GQL roundtrip completed successfully under the five-second
 actual-output watchdog and 45-second total deadline. Source, root, catalog,
 query, row and wire-budget controls rejected; an actual empty physical answer
