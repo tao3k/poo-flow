@@ -185,6 +185,9 @@ impl SemanticRuntime {
                 | "temporal.family.observe"
                 | "temporal.family.admit"
                 | "temporal.family.current"
+                | "temporal.family.revision.root"
+                | "temporal.family.revision.change"
+                | "temporal.family.journal"
         ) {
             return Err(Error::InvalidInput);
         }

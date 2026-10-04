@@ -132,3 +132,33 @@ Only =poo_flow_semantic_v2_*= native entry symbols are loaded/exported. Descript
 fallback. Artifact manifests and differential oracles use =.ss= files. Native MRR
 values are passed directly; this adapter no longer calls MRR JSON transport.
 See [[file:../runtime-c/semantic-wire.org][the bounded Scheme wire grammar]].
+
+* Proof-bound Family revision and journal ABI
+
+=MrrFamilyAdmission::revision_root= asks the Scheme owner to replay the original
+admission and retain its proof-bound root. =MrrFamilyRevision::change= forwards
+an original admission handle, predecessor handle, typed operation and
+=FamilyRevisionFrontier=. Scheme reconstructs a native POO frontier, replays
+both admissions and enforces the Library's Source/query/generation/cut rules.
+No proof can be replaced by a caller-supplied string. A frontier's inventory
+completeness and index digest remain caller declarations, not authenticated
+reverse-dependency or provider evidence.
+
+=MrrFamilyRevision::journal= replays every referenced original admission and
+checks the supplied immutable graph inventory. The Scheme datum response
+retains native revision fields plus per-entry classification, admission digest
+and proof-bound revision digest. Branches and predecessors are retained; it
+selects no current winner. Missing predecessors, duplicate revisions, unknown
+handles and malformed fields reject. Native history is bounded to 128 distinct
+revision handles; duplicate delivery remains idempotent at capacity. A journal
+request contains 1--128 handles.
+
+The descriptor advertises =temporal.family.revision.root=,
+=temporal.family.revision.change= and =temporal.family.journal=. These use the
+existing Scheme datum v2 transport and single owner thread. Handles live only
+in that native process. The projected journal is a read-only receipt, not a
+restartable proof archive; complete premises must be transported and replayed
+before MRR Data may persist authoritative history or publish a current pointer.
+=durable=, =runtimeExecuted=, =sourceAuthenticated= and =actionAuthorized= are
+false. Current Source applicability is independently checked by =current=;
+a historical revision/journal receipt never establishes current eligibility.

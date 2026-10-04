@@ -497,3 +497,41 @@ original output are in the qualification archive linked above. Four earlier
 discovery timeouts remain archived; bounded, completed official dependency
 imports resolved the observed silent loading stage. No business or model calls
 were used to substitute for these Library checks.
+
+* In-process revision/journal ABI slice
+
+The POO Rust Library now connects original admitted MRR values to the Scheme
+Family lifecycle owner. =MrrFamilyAdmission::revision_root= and
+=MrrFamilyRevision::change/journal= use three native Scheme datum v2 operations.
+The original admission and proof objects stay on the native owner thread;
+caller payloads name retained handles and a declared scoped frontier. Scheme
+replays admissions and predecessors, then projects original proof, revision,
+classification and Source scope fields. A supplied proof field cannot override
+an owner value. Correction/retraction branches coexist without selecting a
+current winner; current Source applicability is still a separate query.
+
+Revision history and journal inventory are bounded to 128 entries, frontier
+identities to 128 characters and each frontier list to 128 identities. Capacity
+refuses new revisions while retaining idempotent existing handles. The journal
+response has per-entry admission/revision digests and classification, in
+addition to the original conclusion envelope fields.
+
+The original MRR query/candidate/receipt regression passed through the actual
+native C ABI with both debug and release Rust executables, exit 0, five seconds
+without genuine output as failure and a 45-second total deadline. It covers
+proof-bound correction/tombstone, retained classification/history/branches,
+missing/duplicate/unknown inventory, partial frontier, wrong cut, extra proof
+field, identity bounds and capacity refusal. Exact artifact/source/pin receipts
+are in [[file:../../t/qualification/temporal-family-lifecycle-abi/README.org][the lifecycle ABI qualification archive]]. One initial omitted-trace
+exit-124 failure remains archived; enabling existing completed hash/native-call
+events qualified the same debug artifact without widening either deadline.
+
+This slice lives in the POO adapter; MRR Context and MRR Data retain their
+separate ownership. Handles are process local. The projected journal lacks a
+restartable full-premise archive and is not suitable as authoritative durable
+history by itself. Frontier completeness/index identity remain caller
+premises; Source-authenticated, action-authorized, runtime-executed and durable
+flags remain false. Full proof transport/replay, multi-support stabilization,
+Context dirty/current fences, backend append/recovery and current-pointer CAS
+remain required before publication and real-model lifecycle gates. The earlier
+physical and model receipts continue to qualify only their frozen graphs.

@@ -8,10 +8,20 @@
         (only-in :poo-flow/modules/temporal-causality/admission/interface
                  poo-flow-temporal-source-snapshot poo-flow-temporal-family-admit)
         (only-in :poo-flow/modules/temporal-causality/applicability/funs
-                 poo-flow-temporal-family-applicability))
-(export temporal-source-register temporal-family-admit-call temporal-family-current-call)
+                 poo-flow-temporal-family-applicability)
+        (only-in :poo-flow/modules/temporal-causality/lifecycle/interface
+                 poo-flow-temporal-family-revision-root
+                 poo-flow-temporal-family-revision-change
+                 poo-flow-temporal-family-revision-replay
+                 poo-flow-temporal-family-revision-journal)
+        (only-in :poo-flow/modules/temporal-causality/truth-maintenance/objects
+                 poo-flow-temporal-invalidation-plan-value))
+(export temporal-source-register temporal-family-admit-call temporal-family-current-call
+        temporal-family-revision-root-call temporal-family-revision-change-call
+        temporal-family-journal-call)
 (def sources (make-hash-table))
 (def admissions (make-hash-table))
+(def revisions (make-hash-table))
 (def (field object key)
   (unless (and (hash-table? object) (hash-key? object key))
     (error "missing admission field" key))
@@ -96,3 +106,80 @@
           (status (symbol->string (.ref applicability 'status)))
           (trustBasis "host-registered-snapshot")
           (sourceAuthenticated #f) (actionAuthorized #f))))
+
+;;; In-process immutable handles only. No journal persistence/current-pointer CAS.
+(def (known table id)
+  (or (hash-get table id) (error "unknown native history handle")))
+(def (bounded-text? value)
+  (and (string? value) (< 0 (string-length value) 129)))
+(def (bounded-identities? values)
+  (and (list? values) (<= (length values) 128)
+       (andmap bounded-text? values)))
+(def (revision-wire revision)
+  (hash (identity (.ref revision 'identity))
+        (subject (.ref revision 'subject-identity)) (scope (.ref revision 'scope-identity))
+        (cut (.ref revision 'cut-digest)) (projection (.ref revision 'projection-digest))
+        (policy (.ref revision 'policy-identity)) (generation (.ref revision 'generation-identity))
+        (operation (symbol->string (.ref revision 'operation)))
+        (predecessor (.ref revision 'predecessor-identity))
+        (proofDigest (.ref revision 'proof-identity)) (resultDigest (.ref revision 'result-identity))
+        (invalidationIndexDigest (.ref revision 'invalidation-index-digest))))
+(def (retain-revision value)
+  (let* ((canonical (poo-flow-temporal-family-revision-replay value))
+         (id (.ref canonical 'semantic-digest)))
+    (unless (or (hash-key? revisions id) (< (hash-length revisions) 128))
+      (error "revision history capacity exceeded"))
+    (hash-put! revisions id canonical)
+    (revision-receipt canonical)))
+(def (revision-receipt canonical)
+  (hash (schema "poo-flow.temporal-family-revision.v1")
+        (revisionDigest (.ref canonical 'semantic-digest))
+        (admissionDigest (.ref (.ref canonical 'admission) 'semantic-digest))
+        (classification (symbol->string (.ref (.ref canonical 'admission) 'classification)))
+        (revision (revision-wire (.ref canonical 'revision)))
+        (sourceAuthenticated #f) (runtimeExecuted #f) (actionAuthorized #f)
+        (durable #f)))
+(def (temporal-family-revision-root-call object)
+  (fields object ["admissionDigest"])
+  (retain-revision (poo-flow-temporal-family-revision-root
+                    (known admissions (field object "admissionDigest")))))
+(def (temporal-family-revision-change-call object)
+  (fields object ["previousDigest" "admissionDigest" "operation" "frontier"])
+  (let* ((operation (field object "operation")) (frontier (field object "frontier")))
+    (unless (member operation '("correct" "retract")) (error "invalid revision operation"))
+    (fields frontier ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
+                      "previousProjection" "revisedProjection" "changedSubjects"
+                      "affectedConclusions" "inventoryComplete" "trigger"])
+    (unless (and (andmap (lambda (key) (bounded-text? (field frontier key)))
+                        ["indexIdentity" "indexDigest" "previousCut" "revisedCut"
+                         "previousProjection" "revisedProjection"])
+                 (bounded-identities? (field frontier "changedSubjects"))
+                 (bounded-identities? (field frontier "affectedConclusions")))
+      (error "frontier identity bounds rejected"))
+    (let (trigger (field frontier "trigger"))
+      (unless (member trigger '("premise-delta" "valid-time-reprojection"))
+        (error "invalid frontier trigger"))
+      (retain-revision
+       (poo-flow-temporal-family-revision-change
+        (known revisions (field object "previousDigest"))
+        (known admissions (field object "admissionDigest"))
+        (poo-flow-temporal-invalidation-plan-value
+         (field frontier "indexIdentity") (field frontier "indexDigest")
+         (field frontier "previousCut") (field frontier "revisedCut")
+         (field frontier "previousProjection") (field frontier "revisedProjection")
+         (field frontier "changedSubjects") (field frontier "affectedConclusions")
+         (field frontier "inventoryComplete") (string->symbol trigger))
+        (string->symbol operation))))))
+(def (temporal-family-journal-call object)
+  (fields object ["identity" "revisionDigests"])
+  (let (ids (field object "revisionDigests"))
+    (unless (and (bounded-text? (field object "identity"))
+                 (bounded-identities? ids) (pair? ids)) (error "journal inventory bound"))
+    (let (journal (poo-flow-temporal-family-revision-journal
+                  (field object "identity") (map (lambda (id) (known revisions id)) ids)))
+      (hash (schema "poo-flow.temporal-family-journal.v1")
+            (identity (.ref journal 'identity)) (journalDigest (.ref journal 'semantic-digest))
+            (revisions (map revision-wire (.ref journal 'revisions)))
+            (entries (map (lambda (id) (revision-receipt
+                           (poo-flow-temporal-family-revision-replay (known revisions id)))) ids))
+            (sourceAuthenticated #f) (runtimeExecuted #f) (actionAuthorized #f) (durable #f)))))

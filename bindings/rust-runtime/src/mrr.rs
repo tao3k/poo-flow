@@ -109,6 +109,19 @@ impl MrrFamilyAdmission {
     pub fn result(&self) -> &Value {
         &self.result
     }
+    /// Retain a Scheme-replayed proof-bound root on the native owner thread.
+    pub fn revision_root(
+        &self,
+        runtime: &SemanticRuntime,
+    ) -> Result<MrrFamilyRevision, MrrBridgeError> {
+        runtime
+            .call(
+                "temporal.family.revision.root",
+                &datum!({"admissionDigest": &self.result["admissionDigest"]}),
+            )
+            .map(|result| MrrFamilyRevision { result })
+            .map_err(MrrBridgeError::Native)
+    }
     pub fn current(&self, runtime: &SemanticRuntime) -> Result<Value, MrrBridgeError> {
         runtime
             .call(
@@ -118,6 +131,74 @@ impl MrrFamilyAdmission {
                 }),
             )
             .map_err(MrrBridgeError::Native)
+    }
+}
+/// Host-declared scoped frontier; completeness is a premise, not authentication.
+pub struct FamilyRevisionFrontier {
+    pub index_identity: String,
+    pub index_digest: String,
+    pub previous_cut: String,
+    pub revised_cut: String,
+    pub previous_projection: String,
+    pub revised_projection: String,
+    pub changed_subjects: Vec<String>,
+    pub affected_conclusions: Vec<String>,
+    pub inventory_complete: bool,
+    pub trigger: FamilyRevisionTrigger,
+}
+pub enum FamilyRevisionTrigger {
+    PremiseDelta,
+    ValidTimeReprojection,
+}
+pub enum FamilyRevisionOperation {
+    Correct,
+    Retract,
+}
+/// Original Scheme receipt for an immutable in-process revision, never a permit.
+pub struct MrrFamilyRevision {
+    result: Value,
+}
+impl MrrFamilyRevision {
+    pub fn result(&self) -> &Value {
+        &self.result
+    }
+    pub fn change(
+        &self,
+        runtime: &SemanticRuntime,
+        admission: &MrrFamilyAdmission,
+        frontier: &FamilyRevisionFrontier,
+        operation: FamilyRevisionOperation,
+    ) -> Result<Self, MrrBridgeError> {
+        let operation = match operation {
+            FamilyRevisionOperation::Correct => "correct",
+            FamilyRevisionOperation::Retract => "retract",
+        };
+        let trigger = match frontier.trigger {
+            FamilyRevisionTrigger::PremiseDelta => "premise-delta",
+            FamilyRevisionTrigger::ValidTimeReprojection => "valid-time-reprojection",
+        };
+        runtime.call("temporal.family.revision.change", &datum!({
+            "previousDigest": &self.result["revisionDigest"],
+            "admissionDigest": &admission.result["admissionDigest"], "operation": operation,
+            "frontier": { "indexIdentity": &frontier.index_identity,
+                "indexDigest": &frontier.index_digest, "previousCut": &frontier.previous_cut,
+                "revisedCut": &frontier.revised_cut, "previousProjection": &frontier.previous_projection,
+                "revisedProjection": &frontier.revised_projection,
+                "changedSubjects": frontier.changed_subjects.iter().map(Value::from).collect::<Vec<_>>(),
+                "affectedConclusions": frontier.affected_conclusions.iter().map(Value::from).collect::<Vec<_>>(),
+                "inventoryComplete": frontier.inventory_complete, "trigger": trigger }
+        })).map(|result| Self { result }).map_err(MrrBridgeError::Native)
+    }
+    /// Replay every retained original proof and validate the supplied graph inventory.
+    /// The returned native journal is read-only and has no durable/current CAS claim.
+    pub fn journal(
+        runtime: &SemanticRuntime,
+        identity: &str,
+        revisions: &[&Self],
+    ) -> Result<Value, MrrBridgeError> {
+        runtime.call("temporal.family.journal", &datum!({"identity": identity,
+            "revisionDigests": revisions.iter().map(|v| v.result["revisionDigest"].clone()).collect::<Vec<_>>()
+        })).map_err(MrrBridgeError::Native)
     }
 }
 impl MrrObservationEvidence {

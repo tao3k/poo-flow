@@ -1,0 +1,9 @@
+
+running 1 test
+test original_mrr_values_project_to_real_native_poo ... MRR source query binding reconstructed
+Original Scheme v2 candidate and receipt verified
+Transport tamper, scope, duplicate and empty controls rejected
+FAIL: five seconds without test progress
+real 5.90
+user 0.58
+sys 0.03

@@ -5,7 +5,10 @@ use meta_relational_reasoning as m;
 use poo_flow_rust_runtime::datum;
 use poo_flow_rust_runtime::{
     SemanticRuntime,
-    mrr::{MrrObservationEvidence, ObservationScope, SourceRegistrationContext},
+    mrr::{
+        FamilyRevisionFrontier, FamilyRevisionOperation, FamilyRevisionTrigger, MrrFamilyRevision,
+        MrrObservationEvidence, ObservationScope, SourceRegistrationContext,
+    },
 };
 use std::num::NonZeroUsize;
 fn bound(label: &str) -> m::CatalogBoundQuery {
@@ -336,7 +339,7 @@ fn original_mrr_values_project_to_real_native_poo() {
             .is_err()
     );
     let revised = revised_source
-        .admit(&runtime, "deployment-conclusion-revised")
+        .admit(&runtime, "deployment-conclusion")
         .unwrap();
     assert_eq!(revised.result()["classification"], "refuted");
     assert_eq!(revised.current(&runtime).unwrap()["status"], "current");
@@ -344,6 +347,161 @@ fn original_mrr_values_project_to_real_native_poo() {
         historical.result()["admissionDigest"],
         revised.result()["admissionDigest"]
     );
+    let root = historical.revision_root(&runtime).unwrap();
+    let old = &root.result()["revision"];
+    let new = &revised.result()["conclusion"];
+    let mut frontier = FamilyRevisionFrontier {
+        index_identity: "declared-scoped-index".into(),
+        index_digest: "declared-index-digest".into(),
+        previous_cut: old["cut"].as_str().unwrap().into(),
+        revised_cut: new["cut"].as_str().unwrap().into(),
+        previous_projection: old["projection"].as_str().unwrap().into(),
+        revised_projection: new["projection"].as_str().unwrap().into(),
+        changed_subjects: vec!["build".into()],
+        affected_conclusions: vec![old["identity"].as_str().unwrap().into()],
+        inventory_complete: false,
+        trigger: FamilyRevisionTrigger::PremiseDelta,
+    };
+    assert!(
+        root.change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Retract
+        )
+        .is_err()
+    );
+    frontier.inventory_complete = true;
+    assert!(
+        root.change(
+            &runtime,
+            &historical,
+            &frontier,
+            FamilyRevisionOperation::Retract
+        )
+        .is_err()
+    );
+    let corrected_revision = root
+        .change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Correct,
+        )
+        .unwrap();
+    assert_eq!(
+        corrected_revision.result()["revision"]["operation"],
+        "correct"
+    );
+    assert_eq!(
+        corrected_revision.result()["revision"]["resultDigest"],
+        revised.result()["conclusion"]["proofDigest"]
+    );
+    let withdrawn = root
+        .change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Retract,
+        )
+        .unwrap();
+    assert_eq!(withdrawn.result()["classification"], "refuted");
+    assert_eq!(withdrawn.result()["revision"]["operation"], "retract");
+    assert_eq!(
+        withdrawn.result()["revision"]["predecessor"],
+        root.result()["revision"]["identity"]
+    );
+    assert_eq!(
+        withdrawn.result()["revision"]["proofDigest"],
+        revised.result()["conclusion"]["proofDigest"]
+    );
+    assert_eq!(withdrawn.result()["revision"]["resultDigest"], false);
+    let journal =
+        MrrFamilyRevision::journal(&runtime, "original-native-history", &[&root, &withdrawn])
+            .unwrap();
+    assert_eq!(journal["revisions"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        journal["entries"].as_array().unwrap()[0]["classification"],
+        "necessary"
+    );
+    assert_eq!(
+        journal["entries"].as_array().unwrap()[1]["classification"],
+        "refuted"
+    );
+    for flag in [
+        "durable",
+        "runtimeExecuted",
+        "sourceAuthenticated",
+        "actionAuthorized",
+    ] {
+        assert_eq!(journal[flag], false);
+    }
+    assert!(MrrFamilyRevision::journal(&runtime, "missing-root", &[&withdrawn]).is_err());
+    assert!(
+        runtime
+            .call(
+                "temporal.family.revision.root",
+                &datum!({"admissionDigest":"forged"})
+            )
+            .is_err()
+    );
+    assert!(
+        runtime
+            .call(
+                "temporal.family.journal",
+                &datum!({"identity":"forged", "revisionDigests":["forged"]})
+            )
+            .is_err()
+    );
+    assert!(MrrFamilyRevision::journal(&runtime, "duplicate", &[&root, &root]).is_err());
+    let branches = MrrFamilyRevision::journal(
+        &runtime,
+        "historical-branches",
+        &[&root, &corrected_revision, &withdrawn],
+    )
+    .unwrap();
+    assert_eq!(branches["revisions"].as_array().unwrap().len(), 3);
+    assert_eq!(branches["actionAuthorized"], false);
+    assert!(runtime.call("temporal.family.revision.root", &datum!({
+        "admissionDigest": &historical.result()["admissionDigest"], "proofDigest": "forged"
+    })).is_err());
+    let original_index = frontier.index_digest.clone();
+    frontier.index_digest = "x".repeat(129);
+    assert!(
+        root.change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Correct
+        )
+        .is_err()
+    );
+    frontier.index_digest = original_index;
+    assert!(MrrFamilyRevision::journal(&runtime, "empty", &[]).is_err());
+    let original_cut = frontier.revised_cut.clone();
+    frontier.revised_cut = "foreign-cut".into();
+    assert!(
+        root.change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Correct
+        )
+        .is_err()
+    );
+    frontier.revised_cut = original_cut;
+    assert_eq!(
+        root.change(
+            &runtime,
+            &revised,
+            &frontier,
+            FamilyRevisionOperation::Retract
+        )
+        .unwrap()
+        .result(),
+        withdrawn.result()
+    );
+    println!("MRR original admission -> native proof-bound tombstone -> replayed journal verified");
     // Duplicate host delivery is idempotent and cannot restore the old current source.
     let repeated = corrected_evidence
         .register_current(&runtime, model, task, context())
@@ -352,18 +510,27 @@ fn original_mrr_values_project_to_real_native_poo() {
     assert_eq!(historical.current(&runtime).unwrap()["status"], "stale");
     println!("MRR-CORRECTION -> HISTORICAL-STALE -> NATIVE-READMISSION verified");
     for index in 0..126 {
-        revised_source
+        let entry = revised_source
             .admit(&runtime, &format!("history-{index}"))
             .unwrap();
+        if index < 125 {
+            entry.revision_root(&runtime).unwrap();
+        } else {
+            assert!(entry.revision_root(&runtime).is_err());
+        }
         if (index + 1) % 16 == 0 {
             println!("Native immutable admission entries completed={}", index + 3);
         }
     }
     assert!(revised_source.admit(&runtime, "history-overflow").is_err());
     let repeat = revised_source
-        .admit(&runtime, "deployment-conclusion-revised")
+        .admit(&runtime, "deployment-conclusion")
         .unwrap();
     assert_eq!(repeat.result(), revised.result());
+    assert_eq!(
+        historical.revision_root(&runtime).unwrap().result(),
+        root.result()
+    );
     assert_eq!(historical.current(&runtime).unwrap()["status"], "stale");
     println!("Native history capacity rejects new entries and preserves idempotent replay");
     println!("MRR-ORIGINAL-RECEIPT -> HOST-CORRESPONDENCE -> NATIVE-POO verified");
