@@ -37,6 +37,21 @@ retains that failure. No installed SDK file was changed. A stale core/types
 object lock from an earlier interrupted attempt had no active holder and was
 removed from the temporary package SDK; that only unblocked compilation.
 
+The subsequent official static build completed after generating both missing
+upstream C/object pairs in the temporary SDK and explicitly selecting that
+SDK with =GERBIL_BUILD_PREFIX=. No installed SDK file or compiler intermediate
+was edited. The first executable reached gxtest source discovery but rejected
+the public helper's import syntax; =gxtest-expander-missing.log= preserves that
+failure. The entry now calls the official =gerbil-load-expander!= hook before
+the same upstream runner, matching Gerbil's interpreter initialization.
+
+The rebuilt entry also exposes optional =POO_FLOW_TEST_PROGRESS= completion
+events after static initialization and after expander initialization. These
+are completed stages, not timer output. The strict run still timed out before
+the first entry event: =gxtest-before-entry-failed.log=. None of the four cases
+ran, and static startup qualification remains open. Completing the link or
+repairing source discovery does not replace this failed runtime gate.
+
 These host-declared read-only checks do not authenticate the source, fence a
 subsequent effect, prove physical evaluation or implement withdrawal journals,
 authoritative multi-source cuts, durable CAS/IFC publication and recovery.
