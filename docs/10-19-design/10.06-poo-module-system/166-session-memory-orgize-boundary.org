@@ -190,12 +190,15 @@ are returned to the target for review or policy-guided resolution.
 | temporal family revision is stale after correction | old Memory proposal is refused until frontier and semantic admission are replayed |
 | only a process log or old receipt hash is available | no current Memory publication or source authority is inferred |
 
-Raw =*.log= output is ignored by Git and belongs in local/CI artifacts. A
-small structured receipt should bind producer REV, source cut, exit status,
-watchdog limits, artifact identity and hash. If the raw artifact is gone, its
-historical hash remains a claim about the past run, not a locally replayable
-current qualification. This applies to Session/Memory publication evidence as
-well as proof and build receipts.
+Session/WorkTree TLC models run through two Python case catalog entries and
+produce structured JSON results for each normal and mutant TLC run. The
+receipt binds Git HEAD and dirty flag, model/config digests, actual exit,
+state counts, and watchdog limits. CI console output is diagnostic progress;
+its hash alone is a claim about the past run, not a locally replayable current
+qualification. For
+Session/Memory publication, a future typed receipt must also bind the source
+cut, artifact identity, authorization, and committed head revision. Existing
+historical log hashes grant no current source or effect authority.
 
 The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
 pure guards and finite concurrent transitions for Session and WorkTree heads.

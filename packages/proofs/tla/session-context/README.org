@@ -7,10 +7,14 @@ workers.  Normal TLC runs must complete without invariant violations.  Four
 Session and six WorkTree guard mutations must violate their named invariants.
 
 Run =just check-session-context-tla= from the POO Flow repository root.  The
-runner requires actual TLC output within five seconds, caps each case at 45
-seconds, and writes case logs and a JSON receipt under =.ci/session-context/=.
-The Linux PR CI invokes the same focused recipe after installing the pinned
-TLC jar.
+Two =session= native cases in =packages/python-testing= orchestrate 12 TLC
+normal and mutant runs. Each requires actual TLC output within five seconds
+and completes within 45 seconds. The Python case runner writes one
+structured JSON receipt under =.ci/session-context/= with source revision,
+worktree dirty flag, model/config digests, actual exit, state counts, and
+watchdog limits. It streams real TLC milestones to the console without
+per-case log files. The Linux PR CI invokes the same focused recipe after installing the
+pinned TLC jar.
 
 These checks do not prove a production Scheme/runtime refinement, actual
 memory sharing authorization, physical CAS, effect reconciliation, or semantic

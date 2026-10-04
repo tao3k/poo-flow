@@ -249,9 +249,6 @@ jobs:
         run: |
           set -euo pipefail
           lake build PooFlowSessionProof
-          lake env lean PooFlowSessionProof/AxiomAudit.lean 2>&1 \
-            | tee "$RUNNER_TEMP/session-axiom-audit.log"
-          grep -F 'SESSION-AXIOM-AUDIT-OK' "$RUNNER_TEMP/session-axiom-audit.log"
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

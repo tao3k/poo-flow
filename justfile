@@ -529,7 +529,7 @@ check-session-poo-lean:
 
 [group('check')]
 check-session-context-tla:
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" PYTHONPATH="{{ justfile_directory() }}/packages/proofs/python/src" python3 -m poo_flow_proof.session_context_tla --receipt "{{ justfile_directory() }}/.ci/session-context/tla-receipt.json"
+    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing run --mode native --module session --receipt "{{ justfile_directory() }}/.ci/session-context/testing-receipt.json"
 
 [group('check')]
 check-session-proof: check-session-poo-lean check-session-context-tla

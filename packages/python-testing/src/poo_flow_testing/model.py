@@ -52,3 +52,10 @@ class CaseContext:
 
     def module_root(self, module: str) -> Path | None:
         return self.module_roots.get(module)
+
+
+@dataclass(frozen=True)
+class CaseEvidence:
+    """Small JSON-compatible observations returned by a completed case."""
+
+    details: Mapping[str, object]

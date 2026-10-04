@@ -25,6 +25,13 @@ def test_catalog_selects_single_part_and_cross_module_cases() -> None:
     assert catalog.select(identity="ascent.source-withdrawal")[0].spec.mode == "native"
 
 
+def test_session_native_cases_register_the_two_tla_models() -> None:
+    catalog = build_catalog()
+    assert {case.spec.identity for case in catalog.select(module="session", mode="native")} == {
+        "session.tla-lifecycle", "session.tla-worktree"
+    }
+
+
 def test_registry_rejects_ambiguous_declarations() -> None:
     target = ModulePart("gerbil-ascent", "candidate/reasoning")
     with pytest.raises(ValueError, match="distinct"):
