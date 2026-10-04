@@ -217,3 +217,18 @@ latency gate. Installation and build logs remain separate from test receipts.
 This remains read-only library qualification. It makes no new provider call,
 does not refresh the historical model score, and does not close current-cut,
 correction/re-query, production recovery or IFC effect publication gates.
+
+* Current pinned correction and re-query
+
+The next qualification uses MRR =d5beb4030bf875fa851cddc27789030c551154c3=
+and Data =707f435320008df6799be8e8be1cfede5aad71cb=, with the Library's direct
+MRR dependency and Data's facade selecting that identical MRR source.
+The new executable passes real Arrow correction, original MRR re-query,
+historical necessary/stale retention and refuted/current native re-admission.
+The five-second genuine-output and 45-second total limits remain unchanged.
+
+Current raw Scheme receipts, output and build/input digests are in
+=t/qualification/temporal-current-source/physical-pinned-*=. Earlier failures
+remain archived. This closes the local read-only correction/re-query gate for
+this exact graph, while authenticated current cuts, effect publication,
+withdrawal/recovery and new real-model qualification remain separate gates.

@@ -71,6 +71,34 @@ five-second genuine-progress and 45-second total limits were unchanged.
 This closes local native public-case qualification, not interpreted cold
 startup, the physical MRR/Data roundtrip or a latency benchmark.
 
+* Coherent pinned physical correction
+
+The Rust Library and physical qualification now resolve one MRR source at
+=d5beb4030bf875fa851cddc27789030c551154c3=. The latter resolves one Data source
+at =707f435320008df6799be8e8be1cfede5aad71cb=, whose facade selects that same
+MRR commit. Cargo generated both lockfiles; no path patch substitutes a pin.
+
+The new immutable binary passes the physical correction/re-query and native
+Temporal re-admission under the unchanged five-second real-progress and
+45-second total deadlines. Original GQL reaches actual Arrow/DataFusion
+execution and original MRR Scheme V2 transport. A corrected physical root
+produces a new MRR generation; retained historical proof is necessary/stale
+and revised proof is refuted/current. Cross-root handoff substitution, stale
+re-admission and rollback remain refused. Physical roots and host-selected
+Temporal cuts retain distinct identities.
+
+=physical-pinned-passed.log=, =physical-pinned-receipt.ss= and
+=physical-pinned-oracle.ss= retain original output/data. The oracle is the
+emitted replay pair and is not an independent proof of physical execution.
+=physical-pinned-build-freeze.ss= freezes pins, current executable/library,
+four compiler-owned MRR modules, source/lock/build inputs and evidence hashes.
+The old initialization failures remain failed historical invocations.
+
+This closes the local read-only correction/re-query path for this exact graph.
+It is not a new model result, benchmark, authenticated production current cut,
+effect authorization, withdrawal journal, durable CAS/IFC publication or
+recovery qualification. All three receipt authority/coverage flags are false.
+
 These host-declared read-only checks do not authenticate the source, fence a
 subsequent effect, prove physical evaluation or implement withdrawal journals,
 authoritative multi-source cuts, durable CAS/IFC publication and recovery.

@@ -74,6 +74,8 @@ path = [
   "t/qualification/temporal-physical-native/evidence/*",
   "t/qualification/temporal-current-source/*.log",
   "t/qualification/temporal-current-source/native-build-freeze.ss",
+  "t/qualification/temporal-current-source/physical-pinned-receipt.ss",
+  "t/qualification/temporal-current-source/physical-pinned-oracle.ss",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
