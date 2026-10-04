@@ -131,11 +131,54 @@ fn candidate(query: &m::CatalogBoundQuery, duplicate: bool) -> m::CandidateQuery
 #[test]
 fn original_mrr_values_project_to_real_native_poo() {
     let query = bound("generation-one");
+    println!("MRR source query binding reconstructed");
     let rows = candidate(&query, false);
     let cap = NonZeroUsize::new(16384).unwrap();
     let receipt = m::admit_query_result_candidate(&query, &rows, limits()).unwrap();
     let evidence =
         MrrObservationEvidence::verify(&query, &rows, &receipt, limits(), cap, scope()).unwrap();
+    let transport = m::export_query_result_transport(&query, &rows, limits(), cap).unwrap();
+    let received =
+        MrrObservationEvidence::verify_transport(&query, &transport, limits(), cap, scope())
+            .unwrap();
+    assert_eq!(received.original().candidate(), &rows);
+    assert_eq!(received.original().receipt(), &receipt);
+    assert_eq!(received.correspondence(), evidence.correspondence());
+    println!("Original Scheme v2 candidate and receipt verified");
+    assert!(
+        MrrObservationEvidence::verify_transport(
+            &bound("generation-two"),
+            &transport,
+            limits(),
+            cap,
+            scope(),
+        )
+        .is_err()
+    );
+    assert!(
+        MrrObservationEvidence::verify_transport(&query, b"{}", limits(), cap, scope(),).is_err()
+    );
+    assert!(
+        MrrObservationEvidence::verify_transport(
+            &query,
+            &transport[..transport.len() - 1],
+            limits(),
+            cap,
+            scope(),
+        )
+        .is_err()
+    );
+    let empty = m::CandidateQueryResult::new(
+        m::QueryResultBinding::for_query(&query),
+        rows.columns().to_vec(),
+        vec![],
+    );
+    let empty_transport = m::export_query_result_transport(&query, &empty, limits(), cap).unwrap();
+    assert!(m::verify_query_result_transport(&query, &empty_transport, limits(), cap).is_ok());
+    assert!(
+        MrrObservationEvidence::verify_transport(&query, &empty_transport, limits(), cap, scope(),)
+            .is_err()
+    );
     assert_eq!(evidence.original().candidate(), &rows);
     assert_eq!(
         evidence.original().receipt().binding().generation(),
@@ -186,6 +229,7 @@ fn original_mrr_values_project_to_real_native_poo() {
         )
         .is_err()
     );
+    println!("Transport tamper, scope, duplicate and empty controls rejected");
     let runtime = SemanticRuntime::open(
         std::env::var("POO_FLOW_SEMANTIC_LIBRARY").unwrap(),
         &std::env::var("POO_FLOW_SEMANTIC_SHA256").unwrap(),
@@ -201,6 +245,7 @@ fn original_mrr_values_project_to_real_native_poo() {
         .classify(&runtime, model.clone(), task.clone())
         .unwrap();
     assert_eq!(result["classification"], "necessary");
+    println!("Native Temporal classified original receipt as necessary");
     assert_eq!(result["actionAuthorized"], false);
     assert_eq!(result["sourceAuthenticated"], false);
     let mut forged = model.clone();

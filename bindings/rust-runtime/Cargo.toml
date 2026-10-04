@@ -16,6 +16,6 @@ default = []
 mrr-transport = ["dep:meta-relational-reasoning"]
 [dependencies.meta-relational-reasoning]
 git = "https://github.com/tao3k/meta-relational-reasoning.git"
-rev = "3ce31dac2dc58ab780ed06fa88103de501355692"
+rev = "9ee5ace469e7a9319c74b8be0308e9062a47e587"
 optional = true
 default-features = false

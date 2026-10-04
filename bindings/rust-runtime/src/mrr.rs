@@ -29,6 +29,7 @@ pub struct ObservationScope {
 #[derive(Debug)]
 pub enum MrrBridgeError {
     Admission(mrr::QueryResultAdmissionError),
+    Transport(mrr::QueryResultTransportError),
     ReceiptMismatch,
     UnsupportedProjection,
     InvalidScope,
@@ -66,6 +67,31 @@ pub struct MrrObservationEvidence {
     scope: ObservationScope,
 }
 impl MrrObservationEvidence {
+    /// Reconstruct original owner values from bounded Scheme v2 bytes, then
+    /// check the host's Temporal projection. The query must come from the
+    /// authentic source binder; transport bytes do not authenticate execution.
+    pub fn verify_transport(
+        query: &CatalogBoundQuery,
+        bytes: &[u8],
+        limits: QueryResultLimits,
+        max_bytes: NonZeroUsize,
+        scope: ObservationScope,
+    ) -> Result<Self, MrrBridgeError> {
+        if max_bytes.get() > 1024 * 1024 || bytes.len() > max_bytes.get() {
+            return Err(MrrBridgeError::UnsupportedProjection);
+        }
+        let original = mrr::verify_query_result_transport(query, bytes, limits, max_bytes)
+            .map_err(MrrBridgeError::Transport)?;
+        Self::verify(
+            query,
+            original.candidate(),
+            original.receipt(),
+            limits,
+            max_bytes,
+            scope,
+        )
+    }
+
     /// Re-admit original native owner values against the authentic caller-owned query.
     /// Supported columns are exactly `event` String and `position` Integer.
     /// Null, Node, Relation, List, duplicates, extra columns and >128 rows reject.

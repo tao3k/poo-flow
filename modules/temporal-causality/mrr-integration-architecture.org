@@ -35,6 +35,35 @@ it has no physical query execution, reverse fact export or durable correction
 loop. The successful Rust real-model batch exercises native family tools, not
 this complete cross-repository lifecycle. See [[file:integration-readiness-audit.org][the evidence audit]].
 
+* Scheme v2 handoff implementation update
+
+The Rust bridge now pins MRR =9ee5ace469e7a9319c74b8be0308e9062a47e587=.
+This commit includes the source execution API from MRR Data's previous pin
+=e9f87c3744b0d38709c479edc1b2143ef5ec9bbd= and the Scheme v2 migration.
+=MrrObservationEvidence::verify_transport= accepts only original bounded
+Scheme v2 result bytes, reconstructs owner types through native MRR admission,
+and checks the existing event/position projection. JSON and truncated transport
+are rejected. A valid empty MRR answer remains unsupported by this projection.
+
+MRR Data PR #12 adds =DataQueryResultHandoff=, retaining =BoundDataQuery=
+including its physical root, engine contract, graph projection and semantic
+query together with the complete original result. Its receiver compares an
+independently selected physical binding before MRR re-admission. The handoff is
+an in-process Rust value; only its original result payload is Scheme wire.
+This does not define a cross-process physical envelope or authenticate execution.
+
+The release native POO transport test passed in 0.71 seconds with the five-second
+genuine-output watchdog; all-target Clippy passed with warnings denied. The
+first debug invocation failed that watchdog and is not counted as a pass.
+No real-model call or new performance measurement was made in this slice.
+
+Cold/warm restored-property tests and the native POO transport test exercise
+these two seams separately. They do not yet qualify one original GQL event/time
+query through physical execution into Temporal. G0 remains open for that joined
+scenario, source compilation receipt and receiver-owned root/cut correspondence.
+The legacy static-edge worker still uses its previous JSON envelope and is not
+part of this new native handoff; its direct migration remains outstanding.
+
 * Audited seams and necessary corrections
 
 | Source seam at the pinned MRR/MRR Data revisions | Actual guarantee | Design consequence |
