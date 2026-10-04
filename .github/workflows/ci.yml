@@ -231,24 +231,13 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Install elan
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ ! -x "$HOME/.elan/bin/lake" ]; then
-            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-              | sh -s -- -y --default-toolchain none
-          fi
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-          cd packages/proofs/lean-poo
-          "$HOME/.elan/bin/lake" --version
-
       - name: Build Session and WorkTree proofs with axiom audit
-        working-directory: packages/proofs/lean-poo
-        shell: bash
-        run: |
-          set -euo pipefail
-          lake build PooFlowSessionProof
+        uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1
+        with:
+          lake-package-directory: packages/proofs/lean-poo
+          auto-config: false
+          build: true
+          build-args: PooFlowSessionProof
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
