@@ -6,9 +6,15 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+title: Temporal Causality and Causal Trajectory Architecture
 #+date: [2026-09-16]
 #+property: SDD_KIND architecture-decision
-#+property: STATUS implemented-m2-bounded-healthcare-model
+#+property: STATUS implemented-bounded-slices-design-audited-framework-partial
 
 * Decision and terminology
+
+The [[file:../../../modules/temporal-causality/design-audit.org][2026-10-04 engine design audit]] resolves eight extension decisions and
+records their owners and executable exit gates. Its accepted design rules do
+not upgrade bounded slices to full engine closure. In particular the C/Python
+=temporal.solve= ABI qualifies the ASCENT finite lens, not the hypothesis-family
+engine or authorized conclusion publication.
 
 The module-local research contract is
 =modules/temporal-causality/framework.org=.  It defines the broader temporal
@@ -154,13 +160,21 @@ laws.  No
 projection silently promotes candidate evidence to an observed or admitted
 causal fact.
 
-For a query proposition =q= and the admitted finite family of worlds =W=,
-the result may claim =possible= only when a witness world satisfies =q=, and
-=necessary= only when every explored world satisfies =q= *and* exhaustion of
-the declared family is evidenced.  =refuted= needs the corresponding exhaustive
-absence; otherwise return =unknown= with the open frontier, bounds, assumptions
-and counterexamples.  An empty family is invalid input, not vacuous necessity.
-These are model-relative classifications, not empirical causal conclusions.
+For the future behavior-space profile, a query proposition =q= over a
+nonempty admitted finite family of worlds =W= is =possible= only with a
+satisfying witness, =necessary= only with universal satisfaction and evidenced
+exhaustion, and =refuted= only with exhaustive absence of a satisfying world.
+Otherwise return =unknown= with frontier, bounds and assumptions. Empty or
+inconsistent admissible worlds cannot yield vacuous necessity.
+
+The executable finite-hypothesis-family profile has narrower semantics:
+=possible= means the candidate passes supported known constraints; =refuted=
+means a known constraint on that candidate fails, without requiring exhaustion
+of unrelated alternatives. =Necessary= is sole-candidate uniqueness after
+exhausting a caller-declared complete exclusive family with no unknowns.
+Overlapping families do not obtain necessity by this rule. Candidate
+classification is not possible-world exploration or empirical causal
+attribution. [[file:../../../modules/temporal-causality/design-audit.org][Audit decision D1]] fixes this distinction for future profiles.
 
 ** Dynamic POO model construction and formal correspondence
 

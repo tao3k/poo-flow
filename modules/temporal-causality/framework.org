@@ -462,6 +462,11 @@ the new projection/refinement obligations.
 
 * Work remaining for a complete framework
 
+The [[file:design-audit.org][2026-10-04 design decisions and acceptance ledger]] settles the
+extension rules for these gaps, including scoped evidence admission, frozen
+TLC dependencies and authorized runtime publication. The ledger distinguishes
+accepted design from executable closure and is the delivery-order reference.
+
 1. Extend the bounded observation layer with source-verified clock
    conversions and authenticated watermark/completeness semantics over the
    existing event/ingress/processing axes, distributed duration budgets,
