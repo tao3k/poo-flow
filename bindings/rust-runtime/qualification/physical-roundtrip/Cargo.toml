@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 [package]
 name = "poo-temporal-physical-roundtrip"
 version = "0.1.0"
@@ -5,6 +8,8 @@ edition = "2024"
 publish = false
 license = "Apache-2.0 AND LGPL-2.1-or-later"
 [workspace]
+[workspace.package]
+license = "Apache-2.0 AND LGPL-2.1-or-later"
 [dependencies]
 poo-flow-rust-runtime = { path = "../..", features = ["mrr-transport"] }
 meta-relational-reasoning = { git = "https://github.com/tao3k/meta-relational-reasoning.git", rev = "9ee5ace469e7a9319c74b8be0308e9062a47e587", default-features = false }

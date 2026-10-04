@@ -61,3 +61,18 @@ path = [
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+# Keep immutable acceptance receipts and historical records byte-for-byte intact.
+[[annotations]]
+path = [
+  "bindings/runtime-c/semantic-wire.org",
+  "t/qualification/temporal-library-basic/rust-model-family/historical.org",
+  "t/qualification/temporal-library-basic/rust-mrr-runtime/historical.org",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/README.org",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/model/*.ss",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/mrr-cold-benchmark.ss",
+  "t/qualification/temporal-physical-native/evidence/*",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
