@@ -215,7 +215,8 @@ jobs:
           print("packaged Bazel runtime-v0 negotiation: ok")
           PY
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" - <<'PY'
-          import json, shutil
+          import shutil
+          from poo_flow_runtime import scheme_wire as wire
           from poo_flow_runtime import (SemanticRuntime, RuntimeGraphProgram,
               RuntimeGraphRuntime, RuntimeGraphRegistries, linear_plan)
           from poo_flow_runtime._native.session import NativeRuntimeSession, NativeBundleDescriptor
@@ -229,13 +230,13 @@ jobs:
           with SemanticRuntime.bundled() as runtime:
               answer = runtime.call('temporal.solve', task)
               assert answer['rows'] == [['a', 'b']]
-              predicted = runtime.predict_temporal_answer(task, lambda supplied: json.dumps(
+              predicted = runtime.predict_temporal_answer(task, lambda supplied: wire.dumps(
                   {'status': 'complete', 'rows': [['a', 'b']]}))
               assert predicted['receipt']['verdict'] == 'consistent'
-              assert runtime.observe_model_answer(task, json.dumps(
+              assert runtime.observe_model_answer(task, wire.dumps(
                   {'status': 'complete', 'rows': [['a', 'b']]}))['verdict'] == 'consistent'
               assert runtime.observe_model_answer(task,
-                  '{"status":"complete","rows":[]}')['verdict'] == 'contradicted'
+                  wire.dumps({'status': 'complete', 'rows': []}))['verdict'] == 'contradicted'
               with NativeRuntimeSession(NativeBundleDescriptor(bytes(32), 1, b'bundle')) as session:
                   program = RuntimeGraphProgram(plan=linear_plan('act'),
                       runtime=RuntimeGraphRuntime.native(session, semantic_context=runtime),
