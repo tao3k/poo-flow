@@ -6,8 +6,8 @@ workers; =WorktreeContext.tla= checks two WorkTrees, two Sessions, and two
 workers.  Normal TLC runs must complete without invariant violations.  Four
 Session and six WorkTree guard mutations must violate their named invariants.
 
-Run =just check-session-context-tla= from the POO Flow repository root.  The
-Two =session= native cases in =packages/python-testing= orchestrate 12 TLC
+Run =just check-session-context-tla= from the POO Flow repository root. Two
+=session= native cases in =packages/python-testing= orchestrate 12 TLC
 normal and mutant runs. Each requires actual TLC output within five seconds
 and completes within 45 seconds. The Python case runner writes one
 structured JSON receipt under =.ci/session-context/= with source revision,

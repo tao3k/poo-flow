@@ -195,9 +195,9 @@ produce structured JSON results for each normal and mutant TLC run. The
 receipt binds Git HEAD and dirty flag, model/config digests, actual exit,
 state counts, and watchdog limits. CI console output is diagnostic progress;
 its hash alone is a claim about the past run, not a locally replayable current
-qualification. For
-Session/Memory publication, a future typed receipt must also bind the source
-cut, artifact identity, authorization, and committed head revision. Existing
+qualification. For Session/Memory publication, a future typed receipt must
+also bind the source cut, artifact identity, authorization, and committed head
+revision. Existing
 historical log hashes grant no current source or effect authority.
 
 The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
