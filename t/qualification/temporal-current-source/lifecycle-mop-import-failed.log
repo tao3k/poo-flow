@@ -1,5 +1,0 @@
-poo-test: static module initialization completed
-poo-test: official expander initialization completed
-poo-test: expander import completed :std/test
-poo-test: expander import completed :clan/poo/object
-FAIL: five seconds without test progress

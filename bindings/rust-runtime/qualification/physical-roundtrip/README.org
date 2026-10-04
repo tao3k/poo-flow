@@ -3,6 +3,12 @@
 
 #+title: Original GQL physical read-only Temporal qualification
 
+Historical =*.log= files cited below were removed from the source checkout.
+The retained receipts contain their hashes, while raw output can be recovered
+from Git commit =79f1ec6f205afaf53580a916d858e051264ec38f=. Those hashes
+alone cannot requalify the current runtime; rerun the bounded gates for a new
+source revision.
+
 This independent qualification package compiles one original GQL source with
 MRR's source compiler, keeps its compilation receipt and bound query, restores
 an immutable three-event Arrow snapshot, runs DataFusion, verifies the complete

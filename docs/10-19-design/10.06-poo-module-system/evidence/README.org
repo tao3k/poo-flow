@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Evidence receipts and generated logs
+
+The POO Flow source tree no longer tracks =*.log=. Build, test and qualification
+logs belong in the local ignored =.ci/= directory or in CI run artifacts.
+The structured =.json= and =.ss= receipts here retain their original log names
+and SHA-256 values as historical assertions. A hash without its raw bytes is
+not a locally replayable log qualification and does not establish current
+source, authority or runtime behavior. Do not silently turn a historical
+receipt into a current pass.
+
+The removed log bytes remain recoverable from the pre-cleanup PR #34 commit
+=79f1ec6f205afaf53580a916d858e051264ec38f= in Git history. Future
+qualification should publish the raw output as a bounded CI artifact and
+record its artifact identity, SHA-256, producer revision, source cut, exit
+status, watchdog limits and retention policy in a small typed receipt. Keep
+semantic assertions and admission decisions in their owning tests and
+receipts; a verbose process log is diagnostic evidence, not an authority
+grant or a substitute for a passing exit status.

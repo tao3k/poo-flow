@@ -1,6 +1,0 @@
-env -u SDKROOT -u DEVELOPER_DIR -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH COMPILER_PATH=/usr/bin CPATH='/opt/homebrew/opt/openssl@3/include' LIBRARY_PATH='/opt/homebrew/opt/openssl@3/lib' timeout --foreground --signal=TERM --kill-after=3s 60s gxi -:max-heap=1G,debug=q "/private/tmp/poo-direct-understanding-preview-20261003-release/diagnostic-transfer.ss"
-IMPORT :gerbil-ascent/program/scheme-language
-MODULE-OK :gerbil-ascent/program/scheme-language
-(invalid-body (rule 0 body 1))
-HARNESS-OK direct-compute
-OK
