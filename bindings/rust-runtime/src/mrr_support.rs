@@ -6,7 +6,7 @@ use crate::{
     Error, SemanticRuntime, datum,
     wire::{self, Value},
 };
-use meta_relational_reasoning::{Derivation, FactId};
+use meta_relational_reasoning::{Derivation, FactId, RelationCatalog, RelationCatalogDigest};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -20,6 +20,7 @@ pub struct MrrSupportBinding {
 pub struct MrrSupportProjection {
     originals: Vec<Derivation>,
     program: Value,
+    catalog_digest: RelationCatalogDigest,
 }
 impl MrrSupportProjection {
     /// Re-admit original owner values; preserve IDs rather than inventing generations.
@@ -27,6 +28,7 @@ impl MrrSupportProjection {
         identity: &str,
         policy: &str,
         complete: bool,
+        catalog: &RelationCatalog,
         derivations: &[Derivation],
         bindings: &[MrrSupportBinding],
     ) -> Result<Self, Error> {
@@ -39,6 +41,7 @@ impl MrrSupportProjection {
         {
             return Err(Error::InvalidInput);
         }
+        validate_catalog(catalog)?;
         let mut bound = BTreeMap::new();
         for b in bindings {
             if !text(&b.subject) || !text(&b.revision) || bound.insert(b.fact, b).is_some() {
@@ -53,6 +56,11 @@ impl MrrSupportProjection {
             if d.generation() != generation || !seen.insert(d.id()) || d.support().len() > 128 {
                 return Err(Error::InvalidInput);
             }
+            catalog
+                .relation(d.output().relation())
+                .ok_or(Error::InvalidInput)?
+                .validate_fact(d.output())
+                .map_err(|_| Error::InvalidInput)?;
             Derivation::new(
                 d.id(),
                 d.rule(),
@@ -91,6 +99,7 @@ impl MrrSupportProjection {
         }
         Ok(Self {
             originals: derivations.to_vec(),
+            catalog_digest: catalog.digest(),
             program: datum!({"identity":identity,"policy":policy,"complete":complete,"supports":supports}),
         })
     }
@@ -100,15 +109,20 @@ impl MrrSupportProjection {
     pub fn program(&self) -> &Value {
         &self.program
     }
+    pub fn catalog_digest(&self) -> RelationCatalogDigest {
+        self.catalog_digest
+    }
     /// Scheme owns applicability; the caller supplies the declared temporal journal.
     pub fn evaluate(
         &self,
         runtime: &SemanticRuntime,
+        catalog: &RelationCatalog,
         journal: Value,
         as_of: i64,
         valid_at: Value,
         budget: u32,
     ) -> Result<Value, Error> {
+        recheck_catalog(catalog, self.catalog_digest)?;
         runtime.call("temporal.support.evaluate", &datum!({"schema":"poo-flow.temporal-support-request.v1",
             "program":self.program.clone(),"journal":journal,"asOf":as_of,"validAt":valid_at,"budget":budget}))
     }
@@ -120,13 +134,22 @@ pub struct MrrFactProjection {
     original: meta_relational_reasoning::Fact,
     payload: Value,
     content_digest: String,
+    catalog_digest: RelationCatalogDigest,
 }
 impl MrrFactProjection {
     pub fn admit(
         fact: &meta_relational_reasoning::Fact,
-        evaluator_relation: &str,
+        catalog: &RelationCatalog,
     ) -> Result<Self, Error> {
         use meta_relational_reasoning::{EvidenceCompleteness, FactValidity};
+        validate_catalog(catalog)?;
+        let schema = catalog
+            .relation(fact.relation())
+            .ok_or(Error::InvalidInput)?;
+        schema
+            .validate_fact(fact)
+            .map_err(|_| Error::InvalidInput)?;
+        let evaluator_relation = schema.predicate();
         fact.context().validate().map_err(|_| Error::InvalidInput)?;
         if fact.context().completeness() != EvidenceCompleteness::Complete
             || fact.context().validity() != FactValidity::Valid
@@ -166,6 +189,7 @@ impl MrrFactProjection {
         );
         Ok(Self {
             original: fact.clone(),
+            catalog_digest: catalog.digest(),
             payload: datum!({"schema":"poo-flow.mrr-fact-request.v1",
             "identity":id,"generation":generation,"relationId":relation,"evaluatorRelation":evaluator_relation,"row":row}),
             content_digest,
@@ -180,11 +204,61 @@ impl MrrFactProjection {
     pub fn content_digest(&self) -> &str {
         &self.content_digest
     }
-    pub fn verify_content(&self, runtime: &SemanticRuntime) -> Result<Value, Error> {
+    pub fn catalog_digest(&self) -> RelationCatalogDigest {
+        self.catalog_digest
+    }
+    pub fn verify_content(
+        &self,
+        runtime: &SemanticRuntime,
+        catalog: &RelationCatalog,
+    ) -> Result<Value, Error> {
+        recheck_catalog(catalog, self.catalog_digest)?;
         let result = runtime.call("temporal.fact.content", &self.payload)?;
         if result["contentDigest"] != Value::from(self.content_digest.clone()) {
             return Err(Error::InvalidInput);
         }
         Ok(result)
     }
+}
+
+// The owner catalog admits field shape and context, not rule execution or cross-row
+// Key/Unique/FD constraints. Requiring its current value avoids an unchecked legacy path.
+fn validate_catalog(catalog: &RelationCatalog) -> Result<(), Error> {
+    if catalog.relations().len() > 32 {
+        return Err(Error::InvalidInput);
+    }
+    let mut predicates = BTreeSet::new();
+    for schema in catalog.relations() {
+        let predicate = schema.predicate();
+        if predicate.len() > 256
+            || !predicate
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || c == b'_')
+            || !predicates.insert(predicate)
+            || schema.fields().is_empty()
+            || schema.fields().len() > 32
+            || !schema.constraints().is_empty()
+            || schema.fields().iter().any(|f| {
+                f.nullable()
+                    || !matches!(
+                        f.schema(),
+                        meta_relational_reasoning::ValueSchema::Integer
+                            | meta_relational_reasoning::ValueSchema::Boolean
+                    )
+            })
+        {
+            return Err(Error::InvalidInput);
+        }
+    }
+    Ok(())
+}
+fn recheck_catalog(
+    catalog: &RelationCatalog,
+    expected: RelationCatalogDigest,
+) -> Result<(), Error> {
+    validate_catalog(catalog)?;
+    if catalog.digest() != expected {
+        return Err(Error::InvalidInput);
+    }
+    Ok(())
 }

@@ -7,6 +7,28 @@ use poo_flow_rust_runtime::{
     mrr_support::{MrrSupportBinding, MrrSupportProjection},
     wire::{self, Value},
 };
+fn catalog() -> m::RelationCatalog {
+    m::RelationCatalog::admit(
+        [("claim", 1), ("edge", 2), ("path", 2)]
+            .into_iter()
+            .map(|(name, arity)| {
+                m::RelationSchema::new(
+                    m::RelationId::from_canonical_bytes(name).unwrap(),
+                    name,
+                    (0..arity)
+                        .map(|i| {
+                            m::RelationField::new(format!("col{i}"), m::ValueSchema::Integer, false)
+                                .unwrap()
+                        })
+                        .collect(),
+                    vec![],
+                )
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap()
+}
 fn fixture() -> (Vec<m::Derivation>, Vec<MrrSupportBinding>) {
     let generation = m::GenerationId::from_canonical_bytes("support-generation").unwrap();
     let rule = m::RuleId::from_canonical_bytes("original-rule").unwrap();
@@ -54,8 +76,15 @@ fn journal() -> Value {
 #[test]
 fn original_mrr_support_identity_and_native_temporal_cuts() {
     let (ds, bindings) = fixture();
-    let projection =
-        MrrSupportProjection::admit("mrr-supports", "read-only", true, &ds, &bindings).unwrap();
+    let projection = MrrSupportProjection::admit(
+        "mrr-supports",
+        "read-only",
+        true,
+        &catalog(),
+        &ds,
+        &bindings,
+    )
+    .unwrap();
     assert_eq!(projection.originals(), ds.as_slice());
     assert_eq!(
         projection.program()["supports"].as_array().unwrap()[0]["identity"],
@@ -72,7 +101,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
     )
     .unwrap();
     let first = projection
-        .evaluate(&runtime, journal(), 1, false.into(), 128)
+        .evaluate(&runtime, &catalog(), journal(), 1, false.into(), 128)
         .unwrap();
     assert_eq!(
         first["conclusions"].as_array().unwrap()[0]["activeSupports"]
@@ -83,7 +112,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
     );
     println!("CASE original MRR identities and two active supports");
     let one = projection
-        .evaluate(&runtime, journal(), 2, false.into(), 128)
+        .evaluate(&runtime, &catalog(), journal(), 2, false.into(), 128)
         .unwrap();
     assert_eq!(
         one["conclusions"].as_array().unwrap()[0]["activeSupports"],
@@ -91,7 +120,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
     );
     println!("CASE withdrawal preserves remaining support");
     let none = projection
-        .evaluate(&runtime, journal(), 3, false.into(), 128)
+        .evaluate(&runtime, &catalog(), journal(), 3, false.into(), 128)
         .unwrap();
     assert_eq!(
         none["conclusions"].as_array().unwrap()[0]["status"],
@@ -107,7 +136,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
     }
     assert_eq!(
         projection
-            .evaluate(&runtime, journal(), 1, false.into(), 128)
+            .evaluate(&runtime, &catalog(), journal(), 1, false.into(), 128)
             .unwrap(),
         first
     );
@@ -122,24 +151,32 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
         .unwrap();
     }
     original_mrr_fact_content_parity_and_profile_controls(&runtime);
+    catalog_substitution_rejected_before_native_call(&runtime);
 }
 #[test]
 fn reject_incomplete_or_ambiguous_host_correspondence() {
     let (ds, b) = fixture();
-    assert!(MrrSupportProjection::admit("p", "policy", true, &ds, &b[..1]).is_err());
+    assert!(MrrSupportProjection::admit("p", "policy", true, &catalog(), &ds, &b[..1]).is_err());
     let mut duplicate = b.clone();
     duplicate.push(b[0].clone());
-    assert!(MrrSupportProjection::admit("p", "policy", true, &ds, &duplicate).is_err());
+    assert!(MrrSupportProjection::admit("p", "policy", true, &catalog(), &ds, &duplicate).is_err());
     let mut extra = b.clone();
     extra.push(MrrSupportBinding {
         fact: m::FactId::from_canonical_bytes("unused").unwrap(),
         subject: "unused".into(),
         revision: "u1".into(),
     });
-    assert!(MrrSupportProjection::admit("p", "policy", true, &ds, &extra).is_err());
+    assert!(MrrSupportProjection::admit("p", "policy", true, &catalog(), &ds, &extra).is_err());
     assert!(
-        MrrSupportProjection::admit("p", "policy", true, &[ds[0].clone(), ds[0].clone()], &b)
-            .is_err()
+        MrrSupportProjection::admit(
+            "p",
+            "policy",
+            true,
+            &catalog(),
+            &[ds[0].clone(), ds[0].clone()],
+            &b
+        )
+        .is_err()
     );
     println!("CASE missing duplicate unused bindings and repeated derivation rejected");
 }
@@ -194,9 +231,9 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
             row,
             fact_context,
         );
-        let projection = MrrFactProjection::admit(&fact, rel).unwrap();
+        let projection = MrrFactProjection::admit(&fact, &catalog()).unwrap();
         assert_eq!(projection.original(), &fact);
-        let result = projection.verify_content(&runtime).unwrap();
+        let result = projection.verify_content(&runtime, &catalog()).unwrap();
         assert_eq!(result["proofAdmitted"], false);
         let lineage = if name == "output" {
             let supports = vec![
@@ -210,7 +247,13 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
         } else {
             false.into()
         };
-        fixtures.push(datum!({"request":projection.payload().clone(),"expected":result,"originalDerivation":lineage}));
+        let catalog_digest = projection
+            .catalog_digest()
+            .as_bytes()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        fixtures.push(datum!({"request":projection.payload().clone(),"expected":result,"originalDerivation":lineage,"originalCatalogDigest":catalog_digest}));
         println!("CASE actual MRR fact native content parity {name}");
     }
     let unsupported = m::Fact::new(
@@ -219,7 +262,7 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
         vec![m::Value::String("unmapped".into())],
         context,
     );
-    assert!(MrrFactProjection::admit(&unsupported, "edge").is_err());
+    assert!(MrrFactProjection::admit(&unsupported, &catalog()).is_err());
     let partial = m::Fact::new(
         m::FactId::from_canonical_bytes("partial").unwrap(),
         unsupported.relation(),
@@ -233,8 +276,206 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
         )
         .unwrap(),
     );
-    assert!(MrrFactProjection::admit(&partial, "edge").is_err());
+    assert!(MrrFactProjection::admit(&partial, &catalog()).is_err());
     if let Ok(path) = std::env::var("POO_FLOW_MRR_FACT_ORACLE") {
         std::fs::write(path, wire::to_vec(&Value::Array(fixtures)).unwrap()).unwrap();
     }
+}
+
+fn catalog_substitution_rejected_before_native_call(runtime: &SemanticRuntime) {
+    use poo_flow_rust_runtime::mrr_support::MrrFactProjection;
+    let (derivations, bindings) = fixture();
+    let admitted = catalog();
+    let support =
+        MrrSupportProjection::admit("p", "policy", true, &admitted, &derivations, &bindings)
+            .unwrap();
+    let fact = MrrFactProjection::admit(derivations[0].output(), &admitted).unwrap();
+    let changed = m::RelationCatalog::admit(
+        admitted
+            .relations()
+            .iter()
+            .map(|schema| {
+                m::RelationSchema::new(
+                    schema.id(),
+                    schema.predicate(),
+                    schema
+                        .fields()
+                        .iter()
+                        .map(|f| {
+                            m::RelationField::new(
+                                format!("changed_{}", f.name()),
+                                f.schema().clone(),
+                                f.nullable(),
+                            )
+                            .unwrap()
+                        })
+                        .collect(),
+                    vec![],
+                )
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap();
+    assert_ne!(admitted.digest(), changed.digest());
+    assert!(fact.verify_content(runtime, &changed).is_err());
+    assert!(
+        support
+            .evaluate(runtime, &changed, journal(), 1, false.into(), 128)
+            .is_err()
+    );
+    assert_eq!(fact.catalog_digest(), admitted.digest());
+    assert_eq!(support.catalog_digest(), admitted.digest());
+    assert_eq!(
+        fact.verify_content(runtime, &admitted).unwrap()["contentDigest"],
+        fact.content_digest()
+    );
+    println!(
+        "CASE changed original catalog rejected by fact and support before native call; original catalog remains usable"
+    );
+}
+
+#[test]
+fn original_catalog_shape_and_relation_correspondence_rejects() {
+    use poo_flow_rust_runtime::mrr_support::MrrFactProjection;
+    let (ds, bindings) = fixture();
+    let original = ds[0].output();
+    let schema = |id: &str, predicate: &str, fields: Vec<m::RelationField>, constraints| {
+        m::RelationSchema::new(
+            m::RelationId::from_canonical_bytes(id).unwrap(),
+            predicate,
+            fields,
+            constraints,
+        )
+        .unwrap()
+    };
+    let field = |kind, nullable| m::RelationField::new("col", kind, nullable).unwrap();
+    let wrong_arity = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![
+            field(m::ValueSchema::Integer, false),
+            m::RelationField::new("extra", m::ValueSchema::Integer, false).unwrap(),
+        ],
+        vec![],
+    )])
+    .unwrap();
+    let wrong_type = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![field(m::ValueSchema::Boolean, false)],
+        vec![],
+    )])
+    .unwrap();
+    let absent = m::RelationCatalog::admit(vec![schema(
+        "missing",
+        "missing",
+        vec![field(m::ValueSchema::Integer, false)],
+        vec![],
+    )])
+    .unwrap();
+    for invalid in [&wrong_arity, &wrong_type, &absent] {
+        assert!(MrrFactProjection::admit(original, invalid).is_err());
+        assert!(MrrSupportProjection::admit("p", "policy", true, invalid, &ds, &bindings).is_err());
+    }
+    let duplicate_predicate = m::RelationCatalog::admit(vec![
+        schema(
+            "claim",
+            "claim",
+            vec![field(m::ValueSchema::Integer, false)],
+            vec![],
+        ),
+        schema(
+            "other",
+            "claim",
+            vec![field(m::ValueSchema::Integer, false)],
+            vec![],
+        ),
+    ])
+    .unwrap();
+    let nullable = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![field(m::ValueSchema::Integer, true)],
+        vec![],
+    )])
+    .unwrap();
+    let constrained = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![field(m::ValueSchema::Integer, false)],
+        vec![m::RelationConstraint::Key(vec!["col".into()])],
+    )])
+    .unwrap();
+    let unsupported = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![field(m::ValueSchema::String, false)],
+        vec![],
+    )])
+    .unwrap();
+    let unsafe_name = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim-name",
+        vec![field(m::ValueSchema::Integer, false)],
+        vec![],
+    )])
+    .unwrap();
+    let oversized = m::RelationCatalog::admit(
+        (0..33)
+            .map(|i| {
+                schema(
+                    &format!("r{i}"),
+                    &format!("r{i}"),
+                    vec![field(m::ValueSchema::Integer, false)],
+                    vec![],
+                )
+            })
+            .collect(),
+    )
+    .unwrap();
+    for invalid in [
+        &duplicate_predicate,
+        &nullable,
+        &constrained,
+        &unsupported,
+        &unsafe_name,
+        &oversized,
+    ] {
+        assert!(MrrFactProjection::admit(original, invalid).is_err());
+        assert!(MrrSupportProjection::admit("p", "policy", true, invalid, &ds, &bindings).is_err());
+    }
+    let admitted = catalog();
+    let projection = MrrFactProjection::admit(original, &admitted).unwrap();
+    assert_eq!(projection.payload()["evaluatorRelation"], "claim");
+    let mut reordered = admitted.relations().to_vec();
+    reordered.reverse();
+    let same = m::RelationCatalog::admit(reordered).unwrap();
+    assert_eq!(projection.catalog_digest(), same.digest());
+    // Supported mixed scalar profile uses the owner's declared positions.
+    let mixed_catalog = m::RelationCatalog::admit(vec![schema(
+        "claim",
+        "claim",
+        vec![
+            field(m::ValueSchema::Boolean, false),
+            m::RelationField::new("n", m::ValueSchema::Integer, false).unwrap(),
+        ],
+        vec![],
+    )])
+    .unwrap();
+    let mixed = m::Fact::new(
+        original.id(),
+        original.relation(),
+        vec![m::Value::Boolean(true), m::Value::Integer(i64::MIN)],
+        *original.context(),
+    );
+    assert_eq!(
+        MrrFactProjection::admit(&mixed, &mixed_catalog)
+            .unwrap()
+            .payload()["row"],
+        Value::Array(vec![true.into(), i64::MIN.into()])
+    );
+    println!(
+        "CASE original catalog shape, missing relation, collisions, unsupported schemas and bounds reject; canonical order and mixed scalar positions retain"
+    );
 }

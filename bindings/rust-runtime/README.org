@@ -268,10 +268,39 @@ output content or provider authenticity. Missing, duplicate and unused bindings
 reject. Scheme alone evaluates applicability from the declared journal.
 The read-only result admits neither proofs nor publication or durability.
 
-=MrrFactProjection::admit= retains an original MRR Fact, validates its owner
-context and complete/valid status, and projects integer/boolean content without
-coercion. =verify_content= compares its canonical digest with the original
-Scheme constructor through =temporal.fact.content=, ABI v1. The evaluator
-relation correspondence is explicit. This does not admit the associated MRR
-rule or authenticate source provenance. Native tests replay a typed owner Fact
-and Derivation fixture through actual ASCENT proof roots and Temporal revisions.
+=MrrFactProjection::admit= requires the original admitted =RelationCatalog=.
+It resolves the Fact's exact RelationId, runs the owner =validate_fact= field
+and context checks, requires complete/valid context and projects integer/boolean
+content without coercion. The evaluator relation name comes from the catalog's
+predicate; there is no unchecked caller alias constructor. Support projection
+also requires the catalog and validates each original Derivation output.
+Both retain its exact owner digest, and =verify_content= / =evaluate= require a
+matching supplied catalog before calling native Scheme. A caller must obtain
+that catalog from its authoritative provider; a matching value alone is not
+provider authentication or an atomic current-state read.
+
+The supported catalog profile is at most 32 relations, unique ASCII alphanumeric
+or underscore predicates of at most 256 bytes, and 1--32 nonnullable integer or
+boolean fields per relation. Key/Unique/FD constraints and other field schemas
+are rejected because this adapter does not validate cross-row constraints or
+implement their semantics. Original catalog ordering is canonicalized by MRR.
+The fact content digest and fixed Scheme ABI v1 payload remain unchanged;
+the held catalog digest is a local owner admission condition, not a newly
+verified Scheme proof field. =verify_content= compares content with the original
+Scheme constructor through =temporal.fact.content=.
+
+This does not admit the associated MRR rule or authenticate source provenance.
+Native tests replay a typed owner Fact and Derivation fixture through actual
+ASCENT proof roots and Temporal revisions. The Rust catalog qualification and
+Python replay receipts are in
+=t/qualification/temporal-library-basic/catalog-binding-v1/=.
+
+The remaining integration sequence is:
+1. Project original =mrr_logic::Rule= heads/bodies and catalog relation/column
+   correspondence into the original Scheme evaluator, then check their exact
+   correspondence against proof DAG rule applications. A RuleId is insufficient.
+2. Expose the existing Scheme proof producer and isolated Host policy capability
+   through dedicated control entries in ABI v1. Model calls must not register
+   policy/clock state or manufacture admitted proofs.
+3. Recheck current authoritative catalog, source, policy and clock at the effect
+   boundary, and admit only conditional Data publication with the expected head.

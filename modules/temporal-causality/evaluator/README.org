@@ -80,7 +80,12 @@ different journal snapshot requires a new binding receipt.
 
 The fixed ABI v1 =temporal.fact.content= projects only canonical fact content.
 It admits neither proof nor correspondence. Rust retains original Fact values
-and validates context/completeness/validity before projection. Python replays the
+and requires the original MRR RelationCatalog to validate relation/field shape,
+context/completeness/validity before projection. Its evaluator relation name
+comes from that catalog predicate. The bounded Rust catalog profile rejects
+alias collisions, nullable/unsupported fields and cross-row constraints; each
+call rechecks the supplied catalog digest. These are Rust owner checks, not
+Scheme admission of the original MRR rule or provider authenticity. Python replays the
 original typed Rust Scheme receipt; the native proof test consumes the same Fact
 and Derivation identities. The full proof/control ABI and authoritative MRR rule
 mapping remain separate gates.
