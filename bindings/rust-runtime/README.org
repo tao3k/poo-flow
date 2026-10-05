@@ -267,3 +267,11 @@ binds rule/generation/output/support IDs; it does not certify rule execution,
 output content or provider authenticity. Missing, duplicate and unused bindings
 reject. Scheme alone evaluates applicability from the declared journal.
 The read-only result admits neither proofs nor publication or durability.
+
+=MrrFactProjection::admit= retains an original MRR Fact, validates its owner
+context and complete/valid status, and projects integer/boolean content without
+coercion. =verify_content= compares its canonical digest with the original
+Scheme constructor through =temporal.fact.content=, ABI v1. The evaluator
+relation correspondence is explicit. This does not admit the associated MRR
+rule or authenticate source provenance. Native tests replay a typed owner Fact
+and Derivation fixture through actual ASCENT proof roots and Temporal revisions.

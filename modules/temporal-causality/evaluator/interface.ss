@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import "positive-proof.ss")
-(export (import: "positive-proof.ss"))
+(import "positive-proof.ss" "fact.ss" "binding.ss")
+(export (import: "positive-proof.ss") (import: "fact.ss") (import: "binding.ss"))

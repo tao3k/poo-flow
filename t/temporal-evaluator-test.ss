@@ -1,12 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :clan/poo/object .o .ref)
+(import (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read)
+        :std/test (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/testing-api poo-flow-test-case)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt reasoning-receipt-status reasoning-receipt-proof
                  reasoning-receipt-rows reasoning-receipt-bound?)
-        (only-in :gerbil-ascent/candidate/provenance positive-proof-status positive-proof-nodes proof-node-row)
+        (only-in :gerbil-ascent/candidate/provenance positive-proof-status positive-proof-nodes positive-proof-roots proof-node-id proof-node-kind proof-node-row)
         :poo-flow/modules/temporal-causality/evaluator/interface
         :poo-flow/modules/temporal-causality/time/objects
         :poo-flow/modules/temporal-causality/revisions/interface
@@ -140,4 +141,88 @@
              (a (admit s all receipt)))
         (check (.ref a 'rows) => '((1 2) (1 3) (2 3)))
         (check (.ref (poo-flow-temporal-positive-proof-replay a s all receipt 512 32) 'semantic-digest)
-               => (.ref a 'semantic-digest))))))
+               => (.ref a 'semantic-digest))))
+    (poo-flow-test-case "proof root and exact source leaves bind fact content into Temporal support"
+      (let* ((s (source 1)) (receipt (reasoning-attempt s proposal 512)) (a (admit s proposal receipt))
+             (root (car (positive-proof-roots (reasoning-receipt-proof receipt))))
+             (leaves (filter (lambda (n) (eq? (proof-node-kind n) 'source))
+                             (positive-proof-nodes (reasoning-receipt-proof receipt))))
+             (facts (map (lambda (n) (poo-flow-temporal-mrr-fact-content
+                       (number->string (proof-node-id n)) "generation" "edge-id" "edge" (proof-node-row n))) leaves))
+             (out (poo-flow-temporal-mrr-fact-content "output" "generation" "path-id" "path" '(1 3)))
+             (bindings (map (lambda (n f) (poo-flow-temporal-proof-source-binding (proof-node-id n)
+                            f (.ref f 'identity) (.ref f 'identity))) leaves facts))
+             (j (poo-flow-temporal-evidence-journal "bound" "txn"
+                  (map (lambda (f) (poo-flow-temporal-evidence-revision (.ref f 'identity) (.ref f 'identity)
+                    'assert #f (at 1) (poo-flow-temporal-interval "v" (at 0) (at 10) #t #f)
+                    (.ref f 'semantic-digest))) facts)))
+             (bound (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32 root out bindings j))
+             (p (poo-flow-temporal-support-program "bound" "policy" #t (list (.ref bound 'support))))
+             (current (poo-flow-temporal-support-evaluate p j (at 1) #f 128)))
+        (check (.ref bound 'proof-admitted?) => #t)
+        (check (.ref bound 'binding-verified?) => #t)
+        (check (.ref bound 'mrr-rule-equivalence-verified?) => #f)
+        (check (.ref (car (.ref current 'conclusions)) 'status) => 'supported)
+        (let* ((first (car facts))
+               (changed (poo-flow-temporal-evidence-journal "bound" "txn"
+                 (append (.ref j 'revisions)
+                   (list (poo-flow-temporal-evidence-revision "correction" (.ref first 'identity)
+                     'correct (.ref first 'identity) (at 2)
+                     (poo-flow-temporal-interval "v2" (at 0) (at 10) #t #f) "changed-content"))))))
+          (check (.ref (car (.ref (poo-flow-temporal-support-evaluate p changed (at 2) #f 128) 'conclusions)) 'status) => 'unsupported)
+          (check (.ref (car (.ref (poo-flow-temporal-support-evaluate p changed (at 1) #f 128) 'conclusions)) 'status) => 'supported)
+          (check (.ref bound 'proof-admitted?) => #t))
+        (check (.ref (poo-flow-temporal-proof-support-replay bound a s proposal receipt 512 32 out bindings j)
+                     'semantic-digest) => (.ref bound 'semantic-digest))
+        (check-exception (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32
+          root (poo-flow-temporal-mrr-fact-content "output" "generation" "path-id" "path" '(1 99)) bindings j) true)
+        (check-exception (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32
+          root out (cdr bindings) j) true)
+        (check-exception (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32
+          root out (cons (car bindings) bindings) j) true)
+        (check-exception (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32
+          root (poo-flow-temporal-mrr-fact-content "output" "foreign-generation" "path-id" "path" '(1 3)) bindings j) true)
+        (check-exception (poo-flow-temporal-proof-support "derivation" a s proposal receipt 512 32
+          root out bindings (poo-flow-temporal-evidence-journal "wrong" "txn"
+            (map (lambda (f) (poo-flow-temporal-evidence-revision (.ref f 'identity) (.ref f 'identity)
+              'assert #f (at 1) (poo-flow-temporal-interval "v" (at 0) (at 10) #t #f) "unbound-content")) facts))) true)
+        (check-exception (poo-flow-temporal-proof-support-replay
+          (.o (:: @ bound) output: (.o (:: @ (.ref bound 'output)) row: '(9 9)))
+          a s proposal receipt 512 32 out bindings j) true)
+        (check-exception (poo-flow-temporal-proof-support-replay
+          (.o (:: @ bound) support: (.o (:: @ (.ref bound 'support)) proof-identity: "forged"))
+          a s proposal receipt 512 32 out bindings j) true)))
+    (poo-flow-test-case "fact digest rejects unsupported scalar types and forged content"
+      (let (f (poo-flow-temporal-mrr-fact-content "id" "generation" "relation" "edge" '(1 #t)))
+        (check-exception (poo-flow-temporal-mrr-fact-content "id" "generation" "relation" "edge" '(1.0)) true)
+        (check-exception (poo-flow-temporal-mrr-fact-content "id" "generation" "relation" "edge" '()) true)
+        (check-exception (poo-flow-temporal-mrr-fact-content-replay (.o (:: @ f) row: '(2 #t))) true)))
+    (poo-flow-test-case "original MRR fact and Derivation fixture binds to native proof leaves"
+      (let* ((cases (call-with-input-file "t/qualification/temporal-library-basic/fact-binding-v1/typed-facts.ss"
+                      (lambda (p) (read-line p) (read-line p) (scheme-wire-read (read-line p)))))
+             (facts (map (lambda (c) (let (r (hash-ref c "request"))
+                       (poo-flow-temporal-mrr-fact-content (hash-ref r "identity") (hash-ref r "generation")
+                         (hash-ref r "relationId") (hash-ref r "evaluatorRelation") (hash-ref r "row")))) cases))
+             (inputs (list (car facts) (cadr facts))) (out (caddr facts))
+             (origin (hash-ref (caddr cases) "originalDerivation"))
+             (s (source 1)) (receipt (reasoning-attempt s proposal 512)) (a (admit s proposal receipt))
+             (proof (reasoning-receipt-proof receipt))
+             (nodes (filter (lambda (n) (eq? (proof-node-kind n) 'source)) (positive-proof-nodes proof)))
+             (bindings (map (lambda (f)
+               (let (node (car (filter (lambda (n) (equal? (proof-node-row n) (.ref f 'row))) nodes)))
+                 (poo-flow-temporal-proof-source-binding (proof-node-id node) f (.ref f 'identity) (.ref f 'identity)))) inputs))
+             (j (poo-flow-temporal-evidence-journal "typed" "txn"
+                  (map (lambda (f) (poo-flow-temporal-evidence-revision (.ref f 'identity) (.ref f 'identity)
+                    'assert #f (at 1) (poo-flow-temporal-interval "v" (at 0) (at 10) #t #f)
+                    (.ref f 'semantic-digest))) inputs)))
+             (bound (poo-flow-temporal-proof-support (hash-ref origin "identity") a s proposal receipt 512 32
+                      (car (positive-proof-roots proof)) out bindings j))
+             (support (.ref bound 'support)))
+        (for-each (lambda (c f) (check (.ref f 'semantic-digest) => (hash-ref (hash-ref c "expected") "contentDigest"))) cases facts)
+        (check (list-sort string<? (map (lambda (f) (.ref f 'identity)) inputs))
+               => (list-sort string<? (hash-ref origin "supports")))
+        (check (.ref support 'identity) => (hash-ref origin "identity"))
+        (check (.ref support 'conclusion-identity) => (hash-ref origin "output"))
+        (check (.ref bound 'binding-verified?) => #t)
+        (check (.ref bound 'mrr-rule-equivalence-verified?) => #f)
+        (check (.ref bound 'action-authorized?) => #f)))))

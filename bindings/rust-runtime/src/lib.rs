@@ -219,6 +219,7 @@ impl SemanticRuntime {
                 | "temporal.family.archive.export"
                 | "temporal.family.archive.replay"
                 | "temporal.support.evaluate"
+                | "temporal.fact.content"
         ) {
             return Err(Error::InvalidInput);
         }

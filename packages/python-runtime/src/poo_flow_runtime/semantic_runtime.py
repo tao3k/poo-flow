@@ -67,6 +67,10 @@ class SemanticRuntime:
             self._closed = True
             raise
 
+    def canonical_mrr_fact_content(self, request: Mapping[str, Any]) -> dict:
+        """Content digest only; no proof, source or MRR owner admission."""
+        return self.call('temporal.fact.content', request)
+
     def evaluate_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Read-only native applicability; does not admit proofs or authorize effects."""
         return self.call('temporal.support.evaluate', request)

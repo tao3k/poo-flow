@@ -113,3 +113,78 @@ impl MrrSupportProjection {
             "program":self.program.clone(),"journal":journal,"asOf":as_of,"validAt":valid_at,"budget":budget}))
     }
 }
+
+/// Original owner Fact content for the integer/boolean evaluator row profile.
+#[derive(Clone, Debug)]
+pub struct MrrFactProjection {
+    original: meta_relational_reasoning::Fact,
+    payload: Value,
+    content_digest: String,
+}
+impl MrrFactProjection {
+    pub fn admit(
+        fact: &meta_relational_reasoning::Fact,
+        evaluator_relation: &str,
+    ) -> Result<Self, Error> {
+        use meta_relational_reasoning::{EvidenceCompleteness, FactValidity};
+        fact.context().validate().map_err(|_| Error::InvalidInput)?;
+        if fact.context().completeness() != EvidenceCompleteness::Complete
+            || fact.context().validity() != FactValidity::Valid
+            || evaluator_relation.is_empty()
+            || evaluator_relation.len() > 256
+            || !evaluator_relation
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || c == b'_')
+            || fact.values().is_empty()
+            || fact.values().len() > 32
+        {
+            return Err(Error::InvalidInput);
+        }
+        let row: Vec<Value> = fact
+            .values()
+            .iter()
+            .map(|v| match v {
+                meta_relational_reasoning::Value::Integer(n) => Ok(Value::from(*n)),
+                meta_relational_reasoning::Value::Boolean(b) => Ok(Value::from(*b)),
+                _ => Err(Error::InvalidInput),
+            })
+            .collect::<Result<_, _>>()?;
+        let id = fact.id().to_string();
+        let generation = fact.context().generation().to_string();
+        let relation = fact.relation().to_string();
+        let canonical = Value::Array(vec![
+            "poo-flow.mrr-fact-content.v1".into(),
+            id.clone().into(),
+            generation.clone().into(),
+            relation.clone().into(),
+            evaluator_relation.into(),
+            row.clone().into(),
+        ]);
+        let content_digest = format!(
+            "sha256:{:x}",
+            Sha256::digest(wire::to_vec(&canonical).map_err(|_| Error::InvalidInput)?)
+        );
+        Ok(Self {
+            original: fact.clone(),
+            payload: datum!({"schema":"poo-flow.mrr-fact-request.v1",
+            "identity":id,"generation":generation,"relationId":relation,"evaluatorRelation":evaluator_relation,"row":row}),
+            content_digest,
+        })
+    }
+    pub fn original(&self) -> &meta_relational_reasoning::Fact {
+        &self.original
+    }
+    pub fn payload(&self) -> &Value {
+        &self.payload
+    }
+    pub fn content_digest(&self) -> &str {
+        &self.content_digest
+    }
+    pub fn verify_content(&self, runtime: &SemanticRuntime) -> Result<Value, Error> {
+        let result = runtime.call("temporal.fact.content", &self.payload)?;
+        if result["contentDigest"] != Value::from(self.content_digest.clone()) {
+            return Err(Error::InvalidInput);
+        }
+        Ok(result)
+    }
+}

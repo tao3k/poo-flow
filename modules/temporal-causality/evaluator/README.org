@@ -46,3 +46,41 @@ Build with =just build-temporal-evaluator= and execute
 =just test-temporal-evaluator= in the package-qualified environment. The heap
 fence and five-second idle / 45-second total watchdog remain unchanged.
 Completed import boundaries and native Cases supply actual progress.
+
+* Fact content and exact proof-root correspondence
+
+=poo-flow-temporal-mrr-fact-content= is a native value for original fact identity,
+MRR generation, original relation identity, explicit evaluator relation name and
+a 1--32 integer/boolean row. Integers retain signed 64-bit semantics; unsupported
+types are rejected without coercion. The digest hashes a fixed inert Scheme v1
+list spelling shared with the typed Rust consumer.
+
+=poo-flow-temporal-proof-source-binding= names an original proof source-node ID,
+fact content, subject and revision. The advanced owner adapter
+=poo-flow-temporal-proof-support= replays the original admission, selects an
+actual query root, and requires the output relation/row to match the fact.
+Bindings must cover exactly its transitive source leaves, without repeated
+node/fact/subject/revision identities. Every source row must match its original
+proof node; all MRR generations must agree. The original journal is reconstructed
+and each bound assert/correct revision must have the matching subject and exact
+fact content digest. Missing, extra, mismatched or forged correspondence rejects.
+
+The result contains an ordinary native support value for normal support
+composition. Its proof label binds the verified admission/root, output content,
+source correspondence and exact journal snapshot. Replay reconstructs the
+result and checks the embedded support. Source correction makes that old
+exact-revision support inapplicable at the new cut, while historical support
+and the original scoped proof remain intact.
+
+binding-verified? and proof-admitted? true describe this source-relative row
+correspondence. MRR rule/catalog equivalence and provider/source authentication
+are not established; mrr-rule-equivalence-verified?, source-authenticated?,
+selection-admitted?, action-authorized? and durable? remain false. A rebind to a
+different journal snapshot requires a new binding receipt.
+
+The fixed ABI v1 =temporal.fact.content= projects only canonical fact content.
+It admits neither proof nor correspondence. Rust retains original Fact values
+and validates context/completeness/validity before projection. Python replays the
+original typed Rust Scheme receipt; the native proof test consumes the same Fact
+and Derivation identities. The full proof/control ABI and authoritative MRR rule
+mapping remain separate gates.

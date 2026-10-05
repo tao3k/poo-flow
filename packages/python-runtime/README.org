@@ -482,3 +482,8 @@ support Library through ABI v1. Supply the bounded declared program and temporal
 journal described in =bindings/runtime-c/semantic-wire.org=. The helper does not
 admit proofs, authenticate sources or authorize effects. MRR identity projection
 belongs to the Rust consumer; Python can replay its inert Scheme request/receipt.
+
+=SemanticRuntime.canonical_mrr_fact_content(request)= calls the fixed ABI v1
+content projection. It does not reconstruct MRR owner records or admit proof,
+source or correspondence. The qualification replays original typed Rust Fact
+receipts and rejects unsupported scalar/range/schema fields.

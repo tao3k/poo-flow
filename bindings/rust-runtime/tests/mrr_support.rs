@@ -121,6 +121,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
         )
         .unwrap();
     }
+    original_mrr_fact_content_parity_and_profile_controls(&runtime);
 }
 #[test]
 fn reject_incomplete_or_ambiguous_host_correspondence() {
@@ -141,4 +142,99 @@ fn reject_incomplete_or_ambiguous_host_correspondence() {
             .is_err()
     );
     println!("CASE missing duplicate unused bindings and repeated derivation rejected");
+}
+
+fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRuntime) {
+    use poo_flow_rust_runtime::mrr_support::MrrFactProjection;
+    let generation = m::GenerationId::from_canonical_bytes("fact-generation").unwrap();
+    let source = m::EntityId::from_canonical_bytes("source-owner").unwrap();
+    let context = m::RelationContext::new(
+        generation,
+        m::RelationAuthority::Entity(source),
+        m::FactProvenance::Source(source),
+        m::EvidenceCompleteness::Complete,
+        m::FactValidity::Valid,
+    )
+    .unwrap();
+    let mut fixtures = Vec::new();
+    for (name, row, rel) in [
+        (
+            "a",
+            vec![m::Value::Integer(1), m::Value::Integer(2)],
+            "edge",
+        ),
+        (
+            "b",
+            vec![m::Value::Integer(2), m::Value::Integer(3)],
+            "edge",
+        ),
+        (
+            "output",
+            vec![m::Value::Integer(1), m::Value::Integer(3)],
+            "path",
+        ),
+    ] {
+        let rule = m::RuleId::from_canonical_bytes("path-rule").unwrap();
+        let derivation_id = m::DerivationId::from_canonical_bytes("path-derivation").unwrap();
+        let fact_context = if name == "output" {
+            m::RelationContext::new(
+                generation,
+                m::RelationAuthority::Rule(rule),
+                m::FactProvenance::Derivation(derivation_id),
+                m::EvidenceCompleteness::Complete,
+                m::FactValidity::Valid,
+            )
+            .unwrap()
+        } else {
+            context
+        };
+        let fact = m::Fact::new(
+            m::FactId::from_canonical_bytes(name).unwrap(),
+            m::RelationId::from_canonical_bytes(rel).unwrap(),
+            row,
+            fact_context,
+        );
+        let projection = MrrFactProjection::admit(&fact, rel).unwrap();
+        assert_eq!(projection.original(), &fact);
+        let result = projection.verify_content(&runtime).unwrap();
+        assert_eq!(result["proofAdmitted"], false);
+        let lineage = if name == "output" {
+            let supports = vec![
+                m::FactId::from_canonical_bytes("a").unwrap(),
+                m::FactId::from_canonical_bytes("b").unwrap(),
+            ];
+            let d = m::Derivation::new(derivation_id, rule, generation, fact.clone(), supports)
+                .unwrap();
+            datum!({"identity":d.id().to_string(),"rule":d.rule().to_string(),"generation":d.generation().to_string(),
+                "output":d.output().id().to_string(),"supports":d.support().iter().map(|f|Value::from(f.to_string())).collect::<Vec<_>>()})
+        } else {
+            false.into()
+        };
+        fixtures.push(datum!({"request":projection.payload().clone(),"expected":result,"originalDerivation":lineage}));
+        println!("CASE actual MRR fact native content parity {name}");
+    }
+    let unsupported = m::Fact::new(
+        m::FactId::from_canonical_bytes("unsupported").unwrap(),
+        m::RelationId::from_canonical_bytes("edge").unwrap(),
+        vec![m::Value::String("unmapped".into())],
+        context,
+    );
+    assert!(MrrFactProjection::admit(&unsupported, "edge").is_err());
+    let partial = m::Fact::new(
+        m::FactId::from_canonical_bytes("partial").unwrap(),
+        unsupported.relation(),
+        vec![m::Value::Integer(1)],
+        m::RelationContext::new(
+            generation,
+            m::RelationAuthority::Entity(source),
+            m::FactProvenance::Source(source),
+            m::EvidenceCompleteness::Partial,
+            m::FactValidity::Valid,
+        )
+        .unwrap(),
+    );
+    assert!(MrrFactProjection::admit(&partial, "edge").is_err());
+    if let Ok(path) = std::env::var("POO_FLOW_MRR_FACT_ORACLE") {
+        std::fs::write(path, wire::to_vec(&Value::Array(fixtures)).unwrap()).unwrap();
+    }
 }

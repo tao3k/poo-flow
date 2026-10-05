@@ -95,6 +95,8 @@
    :poo-flow/modules/temporal-causality/truth-maintenance/support/interface
    :poo-flow/modules/temporal-causality/truth-maintenance/support/policy-host
    :poo-flow/modules/temporal-causality/evaluator/positive-proof
+   :poo-flow/modules/temporal-causality/evaluator/fact
+   :poo-flow/modules/temporal-causality/evaluator/binding
    :poo-flow/modules/temporal-causality/evaluator/interface
    :gerbil/tools/gxtest))
 (eval '(exit (gerbil/tools/gxtest#main "-v" "5" "t/temporal-evaluator-test.ss")))

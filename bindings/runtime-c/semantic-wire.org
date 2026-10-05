@@ -69,3 +69,19 @@ conclusions (identity, status, activeSupports). proofAdmitted, sourceAuthenticat
 actionAuthorized and durable are always #f. Caller-declared completeness and
 opaque proof identities cannot establish exhaustive support or proof validity.
 Transport remains bounded inert Scheme datum v1. No host registry is mutated.
+
+* Original fact content projection, v1
+
+=temporal.fact.content= requires exactly schema, identity, generation, relationId,
+evaluatorRelation and row. Schema is =poo-flow.mrr-fact-request.v1=. Row contains
+1--32 signed 64-bit integers or booleans; evaluatorRelation is an ASCII
+alphanumeric/underscore name. Identifiers are bounded nonempty strings.
+Result =poo-flow.mrr-fact-result.v1= retains those fields, ABI 1 and contentDigest.
+proofAdmitted, bindingVerified, sourceAuthenticated, actionAuthorized and durable
+are false. This endpoint cannot validate MRR owner provenance or rule equivalence.
+
+The digest is SHA-256 of the inert Scheme v1 spelling of the list
+["poo-flow.mrr-fact-content.v1", identity, generation, relationId,
+evaluatorRelation, row]. Rust uses =wire::to_vec= on this typed list; the Scheme
+constructor writes the identical list/list-tag projection. No general reader or
+JSON transport is added.

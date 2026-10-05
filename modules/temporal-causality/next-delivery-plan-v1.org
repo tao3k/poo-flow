@@ -91,11 +91,30 @@ in [[file:../../t/qualification/temporal-library-basic/evaluator-proof-v1/qualif
 existing support ABI import graph. No new proof/Host control ABI, consumer model
 call, wheel, AOT archive or end-to-end publication is qualified by this slice.
 
-Next A3 work: explicit proof-row/source-revision/MRR fact correspondence and
-typed ABI v1 proof/control projection, then incremental/full equivalence. This adapter qualifies identity and
-applicability only. Absence certificates and recursive profiles remain A4;
-durable authoritative commit/IFC remains A5. No model call, performance benchmark
-or exact-head remote CI success is inferred from these local checks.
+The next binding slice is locally qualified. Original positive query roots and
+their exact source-leaf nodes now bind native fact-content values to journal
+subjects/revisions. Each revision content must equal the canonical fact digest.
+The resulting ordinary support retains the scoped proof binding. Current
+correction invalidates its exact old revision; historical cut replay preserves
+the old support and proof. Missing/duplicate leaves, wrong output/generation,
+revision content substitution and embedded support tamper reject.
+
+The fresh ABI v1 adds =temporal.fact.content= only. Typed Rust consumes original
+complete/valid MRR Fact records; Scheme and Python reproduce their content
+digests. The same typed Fact/Derivation Scheme fixture passes through the actual
+native proof/journal binding. Evaluator relation mapping is explicit; original
+MRR rule/catalog equivalence and source authority remain unverified.
+
+13 native Cases passed in 9.56s, Python 85 tests in 2.09s and Rust 2 tests in
+1.71s on the fresh artifact, all under the unchanged five-second idle/45-second
+total gates. [[file:../../t/qualification/temporal-library-basic/fact-binding-v1/qualification.ss][The Scheme v1 receipt]] preserves the native output-slot capture
+failure, duplicate-runtime Rust failure and resulting missing-oracle Python
+failure. No real-model call or performance benchmark was made.
+
+Next A3 work: authoritative MRR rule/catalog correspondence and the typed proof/
+Host control ABI, then incremental/full equivalence. Source authentication,
+durable authoritative commit and IFC publication remain open. Prior A0--A2
+receipts keep their original producer scope.
 
 * Current A2 physical and Context qualification
 

@@ -779,7 +779,7 @@ test-temporal-support:
 # Named original ASCENT positive-proof adapter and host policy boundary.
 [group('build')]
 build-temporal-evaluator:
-    gxc -:max-heap=1G,debug=q -V -O modules/temporal-causality/truth-maintenance/support/policy-host.ss modules/temporal-causality/evaluator/positive-proof.ss modules/temporal-causality/evaluator/interface.ss
+    gxc -:max-heap=1G,debug=q -V -O modules/temporal-causality/truth-maintenance/support/policy-host.ss modules/temporal-causality/evaluator/positive-proof.ss modules/temporal-causality/evaluator/fact.ss modules/temporal-causality/evaluator/binding.ss modules/temporal-causality/evaluator/interface.ss
 
 [group('test')]
 test-temporal-evaluator:
@@ -789,7 +789,7 @@ test-temporal-evaluator:
     trap 'rm -f "$log"' EXIT
     timeout --foreground --signal=TERM --kill-after=1s 45s python3 packages/python-runtime/tools/watch.py gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-evaluator-runner.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
-    test "$(grep -c '^CASE-OK ' "$log")" = 10
+    test "$(grep -c '^CASE-OK ' "$log")" = 13
     grep -Fx 'MODULE-OK t/temporal-evaluator-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null

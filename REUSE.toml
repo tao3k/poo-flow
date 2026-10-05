@@ -56,6 +56,7 @@ path = [
   "t/qualification/temporal-library-basic/support-consumer-v1/*.log.gz",
   "t/qualification/temporal-library-basic/support-policy-v1/*.log.gz",
   "t/qualification/temporal-library-basic/evaluator-proof-v1/*.log.gz",
+  "t/qualification/temporal-library-basic/fact-binding-v1/*.log.gz",
   "t/qualification/temporal-library-basic/support-policy-v1/*.scm.gz",
 ]
 precedence = "aggregate"

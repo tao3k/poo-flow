@@ -3,7 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; AOT semantic projection: inert Scheme data enters existing Scheme owners.
-(import (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
+(import (only-in :poo-flow/modules/temporal-causality/evaluator/fact poo-flow-temporal-mrr-fact-content)
+        (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
         :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
                  temporal-source-register temporal-family-admit-call temporal-family-current-call
@@ -118,7 +120,20 @@
 
 (def (semantic-call operation payload)
   (let (object (scheme-wire-read payload))
-    (cond ((string=? operation "temporal.support.evaluate")
+    (cond ((string=? operation "temporal.fact.content")
+           (unless (and (= (hash-length object) 6)
+                        (equal? (required object "schema") "poo-flow.mrr-fact-request.v1"))
+             (error "invalid fact request fields/schema"))
+           (let (fact (poo-flow-temporal-mrr-fact-content (required object "identity")
+                        (required object "generation") (required object "relationId")
+                        (required object "evaluatorRelation") (required object "row")))
+             (scheme-wire-write (hash (schema "poo-flow.mrr-fact-result.v1") (abiVersion 1)
+               (contentDigest (.ref fact 'semantic-digest)) (identity (.ref fact 'identity))
+               (generation (.ref fact 'generation)) (relationId (.ref fact 'relation-identity))
+               (evaluatorRelation (.ref fact 'evaluator-relation)) (row (.ref fact 'row))
+               (proofAdmitted #f) (bindingVerified #f) (sourceAuthenticated #f)
+               (actionAuthorized #f) (durable #f)))))
+          ((string=? operation "temporal.support.evaluate")
            (scheme-wire-write (temporal-support-call object)))
           ((string=? operation "$host.temporal.source.register")
            (scheme-wire-write (temporal-source-register object)))
@@ -160,7 +175,7 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1) (wireFormat "scheme-datum-v1")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate" "temporal.fact.content"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])
