@@ -116,7 +116,8 @@ def check_tla(context: CaseContext, case: TlaCase) -> CaseEvidence:
         (work / model.name).write_bytes(model_bytes)
         config_name = f"{case.model}-{case.mutation}.cfg"
         (work / config_name).write_text(config)
-        print(f"TLC {case.model} {case.mutation}", flush=True)
+        sys.stdout.buffer.write(f"TLC {case.model} {case.mutation}\n".encode())
+        sys.stdout.buffer.flush()
         status, output, duration_ms = _run_tlc(
             ["tlc", "-deadlock", "-workers", "2", "-seed", "1", "-fp", "0",
              "-metadir", str(work / "states"), "-config", config_name, model.name],
