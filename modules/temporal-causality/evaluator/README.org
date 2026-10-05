@@ -125,7 +125,52 @@ constructors and verifies their actual Scheme proof nodes.
 supplied projected program, relative to a verified original source/proposal.
 It does not authenticate RuleId/catalog issuers or connect an MRR Derivation's
 Rule authority to a selected proof root. Existing fact/support binding's
-=mrr-rule-equivalence-verified?= remains false until that combined admission is
-implemented. Source authentication, current selection, authorization and
+=mrr-rule-equivalence-verified?= remains false on the low-level fact/support
+binding. The joint derivation admission below establishes it for its bounded
+selected-root profile. Source authentication, current selection, authorization and
 durability remain false. The proof/control ABI and authoritative provider
 refresh are still separate gates. No new wire operation is exposed here.
+
+
+* Selected original Derivation and direct premise admission
+
+=poo-flow-temporal-mrr-derivation= and =...-proof-node-fact= are native POO values.
+The named original-owner adapter =...-mrr-derivation-from-ascent= joins a replayed
+Rule correspondence and exact fact/revision support binding with original
+Derivation declarations for every reachable rule node of the selected query root.
+Each node retains a distinct original FactId and complete content. Every rule
+node must have an original Derivation with the verified RuleId, matching output,
+generation and exact direct input FactId set. A source node cannot declare rule
+authority. Missing, duplicate and unused node/fact/Derivation bindings reject.
+The selected root must match the output fact and support binding's DerivationId.
+
+Direct MRR support is distinct from transitive Temporal leaves. The recursive
+fixture's root directly supports path(1,2) and edge(2,3); its intermediate
+Derivation supports edge(1,2). Temporal premises remain the exact edge source
+revisions. The ordinary support proof label hashes the combined rule/content/
+node/revision admission, so it retains the verified Rule authority correspondence.
+Source correction invalidates that support at the new cut, while historical
+support and source-relative proof remain replayable.
+
+=...-mrr-derivation-admission-replay= reconstructs the full admission, all effect
+flags and embedded support. It rejects changed node bindings, forged action
+claims and replaced support proof labels. The new receipt sets
+=derivation-correspondence-verified?= and =mrr-rule-equivalence-verified?= true
+for this declared, bounded positive DAG. The low-level binding remains a
+conservative independent value. Issuer/provider authentication, current
+selection, action authorization and durability remain false.
+
+Rust =mrr_derivation::MrrDerivationProjection= retains original Fact/Derivation
+values, re-admits the owner's context/authority/provenance/generation checks,
+validates content against the same original Catalog and Rule program, and
+projects the exact selected support graph. It rejects missing/unused/duplicate
+facts, unknown rules, wrong output identity/content, cyclic dependencies and
+unsupported authority forms. This profile admits one original Derivation per
+derived FactId, at most 128 facts/Derivations, and no exhaustive-provenance claim.
+It performs no rule evaluation. The actual Scheme replay remains the truth gate.
+
+The raw joint receipts and executed controls are in
+=t/qualification/temporal-library-basic/derivation-authority-v1/=. No proof or
+Host policy control wire entry is exposed by this module. Those trusted ABI v1
+controls, authoritative current-provider refresh and Data expected-head
+publication remain the next integration boundaries.

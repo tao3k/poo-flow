@@ -296,10 +296,9 @@ Python replay receipts are in
 =t/qualification/temporal-library-basic/catalog-binding-v1/=.
 
 The remaining integration sequence is:
-1. Combine verified Rule-node correspondence with exact fact/support binding
-   and the original MRR Derivation authority at the selected proof root. The
-   bounded original Rule content projection below is implemented; a RuleId
-   alone remains insufficient.
+1. The bounded selected-root Rule/Fact/Derivation correspondence is now
+   implemented below. Consume its freshly replayed joint admission through the
+   trusted proof control entry; an identity or serialized flag alone is insufficient.
 2. Expose the existing Scheme proof producer and isolated Host policy capability
    through dedicated control entries in ABI v1. Model calls must not register
    policy/clock state or manufacture admitted proofs.
@@ -320,5 +319,25 @@ original MRR GenerationId and ASCENT's numeric generation.
 =t/qualification/temporal-library-basic/rule-correspondence-v1/= records actual
 original Rule projections and native positive-proof node/RuleId correspondence,
 including replay and negative controls. This completes bounded content mapping;
-connecting a selected root to the original MRR Derivation authority and exposing
-trusted proof/Host control entries through ABI v1 remain required next steps.
+the selected-root Derivation authority connection below is implemented.
+Exposing trusted proof/Host control entries through ABI v1 remains required.
+
+
+* Selected original Derivation graph
+
+=mrr_derivation::MrrDerivationProjection::admit= consumes the original typed
+Rule program, Catalog, root FactId, Facts and Derivations. It retains originals,
+re-admits owner Derivation context checks, validates complete/valid Fact content,
+requires matching generation/catalog/rule/output correspondence and an acyclic
+exact support graph rooted at a derived fact. Missing/unused/duplicate inputs,
+unknown rules, unsupported authority forms and more than 128 facts/Derivations
+reject. It does not infer rule truth from a successful Rust shape admission.
+
+The native joint adapter replays the actual original evaluator proof and verifies
+all original direct-support FactIds against DAG inputs, including intermediate
+derived facts. It independently binds transitive source leaves to exact Temporal
+revisions. The combined receipt/proof label and embedded support are replayable;
+all current-effect/authentication/durability flags remain false. The qualified
+fixture has four Facts, two Derivations, an intermediate path(1,2), and root
+path(1,3). Raw Scheme v1 receipts and gates are in
+=t/qualification/temporal-library-basic/derivation-authority-v1/=.

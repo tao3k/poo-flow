@@ -98,6 +98,7 @@
    :poo-flow/modules/temporal-causality/evaluator/fact
    :poo-flow/modules/temporal-causality/evaluator/binding
    :poo-flow/modules/temporal-causality/evaluator/rule
+   :poo-flow/modules/temporal-causality/evaluator/derivation
    :poo-flow/modules/temporal-causality/evaluator/interface
    :gerbil/tools/gxtest))
 (eval '(exit (gerbil/tools/gxtest#main "-v" "5" "t/temporal-evaluator-test.ss")))
