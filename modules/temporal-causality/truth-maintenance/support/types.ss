@@ -5,7 +5,8 @@
         (only-in :clan/poo/mop define-type Type.)
         (only-in :std/list/list every))
 (export PooFlowTemporalSupportPremise PooFlowTemporalSupport
-        PooFlowTemporalSupportProgram PooFlowTemporalSupportEvaluation)
+        PooFlowTemporalSupportProgram PooFlowTemporalSupportEvaluation
+        PooFlowTemporalSupportPolicy PooFlowTemporalSupportGuard)
 (def (shape? x kind names)
   (and (object? x) (.slot? x 'kind) (eq? (.ref x 'kind) kind)
        (every (lambda (name) (.slot? x name)) names)))
@@ -22,3 +23,12 @@
   .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-evaluation
                                 '(semantic-digest program-digest cut-digest projection-digest conclusions
                                   evaluated-support-count budget-exhausted? proof-admitted? action-authorized? durable?))))
+
+(define-type (PooFlowTemporalSupportPolicy @ Type.)
+  .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-policy
+                          '(identity revision-identity start end semantic-digest))))
+(define-type (PooFlowTemporalSupportGuard @ Type.)
+  .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-guard
+                          '(semantic-digest policy policy-digest expected-policy-digest effective-at
+                            policy-status policy-applicable? evaluation as-of valid-at budget
+                            proof-admitted? source-authenticated? selection-admitted? action-authorized? durable?))))

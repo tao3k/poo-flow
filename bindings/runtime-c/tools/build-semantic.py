@@ -76,6 +76,7 @@ def main() -> None:
                    "modules/temporal-causality/truth-maintenance/support/types.ss",
                    "modules/temporal-causality/truth-maintenance/support/objects.ss",
                    "modules/temporal-causality/truth-maintenance/support/funs.ss",
+                   "modules/temporal-causality/truth-maintenance/support/policy.ss",
                    "modules/temporal-causality/truth-maintenance/support/interface.ss", "src/ffi/temporal-support.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",

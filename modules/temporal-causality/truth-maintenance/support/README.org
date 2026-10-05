@@ -36,3 +36,34 @@ Build: =just build-temporal-support=. Qualify:
 =just test-temporal-support=, using the package-qualified Gerbil environment.
 The test entry retains heap fencing, original gxtest Cases and the five-second
 idle / 45-second total watchdog with actual import-boundary output.
+
+* Declared policy window and replay guard
+
+=poo-flow-temporal-support-policy(identity, revision, start, end)= constructs a
+native POO policy value with a nonempty half-open [start,end) window. Instants
+must have observed integer coordinates in one declared domain. The digest binds
+policy identity/revision and each instant's identity/domain/coordinate/provenance
+and modality. These labels are caller declarations, not authenticated clock or
+policy authority.
+
+=poo-flow-temporal-support-guard(program, journal, as-of, valid-at, budget, policy,
+expected-policy-digest, effective-at)= recomputes the original support projection.
+The policy identity must match the program and effective-at must share its time
+domain. A changed digest yields stale-policy; early and end-or-later instants
+yield not-yet-effective and expired-policy. Only the exact declared binding
+inside the window yields applicable. Policy applicability is reported separately
+from support applicability, preserving historical evidence when a policy expires.
+
+=poo-flow-temporal-support-guard-replay(receipt, program, journal, policy)=
+recomputes the historical cut and declared effective instant and checks the
+receipt binding. Policy replacement, evidence/cut changes and tampered fields
+reject. It returns a reconstructed native value. Replay does not refresh a current
+policy pointer or clock; callers must supply authoritative current inputs for a
+new guard query.
+
+proof-admitted?, source-authenticated?, selection-admitted?, action-authorized?
+and durable? remain false in every guard. A policy-applicable? true result is
+only the policy check; it is not an admitted current selection or publish permit.
+This new guard is qualified as a Scheme Library API. ABI v1 support evaluation
+continues to expose applicability only; no guard/proof/policy mutation ABI or
+MRR host grant is introduced.

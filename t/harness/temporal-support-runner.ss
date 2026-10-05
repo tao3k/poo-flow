@@ -48,6 +48,7 @@
     :poo-flow/modules/temporal-causality/truth-maintenance/support/types
     :poo-flow/modules/temporal-causality/truth-maintenance/support/objects
     :poo-flow/modules/temporal-causality/truth-maintenance/support/funs
+    :poo-flow/modules/temporal-causality/truth-maintenance/support/policy
     :poo-flow/modules/temporal-causality/truth-maintenance/support/interface
     :poo-flow/modules/temporal-causality/truth-maintenance/interface
     :gerbil/tools/gxtest))

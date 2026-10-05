@@ -51,8 +51,24 @@ The fresh compiler-owned AOT artifact is recorded in
 [[file:../../t/qualification/temporal-library-basic/support-consumer-v1/qualification.ss][the Scheme v1 consumer receipt]], with raw logs and both initial Rust failures.
 Scheme ABI remains v1, Gerbil v0.19, and ASCENT remains pinned at 964feb3.
 
-Next A3 work: evaluator-owned proof admission, policy identity/expiry and replay
-binding, then incremental/full equivalence. This adapter qualifies identity and
+The Scheme Library also provides a declared policy window and historical replay
+guard through the original public interface. Nine native Cases passed in 10.19s
+under the unchanged idle/total/heap gates, including the five original support
+Cases. New controls cover half-open expiry, replacement policy digest, original
+history replay, forged receipt/policy, domain mismatch and uncertain clock labels.
+The initial POO slot capture/heap failure is retained in
+[[file:../../t/qualification/temporal-library-basic/support-policy-v1/qualification.ss][the Scheme v1 policy receipt]]. The fresh AOT closure matches the retained
+compiler-generated policy module hash; existing Python (79 tests, 3.26s) and
+Rust (2 tests, 1.92s) support ABI consumers passed regression. Those consumer
+checks do not qualify a guard ABI.
+
+Policy status is separate from evidence applicability. The guard still carries
+false proof/source/selection/effect/durability flags. Caller-declared policy and
+observed time labels do not authenticate the clock, current policy or its issuer.
+No new guard ABI operation or MRR current-pointer admission is qualified here.
+
+Next A3 work: evaluator-owned proof admission and authoritative policy refresh
+at the host boundary, then incremental/full equivalence. This adapter qualifies identity and
 applicability only. Absence certificates and recursive profiles remain A4;
 durable authoritative commit/IFC remains A5. No model call, performance benchmark
 or exact-head remote CI success is inferred from these local checks.

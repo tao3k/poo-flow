@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :clan/poo/object .ref)
+(import :std/test (only-in :clan/poo/object .ref .o)
         (only-in :poo-flow/testing-api poo-flow-test-case)
         :poo-flow/modules/temporal-causality/time/objects
         :poo-flow/modules/temporal-causality/revisions/interface
@@ -65,4 +65,56 @@
                          (list (poo-flow-temporal-support "loop" "claim" "proof" '() '("claim")))) true)
       (check-exception (result (poo-flow-temporal-support-program "foreign" "policy" #t
                                  (list (poo-flow-temporal-support "x" "claim" "proof"
-                                   (list (poo-flow-temporal-support-premise "foreign" "a1")) '()))) history 1 128) true))))
+                                   (list (poo-flow-temporal-support-premise "foreign" "a1")) '()))) history 1 128) true))
+    (poo-flow-test-case "policy half-open window keeps proof and effects unadmitted"
+      (let* ((p (program #t)) (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (evaluate (lambda (n) (poo-flow-temporal-support-guard p history (at 1) #f 128
+                         policy (.ref policy 'semantic-digest) (at n))))
+             (early (evaluate 0)) (active (evaluate 1)) (expired (evaluate 4)))
+        (check (.ref early 'policy-status) => 'not-yet-effective)
+        (check (.ref active 'policy-status) => 'applicable)
+        (check (.ref active 'policy-applicable?) => #t)
+        (check (.ref expired 'policy-status) => 'expired-policy)
+        (check (.ref expired 'policy-applicable?) => #f)
+        (check (.ref (claim (.ref expired 'evaluation)) 'status) => 'supported)
+        (check (.ref active 'proof-admitted?) => #f)
+        (check (.ref active 'selection-admitted?) => #f)
+        (check (.ref active 'action-authorized?) => #f)
+        (check (.ref active 'durable?) => #f)))
+    (poo-flow-test-case "replacement policy cannot inherit the old binding"
+      (let* ((old (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (new (poo-flow-temporal-support-policy "policy" "rev2" (at 1) (at 4)))
+             (r (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+                  new (.ref old 'semantic-digest) (at 2))))
+        (check (.ref r 'policy-status) => 'stale-policy)
+        (check (.ref r 'policy-applicable?) => #f)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          (poo-flow-temporal-support-policy "foreign" "rev1" (at 1) (at 4))
+          (.ref old 'semantic-digest) (at 2)) true)))
+    (poo-flow-test-case "historical replay binds policy evidence and declared time"
+      (let* ((p (program #t)) (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (r (poo-flow-temporal-support-guard p history (at 1) #f 128 policy
+                  (.ref policy 'semantic-digest) (at 2)))
+             (replay (poo-flow-temporal-support-guard-replay r p history policy)))
+        (check (.ref replay 'semantic-digest) => (.ref r 'semantic-digest))
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) effective-at: (at 4)) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) as-of: (at 3)) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) action-authorized?: #t) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay r p history
+          (poo-flow-temporal-support-policy "policy" "rev2" (at 1) (at 4))) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) semantic-digest: "forged") p history policy) true)))
+    (poo-flow-test-case "invalid policy windows time domains and forged values reject"
+      (let (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 4) (at 1)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 1)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (valid 4)) true)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          policy (.ref policy 'semantic-digest) (valid 2)) true)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          (.o (:: @ policy) semantic-digest: "forged") (.ref policy 'semantic-digest) (at 2)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1"
+          (poo-flow-temporal-instant "uncertain" "txn" 1 "ledger" 'uncertain) (at 4)) true)))))
