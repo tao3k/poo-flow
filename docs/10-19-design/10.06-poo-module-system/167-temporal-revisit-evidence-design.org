@@ -66,9 +66,12 @@ accepts caller-provided records and accessors; its structural checks do not
 bind those records to the event stream or exact bytes. A prototype Orgize
 =OrgAotDocument::query_named_source_observation= binds a maintained AOT
 query result to one parser-owned document, including source digest, parse
-configuration, full query rule, scope, IDs and spans. It has not passed the
-focused Rust test gate, and it does not authenticate a file, WorkTree cut or
-grant, or connect to POO Flow's separate Scheme graph view. The proposed
+configuration, full query rule, scope, IDs and spans. At Orgize PR #21 head
+=baed8279734e844c10804ac75d4bffced440d43b=, [[https://github.com/tao3k/orgize/actions/runs/37251527438][exact-head CI]] passed Rust
+tests on Ubuntu, macOS and Windows, both Python package jobs, and Ubuntu
+Clippy. That qualifies this in-process observation, but it does not
+authenticate a file, WorkTree cut or grant, or connect to POO Flow's separate
+Scheme graph view. The proposed
 bridge must carry parser-owned selected records into a checked Session input;
 comparing a caller-supplied graph with a caller-supplied digest is insufficient.
 
