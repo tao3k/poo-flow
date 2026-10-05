@@ -86,10 +86,19 @@ observation privately. A later use must recheck the declared key, resolved
 root and file, current bytes, parse configuration, and query rule. The key's
 WorkTree identity and cut are still host premises; this adapter cannot prove
 Git state, grants, stable filesystem access under concurrent path mutation, or
-Session policy. It does not yet bind a canonical POO Flow Query or verify its
-result rows, pass a qualified result to a temporal consumer, or publish a
-Memory/Session head. It remains a read-side observation, not the main Query
-integration contract.
+Session policy. It remains a read-side observation and cannot publish a
+Memory/Session head.
+
+The Scheme =modules/query/orgize-source.ss= adapter takes supplied Org text,
+asks Orgize's =org-elements/source-interface.ss= for a bounded source-derived
+headline projection, builds a canonical POO Flow ElementSpace and GQL-aligned
+POO Query, then runs one supported query for open TODO headlines. Canonical
+scalar result rows carry source SHA-256, byte span, title, and TODO state.
+Replay reparses current supplied text and reruns the fixed Query, rejecting a
+changed source, predicate, or row even when a forged row has a valid internal
+digest. It does not read a WorkTree itself or establish host source-cut/grant
+identity, Session admission, temporal evidence qualification, Impact, or
+publication. Those handoffs remain separate work.
 
 POO Flow already has temporal instants/axes, evidence retrieval/use/assessment,
 impact frontiers, and pure Session/Memory policy receipts. Reuse those owners:

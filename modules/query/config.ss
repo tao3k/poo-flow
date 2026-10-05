@@ -13,6 +13,9 @@
         (only-in "gql.ss" poo-flow-query->gql)
         (only-in "contracts.ss" poo-flow-query-bind-execution-receipt)
         (only-in "scheme-select.ss" poo-flow-query-select-scheme-nodes)
+        (only-in "orgize-source.ss"
+                 poo-flow-query-orgize-open-headlines
+                 poo-flow-query-orgize-open-headlines-replay)
         (only-in "results/objects.ss"
                  PooFlowQueryResultCell. PooFlowQueryResultRow.
                  PooFlowQueryResultSet.)
@@ -39,6 +42,9 @@
       .project-gql: poo-flow-query->gql
       .bind-execution-receipt: poo-flow-query-bind-execution-receipt
       .select-scheme-nodes: poo-flow-query-select-scheme-nodes
+      .select-orgize-open-headlines: poo-flow-query-orgize-open-headlines
+      .replay-orgize-open-headlines:
+      poo-flow-query-orgize-open-headlines-replay
       .result-cell: poo-flow-query-result-cell
       .result-row: poo-flow-query-result-row
       .result-set: poo-flow-query-result-set))

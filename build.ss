@@ -86,6 +86,7 @@
     "modules/governance/interface.ss"
     "modules/proof/interface.ss"
     "src/semantic/orgize-interface.ss"
+    "src/semantic/orgize-source-interface.ss"
     "modules/query/interface.ss"
     "modules/search/interface.ss"
     "modules/query/rust-ir.ss"
