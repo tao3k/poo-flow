@@ -6,7 +6,45 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
-* Current source identities and evidence boundary
+* Current A2 physical and Context qualification
+
+The parent Rust Library and physical qualifier now agree with the resolved
+MRR Data source on MRR =4ccca987c97065499a366b9d1980419a574032a8=.
+The physical Data owner is =203dec657ba4e57ba4b8313ae18415aab5547f95=;
+MRR selects native build owner =072acac90dd4a83849826c75b1b5633721ce2ef0=.
+Cargo resolved both locks from the original immutable Git sources. Registry
+versions/checksums are unchanged. No local source patch substitutes for an owner.
+Gerbil remains v0.19 and Scheme transport/ABI remains v1.
+
+| A2 gate | Actual local evidence |
+|---------+-----------------------|
+| Original GQL -> Arrow root -> DataFusion -> MRR -> Temporal | Original compilation/query/root/result identities retained; final process exited 0 in 3.29s |
+| Negative admission | Source, root, catalog, row, query and wire-budget substitutions rejected; unsupported transport version rejected |
+| Empty result profile | Empty physical answer admitted by MRR, refused by the named nonempty event-position Temporal profile |
+| Original physical correction | Second immutable Arrow root and actual re-query changed classification necessary -> refuted; old admission stayed immutable and became stale; revised admission is current |
+| MRR Context and archive | Original policy/Temporal/Source binding and negative substitutions passed; separate process replayed complete premises and rejected tamper/cycle/missing/duplicate; 3.14s total |
+
+The physical qualifier checks both native ABI version 1 and =scheme-datum-v1=,
+and retains its original/corrected MRR transport in the
+[[file:../../t/qualification/temporal-library-basic/mrr-data-physical-v1/physical-receipt.ss][physical receipt]].
+The Just entry requires the protocol/correction/final markers, a real nonempty
+receipt and the original exit under the unchanged five-second idle / 45-second
+wall gate. [[file:../../t/qualification/temporal-library-basic/mrr-data-physical-v1/qualification.ss][The qualification receipt]] freezes both locks, sources, binaries,
+native artifact, actual logs and Context archive.
+
+This closes the bounded local A2 original query/correction and Context slices.
+The DataFusion executor is trusted and the physical inventory is a fixture.
+Source authenticity, exhaustive coverage, general reverse facts, multiple
+support withdrawal, durable journal/recovery, unified Data commit/IFC permission
+and authorized effects remain separate gates. Existing Data snapshot format
+identities are separate from this unchanged Scheme v1 wire contract. No new
+model call, wheel/deployment claim or benchmark is made.
+
+Next: A3 general reverse fact projection and support/revision lifecycle on
+original admissions, with two supports -> one -> none, late correction,
+absence invalidation, current/as-of selection and conflicting-branch controls.
+
+* Initial audit source identities and evidence boundary
 
 POO source base: =132259f1c2f10569f9c4f06ab432e64e9cd1430f=.
 The dependency update replaces ASCENT
@@ -32,7 +70,7 @@ and artifact identities. Changing ASCENT reopens producer qualification.
 An old DLL or its old real-model receipt does not qualify the new dependency.
 The complete fixed-v1 physical/model lifecycle remains open.
 
-* Current implementation outcomes after initialization repair
+* Prior A0/A1 outcomes after initialization repair
 
 The consumer runners now preload actual dependencies in the order declared by
 the compiled ASCENT modules at REV =964feb3e=. Required admission, evaluator,

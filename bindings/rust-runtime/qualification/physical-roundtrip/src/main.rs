@@ -334,11 +334,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     assert_eq!(evidence.original().receipt(), admitted.receipt());
     println!("Physical GQL result and original MRR receipt re-admitted by Temporal receiver");
+    let original_transport = poo_flow_rust_runtime::wire::from_slice(handoff.result_bytes())?;
+    assert_eq!(
+        original_transport["schema"],
+        "mrr.query-result-transport.v1"
+    );
+    let unsupported_version = String::from_utf8(handoff.result_bytes().to_vec())?.replace(
+        "mrr.query-result-transport.v1",
+        "mrr.query-result-transport.v2",
+    );
+    assert!(
+        m::verify_query_result_transport(
+            source.query(),
+            unsupported_version.as_bytes(),
+            limits,
+            cap
+        )
+        .is_err()
+    );
+    println!("Original Scheme v1 transport admitted; unsupported version rejected");
     let runtime = SemanticRuntime::open(
         std::env::var("POO_FLOW_SEMANTIC_LIBRARY")?,
         &std::env::var("POO_FLOW_SEMANTIC_SHA256")?,
         64,
     )?;
+    let descriptor = runtime.call("descriptor", &datum!({}))?;
+    assert_eq!(descriptor["abiVersion"], 1_i32);
+    assert_eq!(descriptor["wireFormat"], "scheme-datum-v1");
     let model = datum!({"identity":"physical-gql-family","mode":"exclusive-explanations","complete":true,
         "domains":[{"identity":"clock","role":"event-time"}],"hypotheses":[
         {"identity":"target","cause":"build","effect":"deploy","constraints":[{"identity":"order","relation":"before","left":"build","right":"deploy"}]},
@@ -487,6 +509,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let original_transport = poo_flow_rust_runtime::wire::from_slice(handoff.result_bytes())?;
         let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
         let receipt = datum!({"schema":"poo-flow.temporal-physical-read-only.v1",
+            "abiVersion":1,"wireFormat":"scheme-datum-v1",
             "source":SOURCE,"sourceDigest":digest,"root":snapshot.cid().to_string(),
             "compilationReceipt":{"schema":source.compilation().schema,
                 "language":format!("{:?}",source.compilation().language),
@@ -524,6 +547,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .open(path)?;
         std::io::Write::write_all(&mut output, &poo_flow_rust_runtime::wire::to_vec(&oracle)?)?;
     }
-    println!("GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V2 -> NATIVE TEMPORAL OK");
+    println!("GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V1 -> NATIVE TEMPORAL OK");
     Ok(())
 }

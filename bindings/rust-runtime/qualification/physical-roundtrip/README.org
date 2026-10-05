@@ -3,7 +3,38 @@
 
 #+title: Original GQL physical read-only Temporal qualification
 
-* Fixed v1 graph and qualification boundary
+* Current immutable v1 graph and acceptance
+
+MRR =4ccca987c97065499a366b9d1980419a574032a8= and Data
+=203dec657ba4e57ba4b8313ae18415aab5547f95= now agree across the parent Rust
+Library, this package and Data's own resolved source manifest. Both actual
+Cargo locks preserve registry versions. MRR's native build owner is
+=072acac90dd4a83849826c75b1b5633721ce2ef0=; Gerbil remains v0.19.
+
+The original physical and correction scenario passed under the five-second
+idle / 45-second wall gate, exit 0, 3.29 seconds. It checks original GQL receipt,
+query/root/catalog/result correspondence, source/root/catalog/row/query/budget
+substitution rejection, the named empty-answer boundary, native ABI v1 and
+unsupported wire version rejection. A genuinely changed immutable Arrow root
+is re-queried; historical necessary admission becomes stale, revised refuted
+admission becomes current. Separate MRR Context and fresh-process proof archive
+replay passed in 3.14 seconds using the same semantic native artifact.
+
+See [[file:../../../../t/qualification/temporal-library-basic/mrr-data-physical-v1/qualification.ss][current qualification]] and
+[[file:../../../../t/qualification/temporal-library-basic/mrr-data-physical-v1/physical-receipt.ss][original physical result and correction receipt]].
+Scheme ABI/transport is v1. The first execution's final log retained a stale
+V2 text marker; actual transport was v1. That marker is fixed and the final
+execution adds explicit ABI/transport assertions plus unsupported-version
+rejection. The Just entry requires protocol, correction and final markers and
+a nonempty original receipt with real exit propagation.
+
+The physical executor remains trusted and inventory is synthetic. These local
+receipts do not qualify source authenticity, exhaustive coverage, multiple
+supports, durable applicability/IFC publication, deployment or real-model
+lifecycle. This run made no model call or benchmark claim. Earlier sections
+below preserve their original source cuts and remain historical.
+
+* Prior fixed v1 graph and qualification boundary
 
 The active package uses Scheme transport and native semantic ABI v1. It pins
 MRR =9fcc4a42d4ea9462e0ce667bffab74b077696d9e= and MRR Data
