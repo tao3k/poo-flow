@@ -327,7 +327,7 @@ impl MrrObservationEvidence {
             correspondence: self.correspondence.clone(),
         })
     }
-    /// Reconstruct original owner values from bounded Scheme v2 bytes, then
+    /// Reconstruct original owner values from bounded Scheme v1 bytes, then
     /// check the host's Temporal projection. The query must come from the
     /// authentic source binder; transport bytes do not authenticate execution.
     pub fn verify_transport(
@@ -433,7 +433,7 @@ impl MrrObservationEvidence {
         let receipt = original.receipt();
         let binding = receipt.binding();
         let correspondence = datum!({
-            "schema": "poo-flow.mrr-observation-correspondence.v2",
+            "schema": "poo-flow.mrr-observation-correspondence.v1",
             "claim": "host-declared-same-domain-observation-projection",
             "mrrQueryBindingDigest": hex(binding.query_binding_digest()),
             "mrrGeneration": binding.generation().to_string(),

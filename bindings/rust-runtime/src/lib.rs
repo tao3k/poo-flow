@@ -117,6 +117,30 @@ impl SemanticRuntime {
                             return;
                         }
                         trace("native-owner-opened");
+                        let descriptor = native
+                            .call(
+                                &CString::new("descriptor").expect("static operation"),
+                                b"(object)",
+                            )
+                            .and_then(|value| {
+                                if value["schema"] != "poo-flow.semantic-descriptor"
+                                    || value["abiVersion"] != 1_i32
+                                    || value["wireFormat"] != "scheme-datum-v1"
+                                {
+                                    Err(Error::Transport("semantic v1 descriptor mismatch".into()))
+                                } else {
+                                    Ok(())
+                                }
+                            });
+                        if let Err(error) = descriptor {
+                            unsafe {
+                                (native.close)();
+                            }
+                            PROCESS_STATE.store(2, Ordering::SeqCst);
+                            let _ = ready_tx.send(Err(error));
+                            return;
+                        }
+                        trace("native-v1-descriptor-verified");
                         let _ = ready_tx.send(Ok(()));
                         while let Ok(command) = receiver.recv() {
                             match command {
@@ -295,27 +319,27 @@ impl Native {
         let symbol_error = |e: libloading::Error| Error::Transport(e.to_string());
         let open = unsafe {
             *library
-                .get::<Open>(b"poo_flow_semantic_v2_open\0")
+                .get::<Open>(b"poo_flow_semantic_v1_open\0")
                 .map_err(symbol_error)?
         };
         let close = unsafe {
             *library
-                .get::<Open>(b"poo_flow_semantic_v2_close\0")
+                .get::<Open>(b"poo_flow_semantic_v1_close\0")
                 .map_err(symbol_error)?
         };
         let call = unsafe {
             *library
-                .get::<Call>(b"poo_flow_semantic_v2_call\0")
+                .get::<Call>(b"poo_flow_semantic_v1_call\0")
                 .map_err(symbol_error)?
         };
         let release = unsafe {
             *library
-                .get::<Release>(b"poo_flow_semantic_v2_result_release\0")
+                .get::<Release>(b"poo_flow_semantic_v1_result_release\0")
                 .map_err(symbol_error)?
         };
         let register = unsafe {
             *library
-                .get::<Register>(b"poo_flow_semantic_v2_source_register\0")
+                .get::<Register>(b"poo_flow_semantic_v1_source_register\0")
                 .map_err(symbol_error)?
         };
         // Keep Gambit code mapped for process lifetime, including after terminal close.

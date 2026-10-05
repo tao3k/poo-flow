@@ -1,12 +1,15 @@
-#+title: Semantic ABI v2 Scheme Datum Boundary
+#+title: Semantic ABI v1 Scheme Datum Boundary
 
 * Version and ownership
 
-ABI v2 exports only =poo_flow_semantic_v2_open/call/source_register/close=
-and =poo_flow_semantic_v2_result_release=. Result layout and owner-thread lifetime
+Scheme wire and ABI versions are fixed at v1. A representation migration does
+not authorize a version bump.
+
+The public ABI v1 consists of =poo_flow_semantic_v1_open/call/source_register/close=
+and =poo_flow_semantic_v1_result_release=. Result layout and owner-thread lifetime
 are unchanged. Native POO objects remain inside Scheme; this encoding is an inert
 FFI projection, not a semantic DSL or an evaluator. Legacy symbols and JSON
-payloads are rejected. The descriptor reports version 2 and scheme-datum-v2.
+payloads are rejected. The descriptor reports version 1 and scheme-datum-v1.
 
 * Inert grammar
 
@@ -42,8 +45,8 @@ batch receipts. Old ABI results remain historical; re-encoding their receipts
 would not qualify the new ABI. Required DeepSeek HTTP JSON is confined to the
 provider adapter and is decoded before crossing project interfaces.
 
-Publication request digests use the domain =poo-flow.temporal-publication-request.v2=
+Publication request digests use the domain =poo-flow.temporal-publication-request.v1=
 and canonical Scheme bytes. Existing historical database receipts retain their
-original identities. Reusing an ABI v1 idempotency key with a v2 request fails as
+original identities. Reusing a legacy JSON idempotency key with a native Scheme request fails as
 a mismatch; there is no silent rewrite or JSON replay fallback. Historical lookup
-remains distinct from a new commit. This qualification uses fresh v2 stores.
+remains distinct from a new commit. This qualification uses fresh native Scheme v1 stores.

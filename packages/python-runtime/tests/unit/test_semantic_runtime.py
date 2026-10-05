@@ -102,7 +102,7 @@ def test_semantic_native_owner_thread_and_raw_input_guards(runtime):
     status = runtime._worker.submit(lib.poo_flow_python_semantic_call,
                                      b'\xff', b'{}', 2, result).result()
     assert status == 3
-    assert runtime.call('descriptor', {})['abiVersion'] == 2
+    assert runtime.call('descriptor', {})['abiVersion'] == 1
     with pytest.raises(SemanticRuntimeError):
         SemanticRuntime(os.environ['POO_FLOW_SEMANTIC_LIBRARY'],
                         expected_digest=runtime.artifact_digest)
@@ -219,7 +219,7 @@ def test_semantic_native_queue_bound_and_digest_rejection(runtime):
             assert future.cancel()
     finally:
         release.set(); blocker.result()
-    assert runtime.call('descriptor', {})['abiVersion'] == 2
+    assert runtime.call('descriptor', {})['abiVersion'] == 1
 
 
 def test_semantic_answer_validation_binds_current_source(runtime):
@@ -273,12 +273,14 @@ def test_semantic_native_routes_and_dynamic_targets_are_scheme_owned(runtime):
             program.invoke({'label': 'unknown'})
 
 
-def test_semantic_abi_v2_rejects_legacy_json_and_reader_extensions(runtime):
+def test_semantic_abi_v1_rejects_legacy_json_and_reader_extensions(runtime):
     import ctypes
     native = ctypes.CDLL(os.environ['POO_FLOW_SEMANTIC_LIBRARY'])
     with pytest.raises(AttributeError):
         getattr(native, 'poo_flow_semantic_open')
-    assert runtime.descriptor['wireFormat'] == 'scheme-datum-v2'
+    with pytest.raises(AttributeError):
+        getattr(native, 'poo_flow_semantic_v2_open')
+    assert runtime.descriptor['wireFormat'] == 'scheme-datum-v1'
     for data in [b'{}', b'#.(exit)', b'#0=(list #0#)', b'(object ("a" 1) ("a" 2))']:
         result = runtime._ffi.new('poo_flow_semantic_result *')
         status = runtime._worker.submit(runtime._lib.poo_flow_python_semantic_call,
@@ -287,4 +289,4 @@ def test_semantic_abi_v2_rejects_legacy_json_and_reader_extensions(runtime):
             assert status == 4
         finally:
             runtime._lib.poo_flow_python_semantic_release(result)
-    assert runtime.call('descriptor', {})['abiVersion'] == 2
+    assert runtime.call('descriptor', {})['abiVersion'] == 1

@@ -130,7 +130,7 @@ class TemporalPublicationStore:
                       'sourceDigest': source_digest, 'conclusionIdentity': conclusion_identity})
         if len(data) > 1048576:
             raise ValueError('semantic input exceeds maximum bytes')
-        request = 'sha256:' + hashlib.sha256(_datum(["poo-flow.temporal-publication-request.v2", wire.loads(data), version,
+        request = 'sha256:' + hashlib.sha256(_datum(["poo-flow.temporal-publication-request.v1", wire.loads(data), version,
                                                   expected_revision, fence])).hexdigest()
         def commit():
             with self._lock:

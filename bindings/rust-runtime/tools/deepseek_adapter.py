@@ -33,7 +33,7 @@ if len(cases) != 1:
 model = config.get('DEEPSEEK_MODEL', config.get('ANTHROPIC_MODEL', 'deepseek-v4-pro'))
 artifact_digest = sha(a.library)
 with a.output.open("x") as claim:
-    claim.write(wire.dumps({"schema":"poo-flow.provider-family-case.v2", "case":a.case, "passed":False, "state":"claimed", "maximumCalls":2, "retries":0}) + "\n")
+    claim.write(wire.dumps({"schema":"poo-flow.provider-family-case.v1", "case":a.case, "passed":False, "state":"claimed", "maximumCalls":2, "retries":0}) + "\n")
 
 async def run():
     records=[]
@@ -90,7 +90,7 @@ async def run():
             metrics = r[phase]
             r[phase] = {k:metrics[k] for k in ('responseId','responseStatus','seconds',
                 'firstContentSeconds','contentGapsSeconds','usage','progressKind') if k in metrics}
-        r.update(schema='poo-flow.provider-family-case.v2', model=model,
+        r.update(schema='poo-flow.provider-family-case.v1', model=model,
                  nativeArtifactSha256=artifact_digest, retries=0)
         a.output.write_text(wire.dumps(r) + '\n')
         print(' RESULT',r['passed'],r.get('failure',''),flush=True)

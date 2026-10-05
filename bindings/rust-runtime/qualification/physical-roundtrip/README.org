@@ -3,6 +3,25 @@
 
 #+title: Original GQL physical read-only Temporal qualification
 
+* Fixed v1 graph and qualification boundary
+
+The active package uses Scheme transport and native semantic ABI v1. It pins
+MRR =9fcc4a42d4ea9462e0ce667bffab74b077696d9e= and MRR Data
+=b37aa9abe3a5be5f5b7759d78fbd8123547280c9=. These exact owner pins agree
+with the parent runtime and the Data qualification receipt. The parent native
+v1 artifact, Python Library, Rust differential bridge and MRR Context replay
+have been qualified separately in
+[[file:../../../../t/qualification/temporal-library-basic/scheme-abi-v1/receipt.ss][the fixed-v1 Library receipt]].
+The Data Backend receipt records 37 passing Library/Turso/DuckDB tests.
+
+The current physical GQL/DataFusion graph still requires its own bounded
+execution. The historical v2 physical and model results below do not qualify
+this fixed-v1 graph. Current-source guarding through durable Data commit and
+IFC publication remain separate open gates. Scheme version changes require
+explicit protocol authorization; representation changes preserve v1.
+
+* Historical physical qualification
+
 Historical =*.log= files cited below were removed from the source checkout.
 The retained receipts contain their hashes, while raw output can be recovered
 from Git commit =79f1ec6f205afaf53580a916d858e051264ec38f=. Those hashes
@@ -12,7 +31,7 @@ source revision.
 This independent qualification package compiles one original GQL source with
 MRR's source compiler, keeps its compilation receipt and bound query, restores
 an immutable three-event Arrow snapshot, runs DataFusion, verifies the complete
-original Scheme v2 candidate/receipt and calls the native POO Temporal runtime.
+original Scheme v1 candidate/receipt and calls the native POO Temporal runtime.
 The scenario rejects independent source digest, root, catalog, row, query and
 wire-budget substitutions. The event/position profile has no null coercion.
 
@@ -25,7 +44,7 @@ receipt retains the original result transport, not merely its digest.
 
 Build with the configured MRR native Gerbil environment, including the SDK's
 real Gambit compiler and relocation settings. The runtime library and its digest
-must match an independently qualified native ABI v2 artifact. Run the binary
+must match an independently qualified native ABI v1 artifact. Run the binary
 through =bindings/rust-runtime/tools/watch.py=; a five-second silence fails.
 Set =MRR_NATIVE_PROGRESS=1= for genuine native frontend stage output and
 =POO_FLOW_PHYSICAL_RECEIPT= to an output .ss path. This is semantic qualification;

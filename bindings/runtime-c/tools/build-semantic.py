@@ -141,7 +141,7 @@ def main() -> None:
     run([os.environ.get('CC', 'cc'), *shared, '-o', str(output),
          *map(str, objects), str(link_object), str(host_object),
          '-L', str(home / 'lib'), '-lgambit', *flags])
-    manifest = {"schema": "poo-flow.semantic-aot-artifact", "version": 2, "modules": inputs,
+    manifest = {"schema": "poo-flow.semantic-aot-artifact", "version": 1, "modules": inputs,
                 "artifactSha256": hashlib.sha256(output.read_bytes()).hexdigest(),
                 "sourceSha256": hashlib.sha256((ROOT / 'src/ffi/semantic.ss').read_bytes()).hexdigest(),
                 "hostSha256": hashlib.sha256((ROOT / 'bindings/runtime-c/src/semantic_host.c').read_bytes()).hexdigest(),

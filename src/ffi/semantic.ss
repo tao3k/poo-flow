@@ -156,7 +156,7 @@
                     (verification (hash-get answer 'verification))))))
           ((string=? operation "descriptor")
            (scheme-wire-write
-            (hash (schema "poo-flow.semantic-descriptor") (abiVersion 2) (wireFormat "scheme-datum-v2")
+            (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1) (wireFormat "scheme-datum-v1")
                   (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)

@@ -7,6 +7,16 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
+* Fixed Scheme v1 protocol constraint
+
+The current implementation keeps Scheme transport and semantic ABI versions at
+v1. JSON removal changes the representation, not the protocol version. C
+exports, Scheme descriptors, Python/Rust consumers, MRR transport and Backend
+records must agree on v1. Earlier v2 qualification sections below are historical
+evidence and do not qualify the fixed-v1 artifacts. No v2 or JSON fallback is
+part of the current consumer path. Source currentness through the Data commit
+remains a separate atomicity gate.
+
 * Audited identities and method
 
 Source audit at POO Flow =a7566036315304b9439b7fd3beb21715fd2c0a95=,

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-//! Original GQL -> verified physical root -> MRR Scheme v2 -> native Temporal.
+//! Original GQL -> verified physical root -> MRR Scheme v1 -> native Temporal.
 use arrow_array::{Int64Array, RecordBatch, StringArray};
 use arrow_schema::{DataType, Field, Schema};
 use meta_relational_reasoning as m;

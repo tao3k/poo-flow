@@ -19,6 +19,8 @@ fn native_python_differential_and_lifetime() {
     let runtime = Arc::new(SemanticRuntime::open(&path, &digest, 64).unwrap());
     let descriptor = runtime.call("descriptor", &datum!({})).unwrap();
     assert_eq!(descriptor["threading"], "single-owner-thread");
+    assert_eq!(descriptor["abiVersion"], 1_i32);
+    assert_eq!(descriptor["wireFormat"], "scheme-datum-v1");
     let cases: Value = wire::from_slice(&std::fs::read(fixture).unwrap()).unwrap();
     for case in cases.as_array().unwrap() {
         println!("DIFFERENTIAL {}", case["name"]);
@@ -61,10 +63,10 @@ fn native_python_differential_and_lifetime() {
                     *const u8,
                     usize,
                     *mut RawResult,
-                ) -> i32>(b"poo_flow_semantic_v2_call\0")
+                ) -> i32>(b"poo_flow_semantic_v1_call\0")
                 .unwrap();
         let release = library
-            .get::<unsafe extern "C" fn(*mut RawResult)>(b"poo_flow_semantic_v2_result_release\0")
+            .get::<unsafe extern "C" fn(*mut RawResult)>(b"poo_flow_semantic_v1_result_release\0")
             .unwrap();
         let mut result = RawResult {
             status: 0,

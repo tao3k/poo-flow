@@ -125,10 +125,10 @@ Coverage and action authorization remain false; family completeness is still
 an explicit caller assumption. Original receipt result-digest semantics are
 preserved separately from Temporal model/projection identity.
 
-* ABI v2 direct migration
+* ABI v1 direct migration
 
-Only =poo_flow_semantic_v2_*= native entry symbols are loaded/exported. Descriptor
-=abiVersion= is 2 and =wireFormat= is =scheme-datum-v2=. There is no legacy JSON
+Only =poo_flow_semantic_v1_*= native entry symbols are loaded/exported. Descriptor
+=abiVersion= is 1 and =wireFormat= is =scheme-datum-v1=. There is no legacy JSON
 fallback. Artifact manifests and differential oracles use =.ss= files. Native MRR
 values are passed directly; this adapter no longer calls MRR JSON transport.
 See [[file:../runtime-c/semantic-wire.org][the bounded Scheme wire grammar]].

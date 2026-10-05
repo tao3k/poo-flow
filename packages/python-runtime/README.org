@@ -59,7 +59,7 @@ local qualification are in [[file:../../modules/temporal-causality/design-audit.
 
 Host-pinned source admission is a separate control operation.
 =register_temporal_source(scope, task)= registers canonical domain/observation
-bytes using =poo_flow_semantic_v2_source_register=, not the semantic operation
+bytes using =poo_flow_semantic_v1_source_register=, not the semantic operation
 router. Do not expose registration as a model tool. The scope binds source
 identity, authority, subject, scope, cut, projection, policy and generation.
 A conflicting registration at the same generation or a rollback is rejected;
@@ -404,7 +404,7 @@ program invocation, and resume-path binding reuse.
 * MRR native typed handoff
 
 The Legacy =MrrSnapshotResource= static-edge worker adapter has been removed.
-Use the original MRR Scheme v2 result handoff and the native Rust Temporal bridge
+Use the original MRR Scheme v1 result handoff and the native Rust Temporal bridge
 for the qualified read-only event/position path. The physical roundtrip fixture
 is in =bindings/rust-runtime/qualification/physical-roundtrip=. Python has no
 replacement remote snapshot publication or outbox API in this slice.

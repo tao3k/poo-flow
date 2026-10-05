@@ -169,7 +169,16 @@ fn original_mrr_values_project_to_real_native_poo() {
     assert_eq!(received.original().candidate(), &rows);
     assert_eq!(received.original().receipt(), &receipt);
     assert_eq!(received.correspondence(), evidence.correspondence());
-    println!("Original Scheme v2 candidate and receipt verified");
+    assert_eq!(
+        received.correspondence()["schema"],
+        "poo-flow.mrr-observation-correspondence.v1"
+    );
+    assert!(
+        std::str::from_utf8(&transport)
+            .unwrap()
+            .contains("mrr.query-result-transport.v1")
+    );
+    println!("Original Scheme v1 candidate and receipt verified");
     assert!(
         MrrObservationEvidence::verify_transport(
             &bound("generation-two"),

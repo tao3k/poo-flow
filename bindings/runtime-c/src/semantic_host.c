@@ -46,7 +46,7 @@ static int bounded_scheme_depth(const uint8_t *bytes, size_t length) {
   }
   return depth == 0 && !quoted;
 }
-int32_t poo_flow_semantic_v2_open(void) {
+int32_t poo_flow_semantic_v1_open(void) {
   pthread_mutex_lock(&lock);
   if (state != 0) { pthread_mutex_unlock(&lock); return 1; }
   state = 2; /* Failed setup is terminal. */
@@ -91,15 +91,15 @@ static int32_t semantic_call(const char *operation, const uint8_t *input,
   pthread_mutex_unlock(&lock);
   return status;
 }
-int32_t poo_flow_semantic_v2_call(const char *operation, const uint8_t *input,
+int32_t poo_flow_semantic_v1_call(const char *operation, const uint8_t *input,
                                  size_t length, poo_flow_semantic_result *result) {
   return semantic_call(operation, input, length, result, 0);
 }
-int32_t poo_flow_semantic_v2_source_register(const uint8_t *input, size_t length,
+int32_t poo_flow_semantic_v1_source_register(const uint8_t *input, size_t length,
                                            poo_flow_semantic_result *result) {
   return semantic_call("$host.temporal.source.register", input, length, result, 1);
 }
-int32_t poo_flow_semantic_v2_close(void) {
+int32_t poo_flow_semantic_v1_close(void) {
   pthread_mutex_lock(&lock);
   if (state != 1) { pthread_mutex_unlock(&lock); return 1; }
   if (!pthread_equal(owner, pthread_self())) { pthread_mutex_unlock(&lock); return 2; }
@@ -107,7 +107,7 @@ int32_t poo_flow_semantic_v2_close(void) {
   pthread_mutex_unlock(&lock);
   return 0;
 }
-void poo_flow_semantic_v2_result_release(poo_flow_semantic_result *result) {
+void poo_flow_semantic_v1_result_release(poo_flow_semantic_result *result) {
   if (!result) return;
   free(result->data); result->data = NULL; result->length = 0; result->status = 0;
 }

@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+from functools import wraps
 import hashlib
+import logging
 import os
 from pathlib import Path
 import pytest
@@ -23,3 +25,23 @@ def runtime():
     assert value._lib.poo_flow_python_semantic_open(str(path).encode()) == 1
 
 
+
+
+def pytest_configure(config):
+    """Report completed parser work without changing the harness result or rules."""
+    if os.environ.get('POO_FLOW_TEST_PROGRESS') != '1':
+        return
+    from python_lang_project_harness import _runner
+    original = _runner.parse_python_file
+
+    @wraps(original)
+    def observed(path):
+        report = original(path)
+        logging.getLogger(__name__).info('PYTHON-HARNESS-PARSED %s', path)
+        return report
+
+    def restore():
+        _runner.parse_python_file = original
+
+    _runner.parse_python_file = observed
+    config.add_cleanup(restore)

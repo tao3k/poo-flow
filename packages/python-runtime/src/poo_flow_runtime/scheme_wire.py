@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Bounded inert Scheme datum transport, ABI 2. Never eval or general read."""
+"""Bounded inert Scheme datum transport, ABI 1. Never eval or general read."""
 import math
 import re
 

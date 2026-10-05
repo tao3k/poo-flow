@@ -10,6 +10,8 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import hashlib
+import logging
+import os
 from . import scheme_wire as wire
 from pathlib import Path
 from types import MappingProxyType
@@ -32,7 +34,7 @@ class SemanticRuntime:
         path = Path(__file__).parent / '_native' / 'lib' / name
         manifest = wire.loads(Path(str(path) + '.ss').read_text())
         if (manifest.get('schema') != 'poo-flow.semantic-aot-artifact'
-                or manifest.get('version') != 2):
+                or manifest.get('version') != 1):
             raise SemanticRuntimeError('invalid semantic artifact manifest', status=6)
         return cls(path, expected_digest=manifest['artifactSha256'])
 
@@ -55,7 +57,8 @@ class SemanticRuntime:
             initialized = True
             self.descriptor = self.call('descriptor', {})
             if (self.descriptor.get('schema') != 'poo-flow.semantic-descriptor'
-                    or self.descriptor.get('abiVersion') != 2):
+                    or self.descriptor.get('abiVersion') != 1
+                    or self.descriptor.get('wireFormat') != 'scheme-datum-v1'):
                 raise SemanticRuntimeError('semantic ABI descriptor mismatch', status=6)
         except BaseException:
             if initialized:
@@ -131,6 +134,9 @@ class SemanticRuntime:
                 status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
             else:
                 status = self._lib.poo_flow_python_semantic_call(operation, data, len(data), result)
+            if os.environ.get('POO_FLOW_RUNTIME_TRACE') == '1':
+                logging.getLogger(__name__).info(
+                    'NATIVE-COMPLETED %s status=%s', operation.decode('utf-8'), status)
             raw = bytes(self._ffi.buffer(result.data, result.length)) if result.data != self._ffi.NULL else b''
             if status:
                 raise SemanticRuntimeError(raw.decode('utf-8', 'replace') or

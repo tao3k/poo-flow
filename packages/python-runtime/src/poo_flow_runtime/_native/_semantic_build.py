@@ -35,11 +35,11 @@ int32_t poo_flow_python_semantic_open(const char *path) {
   if (!library) { pthread_mutex_unlock(&shim_lock); return 6; }
   void *symbol;
 #define LOAD(field, name) symbol = dlsym(library, name); if (!symbol) { dlclose(library); library = NULL; pthread_mutex_unlock(&shim_lock); return 6; } memcpy(&field, &symbol, sizeof(field))
-  LOAD(open_native, "poo_flow_semantic_v2_open");
-  LOAD(call_native, "poo_flow_semantic_v2_call");
-  LOAD(register_source_native, "poo_flow_semantic_v2_source_register");
-  LOAD(close_native, "poo_flow_semantic_v2_close");
-  LOAD(release_native, "poo_flow_semantic_v2_result_release");
+  LOAD(open_native, "poo_flow_semantic_v1_open");
+  LOAD(call_native, "poo_flow_semantic_v1_call");
+  LOAD(register_source_native, "poo_flow_semantic_v1_source_register");
+  LOAD(close_native, "poo_flow_semantic_v1_close");
+  LOAD(release_native, "poo_flow_semantic_v1_result_release");
 #undef LOAD
   int32_t status = open_native();
   pthread_mutex_unlock(&shim_lock);
