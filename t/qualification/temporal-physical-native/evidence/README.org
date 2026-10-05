@@ -3,10 +3,7 @@
 
 #+title: Physical Temporal evidence retention
 
-The =*.log= output from these historical qualifications is no longer tracked.
-The =*.ss= receipts and freezes retain the original log names and digests,
-but cannot verify those digests from the current checkout alone. The raw
-bytes remain recoverable from Git commit
-=79f1ec6f205afaf53580a916d858e051264ec38f=. A new source or dependency
-cut requires a fresh run and a new receipt; neither a preserved hash nor an
-old passing line is current runtime evidence.
+Raw execution logs are local or CI artifacts and are not stored in Git.
+The historical structured summaries preserve outcomes and source identities.
+A new source or dependency cut requires a fresh executable gate; an old hash
+or passing line cannot establish current runtime behavior.

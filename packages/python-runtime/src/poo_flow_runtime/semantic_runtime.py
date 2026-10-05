@@ -83,6 +83,18 @@ class SemanticRuntime:
         """Trusted source-relative native proof/lineage admission, without effect grants."""
         return self._submit('$host.temporal.derivation.admit', request, control=True).result()
 
+    def refresh_temporal_proof_state(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Dedicated Host control of the native Library proof registry; no effects."""
+        return self._submit('$host.temporal.proof.state.refresh', request, control=True).result()
+
+    def register_temporal_proof(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Dedicated Host control of the native Library proof registry; no effects."""
+        return self._submit('$host.temporal.proof.register', request, control=True).result()
+
+    def current_temporal_proof(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Read-only current applicability of a retained proof; no replacement state."""
+        return self.call('temporal.proof.current', request)
+
     def guard_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Read-only support/policy guard against current host-registered state."""
         return self.call('temporal.support.guard', request)
@@ -157,6 +169,10 @@ class SemanticRuntime:
                     status = self._lib.poo_flow_python_semantic_policy_refresh(data, len(data), result)
                 elif operation == b'$host.temporal.derivation.admit':
                     status = self._lib.poo_flow_python_semantic_derivation_admit(data, len(data), result)
+                elif operation == b'$host.temporal.proof.state.refresh':
+                    status = self._lib.poo_flow_python_semantic_proof_state_refresh(data, len(data), result)
+                elif operation == b'$host.temporal.proof.register':
+                    status = self._lib.poo_flow_python_semantic_proof_register(data, len(data), result)
                 else:
                     raise ValueError('unsupported host control operation')
             else:

@@ -30,6 +30,10 @@ int32_t poo_flow_semantic_v1_policy_refresh(const uint8_t *input, size_t length,
 /* Trusted original-owner lineage projection. Scheme recomputes positive proof,
  * Rule/direct Derivation correspondence and exact Temporal source bindings.
  * Source-relative only; this never grants an external effect or publication. */
+int32_t poo_flow_semantic_v1_proof_state_refresh(const uint8_t *input, size_t length,
+                                              poo_flow_semantic_result *result);
+int32_t poo_flow_semantic_v1_proof_register(const uint8_t *input, size_t length,
+                                              poo_flow_semantic_result *result);
 int32_t poo_flow_semantic_v1_derivation_admit(const uint8_t *input, size_t length,
                                            poo_flow_semantic_result *result);
 int32_t poo_flow_semantic_v1_close(void);

@@ -211,8 +211,16 @@ unknown registrations and tampered originals raise before producing a result.
 Budget exhaustion remains =unknown=. Historical proof replay stays available
 independently of current support.
 
-These are Library APIs. The proof registry has no C/Python/Rust wire entrypoint
-in this increment. Host-declared journal/catalog/policy state is not provider
+The native Library now projects through dedicated C ABI v1
+=poo_flow_semantic_v1_proof_state_refresh= and =..._proof_register= controls.
+Python exposes =refresh_temporal_proof_state= and =register_temporal_proof=;
+Rust exposes =refresh_proof_state= and =register_proof= on the existing native
+owner thread. Ordinary =temporal.proof.current= accepts only a registered handle,
+expected generations, expected policy digest and budget. Both runtimes expose
+named read-only helpers. Host controls are absent from descriptor operations and
+ordinary C calls reject them before Scheme dispatch. All transport remains
+bounded inert Scheme datum v1. Exact fields reject replacement clocks/journals,
+proof flags and schema-version changes. Host-declared journal/catalog/policy state is not provider
 authentication. =proof-admitted?= means original proof replay passed;
 =current?= only describes this owner-thread observation. Source authentication,
 selection admission, action authorization and durability remain false. A final

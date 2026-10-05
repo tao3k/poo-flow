@@ -119,3 +119,11 @@ void poo_flow_semantic_v1_result_release(poo_flow_semantic_result *result) {
   if (!result) return;
   free(result->data); result->data = NULL; result->length = 0; result->status = 0;
 }
+
+int32_t poo_flow_semantic_v1_proof_state_refresh(const uint8_t *input, size_t length, poo_flow_semantic_result *result) {
+  return semantic_call("$host.temporal.proof.state.refresh", input, length, result, 1);
+}
+
+int32_t poo_flow_semantic_v1_proof_register(const uint8_t *input, size_t length, poo_flow_semantic_result *result) {
+  return semantic_call("$host.temporal.proof.register", input, length, result, 1);
+}

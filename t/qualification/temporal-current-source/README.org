@@ -2,11 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+title: Native Temporal current-source evidence
 
-The =*.log= names below identify historical runs, not files retained in the
-current checkout. Their raw bytes are recoverable from Git commit
-=79f1ec6f205afaf53580a916d858e051264ec38f=; the =*.ss= freeze receipts
-retain hashes but cannot recheck log integrity without those bytes. New
-qualification must produce fresh ignored/CI logs and a matching receipt.
+Raw execution logs are local or CI artifacts and are not retained in the
+source checkout. Historical structured summaries do not qualify a newer source
+cut; run the executable gate again for current evidence.
 
 This slice retains the original native family admission, replays its premises,
 and compares it with a host-selected current source. The Scheme owner decides

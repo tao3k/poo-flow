@@ -27,7 +27,7 @@ def test_semantic_native_descriptor(runtime):
         'temporal.family.journal',
         'temporal.family.archive.export',
         'temporal.family.archive.replay',
-        'temporal.support.evaluate', 'temporal.fact.content', 'temporal.support.guard',
+        'temporal.support.evaluate', 'temporal.fact.content', 'temporal.support.guard', 'temporal.proof.current',
     ]
     assert runtime.descriptor['threading'] == 'single-owner-thread'
 

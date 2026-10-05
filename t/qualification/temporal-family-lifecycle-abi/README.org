@@ -31,10 +31,9 @@ freeze this exact bounded gate's historical receipt. The previous public
 Scheme 11-case receipt remains historical Library evidence; it does not replace
 this ABI execution.
 
-The =*.log= names below identify historical outputs removed from the source
-checkout. Their raw bytes remain recoverable from PR #34 commit
-=b68f6800=, while =build-freeze.ss= retains their hashes. Those hashes alone
-cannot recheck the raw outputs locally or qualify a newer source cut.
+Raw execution logs are local or CI artifacts and are not stored in Git.
+Historical run names below describe earlier outcomes; structured hashes alone
+do not qualify a newer source cut.
 
 =runtime-progress-disabled-failed.log= recorded the initial exit-124 failure:
 the command omitted the existing Rust loader trace and stopped during artifact

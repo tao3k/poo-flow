@@ -16,8 +16,8 @@ the new proof registry through a wire control. All tests retain the five-second
 idle and 45-second total watchdog. Native heap remains 1G.
 
 The explicit normal-return rejection sentinel replaces check-exception true in
-the evaluator gate. Pre-assertion smoke and failed validity fixtures are retained
-as unqualified evidence. The incorrectly named oracle configuration caused three
+the evaluator gate. Pre-assertion smoke and failed validity fixtures remain unqualified. Raw
+execution logs are local or CI artifacts and are not stored in Git. The incorrectly named oracle configuration caused three
 Python skips; the corrected full run is the qualified receipt.
 
 qualification.ss records source hashes and bounded claims. native-artifact.ss

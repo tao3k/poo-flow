@@ -79,13 +79,13 @@ def main() -> None:
                    "modules/temporal-causality/truth-maintenance/support/policy.ss",
                    "modules/temporal-causality/truth-maintenance/support/interface.ss",
                    "modules/temporal-causality/truth-maintenance/support/policy-host.ss",
-                   "modules/temporal-causality/evaluator/fact.ss", "src/ffi/temporal-support.ss", "src/ffi/temporal-policy.ss",
+                   "modules/temporal-causality/evaluator/fact.ss", "src/ffi/temporal-support.ss",
                    "modules/temporal-causality/evaluator/positive-proof.ss",
                    "modules/temporal-causality/evaluator/binding.ss",
                    "modules/temporal-causality/evaluator/rule.ss",
                    "modules/temporal-causality/evaluator/derivation.ss",
                    "modules/temporal-causality/evaluator/proof-host.ss",
-                   "modules/temporal-causality/evaluator/interface.ss", "src/ffi/temporal-proof.ss"]:
+                   "modules/temporal-causality/evaluator/interface.ss", "src/ffi/temporal-proof.ss", "src/ffi/temporal-policy.ss", "src/ffi/temporal-proof-host.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",

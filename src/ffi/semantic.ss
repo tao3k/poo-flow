@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; AOT semantic projection: inert Scheme data enters existing Scheme owners.
-(import (only-in :poo-flow/modules/temporal-causality/evaluator/fact poo-flow-temporal-mrr-fact-content)
+(import (only-in :poo-flow/src/ffi/temporal-proof-host temporal-proof-state-refresh temporal-proof-register temporal-proof-current)
+        (only-in :poo-flow/modules/temporal-causality/evaluator/fact poo-flow-temporal-mrr-fact-content)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
         (only-in :poo-flow/src/ffi/temporal-proof temporal-derivation-admit)
@@ -137,6 +138,9 @@
                (actionAuthorized #f) (durable #f)))))
           ((string=? operation "temporal.support.evaluate")
            (scheme-wire-write (temporal-support-call object)))
+          ((string=? operation "$host.temporal.proof.state.refresh") (scheme-wire-write (temporal-proof-state-refresh object)))
+          ((string=? operation "$host.temporal.proof.register") (scheme-wire-write (temporal-proof-register object)))
+          ((string=? operation "temporal.proof.current") (scheme-wire-write (temporal-proof-current object)))
           ((string=? operation "$host.temporal.derivation.admit")
            (scheme-wire-write (temporal-derivation-admit object)))
           ((string=? operation "$host.temporal.policy.refresh")
@@ -183,7 +187,7 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1) (wireFormat "scheme-datum-v1")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate" "temporal.fact.content" "temporal.support.guard"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate" "temporal.fact.content" "temporal.support.guard" "temporal.proof.current"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])

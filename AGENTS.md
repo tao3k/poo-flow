@@ -21,3 +21,7 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 - Run focused Gerbil tests serially unless the scheduler enforces an aggregate memory budget. Each process can use its own heap allowance.
 - Add a Just recipe with `gerbil_test_runtime_options` and a timeout before importing Scheme modules if a test needs a different launcher.
 - Inspect the focused test output before reporting success: require `MODULE-OK`, `HARNESS-OK`, a final `OK`, and no `ERROR CASE`, `ERROR CHECK`, `ERROR HARNESS`, `Heap overflow`, or `Stack overflow` marker. Gerbil can exit with code 0 after a harness failure.
+
+## Execution artifacts
+
+- Do not commit raw build/test/qualification logs or compressed logs. Keep them in local or CI artifacts; source control holds executable gates and structured summaries.

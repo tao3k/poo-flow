@@ -13,6 +13,8 @@ int32_t poo_flow_python_semantic_source_register(const uint8_t *input, size_t le
                                                 poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_policy_refresh(const uint8_t *input, size_t length, poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_derivation_admit(const uint8_t *input, size_t length, poo_flow_semantic_result *result);
+int32_t poo_flow_python_semantic_proof_state_refresh(const uint8_t *input, size_t length, poo_flow_semantic_result *result);
+int32_t poo_flow_python_semantic_proof_register(const uint8_t *input, size_t length, poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_close(void);
 void poo_flow_python_semantic_release(poo_flow_semantic_result *result);
 ''')
@@ -30,6 +32,8 @@ static int32_t (*call_native)(const char *, const uint8_t *, size_t, poo_flow_se
 static int32_t (*register_source_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*refresh_policy_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*admit_derivation_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
+static int32_t (*proof_state_refresh_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
+static int32_t (*proof_register_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*close_native)(void);
 static void (*release_native)(poo_flow_semantic_result *);
 int32_t poo_flow_python_semantic_open(const char *path) {
@@ -44,6 +48,8 @@ int32_t poo_flow_python_semantic_open(const char *path) {
   LOAD(register_source_native, "poo_flow_semantic_v1_source_register");
   LOAD(refresh_policy_native, "poo_flow_semantic_v1_policy_refresh");
   LOAD(admit_derivation_native, "poo_flow_semantic_v1_derivation_admit");
+  LOAD(proof_state_refresh_native, "poo_flow_semantic_v1_proof_state_refresh");
+  LOAD(proof_register_native, "poo_flow_semantic_v1_proof_register");
   LOAD(close_native, "poo_flow_semantic_v1_close");
   LOAD(release_native, "poo_flow_semantic_v1_result_release");
 #undef LOAD
@@ -76,6 +82,18 @@ int32_t poo_flow_python_semantic_derivation_admit(const uint8_t *input, size_t l
                                                 poo_flow_semantic_result *result) {
   pthread_mutex_lock(&shim_lock);
   int32_t status = library ? admit_derivation_native(input, length, result) : 1;
+  pthread_mutex_unlock(&shim_lock);
+  return status;
+}
+int32_t poo_flow_python_semantic_proof_state_refresh(const uint8_t *input, size_t length, poo_flow_semantic_result *result) {
+  pthread_mutex_lock(&shim_lock);
+  int32_t status = library ? proof_state_refresh_native(input, length, result) : 1;
+  pthread_mutex_unlock(&shim_lock);
+  return status;
+}
+int32_t poo_flow_python_semantic_proof_register(const uint8_t *input, size_t length, poo_flow_semantic_result *result) {
+  pthread_mutex_lock(&shim_lock);
+  int32_t status = library ? proof_register_native(input, length, result) : 1;
   pthread_mutex_unlock(&shim_lock);
   return status;
 }

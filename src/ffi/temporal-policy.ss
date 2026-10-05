@@ -3,11 +3,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Dedicated host control state; ordinary queries supply neither policy nor clock.
 (import (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/modules/temporal-causality/evaluator/proof-host poo-flow-temporal-proof-host)
         (only-in :poo-flow/modules/temporal-causality/time/objects poo-flow-temporal-instant)
         (only-in :poo-flow/modules/temporal-causality/truth-maintenance/support/policy poo-flow-temporal-support-policy)
         :poo-flow/modules/temporal-causality/truth-maintenance/support/policy-host
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-input temporal-support-result))
-(export temporal-policy-refresh temporal-policy-guard-call)
+(export temporal-policy-refresh temporal-policy-guard-call temporal-policy-proof-host)
+(def (temporal-policy-proof-host) (poo-flow-temporal-proof-host host))
 (def host (poo-flow-temporal-support-policy-host))
 (def (field x key)
   (unless (and (hash-table? x) (hash-key? x key)) (error "missing policy field" key)) (hash-ref x key))

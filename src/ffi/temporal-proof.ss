@@ -8,7 +8,7 @@
                  proof-node-id proof-node-row proof-node-relation)
         :poo-flow/modules/temporal-causality/evaluator/interface
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-journal-input))
-(export temporal-derivation-admit)
+(export temporal-derivation-admit temporal-derivation-context-input temporal-rule-program-input)
 (def (field x k)
   (unless (and (hash-table? x) (hash-key? x k)) (error "missing derivation field" k)) (hash-ref x k))
 (def (fields x ks)
@@ -27,7 +27,7 @@
 (def (atom a)
   (fields a ["relationId" "terms"])
   (poo-flow-temporal-rule-atom (field a "relationId") (map term (bounded (field a "terms") 32))))
-(def (program p)
+(def (temporal-rule-program-input p)
   (fields p ["schema" "identity" "catalogDigest" "generation" "ascentGeneration" "relations" "rules"])
   (unless (equal? (field p "schema") "poo-flow.mrr-rule-program.v1") (error "unsupported rule projection schema"))
   (poo-flow-temporal-rule-program (field p "identity") (field p "catalogDigest") (field p "generation") (field p "ascentGeneration")
@@ -42,7 +42,7 @@
   (unless (equal? (field f "schema") "poo-flow.mrr-fact-request.v1") (error "unsupported fact projection schema"))
   (poo-flow-temporal-mrr-fact-content (field f "identity") (field f "generation") (field f "relationId")
     (field f "evaluatorRelation") (bounded (field f "row") 32)))
-(def (temporal-derivation-admit request)
+(def (derivation-input request retain?)
   (fields request ["schema" "projection" "journal" "sourceBindings" "workSteps" "maximumNodes"])
   (unless (equal? (field request "schema") "poo-flow.temporal-derivation-admit-request.v1") (error "unsupported derivation admit schema"))
   (let* ((data (field request "projection")) (steps (field request "workSteps")) (max-nodes (field request "maximumNodes")))
@@ -50,7 +50,7 @@
     (unless (and (equal? (field data "schema") "poo-flow.mrr-derivation-projection.v1")
                  (exact-integer? steps) (<= 1 steps 4096) (exact-integer? max-nodes) (<= 1 max-nodes 128))
       (error "invalid derivation proof bounds"))
-    (let* ((owned-program (program (field data "program")))
+    (let* ((owned-program (temporal-rule-program-input (field data "program")))
            (original-facts (bounded (field data "facts") 128))
            (facts (map (lambda (row)
              (fields row ["content" "contentDigest" "source"])
@@ -111,7 +111,10 @@
                (correspondence (poo-flow-temporal-rule-correspondence-from-ascent owned-program admission snapshot candidate receipt steps max-nodes))
                (joint (poo-flow-temporal-mrr-derivation-from-ascent (field data "identity") owned-program correspondence bound admission
                         snapshot candidate receipt steps max-nodes node-bindings output source-bindings journal))
-               (support (.ref joint 'support)))
+               (support (.ref joint 'support))
+               (context-value (and retain? (poo-flow-temporal-derivation-context joint owned-program correspondence bound admission
+                                 snapshot candidate receipt steps max-nodes node-bindings output source-bindings journal))))
+          (list owned-program journal context-value
           (hash (schema "poo-flow.temporal-derivation-admit-result.v1") (abiVersion 1)
                 (bindingDigest (.ref joint 'semantic-digest)) (proofDigest (.ref admission 'proof-digest))
                 (catalogDigest (.ref owned-program 'catalog-digest)) (generation (.ref owned-program 'generation))
@@ -124,4 +127,7 @@
                 (derivationCorrespondenceVerified (.ref joint 'derivation-correspondence-verified?))
                 (mrrRuleEquivalenceVerified (.ref joint 'mrr-rule-equivalence-verified?))
                 (trustBasis "host-declared-source-relative-native-proof")
-                (sourceAuthenticated #f) (selectionAdmitted #f) (actionAuthorized #f) (durable #f)))))))
+                (sourceAuthenticated #f) (selectionAdmitted #f) (actionAuthorized #f) (durable #f))))))))
+
+(def (temporal-derivation-admit request) (list-ref (derivation-input request #f) 3))
+(def (temporal-derivation-context-input request) (derivation-input request #t))

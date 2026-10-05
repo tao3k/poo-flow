@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 //! Bounded Rust transport to the POO-owned native semantic engine.
 //! All unsafe calls stay on one OS thread. No classification is implemented here.
-#[cfg(feature = "orgize-source")]
-pub mod org_source;
-pub mod wire;
 #[cfg(feature = "mrr-transport")]
-pub mod mrr_support;
+pub mod mrr_derivation;
 #[cfg(feature = "mrr-transport")]
 pub mod mrr_rule;
 #[cfg(feature = "mrr-transport")]
-pub mod mrr_derivation;
+pub mod mrr_support;
+#[cfg(feature = "orgize-source")]
+pub mod org_source;
+pub mod wire;
 use crate::wire::Value;
 use libloading::Library;
 use sha2::{Digest, Sha256};
@@ -50,6 +50,8 @@ enum Command {
     Call(CString, Vec<u8>, Reply),
     Register(Vec<u8>, Reply),
     PolicyRefresh(Vec<u8>, Reply),
+    ProofStateRefresh(Vec<u8>, Reply),
+    ProofRegister(Vec<u8>, Reply),
     DerivationAdmit(Vec<u8>, Reply),
     Close(mpsc::Sender<Result<(), Error>>),
 }
@@ -162,6 +164,16 @@ impl SemanticRuntime {
                                     ));
                                     let _ = reply.send(result);
                                 }
+                                Command::ProofStateRefresh(data, reply) => {
+                                    let result = native.refresh_proof_state(&data);
+                                    trace("proof_state_refresh-returned");
+                                    let _ = reply.send(result);
+                                }
+                                Command::ProofRegister(data, reply) => {
+                                    let result = native.register_proof(&data);
+                                    trace("proof_register-returned");
+                                    let _ = reply.send(result);
+                                }
                                 Command::DerivationAdmit(data, reply) => {
                                     let result = native.admit_derivation(&data);
                                     trace("derivation-admission-returned");
@@ -236,6 +248,7 @@ impl SemanticRuntime {
                 | "temporal.support.evaluate"
                 | "temporal.fact.content"
                 | "temporal.support.guard"
+                | "temporal.proof.current"
         ) {
             return Err(Error::InvalidInput);
         }
@@ -258,7 +271,51 @@ impl SemanticRuntime {
     pub fn call(&self, operation: &str, payload: &Value) -> Result<Value, Error> {
         self.submit(operation, payload)?.wait()
     }
+    /// Read-only registered proof applicability against native Host current state.
+    pub fn current_proof(&self, payload: &Value) -> Result<Value, Error> {
+        self.call("temporal.proof.current", payload)
+    }
     /// Trusted host original lineage admission; native Scheme owns source-relative proof.
+    /// Dedicated native proof Host control; grants no effects.
+    pub fn refresh_proof_state(&self, payload: &Value) -> Result<Value, Error> {
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        if data.len() > 1_048_576 {
+            return Err(Error::InvalidInput);
+        }
+        let (tx, rx) = mpsc::channel();
+        self.state
+            .lock()
+            .map_err(|_| Error::Closed)?
+            .sender
+            .as_ref()
+            .ok_or(Error::Closed)?
+            .try_send(Command::ProofStateRefresh(data, tx))
+            .map_err(|e| match e {
+                mpsc::TrySendError::Full(_) => Error::QueueFull,
+                mpsc::TrySendError::Disconnected(_) => Error::Closed,
+            })?;
+        rx.recv().map_err(|_| Error::Closed)?
+    }
+    /// Dedicated native proof Host control; grants no effects.
+    pub fn register_proof(&self, payload: &Value) -> Result<Value, Error> {
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        if data.len() > 1_048_576 {
+            return Err(Error::InvalidInput);
+        }
+        let (tx, rx) = mpsc::channel();
+        self.state
+            .lock()
+            .map_err(|_| Error::Closed)?
+            .sender
+            .as_ref()
+            .ok_or(Error::Closed)?
+            .try_send(Command::ProofRegister(data, tx))
+            .map_err(|e| match e {
+                mpsc::TrySendError::Full(_) => Error::QueueFull,
+                mpsc::TrySendError::Disconnected(_) => Error::Closed,
+            })?;
+        rx.recv().map_err(|_| Error::Closed)?
+    }
     pub fn admit_derivation(&self, payload: &Value) -> Result<Value, Error> {
         let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
         if data.len() > 1_048_576 {
@@ -373,6 +430,8 @@ struct Native {
     call: Call,
     register: Register,
     policy_refresh: Register,
+    proof_state_refresh: Register,
+    proof_register: Register,
     derivation_admit: Register,
     release: Release,
 }
@@ -401,6 +460,16 @@ impl Native {
                 .get::<Release>(b"poo_flow_semantic_v1_result_release\0")
                 .map_err(symbol_error)?
         };
+        let proof_state_refresh = unsafe {
+            *library
+                .get::<Register>(b"poo_flow_semantic_v1_proof_state_refresh\0")
+                .map_err(symbol_error)?
+        };
+        let proof_register = unsafe {
+            *library
+                .get::<Register>(b"poo_flow_semantic_v1_proof_register\0")
+                .map_err(symbol_error)?
+        };
         let derivation_admit = unsafe {
             *library
                 .get::<Register>(b"poo_flow_semantic_v1_derivation_admit\0")
@@ -424,6 +493,8 @@ impl Native {
             call,
             register,
             policy_refresh,
+            proof_state_refresh,
+            proof_register,
             derivation_admit,
             release,
         })
@@ -431,6 +502,16 @@ impl Native {
     fn call(&self, op: &CString, input: &[u8]) -> Result<Value, Error> {
         self.response(|result| unsafe {
             (self.call)(op.as_ptr(), input.as_ptr(), input.len(), result)
+        })
+    }
+    fn refresh_proof_state(&self, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe {
+            (self.proof_state_refresh)(input.as_ptr(), input.len(), result)
+        })
+    }
+    fn register_proof(&self, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe {
+            (self.proof_register)(input.as_ptr(), input.len(), result)
         })
     }
     fn admit_derivation(&self, input: &[u8]) -> Result<Value, Error> {

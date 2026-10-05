@@ -317,6 +317,76 @@ fn actual_native_joint_proof_and_temporal_source_bindings() {
     assert!(runtime.admit_derivation(&bad).is_err());
     assert_eq!(runtime.admit_derivation(&request).unwrap(), result);
     println!("CASE forged rule/source reject without changing deterministic native admission");
+    let mut retained_task = request.clone();
+    retained_task["journal"]["validDomain"] = "txn".into();
+    let instant = |n: i64| {
+        datum!({"identity":n.to_string(),"domain":"txn","coordinate":n,
+        "provenance":"host-clock","modality":"observed"})
+    };
+    let mut policy = datum!({"schema":"poo-flow.temporal-policy-refresh-request.v1",
+        "policy":{"identity":"rust-proof-policy","revision":"v1","start":instant(1),"end":instant(4)},
+        "generation":1,"effectiveAt":instant(1)});
+    let p = runtime.refresh_policy(&policy).unwrap();
+    let mut state = datum!({"schema":"poo-flow.temporal-proof-state-refresh-request.v1","identity":"rust-proof-scope",
+        "generation":1,"program":retained_task["projection"]["program"].clone(),"journal":retained_task["journal"].clone()});
+    let registered_state = runtime.refresh_proof_state(&state).unwrap();
+    let register = datum!({"schema":"poo-flow.temporal-proof-register-request.v1","stateIdentity":"rust-proof-scope",
+        "expectedStateDigest":registered_state["stateDigest"].clone(),"policyIdentity":"rust-proof-policy","task":retained_task.clone()});
+    assert!(
+        runtime
+            .call("$host.temporal.proof.state.refresh", &state)
+            .is_err()
+    );
+    assert!(
+        runtime
+            .call("$host.temporal.proof.register", &register)
+            .is_err()
+    );
+    let registration = runtime.register_proof(&register).unwrap();
+    let original = runtime.admit_derivation(&retained_task).unwrap();
+    assert_eq!(registration["proofDigest"], original["bindingDigest"]);
+    assert_eq!(runtime.register_proof(&register).unwrap(), registration);
+    let mut current = datum!({"schema":"poo-flow.temporal-proof-current-request.v1",
+        "registration":registration["registration"].clone(),"expectedStateGeneration":1,"expectedPolicyGeneration":1,
+        "expectedPolicyDigest":p["policyDigest"].clone(),"budget":128});
+    let checked = runtime.current_proof(&current).unwrap();
+    assert_eq!(checked["status"], "current");
+    assert_eq!(checked["current"], true);
+    for flag in [
+        "sourceAuthenticated",
+        "selectionAdmitted",
+        "actionAuthorized",
+        "durable",
+    ] {
+        assert_eq!(checked[flag], false);
+    }
+    println!("CASE original typed MRR graph registered and native Host current proof verified");
+    let initial = state.clone();
+    if let wire::Value::Array(rows) = &mut state["journal"]["revisions"] {
+        let first = rows[0].clone();
+        rows.push(datum!({"identity":"late-correction","subject":first["subject"].clone(),"operation":"correct",
+            "predecessor":first["identity"].clone(),"admitted":2,"validRange":first["validRange"].clone(),"content":"changed"}));
+    }
+    state["generation"] = 2.into();
+    runtime.refresh_proof_state(&state).unwrap();
+    policy["generation"] = 2.into();
+    policy["effectiveAt"] = instant(2);
+    runtime.refresh_policy(&policy).unwrap();
+    assert!(runtime.current_proof(&current).is_err());
+    current["expectedStateGeneration"] = 2.into();
+    current["expectedPolicyGeneration"] = 2.into();
+    let corrected = runtime.current_proof(&current).unwrap();
+    assert_eq!(corrected["status"], "unsupported");
+    assert_eq!(corrected["current"], false);
+    assert_eq!(corrected["proofDigest"], registration["proofDigest"]);
+    let mut erased = initial;
+    erased["generation"] = 3.into();
+    assert!(runtime.refresh_proof_state(&erased).is_err());
+    assert!(runtime.register_proof(&register).is_err());
+    assert_eq!(runtime.current_proof(&current).unwrap(), corrected);
+    println!(
+        "CASE late source correction rejects current applicability and history erasure without effect grants"
+    );
     if let Ok(path) = std::env::var("POO_FLOW_NATIVE_DERIVATION_ORACLE") {
         std::fs::write(
             path,
