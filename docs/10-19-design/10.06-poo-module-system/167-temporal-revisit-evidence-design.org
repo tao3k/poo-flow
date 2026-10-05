@@ -57,8 +57,9 @@ classification is still partly in Rust. The proposed Orgize document
 document-local temporal projection Scheme-owned and requires parity before
 generated Rust execution can replace independent Rust classification. The
 current POO Flow =modules/memory-core/org-selection.ss= calls an Orgize
-Scheme query on a supplied graph; it cannot attest that the graph came from
-the declared current bytes.
+Scheme selector on a supplied graph; it cannot attest that the graph came
+from the declared current bytes. This selector is document-local, whereas
+=modules/query= owns POO Flow's canonical Query and ElementSpace contracts.
 
 The Orgize event fold yields Scheme-owned parse events, then its generated
 Rust/Rowan path projects the Elements graph. The Scheme graph-query view
@@ -74,7 +75,8 @@ even when it happens to select the same records. The [[https://github.com/tao3k/
 the focused test and cross-platform gates. This in-process recheck does not
 authenticate a file, WorkTree cut or grant, or connect to POO Flow's separate
 Scheme graph view. The proposed
-bridge must carry parser-owned selected records into a checked Session input;
+bridge must project parser-owned Elements into POO Flow's ElementSpace and
+bind qualified Query rows to the same source before Session or temporal use;
 comparing a caller-supplied graph with a caller-supplied digest is insufficient.
 
 The optional POO Flow Rust runtime =orgize-source= feature now starts that
@@ -84,8 +86,10 @@ observation privately. A later use must recheck the declared key, resolved
 root and file, current bytes, parse configuration, and query rule. The key's
 WorkTree identity and cut are still host premises; this adapter cannot prove
 Git state, grants, stable filesystem access under concurrent path mutation, or
-Session policy. It does not yet pass the selected records into the Scheme
-Session owner or publish a Memory/Session head. Those remain acceptance gates.
+Session policy. It does not yet bind a canonical POO Flow Query or verify its
+result rows, pass a qualified result to a temporal consumer, or publish a
+Memory/Session head. It remains a read-side observation, not the main Query
+integration contract.
 
 POO Flow already has temporal instants/axes, evidence retrieval/use/assessment,
 impact frontiers, and pure Session/Memory policy receipts. Reuse those owners:
@@ -93,6 +97,7 @@ impact frontiers, and pure Session/Memory policy receipts. Reuse those owners:
 | Owner | Decision |
 |-------+----------|
 | Orgize Scheme | Preserve source-local Org identity, spans, planning/repeater and LOGBOOK events; project document-local candidates with reasons |
+| POO Flow Query | Admit the canonical Query over an explicit ElementSpace; bind Provider and bounded result contracts to source-backed rows |
 | POO Flow temporal-causality | Evaluate evidence against current cuts, valid time, changes, contradiction and affected claims |
 | POO Flow Session and policy | Scope, grants, explicit C4 policy order, attempt budget, when to request a revisit and which actor may do it |
 | MRR Query/Content/Context | Admit derived semantic claims when a revisit uses relational inference; direct test receipts do not need a fabricated MRR derivation |
@@ -122,6 +127,10 @@ required evidence, current capability, expected head revision, attempt ID,
 budget, and policy revision. Triggers may be elapsed time, a new source cut,
 dependency change, contradictory evidence, or an imminent use of the claim.
 Time merely makes the check eligible; it does not attest the outcome.
+An Orgize named selector can nominate Elements within the document; a POO Flow
+Query result determines which source-backed candidates a downstream consumer
+may use. The result must retain the document cut and anchor. Query admission
+and receipt metadata alone do not authenticate execution or result rows.
 
 One attempt records the selected current source cut, actor, start/end time,
 method and actual outcome. Its assessment cites the evidence used, the
@@ -221,23 +230,27 @@ cannot both publish a head transition.
 
 * Proof and implementation gates
 
-1. In Orgize, implement the document-local source/event projection in Scheme
-   using ordinary Org syntax. Keep source spans, repeaters and LOGBOOK events
-   observable; compare generated Rust with Scheme on the same fixtures. Do not
-   add a second Memory parser or independent Rust classifier. Bind query
-   output to one parser-owned source/graph/configuration/rule observation;
-   refuse a forged graph paired with a genuine source digest before it reaches
-   Session policy.
-2. In POO Flow, define pure revisit intent/assessment POO values using the
-   existing temporal evidence and Session policy owners. Reuse the finite C4
-   certificate. Keep the current =memory-core= catalog report-only until the
-   migration decision; avoid a new authoritative Memory registry.
-3. In Lean, prove that a due signal cannot imply evidence support, a prior
+1. In Orgize, keep document-local parsing, Elements, selectors and temporal
+   Org facts Scheme-owned. Preserve source spans, repeaters and LOGBOOK events;
+   compare generated Rust with Scheme on the same fixtures. This gives POO Flow
+   source-backed Elements, not an independent general Query authority.
+2. In POO Flow =modules/query=, project those Elements into an explicit
+   ElementSpace and bind one canonical Query to bounded, source-backed result
+   rows. Qualify a forged graph, changed source, changed selector rule,
+   mismatched row digest and incomplete result as refusals. The existing
+   Provider receipt binding checks declared metadata, not execution or rows;
+   add the missing evidence at this boundary before temporal use.
+3. Define pure revisit intent/assessment POO values using Query results,
+   temporal evidence and Session policy owners. Reuse the finite C4
+   certificate. Impact requires typed, scope-compatible trajectories; an Org
+   Element match alone is insufficient. Keep the current =memory-core= catalog
+   report-only until the migration decision.
+4. In Lean, prove that a due signal cannot imply evidence support, a prior
    cut cannot certify a new cut, and a retention verdict cannot imply truth.
    In TLA+, explore source change, revocation, two workers, stale assessment,
    and lost CAS. Scheme tests prove the actual projection and policy behavior;
    Python coordinates these native gates only.
-4. Only after source authentication, semantic evidence and runtime CAS exist,
+5. Only after source authentication, semantic evidence and runtime CAS exist,
    consider moving a visible head. The current Orgize query selector and pure
    Session intent do not establish that path.
 
