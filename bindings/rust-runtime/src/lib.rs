@@ -5,6 +5,8 @@
 #[cfg(feature = "orgize-source")]
 pub mod org_source;
 pub mod wire;
+#[cfg(feature = "mrr-transport")]
+pub mod mrr_support;
 use crate::wire::Value;
 use libloading::Library;
 use sha2::{Digest, Sha256};
@@ -216,6 +218,7 @@ impl SemanticRuntime {
                 | "temporal.family.journal"
                 | "temporal.family.archive.export"
                 | "temporal.family.archive.replay"
+                | "temporal.support.evaluate"
         ) {
             return Err(Error::InvalidInput);
         }

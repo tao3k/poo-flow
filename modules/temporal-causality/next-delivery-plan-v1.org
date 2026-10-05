@@ -35,16 +35,27 @@ negative-premise profile is silently added.
 
 [[file:../../t/qualification/temporal-library-basic/support-applicability-v1/qualification.ss][The Scheme v1 qualification]] preserves the initial idle failure, rejected
 invalid test revision fixture, final raw native output and source hashes.
-No new ABI operation, MRR support projection, Python/Rust support consumption,
-AOT consumer, incremental/full equivalence, policy expiry, absence certificate,
-durable journal or IFC publication was qualified for this new kernel. Existing
-A0--A2 artifact receipts retain their original producer scope. No model call or
-benchmark was performed.
+The next consumer slice is now locally qualified through the same fresh native
+artifact: ABI v1 =temporal.support.evaluate=, Python Library helper and Rust
+=mrr_support= adapter. The adapter retains original MRR Derivation values,
+projects original derivation/output IDs, and hashes rule, generation, output and
+support identities into an inert proof label. Host fact-to-subject/revision
+correspondence is explicit; duplicate, missing and unused bindings reject.
+Original MRR shape admission does not establish rule truth or source authority.
 
-Next A3 work: project original admitted MRR/evaluator support identities onto
-this native kernel, bind proof/policy replay and declare the ABI v1 projection;
-then qualify Python/Rust support consumption. Absence certificates and recursive
-profiles remain A4; durable authoritative commit/IFC remains A5.
+79 Python tests passed (including the project harness and replay of the original
+MRR Scheme oracle), 2.46s supervised wall time. Two Rust tests passed, 1.50s:
+original identities, two supports -> one -> none, historical replay and invalid
+host correspondences. Both retain the five-second idle / 45-second total gate.
+The fresh compiler-owned AOT artifact is recorded in
+[[file:../../t/qualification/temporal-library-basic/support-consumer-v1/qualification.ss][the Scheme v1 consumer receipt]], with raw logs and both initial Rust failures.
+Scheme ABI remains v1, Gerbil v0.19, and ASCENT remains pinned at 964feb3.
+
+Next A3 work: evaluator-owned proof admission, policy identity/expiry and replay
+binding, then incremental/full equivalence. This adapter qualifies identity and
+applicability only. Absence certificates and recursive profiles remain A4;
+durable authoritative commit/IFC remains A5. No model call, performance benchmark
+or exact-head remote CI success is inferred from these local checks.
 
 * Current A2 physical and Context qualification
 

@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; AOT semantic projection: inert Scheme data enters existing Scheme owners.
-(import :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
+(import (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
+        :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
                  temporal-source-register temporal-family-admit-call temporal-family-current-call
                  temporal-family-revision-root-call temporal-family-revision-change-call temporal-family-journal-call)
@@ -117,7 +118,9 @@
 
 (def (semantic-call operation payload)
   (let (object (scheme-wire-read payload))
-    (cond ((string=? operation "$host.temporal.source.register")
+    (cond ((string=? operation "temporal.support.evaluate")
+           (scheme-wire-write (temporal-support-call object)))
+          ((string=? operation "$host.temporal.source.register")
            (scheme-wire-write (temporal-source-register object)))
           ((string=? operation "temporal.family.admit")
            (scheme-wire-write (temporal-family-admit-call object)))
@@ -157,7 +160,7 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1) (wireFormat "scheme-datum-v1")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])

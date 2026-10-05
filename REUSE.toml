@@ -53,6 +53,7 @@ path = [
   "t/qualification/temporal-library-basic/integration/tests.xml",
   "t/qualification/temporal-library-basic/mrr-data-physical-v1/*.log.gz",
   "t/qualification/temporal-library-basic/support-applicability-v1/*.log.gz",
+  "t/qualification/temporal-library-basic/support-consumer-v1/*.log.gz",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"

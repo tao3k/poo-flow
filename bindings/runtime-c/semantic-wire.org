@@ -50,3 +50,22 @@ and canonical Scheme bytes. Existing historical database receipts retain their
 original identities. Reusing a legacy JSON idempotency key with a native Scheme request fails as
 a mismatch; there is no silent rewrite or JSON replay fallback. Historical lookup
 remains distinct from a new commit. This qualification uses fresh native Scheme v1 stores.
+
+* Read-only support applicability, v1
+
+=temporal.support.evaluate= accepts =poo-flow.temporal-support-request.v1=.
+Exact top-level fields are schema, program, journal, asOf, validAt and budget.
+Program fields: identity, policy, complete, supports. Each support has identity,
+conclusion, proof, premises (subject/revision pairs), and parents (conclusion IDs).
+Journal fields: identity, admissionDomain, validDomain, revisions. Each revision
+has identity, subject, operation (assert/correct/retract), predecessor (#f or ID),
+admitted (integer), validRange (#f or [start,end)), content (#f or content ID).
+=validAt= is #f or an integer. Inventory bounds are 128; budget is 0--128.
+Native POO constructors and the original temporal journal enforce admission.
+
+The result schema is =poo-flow.temporal-support-result.v1=, ABI 1, with program,
+binding, cut and projection digests, evaluatedSupports, budgetExhausted and
+conclusions (identity, status, activeSupports). proofAdmitted, sourceAuthenticated,
+actionAuthorized and durable are always #f. Caller-declared completeness and
+opaque proof identities cannot establish exhaustive support or proof validity.
+Transport remains bounded inert Scheme datum v1. No host registry is mutated.

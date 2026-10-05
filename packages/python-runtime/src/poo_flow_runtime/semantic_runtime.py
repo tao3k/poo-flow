@@ -67,6 +67,10 @@ class SemanticRuntime:
             self._closed = True
             raise
 
+    def evaluate_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Read-only native applicability; does not admit proofs or authorize effects."""
+        return self.call('temporal.support.evaluate', request)
+
     def classify_temporal_family(self, task: Mapping[str, Any]) -> dict[str, Any]:
         """Classify the finite POO hypothesis family in the native Scheme engine."""
         return self.call('temporal.family.classify', task)

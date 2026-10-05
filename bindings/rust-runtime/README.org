@@ -256,3 +256,14 @@ oversized source rejection. The Python runtime wheel CI runs these tests with
 the optional feature and checks explicit =ORGIZE-SOURCE-HOST-OK= markers. An
 independent Ubuntu CI job checks this feature without waiting for the native
 Gerbil matrix.
+
+* Original MRR support identity projection
+
+With =mrr-transport=, =mrr_support::MrrSupportProjection::admit= consumes original
+MRR Derivation values and explicit =MrrSupportBinding= fact-to-subject/revision
+correspondence. It retains the original values and projects original IDs through
+the fixed Scheme ABI v1 =temporal.support.evaluate= operation. The identity digest
+binds rule/generation/output/support IDs; it does not certify rule execution,
+output content or provider authenticity. Missing, duplicate and unused bindings
+reject. Scheme alone evaluates applicability from the declared journal.
+The read-only result admits neither proofs nor publication or durability.
