@@ -757,3 +757,21 @@ qualify-temporal-physical binary library digest output:
 [group('test')]
 qualify-temporal-physical-model python binary library oracle env_file output:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 60s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-physical-native/model-scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"
+
+# Compile the bounded acyclic support kernel before native runtime qualification.
+[group('build')]
+build-temporal-support:
+    gxc -:max-heap=1G,debug=q -V -O modules/temporal-causality/revisions/types.ss modules/temporal-causality/revisions/objects.ss modules/temporal-causality/revisions/funs.ss modules/temporal-causality/revisions/interface.ss modules/temporal-causality/truth-maintenance/support/types.ss modules/temporal-causality/truth-maintenance/support/objects.ss modules/temporal-causality/truth-maintenance/support/funs.ss modules/temporal-causality/truth-maintenance/support/interface.ss modules/temporal-causality/truth-maintenance/interface.ss
+
+[group('test')]
+test-temporal-support:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    timeout --foreground --signal=TERM --kill-after=1s 45s python3 packages/python-runtime/tools/watch.py gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-support-runner.ss 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    test "$(grep -c '^CASE-OK ' "$log")" = 5
+    grep -Fx 'MODULE-OK t/temporal-support-test.ss' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null

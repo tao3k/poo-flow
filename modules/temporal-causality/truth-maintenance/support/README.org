@@ -1,0 +1,38 @@
+#+title: Bounded acyclic support applicability
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+Native public values are =poo-flow-temporal-support-premise= and
+=poo-flow-temporal-support=. Assemble them with
+=poo-flow-temporal-support-program= and apply the named pure
+=poo-flow-temporal-support-evaluate= to an original evidence journal, admission
+cut, optional valid-time instant and work budget. Import the parent
+=truth-maintenance/interface.ss=; public values are POO objects.
+
+A premise names both subject and exact revision. A support combines premises
+and parent conclusions with AND; distinct supports for one conclusion combine
+with OR. The immutable program validates an acyclic graph and canonicalizes
+identities. Actual journal replay determines current premise applicability.
+Results retain program/cut/projection digests, active support identities,
+scoped status and budget consumption. An omitted valid-time parameter queries
+admission-time applicability only, following the existing evidence Library.
+
+There are at most 128 supports, each with at most 128 source/parent premises;
+the evaluation budget is 0--128 supports. A valid applicable alternative is
+supported. No remaining alternative is unsupported only within a declared
+complete inventory; partial inventory or unknown/exhausted work stays unknown.
+Conflicting evidence heads do not select an arbitrary winner. Historical cuts
+are pure queries and never mutate later or earlier results.
+
+Proof labels and inventory completeness are caller declarations. This function
+does not admit theorem proofs, prove closed causal coverage, infer absence,
+select a durable current pointer, authorize effects or retract historical
+admissions. The output's proof-admitted?, action-authorized? and durable? slots
+are false. Cycles require a separately qualified recursive profile.
+
+Build: =just build-temporal-support=. Qualify:
+=just test-temporal-support=, using the package-qualified Gerbil environment.
+The test entry retains heap fencing, original gxtest Cases and the five-second
+idle / 45-second total watchdog with actual import-boundary output.

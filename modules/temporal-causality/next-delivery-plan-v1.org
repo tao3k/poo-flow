@@ -6,6 +6,46 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
+* Current A3 acyclic support applicability slice
+
+The Scheme truth-maintenance Library now exposes native POO support premises,
+alternative supports, an immutable program and pure support evaluation through
+=truth-maintenance/interface.ss=. Each source premise binds both subject and
+exact revision identity, and evaluation uses the original evidence journal's
+as-of/valid-time projection. Premises within a support are conjunctive; multiple
+supports for a conclusion are alternatives. Downstream conclusions reuse these
+scoped applicability states. Admission rejects cycles, duplicate identities,
+unknown parent conclusions and foreign revision owners.
+
+Five original native Cases passed through the public module interface, exit 0,
+9.76s wall time under the unchanged five-second idle / 45-second total gates:
+two supports -> one -> none, downstream propagation and historical cut replay;
+partial inventories and budget exhaustion stay unknown; corrections invalidate
+old exact-revision premises and conflicting branches stay unknown; future
+admissions stay unknown and valid-time exclusion refuses applicability;
+recursive declarations and foreign subject/revision bindings reject.
+
+This is bounded acyclic applicability of declared supports, not admission of
+the opaque proof identities or proof that the support inventory is exhaustive.
+An unsupported conclusion does not prove logical refutation or authorize
+retraction/publication. Output explicitly carries false proof-admission,
+action-authorization and durability flags. Evaluation is full recomputation,
+with at most 128 supports and a 0--128 support-work budget. No recursive or
+negative-premise profile is silently added.
+
+[[file:../../t/qualification/temporal-library-basic/support-applicability-v1/qualification.ss][The Scheme v1 qualification]] preserves the initial idle failure, rejected
+invalid test revision fixture, final raw native output and source hashes.
+No new ABI operation, MRR support projection, Python/Rust support consumption,
+AOT consumer, incremental/full equivalence, policy expiry, absence certificate,
+durable journal or IFC publication was qualified for this new kernel. Existing
+A0--A2 artifact receipts retain their original producer scope. No model call or
+benchmark was performed.
+
+Next A3 work: project original admitted MRR/evaluator support identities onto
+this native kernel, bind proof/policy replay and declare the ABI v1 projection;
+then qualify Python/Rust support consumption. Absence certificates and recursive
+profiles remain A4; durable authoritative commit/IFC remains A5.
+
 * Current A2 physical and Context qualification
 
 The parent Rust Library and physical qualifier now agree with the resolved
