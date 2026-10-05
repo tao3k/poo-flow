@@ -253,4 +253,6 @@ fail-closed for caller-supplied Element graphs.
 The =org_source= Rust integration tests exercise current rechecks and stale
 bytes/configuration/cut/query, path escape, root replacement, non-UTF-8 and
 oversized source rejection. The Python runtime wheel CI runs these tests with
-the optional feature and checks explicit =ORGIZE-SOURCE-HOST-OK= markers.
+the optional feature and checks explicit =ORGIZE-SOURCE-HOST-OK= markers. An
+independent Ubuntu CI job checks this feature without waiting for the native
+Gerbil matrix.
