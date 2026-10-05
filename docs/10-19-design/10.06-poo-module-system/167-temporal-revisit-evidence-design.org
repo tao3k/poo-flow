@@ -60,6 +60,18 @@ current POO Flow =modules/memory-core/org-selection.ss= calls an Orgize
 Scheme query on a supplied graph; it cannot attest that the graph came from
 the declared current bytes.
 
+The Orgize event fold yields Scheme-owned parse events, then its generated
+Rust/Rowan path projects the Elements graph. The Scheme graph-query view
+accepts caller-provided records and accessors; its structural checks do not
+bind those records to the event stream or exact bytes. A prototype Orgize
+=OrgAotDocument::query_named_source_observation= binds a maintained AOT
+query result to one parser-owned document, including source digest, parse
+configuration, full query rule, scope, IDs and spans. It has not passed the
+focused Rust test gate, and it does not authenticate a file, WorkTree cut or
+grant, or connect to POO Flow's separate Scheme graph view. The proposed
+bridge must carry parser-owned selected records into a checked Session input;
+comparing a caller-supplied graph with a caller-supplied digest is insufficient.
+
 POO Flow already has temporal instants/axes, evidence retrieval/use/assessment,
 impact frontiers, and pure Session/Memory policy receipts. Reuse those owners:
 
@@ -197,7 +209,10 @@ cannot both publish a head transition.
 1. In Orgize, implement the document-local source/event projection in Scheme
    using ordinary Org syntax. Keep source spans, repeaters and LOGBOOK events
    observable; compare generated Rust with Scheme on the same fixtures. Do not
-   add a second Memory parser or independent Rust classifier.
+   add a second Memory parser or independent Rust classifier. Bind query
+   output to one parser-owned source/graph/configuration/rule observation;
+   refuse a forged graph paired with a genuine source digest before it reaches
+   Session policy.
 2. In POO Flow, define pure revisit intent/assessment POO values using the
    existing temporal evidence and Session policy owners. Reuse the finite C4
    certificate. Keep the current =memory-core= catalog report-only until the
