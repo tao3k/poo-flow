@@ -7,7 +7,8 @@
         "policy.ss")
 (export poo-flow-temporal-support-policy-host
         poo-flow-temporal-support-policy-host-refresh!
-        poo-flow-temporal-support-policy-host-guard)
+        poo-flow-temporal-support-policy-host-guard
+        poo-flow-temporal-support-policy-host-guard-current)
 ;;; Opaque runtime state, never transported; the host serializes control/use.
 (defstruct policy-host-state (current revisions))
 (def (poo-flow-temporal-support-policy-host)
@@ -73,4 +74,15 @@
       (error "unregistered or stale host policy generation"))
     ;; The query supplies neither a replacement policy nor an effective clock.
     (poo-flow-temporal-support-guard program journal as-of valid-at budget
+      (.ref snapshot 'policy) expected-policy-digest (.ref snapshot 'effective-at))))
+
+;;; Current proof applicability cannot choose a historical evidence cut or clock.
+(def (poo-flow-temporal-support-policy-host-guard-current host expected-generation expected-policy-digest
+                                                        program journal budget)
+  (let* ((s (state host))
+         (snapshot (hash-get (policy-host-state-current s) (.ref program 'policy-identity))))
+    (unless (and snapshot (exact-integer? expected-generation)
+                 (= expected-generation (.ref snapshot 'generation)))
+      (error "unregistered or stale host policy generation"))
+    (poo-flow-temporal-support-guard program journal (.ref snapshot 'effective-at) (.ref snapshot 'effective-at) budget
       (.ref snapshot 'policy) expected-policy-digest (.ref snapshot 'effective-at))))

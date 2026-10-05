@@ -174,3 +174,53 @@ The raw joint receipts and executed controls are in
 Host policy control wire entry is exposed by this module. Those trusted ABI v1
 controls, authoritative current-provider refresh and Data expected-head
 publication remain the next integration boundaries.
+
+* Registered proof current applicability (Library v1)
+
+=poo-flow-temporal-derivation-context= is a pure named owner adapter retaining
+original native replay inputs. =poo-flow-temporal-proof-host= is an explicit,
+process-local Host capability composed with the existing policy Host. The Host
+serializes registration, refresh and queries on its owner thread.
+
+=...-proof-host-refresh!= registers one source scope's complete native rule
+program and evidence journal at a nonnegative monotonic Host generation. The
+128-scope registry validates every refresh before mutation. Same-generation
+replays must be exact; prior journal revision identities and contents cannot
+be removed or rewritten. A catalog may change at a newer generation.
+
+=...-proof-host-register!= replays the joint native Derivation admission and
+requires its exact program/journal to match the registered state digest. It
+retains up to 128 immutable registrations identified by a v1 digest binding
+scope, original state, proof and policy identity. It accepts neither proof
+flags nor a caller's replacement current snapshot.
+
+=...-proof-host-current= selects a retained registration and Host current
+state, requires the expected state/policy generations, and repeats original
+proof replay. It compares the complete native rule-program digest and evaluates
+its qualified support under the registered current policy and observed clock.
+The policy Host selects both admission-time cut and valid-at instant from that
+clock. If validity uses another clock domain, native uncertainty remains
+conservative; this adapter supplies no implicit conversion. Queries cannot
+choose a historical cut to bypass a correction. Results bind proof, original
+state, current state, generations, support guard and status in a v1 digest.
+
+Possible results include =current=, =stale-catalog=, =stale-policy=,
+=not-yet-effective=, =expired-policy=, =unsupported= and =unknown=. A catalog
+change takes precedence over other status failures. Invalid/stale generations,
+unknown registrations and tampered originals raise before producing a result.
+Budget exhaustion remains =unknown=. Historical proof replay stays available
+independently of current support.
+
+These are Library APIs. The proof registry has no C/Python/Rust wire entrypoint
+in this increment. Host-declared journal/catalog/policy state is not provider
+authentication. =proof-admitted?= means original proof replay passed;
+=current?= only describes this owner-thread observation. Source authentication,
+selection admission, action authorization and durability remain false. A final
+authoritative provider refresh, publication fence and MRR Data conditional CAS
+are still required for effects.
+
+The evaluator gate uses explicit rejection assertions with the assertion
+outside the exception catch. Gerbil v0.19 =check-exception expr true= can catch
+its own missing-exception TestError, so it is not used for this gate's negative
+controls. The normal-return sentinel verifies this distinction. Receipts are
+in =t/qualification/temporal-library-basic/registered-proof-host-v1/=.

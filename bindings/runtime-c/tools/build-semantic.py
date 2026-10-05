@@ -84,6 +84,7 @@ def main() -> None:
                    "modules/temporal-causality/evaluator/binding.ss",
                    "modules/temporal-causality/evaluator/rule.ss",
                    "modules/temporal-causality/evaluator/derivation.ss",
+                   "modules/temporal-causality/evaluator/proof-host.ss",
                    "modules/temporal-causality/evaluator/interface.ss", "src/ffi/temporal-proof.ss"]:
         run([*compiler, "-O", "-static", source])
     run([*compiler, "-O", "-static",
