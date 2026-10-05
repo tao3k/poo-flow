@@ -89,3 +89,43 @@ Scheme admission of the original MRR rule or provider authenticity. Python repla
 original typed Rust Scheme receipt; the native proof test consumes the same Fact
 and Derivation identities. The full proof/control ABI and authoritative MRR rule
 mapping remain separate gates.
+
+* Original MRR Rule content correspondence
+
+The normal Scheme API uses native POO values: =poo-flow-temporal-rule-relation=,
+=...-rule-variable=, =...-rule-literal=, =...-rule-atom=, =...-rule= and
+=...-rule-program=. The program retains the declared catalog digest and original
+MRR generation ID plus an explicit correspondence to ASCENT's numeric snapshot
+generation. A matching declared generation is not a provider-authenticated cut.
+
+The bounded profile contains at most 32 relations/rules, at most 32 atoms per
+rule body and 1--32 columns per atom. Predicate and variable names use bounded
+ASCII identifiers. Columns and literals are integer/boolean, with signed 64-bit
+integers. Programs reject duplicate IDs/predicates, absent relation IDs, wrong
+arity, unsafe head variables, inconsistent variable types and literal types.
+
+The named owner adapter =poo-flow-temporal-rule-correspondence-from-ascent=
+replays the original positive-proof admission with the actual Scheme evaluator.
+It requires the exact source/derived relation inventory, checks source row types,
+and compares each original projected rule's complete head/body/terms to the
+inspected candidate rule at the same position. It then resolves each verified
+rule proof-node's original clause label to the corresponding original RuleId.
+The receipt binds program/proof digests, generation and node/RuleId applications.
+=...-rule-correspondence-replay= recomputes it and rejects modified applications,
+digests or effect flags.
+
+Rust =mrr_rule::MrrRuleProgramProjection= retains original MRR Rule values,
+re-admits owner rule safety, uses the original bounded RelationCatalog, and
+checks schema/term correspondence before projecting inert Scheme v1 data.
+It implements no evaluator. The qualification uses actual original base and
+recursive Rules, then consumes that exact projection through native POO
+constructors and verifies their actual Scheme proof nodes.
+
+=rule-correspondence-verified?= describes exact content correspondence to the
+supplied projected program, relative to a verified original source/proposal.
+It does not authenticate RuleId/catalog issuers or connect an MRR Derivation's
+Rule authority to a selected proof root. Existing fact/support binding's
+=mrr-rule-equivalence-verified?= remains false until that combined admission is
+implemented. Source authentication, current selection, authorization and
+durability remain false. The proof/control ABI and authoritative provider
+refresh are still separate gates. No new wire operation is exposed here.

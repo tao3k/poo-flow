@@ -223,7 +223,7 @@ impl MrrFactProjection {
 
 // The owner catalog admits field shape and context, not rule execution or cross-row
 // Key/Unique/FD constraints. Requiring its current value avoids an unchecked legacy path.
-fn validate_catalog(catalog: &RelationCatalog) -> Result<(), Error> {
+pub(crate) fn validate_catalog(catalog: &RelationCatalog) -> Result<(), Error> {
     if catalog.relations().len() > 32 {
         return Err(Error::InvalidInput);
     }

@@ -296,11 +296,29 @@ Python replay receipts are in
 =t/qualification/temporal-library-basic/catalog-binding-v1/=.
 
 The remaining integration sequence is:
-1. Project original =mrr_logic::Rule= heads/bodies and catalog relation/column
-   correspondence into the original Scheme evaluator, then check their exact
-   correspondence against proof DAG rule applications. A RuleId is insufficient.
+1. Combine verified Rule-node correspondence with exact fact/support binding
+   and the original MRR Derivation authority at the selected proof root. The
+   bounded original Rule content projection below is implemented; a RuleId
+   alone remains insufficient.
 2. Expose the existing Scheme proof producer and isolated Host policy capability
    through dedicated control entries in ABI v1. Model calls must not register
    policy/clock state or manufacture admitted proofs.
 3. Recheck current authoritative catalog, source, policy and clock at the effect
    boundary, and admit only conditional Data publication with the expected head.
+
+* Original Rule program projection
+
+=mrr_rule::MrrRuleProgramProjection::admit= retains original MRR Rules and their
+head/body/term positions, re-admits owner safety and validates them against the
+original bounded RelationCatalog. It rejects missing relations, wrong arity,
+unsupported or mistyped literals, inconsistent variable column types, repeated
+RuleIds and oversized bodies/programs. It exposes an inert Scheme v1 projection
+for the named Scheme owner adapter; it does not evaluate rules or accept a
+serialized proof flag. The host explicitly declares the correspondence between
+original MRR GenerationId and ASCENT's numeric generation.
+
+=t/qualification/temporal-library-basic/rule-correspondence-v1/= records actual
+original Rule projections and native positive-proof node/RuleId correspondence,
+including replay and negative controls. This completes bounded content mapping;
+connecting a selected root to the original MRR Derivation authority and exposing
+trusted proof/Host control entries through ABI v1 remain required next steps.

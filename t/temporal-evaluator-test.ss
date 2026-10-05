@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read)
+(import (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         :std/test (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/testing-api poo-flow-test-case)
         (only-in :gerbil-ascent/candidate/reasoning
@@ -35,6 +35,52 @@
     program journal (at 1) #f 128))
 (def temporal-evaluator-test
   (test-suite "original evaluator positive proof admission"
+    (poo-flow-test-case "original MRR recursive rules correspond to verified native proof nodes"
+      (let* ((p (mrr-rule-program-fixture)) (s (source 1)) (r (reasoning-attempt s proposal 512))
+             (a (admit s proposal r))
+             (c (poo-flow-temporal-rule-correspondence-from-ascent p a s proposal r 512 32)))
+        (check (.ref c 'rule-correspondence-verified?) => #t)
+        (check (pair? (.ref c 'applications)) => #t)
+        (for-each (lambda (rule) (check (and (member (.ref rule 'identity) (map cadr (.ref c 'applications))) #t) => #t)) (.ref p 'rules))
+        (check (.ref c 'action-authorized?) => #f)
+        (check (.ref (poo-flow-temporal-rule-correspondence-replay c p a s proposal r 512 32) 'semantic-digest) => (.ref c 'semantic-digest))
+        (check-exception (poo-flow-temporal-rule-correspondence-replay
+          (.o (:: @ c) applications: '((999 "forged"))) p a s proposal r 512 32) true)
+        (check-exception (poo-flow-temporal-rule-correspondence-replay
+          (.o (:: @ c) action-authorized?: #t) p a s proposal r 512 32) true)
+        (when (getenv "POO_FLOW_MRR_RULE_CORRESPONDENCE_ORACLE" #f)
+          (let (out (make-hash-table))
+            (hash-put! out "schema" "poo-flow.rule-correspondence-receipt.v1")
+            (for-each (lambda (slot) (hash-put! out (symbol->string slot) (.ref c slot)))
+              '(program-digest proof-digest generation applications semantic-digest rule-correspondence-verified?
+                source-authenticated? selection-admitted? action-authorized? durable?))
+            (call-with-output-file (getenv "POO_FLOW_MRR_RULE_CORRESPONDENCE_ORACLE")
+              (lambda (port) (display (scheme-wire-write out) port) (newline port)))))
+        (check-exception (poo-flow-temporal-rule-correspondence-from-ascent
+          (.o (:: @ p) ascent-generation: 2) a s proposal r 512 32) true)
+        (check-exception (poo-flow-temporal-rule-correspondence-from-ascent
+          (.o (:: @ p) rules: (reverse (.ref p 'rules))) a s proposal r 512 32) true)
+        (let* ((old (car (.ref p 'rules)))
+               (wrong (poo-flow-temporal-rule (.ref old 'identity) (.ref old 'head)
+                        (list (poo-flow-temporal-rule-atom (.ref (.ref old 'head) 'relation-identity)
+                          (.ref (.ref old 'head) 'terms)))))
+               (changed (poo-flow-temporal-rule-program (.ref p 'identity) (.ref p 'catalog-digest)
+                 (.ref p 'generation) 1 (.ref p 'relations) (cons wrong (cdr (.ref p 'rules))))))
+          (check-exception (poo-flow-temporal-rule-correspondence-from-ascent changed a s proposal r 512 32) true))))
+    (poo-flow-test-case "native rule program rejects unsafe variables typed terms and missing relation"
+      (let* ((p (mrr-rule-program-fixture)) (rs (.ref p 'relations)) (old (car (.ref p 'rules)))
+             (head (.ref old 'head))
+             (rebuild (lambda (rules) (poo-flow-temporal-rule-program "invalid" (.ref p 'catalog-digest)
+                        (.ref p 'generation) 1 rs rules))))
+        (check-exception (rebuild (list (poo-flow-temporal-rule "unsafe"
+          (poo-flow-temporal-rule-atom (.ref head 'relation-identity)
+            (list (poo-flow-temporal-rule-variable "unbound") (poo-flow-temporal-rule-variable "y"))) (.ref old 'body)))) true)
+        (check-exception (rebuild (list (poo-flow-temporal-rule "wrong-type" head
+          (list (poo-flow-temporal-rule-atom (.ref (car (.ref old 'body)) 'relation-identity)
+            (list (poo-flow-temporal-rule-literal #t) (poo-flow-temporal-rule-variable "y"))))))) true)
+        (check-exception (rebuild (list (poo-flow-temporal-rule "missing" head
+          (list (poo-flow-temporal-rule-atom "missing" (.ref head 'terms)))))) true)
+        (check-exception (rebuild (list old old)) true)))
     (poo-flow-test-case "native positive query and original proof replay produce POO admission"
       (let* ((s (source 1)) (receipt (reasoning-attempt s proposal 512)) (a (admit s proposal receipt))
              (replay (poo-flow-temporal-positive-proof-replay a s proposal receipt 512 32)))
@@ -226,3 +272,19 @@
         (check (.ref bound 'binding-verified?) => #t)
         (check (.ref bound 'mrr-rule-equivalence-verified?) => #f)
         (check (.ref bound 'action-authorized?) => #f)))))
+
+;;; Inert original-owner projection fixture; the normal API is native POO values.
+(def (mrr-rule-program-fixture)
+  (let* ((data (call-with-input-file (or (getenv "POO_FLOW_MRR_RULE_ORACLE" #f)
+                    "t/qualification/temporal-library-basic/rule-correspondence-v1/typed-rules.ss")
+                 (lambda (p) (scheme-wire-read (read-line p)))))
+         (term (lambda (t) (if (equal? (hash-ref t "kind") "variable")
+                 (poo-flow-temporal-rule-variable (hash-ref t "name"))
+                 (poo-flow-temporal-rule-literal (hash-ref t "value")))))
+         (atom (lambda (a) (poo-flow-temporal-rule-atom (hash-ref a "relationId") (map term (hash-ref a "terms")))))
+         (relations (map (lambda (r) (poo-flow-temporal-rule-relation (hash-ref r "identity") (hash-ref r "predicate")
+                       (map string->symbol (hash-ref r "columns")))) (hash-ref data "relations")))
+         (rules (map (lambda (r) (poo-flow-temporal-rule (hash-ref r "identity") (atom (hash-ref r "head"))
+                   (map atom (hash-ref r "body")))) (hash-ref data "rules"))))
+    (poo-flow-temporal-rule-program (hash-ref data "identity") (hash-ref data "catalogDigest")
+      (hash-ref data "generation") (hash-ref data "ascentGeneration") relations rules)))

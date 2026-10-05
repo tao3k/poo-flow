@@ -7,6 +7,8 @@ pub mod org_source;
 pub mod wire;
 #[cfg(feature = "mrr-transport")]
 pub mod mrr_support;
+#[cfg(feature = "mrr-transport")]
+pub mod mrr_rule;
 use crate::wire::Value;
 use libloading::Library;
 use sha2::{Digest, Sha256};
