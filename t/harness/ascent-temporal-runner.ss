@@ -62,7 +62,6 @@
    :gerbil-ascent/program/operator
    :gerbil-ascent/program/operator-change
    :gerbil-ascent/program/operator-session
-   :gerbil-ascent/program/funs
    :gerbil-ascent/program/summary
    :gerbil-ascent/program/interface
    :gerbil-ascent/core/binary-program
