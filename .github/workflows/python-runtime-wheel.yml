@@ -293,7 +293,7 @@ jobs:
           rustup toolchain install 1.95.0 --profile minimal
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m pip install pytest
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" \
-            bindings/rust-runtime/tools/differential.py \
+            packages/python-runtime/tools/differential.py \
             --library "$POO_FLOW_SEMANTIC_LIBRARY" \
             --output "$RUNNER_TEMP/poo-rust-oracle.ss"
           export POO_FLOW_SEMANTIC_SHA256
@@ -301,7 +301,7 @@ jobs:
           export POO_FLOW_RUNTIME_TRACE=1
           export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.ss"
           cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context,orgize-source --no-run
-          timeout --foreground --signal=TERM --kill-after=1s 45s python bindings/rust-runtime/tools/watch.py \
+          timeout --foreground --signal=TERM --kill-after=1s 45s python packages/python-runtime/tools/watch.py \
             cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context,orgize-source -- --nocapture 2>&1 | tee "$RUNNER_TEMP/poo-mrr-context-runtime.log"
           grep -F 'MRR Context checked original receipt, policy, temporal fact and current Source; forged/missing/foreign bindings rejected' "$RUNNER_TEMP/poo-mrr-context-runtime.log"
           grep -Fx 'MRR Context rejected stale native Source after correction' "$RUNNER_TEMP/poo-mrr-context-runtime.log"

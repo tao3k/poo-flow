@@ -1,10 +1,15 @@
-#+title: POO Flow Rust Runtime Consumer
+#+title: POO Flow Rust ABI Bindings
 #+begin_comment
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
 * Contract
+
+Python runtime implementation and its Python qualification tools live under
+=packages/python-runtime=. This directory owns the Rust consumer of the shared
+C/Scheme ABI and Rust assertions for that consumer. Temporal semantics remain
+in the POO/Scheme core. Python and Rust call the shared ABI as separate callers.
 
 This Rust crate consumes =runtime-c/semantic.h=. Native POO/Scheme remains the
 semantic owner. Supported operations are descriptor, temporal.solve/verify/observe
@@ -63,7 +68,7 @@ atomic IFC publication and crash recovery require their separate gates.
 
 * Acceptance
 
-Run =tools/differential.py= with the installed qualified Python wheel and
+Run =packages/python-runtime/tools/differential.py= with the installed qualified Python wheel and
 native artifact to generate a fresh oracle in its own process. The Rust native
 test requires that artifact path/hash and POO_FLOW_RUST_DIFFERENTIAL. It compares
 21 exact lens/family results across two vocabularies and open/budget profiles,
@@ -75,7 +80,7 @@ against the same native producer artifact and installed wheel.
 uses the ASP Scheme benchmark API to freeze four cases and artifacts, claim a
 new output directory, measure each case once and emit native Scheme receipts.
 At most eight real provider requests run with the five-second genuine-content
-watchdog and zero retries. =tools/deepseek_adapter.py= is only the provider HTTP
+watchdog and zero retries. =packages/python-runtime/tools/deepseek_adapter.py= is only the provider HTTP
 adapter: JSON exists inside that external service boundary; subprocess payloads,
 oracles, native ABI and persisted records are Scheme data. Paid calls are never
 repeated for p95 sampling. This runner checks task fidelity, real native output

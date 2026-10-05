@@ -24,7 +24,7 @@
   (let* ((python (list-ref args 0)) (binary (list-ref args 1))
          (library (list-ref args 2)) (oracle (list-ref args 3))
          (env-file (list-ref args 4)) (output (list-ref args 5))
-         (adapter "bindings/rust-runtime/tools/deepseek_adapter.py")
+         (adapter "packages/python-runtime/tools/deepseek_adapter.py")
          (paths (append (list binary library oracle adapter
                       "t/qualification/temporal-model-native/scenario.ss"
                       "t/qualification/temporal-physical-native/model-scenario.ss"
@@ -38,7 +38,7 @@
     ;; Existing output is a paid-batch claim: never overwrite or retry it.
     (create-directory output)
     (save (path-expand "plan.ss" output)
-          `((schema . poo-flow.asp-temporal-model-plan.v2)
+          `((schema . poo-flow.asp-temporal-model-plan.v1)
             (measurement-owner . asp-gerbil-scheme/benchmark-api)
             (cases . ,cases) (maximum-provider-calls . ,(* 2 (length cases))) (retries . 0)
             (content-idle-seconds . 5) (artifact-freeze . ,freeze)))
@@ -67,7 +67,7 @@
          (set! records (cons `((case . ,name) (passed . ,passed)
                               (elapsed-ms . ,elapsed-ms) (failure . ,failure)) records))
          (save (path-expand "receipt.ss" output)
-               `((schema . poo-flow.asp-temporal-model-progress.v2)
+               `((schema . poo-flow.asp-temporal-model-progress.v1)
                  (measurement-owner . asp-gerbil-scheme/benchmark-api)
                  (cases . ,(reverse records))))
          (displayln "ASP-MODEL-CASE " name " passed=" passed)
@@ -75,7 +75,7 @@
     (let* ((intact (equal? freeze (map (lambda (path) (cons path (file-digest path))) paths)))
            (passed (and intact (andmap (lambda (r) (cdr (assq 'passed r))) records))))
       (save (path-expand "receipt.ss" output)
-            `((schema . poo-flow.asp-temporal-model-acceptance.v2)
+            `((schema . poo-flow.asp-temporal-model-acceptance.v1)
               (measurement-owner . asp-gerbil-scheme/benchmark-api)
               (maximum-provider-calls . ,(* 2 (length cases))) (retries . 0)
               (freeze-intact . ,intact) (passed . ,passed)

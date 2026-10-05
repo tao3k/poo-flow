@@ -6,6 +6,12 @@
 
 This package is the Python runtime consumer for POO Flow runtime bindings.
 
+Python runtime code lives in =src/poo_flow_runtime=, Python tests in =tests=,
+and cross-language/model qualification entrypoints in =tools=. The Rust ABI
+consumer lives separately in =bindings/rust-runtime=. Both callers use the
+shared =bindings/runtime-c= boundary; Temporal semantics stay in Scheme.
+See [[file:tools/README.org][Python qualification tools]] for the entrypoints.
+
 It does not own the ABI. The C surface lives under =bindings/runtime-c=.
 Production code compiles and loads that binding through out-of-line CFFI API
 mode so the package validates the same runtime handoff contract that Rust,
@@ -33,7 +39,7 @@ native execution requires both the Scheme binding and a real control session.
 
 =SemanticRuntime.call("temporal.solve", task)= evaluates the existing finite
 ASCENT temporal semantics. =observe_model_answer(task, output)= parses inert
-JSON and recomputes Scheme evidence, returning =consistent= or =contradicted=.
+Scheme data and recomputes Scheme evidence, returning =consistent= or =contradicted=.
 =predict_temporal_answer(task, predictor)= and its async counterpart pass only
 the task to model IO and return its candidate with a fresh Scheme observation.
 A contradiction is reported as evidence, without retry or effect authorization.

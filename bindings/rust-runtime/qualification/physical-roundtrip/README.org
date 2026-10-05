@@ -45,7 +45,7 @@ receipt retains the original result transport, not merely its digest.
 Build with the configured MRR native Gerbil environment, including the SDK's
 real Gambit compiler and relocation settings. The runtime library and its digest
 must match an independently qualified native ABI v1 artifact. Run the binary
-through =bindings/rust-runtime/tools/watch.py=; a five-second silence fails.
+through =packages/python-runtime/tools/watch.py=; a five-second silence fails.
 Set =MRR_NATIVE_PROGRESS=1= for genuine native frontend stage output and
 =POO_FLOW_PHYSICAL_RECEIPT= to an output .ss path. This is semantic qualification;
 performance measurements belong to ASP Scheme's benchmark API.

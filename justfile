@@ -291,7 +291,7 @@ test-temporal-family-native executable:
     test -x "{{ executable }}"
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    POO_FLOW_TEST_PROGRESS=1 GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/bindings/rust-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 "{{ justfile_directory() }}/t/temporal-applicability-test.ss" "{{ justfile_directory() }}/t/temporal-lifecycle-test.ss" 2>&1 | tee "$log"
+    POO_FLOW_TEST_PROGRESS=1 GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 "{{ justfile_directory() }}/t/temporal-applicability-test.ss" "{{ justfile_directory() }}/t/temporal-lifecycle-test.ss" 2>&1 | tee "$log"
     if grep -Eq 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
     test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 13
     grep -Eq '^MODULE-OK .*temporal-applicability-test.ss$' "$log"
@@ -308,7 +308,7 @@ test-temporal-family-archive executable library sha256 directory:
     test -f "{{ library }}"
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 POO_FLOW_ARCHIVE_DIRECTORY="{{ directory }}" POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ sha256 }}" timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/bindings/rust-runtime/tools/watch.py" "{{ executable }}" --exact original_mrr_values_project_to_real_native_poo --nocapture --test-threads=1 2>&1 | tee "$log"
+    MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 POO_FLOW_ARCHIVE_DIRECTORY="{{ directory }}" POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ sha256 }}" timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" --exact original_mrr_values_project_to_real_native_poo --nocapture --test-threads=1 2>&1 | tee "$log"
     test "$(grep -Ec '^test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;' "$log" || true)" = 2
     grep -Eq '^Fresh-process full Family proof archive replay verified$' "$log"
     test -s "{{ directory }}/archive.ss"
@@ -735,7 +735,7 @@ qualify-temporal-model python binary library oracle env_file output:
 # Read-only physical semantic qualification; no performance sampling or model spend.
 [group('test')]
 qualify-temporal-physical binary library digest output:
-    timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ digest }}" POO_FLOW_PHYSICAL_RECEIPT="{{ output }}" python3 bindings/rust-runtime/tools/watch.py "{{ binary }}"
+    timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ digest }}" POO_FLOW_PHYSICAL_RECEIPT="{{ output }}" python3 packages/python-runtime/tools/watch.py "{{ binary }}"
 
 [group('test')]
 qualify-temporal-physical-model python binary library oracle env_file output:
