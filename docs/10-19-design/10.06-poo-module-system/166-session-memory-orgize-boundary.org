@@ -110,8 +110,8 @@ predicates; joins, negation, ordering and aggregation remain a query design
 gate. Some higher-level Contract consumers still use an older registry
 interpreter, so that path cannot be assumed to use the Scheme AOT pack.
 POO Flow PR #34 pins the stacked
-[[https://github.com/tao3k/orgize/pull/21][Orgize PR #21]] head =baed8279734e844c10804ac75d4bffced440d43b=;
-the [[https://github.com/tao3k/orgize/blob/baed8279734e844c10804ac75d4bffced440d43b/languages/org/v1/modules/org-elements/aot.ss][Scheme AOT source]] belongs to that exact dependency cut.
+[[https://github.com/tao3k/orgize/pull/21][Orgize PR #21]] head =1fd3c44972902545e13e80568f397789c717c785=;
+the [[https://github.com/tao3k/orgize/blob/1fd3c44972902545e13e80568f397789c717c785/languages/org/v1/modules/org-elements/aot.ss][Scheme AOT source]] belongs to that exact dependency cut.
 
 * Scheme selection and typed handoff
 

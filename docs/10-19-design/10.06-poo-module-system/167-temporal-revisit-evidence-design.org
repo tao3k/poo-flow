@@ -67,9 +67,11 @@ bind those records to the event stream or exact bytes. A prototype Orgize
 =OrgAotDocument::query_named_source_observation= binds a maintained AOT
 query result to one parser-owned document, including source digest, parse
 configuration, full query rule, scope, IDs and spans. At Orgize PR #21 head
-=baed8279734e844c10804ac75d4bffced440d43b=, [[https://github.com/tao3k/orgize/actions/runs/37251527438][exact-head CI]] passed Rust
-tests on Ubuntu, macOS and Windows, both Python package jobs, and Ubuntu
-Clippy. That qualifies this in-process observation, but it does not
+=1fd3c44972902545e13e80568f397789c717c785=, the observation also
+retains the base parse configuration and can reparse current bytes and rerun
+the Scheme-AOT named query. A changed rule body with the same ID is refused
+even when it happens to select the same records. The [[https://github.com/tao3k/orgize/actions/runs/37254770472][exact-head CI]] records
+the focused test and cross-platform gates. This in-process recheck does not
 authenticate a file, WorkTree cut or grant, or connect to POO Flow's separate
 Scheme graph view. The proposed
 bridge must carry parser-owned selected records into a checked Session input;
