@@ -11,6 +11,7 @@ int32_t poo_flow_python_semantic_call(const char *operation, const uint8_t *inpu
                                     size_t length, poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_source_register(const uint8_t *input, size_t length,
                                                 poo_flow_semantic_result *result);
+int32_t poo_flow_python_semantic_policy_refresh(const uint8_t *input, size_t length, poo_flow_semantic_result *result);
 int32_t poo_flow_python_semantic_close(void);
 void poo_flow_python_semantic_release(poo_flow_semantic_result *result);
 ''')
@@ -26,6 +27,7 @@ static void *library;
 static int32_t (*open_native)(void);
 static int32_t (*call_native)(const char *, const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*register_source_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
+static int32_t (*refresh_policy_native)(const uint8_t *, size_t, poo_flow_semantic_result *);
 static int32_t (*close_native)(void);
 static void (*release_native)(poo_flow_semantic_result *);
 int32_t poo_flow_python_semantic_open(const char *path) {
@@ -38,6 +40,7 @@ int32_t poo_flow_python_semantic_open(const char *path) {
   LOAD(open_native, "poo_flow_semantic_v1_open");
   LOAD(call_native, "poo_flow_semantic_v1_call");
   LOAD(register_source_native, "poo_flow_semantic_v1_source_register");
+  LOAD(refresh_policy_native, "poo_flow_semantic_v1_policy_refresh");
   LOAD(close_native, "poo_flow_semantic_v1_close");
   LOAD(release_native, "poo_flow_semantic_v1_result_release");
 #undef LOAD
@@ -56,6 +59,13 @@ int32_t poo_flow_python_semantic_source_register(const uint8_t *input, size_t le
                                                 poo_flow_semantic_result *result) {
   pthread_mutex_lock(&shim_lock);
   int32_t status = library ? register_source_native(input, length, result) : 1;
+  pthread_mutex_unlock(&shim_lock);
+  return status;
+}
+int32_t poo_flow_python_semantic_policy_refresh(const uint8_t *input, size_t length,
+                                               poo_flow_semantic_result *result) {
+  pthread_mutex_lock(&shim_lock);
+  int32_t status = library ? refresh_policy_native(input, length, result) : 1;
   pthread_mutex_unlock(&shim_lock);
   return status;
 }

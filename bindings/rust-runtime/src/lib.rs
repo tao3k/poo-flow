@@ -49,6 +49,7 @@ type Reply = mpsc::Sender<Result<Value, Error>>;
 enum Command {
     Call(CString, Vec<u8>, Reply),
     Register(Vec<u8>, Reply),
+    PolicyRefresh(Vec<u8>, Reply),
     Close(mpsc::Sender<Result<(), Error>>),
 }
 struct State {
@@ -160,6 +161,10 @@ impl SemanticRuntime {
                                     ));
                                     let _ = reply.send(result);
                                 }
+                                Command::PolicyRefresh(data, reply) => {
+                                    let result = native.refresh_policy(&data);
+                                    let _ = reply.send(result);
+                                }
                                 Command::Register(data, reply) => {
                                     let result = native.register(&data);
                                     trace("source-registration-returned");
@@ -224,6 +229,7 @@ impl SemanticRuntime {
                 | "temporal.family.archive.replay"
                 | "temporal.support.evaluate"
                 | "temporal.fact.content"
+                | "temporal.support.guard"
         ) {
             return Err(Error::InvalidInput);
         }
@@ -245,6 +251,26 @@ impl SemanticRuntime {
     }
     pub fn call(&self, operation: &str, payload: &Value) -> Result<Value, Error> {
         self.submit(operation, payload)?.wait()
+    }
+    /// Trusted host policy/observed-clock control; provider authenticity is separate.
+    pub fn refresh_policy(&self, payload: &Value) -> Result<Value, Error> {
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        if data.len() > 1_048_576 {
+            return Err(Error::InvalidInput);
+        }
+        let (tx, rx) = mpsc::channel();
+        self.state
+            .lock()
+            .map_err(|_| Error::Closed)?
+            .sender
+            .as_ref()
+            .ok_or(Error::Closed)?
+            .try_send(Command::PolicyRefresh(data, tx))
+            .map_err(|e| match e {
+                mpsc::TrySendError::Full(_) => Error::QueueFull,
+                mpsc::TrySendError::Disconnected(_) => Error::Closed,
+            })?;
+        rx.recv().map_err(|_| Error::Closed)?
     }
     /// Host control entrypoint: choose source state independently of model tools.
     /// This declares the host trust premise; it does not authenticate a provider.
@@ -320,6 +346,7 @@ struct Native {
     close: Open,
     call: Call,
     register: Register,
+    policy_refresh: Register,
     release: Release,
 }
 impl Native {
@@ -347,6 +374,11 @@ impl Native {
                 .get::<Release>(b"poo_flow_semantic_v1_result_release\0")
                 .map_err(symbol_error)?
         };
+        let policy_refresh = unsafe {
+            *library
+                .get::<Register>(b"poo_flow_semantic_v1_policy_refresh\0")
+                .map_err(|e| Error::Transport(e.to_string()))?
+        };
         let register = unsafe {
             *library
                 .get::<Register>(b"poo_flow_semantic_v1_source_register\0")
@@ -359,12 +391,18 @@ impl Native {
             close,
             call,
             register,
+            policy_refresh,
             release,
         })
     }
     fn call(&self, op: &CString, input: &[u8]) -> Result<Value, Error> {
         self.response(|result| unsafe {
             (self.call)(op.as_ptr(), input.as_ptr(), input.len(), result)
+        })
+    }
+    fn refresh_policy(&self, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe {
+            (self.policy_refresh)(input.as_ptr(), input.len(), result)
         })
     }
     fn register(&self, input: &[u8]) -> Result<Value, Error> {

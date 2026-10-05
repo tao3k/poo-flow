@@ -12,9 +12,10 @@ C/Scheme ABI and Rust assertions for that consumer. Temporal semantics remain
 in the POO/Scheme core. Python and Rust call the shared ABI as separate callers.
 
 This Rust crate consumes =runtime-c/semantic.h=. Native POO/Scheme remains the
-semantic owner. Supported operations are descriptor, temporal.solve/verify/observe
-and temporal.family.classify/observe. Host registration, admission, publication
-and arbitrary operation dispatch are not exposed by this read-only consumer.
+semantic owner. The ordinary operation allow-list in =src/lib.rs= includes temporal solving,
+family lifecycle, support/content projection and the registered policy guard.
+Source and policy registration use dedicated trusted Host control methods.
+The consumer does not publish Data or dispatch arbitrary operations.
 
 =SemanticRuntime::open(path, expected_sha256, capacity)= checks a trusted host's
 artifact digest, then opens it on one dedicated OS thread. Use an immutable
@@ -105,7 +106,7 @@ is converted into an integer Temporal generation by this transport.
 
 * Native MRR result integration
 
-Feature =mrr-transport= pins MRR =3ce31dac2dc58ab780ed06fa88103de501355692=.
+Feature =mrr-transport= pins MRR =4ccca987c97065499a366b9d1980419a574032a8=.
 =MrrObservationEvidence::verify= takes original native CandidateQueryResult and QueryResultAdmissionReceipt
 values and calls MRR receiver-side candidate admission against the host's original CatalogBoundQuery. It retains the
 original typed candidate and QueryResultAdmissionReceipt through =original()=.
@@ -341,3 +342,13 @@ all current-effect/authentication/durability flags remain false. The qualified
 fixture has four Facts, two Derivations, an intermediate path(1,2), and root
 path(1,3). Raw Scheme v1 receipts and gates are in
 =t/qualification/temporal-library-basic/derivation-authority-v1/=.
+
+* Registered Host policy through fixed ABI v1
+
+=SemanticRuntime::refresh_policy(&request)= uses the dedicated C Host control
+entrypoint; =call("temporal.support.guard", &request)= evaluates support against
+the registered policy and observed time. Do not expose refresh as a model tool.
+The strict Scheme v1 schemas, monotonic/idempotent registry rules, conservative
+flags and lifecycle requirements are specified in
+=bindings/runtime-c/README.org=, section Registered Host policy. The configured
+native artifact must provide the added policy-refresh symbol.

@@ -61,6 +61,10 @@ path = [
   "t/qualification/temporal-library-basic/rule-correspondence-v1/*.log.gz",
   "t/qualification/temporal-library-basic/rule-correspondence-v1/typed-rules.ss",
   "t/qualification/temporal-library-basic/derivation-authority-v1/*.log.gz",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/*.log.gz",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/*.scm.gz",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/typed-policy.ss",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/native-artifact.ss",
   "t/qualification/temporal-library-basic/derivation-authority-v1/typed-derivations.ss",
   "t/qualification/temporal-library-basic/support-policy-v1/*.scm.gz",
 ]

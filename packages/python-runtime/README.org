@@ -487,3 +487,13 @@ belongs to the Rust consumer; Python can replay its inert Scheme request/receipt
 content projection. It does not reconstruct MRR owner records or admit proof,
 source or correspondence. The qualification replays original typed Rust Fact
 receipts and rejects unsupported scalar/range/schema fields.
+
+* Registered Host policy through fixed ABI v1
+
+=SemanticRuntime.refresh_temporal_policy(request)= uses the dedicated C Host
+control entrypoint; =guard_temporal_support(request)= evaluates support against
+the registered policy and observed time. Do not expose refresh as a model tool.
+The strict Scheme v1 schemas, monotonic/idempotent registry rules, conservative
+flags and lifecycle requirements are specified in
+=bindings/runtime-c/README.org=, section Registered Host policy. The configured
+native artifact must provide the added policy-refresh symbol.

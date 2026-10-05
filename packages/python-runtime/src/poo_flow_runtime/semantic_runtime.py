@@ -75,6 +75,14 @@ class SemanticRuntime:
         """Read-only native applicability; does not admit proofs or authorize effects."""
         return self.call('temporal.support.evaluate', request)
 
+    def refresh_temporal_policy(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Trusted host policy/observed-time registration; does not grant effects."""
+        return self._submit('$host.temporal.policy.refresh', request, control=True).result()
+
+    def guard_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Read-only support/policy guard against current host-registered state."""
+        return self.call('temporal.support.guard', request)
+
     def classify_temporal_family(self, task: Mapping[str, Any]) -> dict[str, Any]:
         """Classify the finite POO hypothesis family in the native Scheme engine."""
         return self.call('temporal.family.classify', task)
@@ -139,7 +147,12 @@ class SemanticRuntime:
         result = self._ffi.new('poo_flow_semantic_result *')
         try:
             if control:
-                status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
+                if operation == b'$host.temporal.source.register':
+                    status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
+                elif operation == b'$host.temporal.policy.refresh':
+                    status = self._lib.poo_flow_python_semantic_policy_refresh(data, len(data), result)
+                else:
+                    raise ValueError('unsupported host control operation')
             else:
                 status = self._lib.poo_flow_python_semantic_call(operation, data, len(data), result)
             if os.environ.get('POO_FLOW_RUNTIME_TRACE') == '1':

@@ -99,6 +99,10 @@ int32_t poo_flow_semantic_v1_source_register(const uint8_t *input, size_t length
                                            poo_flow_semantic_result *result) {
   return semantic_call("$host.temporal.source.register", input, length, result, 1);
 }
+int32_t poo_flow_semantic_v1_policy_refresh(const uint8_t *input, size_t length,
+                                          poo_flow_semantic_result *result) {
+  return semantic_call("$host.temporal.policy.refresh", input, length, result, 1);
+}
 int32_t poo_flow_semantic_v1_close(void) {
   pthread_mutex_lock(&lock);
   if (state != 1) { pthread_mutex_unlock(&lock); return 1; }

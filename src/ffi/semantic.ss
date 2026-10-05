@@ -6,6 +6,7 @@
 (import (only-in :poo-flow/modules/temporal-causality/evaluator/fact poo-flow-temporal-mrr-fact-content)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
+        (only-in :poo-flow/src/ffi/temporal-policy temporal-policy-refresh temporal-policy-guard-call)
         :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
                  temporal-source-register temporal-family-admit-call temporal-family-current-call
@@ -135,6 +136,10 @@
                (actionAuthorized #f) (durable #f)))))
           ((string=? operation "temporal.support.evaluate")
            (scheme-wire-write (temporal-support-call object)))
+          ((string=? operation "$host.temporal.policy.refresh")
+           (scheme-wire-write (temporal-policy-refresh object)))
+          ((string=? operation "temporal.support.guard")
+           (scheme-wire-write (temporal-policy-guard-call object)))
           ((string=? operation "$host.temporal.source.register")
            (scheme-wire-write (temporal-source-register object)))
           ((string=? operation "temporal.family.admit")
@@ -175,7 +180,7 @@
           ((string=? operation "descriptor")
            (scheme-wire-write
             (hash (schema "poo-flow.semantic-descriptor") (abiVersion 1) (wireFormat "scheme-datum-v1")
-                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate" "temporal.fact.content"]) (maximumInputBytes 1048576)
+                  (operations ["temporal.solve" "graph.admit" "temporal.verify" "graph.targets" "temporal.observe" "temporal.family.classify" "temporal.family.observe" "temporal.family.admit" "temporal.family.current" "temporal.family.revision.root" "temporal.family.revision.change" "temporal.family.journal" "temporal.family.archive.export" "temporal.family.archive.replay" "temporal.support.evaluate" "temporal.fact.content" "temporal.support.guard"]) (maximumInputBytes 1048576)
                   (maximumTemporalEvents 128) (maximumTemporalParents 256)
                   (maximumTemporalHorizon 1024)
                   (temporalProfiles ["ascent-finite-lens" "finite-hypothesis-family"])
