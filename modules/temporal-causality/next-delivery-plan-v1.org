@@ -32,7 +32,40 @@ and artifact identities. Changing ASCENT reopens producer qualification.
 An old DLL or its old real-model receipt does not qualify the new dependency.
 The complete fixed-v1 physical/model lifecycle remains open.
 
-* Current local outcomes: A0 remains open
+* Current implementation outcomes after initialization repair
+
+The consumer runners now preload actual dependencies in the order declared by
+the compiled ASCENT modules at REV =964feb3e=. Required admission, evaluator,
+session and proof modules remain present. Every progress line corresponds to
+an actual module import boundary. Both ASCENT test Just entries now enforce
+the five-second idle / 45-second total gates themselves, retain heap fencing,
+propagate the real exit and require Case, Module, Harness and final =OK= markers.
+
+| Gate | Actual result |
+|------+---------------|
+| A0 original Temporal lens/exchange | Two original cases passed; first expanded-source execution exited 0 in 24.64s |
+| A0 guarded copy/join | Original snapshot-preservation case passed; exit 0 in 9.41s |
+| Semantic worker startup | Explicit FFI dependency imports reached =READY= and final =OK=, then clean EOF; 9.37s |
+| A1 new Scheme AOT | Fresh native library and compiler-owned manifest built against the isolated pinned ASCENT cache; ABI v1 |
+| A1 Python Basic | 43 semantic/runtime/publication/wire cases passed; 2.50s supervised wall time |
+| A1 Rust/native Basic | 21 Python-native paired results plus owner, digest, queue and lifetime guards passed; 2.73s supervised wall time |
+
+Python and Rust used the same fresh semantic artifact with SHA-256
+=5d86f069e5185f689cd13dcf8c37bcbfb72b5ff9675e547c96cb1281d5b12848=.
+Python exercised the installed editable Library and the separately retained real
+control-lane artifact; this is not a new wheel or clean-machine qualification.
+Initial source startup failures, the worker's FFI loading failure and Python's
+missing control-lane configuration failure remain in the evidence receipt.
+Timing describes these local processes, with no latency or performance claim.
+
+A0 and this bounded A1 Basic slice now have local passing evidence. A2's
+coherent MRR/Data graph, physical admission, Context/archive requalification,
+A3--A6 lifecycle/IFC/publication and new real-model gates remain open. No model
+call occurred. The next owner task is review and convergence of the MRR/Data
+immutable graph before original physical roundtrip acceptance.
+See [[file:../../t/qualification/temporal-library-basic/ascent-consumer-v1.ss][the consumer and Basic Library receipt]].
+
+* Initial audit outcomes at 0393d36d: A0 was open
 
 The dependency contract, actual Bazel lock check and project version contract
 passed. The immutable archive digest was checked, and Linux/Darwin source lock
