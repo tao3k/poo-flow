@@ -398,6 +398,34 @@ jobs:
             "$POO_FLOW_CEDAR_RUNTIME_HOST" \
             bindings/cedar-gerbil/fixtures/atomic-case/policies.cedar
 
+  orgize-source-rust-host:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: Orgize source observation Rust host
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Compile parser-owned source observation tests
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.95.0 --profile minimal
+          cargo +1.95.0 test --locked --manifest-path bindings/rust-runtime/Cargo.toml \
+            --features orgize-source --test org_source --no-run
+
+      - name: Recheck current source and reject stale host premises
+        run: |
+          set -euo pipefail
+          timeout --foreground --signal=TERM --kill-after=1s 45s \
+            python3 packages/python-runtime/tools/watch.py \
+              cargo +1.95.0 test --locked --manifest-path bindings/rust-runtime/Cargo.toml \
+                --features orgize-source --test org_source -- --nocapture \
+            2>&1 | tee "$RUNNER_TEMP/orgize-source-host.log"
+          grep -F 'ORGIZE-SOURCE-HOST-OK: current source and stale cut, query, config, bytes' "$RUNNER_TEMP/orgize-source-host.log"
+          grep -F 'ORGIZE-SOURCE-HOST-OK: path escape and root swap rejected' "$RUNNER_TEMP/orgize-source-host.log"
+          grep -F 'ORGIZE-SOURCE-HOST-OK: invalid UTF-8 and oversized source rejected' "$RUNNER_TEMP/orgize-source-host.log"
+
   external-module-linux-full:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow external Bazel module (linux-amd64, full)
