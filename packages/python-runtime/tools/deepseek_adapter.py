@@ -17,6 +17,11 @@ from poo_flow_testing.model_study.semantic_config import configuration
 from poo_flow_runtime import scheme_wire as wire
 from poo_flow_testing.model_study.semantic_provider import predict
 
+def report_progress(*parts: object, end: str = '\n') -> None:
+    """Emit this CLI's bounded progress on its owned stdout channel."""
+    sys.stdout.write(' '.join(str(part) for part in parts) + end)
+    sys.stdout.flush()
+
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
 parser = argparse.ArgumentParser()
 parser.add_argument('--binary', type=Path, required=True)
@@ -38,7 +43,7 @@ with a.output.open("x") as claim:
 async def run():
     records=[]
     for i,case in enumerate(cases):
-        print('REAL-MODEL RUST FAMILY',case['name'],flush=True)
+        report_progress('REAL-MODEL RUST FAMILY',case['name'])
         r=dict(case=case['name'],passed=False,tool={},final={})
         task=case['payload']
         request=dict(model=model,reasoning={'effort':'none'},temperature=0.0,max_output_tokens=4096,stream=True,
@@ -47,7 +52,7 @@ async def run():
                         parameters=dict(type='object',properties={'datum':dict(type='string')},required=['datum'],additionalProperties=False))],
             tool_choice=dict(type='function',name='poo_flow_temporal_family_classify'))
         try:
-            await predict(request,config['DEEPSEEK_API_KEY'],r['tool'],emit=lambda _:print('.',end='',flush=True),content_event='response.function_call_arguments.delta')
+            await predict(request,config['DEEPSEEK_API_KEY'],r['tool'],emit=lambda _:report_progress('.',end=''),content_event='response.function_call_arguments.delta')
             calls=r['tool'].get('toolCalls',[])
             if len(calls)!=1 or calls[0].get('name')!='poo_flow_temporal_family_classify':raise ValueError('wrong tool call')
             call=calls[0]
@@ -77,7 +82,7 @@ async def run():
             final=dict(model=model,reasoning={'effort':'none'},temperature=0.0,max_output_tokens=2048,stream=True,
                 input=request['input']+[call,dict(type='function_call_output',call_id=call['call_id'],output=wire.dumps(result)),
                                        dict(role='user',content='Return only these fields from the actual Library output as one Scheme datum: classification, bindingDigest, modelDigest, exhausted, sourceAuthenticated, actionAuthorized. Use (object ("field" value) ...), strings in quotes, booleans #t/#f. No markdown.')])
-            raw=await predict(final,config['DEEPSEEK_API_KEY'],r['final'],emit=lambda _:print('.',end='',flush=True))
+            raw=await predict(final,config['DEEPSEEK_API_KEY'],r['final'],emit=lambda _:report_progress('.',end=''))
             r['modelText']=raw
             if wire.loads(raw)!=expected:raise ValueError('final differs from actual native result')
             r['modelResult']=wire.loads(raw)
@@ -93,6 +98,6 @@ async def run():
         r.update(schema='poo-flow.provider-family-case.v1', model=model,
                  nativeArtifactSha256=artifact_digest, retries=0)
         a.output.write_text(wire.dumps(r) + '\n')
-        print(' RESULT',r['passed'],r.get('failure',''),flush=True)
+        report_progress(' RESULT',r['passed'],r.get('failure',''))
         return 0 if r['passed'] else 1
 sys.exit(asyncio.run(run()))
