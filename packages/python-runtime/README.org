@@ -497,3 +497,14 @@ The strict Scheme v1 schemas, monotonic/idempotent registry rules, conservative
 flags and lifecycle requirements are specified in
 =bindings/runtime-c/README.org=, section Registered Host policy. The configured
 native artifact must provide the added policy-refresh symbol.
+
+* Trusted original Derivation admission
+
+=SemanticRuntime.admit_temporal_derivation(request)= calls the trusted ABI v1
+Host entrypoint for source-relative native proof and exact lineage admission.
+Python replays the original Rust request/result without rebuilding owner types.
+Do not expose this method as a model tool.
+
+Schemas, bounds and remaining current-state/effect requirements are specified in
+=bindings/runtime-c/README.org=, section Trusted original Derivation admission.
+Qualification is in =t/qualification/temporal-library-basic/proof-control-abi-v1/=.

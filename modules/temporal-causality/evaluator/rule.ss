@@ -16,7 +16,8 @@
         poo-flow-temporal-rule-variable poo-flow-temporal-rule-literal
         poo-flow-temporal-rule-atom poo-flow-temporal-rule
         poo-flow-temporal-rule-program poo-flow-temporal-rule-correspondence-from-ascent
-        poo-flow-temporal-rule-correspondence-replay)
+        poo-flow-temporal-rule-correspondence-replay
+        poo-flow-temporal-rule-program-ascent-query)
 (def (text? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (name? x) (and (text? x) (andmap (lambda (c) (or (char<=? #\a c #\z)
   (char<=? #\A c #\Z) (char<=? #\0 c #\9) (eqv? c #\_))) (string->list x))))
@@ -140,3 +141,21 @@
       '(program-digest proof-digest generation applications semantic-digest rule-correspondence-verified?
         source-authenticated? selection-admitted? action-authorized? durable?))
       (error "rule correspondence replay mismatch")) canonical))
+
+;;; Named owner handoff: native POO program/output to original ASCENT candidate.
+;;; This bounded projection is for trusted adapters, not a general user DSL.
+(def (poo-flow-temporal-rule-program-ascent-query program snapshot output)
+  (let* ((canonical (poo-flow-temporal-rule-program (.ref program 'identity) (.ref program 'catalog-digest)
+                     (.ref program 'generation) (.ref program 'ascent-generation)
+                     (.ref program 'relations) (.ref program 'rules)))
+         (source-names (map car (reasoning-snapshot-relations snapshot)))
+         (relations (.ref canonical 'relations)))
+    (unless (and (equal? (.ref canonical 'semantic-digest) (.ref program 'semantic-digest))
+                 (equal? (.ref output 'generation) (.ref canonical 'generation)))
+      (error "stale query projection"))
+    (append '(candidate)
+      (map (lambda (r) (list 'relation (string->symbol (.ref r 'predicate)) (length (.ref r 'columns))))
+           (filter (lambda (r) (not (memq (string->symbol (.ref r 'predicate)) source-names))) relations))
+      (map (lambda (r) (cons 'rule (rule-clause r relations))) (.ref canonical 'rules))
+      (list (cons 'query (cons (string->symbol (.ref output 'evaluator-relation)) (.ref output 'row)))
+            '(limits 128 128 128)))))

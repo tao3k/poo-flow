@@ -134,3 +134,47 @@ ABI remain v1, with no fallback transport.
 Executable C/Python/Rust evidence, original cross-language datum parity and all
 failed attempts are retained in
 =t/qualification/temporal-library-basic/host-policy-abi-v1/=.
+
+* Trusted original Derivation admission through ABI v1
+
+=poo_flow_semantic_v1_derivation_admit= is a dedicated trusted Host entrypoint.
+Ordinary/model calls cannot dispatch =$host.temporal.derivation.admit=. Python
+uses =SemanticRuntime.admit_temporal_derivation=; Rust uses
+=MrrDerivationProjection::verify_native= with original retained owner records,
+typed =MrrTemporalSourceBinding= values and the original Temporal journal.
+
+The strict inert Scheme v1 request has schema
+=poo-flow.temporal-derivation-admit-request.v1= and exactly =projection=,
+=journal=, =sourceBindings=, =workSteps= and =maximumNodes=. Projection is the
+original =poo-flow.mrr-derivation-projection.v1= Rule/Catalog/Fact/Derivation
+projection. Source bindings each contain =fact=, =subject= and =revision=;
+callers supply no proof nodes, proof flags or completion claims. Journal uses
+the existing support journal shape. All inventories and field sets are bounded;
+work steps are 1..4096 and proof nodes 1..128. Source rows use the existing
+int64/boolean profile and must agree with projected Catalog column types.
+
+The native POO program constructs the original ASCENT query for the selected
+output from exact source rows and original Rules. The original Scheme producer
+and positive-proof verifier recompute source-relative truth. Rule node labels,
+original direct Derivation input FactIds, output root, all transitive source
+leaves and journal content/revisions must jointly agree. There is one original
+Derivation per derived FactId and one exact rooted correspondence; alternative
+support completeness is outside this bounded profile.
+
+The result carries native =proofAdmitted=, =mrrRuleEquivalenceVerified= and
+=derivationCorrespondenceVerified= plus the selected root identity, digests,
+node correspondence and ordinary support. Rust additionally checks the response
+against its retained original root/rule/catalog/generation. The support's proof
+label equals the joint binding digest. Source authentication, selection, action
+and durability flags remain false. Later source correction invalidates current
+support while the historical cut remains supported.
+
+This operation is pure admission against Host-declared snapshots. It neither
+retains a current admitted-proof registry nor authenticates the source provider,
+refreshes authoritative state, joins the registered policy guard into a final
+effect fence, or publishes Data. Returned datum receipts are evidence of this
+call, not a transferable effect grant. Native result ownership, terminal close,
+thread serialization and artifact digest validation remain unchanged; current
+clients require the added symbol. Transport, schemas and ABI remain v1.
+
+Receipts: =t/qualification/temporal-library-basic/proof-control-abi-v1/=.

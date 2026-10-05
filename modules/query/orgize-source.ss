@@ -107,7 +107,7 @@
              space-id digest
              (map (lambda (element) (.ref element 'identity)) elements)
              #t))
-           (query
+           (query-value
             (validate
              PooFlowQuery
              (.o (:: @ PooFlowQuery.)
@@ -124,12 +124,12 @@
                  evidence-requirements: '()
                  visibility-request: 'restricted
                  result-contract: OrgOpenHeadlineResult)))
-           (admission (poo-flow-query-admit query space)))
-      (unless (.ref admission 'accepted?)
+           (admission-value (poo-flow-query-admit query-value space)))
+      (unless (.ref admission-value 'accepted?)
         (error "source-derived Org Query failed ElementSpace admission"))
       (let* ((selection
               (poo-flow-query-select-scheme-nodes
-               query (source-elements->query-nodes elements digest)))
+               query-value (source-elements->query-nodes elements digest)))
              (rows
               (map (lambda (values) (query-row->result-row values digest))
                    (.ref selection 'rows)))
@@ -137,14 +137,14 @@
               (poo-flow-query-result-set
                (string-append digest ":open-headlines-result")
                OrgOpenHeadlineResult
-               (.ref query 'identity) (.ref query 'version) digest rows #t)))
+               (.ref query-value 'identity) (.ref query-value 'version) digest rows #t)))
         (.o kind: 'poo-flow.query.orgize-source-observation
             parser-identity: org-source-headline-parser-identity
             source-sha256: digest
             source-size: (.ref projection 'source-size)
             element-space: space
-            query: query
-            admission: admission
+            query: query-value
+            admission: admission-value
             result-set: result
             query-executed-in-scheme?: #t
             worktree-bound?: #f

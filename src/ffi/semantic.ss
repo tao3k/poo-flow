@@ -6,6 +6,7 @@
 (import (only-in :poo-flow/modules/temporal-causality/evaluator/fact poo-flow-temporal-mrr-fact-content)
         (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-call)
+        (only-in :poo-flow/src/ffi/temporal-proof temporal-derivation-admit)
         (only-in :poo-flow/src/ffi/temporal-policy temporal-policy-refresh temporal-policy-guard-call)
         :std/ffi (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
         (only-in :poo-flow/src/ffi/temporal-admission
@@ -136,6 +137,8 @@
                (actionAuthorized #f) (durable #f)))))
           ((string=? operation "temporal.support.evaluate")
            (scheme-wire-write (temporal-support-call object)))
+          ((string=? operation "$host.temporal.derivation.admit")
+           (scheme-wire-write (temporal-derivation-admit object)))
           ((string=? operation "$host.temporal.policy.refresh")
            (scheme-wire-write (temporal-policy-refresh object)))
           ((string=? operation "temporal.support.guard")

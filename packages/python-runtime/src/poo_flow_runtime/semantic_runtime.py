@@ -79,6 +79,10 @@ class SemanticRuntime:
         """Trusted host policy/observed-time registration; does not grant effects."""
         return self._submit('$host.temporal.policy.refresh', request, control=True).result()
 
+    def admit_temporal_derivation(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Trusted source-relative native proof/lineage admission, without effect grants."""
+        return self._submit('$host.temporal.derivation.admit', request, control=True).result()
+
     def guard_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Read-only support/policy guard against current host-registered state."""
         return self.call('temporal.support.guard', request)
@@ -151,6 +155,8 @@ class SemanticRuntime:
                     status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
                 elif operation == b'$host.temporal.policy.refresh':
                     status = self._lib.poo_flow_python_semantic_policy_refresh(data, len(data), result)
+                elif operation == b'$host.temporal.derivation.admit':
+                    status = self._lib.poo_flow_python_semantic_derivation_admit(data, len(data), result)
                 else:
                     raise ValueError('unsupported host control operation')
             else:

@@ -321,7 +321,7 @@ original MRR GenerationId and ASCENT's numeric generation.
 original Rule projections and native positive-proof node/RuleId correspondence,
 including replay and negative controls. This completes bounded content mapping;
 the selected-root Derivation authority connection below is implemented.
-Exposing trusted proof/Host control entries through ABI v1 remains required.
+Trusted Host policy and joint proof entries are available through ABI v1 below.
 
 
 * Selected original Derivation graph
@@ -352,3 +352,15 @@ The strict Scheme v1 schemas, monotonic/idempotent registry rules, conservative
 flags and lifecycle requirements are specified in
 =bindings/runtime-c/README.org=, section Registered Host policy. The configured
 native artifact must provide the added policy-refresh symbol.
+
+* Trusted original Derivation admission
+
+=MrrDerivationProjection::verify_native= submits retained original owner lineage
+through the dedicated ABI v1 Host control. Typed =MrrTemporalSourceBinding=
+values map original source FactIds to exact Temporal revisions. Native Scheme
+owns proof recomputation and joint Rule/Derivation/leaf correspondence. Rust
+rechecks returned root/rule/catalog/generation and conservative effect flags.
+
+Schemas, bounds and remaining current-state/effect requirements are specified in
+=bindings/runtime-c/README.org=, section Trusted original Derivation admission.
+Qualification is in =t/qualification/temporal-library-basic/proof-control-abi-v1/=.

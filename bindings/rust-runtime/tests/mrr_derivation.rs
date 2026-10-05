@@ -236,3 +236,92 @@ fn reject_missing_extra_duplicate_context_generation_cycle_and_rule_identity() {
         "CASE missing/unused/duplicate facts and derivations, stale generation, cyclic support, unknown rule and source root reject"
     );
 }
+
+#[test]
+fn actual_native_joint_proof_and_temporal_source_bindings() {
+    use poo_flow_rust_runtime::mrr_derivation::MrrTemporalSourceBinding;
+    use poo_flow_rust_runtime::{SemanticRuntime, datum};
+    let (program, catalog, facts, ds) = owner_fixture();
+    let projection = MrrDerivationProjection::admit(
+        "lineage",
+        &program,
+        &catalog,
+        ds[1].output().id(),
+        &facts,
+        &ds,
+    )
+    .unwrap();
+    let mut revisions = Vec::new();
+    let mut bindings = Vec::new();
+    let mut wire_bindings = Vec::new();
+    for (index, row) in projection.payload()["facts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        if row["source"] != true {
+            continue;
+        }
+        let id = facts[index].id();
+        let subject = format!("subject-{index}");
+        let revision = format!("revision-{index}");
+        revisions.push(datum!({"identity":revision.clone(),"subject":subject.clone(),"operation":"assert",
+            "predecessor":false,"admitted":1,"validRange":vec![wire::Value::from(0),wire::Value::from(10)],"content":row["contentDigest"].clone()}));
+        wire_bindings.push(
+            datum!({"fact":id.to_string(),"subject":subject.clone(),"revision":revision.clone()}),
+        );
+        bindings.push(MrrTemporalSourceBinding {
+            fact: id,
+            subject,
+            revision,
+        });
+    }
+    let journal = datum!({"identity":"host-journal","admissionDomain":"txn","validDomain":"valid","revisions":revisions});
+    let request = datum!({"schema":"poo-flow.temporal-derivation-admit-request.v1","projection":projection.payload().clone(),
+        "journal":journal.clone(),"sourceBindings":wire_bindings,"workSteps":512,"maximumNodes":32});
+    let runtime = SemanticRuntime::open(
+        std::env::var("POO_FLOW_SEMANTIC_LIBRARY").unwrap(),
+        &std::env::var("POO_FLOW_SEMANTIC_SHA256").unwrap(),
+        64,
+    )
+    .unwrap();
+    assert!(
+        runtime
+            .call("$host.temporal.derivation.admit", &request)
+            .is_err()
+    );
+    let result = projection
+        .verify_native(&runtime, &journal, &bindings, 512, 32)
+        .unwrap();
+    assert_eq!(result["nodeBindings"].as_array().unwrap().len(), 4);
+    assert_eq!(result["support"]["premises"].as_array().unwrap().len(), 2);
+    assert_eq!(runtime.admit_derivation(&request).unwrap(), result);
+    println!(
+        "CASE native positive proof, original RuleId/direct Derivation inputs and exact journal leaves admitted"
+    );
+    assert!(
+        projection
+            .verify_native(&runtime, &journal, &bindings[..1], 512, 32)
+            .is_err()
+    );
+    let mut bad = request.clone();
+    if let wire::Value::Array(rows) = &mut bad["projection"]["derivations"] {
+        rows[1]["rule"] = ds[0].rule().to_string().into();
+    }
+    assert!(runtime.admit_derivation(&bad).is_err());
+    bad = request.clone();
+    if let wire::Value::Array(rows) = &mut bad["journal"]["revisions"] {
+        rows[0]["content"] = "forged".into();
+    }
+    assert!(runtime.admit_derivation(&bad).is_err());
+    assert_eq!(runtime.admit_derivation(&request).unwrap(), result);
+    println!("CASE forged rule/source reject without changing deterministic native admission");
+    if let Ok(path) = std::env::var("POO_FLOW_NATIVE_DERIVATION_ORACLE") {
+        std::fs::write(
+            path,
+            wire::to_vec(&datum!({"request":request,"expected":result})).unwrap(),
+        )
+        .unwrap();
+    }
+}

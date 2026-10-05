@@ -50,6 +50,7 @@ enum Command {
     Call(CString, Vec<u8>, Reply),
     Register(Vec<u8>, Reply),
     PolicyRefresh(Vec<u8>, Reply),
+    DerivationAdmit(Vec<u8>, Reply),
     Close(mpsc::Sender<Result<(), Error>>),
 }
 struct State {
@@ -161,6 +162,11 @@ impl SemanticRuntime {
                                     ));
                                     let _ = reply.send(result);
                                 }
+                                Command::DerivationAdmit(data, reply) => {
+                                    let result = native.admit_derivation(&data);
+                                    trace("derivation-admission-returned");
+                                    let _ = reply.send(result);
+                                }
                                 Command::PolicyRefresh(data, reply) => {
                                     let result = native.refresh_policy(&data);
                                     let _ = reply.send(result);
@@ -251,6 +257,26 @@ impl SemanticRuntime {
     }
     pub fn call(&self, operation: &str, payload: &Value) -> Result<Value, Error> {
         self.submit(operation, payload)?.wait()
+    }
+    /// Trusted host original lineage admission; native Scheme owns source-relative proof.
+    pub fn admit_derivation(&self, payload: &Value) -> Result<Value, Error> {
+        let data = wire::to_vec(payload).map_err(|_| Error::InvalidInput)?;
+        if data.len() > 1_048_576 {
+            return Err(Error::InvalidInput);
+        }
+        let (tx, rx) = mpsc::channel();
+        self.state
+            .lock()
+            .map_err(|_| Error::Closed)?
+            .sender
+            .as_ref()
+            .ok_or(Error::Closed)?
+            .try_send(Command::DerivationAdmit(data, tx))
+            .map_err(|e| match e {
+                mpsc::TrySendError::Full(_) => Error::QueueFull,
+                mpsc::TrySendError::Disconnected(_) => Error::Closed,
+            })?;
+        rx.recv().map_err(|_| Error::Closed)?
     }
     /// Trusted host policy/observed-clock control; provider authenticity is separate.
     pub fn refresh_policy(&self, payload: &Value) -> Result<Value, Error> {
@@ -347,6 +373,7 @@ struct Native {
     call: Call,
     register: Register,
     policy_refresh: Register,
+    derivation_admit: Register,
     release: Release,
 }
 impl Native {
@@ -374,6 +401,11 @@ impl Native {
                 .get::<Release>(b"poo_flow_semantic_v1_result_release\0")
                 .map_err(symbol_error)?
         };
+        let derivation_admit = unsafe {
+            *library
+                .get::<Register>(b"poo_flow_semantic_v1_derivation_admit\0")
+                .map_err(symbol_error)?
+        };
         let policy_refresh = unsafe {
             *library
                 .get::<Register>(b"poo_flow_semantic_v1_policy_refresh\0")
@@ -392,12 +424,18 @@ impl Native {
             call,
             register,
             policy_refresh,
+            derivation_admit,
             release,
         })
     }
     fn call(&self, op: &CString, input: &[u8]) -> Result<Value, Error> {
         self.response(|result| unsafe {
             (self.call)(op.as_ptr(), input.as_ptr(), input.len(), result)
+        })
+    }
+    fn admit_derivation(&self, input: &[u8]) -> Result<Value, Error> {
+        self.response(|result| unsafe {
+            (self.derivation_admit)(input.as_ptr(), input.len(), result)
         })
     }
     fn refresh_policy(&self, input: &[u8]) -> Result<Value, Error> {

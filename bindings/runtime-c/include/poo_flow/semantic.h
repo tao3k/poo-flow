@@ -27,6 +27,11 @@ int32_t poo_flow_semantic_v1_source_register(const uint8_t *input, size_t length
  * cannot access this control lane. No provider authentication or effect grant. */
 int32_t poo_flow_semantic_v1_policy_refresh(const uint8_t *input, size_t length,
                                          poo_flow_semantic_result *result);
+/* Trusted original-owner lineage projection. Scheme recomputes positive proof,
+ * Rule/direct Derivation correspondence and exact Temporal source bindings.
+ * Source-relative only; this never grants an external effect or publication. */
+int32_t poo_flow_semantic_v1_derivation_admit(const uint8_t *input, size_t length,
+                                           poo_flow_semantic_result *result);
 int32_t poo_flow_semantic_v1_close(void);
 void poo_flow_semantic_v1_result_release(poo_flow_semantic_result *result);
 /* 0 success, 1 closed/unavailable, 2 wrong thread, 3 invalid transport,

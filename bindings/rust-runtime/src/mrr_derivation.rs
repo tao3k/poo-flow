@@ -2,10 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 //! Original owner lineage graph projection; native Scheme verifies derivation truth.
 use crate::{
-    Error, datum, mrr_rule::MrrRuleProgramProjection, mrr_support::MrrFactProjection, wire::Value,
+    Error, SemanticRuntime, datum, mrr_rule::MrrRuleProgramProjection,
+    mrr_support::MrrFactProjection, wire::Value,
 };
 use meta_relational_reasoning as m;
 use std::collections::{BTreeMap, BTreeSet};
+/// Host correspondence from an original source FactId to a Temporal revision.
+#[derive(Clone, Debug)]
+pub struct MrrTemporalSourceBinding {
+    pub fact: m::FactId,
+    pub subject: String,
+    pub revision: String,
+}
 #[derive(Clone, Debug)]
 pub struct MrrDerivationProjection {
     facts: Vec<m::Fact>,
@@ -103,6 +111,80 @@ impl MrrDerivationProjection {
             payload: datum!({"schema":"poo-flow.mrr-derivation-projection.v1","identity":identity,
                 "program":program.payload().clone(),"rootFact":root.to_string(),"facts":projected,"derivations":ds}),
         })
+    }
+    /// Replay original owner lineage in Scheme; journal semantics remain native.
+    pub fn verify_native(
+        &self,
+        runtime: &SemanticRuntime,
+        journal: &Value,
+        bindings: &[MrrTemporalSourceBinding],
+        work_steps: u32,
+        maximum_nodes: u32,
+    ) -> Result<Value, Error> {
+        let mut seen = BTreeSet::new();
+        let sources = self.payload["facts"]
+            .as_array()
+            .ok_or(Error::InvalidInput)?;
+        let source_ids: BTreeSet<String> = sources
+            .iter()
+            .filter(|f| f["source"] == true)
+            .map(|f| f["content"]["identity"].as_str().unwrap().to_owned())
+            .collect();
+        if bindings.len() != source_ids.len()
+            || !(1..=4096).contains(&work_steps)
+            || !(1..=128).contains(&maximum_nodes)
+        {
+            return Err(Error::InvalidInput);
+        }
+        let mut projected = Vec::new();
+        for b in bindings {
+            if !source_ids.contains(&b.fact.to_string())
+                || !seen.insert(b.fact)
+                || b.subject.is_empty()
+                || b.subject.chars().count() > 256
+                || b.revision.is_empty()
+                || b.revision.chars().count() > 256
+            {
+                return Err(Error::InvalidInput);
+            }
+            projected.push(datum!({"fact":b.fact.to_string(),"subject":b.subject.clone(),"revision":b.revision.clone()}));
+        }
+        let result = runtime.admit_derivation(
+            &datum!({"schema":"poo-flow.temporal-derivation-admit-request.v1",
+            "projection":self.payload.clone(),"journal":journal.clone(),"sourceBindings":projected,
+            "workSteps":work_steps,"maximumNodes":maximum_nodes}),
+        )?;
+        let root = self.payload["rootFact"]
+            .as_str()
+            .ok_or(Error::InvalidInput)?;
+        let original = self
+            .derivations
+            .iter()
+            .find(|d| d.output().id().to_string() == root)
+            .ok_or(Error::InvalidInput)?;
+        if result["schema"] != "poo-flow.temporal-derivation-admit-result.v1"
+            || result["abiVersion"] != 1
+            || result["proofAdmitted"] != true
+            || result["derivationCorrespondenceVerified"] != true
+            || result["mrrRuleEquivalenceVerified"] != true
+            || result["generation"] != self.payload["program"]["generation"]
+            || result["catalogDigest"] != self.payload["program"]["catalogDigest"]
+            || result["derivationIdentity"] != original.id().to_string()
+            || result["ruleIdentity"] != original.rule().to_string()
+            || result["support"]["conclusion"] != root
+            || result["support"]["proof"] != result["bindingDigest"]
+            || [
+                "sourceAuthenticated",
+                "selectionAdmitted",
+                "actionAuthorized",
+                "durable",
+            ]
+            .iter()
+            .any(|k| result[*k] != false)
+        {
+            return Err(Error::InvalidInput);
+        }
+        Ok(result)
     }
     pub fn facts(&self) -> &[m::Fact] {
         &self.facts

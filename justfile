@@ -793,3 +793,17 @@ test-temporal-evaluator:
     grep -Fx 'MODULE-OK t/temporal-evaluator-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
+
+# Fixed-schema Orgize source producer through canonical POO Query.
+[group('test')]
+test-query-orgize-source:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    timeout --foreground --signal=TERM --kill-after=1s 45s python3 packages/python-runtime/tools/watch.py gxi {{ gerbil_test_runtime_options }} t/harness/query-orgize-source-runner.ss 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    test "$(grep -c '^CASE-OK ' "$log")" = 4
+    grep -Fx 'MODULE-OK t/query-orgize-source-test.ss' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null
