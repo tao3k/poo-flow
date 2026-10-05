@@ -67,8 +67,32 @@ false proof/source/selection/effect/durability flags. Caller-declared policy and
 observed time labels do not authenticate the clock, current policy or its issuer.
 No new guard ABI operation or MRR current-pointer admission is qualified here.
 
-Next A3 work: evaluator-owned proof admission and authoritative policy refresh
-at the host boundary, then incremental/full equivalence. This adapter qualifies identity and
+The independent =evaluator/interface.ss= now exposes a native POO admission
+adapter for original ASCENT source-only positive query proof receipts. It
+recomputes the actual native query, requires completed bounded proof production,
+then replays the held original DAG against those rows. Hypothetical facts,
+empty roots, bounded work, original node tamper, stale snapshots/proposals and
+forged projected admission fields reject. This proves the scoped positive query
+relative to declared source content; it does not bind an arbitrary Temporal
+conclusion or MRR Derivation identity.
+
+An independent =support/policy-host.ss= runtime capability now registers policy,
+generation and observed time through an explicit effectful control call.
+Read-only guard use chooses the registered snapshot. Rollback/conflict/revision
+rewrite, cross-domain/uncertain clocks and capacity overflow reject without
+changing current state. Exact registration is idempotent; Host instances are
+isolated. The application serializes use and refreshes authoritative inputs;
+clock authenticity, automatic provider refresh and durable/CAS authority remain
+open.
+
+Ten native Cases passed in 8.00s under unchanged five-second idle / 45-second
+total / 1G heap gates. The original invalid-validity fixture failure is retained
+in [[file:../../t/qualification/temporal-library-basic/evaluator-proof-v1/qualification.ss][the Scheme v1 evaluator receipt]]. These lazy modules are not added to the
+existing support ABI import graph. No new proof/Host control ABI, consumer model
+call, wheel, AOT archive or end-to-end publication is qualified by this slice.
+
+Next A3 work: explicit proof-row/source-revision/MRR fact correspondence and
+typed ABI v1 proof/control projection, then incremental/full equivalence. This adapter qualifies identity and
 applicability only. Absence certificates and recursive profiles remain A4;
 durable authoritative commit/IFC remains A5. No model call, performance benchmark
 or exact-head remote CI success is inferred from these local checks.

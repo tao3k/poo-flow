@@ -1,0 +1,48 @@
+#+title: Original evaluator positive proof admission
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Owner adapter
+
+Import =evaluator/interface.ss=. Public admission and replay results are native
+POO values of =PooFlowTemporalPositiveProof=. The named interop helper
+=poo-flow-temporal-positive-proof-from-ascent(identity, snapshot, candidate,
+receipt, work-steps, max-nodes)= is an advanced owner boundary consuming original
+ASCENT values. It does not introduce a public proposal DSL or accept arbitrary
+wire data. Native owner data in tests exercises that explicit boundary.
+
+Admission checks original snapshot/candidate binding and native completion,
+copies the source/proposal, inspects the original program, then recomputes the
+native query once. Its completed rows must match the held receipt and the
+original positive proof must pass =candidate-verify-positive-proof= against the
+fresh rows. The fresh proof producer must also complete within its work budget.
+There is no repair, retry, fallback proof or conversion of bounded into complete.
+
+The source-only profile rejects hypothetical candidate facts/nodes and empty
+positive query roots. Bounds: 32 source/derived relations, 32 rules, 128 source
+rows, candidate relation limits no larger than 128, 1--4096 proof steps and
+1--128 verification nodes. Original ASCENT owns positive rule semantics and the
+finite proof DAG, including recursive positive derivations. Temporal does not
+implement another evaluator.
+
+The result binds source identity/generation/digest, candidate digest, query,
+canonical native query row set, original node/root proof digest and both work limits. Its
+=proof-admitted?= true flag means verified positive query evidence relative to
+that source/proposal. It does not authenticate the source, establish exhaustive
+provenance or absence, bind arbitrary Temporal conclusions/MRR fact IDs, or
+admit current selection, authorization or durable effects. Those flags stay
+false. Type/shape or a flag alone is not proof validation.
+
+=poo-flow-temporal-positive-proof-replay= repeats the owner checks and requires
+all projected fields to equal the held admission. The returned value is freshly
+reconstructed. Original proof-node tamper rejects even with unchanged receipt
+binding and native rows. There is no serialized archive or proof ABI here.
+
+* Qualification
+
+Build with =just build-temporal-evaluator= and execute
+=just test-temporal-evaluator= in the package-qualified environment. The heap
+fence and five-second idle / 45-second total watchdog remain unchanged.
+Completed import boundaries and native Cases supply actual progress.

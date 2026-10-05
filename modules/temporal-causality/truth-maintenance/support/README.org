@@ -67,3 +67,29 @@ only the policy check; it is not an admitted current selection or publish permit
 This new guard is qualified as a Scheme Library API. ABI v1 support evaluation
 continues to expose applicability only; no guard/proof/policy mutation ABI or
 MRR host grant is introduced.
+
+* Explicit Host policy control
+
+Import =support/policy-host.ss= at the runtime boundary. The named
+=poo-flow-temporal-support-policy-host= constructs a native capability with
+opaque in-process state. =poo-flow-temporal-support-policy-host-refresh!= is an
+explicit effectful control call; it registers the canonical policy, generation
+and Host-supplied observed clock snapshot. The application owns this capability
+and serializes refresh/use. It is not exported through semantic wire dispatch.
+
+Policy revision identities are immutable, generations and observed coordinates
+cannot roll back, and an exact same-generation registration is idempotent.
+Current policies and historical revision identities each have a 128-entry cap.
+Failed registration changes neither current nor history state. Separate Host
+capabilities have isolated registries.
+
+=poo-flow-temporal-support-policy-host-guard= reads the registered policy/time,
+requires the expected generation and compares the expected policy digest. Query
+inputs contain no replacement policy or effective time. The guard remains an
+applicability result with false proof/selection/effect/durability flags.
+
+The registered clock is a declared Host observation, not an automatically
+refreshed or authenticated wall clock. The application must refresh it from its
+authoritative policy/clock owner before current use. This qualifies the local
+control-state transition and stale-generation refusal; it does not qualify
+provider refresh, concurrency/CAS, persistence, or C/Python/Rust control bindings.
