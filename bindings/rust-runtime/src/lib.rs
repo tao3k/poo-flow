@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 //! Bounded Rust transport to the POO-owned native semantic engine.
 //! All unsafe calls stay on one OS thread. No classification is implemented here.
+#[cfg(feature = "orgize-source")]
+pub mod org_source;
 pub mod wire;
 use crate::wire::Value;
 use libloading::Library;

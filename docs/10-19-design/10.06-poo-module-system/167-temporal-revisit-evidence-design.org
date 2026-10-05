@@ -77,6 +77,16 @@ Scheme graph view. The proposed
 bridge must carry parser-owned selected records into a checked Session input;
 comparing a caller-supplied graph with a caller-supplied digest is insufficient.
 
+The optional POO Flow Rust runtime =orgize-source= feature now starts that
+host-side bridge. It reads a bounded UTF-8 file under a host-supplied WorkTree
+root, runs the maintained Orgize named query, and holds the parser-owned
+observation privately. A later use must recheck the declared key, resolved
+root and file, current bytes, parse configuration, and query rule. The key's
+WorkTree identity and cut are still host premises; this adapter cannot prove
+Git state, grants, stable filesystem access under concurrent path mutation, or
+Session policy. It does not yet pass the selected records into the Scheme
+Session owner or publish a Memory/Session head. Those remain acceptance gates.
+
 POO Flow already has temporal instants/axes, evidence retrieval/use/assessment,
 impact frontiers, and pure Session/Memory policy receipts. Reuse those owners:
 

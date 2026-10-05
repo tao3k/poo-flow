@@ -224,3 +224,28 @@ recheck to its own transaction. Authority/effect/durability flags remain false.
 Detached archive replay cannot produce a =MrrFamilyAdmission= or current Context
 handle. The production adapter and executable receipts are documented under
 =t/qualification/temporal-mrr-context-binding/=.
+
+* Orgize source observation
+
+The optional =orgize-source= feature adds =org_source::WorktreeOrgSelection=.
+The Rust host supplies a WorkTree root and a bounded project/WorkTree/source-cut
+key with a relative Org path. The adapter reads at most 8 MiB of UTF-8 source,
+parses it with Orgize's Scheme-AOT parser, runs one maintained named Element
+query, and retains the parser-owned source observation privately. A later
+=recheck_file= reopens the file and compares the key, resolved root and file,
+bytes, parse configuration, rule, scope and selected graph-local IDs/spans.
+Only a successful recheck exposes an ephemeral selection to its caller.
+
+The key and root are host declarations. This adapter does not authenticate Git
+WorkTree state, access grants or a stable filesystem path under concurrent
+mutation. Its file read is not an atomic WorkTree snapshot. It does not call
+the Scheme Session policy, grant an effect, or publish a Session/Memory head.
+The host must still obtain an authoritative cut and current grant, pass the
+parser-owned candidates to Session policy, and conditionally publish through
+the runtime's expected-head CAS. The current Scheme Session selector remains
+fail-closed for caller-supplied Element graphs.
+
+The =org_source= Rust integration tests exercise current rechecks and stale
+bytes/configuration/cut/query, path escape, root replacement, non-UTF-8 and
+oversized source rejection. The Python runtime wheel CI runs these tests with
+the optional feature and checks explicit =ORGIZE-SOURCE-HOST-OK= markers.
