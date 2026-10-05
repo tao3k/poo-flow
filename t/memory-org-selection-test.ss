@@ -69,18 +69,51 @@
       (check-equal? (.ref org-selection 'orgize-evaluated?) #t)
       (check-equal? (.ref org-selection 'semantic-admitted?) #f)
       (check-equal? (.ref org-selection 'memory-published?) #f))
-    (poo-flow-test-case "same-cut granted selection remains a pure Session intent"
+    (poo-flow-test-case "same-cut policy match still lacks source admission"
       (let (proposal
             (poo-flow-session-org-memory-selection-intent
              org-selection org-intent org-store org-session
              (org-context "worktree-a" "cut-a" "bytes-sha256"
                           "tasks.open" 3 3 #t #t)))
         (check-equal?
-         (poo-flow-session-org-memory-selection-intent-eligible? proposal) #t)
+         (poo-flow-session-org-memory-selection-intent-policy-eligible?
+          proposal) #t)
         (check-equal?
-         (poo-flow-session-org-memory-selection-intent-diagnostics proposal) '())
+         (poo-flow-session-org-memory-selection-intent-eligible? proposal) #f)
+        (check-equal?
+         (poo-flow-session-org-memory-selection-intent-diagnostics proposal)
+         '(unverified-source-graph))
         (check-equal? (.ref proposal 'semantic-admitted?) #f)
         (check-equal? (.ref proposal 'memory-published?) #f)))
+    (poo-flow-test-case "same digest with forged graph cannot qualify"
+      (let* ((forged-graph
+              (make-org-element-graph-view
+               (list (.o id: 0 parent: #f kind: "org-data" todo-type: #f)
+                     (.o id: 1 parent: 0 kind: "headline" todo-type: "done")
+                     (.o id: 2 parent: 0 kind: "headline" todo-type: "todo"))
+               (lambda (record) (.ref record 'id))
+               (lambda (record) (.ref record 'parent))
+               (lambda (record) (.ref record 'kind))
+               (lambda (record name)
+                 (and (equal? name "todo-type") (.ref record 'todo-type)))))
+             (forged-selection
+              (poo-flow-memory-org-select
+               "project-one" "worktree-a" "notes/memory.org" "cut-a"
+               "bytes-sha256" forged-graph org-query 0))
+             (proposal
+              (poo-flow-session-org-memory-selection-intent
+               forged-selection org-intent org-store org-session
+               (org-context "worktree-a" "cut-a" "bytes-sha256"
+                            "tasks.open" 3 3 #t #t))))
+        (check-equal? (.ref forged-selection 'candidate-record-ids) '(2))
+        (check-equal?
+         (poo-flow-session-org-memory-selection-intent-policy-eligible?
+          proposal) #t)
+        (check-equal?
+         (poo-flow-session-org-memory-selection-intent-eligible? proposal) #f)
+        (check-equal?
+         (poo-flow-session-org-memory-selection-intent-diagnostics proposal)
+         '(unverified-source-graph))))
     (poo-flow-test-case "foreign WorkTree, stale cut, query and head are refused"
       (let (proposal
             (poo-flow-session-org-memory-selection-intent
@@ -89,7 +122,8 @@
                           "tasks.done" 3 4 #t #t)))
         (check-equal?
          (poo-flow-session-org-memory-selection-intent-diagnostics proposal)
-         '(foreign-scope stale-source-cut query-not-granted stale-memory-head))))
+         '(foreign-scope stale-source-cut query-not-granted stale-memory-head
+                         unverified-source-graph))))
     (poo-flow-test-case "changed bytes at same cut are refused"
       (let (proposal
             (poo-flow-session-org-memory-selection-intent
@@ -98,7 +132,7 @@
                           "tasks.open" 3 3 #t #t)))
         (check-equal?
          (poo-flow-session-org-memory-selection-intent-diagnostics proposal)
-         '(stale-org-bytes))))
+         '(stale-org-bytes unverified-source-graph))))
     (poo-flow-test-case "revoked read and inactive Session are refused"
       (let (proposal
             (poo-flow-session-org-memory-selection-intent
@@ -107,4 +141,4 @@
                           "tasks.open" 3 3 #f #f)))
         (check-equal?
          (poo-flow-session-org-memory-selection-intent-diagnostics proposal)
-         '(read-not-granted session-inactive))))))
+         '(read-not-granted session-inactive unverified-source-graph))))))

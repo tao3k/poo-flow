@@ -5,7 +5,9 @@
 
 ;;; Session-owned pure policy gate for an Orgize Scheme selection.
 ;;; Neither a query result nor this intent admits MRR semantics or publishes
-;;; a Memory head. Current source and grant facts come from the host.
+;;; a Memory head. Current source and grant facts come from the host. The
+;;; supplied graph is not yet bound to parser-owned source bytes, so policy
+;;; eligibility must not be mistaken for source-admission eligibility.
 
 (import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/modules/session/objects
@@ -17,6 +19,7 @@
         poo-flow-session-org-memory-selection-context?
         poo-flow-session-org-memory-selection-intent
         poo-flow-session-org-memory-selection-intent?
+        poo-flow-session-org-memory-selection-intent-policy-eligible?
         poo-flow-session-org-memory-selection-intent-eligible?
         poo-flow-session-org-memory-selection-intent-diagnostics)
 
@@ -127,7 +130,7 @@
   (poo-flow-session-require "Org selection requires current host context"
                             (poo-flow-session-org-memory-selection-context? context)
                             context)
-  (let ((diagnostic-values
+  (let ((policy-diagnostic-values
          (poo-flow-session-org-memory-selection-diagnostics
           selection intent store context))
         (session-value (poo-flow-session-id session))
@@ -140,8 +143,10 @@
         (org-selection selection-value)
         (memory-intent intent-value)
         (expected-head-revision head-value)
-        (eligible? (null? diagnostic-values))
-        (diagnostics diagnostic-values)
+        (policy-eligible? (null? policy-diagnostic-values))
+        (eligible? #f)
+        (diagnostics (append policy-diagnostic-values
+                             '(unverified-source-graph)))
         (semantic-admitted? #f)
         (memory-published? #f))))
 
@@ -151,6 +156,9 @@
 
 (def (poo-flow-session-org-memory-selection-intent-eligible? value)
   (.ref value 'eligible?))
+
+(def (poo-flow-session-org-memory-selection-intent-policy-eligible? value)
+  (.ref value 'policy-eligible?))
 
 (def (poo-flow-session-org-memory-selection-intent-diagnostics value)
   (.ref value 'diagnostics))

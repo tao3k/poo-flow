@@ -118,8 +118,12 @@ grant, Session state and expected head revision. This slice accepts the graph,
 query and source identity from its host. The host still must authenticate that
 the graph and query match the declared current Org bytes and source cut;
 these functions do not parse bytes or create that attestation. No candidate
-has MRR semantic admission or physical publication authority. The pinned
-Orgize Scheme query source currently has task/headline queries; an Org
+has MRR semantic admission or physical publication authority. The Session
+intent now reports =policy-eligible?= separately. Its =eligible?=
+remains false with =unverified-source-graph= until an Orgize parser-owned
+source/query observation can be checked against the current host source cut.
+Matching two caller-supplied digest strings does not perform that check. The
+pinned Orgize Scheme query source currently has task/headline queries; an Org
 Memory-specific named query remains an Orgize-owned gate. Session policy
 validation already reports memory catalog
 intents and store refs, and the Memory catalog marks =runtime-executed= false.
