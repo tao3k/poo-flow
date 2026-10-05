@@ -7,6 +7,12 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
+* Current delivery plan
+
+The [[file:next-delivery-plan-v1.org][2026-10-05 delivery audit]] records the updated ASCENT revision,
+current owner pins and ordered acceptance gates. Earlier implementation and
+qualification sections below retain their historical source/artifact scope.
+
 * Fixed Scheme v1 protocol constraint
 
 The current implementation keeps Scheme transport and semantic ABI versions at

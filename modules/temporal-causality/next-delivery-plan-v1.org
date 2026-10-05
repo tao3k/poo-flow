@@ -1,0 +1,131 @@
+#+title: Temporal delivery plan after the ASCENT dependency audit
+#+date: [2026-10-05]
+#+property: STATUS audited-plan-open-runtime-gates
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Current source identities and evidence boundary
+
+POO source base: =132259f1c2f10569f9c4f06ab432e64e9cd1430f=.
+The dependency update replaces ASCENT
+=0176c061877ff364e0037ce56d7d085848a9ad60= with the published PR #1 revision
+=964feb3eccd1241852947bc0d763715476190026=.
+The exact source archive SHA-256 is
+=d1f82888bbd927f2ac06a37fdd2bc717569f9f5e2bf53a5fac33b7e0f086cd33=.
+Upstream formal and BYODS oracle checks passed when inspected; Scheme and
+other-oracle CI were still running. A published dependency is not automatically
+a qualified POO consumer. Uncommitted upstream rule-binding work is excluded.
+
+The parent Rust binding and physical qualifier still consume MRR
+=9fcc4a42d4ea9462e0ce667bffab74b077696d9e=. The physical qualifier consumes
+MRR Data =b37aa9abe3a5be5f5b7759d78fbd8123547280c9=.
+Live PR refresh found MRR =4ccca987c97065499a366b9d1980419a574032a8= and
+MRR Data =9e0d755be34d5fa4ddd403beeab1ae0d37462ce8=.
+Those newer heads require source review, coherent owner pins and fresh tests;
+this ASCENT update does not qualify or silently select them.
+
+The earlier fixed-v1 receipts record 43 Python tests, 21 native differential
+cases, MRR Context replay and 37 Data Backend tests for their original source
+and artifact identities. Changing ASCENT reopens producer qualification.
+An old DLL or its old real-model receipt does not qualify the new dependency.
+The complete fixed-v1 physical/model lifecycle remains open.
+
+* Current local outcomes: A0 remains open
+
+The dependency contract, actual Bazel lock check and project version contract
+passed. The immutable archive digest was checked, and Linux/Darwin source lock
+projections agree. A fresh ASCENT build in an isolated cache completed all 58
+build targets with exit 0; the shared previously qualified cache was preserved.
+
+Both POO native consumer commands failed before semantic cases:
+
+| Command | Exit | Wall seconds | Last actual progress |
+|---------+------+--------------+----------------------|
+| =just test-ascent-temporal= | 124 | 25.57 | =IMPORT :gerbil-ascent/program/scheme-admission=, then five seconds without test progress |
+| =just test-ascent-integration= | 124 | 5.21 | Guarded test entry; no completed semantic case before the idle limit |
+
+These results establish source compilation, but leave consumer qualification
+open. They do not establish an incorrect relational answer either: neither
+command reached the semantic case results. First resolve the native consumer
+initialization path with real completed-work output under the unchanged limits,
+then repeat the original cases and advance to A1. A warm retry or removing
+required admission work is not sufficient evidence. No fresh AOT, Python/Rust
+consumer, real-model or benchmark qualification was performed for this REV.
+
+The published concurrent Python progress-reporter fix at
+=03f93cf81164adec689309e2f88337f346b8f9d2= was preserved by fast-forward before
+this audit was committed. It does not change these native consumer outcomes.
+
+* Owners and fixed constraints
+
+| Owner | Responsibility |
+|-------+----------------|
+| ASCENT Scheme Library | Finite relational evaluation, snapshots and derivation evidence within its named profiles |
+| POO Flow Scheme core | Temporal interpretation, source/cut correspondence, evidence and proof admission, revisions and applicability |
+| =bindings/runtime-c= | Bounded shared native ABI and explicit host controls |
+| =packages/python-runtime= | Python scheduling/IO, Library tests and Python qualification tools |
+| =bindings/rust-runtime= | Rust ABI consumer, native owner queue and Rust assertions |
+| MRR production Rust Library | Original query/result admission, semantic identity, Context and relational fact use |
+| MRR Data Backend/Protocols | Original physical execution, persisted state and conditional commit ports |
+| ASP Scheme benchmark API | Measurement and native Scheme qualification receipts |
+
+Keep the configured Gerbil v0.19 toolchain and Scheme protocol/ABI version v1.
+Public POO interfaces remain native objects and functional combinators.
+ASCENT's richer upstream implementation does not establish external source
+authenticity, closed causal coverage, IFC permission or durable applicability.
+Do not introduce another solver in Rust or move Python implementation into the
+Rust binding. Model tools receive read-only capabilities; source registration,
+policy controls and publication remain explicit host capabilities.
+
+* Ordered delivery and acceptance
+
+| Order | Work | Required evidence before advancing |
+|-------+------+------------------------------------|
+| A0 dependency closure | Update =gerbil.pkg=, archive projection and Linux/Darwin lock together; build and consume the exact ASCENT revision | Dependency contract and native Bazel lock pass; original guarded copy/join and Temporal lens/exchange cases pass with final native markers and process exit |
+| A1 fixed-v1 Library producer | Rebuild the Scheme AOT artifact against A0; freeze original source closure, manifest and DLL digest | Installed Python Library tests and Rust/native differential tests use the same fresh artifact; open/partial/budget, thread/queue/lifetime and stale-source controls retain their meaning |
+| A2 coherent MRR/Data graph and G0 | Review the refreshed owner heads, choose one MRR revision across POO and Data, resolve actual Git locks, then execute original GQL/Arrow/DataFusion/MRR/Temporal | Original parser/query/catalog/root/result identities survive; root/source/query/catalog/row/wire-budget substitution rejects; empty physical answer follows the documented Temporal profile boundary |
+| A3 G1/G2 lifecycle | General reverse fact projection and acyclic support/revision journal on the original admission | Two supports -> one support -> no support; late correction, absence invalidation, stale Context, conflicting branch, policy expiry and as-of replay preserve original histories and refuse unqualified current selection |
+| A4 G3 recursive/absence profiles | Add only named evaluator profiles with SCC/support and coverage certificates | Incremental results match full recomputation; removing external support breaks cycles; unsupported negation rejects; exhausted budget preserves dirty/unknown state |
+| A5 G4 durable IFC publication | Bind proof/source/policy/flow guards to the authoritative Data Backend commit, replacement/tombstone and replayable journal | Source or grant update racing with commit, duplicate/reordered outbox and crashes at every durable boundary cannot publish or retain a stale permit |
+| A6 G5 real-model lifecycle | Exercise the implemented read-only physical/revision tools, then any separately qualified publication capability | Actual DeepSeek output uses original evidence, correction/re-query and unknown/refuted/stale outcomes; preserve raw responses and failed predictions, with no hidden retry or repair |
+
+Read-only model qualification may proceed after A1/A2 within its declared
+profile. A6's complete correction/publication lifecycle depends on the relevant
+A3--A5 gates. A passing model tool call does not close a missing deterministic
+negative, race or recovery gate. External business integration follows the
+qualified Library and Backend capabilities, rather than supplying substitute
+semantic fixtures.
+
+* Priority corrections from the audit
+
+1. Dependency and ABI evidence must refer to the same actual producer closure.
+   Update the ASCENT pin before accepting a fresh native Library artifact.
+2. In-process source replay and revision journals are bounded basic slices.
+   Durable support withdrawal, current selection and journal recovery remain
+   separate from those slices.
+3. The C SQLite first-root CAS and Data Backend conditional commits have separate
+   evidence. Two individually passing stores do not establish one atomic
+   cross-module publication. Define the authoritative commit owner and bind
+   source/proof/policy guards through that commit; do not treat sequential writes
+   as an atomic transfer.
+4. IFC visibility subset checking is only a partial checker. Label composition,
+   provenance/lease checks, authorized declassification and the actual transfer
+   fence must qualify before an IFC-controlled publication claim.
+5. After a source or grant change, an immutable historical commit receipt proves
+   the old outcome. Fresh current applicability/effect permission needs its own
+   check against the new source/policy state.
+
+* Runtime and reporting gates
+
+Five seconds without genuine completed-work output is failure. Native runtime
+qualification retains its 45-second total deadline. Report actual build,
+process exit, local semantic checks, exact-head remote CI, model behavior and
+benchmark evidence separately. No synthetic heartbeat, relaxed timeout,
+automatic response repair or construction-only performance claim closes a gate.
+
+Current dependency verification and native consumer outcomes are retained in
+[[file:../../t/qualification/temporal-library-basic/ascent-revision-v1.ss][the ASCENT revision receipt]].
+The preceding architecture and historical receipts remain readable, with this
+plan providing the current delivery order and evidence boundary.
