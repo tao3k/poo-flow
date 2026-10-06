@@ -8,7 +8,7 @@
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/test check-equal? check-exception test-suite)
         (only-in :gerbil-parser/src/runtime/artifact sha256-text)
-        (only-in :gerbil-parser/languages/tla-plus/grammars/layout
+        (only-in :gerbil-parser/languages/tla-plus/grammar
                  tla-plus-layout-language-grammar)
         (only-in :gerbil-parser/src/language/descriptor
                  language-grammar-contract)

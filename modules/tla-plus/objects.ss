@@ -6,7 +6,7 @@
 ;;; the lossless TLA+ syntax tree; this module defines no parallel AST.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in :gerbil-parser/languages/tla-plus/grammars/layout
+        (only-in :gerbil-parser/languages/tla-plus/grammar
                  tla-plus-layout-language-grammar)
         (only-in :gerbil-parser/src/language/descriptor
                  language-grammar-contract)
