@@ -828,8 +828,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
    not reconstruct a Query model or invent parser, source, provenance or
    semantic-revision identities from the result receipt.
   A separate bounded synthetic read-only chain now passes original GQL
-   compilation, immutable Arrow recovery, original MRR Scheme v2 receipt
-   admission and native finite-family Temporal classification. Its exact pins
+   compilation, immutable Arrow recovery, historical MRR receipt admission
+   and native finite-family Temporal classification. That receipt predates the
+   fixed Scheme v1 transport migration and does not qualify the current ABI. Its exact pins
    and evidence are recorded in
    [[file:../../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][physical roundtrip qualification]].
    This does not yet bind the Healthcare candidate-path queries above or close
@@ -897,3 +898,24 @@ applicability checks. The Context core consumes existing typed fact references
 and receives no new Temporal ontology or Rust ASCENT evaluator.
 See =t/qualification/temporal-mrr-context-binding/= for the bounded real-owner
 integration test and its open gates.
+
+* Production integration sequence (fixed Scheme v1)
+
+MRR owns typed semantic admission, the single native execution owner and effect
+coordination. MRR Data owns physical Backend/Protocols, the authenticated
+content head and the conditional head/operation-ledger transaction. The runtime
+must not duplicate Backend storage or treat a sampled current proof as an
+atomic publication permit.
+
+1. Integrate the original proof Host into MRR's canonical AOT program and
+   existing Gambit owner thread; qualify coexistence with parsing and inference.
+2. Bind real source/query/root receipts and distinct observed knowledge/valid
+   clock domains to the Host snapshot. No implicit clock conversion is admitted.
+3. Join fresh IFC/action authorization and expected authority versions to the
+   protected Data transaction, with correction/revocation race tests.
+4. Qualify operation-identity-preserving recovery, ambiguous outcomes and
+   resource/cancellation behavior before production effect claims.
+
+All current semantic transport remains bounded inert Scheme datum v1. The
+Python Library ABI and Rust original-owner bridge do not by themselves qualify
+MRR production publication. Raw build/test logs stay in local or CI artifacts.
