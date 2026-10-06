@@ -283,6 +283,23 @@ test-file path:
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
 
+# Run statically linked Query/Orgize/Evidence cases through upstream gxtest.
+[group('test')]
+test-query-parser-native executable:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -x "{{ executable }}"
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    POO_FLOW_TEST_PROGRESS=1 GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 "{{ justfile_directory() }}/t/query-core-test.ss" "{{ justfile_directory() }}/t/query-orgize-source-test.ss" "{{ justfile_directory() }}/t/evidence-assessment-core-test.ss" 2>&1 | tee "$log"
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 24
+    grep -Eq '^MODULE-OK .*query-core-test.ss$' "$log"
+    grep -Eq '^MODULE-OK .*query-orgize-source-test.ss$' "$log"
+    grep -Eq '^MODULE-OK .*evidence-assessment-core-test.ss$' "$log"
+    grep -Eq '^HARNESS-OK ' "$log"
+    grep -Eq '^OK$' "$log"
+
 # Run the compiler-owned native Temporal suite with heap fencing and Case receipts.
 [group('test')]
 test-temporal-family-native executable:

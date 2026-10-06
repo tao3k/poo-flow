@@ -8,8 +8,8 @@
         (only-in :poo-flow/modules/query/interface
                  PooFlowQuery. PooFlowGqlQueryProgram.
                  PooFlowSchemeGqlQueryLanguage.
-                 GqlQueryNode. GqlQueryPath. GqlQueryProperty.
-                 GqlQueryProjection. poo-flow-query-result-contract)
+                 GraphSyntaxNode. GraphSyntaxPath. GraphSyntaxProperty.
+                 GraphSyntaxProjection. poo-flow-query-result-contract)
         (only-in :poo-flow/modules/evidence-assessment/interface
                  PooFlowEvidenceAssessmentCase.
                  poo-flow-evidence-reference
@@ -27,21 +27,21 @@
   (.o (:: @ PooFlowGqlQueryProgram.)
       identity: 'evidence-assessment-core-claims
       match:
-      (.o (:: @ GqlQueryPath.)
-          start: (.o (:: @ GqlQueryNode.)
+      (.o (:: @ GraphSyntaxPath.)
+          start: (.o (:: @ GraphSyntaxNode.)
                      binding: 'claim label: 'EvidenceClaim))
       project:
-      (.o (:: @ GqlQueryProjection.)
+      (.o (:: @ GraphSyntaxProjection.)
           expression:
-          (.o (:: @ GqlQueryProperty.) binding: 'claim property: 'identity)
+          (.o (:: @ GraphSyntaxProperty.) binding: 'claim property: 'identity)
           next:
-          (.o (:: @ GqlQueryProjection.)
+          (.o (:: @ GraphSyntaxProjection.)
               expression:
-              (.o (:: @ GqlQueryProperty.) binding: 'claim property: 'value)
+              (.o (:: @ GraphSyntaxProperty.) binding: 'claim property: 'value)
               next:
-              (.o (:: @ GqlQueryProjection.)
+              (.o (:: @ GraphSyntaxProjection.)
                   expression:
-                  (.o (:: @ GqlQueryProperty.)
+                  (.o (:: @ GraphSyntaxProperty.)
                       binding: 'claim property: 'evidenceSource))))))
 
 (def ClaimQuery

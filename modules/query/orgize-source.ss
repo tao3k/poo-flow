@@ -14,8 +14,8 @@
         (only-in "objects.ss"
                  PooFlowQuery. PooFlowSchemeGqlQueryLanguage.
                  PooFlowGqlQueryProgram.
-                 GqlQueryPath. GqlQueryNode. GqlQueryEquals.
-                 GqlQueryProperty. GqlQueryLiteral. GqlQueryProjection.
+                 GraphSyntaxPath. GraphSyntaxNode. GraphSyntaxEquals.
+                 GraphSyntaxProperty. GraphSyntaxLiteral. GraphSyntaxProjection.
                  poo-flow-query-element-space
                  poo-flow-query-result-contract)
         (only-in "types.ss" PooFlowQuery)
@@ -40,34 +40,34 @@
   (.o (:: @ PooFlowGqlQueryProgram.)
       identity: 'orgize/open-headlines-v1
       match:
-      (.o (:: @ GqlQueryPath.)
-          start: (.o (:: @ GqlQueryNode.)
+      (.o (:: @ GraphSyntaxPath.)
+          start: (.o (:: @ GraphSyntaxNode.)
                      binding: 'h label: 'OrgHeadline))
       where:
-      (.o (:: @ GqlQueryEquals.)
-          left: (.o (:: @ GqlQueryProperty.)
+      (.o (:: @ GraphSyntaxEquals.)
+          left: (.o (:: @ GraphSyntaxProperty.)
                     binding: 'h property: 'todoType)
-          right: (.o (:: @ GqlQueryLiteral.)
+          right: (.o (:: @ GraphSyntaxLiteral.)
                      literal-kind: 'string value: "todo"))
       project:
-      (.o (:: @ GqlQueryProjection.)
-          expression: (.o (:: @ GqlQueryProperty.)
+      (.o (:: @ GraphSyntaxProjection.)
+          expression: (.o (:: @ GraphSyntaxProperty.)
                           binding: 'h property: 'identity)
           next:
-          (.o (:: @ GqlQueryProjection.)
-              expression: (.o (:: @ GqlQueryProperty.)
+          (.o (:: @ GraphSyntaxProjection.)
+              expression: (.o (:: @ GraphSyntaxProperty.)
                               binding: 'h property: 'byteStart)
               next:
-              (.o (:: @ GqlQueryProjection.)
-                  expression: (.o (:: @ GqlQueryProperty.)
+              (.o (:: @ GraphSyntaxProjection.)
+                  expression: (.o (:: @ GraphSyntaxProperty.)
                                   binding: 'h property: 'byteEnd)
                   next:
-                  (.o (:: @ GqlQueryProjection.)
-                      expression: (.o (:: @ GqlQueryProperty.)
+                  (.o (:: @ GraphSyntaxProjection.)
+                      expression: (.o (:: @ GraphSyntaxProperty.)
                                       binding: 'h property: 'title)
                       next:
-                      (.o (:: @ GqlQueryProjection.)
-                          expression: (.o (:: @ GqlQueryProperty.)
+                      (.o (:: @ GraphSyntaxProjection.)
+                          expression: (.o (:: @ GraphSyntaxProperty.)
                                           binding: 'h property: 'todoType))))))))
 
 (def (source-elements->query-nodes elements digest)

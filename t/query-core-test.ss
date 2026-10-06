@@ -33,36 +33,36 @@
   (.o (:: @ PooFlowGqlQueryProgram.)
       identity: 'healthcare-case-profile-relations
       match:
-      (.o (:: @ GqlQueryPath.)
-          start: (.o (:: @ GqlQueryNode.) binding: 's label: 'Scenario)
+      (.o (:: @ GraphSyntaxPath.)
+          start: (.o (:: @ GraphSyntaxNode.) binding: 's label: 'Scenario)
           next:
-          (.o (:: @ GqlQueryStep.)
+          (.o (:: @ GraphSyntaxStep.)
               relation: 'HAS_CASE
-              target: (.o (:: @ GqlQueryNode.) binding: 'c label: 'Case)
+              target: (.o (:: @ GraphSyntaxNode.) binding: 'c label: 'Case)
               next:
-              (.o (:: @ GqlQueryStep.)
+              (.o (:: @ GraphSyntaxStep.)
                   relation: 'HAS_EFFECTIVE_PROFILE
                   target:
-                  (.o (:: @ GqlQueryNode.) binding: 'p label: 'Profile))))
+                  (.o (:: @ GraphSyntaxNode.) binding: 'p label: 'Profile))))
       where:
-      (.o (:: @ GqlQueryEquals.)
+      (.o (:: @ GraphSyntaxEquals.)
           left:
-          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GraphSyntaxProperty.) binding: 's property: 'identity)
           right:
-          (.o (:: @ GqlQueryLiteral.)
+          (.o (:: @ GraphSyntaxLiteral.)
               literal-kind: 'string value: "healthcare"))
       project:
-      (.o (:: @ GqlQueryProjection.)
+      (.o (:: @ GraphSyntaxProjection.)
           expression:
-          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GraphSyntaxProperty.) binding: 's property: 'identity)
           next:
-          (.o (:: @ GqlQueryProjection.)
+          (.o (:: @ GraphSyntaxProjection.)
               expression:
-              (.o (:: @ GqlQueryProperty.) binding: 'c property: 'id)
+              (.o (:: @ GraphSyntaxProperty.) binding: 'c property: 'id)
               next:
-              (.o (:: @ GqlQueryProjection.)
+              (.o (:: @ GraphSyntaxProjection.)
                   expression:
-                  (.o (:: @ GqlQueryProperty.)
+                  (.o (:: @ GraphSyntaxProperty.)
                       binding: 'p property: 'identity))))))
 
 (def Query
@@ -142,13 +142,13 @@
              (.o (:: @ PooFlowGqlQueryProgram.)
                  identity: 'signal-selection
                  match:
-                 (.o (:: @ GqlQueryPath.)
-                     start: (.o (:: @ GqlQueryNode.)
+                 (.o (:: @ GraphSyntaxPath.)
+                     start: (.o (:: @ GraphSyntaxNode.)
                                 binding: 'signal label: 'Signal))
                  project:
-                 (.o (:: @ GqlQueryProjection.)
+                 (.o (:: @ GraphSyntaxProjection.)
                      expression:
-                     (.o (:: @ GqlQueryProperty.)
+                     (.o (:: @ GraphSyntaxProperty.)
                          binding: 'signal property: 'identity))))
             (scheme-query
              (.o (:: @ Query)
@@ -179,12 +179,12 @@
      (let (escaped
            (.o (:: @ CaseProfileProgram)
                where:
-               (.o (:: @ GqlQueryEquals.)
+               (.o (:: @ GraphSyntaxEquals.)
                    left:
-                   (.o (:: @ GqlQueryProperty.)
+                   (.o (:: @ GraphSyntaxProperty.)
                        binding: 's property: 'identity)
                    right:
-                   (.o (:: @ GqlQueryLiteral.)
+                   (.o (:: @ GraphSyntaxLiteral.)
                        literal-kind: 'string value: "patient's-case"))))
        (check
         (poo-flow-query-program->gql escaped)

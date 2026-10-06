@@ -81,10 +81,10 @@
              (query (.ref observation 'query))
              (program (.ref query 'program))
              (done-predicate
-              (.o (:: @ GqlQueryEquals.)
-                  left: (.o (:: @ GqlQueryProperty.)
+              (.o (:: @ GraphSyntaxEquals.)
+                  left: (.o (:: @ GraphSyntaxProperty.)
                             binding: 'h property: 'todoType)
-                  right: (.o (:: @ GqlQueryLiteral.)
+                  right: (.o (:: @ GraphSyntaxLiteral.)
                              literal-kind: 'string value: "done")))
              (changed-program
               (.o (:: @ program) where: done-predicate))
