@@ -94,6 +94,12 @@
     "modules/standards/interface.ss"
     "modules/temporal-causality/interface.ss"
     "modules/temporal-causality/ascent-exchange.ss"
+    ;; Advanced embedded owner projections must ship in the installed package.
+    ;; Ordinary authoring continues through the POO-native Temporal interface.
+    "src/ffi/scheme-wire.ss"
+    "src/ffi/temporal-policy.ss"
+    "src/ffi/temporal-proof.ss"
+    "src/ffi/temporal-proof-host.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("modules/nono-sandbox/_nono.ss"
