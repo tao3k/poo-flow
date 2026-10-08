@@ -180,7 +180,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let execution = source.execute_with(&backend, limits).await?;
     println!("Original MRR source query dispatched to Data backend and admitted");
-    let handoff = d::DataQueryResultHandoff::export_execution(&execution, limits, cap)?;
+    assert_eq!(execution.compilation(), source.compilation());
+    let handoff = d::DataQueryResultHandoff::export_execution(execution.execution(), limits, cap)?;
+    assert_eq!(
+        handoff.result_bytes(),
+        execution.export_result_transport(cap)?
+    );
     let expected = d::bind_data_query(
         source.query(),
         &snapshot,
@@ -286,7 +291,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?
     .bind(&relations, &entities, &semantic)?;
     let empty_execution = empty_source.execute_with(&backend, limits).await?;
-    let empty_handoff = d::DataQueryResultHandoff::export_execution(&empty_execution, limits, cap)?;
+    assert_eq!(empty_execution.compilation(), empty_source.compilation());
+    let empty_handoff =
+        d::DataQueryResultHandoff::export_execution(empty_execution.execution(), limits, cap)?;
+    assert_eq!(
+        empty_handoff.result_bytes(),
+        empty_execution.export_result_transport(cap)?
+    );
     assert_eq!(
         m::verify_query_result_transport(
             empty_source.query(),
@@ -462,8 +473,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let corrected_execution = corrected_source
         .execute_with(&corrected_backend, limits)
         .await?;
+    assert_eq!(
+        corrected_execution.compilation(),
+        corrected_source.compilation()
+    );
     let corrected_handoff =
-        d::DataQueryResultHandoff::export_execution(&corrected_execution, limits, cap)?;
+        d::DataQueryResultHandoff::export_execution(corrected_execution.execution(), limits, cap)?;
+    assert_eq!(
+        corrected_handoff.result_bytes(),
+        corrected_execution.export_result_transport(cap)?
+    );
     let corrected_expected = d::bind_data_query(
         corrected_source.query(),
         &corrected_snapshot,
