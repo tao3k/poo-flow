@@ -262,17 +262,16 @@ equalities and limits lineage impact to a reevaluation frontier. These contracts
 are proposed; the delivered native event/position slice remains the executable
 boundary until each gate has its own receipt.
 
-* Scheme ABI v2 migration
+* Current fixed-v1 consumer closure
 
-The transport observations above describe their pinned producer versions. The
-current semantic runtime now exposes only versioned ABI v2 symbols and inert
-Scheme datum transport. Python host publication callbacks and artifact manifests
-also use Scheme data. The Rust MRR bridge re-admits original native typed values
-without the upstream JSON exporter. The 9ad77d30 JSON qualification dumps and
-the Rust Python benchmark driver have been removed.
+[[file:next-delivery-plan-v1.org][The current delivery ledger]] supersedes the earlier implementation status
+above. Scheme ABI and transport remain v1. The native proof Host controls and
+original MRR rule/Derivation/source-leaf correspondence are implemented and have
+bounded historical qualification. The new exact-run consumer gate requalifies
+Rust and installed Python using one fresh native artifact and the current
+immutable dependency graph. Historical producer receipts are not transferable.
 
-[[file:../../t/qualification/temporal-library-basic/scheme-abi-v2/README.org][ASP-owned v2 qualification]] records 100 installed Python tests, 21 Rust
-differential results and 4/4 real DeepSeek cases with 8 responses and no retries.
-It separately preserves the failed cold-process p95 gate (1.171178s against
-900ms), despite 20 passing semantic samples. No performance closure or physical
-MRR Data integration follows from the functional/model results.
+Source issuer authentication, complete coverage, authoritative Data publication,
+replacement/withdrawal recovery, IFC transfer fencing and the real-model physical
+revision lifecycle remain separately gated. The first-root local store is not
+an implementation of the general publication protocol.

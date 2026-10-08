@@ -1,312 +1,91 @@
-#+title: Temporal delivery plan after the ASCENT dependency audit
-#+date: [2026-10-05]
-#+property: STATUS audited-plan-open-runtime-gates
+#+title: Temporal production delivery ledger
+#+date: [2026-10-08]
+#+property: STATUS dependency-consumer-qualification-in-progress
 #+begin_comment
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
-* Current A3 acyclic support applicability slice
-
-The Scheme truth-maintenance Library now exposes native POO support premises,
-alternative supports, an immutable program and pure support evaluation through
-=truth-maintenance/interface.ss=. Each source premise binds both subject and
-exact revision identity, and evaluation uses the original evidence journal's
-as-of/valid-time projection. Premises within a support are conjunctive; multiple
-supports for a conclusion are alternatives. Downstream conclusions reuse these
-scoped applicability states. Admission rejects cycles, duplicate identities,
-unknown parent conclusions and foreign revision owners.
-
-Five original native Cases passed through the public module interface, exit 0,
-9.76s wall time under the unchanged five-second idle / 45-second total gates:
-two supports -> one -> none, downstream propagation and historical cut replay;
-partial inventories and budget exhaustion stay unknown; corrections invalidate
-old exact-revision premises and conflicting branches stay unknown; future
-admissions stay unknown and valid-time exclusion refuses applicability;
-recursive declarations and foreign subject/revision bindings reject.
-
-This is bounded acyclic applicability of declared supports, not admission of
-the opaque proof identities or proof that the support inventory is exhaustive.
-An unsupported conclusion does not prove logical refutation or authorize
-retraction/publication. Output explicitly carries false proof-admission,
-action-authorization and durability flags. Evaluation is full recomputation,
-with at most 128 supports and a 0--128 support-work budget. No recursive or
-negative-premise profile is silently added.
-
-[[file:../../t/qualification/temporal-library-basic/support-applicability-v1/qualification.ss][The Scheme v1 qualification]] preserves the initial idle failure, rejected
-invalid test revision fixture, final raw native output and source hashes.
-The next consumer slice is now locally qualified through the same fresh native
-artifact: ABI v1 =temporal.support.evaluate=, Python Library helper and Rust
-=mrr_support= adapter. The adapter retains original MRR Derivation values,
-projects original derivation/output IDs, and hashes rule, generation, output and
-support identities into an inert proof label. Host fact-to-subject/revision
-correspondence is explicit; duplicate, missing and unused bindings reject.
-Original MRR shape admission does not establish rule truth or source authority.
-
-79 Python tests passed (including the project harness and replay of the original
-MRR Scheme oracle), 2.46s supervised wall time. Two Rust tests passed, 1.50s:
-original identities, two supports -> one -> none, historical replay and invalid
-host correspondences. Both retain the five-second idle / 45-second total gate.
-The fresh compiler-owned AOT artifact is recorded in
-[[file:../../t/qualification/temporal-library-basic/support-consumer-v1/qualification.ss][the Scheme v1 consumer receipt]], with raw logs and both initial Rust failures.
-Scheme ABI remains v1, Gerbil v0.19, and ASCENT remains pinned at 964feb3.
-
-The Scheme Library also provides a declared policy window and historical replay
-guard through the original public interface. Nine native Cases passed in 10.19s
-under the unchanged idle/total/heap gates, including the five original support
-Cases. New controls cover half-open expiry, replacement policy digest, original
-history replay, forged receipt/policy, domain mismatch and uncertain clock labels.
-The initial POO slot capture/heap failure is retained in
-[[file:../../t/qualification/temporal-library-basic/support-policy-v1/qualification.ss][the Scheme v1 policy receipt]]. The fresh AOT closure matches the retained
-compiler-generated policy module hash; existing Python (79 tests, 3.26s) and
-Rust (2 tests, 1.92s) support ABI consumers passed regression. Those consumer
-checks do not qualify a guard ABI.
-
-Policy status is separate from evidence applicability. The guard still carries
-false proof/source/selection/effect/durability flags. Caller-declared policy and
-observed time labels do not authenticate the clock, current policy or its issuer.
-No new guard ABI operation or MRR current-pointer admission is qualified here.
-
-The independent =evaluator/interface.ss= now exposes a native POO admission
-adapter for original ASCENT source-only positive query proof receipts. It
-recomputes the actual native query, requires completed bounded proof production,
-then replays the held original DAG against those rows. Hypothetical facts,
-empty roots, bounded work, original node tamper, stale snapshots/proposals and
-forged projected admission fields reject. This proves the scoped positive query
-relative to declared source content; it does not bind an arbitrary Temporal
-conclusion or MRR Derivation identity.
-
-An independent =support/policy-host.ss= runtime capability now registers policy,
-generation and observed time through an explicit effectful control call.
-Read-only guard use chooses the registered snapshot. Rollback/conflict/revision
-rewrite, cross-domain/uncertain clocks and capacity overflow reject without
-changing current state. Exact registration is idempotent; Host instances are
-isolated. The application serializes use and refreshes authoritative inputs;
-clock authenticity, automatic provider refresh and durable/CAS authority remain
-open.
-
-Ten native Cases passed in 8.00s under unchanged five-second idle / 45-second
-total / 1G heap gates. The original invalid-validity fixture failure is retained
-in [[file:../../t/qualification/temporal-library-basic/evaluator-proof-v1/qualification.ss][the Scheme v1 evaluator receipt]]. These lazy modules are not added to the
-existing support ABI import graph. No new proof/Host control ABI, consumer model
-call, wheel, AOT archive or end-to-end publication is qualified by this slice.
-
-The next binding slice is locally qualified. Original positive query roots and
-their exact source-leaf nodes now bind native fact-content values to journal
-subjects/revisions. Each revision content must equal the canonical fact digest.
-The resulting ordinary support retains the scoped proof binding. Current
-correction invalidates its exact old revision; historical cut replay preserves
-the old support and proof. Missing/duplicate leaves, wrong output/generation,
-revision content substitution and embedded support tamper reject.
-
-The fresh ABI v1 adds =temporal.fact.content= only. Typed Rust consumes original
-complete/valid MRR Fact records; Scheme and Python reproduce their content
-digests. The same typed Fact/Derivation Scheme fixture passes through the actual
-native proof/journal binding. Evaluator relation mapping is explicit; original
-MRR rule/catalog equivalence and source authority remain unverified.
-
-13 native Cases passed in 9.56s, Python 85 tests in 2.09s and Rust 2 tests in
-1.71s on the fresh artifact, all under the unchanged five-second idle/45-second
-total gates. [[file:../../t/qualification/temporal-library-basic/fact-binding-v1/qualification.ss][The Scheme v1 receipt]] preserves the native output-slot capture
-failure, duplicate-runtime Rust failure and resulting missing-oracle Python
-failure. No real-model call or performance benchmark was made.
-
-Next A3 work: authoritative MRR rule/catalog correspondence and the typed proof/
-Host control ABI, then incremental/full equivalence. Source authentication,
-durable authoritative commit and IFC publication remain open. Prior A0--A2
-receipts keep their original producer scope.
-
-* Current A2 physical and Context qualification
-
-The parent Rust Library and physical qualifier now agree with the resolved
-MRR Data source on MRR =4ccca987c97065499a366b9d1980419a574032a8=.
-The physical Data owner is =203dec657ba4e57ba4b8313ae18415aab5547f95=;
-MRR selects native build owner =072acac90dd4a83849826c75b1b5633721ce2ef0=.
-Cargo resolved both locks from the original immutable Git sources. Registry
-versions/checksums are unchanged. No local source patch substitutes for an owner.
-Gerbil remains v0.19 and Scheme transport/ABI remains v1.
-
-| A2 gate | Actual local evidence |
-|---------+-----------------------|
-| Original GQL -> Arrow root -> DataFusion -> MRR -> Temporal | Original compilation/query/root/result identities retained; final process exited 0 in 3.29s |
-| Negative admission | Source, root, catalog, row, query and wire-budget substitutions rejected; unsupported transport version rejected |
-| Empty result profile | Empty physical answer admitted by MRR, refused by the named nonempty event-position Temporal profile |
-| Original physical correction | Second immutable Arrow root and actual re-query changed classification necessary -> refuted; old admission stayed immutable and became stale; revised admission is current |
-| MRR Context and archive | Original policy/Temporal/Source binding and negative substitutions passed; separate process replayed complete premises and rejected tamper/cycle/missing/duplicate; 3.14s total |
-
-The physical qualifier checks both native ABI version 1 and =scheme-datum-v1=,
-and retains its original/corrected MRR transport in the
-[[file:../../t/qualification/temporal-library-basic/mrr-data-physical-v1/physical-receipt.ss][physical receipt]].
-The Just entry requires the protocol/correction/final markers, a real nonempty
-receipt and the original exit under the unchanged five-second idle / 45-second
-wall gate. [[file:../../t/qualification/temporal-library-basic/mrr-data-physical-v1/qualification.ss][The qualification receipt]] freezes both locks, sources, binaries,
-native artifact, actual logs and Context archive.
-
-This closes the bounded local A2 original query/correction and Context slices.
-The DataFusion executor is trusted and the physical inventory is a fixture.
-Source authenticity, exhaustive coverage, general reverse facts, multiple
-support withdrawal, durable journal/recovery, unified Data commit/IFC permission
-and authorized effects remain separate gates. Existing Data snapshot format
-identities are separate from this unchanged Scheme v1 wire contract. No new
-model call, wheel/deployment claim or benchmark is made.
-
-Next: A3 general reverse fact projection and support/revision lifecycle on
-original admissions, with two supports -> one -> none, late correction,
-absence invalidation, current/as-of selection and conflicting-branch controls.
-
-* Initial audit source identities and evidence boundary
-
-POO source base: =132259f1c2f10569f9c4f06ab432e64e9cd1430f=.
-The dependency update replaces ASCENT
-=0176c061877ff364e0037ce56d7d085848a9ad60= with the published PR #1 revision
-=964feb3eccd1241852947bc0d763715476190026=.
-The exact source archive SHA-256 is
-=d1f82888bbd927f2ac06a37fdd2bc717569f9f5e2bf53a5fac33b7e0f086cd33=.
-Upstream formal and BYODS oracle checks passed when inspected; Scheme and
-other-oracle CI were still running. A published dependency is not automatically
-a qualified POO consumer. Uncommitted upstream rule-binding work is excluded.
-
-The parent Rust binding and physical qualifier still consume MRR
-=9fcc4a42d4ea9462e0ce667bffab74b077696d9e=. The physical qualifier consumes
-MRR Data =b37aa9abe3a5be5f5b7759d78fbd8123547280c9=.
-Live PR refresh found MRR =4ccca987c97065499a366b9d1980419a574032a8= and
-MRR Data =9e0d755be34d5fa4ddd403beeab1ae0d37462ce8=.
-Those newer heads require source review, coherent owner pins and fresh tests;
-this ASCENT update does not qualify or silently select them.
-
-The earlier fixed-v1 receipts record 43 Python tests, 21 native differential
-cases, MRR Context replay and 37 Data Backend tests for their original source
-and artifact identities. Changing ASCENT reopens producer qualification.
-An old DLL or its old real-model receipt does not qualify the new dependency.
-The complete fixed-v1 physical/model lifecycle remains open.
-
-* Prior A0/A1 outcomes after initialization repair
-
-The consumer runners now preload actual dependencies in the order declared by
-the compiled ASCENT modules at REV =964feb3e=. Required admission, evaluator,
-session and proof modules remain present. Every progress line corresponds to
-an actual module import boundary. Both ASCENT test Just entries now enforce
-the five-second idle / 45-second total gates themselves, retain heap fencing,
-propagate the real exit and require Case, Module, Harness and final =OK= markers.
-
-| Gate | Actual result |
-|------+---------------|
-| A0 original Temporal lens/exchange | Two original cases passed; first expanded-source execution exited 0 in 24.64s |
-| A0 guarded copy/join | Original snapshot-preservation case passed; exit 0 in 9.41s |
-| Semantic worker startup | Explicit FFI dependency imports reached =READY= and final =OK=, then clean EOF; 9.37s |
-| A1 new Scheme AOT | Fresh native library and compiler-owned manifest built against the isolated pinned ASCENT cache; ABI v1 |
-| A1 Python Basic | 43 semantic/runtime/publication/wire cases passed; 2.50s supervised wall time |
-| A1 Rust/native Basic | 21 Python-native paired results plus owner, digest, queue and lifetime guards passed; 2.73s supervised wall time |
-
-Python and Rust used the same fresh semantic artifact with SHA-256
-=5d86f069e5185f689cd13dcf8c37bcbfb72b5ff9675e547c96cb1281d5b12848=.
-Python exercised the installed editable Library and the separately retained real
-control-lane artifact; this is not a new wheel or clean-machine qualification.
-Initial source startup failures, the worker's FFI loading failure and Python's
-missing control-lane configuration failure remain in the evidence receipt.
-Timing describes these local processes, with no latency or performance claim.
-
-A0 and this bounded A1 Basic slice now have local passing evidence. A2's
-coherent MRR/Data graph, physical admission, Context/archive requalification,
-A3--A6 lifecycle/IFC/publication and new real-model gates remain open. No model
-call occurred. The next owner task is review and convergence of the MRR/Data
-immutable graph before original physical roundtrip acceptance.
-See [[file:../../t/qualification/temporal-library-basic/ascent-consumer-v1.ss][the consumer and Basic Library receipt]].
-
-* Initial audit outcomes at 0393d36d: A0 was open
-
-The dependency contract, actual Bazel lock check and project version contract
-passed. The immutable archive digest was checked, and Linux/Darwin source lock
-projections agree. A fresh ASCENT build in an isolated cache completed all 58
-build targets with exit 0; the shared previously qualified cache was preserved.
-
-Both POO native consumer commands failed before semantic cases:
-
-| Command | Exit | Wall seconds | Last actual progress |
-|---------+------+--------------+----------------------|
-| =just test-ascent-temporal= | 124 | 25.57 | =IMPORT :gerbil-ascent/program/scheme-admission=, then five seconds without test progress |
-| =just test-ascent-integration= | 124 | 5.21 | Guarded test entry; no completed semantic case before the idle limit |
-
-These results establish source compilation, but leave consumer qualification
-open. They do not establish an incorrect relational answer either: neither
-command reached the semantic case results. First resolve the native consumer
-initialization path with real completed-work output under the unchanged limits,
-then repeat the original cases and advance to A1. A warm retry or removing
-required admission work is not sufficient evidence. No fresh AOT, Python/Rust
-consumer, real-model or benchmark qualification was performed for this REV.
-
-The published concurrent Python progress-reporter fix at
-=03f93cf81164adec689309e2f88337f346b8f9d2= was preserved by fast-forward before
-this audit was committed. It does not change these native consumer outcomes.
-
-* Owners and fixed constraints
+* Fixed owners and versions
 
 | Owner | Responsibility |
 |-------+----------------|
-| ASCENT Scheme Library | Finite relational evaluation, snapshots and derivation evidence within its named profiles |
-| POO Flow Scheme core | Temporal interpretation, source/cut correspondence, evidence and proof admission, revisions and applicability |
-| =bindings/runtime-c= | Bounded shared native ABI and explicit host controls |
-| =packages/python-runtime= | Python scheduling/IO, Library tests and Python qualification tools |
-| =bindings/rust-runtime= | Rust ABI consumer, native owner queue and Rust assertions |
-| MRR production Rust Library | Original query/result admission, semantic identity, Context and relational fact use |
-| MRR Data Backend/Protocols | Original physical execution, persisted state and conditional commit ports |
-| ASP Scheme benchmark API | Measurement and native Scheme qualification receipts |
+| POO Flow Scheme Library | Temporal semantics, proof replay, revisions, applicability and IFC meaning |
+| Scheme ASCENT | Bounded relational evaluation and native proof production |
+| Runtime C | Bounded ABI v1 and explicit trusted Host controls |
+| Python Runtime | Library consumers, scheduling and provider IO |
+| MRR Rust | Original typed admission, identity and production orchestration |
+| MRR Data Backend/Protocols | Physical execution, conditional commit and recovery |
 
-Keep the configured Gerbil v0.19 toolchain and Scheme protocol/ABI version v1.
-Public POO interfaces remain native objects and functional combinators.
-ASCENT's richer upstream implementation does not establish external source
-authenticity, closed causal coverage, IFC permission or durable applicability.
-Do not introduce another solver in Rust or move Python implementation into the
-Rust binding. Model tools receive read-only capabilities; source registration,
-policy controls and publication remain explicit host capabilities.
+Scheme transport and ABI remain v1; configured Gerbil remains v0.19. No Rust
+Temporal solver or duplicate Data backend belongs in the adapters. Model tools
+remain read-only; source/policy/proof registration uses separate Host controls.
 
-* Ordered delivery and acceptance
+The active graph is MRR =ffde2798a5246a61f4d6f0e66d7f05156e55e38f= and Data
+=534afe6c946088b8b0fe4e3a4b2bcdbbb50e6873=. Data's original workspace declares
+that same MRR revision. Its native build owner is =1e4f1f65c7ff8e95fe764f2e8549fa9d92275db4=.
+The graph checker verifies manifests, both actual Cargo locks and, with resolved
+metadata, the original Data checkout and its workspace dependency declarations.
+This is dependency identity evidence, not source authentication or execution proof.
 
-| Order | Work | Required evidence before advancing |
-|-------+------+------------------------------------|
-| A0 dependency closure | Update =gerbil.pkg=, archive projection and Linux/Darwin lock together; build and consume the exact ASCENT revision | Dependency contract and native Bazel lock pass; original guarded copy/join and Temporal lens/exchange cases pass with final native markers and process exit |
-| A1 fixed-v1 Library producer | Rebuild the Scheme AOT artifact against A0; freeze original source closure, manifest and DLL digest | Installed Python Library tests and Rust/native differential tests use the same fresh artifact; open/partial/budget, thread/queue/lifetime and stale-source controls retain their meaning |
-| A2 coherent MRR/Data graph and G0 | Review the refreshed owner heads, choose one MRR revision across POO and Data, resolve actual Git locks, then execute original GQL/Arrow/DataFusion/MRR/Temporal | Original parser/query/catalog/root/result identities survive; root/source/query/catalog/row/wire-budget substitution rejects; empty physical answer follows the documented Temporal profile boundary |
-| A3 G1/G2 lifecycle | General reverse fact projection and acyclic support/revision journal on the original admission | Two supports -> one support -> no support; late correction, absence invalidation, stale Context, conflicting branch, policy expiry and as-of replay preserve original histories and refuse unqualified current selection |
-| A4 G3 recursive/absence profiles | Add only named evaluator profiles with SCC/support and coverage certificates | Incremental results match full recomputation; removing external support breaks cycles; unsupported negation rejects; exhausted budget preserves dirty/unknown state |
-| A5 G4 durable IFC publication | Bind proof/source/policy/flow guards to the authoritative Data Backend commit, replacement/tombstone and replayable journal | Source or grant update racing with commit, duplicate/reordered outbox and crashes at every durable boundary cannot publish or retain a stale permit |
-| A6 G5 real-model lifecycle | Exercise the implemented read-only physical/revision tools, then any separately qualified publication capability | Actual DeepSeek output uses original evidence, correction/re-query and unknown/refuted/stale outcomes; preserve raw responses and failed predictions, with no hidden retry or repair |
+* Implemented scope and evidence ledger
 
-Read-only model qualification may proceed after A1/A2 within its declared
-profile. A6's complete correction/publication lifecycle depends on the relevant
-A3--A5 gates. A passing model tool call does not close a missing deterministic
-negative, race or recovery gate. External business integration follows the
-qualified Library and Backend capabilities, rather than supplying substitute
-semantic fixtures.
+| Slice | Implemented capability | Evidence boundary |
+|-------+------------------------+-------------------|
+| Quint migration | 42 sources; 33 finite cases with positive and mutant controls | Current finite checks pass; general native/Quint state and trace refinement remains open |
+| Original physical exchange | GQL compilation, Arrow restoration, original result handoff, correction/re-query and historical archive | Prior fixed-v1 receipt qualifies MRR 4ccca987 / Data 203dec65 only; updated Data execution requires a fresh roundtrip |
+| Support applicability | Conjunctive premises, alternative supports, downstream acyclic evaluation and historical cuts | Declared inventory; completeness and recursive/absence semantics are not proved |
+| Original positive proof | ASCENT replay, MRR rule/catalog and Derivation mapping, exact source leaf/revision content | Scoped positive source-relative proof; issuer authority and exhaustive support inventory remain open |
+| Registered current proof | Retained original proof, append-only journal, current catalog, policy and observed clock | ABI v1 controls implemented; no selection, effect or durability grant |
+| Local publication | C SQLite source/grant checks and immutable first-root CAS receipt | Initial local selection only; replacement, tombstone and unified Data transaction remain open |
+| Python delivery | Quint output is an explicit callback; CLI preserves real child progress | Local project gate: 47 tests; Quint gate: 6 tests; exact-head wheel acceptance is required |
 
-* Priority corrections from the audit
+Historical source/artifact-bound summaries remain under
+=t/qualification/temporal-library-basic/=, including =rule-correspondence-v1=,
+=derivation-authority-v1=, =registered-proof-host-v1= and =proof-host-abi-v1=.
+They document the original runs and do not qualify a new native artifact.
 
-1. Dependency and ABI evidence must refer to the same actual producer closure.
-   Update the ASCENT pin before accepting a fresh native Library artifact.
-2. In-process source replay and revision journals are bounded basic slices.
-   Durable support withdrawal, current selection and journal recovery remain
-   separate from those slices.
-3. The C SQLite first-root CAS and Data Backend conditional commits have separate
-   evidence. Two individually passing stores do not establish one atomic
-   cross-module publication. Define the authoritative commit owner and bind
-   source/proof/policy guards through that commit; do not treat sequential writes
-   as an atomic transfer.
-4. IFC visibility subset checking is only a partial checker. Label composition,
-   provenance/lease checks, authorized declassification and the actual transfer
-   fence must qualify before an IFC-controlled publication claim.
-5. After a source or grant change, an immutable historical commit receipt proves
-   the old outcome. Fresh current applicability/effect permission needs its own
-   check against the new source/policy state.
+* This stage: coherent dependency and native consumers
 
-* Runtime and reporting gates
+1. Generate both locks from the immutable owner sources, retaining one MRR type
+   universe across POO and Data. Reject divergent pins, stale lock entries and
+   duplicate producer revisions through =check_mrr_dependency_graph.py=.
+2. Rebuild the native Scheme Library in CI. Download that exact run's semantic
+   artifact and Runtime C producer, and verify semantic source/header/host hashes.
+3. Compile original Rust MRR consumers before the execution deadline. Run the
+   original result, support, rule, Derivation and policy tests serially through
+   the five-second idle / 45-second total gate. Preserve actual Scheme oracles.
+4. Install the Python Library consumer and replay those original Rust oracles
+   against the same native artifact. Qualify correction, historical truth,
+   current journal/catalog/policy guards and control-lane rejection. Required
+   oracles must exist; an absent producer cannot turn into a passing skip.
+5. Close the exact delivered-head CI, including the Python wheel. Report native
+   consumer qualification separately from updated physical Data execution.
 
-Five seconds without genuine completed-work output is failure. Native runtime
-qualification retains its 45-second total deadline. Report actual build,
-process exit, local semantic checks, exact-head remote CI, model behavior and
-benchmark evidence separately. No synthetic heartbeat, relaxed timeout,
-automatic response repair or construction-only performance claim closes a gate.
+The executable CI owner is =Temporal MRR Library consumers=. Raw logs and
+original emitted Scheme oracles are local or CI artifacts, never Git logs.
+No new model call or benchmark win is implied by this stage.
 
-Current dependency verification and native consumer outcomes are retained in
-[[file:../../t/qualification/temporal-library-basic/ascent-revision-v1.ss][the ASCENT revision receipt]].
-The preceding architecture and historical receipts remain readable, with this
-plan providing the current delivery order and evidence boundary.
+* Next stages in dependency order
+
+| Order | Work | Acceptance gate |
+|-------+------+-----------------|
+| B1 physical producer requalification | Execute the original GQL/DataFusion/Temporal roundtrip on the new graph | Original source/query/root/catalog/result binding; tamper, empty-profile and wire-budget rejection; genuine changed root and correction; original exit and final markers |
+| B2 general conclusion lifecycle | Reverse claim projection, complete named acyclic support inventories and current/as-of selection | Two supports -> one -> none; late correction, stale Context, policy expiry and conflict; preserve historical proof and explicit unknown |
+| B3 authoritative publication and IFC | Bind admitted source/proof/policy/grant fences to Data's protected conditional commit | Concurrent source/grant changes cannot commit stale permission; replacement, tombstone, duplicate/reordered outbox and crash/recovery controls |
+| B4 recursive and absence profiles | Explicit SCC/external-support and bounded coverage semantics | Incremental/full equivalence; unsupported negation rejects; isolated cycles cannot sustain themselves; budget exhaustion preserves dirty/unknown |
+| B5 real-model lifecycle | Actual DeepSeek consumes original physical/proof/revision tools | Fresh artifact and coherent pins; correction/re-query, unknown/refuted/stale outcomes; raw responses and failures; separately qualified publication capability |
+
+Read-only real-model acceptance may proceed after B1/B2 without claiming B3.
+Production effect acceptance requires B3. No model agreement can establish
+source authenticity, coverage, formal refinement or effect authority.
+
+* Acceptance rules
+
+Five seconds without genuine completed-work output is failure. Native execution
+keeps the 45-second total bound. Build/dependency preparation, local semantics,
+exact-head CI, real-model behavior and performance are distinct evidence.
+No synthetic heartbeat, timeout widening, hidden retry or repair closes a gate.
+New measurements and native qualification receipts use ASP Scheme's benchmark
+API; receipt/ABI versions remain v1. Source control retains gates and bounded
+structured summaries, not raw or compressed logs.
