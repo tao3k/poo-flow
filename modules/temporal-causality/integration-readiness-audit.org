@@ -275,3 +275,17 @@ Source issuer authentication, complete coverage, authoritative Data publication,
 replacement/withdrawal recovery, IFC transfer fencing and the real-model physical
 revision lifecycle remain separately gated. The first-root local store is not
 an implementation of the general publication protocol.
+
+* Bounded Context restriction implementation
+
+The native [[file:../../src/semantic/context-restriction.ss][Context restriction profile]] now implements a finite equivalent
+restriction model: reader/destination intersection, preserved provenance and
+half-open lease narrowing. Widening and forged label digests reject. Its flow
+decision is bound to declared source/content, principal, destination and time;
+all source/flow/effect/durable admission flags remain false. This does not
+upgrade the Bundle's visible-symbol projections into admitted IFC labels.
+
+[[file:context-publication-contract-v1.org][The Data publication contract]] records the missing owner registry, admitted
+Authority/Evidence/declassification and protected conditional-commit obligations.
+The full IFC and G4 gates remain open; the profile's native control tests alone
+do not establish either.

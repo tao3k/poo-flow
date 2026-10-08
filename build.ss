@@ -85,6 +85,7 @@
     "modules/authorization/providers/cedar/interface.ss"
     "modules/governance/interface.ss"
     "modules/proof/interface.ss"
+    "src/semantic/context-restriction.ss"
     "src/semantic/orgize-interface.ss"
     "src/semantic/orgize-source-interface.ss"
     "modules/query/interface.ss"

@@ -138,12 +138,34 @@ proof/source/selection/effect/durable admission flags remain false.
 The shared package-managed entry is
 =gerbil env just qualify-temporal-physical-library LIBRARY OUTPUT=.
 Cargo validates the locked graph, builds and lints; the existing bounded native
-recipe performs execution. CI restores Cargo's dependency/build cache and calls
+recipe performs execution. CI keys Cargo's dependency/build cache by SDK/toolchain and immutable package
+locks; Cargo owns source invalidation. The native AOT artifact is freshly built
+and execution always runs. CI calls
 that same entry, without another installer or job. Gerbil dependencies continue
 through =gerbil deps=, Rust through rustup/Cargo and Python through uv. Builds
 stay outside execution deadlines; cache hits never replace fresh execution.
 B2 delivery requires the new producer oracle, Python replay with no skips and
 all checks on the delivered head. General Quint/native refinement remains B4.
+
+* B2 execution failure retained
+
+At =f0cf5577ebb62439ac325d281a2967bd110b75ce= both native Gerbil jobs and
+original physical correction passed in [[https://github.com/tao3k/poo-flow/actions/runs/37788179600][CI]]. The Rust consumer failed before
+its new native revision call: the Rust operation whitelist omitted
+=temporal.support.revise= and =temporal.support.claim= and returned InvalidInput.
+The missing operations are now registered; a new delivered-head consumer run
+is required. This failure is not a model timeout or a successful B2 receipt.
+
+* B3 first Library slice
+
+[[file:context-publication-contract-v1.org][The Context/Data contract]] specifies the single Data commit boundary and its
+remaining gates. The implemented native =src/semantic/context-restriction.ss=
+provides finite reader/destination intersection, provenance preservation,
+half-open lease composition and non-widening refinement. Material-bound flow
+eligibility carries no IO authority. Native tests cover algebra and rejection
+controls; Data commit fencing, admitted declassification, redaction and formal
+native/Data refinement remain open. No new installer, CI job or ABI version is
+needed for this pure Library slice.
 
 * Next stages in dependency order
 

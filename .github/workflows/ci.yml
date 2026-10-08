@@ -206,7 +206,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             bindings/rust-runtime/qualification/physical-roundtrip/target
-          key: physical-cargo-${{ runner.os }}-${{ runner.arch }}-rust1.95-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg', 'bindings/rust-runtime/qualification/physical-roundtrip/Cargo.lock', 'src/**/*.ss', 'modules/**/*.ss', 'core/**/*.ss') }}
+          key: physical-cargo-${{ runner.os }}-${{ runner.arch }}-rust1.95-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg', 'bindings/rust-runtime/Cargo.lock', 'bindings/rust-runtime/qualification/physical-roundtrip/Cargo.lock') }}
 
       - name: Qualify original physical query and correction
         if: runner.os == 'Linux'
