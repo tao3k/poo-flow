@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 All maintained finite formal models are Quint. Quint =0.33.0= and the
 =0.62.1= Apalache distribution match MRR. Verification uses Quint's =tlc=
-backend. Generated TLA+ is transient compiler output. Lean retains its
+backend, with Java 21 or newer (the backend class version is 65). Generated TLA+ is transient compiler output. Lean retains its
 independent algebraic scope; it is not automatically a refinement proof.
 
 #+begin_src sh

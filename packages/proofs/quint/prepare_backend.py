@@ -7,6 +7,7 @@ runner retains its independent five-second real-output and 45-second limits.
 """
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
 models = Path(__file__).resolve().parent
@@ -17,5 +18,8 @@ with tempfile.TemporaryDirectory(prefix='poo-quint-prepare-') as directory:
         str(models / 'GovernanceCore.qnt'), '--main', 'GovernanceCore',
         '--target', 'tlaplus', '--apalache-version', '0.62.1',
         '--out', str(Path(directory) / 'prepared.tla'),
-    ], cwd=directory, check=True, timeout=60, capture_output=True)
+    ], cwd=directory, check=False, timeout=60, capture_output=True)
+    if prepared.returncode:
+        sys.stderr.buffer.write(prepared.stdout + prepared.stderr)
+        raise SystemExit(prepared.returncode)
 print('QUINT-PREPARE-OK (not a proof receipt)', flush=True)

@@ -212,7 +212,7 @@ jobs:
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - name: Prepare pinned Quint backend
         env:
           QUINT_HOME: ${{ runner.temp }}/poo-quint-cache

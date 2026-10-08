@@ -20,7 +20,7 @@
     pkgs.bazel-buildtools
     pkgs.nodejs_24
     # Quint pins its checker distribution in packages/proofs/quint.
-    pkgs.jdk17
+    pkgs.jdk21
     # The lockfile and lean-toolchain remain the source pins. These tools make
     # `just build-cedar-runtime-host OUT` available through the generated
     # devenv profile entrypoint.
