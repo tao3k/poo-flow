@@ -71,6 +71,14 @@ class SemanticRuntime:
         """Content digest only; no proof, source or MRR owner admission."""
         return self.call('temporal.fact.content', request)
 
+    def compose_context_restrictions(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Native restrictive composition of declarations; no IFC grant admission."""
+        return self.call('context.restriction.compose', request)
+
+    def evaluate_declared_context_flow(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Evaluate declared material/time bindings; never authorize disclosure IO."""
+        return self.call('context.flow.evaluate', request)
+
     def revise_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Replay native support cuts and project the reverse claim frontier."""
         return self.call('temporal.support.revise', request)

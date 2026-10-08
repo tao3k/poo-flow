@@ -278,6 +278,7 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
         .unwrap(),
     );
     assert!(MrrFactProjection::admit(&partial, &catalog()).is_err());
+    declared_context_flow_original_mrr(runtime, &fixtures);
     if let Ok(path) = std::env::var("POO_FLOW_MRR_FACT_ORACLE") {
         std::fs::write(path, wire::to_vec(&Value::Array(fixtures)).unwrap()).unwrap();
     }
@@ -810,5 +811,106 @@ fn named_claim_lifecycle(runtime: &SemanticRuntime) {
     );
     if let Ok(path) = std::env::var("POO_FLOW_MRR_CLAIM_ORACLE") {
         std::fs::write(path, wire::to_vec(&Value::from(oracles)).unwrap()).unwrap();
+    }
+}
+
+fn declared_context_flow_original_mrr(runtime: &SemanticRuntime, facts: &[Value]) {
+    let declaration = |readers: Vec<&str>, provenance: &Value, start, end| {
+        datum!({
+        "schema":"poo-flow.context-restriction.v1","domain":"declared-library-clock",
+        "readers":readers.into_iter().map(Value::from).collect::<Vec<_>>(),
+        "destinations":["library-store"],"provenance":vec![provenance.clone()],"leaseStart":start,"leaseEnd":end})
+    };
+    let declarations = Value::from(vec![
+        declaration(
+            vec!["reader", "other"],
+            &facts[0]["request"]["identity"],
+            1,
+            10,
+        ),
+        declaration(vec!["reader"], &facts[2]["request"]["identity"], 2, 8),
+    ]);
+    let compose_request = datum!({"schema":"poo-flow.context-restriction-compose-request.v1","restrictions":declarations.clone()});
+    let composed = runtime
+        .call("context.restriction.compose", &compose_request)
+        .unwrap();
+    assert_eq!(composed["restriction"]["readers"], datum!(["reader"]));
+    assert_eq!(
+        composed["restriction"]["provenance"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    let request = datum!({"schema":"poo-flow.context-flow-request.v1","restrictions":declarations,
+        "expectedRestrictionDigest":composed["bindingDigest"].clone(),
+        "sourceDigest":facts[0]["expected"]["contentDigest"].clone(),
+        "contentDigest":facts[2]["expected"]["contentDigest"].clone(),
+        "principal":"reader","destination":"library-store","declaredAt":2});
+    let first = runtime.call("context.flow.evaluate", &request).unwrap();
+    assert_eq!(first["status"], "eligible");
+    let mut flows = Vec::new();
+    for (field, value, status) in [
+        ("declaredAt", 2.into(), "eligible"),
+        ("declaredAt", 8.into(), "expired-lease"),
+        ("declaredAt", 1.into(), "not-yet-effective"),
+        ("principal", "other".into(), "reader-denied"),
+        ("destination", "external-model".into(), "destination-denied"),
+        (
+            "sourceDigest",
+            facts[2]["expected"]["contentDigest"].clone(),
+            "eligible",
+        ),
+        (
+            "contentDigest",
+            facts[0]["expected"]["contentDigest"].clone(),
+            "eligible",
+        ),
+    ] {
+        let mut query = request.clone();
+        query[field] = value;
+        let result = runtime.call("context.flow.evaluate", &query).unwrap();
+        assert_eq!(result["status"], status);
+        if query != request {
+            assert_ne!(result["bindingDigest"], first["bindingDigest"]);
+        }
+        for flag in [
+            "sourceAuthenticated",
+            "flowAdmitted",
+            "actionAuthorized",
+            "durable",
+        ] {
+            assert_eq!(result[flag], false);
+        }
+        flows.push(datum!({"request":query,"expected":result}));
+        println!(
+            "CASE original MRR Context material binding {field} yields {status}; no IO authority"
+        );
+    }
+    for (field, value) in [
+        ("expectedRestrictionDigest", "forged".into()),
+        ("actionAuthorized", true.into()),
+        ("effectiveAt", 2.into()),
+    ] {
+        let mut bad = request.clone();
+        bad[field] = value;
+        assert!(runtime.call("context.flow.evaluate", &bad).is_err());
+    }
+    let mut widened = request.clone();
+    let mut labels = widened["restrictions"].as_array().unwrap().clone();
+    labels[1]["readers"] = datum!(["reader", "other"]);
+    widened["restrictions"] = Value::from(labels);
+    assert!(runtime.call("context.flow.evaluate", &widened).is_err());
+    println!("CASE stale restriction and injected clock/authority fields reject");
+    if let Ok(path) = std::env::var("POO_FLOW_MRR_CONTEXT_FLOW_ORACLE") {
+        std::fs::write(
+            path,
+            wire::to_vec(&datum!({
+                "compose":{"request":compose_request,"expected":composed},"flows":flows,
+                "originalSourceFact":facts[0].clone(),"originalOutputFact":facts[2].clone()
+            }))
+            .unwrap(),
+        )
+        .unwrap();
     }
 }

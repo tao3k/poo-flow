@@ -39,6 +39,33 @@ lease boundaries and destination/principal denial, and material substitution or
 forged digest rejection. These are scoped executable controls, not a general
 Quint refinement proof or end-to-end IFC/publication qualification.
 
+* Fixed-v1 ABI and original consumer gate
+
+Runtime C dispatches =context.restriction.compose= and =context.flow.evaluate=
+through the existing Scheme byte boundary. Rust registers both operations;
+Python exposes =compose_context_restrictions= and
+=evaluate_declared_context_flow=. Requests have exact field sets and fixed v1
+schemas. =expectedRestrictionDigest= binds retained composition; changed or
+widened declarations with that retained digest reject. A false expectation asks
+for a fresh declaration evaluation and supplies no inherited authority.
+=declaredAt= is a caller-declared coordinate, never an effective Host clock.
+Extra authority or clock fields reject.
+
+The original MRR consumer composes restrictions carrying original Fact identities
+and binds source/output digests to native canonical original MRR Fact content.
+Seven flows cover lease, reader and destination boundaries and changed source
+or output content. Substituted material changes the decision identity; eligibility
+alone does not reject an unauthenticated material declaration. The original Fact
+and derivation remain in the Scheme oracle, which Python replays through the same
+native artifact. These are original Fact content bindings, not an authenticated
+Temporal source vector or Data frontier. All admission flags remain false.
+
+The existing consumer CI requires this oracle before Python replay. Fourteen
+Python cases cover composition, denial, exact-field rejection and original oracle
+replay. No new CI job, installer or protocol version is introduced. Native wire
+execution passed the existing five-second watchdog with final OK; fresh AOT Rust
+execution and Python oracle replay on the delivered head remain the closure gate.
+
 * Ownership of the next executable boundary
 
 | Owner | Required work |

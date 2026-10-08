@@ -248,6 +248,8 @@ impl SemanticRuntime {
                 | "temporal.support.evaluate"
                 | "temporal.support.revise"
                 | "temporal.support.claim"
+                | "context.restriction.compose"
+                | "context.flow.evaluate"
                 | "temporal.fact.content"
                 | "temporal.support.guard"
                 | "temporal.proof.current"

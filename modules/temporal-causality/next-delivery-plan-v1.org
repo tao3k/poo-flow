@@ -165,7 +165,12 @@ half-open lease composition and non-widening refinement. Material-bound flow
 eligibility carries no IO authority. Native tests cover algebra and rejection
 controls; Data commit fencing, admitted declassification, redaction and formal
 native/Data refinement remain open. No new installer, CI job or ABI version is
-needed for this pure Library slice.
+needed for this pure Library slice. Fixed-v1 Context composition and declared
+flow evaluation now project through Runtime C, the Rust operation registry and
+Python Library methods. The existing MRR consumer emits original Fact-bound
+flow evidence and Python requires/replays that oracle. Fresh artifact execution
+on the delivered head is still required; declared eligibility cannot close the
+Data conditional-commit or IFC admission gate.
 
 * Next stages in dependency order
 

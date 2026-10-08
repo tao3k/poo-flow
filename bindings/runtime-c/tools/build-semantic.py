@@ -35,6 +35,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    # Resolve the selected package SDK before platform C-tool PATH adjustments.
+    home = Path(run(["gxi", "-e", "(displayln (gerbil-home))"], capture=True).strip())
     if platform.system() == 'Darwin':
         for key in ['SDKROOT', 'NIX_CFLAGS_COMPILE', 'NIX_CFLAGS_COMPILE_FOR_BUILD',
                     'NIX_LDFLAGS', 'NIX_LDFLAGS_FOR_BUILD']:
@@ -48,7 +50,6 @@ def main() -> None:
     output = args.output.resolve()
     stage = output.parent / "semantic-build"
     stage.mkdir(parents=True, exist_ok=True)
-    home = Path(run(["gxi", "-e", "(displayln (gerbil-home))"], capture=True).strip())
     gsc = str(home / "bin/gsc")
     os.environ["GAMBOPT"] = f"~~={home},~~bin={home / 'bin'},~~lib={home / 'lib'}"
     compiler = [str(home / "bin/gxc"), "-:max-heap=1G,debug=q", "-V"]
@@ -70,6 +71,7 @@ def main() -> None:
                    "modules/temporal-causality/lifecycle/objects.ss",
                    "modules/temporal-causality/lifecycle/funs.ss",
                    "modules/temporal-causality/lifecycle/interface.ss",
+                   "src/semantic/context-restriction.ss", "src/ffi/context-restriction.ss",
                    "src/ffi/temporal-admission.ss", "src/ffi/scheme-wire.ss", "src/ffi/temporal-archive.ss",
                    "modules/temporal-causality/revisions/types.ss", "modules/temporal-causality/revisions/objects.ss",
                    "modules/temporal-causality/revisions/funs.ss", "modules/temporal-causality/revisions/interface.ss",

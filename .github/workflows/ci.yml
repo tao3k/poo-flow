@@ -454,6 +454,7 @@ jobs:
       POO_FLOW_RUNTIME_V0_LIBRARY: ${{ github.workspace }}/.ci/runtime-c/libpoo_flow_runtime_v0.so
       POO_FLOW_SEMANTIC_LIBRARY: ${{ github.workspace }}/.ci/semantic/libpoo_flow_semantic.so
       POO_FLOW_RUNTIME_TRACE: "1"
+      POO_FLOW_MRR_CONTEXT_FLOW_ORACLE: ${{ github.workspace }}/.ci/mrr/context-flow.ss
       POO_FLOW_MRR_CLAIM_ORACLE: ${{ github.workspace }}/.ci/mrr/claims.ss
       POO_FLOW_MRR_SUPPORT_ORACLE: ${{ github.workspace }}/.ci/mrr/support.ss
       POO_FLOW_MRR_FACT_ORACLE: ${{ github.workspace }}/.ci/mrr/facts.ss
@@ -531,7 +532,7 @@ jobs:
               cargo +1.95.0 test --locked --manifest-path bindings/rust-runtime/Cargo.toml \
                 --features mrr-context --test mrr --test mrr_support --test mrr_rule \
                 --test mrr_derivation --test temporal_policy -- --nocapture --test-threads=1
-          for oracle in support claims facts rules derivations native-proof policy; do
+          for oracle in support claims context-flow facts rules derivations native-proof policy; do
             test -s ".ci/mrr/$oracle.ss"
           done
 
@@ -547,7 +548,8 @@ jobs:
                 packages/python-runtime/tests/unit/test_temporal_support.py \
                 packages/python-runtime/tests/unit/test_temporal_policy.py \
                 packages/python-runtime/tests/unit/test_temporal_proof.py \
-                packages/python-runtime/tests/unit/test_temporal_proof_host.py
+                packages/python-runtime/tests/unit/test_temporal_proof_host.py \
+                packages/python-runtime/tests/unit/test_context_restriction.py
 
       - name: Preserve original bounded Scheme evidence
         if: always()
