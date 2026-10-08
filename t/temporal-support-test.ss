@@ -29,6 +29,25 @@
 (def (claim r) (car (.ref r 'conclusions)))
 (def temporal-support-test
   (test-suite "acyclic temporal support applicability"
+    (poo-flow-test-case "named inventory preserves unsupported claims and scoped uncertainty"
+      (let* ((complete (poo-flow-temporal-support-inventory "empty" "policy" #t '("unproved") '()))
+             (partial (poo-flow-temporal-support-inventory "empty" "policy" #f '("unproved") '())))
+        (check (.ref (claim (result complete history 1 128)) 'status) => 'unsupported)
+        (check (.ref (claim (result partial history 1 128)) 'status) => 'unknown)
+        (check-exception (poo-flow-temporal-support-inventory "bad" "policy" #t '("claim" "claim") '()) true)
+        (check-exception (poo-flow-temporal-support-inventory "bad" "policy" #t '("foreign") (.ref (program #t) 'supports)) true)))
+    (poo-flow-test-case "reverse claim projection groups alternatives and includes downstream claims"
+      (let* ((p (program #t))
+             (first (poo-flow-temporal-support-reverse-plan p history (at 1) (at 2) #f))
+             (last (poo-flow-temporal-support-reverse-plan p history (at 2) (at 3) #f)))
+        (check (.ref first 'changed-subject-identities) => '("a"))
+        (check (.ref first 'affected-conclusion-identities) => '("claim" "downstream"))
+        (check (.ref last 'changed-subject-identities) => '("b"))
+        (check (.ref last 'affected-conclusion-identities) => '("claim" "downstream"))
+        (check (.ref first 'inventory-complete?) => #t)
+        (check (.ref (poo-flow-temporal-support-reverse-plan (program #f) history (at 1) (at 2) #f)
+                    'status) => 'partial)))
+
     (poo-flow-test-case "two supports then one then none preserves historical cuts"
       (let* ((p (program #t)) (two (result p history 1 128))
              (one (result p history 2 128)) (none (result p history 3 128)))

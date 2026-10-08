@@ -699,6 +699,27 @@ benchmark-temporal-mrr:
 qualify-temporal-model python binary library oracle env_file output:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-model-native/scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"
 
+# Gerbil's package environment supplies the SDK; Cargo owns the locked producer.
+[group('test')]
+qualify-temporal-physical-library library output:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export GERBIL_GSC="${GERBIL_GSC:-$(command -v gsc)}"
+    manifest="{{ justfile_directory() }}/bindings/rust-runtime/qualification/physical-roundtrip/Cargo.toml"
+    cargo +1.95.0 metadata --locked --format-version 1 --manifest-path "$manifest" \
+      | python3 packages/automation/check_mrr_dependency_graph.py --resolved
+    cargo +1.95.0 build --locked --manifest-path "$manifest"
+    cargo +1.95.0 clippy --locked --manifest-path "$manifest" -- -D warnings
+    mkdir -p "{{ output }}"
+    library="$(realpath "{{ library }}")"
+    output="$(realpath "{{ output }}")"
+    digest="$(openssl dgst -sha256 -r "$library" | cut -d ' ' -f 1)"
+    POO_FLOW_PHYSICAL_ORACLE="$output/oracle.ss" \
+      just qualify-temporal-physical \
+        "$(dirname "$manifest")/target/debug/poo-temporal-physical-roundtrip" \
+        "$library" "$digest" "$output/receipt.ss"
+    test -s "$output/oracle.ss"
+
 # Read-only physical semantic qualification; no performance sampling or model spend.
 [group('test')]
 qualify-temporal-physical binary library digest output:

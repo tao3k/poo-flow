@@ -16,6 +16,17 @@ pub struct MrrSupportBinding {
     pub subject: String,
     pub revision: String,
 }
+pub struct MrrSupportCut {
+    pub as_of: i64,
+    pub valid_at: Value,
+    pub budget: u32,
+}
+pub struct MrrSupportClaimQuery {
+    pub claim: FactId,
+    pub policy_generation: i64,
+    pub policy_digest: String,
+    pub expected_context: Option<String>,
+}
 #[derive(Clone, Debug)]
 pub struct MrrSupportProjection {
     originals: Vec<Derivation>,
@@ -32,10 +43,39 @@ impl MrrSupportProjection {
         derivations: &[Derivation],
         bindings: &[MrrSupportBinding],
     ) -> Result<Self, Error> {
+        let conclusions: Vec<_> = derivations
+            .iter()
+            .map(|d| d.output().id())
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        Self::admit_inventory(
+            identity,
+            policy,
+            complete,
+            catalog,
+            derivations,
+            bindings,
+            &conclusions,
+        )
+    }
+    /// Named, caller-scoped inventory also retains conclusions with no derivation.
+    /// Completeness is a declared premise, not a proof of exhaustive provenance.
+    pub fn admit_inventory(
+        identity: &str,
+        policy: &str,
+        complete: bool,
+        catalog: &RelationCatalog,
+        derivations: &[Derivation],
+        bindings: &[MrrSupportBinding],
+        conclusions: &[FactId],
+    ) -> Result<Self, Error> {
         let text = |s: &str| !s.is_empty() && s.chars().count() <= 256;
         if !text(identity)
             || !text(policy)
-            || derivations.is_empty()
+            || conclusions.is_empty()
+            || conclusions.len() > 128
+            || conclusions.iter().collect::<BTreeSet<_>>().len() != conclusions.len()
             || derivations.len() > 128
             || bindings.len() > 128
         {
@@ -44,16 +84,34 @@ impl MrrSupportProjection {
         validate_catalog(catalog)?;
         let mut bound = BTreeMap::new();
         for b in bindings {
-            if !text(&b.subject) || !text(&b.revision) || bound.insert(b.fact, b).is_some() {
+            if !text(&b.subject)
+                || !text(&b.revision)
+                || conclusions.contains(&b.fact)
+                || bound.insert(b.fact, b).is_some()
+            {
                 return Err(Error::InvalidInput);
             }
         }
-        let generation = derivations[0].generation();
+        let generation = derivations.first().map(Derivation::generation);
+        let declared: BTreeSet<_> = conclusions.iter().copied().collect();
+        let mut outputs = BTreeMap::new();
+        for d in derivations {
+            if !declared.contains(&d.output().id()) || bound.contains_key(&d.output().id()) {
+                return Err(Error::InvalidInput);
+            }
+            if let Some(previous) = outputs.insert(d.output().id(), d.output())
+                && (previous.relation() != d.output().relation()
+                    || previous.values() != d.output().values())
+            {
+                return Err(Error::InvalidInput);
+            }
+        }
         let mut seen = BTreeSet::new();
         let mut used = BTreeSet::new();
         let mut supports = Vec::new();
         for d in derivations {
-            if d.generation() != generation || !seen.insert(d.id()) || d.support().len() > 128 {
+            if Some(d.generation()) != generation || !seen.insert(d.id()) || d.support().len() > 128
+            {
                 return Err(Error::InvalidInput);
             }
             catalog
@@ -72,14 +130,19 @@ impl MrrSupportProjection {
             let mut subjects = BTreeSet::new();
             let mut premises = Vec::new();
             let mut facts = Vec::new();
+            let mut parents = BTreeSet::new();
             for fact in d.support() {
+                facts.push(Value::from(fact.to_string()));
+                if declared.contains(fact) {
+                    parents.insert(*fact);
+                    continue;
+                }
                 let b = bound.get(fact).ok_or(Error::InvalidInput)?;
                 if !subjects.insert(&b.subject) {
                     return Err(Error::InvalidInput);
                 }
                 used.insert(*fact);
                 premises.push(datum!({"subject":b.subject.clone(),"revision":b.revision.clone()}));
-                facts.push(Value::from(fact.to_string()));
             }
             facts.sort_by(|a, b| a.as_str().cmp(&b.as_str()));
             let origin = datum!({"schema":"poo-flow.mrr-support-identity.v1",
@@ -91,7 +154,7 @@ impl MrrSupportProjection {
             );
             supports.push(
                 datum!({"identity":d.id().to_string(),"conclusion":d.output().id().to_string(),
-                "proof":proof,"premises":premises,"parents":Vec::<Value>::new()}),
+                "proof":proof,"premises":premises,"parents":parents.iter().map(|id|Value::from(id.to_string())).collect::<Vec<_>>()}),
             );
         }
         if used.len() != bound.len() {
@@ -100,7 +163,7 @@ impl MrrSupportProjection {
         Ok(Self {
             originals: derivations.to_vec(),
             catalog_digest: catalog.digest(),
-            program: datum!({"identity":identity,"policy":policy,"complete":complete,"supports":supports}),
+            program: datum!({"identity":identity,"policy":policy,"complete":complete,"conclusions":declared.iter().map(|id|Value::from(id.to_string())).collect::<Vec<_>>(),"supports":supports}),
         })
     }
     pub fn originals(&self) -> &[Derivation] {
@@ -111,6 +174,45 @@ impl MrrSupportProjection {
     }
     pub fn catalog_digest(&self) -> RelationCatalogDigest {
         self.catalog_digest
+    }
+    /// Native reverse claim scheduling and both cut evaluations; no Rust solver.
+    pub fn revise(
+        &self,
+        runtime: &SemanticRuntime,
+        catalog: &RelationCatalog,
+        journal: Value,
+        previous_as_of: i64,
+        cut: MrrSupportCut,
+    ) -> Result<Value, Error> {
+        recheck_catalog(catalog, self.catalog_digest)?;
+        runtime.call(
+            "temporal.support.revise",
+            &datum!({"schema":"poo-flow.temporal-support-revision-request.v1",
+            "previousAsOf":previous_as_of,"task":{
+            "schema":"poo-flow.temporal-support-request.v1", "program":self.program.clone(),
+            "journal":journal,"asOf":cut.as_of,"validAt":cut.valid_at,"budget":cut.budget}}),
+        )
+    }
+    /// Query a named claim under the registered host policy and clock. A retained
+    /// selection binding acts as a stale Context fence, never an effect permit.
+    pub fn select(
+        &self,
+        runtime: &SemanticRuntime,
+        catalog: &RelationCatalog,
+        task: Value,
+        query: MrrSupportClaimQuery,
+    ) -> Result<Value, Error> {
+        recheck_catalog(catalog, self.catalog_digest)?;
+        if task["program"] != self.program {
+            return Err(Error::InvalidInput);
+        }
+        runtime.call(
+            "temporal.support.claim",
+            &datum!({
+            "schema":"poo-flow.temporal-support-claim-request.v1","expectedGeneration":query.policy_generation,
+            "expectedPolicyDigest":query.policy_digest,"task":task,"claim":query.claim.to_string(),
+            "expectedContextBinding":query.expected_context.map(Value::from).unwrap_or(false.into())}),
+        )
     }
     /// Scheme owns applicability; the caller supplies the declared temporal journal.
     pub fn evaluate(

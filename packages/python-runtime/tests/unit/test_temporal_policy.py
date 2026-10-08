@@ -111,3 +111,34 @@ def test_policy_start_boundary_and_generation_conflict(runtime):
     assert runtime.guard_temporal_support(query) == pending
     latest = runtime.refresh_temporal_policy(refresh('future-policy', generation=2, now=1))
     assert runtime.guard_temporal_support(guard(latest))['policyStatus'] == 'applicable'
+
+
+def test_named_claim_selection_fences_context_and_preserves_history(runtime):
+    reg = runtime.refresh_temporal_policy(refresh('claim-selection'))
+    q = guard(reg)
+    q.update(schema='poo-flow.temporal-support-claim-request.v1',
+             claim='claim', expectedContextBinding=False)
+    q['task']['program']['conclusions'] = ['claim', 'empty']
+    first = runtime.select_temporal_claim(q)
+    assert first['status'] == 'supported'
+    current = deepcopy(q)
+    current['task']['asOf'] = 2
+    current['expectedContextBinding'] = first['bindingDigest']
+    stale = runtime.select_temporal_claim(current)
+    assert stale['contextStatus'] == 'stale-context' and stale['status'] == 'unknown'
+    assert stale['claim']['status'] == 'supported'
+    assert runtime.select_temporal_claim(q) == first
+    latest = runtime.refresh_temporal_policy(refresh('claim-selection', generation=2, now=4))
+    with pytest.raises(SemanticRuntimeError):
+        runtime.select_temporal_claim(q)
+    q.update(expectedGeneration=latest['generation'], expectedPolicyDigest=latest['policyDigest'])
+    expired = runtime.select_temporal_claim(q)
+    assert expired['status'] == 'unknown' and expired['policyStatus'] == 'expired-policy'
+    assert expired['claim']['status'] == 'supported'
+    assert not any(expired[k] for k in ['proofAdmitted', 'sourceAuthenticated', 'selectionAdmitted', 'actionAuthorized', 'durable'])
+    for field, value in [('claim', 'foreign'), ('effectiveAt', instant(1)),
+                         ('expectedContextBinding', 7)]:
+        bad = deepcopy(q)
+        bad[field] = value
+        with pytest.raises(SemanticRuntimeError):
+            runtime.select_temporal_claim(bad)

@@ -14,7 +14,10 @@ The Linux =Native Gerbil unit tests= CI job builds this locked producer with
 Rust 1.95.0 and warnings-denied Clippy after the native Scheme gates. Compilation
 uses the package's optimized dev profile and two build jobs. Its executable
 runs against that same job's freshly built semantic AOT Library through
-=just qualify-temporal-physical=. Dependency preparation is outside the semantic
+=gerbil env just qualify-temporal-physical-library LIBRARY OUTPUT=. This entry
+uses Cargo for locked metadata, build and Clippy, then delegates execution to
+=just qualify-temporal-physical=. CI caches Cargo dependencies and build output;
+cache restoration never substitutes for execution. Dependency preparation is outside the semantic
 execution deadline; five-second genuine-progress and 45-second total limits
 remain unchanged.
 

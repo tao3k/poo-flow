@@ -152,6 +152,7 @@ fn original_mrr_support_identity_and_native_temporal_cuts() {
     }
     original_mrr_fact_content_parity_and_profile_controls(&runtime);
     catalog_substitution_rejected_before_native_call(&runtime);
+    named_claim_lifecycle(&runtime);
 }
 #[test]
 fn reject_incomplete_or_ambiguous_host_correspondence() {
@@ -478,4 +479,336 @@ fn original_catalog_shape_and_relation_correspondence_rejects() {
     println!(
         "CASE original catalog shape, missing relation, collisions, unsupported schemas and bounds reject; canonical order and mixed scalar positions retain"
     );
+}
+
+fn named_claim_lifecycle(runtime: &SemanticRuntime) {
+    use poo_flow_rust_runtime::mrr_support::{MrrSupportClaimQuery, MrrSupportCut};
+    let (mut ds, bindings) = fixture();
+    let root = ds[0].output().id();
+    let child = m::FactId::from_canonical_bytes("downstream-claim").unwrap();
+    let unproved = m::FactId::from_canonical_bytes("named-without-support").unwrap();
+    let id = m::DerivationId::from_canonical_bytes("downstream-derivation").unwrap();
+    let context = m::RelationContext::new(
+        ds[0].generation(),
+        m::RelationAuthority::Rule(ds[0].rule()),
+        m::FactProvenance::Derivation(id),
+        m::EvidenceCompleteness::Complete,
+        m::FactValidity::Valid,
+    )
+    .unwrap();
+    ds.push(
+        m::Derivation::new(
+            id,
+            ds[0].rule(),
+            ds[0].generation(),
+            m::Fact::new(
+                child,
+                ds[0].output().relation(),
+                vec![m::Value::Integer(2)],
+                context,
+            ),
+            vec![root],
+        )
+        .unwrap(),
+    );
+    let catalog = catalog();
+    let claims = [root, child, unproved];
+    let projection = MrrSupportProjection::admit_inventory(
+        "named-claims",
+        "read-only",
+        true,
+        &catalog,
+        &ds,
+        &bindings,
+        &claims,
+    )
+    .unwrap();
+    assert_eq!(projection.originals(), ds.as_slice());
+    let rows = projection.program()["supports"].as_array().unwrap();
+    assert_eq!(
+        rows[2]["parents"],
+        Value::from(vec![Value::from(root.to_string())])
+    );
+    let find = |evaluation: &Value, id: m::FactId| -> Value {
+        evaluation["conclusions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["identity"] == id.to_string())
+            .unwrap()
+            .clone()
+    };
+    let mut oracles = Vec::new();
+    for (from, to, changed, active) in [(1, 2, "a", 1), (2, 3, "b", 0)] {
+        let cut = MrrSupportCut {
+            as_of: to,
+            valid_at: false.into(),
+            budget: 128,
+        };
+        let result = projection
+            .revise(runtime, &catalog, journal(), from, cut)
+            .unwrap();
+        assert_eq!(result["changedSubjects"], datum!([changed]));
+        let expected: std::collections::BTreeSet<_> =
+            [root.to_string(), child.to_string()].into_iter().collect();
+        let affected: std::collections::BTreeSet<_> = result["affectedConclusions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_owned())
+            .collect();
+        assert_eq!(affected, expected);
+        assert_eq!(
+            find(&result["current"], root)["activeSupports"]
+                .as_array()
+                .unwrap()
+                .len(),
+            active
+        );
+        assert_eq!(
+            find(&result["current"], child)["status"],
+            if active > 0 {
+                "supported"
+            } else {
+                "unsupported"
+            }
+        );
+        assert_eq!(find(&result["current"], unproved)["status"], "unsupported");
+        let task = datum!({"schema":"poo-flow.temporal-support-request.v1","program":projection.program().clone(),"journal":journal(),"asOf":to,"validAt":false,"budget":128});
+        oracles.push(datum!({"operation":"temporal.support.revise","request":{"schema":"poo-flow.temporal-support-revision-request.v1","task":task,"previousAsOf":from},"expected":result}));
+        println!(
+            "CASE named MRR reverse claim frontier {from}->{to} with downstream and empty claim"
+        );
+    }
+    let mut unsupported_parent = ds.clone();
+    unsupported_parent[2] = m::Derivation::new(
+        id,
+        ds[2].rule(),
+        ds[2].generation(),
+        ds[2].output().clone(),
+        vec![unproved],
+    )
+    .unwrap();
+    let waiting = MrrSupportProjection::admit_inventory(
+        "waiting",
+        "read-only",
+        true,
+        &catalog,
+        &unsupported_parent,
+        &bindings,
+        &claims,
+    )
+    .unwrap();
+    assert_eq!(
+        find(
+            &waiting
+                .evaluate(runtime, &catalog, journal(), 1, false.into(), 128)
+                .unwrap(),
+            child
+        )["status"],
+        "unsupported"
+    );
+    let mut conflict_output = ds.clone();
+    let fact = m::Fact::new(
+        root,
+        ds[1].output().relation(),
+        vec![m::Value::Integer(9)],
+        *ds[1].output().context(),
+    );
+    conflict_output[1] = m::Derivation::new(
+        ds[1].id(),
+        ds[1].rule(),
+        ds[1].generation(),
+        fact,
+        ds[1].support().to_vec(),
+    )
+    .unwrap();
+    assert!(
+        MrrSupportProjection::admit_inventory(
+            "conflict",
+            "read-only",
+            true,
+            &catalog,
+            &conflict_output,
+            &bindings,
+            &claims
+        )
+        .is_err()
+    );
+    let mut ambiguous = bindings.clone();
+    ambiguous.push(MrrSupportBinding {
+        fact: root,
+        subject: "source-alias".into(),
+        revision: "a1".into(),
+    });
+    assert!(
+        MrrSupportProjection::admit_inventory(
+            "alias",
+            "read-only",
+            true,
+            &catalog,
+            &ds,
+            &ambiguous,
+            &claims
+        )
+        .is_err()
+    );
+    println!(
+        "CASE zero-support parent, conflicting output content and source/claim alias controls"
+    );
+    let first = projection
+        .evaluate(runtime, &catalog, journal(), 1, false.into(), 128)
+        .unwrap();
+    assert_eq!(
+        find(&first, root)["activeSupports"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(find(&first, child)["status"], "supported");
+    let partial = MrrSupportProjection::admit_inventory(
+        "named-claims",
+        "read-only",
+        false,
+        &catalog,
+        &ds,
+        &bindings,
+        &claims,
+    )
+    .unwrap();
+    let none = partial
+        .evaluate(runtime, &catalog, journal(), 3, false.into(), 128)
+        .unwrap();
+    assert_eq!(find(&none, root)["status"], "unknown");
+    assert_eq!(find(&none, child)["status"], "unknown");
+    assert_eq!(find(&none, unproved)["status"], "unknown");
+    let mut conflict = journal();
+    let mut correction = conflict["revisions"].as_array().unwrap()[2].clone();
+    correction["operation"] = "correct".into();
+    correction["validRange"] = datum!([0, 10]);
+    correction["content"] = "a2".into();
+    let mut revisions = conflict["revisions"].as_array().unwrap().clone();
+    revisions[2] = correction.clone();
+    correction["identity"] = "a3".into();
+    correction["admitted"] = 4.into();
+    correction["content"] = "a3".into();
+    revisions.push(correction);
+    conflict["revisions"] = Value::from(revisions);
+    let late = projection
+        .evaluate(runtime, &catalog, conflict.clone(), 3, false.into(), 128)
+        .unwrap();
+    assert_eq!(find(&late, root)["status"], "unsupported");
+    let fork = projection
+        .evaluate(runtime, &catalog, conflict.clone(), 4, false.into(), 128)
+        .unwrap();
+    assert_eq!(find(&fork, root)["status"], "unknown");
+    assert_eq!(find(&fork, child)["status"], "unknown");
+    assert_eq!(
+        projection
+            .evaluate(runtime, &catalog, journal(), 1, false.into(), 128)
+            .unwrap(),
+        first
+    );
+    let instant = |n| datum!({"identity":format!("policy-{n}"),"domain":"policy-clock","coordinate":n,"provenance":"host","modality":"observed"});
+    let refresh = |generation, now| datum!({"schema":"poo-flow.temporal-policy-refresh-request.v1","policy":{"identity":"read-only","revision":"r1","start":instant(1),"end":instant(10)},"generation":generation,"effectiveAt":instant(now)});
+    let reg = runtime.refresh_policy(&refresh(1, 1)).unwrap();
+    let task = |at| datum!({"schema":"poo-flow.temporal-support-request.v1","program":projection.program().clone(),"journal":journal(),"asOf":at,"validAt":false,"budget":128});
+    let query = |reg: &Value, expected: Option<String>| MrrSupportClaimQuery {
+        claim: root,
+        policy_generation: match reg["generation"] {
+            Value::Integer(n) => i64::try_from(n).unwrap(),
+            _ => panic!("host generation"),
+        },
+        policy_digest: reg["policyDigest"].as_str().unwrap().into(),
+        expected_context: expected,
+    };
+    let selected = projection
+        .select(runtime, &catalog, task(1), query(&reg, None))
+        .unwrap();
+    assert_eq!(selected["status"], "supported");
+    let expected = selected["bindingDigest"].as_str().unwrap().to_owned();
+    let stale = projection
+        .select(
+            runtime,
+            &catalog,
+            task(2),
+            query(&reg, Some(expected.clone())),
+        )
+        .unwrap();
+    assert_eq!(stale["contextStatus"], "stale-context");
+    assert_eq!(stale["status"], "unknown");
+    assert_eq!(stale["claim"]["status"], "supported");
+    assert_eq!(
+        projection
+            .select(runtime, &catalog, task(1), query(&reg, Some(expected)))
+            .unwrap(),
+        selected
+    );
+    let reg = runtime.refresh_policy(&refresh(2, 10)).unwrap();
+    let expired = projection
+        .select(runtime, &catalog, task(1), query(&reg, None))
+        .unwrap();
+    assert_eq!(expired["policyStatus"], "expired-policy");
+    assert_eq!(expired["status"], "unknown");
+    assert_eq!(expired["claim"]["status"], "supported");
+    for flag in [
+        "proofAdmitted",
+        "sourceAuthenticated",
+        "selectionAdmitted",
+        "actionAuthorized",
+        "durable",
+    ] {
+        assert_eq!(expired[flag], false);
+    }
+    println!(
+        "CASE late correction, conflict, partial inventory, stale Context and host policy expiry preserve historical evidence"
+    );
+    // Missing named outputs and repeated declarations cannot masquerade as a complete inventory.
+    assert!(
+        MrrSupportProjection::admit_inventory(
+            "bad",
+            "read-only",
+            true,
+            &catalog,
+            &ds,
+            &bindings,
+            &[root]
+        )
+        .is_err()
+    );
+    assert!(
+        MrrSupportProjection::admit_inventory(
+            "bad",
+            "read-only",
+            true,
+            &catalog,
+            &ds,
+            &bindings,
+            &[root, root, child]
+        )
+        .is_err()
+    );
+    let empty = MrrSupportProjection::admit_inventory(
+        "empty",
+        "read-only",
+        true,
+        &catalog,
+        &[],
+        &[],
+        &[unproved],
+    )
+    .unwrap();
+    assert_eq!(
+        find(
+            &empty
+                .evaluate(runtime, &catalog, journal(), 3, false.into(), 128)
+                .unwrap(),
+            unproved
+        )["status"],
+        "unsupported"
+    );
+    if let Ok(path) = std::env::var("POO_FLOW_MRR_CLAIM_ORACLE") {
+        std::fs::write(path, wire::to_vec(&Value::from(oracles)).unwrap()).unwrap();
+    }
 }

@@ -6,7 +6,7 @@
         (only-in :std/list/list every))
 (export PooFlowTemporalSupportPremise PooFlowTemporalSupport
         PooFlowTemporalSupportProgram PooFlowTemporalSupportEvaluation
-        PooFlowTemporalSupportPolicy PooFlowTemporalSupportGuard)
+        PooFlowTemporalSupportPolicy PooFlowTemporalSupportGuard PooFlowTemporalSupportClaim)
 (def (shape? x kind names)
   (and (object? x) (.slot? x 'kind) (eq? (.ref x 'kind) kind)
        (every (lambda (name) (.slot? x name)) names)))
@@ -18,7 +18,7 @@
                                 '(identity conclusion-identity proof-identity premises conclusion-premises))))
 (define-type (PooFlowTemporalSupportProgram @ Type.)
   .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-program
-                                '(identity policy-identity inventory-complete? supports semantic-digest))))
+                                '(identity policy-identity inventory-complete? conclusion-identities supports semantic-digest))))
 (define-type (PooFlowTemporalSupportEvaluation @ Type.)
   .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-evaluation
                                 '(semantic-digest program-digest cut-digest projection-digest conclusions
@@ -32,3 +32,8 @@
                           '(semantic-digest policy policy-digest expected-policy-digest effective-at
                             policy-status policy-applicable? evaluation as-of valid-at budget
                             proof-admitted? source-authenticated? selection-admitted? action-authorized? durable?))))
+
+(define-type (PooFlowTemporalSupportClaim @ Type.)
+  .element?: (lambda (x) (shape? x 'poo-flow.temporal-causality.support-claim
+    '(claim status context-status binding-digest guard proof-admitted? source-authenticated?
+      selection-admitted? action-authorized? durable?))))

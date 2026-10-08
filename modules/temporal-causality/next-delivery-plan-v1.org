@@ -100,6 +100,51 @@ This executable gate implements B1. Its exact-head CI result determines whether
 B2 can proceed; dependency metadata or historical receipts cannot substitute for
 physical execution. B3's authoritative Data commit and IFC remain separate.
 
+* Qualified B1 source cut
+
+[[https://github.com/tao3k/poo-flow/actions/runs/37778052826][The complete CI run]] passed at
+=6c275f1701b397ea798283d9c976446a66b9e93d= with the fixed graph above.
+The Linux producer executed the original physical query and changed-root
+correction. Ten Rust tests plus fresh-process replay and 63 Python tests with
+no skips consumed the same AOT Library, SHA-256
+=ddf21752b4b9c18cbac9028304bd04acf1552939f1cbb5d17b8b92221c29e5fd=.
+Original Scheme receipts remain CI artifacts. This qualifies B1 for that source
+cut; it does not qualify a later artifact or B3 publication.
+
+* B2 implementation and delivery gate
+
+The Library exposes named acyclic support inventories, including claims with
+zero supports. Alternative supports project to the original conclusion identity
+before the existing reverse scheduler computes affected downstream conclusions.
+Complete declared inventories produce unsupported after the last support is
+withdrawn; partial inventories preserve unknown. Unsupported is support
+applicability, not logical refutation or proof admission.
+
+MRR preserves original Fact/Derivation identities and output content, admits
+named inventories and calls the Library's reverse and claim-selection operations.
+The Rust consumer emits original =claims.ss= revision oracles; the installed
+Python Library replays them against the same native artifact. Acceptance covers
+two supports to one to none, downstream propagation, zero-support parents,
+late correction, conflict, historical cuts and host policy expiry.
+
+Claim selection is relative to the caller-declared journal cut and inventory.
+A retained native binding from a different cut yields stale Context and unknown.
+This is a native cut-binding check, distinct from the existing MRR admitted
+agentic Context family's source/catalog controls. Only the registered policy
+Host supplies policy and evaluation time. No authoritative current-source
+registry, complete provenance inventory or effect permission is established;
+proof/source/selection/effect/durable admission flags remain false.
+
+The shared package-managed entry is
+=gerbil env just qualify-temporal-physical-library LIBRARY OUTPUT=.
+Cargo validates the locked graph, builds and lints; the existing bounded native
+recipe performs execution. CI restores Cargo's dependency/build cache and calls
+that same entry, without another installer or job. Gerbil dependencies continue
+through =gerbil deps=, Rust through rustup/Cargo and Python through uv. Builds
+stay outside execution deadlines; cache hits never replace fresh execution.
+B2 delivery requires the new producer oracle, Python replay with no skips and
+all checks on the delivered head. General Quint/native refinement remains B4.
+
 * Next stages in dependency order
 
 | Order | Work | Acceptance gate |

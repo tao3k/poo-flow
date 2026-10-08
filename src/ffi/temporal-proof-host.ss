@@ -4,11 +4,11 @@
 ;;; Strict owner wire projections of the native Library proof Host.
 (import (only-in :clan/poo/object .ref)
         :poo-flow/modules/temporal-causality/evaluator/proof-host
-        (only-in :poo-flow/src/ffi/temporal-policy temporal-policy-proof-host)
+        (only-in :poo-flow/src/ffi/temporal-policy temporal-policy-native-host)
         (only-in :poo-flow/src/ffi/temporal-proof temporal-derivation-context-input temporal-rule-program-input)
         (only-in :poo-flow/src/ffi/temporal-support temporal-support-journal-input temporal-support-result))
 (export temporal-proof-state-refresh temporal-proof-register temporal-proof-current)
-(def host (temporal-policy-proof-host))
+(def host (poo-flow-temporal-proof-host (temporal-policy-native-host)))
 (def (field x k)
   (unless (and (hash-table? x) (hash-key? x k)) (error "missing proof host field" k)) (hash-ref x k))
 (def (request x schema keys)

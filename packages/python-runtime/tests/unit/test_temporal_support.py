@@ -61,3 +61,34 @@ def test_original_mrr_scheme_oracle(runtime):
         pytest.skip('original MRR oracle must be configured')
     receipt = loads(Path(oracle).read_text())
     assert runtime.evaluate_temporal_support(receipt['request']) == receipt['expected']
+
+
+def test_original_mrr_named_claim_revision_oracles(runtime):
+    import os
+    from pathlib import Path
+    from poo_flow_runtime.scheme_wire import loads
+    path = os.environ.get('POO_FLOW_MRR_CLAIM_ORACLE')
+    if not path:
+        pytest.skip('original MRR claim oracle must be configured')
+    rows = loads(Path(path).read_text())
+    assert len(rows) == 2
+    for row in rows:
+        assert runtime.revise_temporal_support(row['request']) == row['expected']
+
+
+def test_named_empty_claim_and_reverse_frontier(runtime):
+    p = request()
+    p['program']['conclusions'] = ['claim', 'downstream', 'unproved']
+    p['program']['supports'].append(dict(identity='child', conclusion='downstream',
+        proof='child-proof', premises=[], parents=['claim']))
+    result = runtime.revise_temporal_support(dict(
+        schema='poo-flow.temporal-support-revision-request.v1', task=p, previousAsOf=0))
+    assert result['affectedConclusions'] == ['claim', 'downstream']
+    assert result['changedSubjects'] == ['a', 'b']
+    rows = {r['identity']: r for r in result['current']['conclusions']}
+    assert rows['unproved']['status'] == 'unsupported'
+    assert rows['downstream']['status'] == 'supported'
+    p['program']['complete'] = False
+    p['asOf'] = 3
+    rows = {r['identity']: r for r in runtime.evaluate_temporal_support(p)['conclusions']}
+    assert all(r['status'] == 'unknown' for r in rows.values())

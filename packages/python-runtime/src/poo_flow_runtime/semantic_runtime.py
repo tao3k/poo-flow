@@ -71,6 +71,14 @@ class SemanticRuntime:
         """Content digest only; no proof, source or MRR owner admission."""
         return self.call('temporal.fact.content', request)
 
+    def revise_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Replay native support cuts and project the reverse claim frontier."""
+        return self.call('temporal.support.revise', request)
+
+    def select_temporal_claim(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Select a named claim under host policy and a retained Context binding."""
+        return self.call('temporal.support.claim', request)
+
     def evaluate_temporal_support(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Read-only native applicability; does not admit proofs or authorize effects."""
         return self.call('temporal.support.evaluate', request)

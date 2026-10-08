@@ -9,7 +9,7 @@
         (only-in :poo-flow/modules/temporal-causality/time/objects poo-flow-temporal-instant)
         "types.ss" "funs.ss")
 (export poo-flow-temporal-support-policy poo-flow-temporal-support-guard
-        poo-flow-temporal-support-guard-replay)
+        poo-flow-temporal-support-guard-replay poo-flow-temporal-support-claim)
 (def (text? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (digest x) (string-append "sha256:" (hex-encode (sha256 (string->utf8
   (call-with-output-string (lambda (p) (write x p))))))))
@@ -86,3 +86,20 @@
                  (equal? (.ref (.ref value 'evaluation) 'semantic-digest)
                          (.ref (.ref receipt 'evaluation) 'semantic-digest)))
       (error "support guard replay binding mismatch")) value))
+
+;;; A read-only projection of a native policy guard, never an effect permit.
+(def (poo-flow-temporal-support-claim guard-value identity expected-binding)
+  (validate PooFlowTemporalSupportGuard guard-value)
+  (unless (and (text? identity) (or (not expected-binding) (text? expected-binding)))
+    (error "invalid native claim selection"))
+  (let* ((matches (filter (lambda (row) (equal? (.ref row 'identity) identity))
+                    (.ref (.ref guard-value 'evaluation) 'conclusions)))
+         (binding (.ref guard-value 'semantic-digest))
+         (fresh? (or (not expected-binding) (equal? expected-binding binding))))
+    (unless (= (length matches) 1) (error "claim outside named inventory"))
+    (validate PooFlowTemporalSupportClaim
+      (.o kind: 'poo-flow.temporal-causality.support-claim claim: (car matches)
+          status: (if (and fresh? (.ref guard-value 'policy-applicable?)) (.ref (car matches) 'status) 'unknown)
+          context-status: (if fresh? 'matches-cut 'stale-context)
+          binding-digest: binding guard: guard-value proof-admitted?: #f source-authenticated?: #f
+          selection-admitted?: #f action-authorized?: #f durable?: #f))))
