@@ -48,8 +48,13 @@ Quint refinement proof or end-to-end IFC/publication qualification.
 | MRR Data Backend/Protocols | Resolve protected material; own durable source/policy/grant frontier; recheck fences and lease in one conditional commit; persist pointer/history/outbox; recover |
 | Python Runtime | Exercise the Library and adapter contract; provider IO remains separate |
 
-The pinned Data snapshot protection/outbox API protects physical blocks and
-transfer. It has no Temporal source/grant conditional-commit admission contract.
+At the pinned Data =534afe6c= source cut, =SnapshotPublication= acknowledges
+physical closure transfer and explicitly does not publish a mutable discovery
+pointer. It supplies no Temporal source/grant conditional-commit contract. The
+separate working checkout at =55285d51= contains a later POO Flow protection/outbox
+module; it is outside this locked qualification graph and cannot be treated as
+an admitted backend capability here. Its integration requires an explicit pin
+update and fresh original physical/consumer qualification.
 The Runtime C first-root store has a local pointer transaction but no unified
 Data protected-material/IFC commit. Neither is sufficient for this boundary.
 Do not introduce a second durable backend in MRR runtime or infer permission from
