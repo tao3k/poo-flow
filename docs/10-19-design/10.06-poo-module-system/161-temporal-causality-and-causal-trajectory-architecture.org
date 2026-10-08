@@ -20,7 +20,7 @@ authorized conclusion publication remains open.
 The module-local research contract is
 =modules/temporal-causality/framework.org=.  It defines the broader temporal
 type algebra, model/query separation, formal obligations and implementation
-status.  =packages/proofs/tla/temporal-causality/model.org= specifies the first finite
+status.  =packages/proofs/quint/model.org= specifies the first finite
 TLA+ slice and its exact limits.
 
 =Temporal Causality= is a POO Flow core module, not an SDLC-only algorithm and
@@ -108,7 +108,7 @@ paper's use of the word /causal/ does not itself admit a POO Flow causal fact.
 | R3 | Kakas, Kowalski and Toni, [[https://www.doc.ic.ac.uk/~rak/papers/abdsurv.pdf][Abductive Logic Programming]] (1992) | high | Add POO-native candidate hypothesis, integrity constraint and explanation-set contracts under =modules/temporal-causality/=. A candidate explains observations only relative to declared assumptions and constraints; current =hypothesized= event modality is not an abductive search result. ASCENT or another rule engine may derive candidates but does not own their admission. |
 | R4 | Halpern and Pearl, [[https://www.journals.uchicago.edu/doi/10.1093/bjps/axi147][Causes and Explanations: A Structural-Model Approach, Part I: Causes]] (2005) | high | Add separate intervention/model-family evidence before any actual-cause claim. =poo-flow-temporal-causal-classify= and GQL paths are structural/temporal witnesses; neither implements structural equations or intervention semantics. |
 | R5 | Alvaro et al., [[https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html][Dedalus: Datalog in Time and Space]] (2009) | medium | For optional ASCENT/Scheme derivation, represent delay and reordering as explicit time/arrival facts; do not assume rule closure equals committed event time. =modules/temporal-causality/= remains the semantic owner, not an ASCENT-specific facade. |
-| R6 | Lamport, [[https://lamport.azurewebsites.net/tla/high-level-view.html][A High-Level View of TLA+]] and [[https://lamport.azurewebsites.net/tla/hiding-and-refinement.pdf][Hiding, Refinement, and Auxiliary Variables]] | high | =modules/tla-plus/interface.ss= currently admits parser-owned source/CST, while =packages/proofs/tla/HealthcarePrescriptionCausality.tla= and =HealthcareAIAssistedPrescriptionCausality.tla= are finite vertical models. Project the supported TLA+ model semantics into POO observations, hypotheses and constraints; explore the exact bounded source with TLC. A generated transition relation, if added later, stays internal to TLA+ rather than becoming a fixed public =Next=. |
+| R6 | Lamport, [[https://lamport.azurewebsites.net/tla/high-level-view.html][A High-Level View of TLA+]] and [[https://lamport.azurewebsites.net/tla/hiding-and-refinement.pdf][Hiding, Refinement, and Auxiliary Variables]] | high | =modules/tla-plus/interface.ss= currently admits parser-owned source/CST, while =packages/proofs/quint/HealthcarePrescriptionCausality.qnt= and =HealthcareAIAssistedPrescriptionCausality.tla= are finite vertical models. Project the supported TLA+ model semantics into POO observations, hypotheses and constraints; explore the exact bounded source with TLC. A generated transition relation, if added later, stays internal to TLA+ rather than becoming a fixed public =Next=. |
 | R7 | Lamport, [[https://lamport.azurewebsites.net/tla/safety-liveness.pdf][Safety and Liveness Properties of Specifications]] | high | A progress claim needs stated fairness and environment assumptions. Current Healthcare =.cfg= files list invariants, not liveness properties; add temporal checks only with an explicit finite model and fairness premise. |
 | R8 | [[https://www.iso.org/standard/76120.html][ISO/IEC 39075:2024, GQL]] | medium | =packages/lambda-episteme/user-interface/scenarios/healthcare/reasoning/prescription-causal-trajectory.gql= asks snapshot graph questions. =modules/query/gql.ss= and the MRR execution boundary may produce candidate paths, not causal admission or complete-world claims. |
 | R9 | =PooFlowProof.PooC4.TemporalCausality= and [[https://lean-lang.org/][Lean]] | medium | =packages/proofs/lean/PooFlowProof/PooC4/TemporalCausality.lean= proves current event modality and cut laws. An optional later theorem can prove soundness of TLA+-to-POO projection and result quantifiers after the Scheme contract is executable; source/digest equality alone is not semantic correspondence. |
@@ -271,14 +271,14 @@ evidence, overlapping mechanisms, incomparable clocks, incomplete families
 and finite bounds.  This
 slice does not infer causal mechanisms, compare different clock domains,
 interpret a TLA+ action formula or claim TLC exhaustion.  Stage 3 now has a
-first source-to-POO subset: =packages/proofs/tla/temporal-causality/TemporalHypothesisFamily.tla=
+first source-to-POO subset: =packages/proofs/quint/TemporalFamilyCase.qnt=
 declares five finite literal operators; =modules/tla-plus/funs.ss= maps their
 sets and tuples to the same POO model, while a projection binds source,
 grammar and semantic digests.  Extra declarations and nonliteral expressions
 fail closed.  The subset is not a general TLA+ evaluator.  The literal source
 is now the data instance for the module-local, compositional TLC model in
-=packages/proofs/tla/temporal-causality/=.  Its bounded exploration is separately
-qualified by =just check-temporal-family-tlc=; a typed TLC-to-POO receipt and
+=packages/proofs/quint/temporal-causality.qnt/=.  Its bounded exploration is separately
+qualified by =just check-temporal-family-quint=; a typed TLC-to-POO receipt and
 general refinement proof remain future work.  The local =model.org= records
 the formal contract, proof obligations, scope and checked configurations.
 The focused interface test compares the projected model digest with an
@@ -294,9 +294,9 @@ when later revisions are appended; =t/temporal-revisions-test.ss= checks this
 replay law.  A distinct projection digest now binds the full valid-time query
 and its selected result, preventing a shared admission cut from being reused
 as a different valid-time answer.  The downstream dependency index and
-conclusion revisions bind both identities.  =packages/proofs/tla/temporal-causality/TemporalRevision*.tla= explores a
+conclusion revisions bind both identities.  =packages/proofs/quint/TemporalRevision.qnt*.tla= explores a
 finite revision set, with historical-cut and no-silent-winner invariants
-checked by =just check-temporal-revisions-tlc=.  A third module-local slice,
+checked by =just check-temporal-revisions-quint=.  A third module-local slice,
 =modules/temporal-causality/truth-maintenance/=, indexes POO derivations by
 subject and conclusion premises and computes a cut-bound reevaluation plan
 through the transitive reverse dependencies.  The finite TLA+ case checks
@@ -316,7 +316,7 @@ conclusion revisions, a canonical journal and inert versioned CAS plans in
 =conclusions/=.  A finite TLA+ race case checks two competing proposals;
 runtime proof admission, pointer commit and effect authority remain separate.
 The precise semantics and limits are in
-=modules/temporal-causality/framework.org= and =packages/proofs/tla/temporal-causality/model.org=.
+=modules/temporal-causality/framework.org= and =packages/proofs/quint/model.org=.
 
 The current TLA+ literal profile has exactly these nullary operators:
 
@@ -401,7 +401,7 @@ claim silently active.  TLC ranges over every validity assignment for the
 fixture's two candidate uses (195 distinct states), while assuming perfect
 checking within each world.  TLC cannot determine source relevance or textual
 entailment from an identity or digest.  The local Scheme and TLC gates are
-=just check-temporal-evidence= and =just check-temporal-evidence-tlc=.
+=just check-temporal-evidence= and =just check-temporal-evidence-quint=.
 The second model explores independently supplied reviewer verdicts in either
 order, including disagreement, and withdraws previously active claims on
 new review or source correction.  It checks attestation lifecycle, not
@@ -467,7 +467,7 @@ the Temporal candidate to stay incomplete.  It is a declared POO projection,
 not a verified native exporter.  The local scalar row check cannot establish
 execution or verifier authority.
 
-=packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla=
+=packages/proofs/quint/CandidateExchange.qnt=
 checks the abstract handoff lifecycle.  GQL and ASCENT may report complete
 or incomplete results and independent valid/invalid checks in either order.
 Only current-cut, complete, validly checked required-provider receipts with
@@ -512,7 +512,7 @@ validation record is
 | Result level | Implemented owner | Evidence required to advance |
 |--------------+-------------------+------------------------------|
 | Structural witness | =modules/temporal-causality/funs.ss= | A path is not time order or causal effect. |
-| Bounded temporal candidate | =modules/temporal-causality/funs.ss= and =packages/proofs/tla/temporal-causality/= | Admit a finite family, clock assumptions and exploration bound. |
+| Bounded temporal candidate | =modules/temporal-causality/funs.ss= and =packages/proofs/quint/temporal-causality.qnt/= | Admit a finite family, clock assumptions and exploration bound. |
 | Supplied trajectory | =modules/temporal-causality/trajectory/= | Canonical series, exact time grid, modality, provenance and evidence scope. |
 | Exact trajectory contrast | =modules/temporal-causality/impact/= | Compare aligned series with the same subject, outcome, unit, cut and projection. |
 | Candidate intervention window | =modules/temporal-causality/impact/= | Bind onset/end to sampled instants; report pre-onset agreement, signed trapezoidal score and time mean. |
@@ -919,3 +919,19 @@ atomic publication permit.
 All current semantic transport remains bounded inert Scheme datum v1. The
 Python Library ABI and Rust original-owner bridge do not by themselves qualify
 MRR production publication. Raw build/test logs stay in local or CI artifacts.
+
+* Quint proof authority (2026-10-08)
+
+The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
+Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
+Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
+The finite cases include safety checks, declared weak-fairness temporal
+properties and fault mutations required to produce the named counterexample.
+The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
+
+Earlier TLA+/TLC results above are historical evidence, not receipts for the
+Quint source revision. The TLA+ parser and checked-source Library interfaces
+remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
+They do not verify the current Quint models. Quint uses the TLC backend;
+generated TLA+ is temporary backend output rather than maintained source.
+The migrated models do not establish a general Scheme/Rust refinement theorem.

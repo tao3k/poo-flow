@@ -40,5 +40,21 @@ the downstream proof-impact gate stale until that binding is refreshed.
   authority.
 - Provider results bind Query, Provider and revision identities.
 
-The focused owners are =packages/proofs/tla/NativeSemanticQuery.tla= and
+The focused owners are =packages/proofs/quint/NativeSemanticQuery.qnt= and
 =PooFlowProof.PooC4.NativeSemanticQueryModel=.
+
+* Quint proof authority (2026-10-08)
+
+The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
+Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
+Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
+The finite cases include safety checks, declared weak-fairness temporal
+properties and fault mutations required to produce the named counterexample.
+The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
+
+Earlier TLA+/TLC results above are historical evidence, not receipts for the
+Quint source revision. The TLA+ parser and checked-source Library interfaces
+remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
+They do not verify the current Quint models. Quint uses the TLC backend;
+generated TLA+ is temporary backend output rather than maintained source.
+The migrated models do not establish a general Scheme/Rust refinement theorem.

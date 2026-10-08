@@ -98,16 +98,16 @@ retrieval is a normal exploratory outcome and does not alone make the
 aggregate audit =needs-review=; it stays visible for a caller's relevance or
 stopping policy.
 
-* TLA+ behavioral model
+* Quint behavioral model
 :PROPERTIES:
 :CUSTOM_ID: temporal-evidence-tla
 :END:
 
-=packages/proofs/tla/temporal-causality/evidence/EvidenceLineageSemantics.tla= defines the pure finite candidate-use and
+=packages/proofs/quint/EvidenceSemantics.qnt= defines the pure finite candidate-use and
 dependency relations and their bounded closure.  The internal relation in
-=packages/proofs/tla/temporal-causality/evidence/EvidenceLineageExplorer.tla= permits any enabled order of retrieval,
+=packages/proofs/quint/EvidenceLineage.qnt= permits any enabled order of retrieval,
 citation, use checking, claim admission and evidence correction.  The
-finite fixture is =packages/proofs/tla/temporal-causality/evidence/EvidenceLineageCase.tla/.cfg=.  This =Next=-equivalent
+finite fixture is =packages/proofs/quint/EvidenceLineageCase.qnt=.  This =Next=-equivalent
 exploration relation is a model-checker mechanism, not the public POO API or
 a prediction of the model's next action.
 
@@ -135,7 +135,7 @@ they are explicit transitions now.
 
 The checker assumes a perfect use-checking oracle *within each possible
 world*.  The second finite model,
-=packages/proofs/tla/temporal-causality/evidence/EvidenceAssessmentExplorer.tla=, explicitly permits two reviewers to
+=packages/proofs/quint/EvidenceAssessment.qnt=, explicitly permits two reviewers to
 produce any of =supports/refutes/uncertain= in either order.  A new review
 invalidates the cited claim and its descendants before any fresh admission;
 source withdrawal does the same.  Its safety properties retain an active
@@ -165,7 +165,7 @@ against ASCENT output.  An adapter must bind materialized rows to the result
 digest and the exact Temporal cut before either engine's candidates can be
 joined.  No such adapter is claimed by this model.
 
-The abstract =packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla= tests a necessary safety
+The abstract =packages/proofs/quint/CandidateExchange.qnt= tests a necessary safety
 condition for that adapter: candidate identities may be reported in either
 order, with complete or incomplete receipts and on old or current revision
 generations.  Each candidate declares a nonempty required-provider set;
@@ -210,7 +210,7 @@ untrusted or obsolete premises masquerade as an accepted conclusion.
 | ASCENT Why | ASCENT evaluator | Program/rule identity, input fact identities, derivation nodes, exact snapshot, completion and budget | Local ASCENT commit =5fbaba6= adds independently replayable positive atom-rule DAGs with bounded status; non-positive rules remain unsupported. |
 | ASCENT Why-Not | ASCENT evaluator under a declared finite domain | Ground query tuple, source/candidate facts, rule-closed relation set, exact snapshot/program identity and result status | ASCENT local commit =6993dc8= generates and independently checks bounded positive-rule nonmembership certificates; non-positive and non-ground cases remain unsupported. |
 | Premise meaning and admission | POO Flow Temporal | Evidence cut, source revision, assessment of exact use, authority policy and selected conclusion revision | =candidates/= now binds declared cut/provider/check digests with an inert reviewability audit; no cross-engine row binding or Temporal proof-admission adapter exists. |
-| Lifecycle safety | TLA+ projection owned by Temporal | Generation, required-provider set, complete receipt, atomic invalidation | Finite abstract protocol checked; no runtime refinement proof. |
+| Lifecycle safety | Quint projection owned by Temporal | Generation, required-provider set, complete receipt, atomic invalidation | Finite abstract protocol checked; no runtime refinement proof. |
 
 Positive relational provenance can be represented algebraically over
 annotated inputs as in Green, Karvounarakis and Tannen's
@@ -305,13 +305,13 @@ The ASCENT owner should prove the finite positive-rule closure argument
 as an abstract Lean theorem, then state separately what its Scheme
 verifier checks at runtime.  A successful Lean compilation proves the
 theorem under the encoded assumptions; it does not prove that the Gerbil
-interpreter implements the encoding.  ASCENT's TLA+ model should check
+interpreter implements the encoding.  ASCENT's Quint model should check
 snapshot replacement, proof computation and publication order, so an
 old-generation proof cannot be installed as the current answer and a
 bounded or unsupported result cannot be promoted.  This is distinct
 from the mathematical closure theorem.
 
-POO Flow's TLA+ obligation begins at the *cross-system* boundary:
+POO Flow's Quint obligation begins at the *cross-system* boundary:
 GQL/ASCENT result identity, evidence cut and source-completeness policy
 must match the conclusion revision that consumes them.  Its current
 =CandidateExchangeExplorer= checks only generation and declared-provider
@@ -330,9 +330,9 @@ end-to-end conformance proof.
 just check-temporal-evidence
 #+end_src
 
-#+name: check-temporal-evidence-tlc
+#+name: check-temporal-evidence-quint
 #+begin_src sh
-just check-temporal-evidence-tlc
+just check-temporal-evidence-quint
 #+end_src
 
 The focused Scheme test checks relation canonicalization, distinct
@@ -356,3 +356,6 @@ support rather than treating the number of tool calls as success.
 The 2026 arXiv sources are preprints; the links identify the version whose
 abstract was reviewed.  The module does not implement the papers' agents,
 benchmarks or reported quality metrics.
+
+The current Quint checking authority and version-scoped receipt requirements
+are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Earlier TLC state counts are historical.

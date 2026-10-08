@@ -48,3 +48,7 @@ __pycache__/
 /bindings/runtime-wasm/workflows/.human-capability.publication.json*
 
 packages/python-runtime/build/
+
+# Quint dependencies and compiler/backend generated artifacts.
+node_modules/
+_apalache-out/

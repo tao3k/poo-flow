@@ -15,7 +15,7 @@ still unknown about events and their causal explanations over time.  The
 framework must support partial order, multiple clock roles, intervals,
 late/corrected evidence, open candidate hypotheses, bounded exploration and
 formal assurance without turning time order into actual causation.  Scheme
-owns the POO semantic model and pure queries; TLA+ checks finite behaviors;
+owns the POO semantic model and pure queries; Quint checks finite behaviors;
 Lean can prove reusable semantic and projection laws; GQL and ASCENT can
 propose structural candidates.  A vertical Lambda supplies its own vocabulary
 and authority rules.
@@ -181,7 +181,7 @@ Domain Lambda ──> POO observations / hypotheses / obligations
 #+end_src
 
 =time/= owns clock-indexed primitives.  The Temporal Module owns model
-admission, event/cut semantics, uncertainty and receipts.  =packages/proofs/tla/temporal-causality/= owns the
+admission, event/cut semantics, uncertainty and receipts.  =packages/proofs/quint/temporal-causality.qnt/= owns the
 finite formal projection and checks; =modules/tla-plus/= owns the parser CST
 boundary and supported source-to-POO mapping.  GQL/ASCENT results may supply
 candidate edges or proofs of structural reachability; they do not admit a
@@ -302,7 +302,7 @@ Jensen and Snodgrass's bitemporal distinction
 admission and valid-time axes separate.  Full-inventory invalidation is this
 project's conservative proof-scope rule, not a claim made by that source.
 
-The TLA+ submodel in =packages/proofs/tla/temporal-causality/TemporalInvalidationExplorer.tla= checks a finite
+The Quint submodel in =packages/proofs/quint/TemporalInvalidation.qnt= checks a finite
 subject/conclusion graph.  =Direct= is the changed-subject frontier, =Step=
 adds one-hop conclusion dependents, and =Closure= applies =Step= at most
 =|Conclusions|= times.  The explorer schedules any enabled dependent, so
@@ -368,7 +368,7 @@ an observation can lose a race before commit.  After retraction, the pointer
 may select the tombstone revision; current applicability must interpret its
 =retract= operation as no active result.
 
-The finite TLA+ model in =packages/proofs/tla/temporal-causality/TemporalConclusionSelection.tla= represents
+The finite Quint model in =packages/proofs/quint/TemporalConclusionSelection.qnt= represents
 two proposals against the same predecessor and expected version.  Its
 abstract atomic =Commit= increments the version; the other proposal then
 enters =Conflict=.  TLC checks at-most-one commit, version accounting,
@@ -410,7 +410,7 @@ admission and authorized durable pointer commit remain open.
 
 * Formal programme
 
-The current =packages/proofs/tla/temporal-causality/model.org= gives one finite instance, state machine,
+The current =packages/proofs/quint/model.org= gives one finite instance, state machine,
 invariants, liveness assumption and TLC commands.  The general obligations
 are broader:
 
@@ -572,3 +572,19 @@ invalidation frontier, not actual influence or claim truth.
 - Repository architecture: =docs/10-19-design/10.06-poo-module-system/161-temporal-causality-and-causal-trajectory-architecture.org=.
 - Temporal observation and revision contracts: RFC 45-70, 45-72 and 45-73
   in the same design directory.
+
+* Quint proof authority (2026-10-08)
+
+The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
+Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
+Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
+The finite cases include safety checks, declared weak-fairness temporal
+properties and fault mutations required to produce the named counterexample.
+The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
+
+Earlier TLA+/TLC results above are historical evidence, not receipts for the
+Quint source revision. The TLA+ parser and checked-source Library interfaces
+remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
+They do not verify the current Quint models. Quint uses the TLC backend;
+generated TLA+ is temporary backend output rather than maintained source.
+The migrated models do not establish a general Scheme/Rust refinement theorem.

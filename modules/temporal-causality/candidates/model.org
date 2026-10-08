@@ -67,12 +67,12 @@ cannot change the receipt identity.  This is integrity within the supplied
 POO values; it is not a signature or a proof that an external provider
 produced the stated bytes.
 
-* TLA+ lifecycle model
+* Quint lifecycle model
 :PROPERTIES:
 :CUSTOM_ID: temporal-candidate-exchange-tla
 :END:
 
-[[file:../../../packages/proofs/tla/temporal-causality/evidence/CandidateExchangeExplorer.tla][CandidateExchangeExplorer]]
+[[file:../../../packages/proofs/quint/CandidateExchange.qnt][CandidateExchangeExplorer]]
 lets GQL and ASCENT choose complete/incomplete outcomes and independent
 valid/invalid checks in either order.  The finite case uses one candidate,
 two cuts and generations 0–1; absence of a check represents an unknown
@@ -137,3 +137,6 @@ and pass the verifier basis into =CandidateCheck=.  A bounded or unsupported
 proof cannot be recorded as a valid proof check.  Temporal then separately
 checks source coverage, current revision and premise admission.  No such
 live provider adapter exists in this slice.
+
+The current Quint checking authority and version-scoped receipt requirements
+are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Earlier TLC state counts are historical.

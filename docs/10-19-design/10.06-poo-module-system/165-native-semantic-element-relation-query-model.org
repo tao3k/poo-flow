@@ -202,8 +202,8 @@ and model-checker gates remain distinct; the aggregate gate joins them with the
 Lean correspondence check:
 
 #+begin_src sh
-just check-native-semantic-query-tla
-just check-native-semantic-query-tlc
+just check-quint-types
+just check-native-semantic-query-quint
 just check-native-semantic-query-model
 #+end_src
 

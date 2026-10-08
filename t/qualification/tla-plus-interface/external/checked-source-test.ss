@@ -17,9 +17,9 @@
 (export tla-checked-source-test)
 
 (def spec
-  "packages/proofs/tla/temporal-causality/TemporalConclusionSelectionCase.tla")
+  "t/fixtures/tla-plus/temporal-causality/TemporalConclusionSelectionCase.tla")
 (def config
-  "packages/proofs/tla/temporal-causality/TemporalConclusionSelectionCase.cfg")
+  "t/fixtures/tla-plus/temporal-causality/TemporalConclusionSelectionCase.cfg")
 (def (source-document)
   (poo-flow-tla-parse-source
    (call-with-input-file spec read-all-as-string)))
@@ -32,7 +32,7 @@
      (write-text
       (path-expand name directory)
       (call-with-input-file
-       (path-expand name "packages/proofs/tla/temporal-causality")
+       (path-expand name "t/fixtures/tla-plus/temporal-causality")
        read-all-as-string)))
    '("TemporalConclusionSelectionCase.tla"
      "TemporalConclusionSelectionData.tla"
@@ -42,7 +42,7 @@
 (def (check-family-agreement data-name case-name)
   ;; The data module is projected through the parser-owned source contract.
   ;; TLC explores the matching case with its expected terminal classification.
-  (let* ((root "packages/proofs/tla/temporal-causality")
+  (let* ((root "t/fixtures/tla-plus/temporal-causality")
          (source (path-expand (string-append data-name ".tla") root))
          (spec-path (path-expand (string-append case-name ".tla") root))
          (cfg-path (path-expand (string-append case-name ".cfg") root))
@@ -101,7 +101,7 @@
 (def (check-generated-family source-a source-b result expected)
   (let (directory (string-trim-eol (run-process ["mktemp" "-d"])))
     (unwind-protect
-      (let* ((root "packages/proofs/tla/temporal-causality")
+      (let* ((root "t/fixtures/tla-plus/temporal-causality")
              (spec-path (path-expand "TemporalFamilyCase.tla" directory))
              (data-path (path-expand "TemporalHypothesisFamily.tla" directory))
              (cfg-path (path-expand "TemporalFamilyCase.cfg" directory)))

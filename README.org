@@ -47,7 +47,7 @@ silently claim another tool's guarantee:
 | Layer | Owner | What it establishes | What it cannot establish |
 | POO Governance | =modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
 | Cedar Provider | =modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
-| TLA+ / TLC | =packages/proofs/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
+| Quint | [[file:packages/proofs/quint/README.org][Finite proof inventory]] | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
 | Lean | =packages/proofs/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
 
 The intended evidence chain is:

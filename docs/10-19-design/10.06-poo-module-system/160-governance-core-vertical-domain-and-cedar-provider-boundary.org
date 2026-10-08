@@ -145,7 +145,7 @@ remain owned by the upstream Cedar specification and its Lean proof.
 
 * TLA+ transition model and parser authority
 
-=packages/proofs/tla/GovernanceCore.tla= models the temporal boundary from
+=packages/proofs/quint/GovernanceCore.qnt= models the temporal boundary from
 pre-threat observation through assessment, Governance admission, enterprise
 evidence closure and Provider handoff.  Its invariants require evidence for an
 observed precondition, closed enterprise assurance before handoff, explicit
@@ -159,8 +159,7 @@ identities and exposes a named advanced accessor to the *same* parser-owned
 CST.  It neither copies that tree into a second object family, implements
 another TLA+ grammar, nor interprets temporal semantics.  =just
 check-tla-interface= tests this boundary atomically; the
-=just check-governance-tla= lane qualifies the selected model's syntax and
-byte-exact roundtrip.  The parser package also pins a POO Flow revision; this
+=just check-governance-model= lane verifies the Quint governance model.  The parser package also pins a POO Flow revision; this
 versioned dependency graph must be qualified when either pin changes, without
 introducing an unversioned source loop.
 
@@ -221,3 +220,19 @@ is smaller, testable and does not manufacture a second provider framework.
 - [X] Lambda production closure imports Governance only from POO Flow.
 - [X] Qualify Healthcare medication allow/default-deny/revocation through the real dual-engine Host.
 - [ ] Introduce Provider/Profile CLOS dispatch only after a second real axis exists.
+
+* Quint proof authority (2026-10-08)
+
+The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
+Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
+Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
+The finite cases include safety checks, declared weak-fairness temporal
+properties and fault mutations required to produce the named counterexample.
+The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
+
+Earlier TLA+/TLC results above are historical evidence, not receipts for the
+Quint source revision. The TLA+ parser and checked-source Library interfaces
+remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
+They do not verify the current Quint models. Quint uses the TLC backend;
+generated TLA+ is temporary backend output rather than maintained source.
+The migrated models do not establish a general Scheme/Rust refinement theorem.

@@ -1,0 +1,51 @@
+#+TITLE: POO Flow Quint proofs
+
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Source and checking authority
+
+All maintained finite formal models are Quint. Quint =0.33.0= and the
+=0.62.1= Apalache distribution match MRR. Verification uses Quint's =tlc=
+backend. Generated TLA+ is transient compiler output. Lean retains its
+independent algebraic scope; it is not automatically a refinement proof.
+
+#+begin_src sh
+just prepare-quint
+just check-quint-types
+just check-quint
+PYTHONPATH=packages/python-testing/src python3 -m poo_flow_testing.checks.quint \
+  --group all --receipt /tmp/poo-quint-proof.ss
+#+end_src
+
+The runner requires real output within five seconds and finishes each check
+within 45 seconds. Missing counts, a nonempty final queue, wrong exit status,
+missing temporal completion or an unexpected counterexample fails admission.
+Negative cases select a named predicate and require an invariant violation;
+syntax errors, crashes and timeouts are not successful negative controls.
+Receipts use inert Scheme =poo-flow.quint-proof.v1= and bind every local Quint
+source hash, versions, selected properties, exit, counts and output hash.
+Do not commit logs, generated traces, backend output or acceptance receipts.
+Install dependencies before checking; package manifests only pin build tools.
+
+* Finite model inventory
+
+| Group | Scope |
+|-------+-------|
+| governance | Work/blocker/authority handoff |
+| query | Native semantic query revision and provider receipts |
+| healthcare, healthcare-ai, healthcare-migration | Original bounded evidence/human/Cedar authority cases |
+| family | Exclusive two-cause family, one-step bound and discriminating evidence |
+| revision | Four append-only revisions, historical cut and concurrent heads |
+| invalidation | Four conclusions, reverse dependency cycle and scope reprojection |
+| selection | Two competing proposals, revision CAS and conflict |
+| evidence | Two claim use lineage, reviewer disagreement and two-provider candidate exchange |
+| session | Two sessions/workers and two worktrees, authorization/cut/scope/CAS guard mutants |
+
+The complete executable catalog is =checks/quint.py= in the Python testing
+package. A passing finite case covers that instance's reachable states, not
+arbitrary family cardinality, production concurrency or deployed behavior.
+The legacy TLA+ parser corpus is isolated in =t/fixtures/tla-plus= for language
+API regression tests. It is not part of this proof inventory.

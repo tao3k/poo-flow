@@ -53,19 +53,6 @@ gerbil_parser_dir := poo_flow_gerbil_path + "/pkg/github.com/tao3k/gerbil-parser
 gerbil_parser_path := poo_flow_gerbil_path
 gerbil_parser_library_path := poo_flow_library_path + ":" + gerbil_parser_dir + ":" + contribution_source_root + "/lambda-episteme:" + justfile_directory()
 fhir_validator_jar := env_var_or_default("FHIR_VALIDATOR_JAR", "")
-governance_tla := justfile_directory() + "/packages/proofs/tla/GovernanceCore.tla"
-governance_tlc_config := justfile_directory() + "/packages/proofs/tla/GovernanceCore.cfg"
-governance_tlc_receipt := justfile_directory() + "/.ci/governance/tlc-receipt.ss"
-semantic_query_tla := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.tla"
-semantic_query_tlc_config := justfile_directory() + "/packages/proofs/tla/NativeSemanticQuery.cfg"
-semantic_query_tlc_receipt := justfile_directory() + "/.ci/native-semantic-query/tlc-receipt.ss"
-healthcare_temporal_tla := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.tla"
-healthcare_temporal_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcarePrescriptionCausality.cfg"
-healthcare_migration_tla := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.tla"
-healthcare_migration_tlc_config := justfile_directory() + "/packages/proofs/tla/HealthcareStandardMigration.cfg"
-healthcare_migration_tlc_receipt := justfile_directory() + "/.ci/healthcare-standard-migration/tlc-receipt.ss"
-healthcare_temporal_tlc_receipt := justfile_directory() + "/.ci/healthcare-temporal/tlc-receipt.ss"
-temporal_family_tla_dir := justfile_directory() + "/packages/proofs/tla/temporal-causality"
 lean_proof_dir := justfile_directory() + "/packages/proofs/lean"
 temporal_poo_proof_dir := justfile_directory() + "/packages/proofs/lean-poo"
 
@@ -447,13 +434,11 @@ _prepare-gerbil-parser:
     test -f "{{ gerbil_parser_dir }}/gerbil.pkg"
     GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil interactive -e '(begin (import :gerbil-parser/src/runtime/artifact) (displayln "gerbil-parser-v19-ready"))'
 
-# Atomically qualify the POO-native TLA+ syntax projection. TLC remains a
 # separate semantic gate; no source acceptance is presented as model checking.
 [group('check')]
 check-tla-interface: _prepare-gerbil-parser
     GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} just test-file t/qualification/tla-plus-interface/interface-test.ss
 
-# Bind one parser-owned TLC run to an exact parsed TLA+ source and config.
 [group('check')]
 check-tla-checked-source: _prepare-gerbil-parser
     PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} just test-file t/qualification/tla-plus-interface/external/checked-source-test.ss
@@ -489,7 +474,6 @@ check-lean-module module:
     [[ "{{ module }}" =~ ^PooFlowProof(\.[A-Za-z0-9_]+)+$ ]]
     cd "{{ lean_proof_dir }}" && lake build "{{ module }}"
 
-# The Healthcare Case composes native POO Module proof libraries. GQL and TLA+
 # remain independent gates owned by their parser/model-checker lifecycles.
 [group('check')]
 check-healthcare-lean:
@@ -506,36 +490,27 @@ check-governance-lean:
 check-native-semantic-query-lean:
     cd "{{ lean_proof_dir }}" && lake build PooFlowProof.PooC4.NativeSemanticQueryModel
 
-# Parser admission and TLC remain separate evidence over the same model.
-[group('check')]
-check-native-semantic-query-tla: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA="{{ semantic_query_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA") read-all-as-string)) (artifact (parse-tla-plus source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) (cdr (assq (quote contract) tla-plus-layout-language))) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
 
-# Run TLC directly as an independent state-space gate.  Parser admission is a
-# different part of the three-part TLA+ closure and cannot substitute for this.
 [group('check')]
-check-native-semantic-query-tlc:
-    cd "$(dirname "{{ semantic_query_tla }}")" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" tlc -config "{{ semantic_query_tlc_config }}" "{{ semantic_query_tla }}"
+check-native-semantic-query-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group query
 
 # Explore the module-owned hypothesis family both to exhaustion and under a
 # tighter bound. Each configuration checks every candidate selection order.
 [group('check')]
-check-temporal-family-tlc:
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyCase.cfg TemporalFamilyCase.tla
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalFamilyBounded.cfg TemporalFamilyCase.tla
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalDiscriminatingCase.cfg TemporalDiscriminatingCase.tla
+check-temporal-family-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group family
 
 # Model-check append-only temporal evidence revisions and stable as-of cuts.
 [group('check')]
-check-temporal-revisions-tlc:
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalRevisionCase.cfg TemporalRevisionCase.tla
+check-temporal-revisions-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group revision
 
 # Check the finite reverse-dependency model and the separate LeanPoo 4.34
 # certificate target without changing the Cedar-bound Lean 4.31 project.
 [group('check')]
-check-temporal-invalidation-tlc:
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalInvalidationCase.cfg TemporalInvalidationCase.tla
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalReprojectionCase.cfg TemporalInvalidationCase.tla
+check-temporal-invalidation-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group invalidation
 
 # Check explicit clock domains and conservative interval observations.
 [group('check')]
@@ -574,16 +549,14 @@ check-temporal-candidate-exchange:
     GERBIL_PATH="{{ poo_flow_gerbil_path }}" GERBIL_LOADPATH="{{ justfile_directory() }}/..:{{ justfile_directory() }}/core:{{ poo_flow_gerbil_path }}/lib:{{ justfile_directory() }}" just test-file t/temporal-candidate-exchange-test.ss
 
 [group('check')]
-check-temporal-evidence-tlc:
-    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceLineageCase.cfg EvidenceLineageCase.tla
-    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config EvidenceAssessmentCase.cfg EvidenceAssessmentCase.tla
-    cd "{{ justfile_directory() }}/packages/proofs/tla/temporal-causality/evidence" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config CandidateExchangeCase.cfg CandidateExchangeExplorer.tla
+check-temporal-evidence-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group evidence
 
 # Explore both orders of competing conclusion-selection proposals. The
 # checked transition is an abstract atomic CAS, not a runtime pointer write.
 [group('check')]
-check-temporal-conclusion-selection-tlc:
-    cd "{{ temporal_family_tla_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 60s tlc -workers 1 -config TemporalConclusionSelectionCase.cfg TemporalConclusionSelectionCase.tla
+check-temporal-conclusion-selection-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group selection
 
 [group('check')]
 check-temporal-poo-lean:
@@ -596,16 +569,15 @@ check-session-poo-lean:
     cd "{{ temporal_poo_proof_dir }}" && PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" timeout 120s lake build PooFlowSessionProof
 
 [group('check')]
-check-session-context-tla:
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing run --mode native --module session --receipt "{{ justfile_directory() }}/.ci/session-context/testing-receipt.json"
+check-session-context-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group session
 
 [group('check')]
-check-session-proof: check-session-poo-lean check-session-context-tla
+check-session-proof: check-session-poo-lean check-session-context-quint
 
 [group('check')]
-check-native-semantic-query-model: check-native-semantic-query-lean check-native-semantic-query-tla
-    mkdir -p "$(dirname "{{ semantic_query_tlc_receipt }}")"
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA="{{ semantic_query_tla }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_CONFIG="{{ semantic_query_tlc_config }}" POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_RECEIPT="{{ semantic_query_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLA") (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_NATIVE_SEMANTIC_QUERY_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+check-native-semantic-query-model: check-native-semantic-query-lean
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group query
 
 # Full aggregation is an explicit integration qualification, never the default
 # local or pull-request proof gate.
@@ -613,65 +585,40 @@ check-native-semantic-query-model: check-native-semantic-query-lean check-native
 check-lean-all: check-temporal-poo-lean check-session-poo-lean
     cd "{{ lean_proof_dir }}" && lake build PooFlowProof
 
-# Preserve the focused syntax-only gate for parser development.
 [group('check')]
-check-governance-tla: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_GOVERNANCE_TLA") read-all-as-string)) (artifact (parse-tla-plus source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) (cdr (assq (quote contract) tla-plus-layout-language))) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+check-governance-model:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group governance
 
-# One parser-owned API performs native parsing, byte-exact roundtrip and
-# official TLC model checking, then publishes one typed Gerbil receipt.
+
+# Check finite clinical authority transitions through Quint.
 [group('check')]
-check-governance-model: _prepare-gerbil-parser
-    mkdir -p "$(dirname "{{ governance_tlc_receipt }}")"
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_GOVERNANCE_TLA="{{ governance_tla }}" POO_FLOW_GOVERNANCE_TLC_CONFIG="{{ governance_tlc_config }}" POO_FLOW_GOVERNANCE_TLC_RECEIPT="{{ governance_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_GOVERNANCE_TLA") (getenv "POO_FLOW_GOVERNANCE_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_GOVERNANCE_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
+check-healthcare-temporal-model:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group healthcare
 
-# Explicit semantic alias; both names route to the same parser-owned API.
+# Exact bounded model for the AI-assisted prescription Case.
 [group('check')]
-check-governance-tlc: check-governance-model
+check-healthcare-ai-temporal-model:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group healthcare-ai
 
-# Qualify the bounded wrong-prescription temporal model as native TLA+ source.
-# This gate owns parsing, contract validation and byte-exact roundtrip only.
+# Formal-model governance evidence is an explicit assurance gate.
 [group('check')]
-check-healthcare-temporal-tla: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" gerbil interactive -e '(begin (import (only-in :std/misc/ports read-all-as-string) :gerbil-parser/languages/tla-plus/parser :gerbil-parser/src/runtime/artifact) (let* ((source (call-with-input-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") read-all-as-string)) (artifact (parse-tla-plus source)) (accepted? (and (parse-artifact-success? artifact) (parse-artifact-valid? artifact))) (roundtrip? (and accepted? (equal? source (parse-artifact-roundtrip artifact))))) (displayln (list (cons (quote contract) (cdr (assq (quote contract) tla-plus-layout-language))) (cons (quote accepted) accepted?) (cons (quote roundtrip) roundtrip?) (cons (quote diagnostics) (parse-artifact-ref artifact (quote diagnostics))))) (exit (if (and accepted? roundtrip?) 0 1))))'
+check-healthcare-standard-migration-model:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group healthcare-migration
 
-# TLC is a later assurance gate, not a prerequisite for ordinary Scheme builds
-# or unit tests.  The devenv-owned binary makes this explicit gate reproducible.
-[group('check')]
-check-healthcare-temporal-model: check-healthcare-temporal-tla
-    mkdir -p "$(dirname "{{ healthcare_temporal_tlc_receipt }}")"
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLA="{{ healthcare_temporal_tla }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG="{{ healthcare_temporal_tlc_config }}" POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT="{{ healthcare_temporal_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLA") (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_TEMPORAL_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
-
-# Exact bounded model for the AI-assisted prescription Case.  The parser owner
-# performs parse, byte-roundtrip and TLC execution and emits the typed receipt.
-[group('check')]
-check-healthcare-ai-temporal-model: _prepare-gerbil-parser
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ gerbil_parser_library_path }}" gerbil interactive -e '(begin (import (only-in :clan/poo/object .ref) (only-in :poo-flow/lambda-episteme/user-interface/scenarios/healthcare/assurance HealthcareCaseQualificationMetadata healthcare-case-qualification-path) (only-in :gerbil-parser/languages/tla-plus/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (healthcare-case-qualification-path (quote tla-source)) (healthcare-case-qualification-path (quote tla-config)) workers: (.ref HealthcareCaseQualificationMetadata (quote tlc-workers)))) (datum (tla-plus-model-receipt->alist receipt)) (path (healthcare-case-qualification-path (quote tlc-receipt)))) (display (tla-plus-model-receipt-output receipt)) (create-directory* (path-directory path)) (call-with-output-file path (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
-
-# The migration Feature owns a bounded temporal model; parser/TLC produce the
-# formal-model governance evidence without entering an ordinary Scheme build.
-[group('check')]
-check-healthcare-standard-migration-model: _prepare-gerbil-parser
-    mkdir -p "$(dirname "{{ healthcare_migration_tlc_receipt }}")"
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" POO_FLOW_HEALTHCARE_MIGRATION_TLA="{{ healthcare_migration_tla }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG="{{ healthcare_migration_tlc_config }}" POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT="{{ healthcare_migration_tlc_receipt }}" gerbil interactive -e '(begin (import (only-in :gerbil-parser/languages/tla-plus/qualification qualify-tla-plus-model tla-plus-model-receipt-admitted tla-plus-model-receipt-output tla-plus-model-receipt->alist)) (let* ((receipt (qualify-tla-plus-model (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLA") (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_CONFIG") workers: 1)) (datum (tla-plus-model-receipt->alist receipt))) (display (tla-plus-model-receipt-output receipt)) (call-with-output-file (getenv "POO_FLOW_HEALTHCARE_MIGRATION_TLC_RECEIPT") (lambda (port) (write datum port) (newline port))) (write datum) (newline) (exit (if (tla-plus-model-receipt-admitted receipt) 0 1))))'
-
-# Lean refines the exact TLA+ digest and publishes named migration theorems.
 [group('check')]
 check-healthcare-standard-migration-lean:
     cd "{{ lean_proof_dir }}" && lake build PooFlowScenarioHealthcareProof
 
 # Source-byte and impact-map qualification rejects stale downstream Lean proof
-# bindings whenever the upstream TLA+ model changes.
 [group('check')]
 check-healthcare-standard-migration-proof-impact: check-healthcare-standard-migration-model check-healthcare-standard-migration-lean
-    GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ justfile_directory() }}/.gerbil/contributions/lambda-episteme/standard-migration-impact" GERBIL_LOADPATH="{{ contribution_source_root }}/lambda-episteme:{{ justfile_directory() }}:{{ poo_flow_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil {{ gerbil_test_runtime_options }} test -v 3 t/qualification/healthcare-standard-migration-assurance/impact-test.ss
+    python3 "{{ justfile_directory() }}/packages/proofs/quint/source_binding.py"
 
 [group('check')]
 check-healthcare-standard-migration-assurance: check-healthcare-standard-migration-proof-impact
 
 # Only this exact qualification may combine the independent Scheme, parser,
-# TLC and Lean evidence into the assurance digest consumed by Cedar. MRR is a
-# downstream Rust library consumer of the parser FFI, never a Scheme subprocess.
+# downstream runtime and contribution assurance keep separate evidence scopes.
 [group('check')]
 check-healthcare-case-assurance: build-contribute check-healthcare-gql check-healthcare-lean check-healthcare-ai-temporal-model
     GERBIL_BUILD_VERBOSE=1 GERBIL_PATH="{{ contribution_test_path }}" GERBIL_LOADPATH="{{ contribution_test_library_path }}:{{ poo_flow_library_path }}" timeout --foreground --signal=TERM --kill-after=3s 20s gxi {{ gerbil_test_runtime_options }} ./run-contribute-test.ss "packages/lambda-episteme/t/ontology/qualification/healthcare-case-assurance.ss"
@@ -824,3 +771,17 @@ test-query-orgize-source:
     grep -Fx 'MODULE-OK t/query-orgize-source-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
+
+# Formal source authority matches MRR: Quint 0.33.0 and Apalache 0.62.1.
+[group('check')]
+prepare-quint:
+    npm ci --prefix "{{ justfile_directory() }}/packages/proofs/quint" --no-audit --no-fund
+    python3 "{{ justfile_directory() }}/packages/proofs/quint/prepare_backend.py"
+
+[group('check')]
+check-quint-types:
+    python3 "{{ justfile_directory() }}/packages/proofs/quint/typecheck.py"
+
+[group('check')]
+check-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group all

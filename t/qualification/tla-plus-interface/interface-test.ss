@@ -42,13 +42,13 @@
 ;;; contract. Each path is read from this checkout, not a sibling repository.
 (def tla-layout-corpus-paths
   (append
-   (map (lambda (name) (path-expand name "packages/proofs/tla"))
+   (map (lambda (name) (path-expand name "t/fixtures/tla-plus"))
         '("NativeSemanticQuery.tla" "GovernanceCore.tla"
           "HealthcareAIAssistedPrescriptionCausality.tla"
           "HealthcareStandardMigration.tla"
           "HealthcarePrescriptionCausality.tla"))
    (map (lambda (name)
-          (path-expand name "packages/proofs/tla/temporal-causality"))
+          (path-expand name "t/fixtures/tla-plus/temporal-causality"))
         '("TemporalInvalidationExplorer.tla" "TemporalRevisionData.tla"
           "TemporalHypothesisFamily.tla" "TemporalConclusionSelectionData.tla"
           "TemporalInvalidationCase.tla" "TemporalRevisionCase.tla"
@@ -59,7 +59,7 @@
           "TemporalConclusionSelectionCase.tla" "TemporalRevisionExplorer.tla"
           "TemporalDiscriminatingCase.tla"))
    (map (lambda (name)
-          (path-expand name "packages/proofs/tla/temporal-causality/evidence"))
+          (path-expand name "t/fixtures/tla-plus/temporal-causality/evidence"))
         '("EvidenceAssessmentCase.tla" "EvidenceLineageExplorer.tla"
           "EvidenceLineageCase.tla" "EvidenceAssessmentExplorer.tla"
           "EvidenceLineageSemantics.tla" "CandidateExchangeExplorer.tla"))))
@@ -101,7 +101,7 @@
         (check-equal? (eq? root (poo-flow-tla-parser-cst document)) #t)))
     (poo-flow-test-case "maintained governance model uses the same interface"
       (let* ((source
-              (call-with-input-file "packages/proofs/tla/GovernanceCore.tla"
+              (call-with-input-file "t/fixtures/tla-plus/GovernanceCore.tla"
                                     read-all-as-string))
              (document (poo-flow-tla-parse-source source)))
         (check-equal? (poo-flow-tla-document? document) #t)
@@ -144,7 +144,7 @@
     (poo-flow-test-case "finite literal TLA+ family projects to the POO model"
       (let* ((source
               (call-with-input-file
-               "packages/proofs/tla/temporal-causality/TemporalHypothesisFamily.tla"
+               "t/fixtures/tla-plus/temporal-causality/TemporalHypothesisFamily.tla"
                read-all-as-string))
              (document (poo-flow-tla-parse-source source))
              (projection (poo-flow-tla-project-temporal-model document))
@@ -183,7 +183,7 @@
     (poo-flow-test-case "discriminating TLA+ data changes the projected answer"
       (let* ((source
               (call-with-input-file
-               "packages/proofs/tla/temporal-causality/TemporalDiscriminatingFamily.tla"
+               "t/fixtures/tla-plus/temporal-causality/TemporalDiscriminatingFamily.tla"
                read-all-as-string))
              (projection
               (poo-flow-tla-project-temporal-model
