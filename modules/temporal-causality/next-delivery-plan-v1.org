@@ -1,6 +1,6 @@
 #+title: Temporal production delivery ledger
 #+date: [2026-10-08]
-#+property: STATUS dependency-consumer-qualification-in-progress
+#+property: STATUS audited-current-consumer-gates
 #+begin_comment
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
