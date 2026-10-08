@@ -96,10 +96,10 @@ fn atom(
                 {
                     return Err(Error::InvalidInput);
                 }
-                if let Some(previous) = types.insert(name.to_owned(), field.schema().clone()) {
-                    if previous != *field.schema() {
-                        return Err(Error::InvalidInput);
-                    }
+                if let Some(previous) = types.insert(name.to_owned(), field.schema().clone())
+                    && previous != *field.schema()
+                {
+                    return Err(Error::InvalidInput);
                 }
                 datum!({"kind":"variable","name":name})
             }

@@ -490,6 +490,8 @@ jobs:
 
       - name: Compile original typed MRR consumers
         run: |
+          cargo +1.95.0 clippy --locked --manifest-path bindings/rust-runtime/Cargo.toml \
+            --features mrr-context --tests -- -D warnings
           cargo +1.95.0 test --locked --manifest-path bindings/rust-runtime/Cargo.toml \
             --features mrr-context --test mrr --test mrr_support --test mrr_rule \
             --test mrr_derivation --test temporal_policy --no-run

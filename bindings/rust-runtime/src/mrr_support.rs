@@ -214,7 +214,7 @@ impl MrrFactProjection {
     ) -> Result<Value, Error> {
         recheck_catalog(catalog, self.catalog_digest)?;
         let result = runtime.call("temporal.fact.content", &self.payload)?;
-        if result["contentDigest"] != Value::from(self.content_digest.clone()) {
+        if result["contentDigest"].as_str() != Some(self.content_digest.as_str()) {
             return Err(Error::InvalidInput);
         }
         Ok(result)

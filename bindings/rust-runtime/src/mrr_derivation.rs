@@ -42,9 +42,9 @@ impl MrrDerivationProjection {
         let mut by_fact = BTreeMap::new();
         let mut projected = Vec::new();
         for fact in facts {
+            let generation = fact.context().generation().to_string();
             if by_fact.insert(fact.id(), fact).is_some()
-                || Value::from(fact.context().generation().to_string())
-                    != program.payload()["generation"]
+                || program.payload()["generation"].as_str() != Some(generation.as_str())
             {
                 return Err(Error::InvalidInput);
             }
@@ -84,15 +84,9 @@ impl MrrDerivationProjection {
         for fact in facts {
             match (fact.context().authority(), fact.context().provenance()) {
                 (m::RelationAuthority::Entity(_), m::FactProvenance::Source(_))
-                    if !by_output.contains_key(&fact.id()) =>
-                {
-                    ()
-                }
+                    if !by_output.contains_key(&fact.id()) => {}
                 (m::RelationAuthority::Rule(_), m::FactProvenance::Derivation(_))
-                    if by_output.contains_key(&fact.id()) =>
-                {
-                    ()
-                }
+                    if by_output.contains_key(&fact.id()) => {}
                 _ => return Err(Error::InvalidInput),
             }
         }

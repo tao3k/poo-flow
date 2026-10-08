@@ -233,7 +233,7 @@ fn original_mrr_fact_content_parity_and_profile_controls(runtime: &SemanticRunti
         );
         let projection = MrrFactProjection::admit(&fact, &catalog()).unwrap();
         assert_eq!(projection.original(), &fact);
-        let result = projection.verify_content(&runtime, &catalog()).unwrap();
+        let result = projection.verify_content(runtime, &catalog()).unwrap();
         assert_eq!(result["proofAdmitted"], false);
         let lineage = if name == "output" {
             let supports = vec![
