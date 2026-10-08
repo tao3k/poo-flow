@@ -699,46 +699,6 @@ benchmark-temporal-mrr:
 qualify-temporal-model python binary library oracle env_file output:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-model-native/scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"
 
-# Gerbil's package environment supplies the SDK; Cargo owns the locked producer.
-[group('test')]
-qualify-temporal-physical-library library output:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export GERBIL_GSC="${GERBIL_GSC:-$(command -v gsc)}"
-    runtime="${MRR_RUNTIME_ROOT:-{{ justfile_directory() }}/.ci/mrr-runtime/runtime}"
-    manifest="$runtime/qualification/physical-roundtrip/Cargo.toml"
-    cargo +1.95.0 metadata --locked --format-version 1 --manifest-path "$manifest" \
-      | python3 "$runtime/tools/check_mrr_dependency_graph.py" --resolved
-    cargo +1.95.0 build --locked --manifest-path "$manifest"
-    cargo +1.95.0 clippy --locked --manifest-path "$manifest" -- -D warnings
-    mkdir -p "{{ output }}"
-    library="$(realpath "{{ library }}")"
-    output="$(realpath "{{ output }}")"
-    digest="$(openssl dgst -sha256 -r "$library" | cut -d ' ' -f 1)"
-    POO_FLOW_PHYSICAL_ORACLE="$output/oracle.ss" \
-      just qualify-temporal-physical \
-        "$(dirname "$manifest")/target/debug/mrr-temporal-physical-roundtrip" \
-        "$library" "$digest" "$output/receipt.ss"
-    test -s "$output/oracle.ss"
-
-# Read-only physical semantic qualification; no performance sampling or model spend.
-[group('test')]
-qualify-temporal-physical binary library digest output:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    log="$(mktemp)"
-    trap 'rm -f "$log"' EXIT
-    timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ digest }}" POO_FLOW_PHYSICAL_RECEIPT="{{ output }}" python3 packages/python-runtime/tools/watch.py "{{ binary }}" 2>&1 | tee "$log"
-    grep -Fx 'Original Scheme v1 transport admitted; unsupported version rejected' "$log" >/dev/null
-    grep -Fx 'NATIVE-TO-DATA-COMMIT-REPLAY-ACK-LEASE-OK' "$log" >/dev/null
-    grep -Fx 'NATIVE-TO-DATA-MIXED-SOURCE-FENCE-REFUSED' "$log" >/dev/null
-    grep -Fx 'NATIVE-TO-DATA-GRANT-ABA-RETIREMENT-ALIAS-REFUSED' "$log" >/dev/null
-    grep -Fx 'NATIVE-TO-DATA-RETIRED-GRANT-HISTORICAL-REPLAY-RECOVERED' "$log" >/dev/null
-    grep -Fx 'NATIVE-TO-DATA-STALE-REFUTED-RESTART-OK' "$log" >/dev/null
-    grep -Fx 'PHYSICAL-CORRECTION -> MRR-REQUERY -> HISTORICAL-STALE -> NATIVE-READMISSION OK' "$log" >/dev/null
-    grep -Fx 'GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V1 -> NATIVE TEMPORAL OK' "$log" >/dev/null
-    test -s "{{ output }}"
-
 [group('test')]
 qualify-temporal-physical-model python binary library oracle env_file output:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=5s 60s gerbil {{ gerbil_test_runtime_options }} env gxi t/qualification/temporal-physical-native/model-scenario.ss "{{ python }}" "{{ binary }}" "{{ library }}" "{{ oracle }}" "{{ env_file }}" "{{ output }}"

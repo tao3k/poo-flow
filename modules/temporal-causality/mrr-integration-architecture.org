@@ -14,12 +14,11 @@ MRR adapters and Data publication orchestration. POO contains no Rust runtime
 crate or compatibility alias. It supplies Scheme semantic modules, C ABI and
 Python Library. Data supplies Backend/Protocols and durable transactions.
 
-Cross-repository CI checks out the immutable owner declared in
-=packages/automation/mrr-runtime.toml=, then exercises that external consumer
-against this run's POO native artifact. =.ci/mrr-runtime= is a disposable checkout,
-not a POO source module. Source-only Orgize Rust tests run in MRR CI. Historical
-build-freeze receipts identify their original commits and paths, not current
-ownership or current acceptance.
+MRR CI consumes the immutable POO dependency declared in its =gerbil.pkg=.
+It builds the native Library from that dependency and owns Rust/Python comparison
+and native-to-Data physical acceptance. POO CI qualifies its Scheme core, C ABI
+and Python Library; it neither checks out MRR nor pins the MRR runtime.
+Historical build-freeze receipts retain their original commits and paths.
 
 * Current delivery plan
 
@@ -61,12 +60,11 @@ Dedicated ABI v1 controls retain proof inputs; ordinary read-only queries cannot
 replace current state, policy or the observed clock. Source authentication,
 complete support inventories and effect authorization are not inferred.
 
-The new =Temporal MRR Library consumers= CI gate reuses the exact run's native
-producer. Original Rust evidence is then replayed through the installed Python
-Library against the same artifact. Its success qualifies the named bounded
-read-only lifecycle only. Cargo resolution alone does not qualify physical
-execution on the updated Data producer; that physical roundtrip remains a
-separate executable gate. Historical receipts retain their original pins.
+MRR's Library qualification uses one native artifact for its original Rust
+evidence and installed Python Library replay. Success qualifies the named
+bounded lifecycle only. Physical execution remains a separate executable gate
+in MRR, using the same artifact and Data's authoritative port. Historical
+receipts retain their original pins.
 
 C SQLite publication currently admits only an initial root. Replacement,
 tombstone, durable current-state fences and crash recovery must compose the
@@ -300,7 +298,7 @@ payload; none can be inferred from a model's agreement with tool output.
 
 * Rust layout and optimization constraints
 
-Keep =.ci/mrr-runtime/runtime= the native lifetime/queue/transport adapter. Keep
+Keep the native lifetime/queue/transport adapter in MRR =runtime/=. Keep
 query admission in MRR and physical IO in MRR Data. Add POO-native projection,
 correspondence and applicability objects in the Temporal module; expose only
 bounded ABI operations required by the runtime. Trusted registration/publication
@@ -350,7 +348,7 @@ a current permit merely because its historical commit receipt still exists.
 - [[file:framework.org][Temporal framework and existing revision/projection contracts]]
 - [[file:design-audit.org][D1--D8 design decisions and remaining implementation gates]]
 - [[file:integration-readiness-audit.org][Pinned runtime and real-model qualification boundaries]]
-- [[file:../../.ci/mrr-runtime/runtime/README.org][Native Rust adapter and delivered MRR observation profile]]
+- [[https://github.com/tao3k/meta-relational-reasoning/tree/feat/property-query-executor/runtime][MRR native Rust adapter]]
 - [[file:../../bindings/runtime-c/include/poo_flow/temporal_store.h][Current first-root publication ABI]]
 
 * Direct Legacy removal

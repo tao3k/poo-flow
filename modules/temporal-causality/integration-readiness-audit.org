@@ -219,8 +219,8 @@ MRR Context crate consumes temporal fact references without defining a clock
 or causal solver; its extracted evidence proof does not close POO's IFC label,
 declassification or Temporal applicability gates.
 
-MRR =runtime/= owns the read-only native consumer. POO CI checks out that
-external consumer under =.ci/mrr-runtime= to test the POO-produced Library.
+MRR =runtime/= owns the read-only native consumer. MRR CI uses its declared
+POO dependency to test the POO-produced Library.
 Dedicated owner thread, bounded queue, exact artifact digest, allocator-matched
 release and terminal native close are checked against a real native artifact.
 It consumes finite lens/family operations and no trusted registration/publication
@@ -237,7 +237,7 @@ blocked execution state for that exact payload; its producer head and claim
 scope remain in [[file:../../t/qualification/temporal-library-basic/rust-model-family/historical.org][the model receipt]].
 
 R3 now has an executable original MRR -> explicit host observation correspondence
--> native POO finite-family seam in =.ci/mrr-runtime/runtime/src/mrr.rs=.
+-> native POO finite-family seam in =runtime/src/mrr.rs= in MRR.
 The upstream facade is pinned at PR #9 head =3ce31dac...=; no MRR implementation
 or MRR Data PR was overwritten. The receiving side uses native MRR transport
 verification and retains the original candidate/receipt. The narrowly supported

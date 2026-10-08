@@ -4,9 +4,9 @@
 
 The Python Runtime is =packages/python-runtime/src/poo_flow_runtime=.
 These tools exercise that package and the shared native Scheme/C ABI.
-MRR =runtime/= owns Rust ABI code and assertions. POO CI uses its external
-checkout at =.ci/mrr-runtime/runtime=;
-MRR owns its production Rust Library and MRR Data owns physical backends.
+MRR =runtime/= owns Rust ABI code, assertions and consumer CI. MRR consumes
+POO through its declared Gerbil dependency; POO CI does not check out MRR.
+MRR Data owns physical backends.
 
 | Python entrypoint | Responsibility |
 |-------------------+----------------|

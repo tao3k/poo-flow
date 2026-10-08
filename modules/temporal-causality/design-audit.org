@@ -329,7 +329,7 @@ applicability or information-flow authorization receipt.
 
 * Delivered: bounded Rust read-only Runtime consumer
 
-=.ci/mrr-runtime/runtime= consumes the original semantic C ABI on a dedicated
+=runtime/= in the MRR repository consumes the original semantic C ABI on a dedicated
 owner thread. The qualified release build matches 21 current installed-Python
 native results across finite-family/lens profiles. It checks queue saturation,
 concurrent callers, allocator release, wrong-thread rejection and terminal close.

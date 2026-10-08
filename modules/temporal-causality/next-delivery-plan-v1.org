@@ -136,7 +136,7 @@ registry, complete provenance inventory or effect permission is established;
 proof/source/selection/effect/durable admission flags remain false.
 
 The shared package-managed entry is
-=gerbil env just qualify-temporal-physical-library LIBRARY OUTPUT=.
+=gerbil env bash runtime/tools/qualify-library.sh POO_PACKAGE OUTPUT= in MRR.
 Cargo validates the locked graph, builds and lints; the existing bounded native
 recipe performs execution. CI keys Cargo's dependency/build cache by SDK/toolchain and immutable package
 locks; Cargo owns source invalidation. The native AOT artifact is freshly built
@@ -313,3 +313,12 @@ This closes the named durable retirement/ABA acceptance slice. It does not
 close content tombstone selection, authenticated grant issuance, declassification
 or external effect execution. A historical delivery is not current authority
 to re-dispatch an effect. Required CI on these delivered heads remains separate.
+
+* 2026-10-09 dependency direction correction
+
+The earlier POO CI runtime-owner checkout plan is superseded. MRR consumes
+POO Flow; POO CI must not check out or pin MRR. POO removes all three reverse
+checkout sites, the runtime pin descriptor/guard and the consumer-owned physical
+build entrypoints. MRR CI owns native Rust/Python comparison and Data physical
+acceptance, using its declared Gerbil POO dependency and existing SDK/toolchains.
+The immutable typed MRR/Data producer pair and Scheme ABI v1 remain unchanged.

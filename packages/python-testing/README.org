@@ -131,7 +131,7 @@ Historical evidence under =t/qualification/semantic-abi= retains its original
 failure boundary and is not current ABI qualification.
 
 Current frozen physical model cases are owned by the ASP Scheme benchmark
-scenario in =.ci/mrr-runtime/runtime=. The HTTP adapter reads literal provider
+scenario in =t/qualification/temporal-physical-native/= in POO Flow. The HTTP adapter reads literal provider
 configuration, preserves raw responses, makes at most two calls for one case,
 and performs no retry or repair. Five seconds without real content remains a
 failure. Native observations do not grant effect authority.
