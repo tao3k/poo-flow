@@ -66,6 +66,25 @@ The executable CI owner is =Temporal MRR Library consumers=. Raw logs and
 original emitted Scheme oracles are local or CI artifacts, never Git logs.
 No new model call or benchmark win is implied by this stage.
 
+* Qualified native consumer source cut
+
+[[https://github.com/tao3k/poo-flow/actions/runs/37769701506/job/113291895168][The original consumer CI run]] passed at POO source cut
+=0a7a2c3c22775cbcd657a250e00f75a541a5b5b4= with the immutable graph above.
+Ten original Rust tests and a separate fresh-process archive replay passed.
+Installed Python replay passed 63 tests with no skips. Both consumers used the
+same fresh native artifact, SHA-256
+=1ccd75e33df51f92dfc52f602ec28a0449c336d9050990e17792828409ff19ae=.
+Clippy passed with warnings denied. Execution kept the five-second idle and
+45-second total gates. The first consumer CI attempt failed before tests because
+the minimal Rust toolchain lacked Clippy; that failure is not a semantic pass.
+
+Original Scheme oracles remain in that run's artifact, not Git. This qualifies
+bounded original-proof/current-state read-only consumers for that source cut.
+No physical Data roundtrip, provider authentication, complete support inventory,
+Data commit/IFC authority, new model call or performance gain follows from it.
+The stronger implicit-HEAD rejection changes dependency tooling only; final-head
+CI must still pass before calling the delivered stage closed.
+
 * Next stages in dependency order
 
 | Order | Work | Acceptance gate |
