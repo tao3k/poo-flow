@@ -471,7 +471,7 @@ under the same key fails. The receipt authorizes local selection only and keeps
 
 The host APIs must not be offered to models as tools. Source authenticity,
 Cedar/signed external permits, correction/retraction, external effects and general
-POO/TLA refinement remain outside this first-root profile. SQLite WAL with FULL
+POO/Quint refinement remain outside this first-root profile. SQLite WAL with FULL
 synchronous mode and process-crash recovery are exercised; power-loss/storage
 hardware behavior is not qualified by these local tests.
 
