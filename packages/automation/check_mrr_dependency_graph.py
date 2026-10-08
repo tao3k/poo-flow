@@ -28,7 +28,7 @@ def check(root: Path = ROOT, resolved: dict | None = None) -> tuple[str, str]:
     mrr = owner['rev']
     physical_deps = read(physical / 'Cargo.toml')['dependencies']
     data = physical_deps['mrr-data-core']['rev']
-    for name, dep in physical_deps.items():
+    for name, dep in (*deps.items(), *physical_deps.items()):
         if isinstance(dep, dict) and dep.get('git') in (MRR, DATA):
             expected = mrr if dep['git'] == MRR else data
             if dep.get('rev') != expected:
@@ -46,7 +46,7 @@ def check(root: Path = ROOT, resolved: dict | None = None) -> tuple[str, str]:
                     if source != expected:
                         raise ValueError(f'{directory.name}/{package["name"]}: stale or duplicate owner')
                     found.add(url)
-        required = {MRR, DATA} if directory == physical else {MRR}
+        required = {MRR, DATA}
         if not required <= found:
             raise ValueError(f'{directory.name}: producer missing from actual lock')
     if resolved is not None:

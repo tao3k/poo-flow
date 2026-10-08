@@ -22,7 +22,7 @@ Temporal solver or duplicate Data backend belongs in the adapters. Model tools
 remain read-only; source/policy/proof registration uses separate Host controls.
 
 The active graph is MRR =ffde2798a5246a61f4d6f0e66d7f05156e55e38f= and Data
-=534afe6c946088b8b0fe4e3a4b2bcdbbb50e6873=. Data's original workspace declares
+=513d67812c45875bfa991b5b0032f37cffcb5998=. Data's original workspace declares
 that same MRR revision. Its native build owner is =1e4f1f65c7ff8e95fe764f2e8549fa9d92275db4=.
 The graph checker verifies manifests, both actual Cargo locks and, with resolved
 metadata, the original Data checkout and its workspace dependency declarations.
@@ -195,3 +195,26 @@ No synthetic heartbeat, timeout widening, hidden retry or repair closes a gate.
 New measurements and native qualification receipts use ASP Scheme's benchmark
 API; receipt/ABI versions remain v1. Source control retains gates and bounded
 structured summaries, not raw or compressed logs.
+
+* Atomic delivery stage source cut
+
+Data =844a1d74da301b10638d02ee272e4a19a6c90ecb= extends the existing shared
+Backend with atomic head/operation/delivery, exact recovery and historical ACK.
+The optional Rust adapter and original physical producer now depend on that
+same immutable Data revision; earlier receipts above retain their earlier pins.
+Turso 18 and DuckDB 20 cases passed with strict five-second progress / 45-second
+execution gates, including six actual process-death points. Strict Data Clippy
+passed. The first DuckDB invocation waited on a preparing Cargo lock and failed
+the watchdog; only the subsequent explicitly prepared execution qualifies.
+
+The publication Quint positive exhausts 1,980 states; the omitted-delivery
+mutation produces a required counterexample. This is a finite atomic contract
+model, not native refinement. Rust adapter Clippy passed. The expanded original
+physical producer must execute the new native/Data markers and pass exact-head
+CI before this stage is qualified end to end. Declassification, tombstones,
+issuer authentication and full native/Quint refinement remain open.
+
+Data =513d67812c45875bfa991b5b0032f37cffcb5998= additionally refuses a fresh
+replacement when selected head history lacks its exact operation/delivery tuple.
+Both provider suites and strict Clippy passed this added refusal. Current manifests
+and both locks select this newer cut; historical results retain their source cuts.

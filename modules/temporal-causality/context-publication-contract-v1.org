@@ -75,13 +75,13 @@ execution and Python oracle replay on the delivered head remain the closure gate
 | MRR Data Backend/Protocols | Resolve protected material; own durable source/policy/grant frontier; recheck fences and lease in one conditional commit; persist pointer/history/outbox; recover |
 | Python Runtime | Exercise the Library and adapter contract; provider IO remains separate |
 
-At the pinned Data =534afe6c= source cut, =SnapshotPublication= acknowledges
-physical closure transfer and explicitly does not publish a mutable discovery
-pointer. It supplies no Temporal source/grant conditional-commit contract. The
-separate working checkout at =55285d51= contains a later POO Flow protection/outbox
-module; it is outside this locked qualification graph and cannot be treated as
-an admitted backend capability here. Its integration requires an explicit pin
-update and fresh original physical/consumer qualification.
+Data =534afe6c= already supplies the shared conditional Backend with mandatory
+transactional authority generations, exact history and held-transaction Host
+validation. =SnapshotPublication= separately acknowledges physical closure
+transfer; it does not publish a mutable discovery pointer. The new Data source
+cut =844a1d74= adds atomic publication delivery and exact historical ACKs to that
+same Backend. Neither API grants IFC authority by itself. Host authentication,
+exact grant enrollment and synchronized native/source fences remain required.
 The Runtime C first-root store has a local pointer transaction but no unified
 Data protected-material/IFC commit. Neither is sufficient for this boundary.
 Do not introduce a second durable backend in MRR runtime or infer permission from
@@ -149,3 +149,22 @@ not stable local startup qualification. Diagnostics found a concurrently changed
 global Homebrew runtime and active native compilation. No external processes or
 SDK installation were changed and no timeout was widened. Final-source native
 execution must qualify in the fixed SDK CI environment before delivery closes.
+
+* Executable publication stage
+
+The optional Rust =data-publication= adapter retains the original MRR family
+admission and an immutable Scheme v1 plan. A Host-enrolled grant CID commits to
+scope, operation, expected head, physical payload root, proof admission and full
+Context restriction/actor/destination declarations. Only necessary admissions
+with the exact source and physical content digest can construct a plan. Current
+proof and fresh Host-clock lease evaluation happen inside Data's held transaction.
+The Host advances Data fences before native source refresh; direct native changes
+that bypass that protocol are outside this synchronization guarantee.
+
+The original physical producer now executes native-to-Turso commit, exact replay
+without another clock read, delivery ACK, expired lease refusal, actual source
+correction, stale and refuted refusal and restart. These are required in the
+existing physical job. Their execution and delivered-head CI remain separate
+from adapter compilation and the isolated Data provider tests. A historical ACK
+never grants another external effect. Tombstones and declassification remain
+separate design/implementation gates.

@@ -53,6 +53,8 @@ def main() -> None:
     gsc = str(home / "bin/gsc")
     os.environ["GAMBOPT"] = f"~~={home},~~bin={home / 'bin'},~~lib={home / 'lib'}"
     compiler = [str(home / "bin/gxc"), "-:max-heap=1G,debug=q", "-V"]
+    # Module compilation already emits compiler-owned static sources.
+    # -static controls executable dependency linkage and cannot link Darwin dylibs.
     for source in ["src/utilities/product-syntax.ss", "src/utilities/final-projection-syntax.ss",
                    "src/graph/types-core.ss", "src/graph/algorithms-list-support.ss",
                    "src/graph/algorithms.ss", "modules/temporal-causality/types.ss",
@@ -88,8 +90,8 @@ def main() -> None:
                    "modules/temporal-causality/evaluator/derivation.ss",
                    "modules/temporal-causality/evaluator/proof-host.ss",
                    "modules/temporal-causality/evaluator/interface.ss", "src/ffi/temporal-proof.ss", "src/ffi/temporal-policy.ss", "src/ffi/temporal-proof-host.ss"]:
-        run([*compiler, "-O", "-static", source])
-    run([*compiler, "-O", "-static",
+        run([*compiler, "-O", source])
+    run([*compiler, "-O",
          "-ld-options", "-Wl,-undefined,dynamic_lookup" if platform.system() == "Darwin" else "-ldl",
          "src/ffi/semantic.ss"])
     expression = '''(let* ((ctx (import-module "src/ffi/semantic.ss"))

@@ -391,6 +391,251 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let historical = registered.admit(&runtime, "physical-conclusion-1")?;
     assert_eq!(historical.current(&runtime)?["status"], "current");
     println!("Original physical receipt admitted against registered source state");
+    // Physical root was already restored and queried above. This acknowledgement
+    // records that exact closure, rather than a fabricated replacement payload.
+    use mrr_data_backend::{
+        AuthorityExpectation, AuthorityProposal, AuthorityStatus, Backend, BackendConfig,
+    };
+    use poo_flow_rust_runtime::mrr_publication::{PublicationHost, PublicationPlan};
+    let publication_dir = tempfile::tempdir()?;
+    let publication_path = publication_dir.path().join("publication.db");
+    let publication_backend = Backend::open(
+        BackendConfig::default(),
+        mrr_data_backend::providers::TursoProvider::new(
+            publication_path.clone(),
+            tokio::runtime::Handle::current(),
+        ),
+        tokio::runtime::Handle::current(),
+    )
+    .await?;
+    let publication_port = publication_backend.profile("poo-temporal.v1", "qualification")?;
+    let restrictions = datum!([{"schema":"poo-flow.context-restriction.v1","domain":"host-clock",
+        "readers":["reader"],"destinations":["library-store"],"provenance":["physical-root"],"leaseStart":1,"leaseEnd":5}]);
+    let composed = runtime.call("context.restriction.compose", &datum!({"schema":"poo-flow.context-restriction-compose-request.v1","restrictions":restrictions.clone()}))?;
+    let flow = datum!({"schema":"poo-flow.context-flow-request.v1","restrictions":restrictions,
+        "expectedRestrictionDigest":composed["bindingDigest"].clone(),
+        "sourceDigest":historical.result()["sourceDigest"].clone(),
+        "contentDigest":snapshot.cid().hash().digest().iter().map(|b|format!("{b:02x}")).collect::<String>(),
+        "principal":"reader","destination":"library-store","declaredAt":2});
+    let plan = fixture(PublicationPlan::new(
+        "publication",
+        "first",
+        None,
+        *snapshot.cid(),
+        &historical,
+        &flow,
+    ))?;
+    let source_fence = fixture(
+        publication_port
+            .advance_authority(
+                "publication",
+                AuthorityProposal {
+                    authority_id: "source".into(),
+                    expected: None,
+                    replacement: ContentBlock::new(
+                        ContentCodec::Raw,
+                        historical.result()["sourceDigest"]
+                            .as_str()
+                            .unwrap()
+                            .as_bytes(),
+                    )
+                    .cid(),
+                    status: AuthorityStatus::Active,
+                },
+            )
+            .await,
+    )?;
+    let grant = fixture(
+        publication_port
+            .advance_authority(
+                "publication",
+                AuthorityProposal {
+                    authority_id: "grant".into(),
+                    expected: None,
+                    replacement: plan.commitment(),
+                    status: AuthorityStatus::Active,
+                },
+            )
+            .await,
+    )?;
+    let guards = vec![
+        AuthorityExpectation {
+            authority_id: "source".into(),
+            state: source_fence,
+        },
+        AuthorityExpectation {
+            authority_id: "grant".into(),
+            state: grant,
+        },
+    ];
+    let physical_ack = mrr_data_content::PublishReceipt {
+        cid: *snapshot.cid(),
+        cache: mrr_data_content::CacheAdmission::Stored,
+    };
+    let first_commit = fixture(
+        plan.commit(
+            PublicationHost {
+                port: &publication_port,
+                guards: &guards,
+                grant_id: "grant",
+                admission: &historical,
+                runtime: &runtime,
+            },
+            Some(&physical_ack),
+            || 2,
+        )
+        .await,
+    )?;
+    let first_head = match first_commit {
+        mrr_data_content::ConditionalContentCommitOutcome::Committed(r) => r.committed,
+        _ => panic!("fresh commit"),
+    };
+    assert!(matches!(
+        fixture(
+            plan.commit(
+                PublicationHost {
+                    port: &publication_port,
+                    guards: &guards,
+                    grant_id: "grant",
+                    admission: &historical,
+                    runtime: &runtime
+                },
+                None,
+                || panic!("replay clock")
+            )
+            .await
+        )?,
+        mrr_data_content::ConditionalContentCommitOutcome::Replayed(_)
+    ));
+    let delivery = fixture(
+        publication_port
+            .publication_delivery("publication", 1)
+            .await,
+    )?
+    .unwrap();
+    fixture(publication_port.acknowledge_publication(&delivery).await)?;
+    assert!(
+        fixture(
+            publication_port
+                .publication_delivery("publication", 1)
+                .await
+        )?
+        .unwrap()
+        .acknowledged
+    );
+    let mut substituted = flow.clone();
+    substituted["principal"] = "different-reader".into();
+    let substituted_plan = fixture(PublicationPlan::new(
+        "publication",
+        "first",
+        None,
+        *snapshot.cid(),
+        &historical,
+        &substituted,
+    ))?;
+    assert!(matches!(
+        substituted_plan
+            .commit(
+                PublicationHost {
+                    port: &publication_port,
+                    guards: &guards,
+                    grant_id: "grant",
+                    admission: &historical,
+                    runtime: &runtime
+                },
+                Some(&physical_ack),
+                || 2
+            )
+            .await,
+        Err(mrr_data_content::ConditionalCommitPortError::Validation(
+            poo_flow_rust_runtime::mrr_publication::PublicationError::GrantBinding
+        ))
+    ));
+    let mut wrong_payload = flow.clone();
+    wrong_payload["contentDigest"] = "0".repeat(64).into();
+    assert!(
+        PublicationPlan::new(
+            "publication",
+            "forged",
+            Some(first_head),
+            *snapshot.cid(),
+            &historical,
+            &wrong_payload
+        )
+        .is_err()
+    );
+    let next_plan = fixture(PublicationPlan::new(
+        "publication",
+        "next",
+        Some(first_head),
+        *snapshot.cid(),
+        &historical,
+        &flow,
+    ))?;
+    let next_grant = fixture(
+        publication_port
+            .advance_authority(
+                "publication",
+                AuthorityProposal {
+                    authority_id: "grant".into(),
+                    expected: Some(grant),
+                    replacement: next_plan.commitment(),
+                    status: AuthorityStatus::Active,
+                },
+            )
+            .await,
+    )?;
+    let mut next_guards = vec![
+        AuthorityExpectation {
+            authority_id: "source".into(),
+            state: source_fence,
+        },
+        AuthorityExpectation {
+            authority_id: "grant".into(),
+            state: next_grant,
+        },
+    ];
+    assert!(matches!(
+        next_plan
+            .commit(
+                PublicationHost {
+                    port: &publication_port,
+                    guards: &next_guards,
+                    grant_id: "grant",
+                    admission: &historical,
+                    runtime: &runtime
+                },
+                Some(&physical_ack),
+                || 5
+            )
+            .await,
+        Err(mrr_data_content::ConditionalCommitPortError::Validation(
+            poo_flow_rust_runtime::mrr_publication::PublicationError::Ineligible
+        ))
+    ));
+    assert!(
+        fixture(
+            publication_port
+                .publication_delivery("publication", 2)
+                .await
+        )?
+        .is_none()
+    );
+    println!("NATIVE-TO-DATA-COMMIT-REPLAY-ACK-LEASE-OK");
+    // Fence invalidation precedes the native source refresh below.
+    next_guards[0].state = fixture(
+        publication_port
+            .advance_authority(
+                "publication",
+                AuthorityProposal {
+                    authority_id: "source".into(),
+                    expected: Some(source_fence),
+                    replacement: ContentBlock::new(ContentCodec::Raw, b"next-source").cid(),
+                    status: AuthorityStatus::Active,
+                },
+            )
+            .await,
+    )?;
 
     // Restore and execute a genuinely changed immutable physical revision.
     let corrected_generation =
@@ -522,12 +767,71 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .register_current(&runtime, model, task, context())
             .is_err()
     );
+    assert!(matches!(
+        next_plan
+            .commit(
+                PublicationHost {
+                    port: &publication_port,
+                    guards: &next_guards,
+                    grant_id: "grant",
+                    admission: &historical,
+                    runtime: &runtime
+                },
+                Some(&physical_ack),
+                || 2
+            )
+            .await,
+        Err(mrr_data_content::ConditionalCommitPortError::Validation(
+            poo_flow_rust_runtime::mrr_publication::PublicationError::NotCurrent
+        ))
+    ));
+    assert!(
+        PublicationPlan::new(
+            "publication",
+            "refuted",
+            Some(first_head),
+            *snapshot.cid(),
+            &revised,
+            &flow
+        )
+        .is_err()
+    );
+    assert!(
+        fixture(
+            publication_port
+                .publication_delivery("publication", 2)
+                .await
+        )?
+        .is_none()
+    );
+    publication_backend.shutdown().await?;
+    let reopened = Backend::open(
+        BackendConfig::default(),
+        mrr_data_backend::providers::TursoProvider::new(
+            publication_path,
+            tokio::runtime::Handle::current(),
+        ),
+        tokio::runtime::Handle::current(),
+    )
+    .await?;
+    assert!(
+        fixture(
+            reopened
+                .profile("poo-temporal.v1", "qualification")?
+                .publication_delivery("publication", 1)
+                .await
+        )?
+        .unwrap()
+        .acknowledged
+    );
+    reopened.shutdown().await?;
+    println!("NATIVE-TO-DATA-STALE-REFUTED-RESTART-OK");
     println!("PHYSICAL-CORRECTION -> MRR-REQUERY -> HISTORICAL-STALE -> NATIVE-READMISSION OK");
     runtime.close()?;
     if let Some(path) = std::env::var_os("POO_FLOW_PHYSICAL_RECEIPT") {
         let original_transport = poo_flow_rust_runtime::wire::from_slice(handoff.result_bytes())?;
         let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
-        let receipt = datum!({"schema":"poo-flow.temporal-physical-read-only.v1",
+        let receipt = datum!({"schema":"poo-flow.temporal-physical-publication.v1",
             "abiVersion":1,"wireFormat":"scheme-datum-v1",
             "source":SOURCE,"sourceDigest":digest,"root":snapshot.cid().to_string(),
             "compilationReceipt":{"schema":source.compilation().schema,
@@ -540,6 +844,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "mrrPin":env!("POO_QUALIFIED_MRR_PIN"),
             "mrrDataPin":env!("POO_QUALIFIED_DATA_PIN"),
             "nativeBuildPin":env!("POO_QUALIFIED_NATIVE_BUILD_PIN"),
+            "publication":{"schema":"poo-flow.data-publication-qualification.v1",
+                "provider":"turso","profile":"poo-temporal.v1","namespace":"qualification",
+                "scope":"publication","operation":"first","grantCommitment":plan.commitment().to_string(),
+                "committedRevision":first_head.revision,"committedRoot":first_head.root.to_string(),
+                "deliveryAcknowledged":true,"metadataRecovered":true,"leaseRefusal":true,
+                "staleRefusal":true,"refutedRefusal":true,"actorSubstitutionRefused":true,
+                "payloadSubstitutionRefused":true,"externalEffectExecuted":false},
             "mrrGeneration":generation.to_string(),"temporalGeneration":1,
             "nativeResultDigest":hex(admitted.receipt().digest()),
             "originalMrrTransport":original_transport,"temporalRequest":request.clone(),"temporalResult":result.clone(),

@@ -4,6 +4,8 @@
 //! All unsafe calls stay on one OS thread. No classification is implemented here.
 #[cfg(feature = "mrr-transport")]
 pub mod mrr_derivation;
+#[cfg(feature = "data-publication")]
+pub mod mrr_publication;
 #[cfg(feature = "mrr-transport")]
 pub mod mrr_rule;
 #[cfg(feature = "mrr-transport")]

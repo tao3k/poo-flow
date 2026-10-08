@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+title: Original GQL physical read-only Temporal qualification
+#+title: Original GQL, native Temporal and Data publication qualification
 
 * Current immutable v1 graph and executable acceptance
 
 MRR =ffde2798a5246a61f4d6f0e66d7f05156e55e38f= and Data
-=534afe6c946088b8b0fe4e3a4b2bcdbbb50e6873= share one original MRR type
+=513d67812c45875bfa991b5b0032f37cffcb5998= share one original MRR type
 universe. The native build owner is =1e4f1f65c7ff8e95fe764f2e8549fa9d92275db4=.
 Gerbil stays v0.19; Scheme ABI and transport stay v1.
 
@@ -35,8 +35,11 @@ requires protocol, correction and final markers, process exit zero and nonempty
 receipt/oracle files. No raw logs are committed. Qualification is tied to the
 executed CI head, binary and native artifact; older receipts below cannot qualify
 this graph. The trusted DataFusion executor and synthetic inventory do not prove
-source authenticity, exhaustive coverage, durable publication, IFC authorization,
-production recovery or a real-model lifecycle.
+source authenticity, exhaustive coverage, general IFC authorization or a
+real-model lifecycle. This stage additionally requires native/Data commit,
+replay, exact delivery ACK, fresh-clock lease refusal, actor/payload binding,
+stale/refuted refusal and native provider restart. Persisted metadata recovery
+is distinct from external effect execution and physical block durability.
 
 * Historical fixed-v1 physical acceptance
 

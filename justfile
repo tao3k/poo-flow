@@ -729,6 +729,8 @@ qualify-temporal-physical binary library digest output:
     trap 'rm -f "$log"' EXIT
     timeout --foreground --signal=TERM --kill-after=1s 45s env MRR_NATIVE_PROGRESS=1 POO_FLOW_RUNTIME_TRACE=1 POO_FLOW_SEMANTIC_LIBRARY="{{ library }}" POO_FLOW_SEMANTIC_SHA256="{{ digest }}" POO_FLOW_PHYSICAL_RECEIPT="{{ output }}" python3 packages/python-runtime/tools/watch.py "{{ binary }}" 2>&1 | tee "$log"
     grep -Fx 'Original Scheme v1 transport admitted; unsupported version rejected' "$log" >/dev/null
+    grep -Fx 'NATIVE-TO-DATA-COMMIT-REPLAY-ACK-LEASE-OK' "$log" >/dev/null
+    grep -Fx 'NATIVE-TO-DATA-STALE-REFUTED-RESTART-OK' "$log" >/dev/null
     grep -Fx 'PHYSICAL-CORRECTION -> MRR-REQUERY -> HISTORICAL-STALE -> NATIVE-READMISSION OK' "$log" >/dev/null
     grep -Fx 'GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V1 -> NATIVE TEMPORAL OK' "$log" >/dev/null
     test -s "{{ output }}"

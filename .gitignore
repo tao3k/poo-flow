@@ -52,3 +52,4 @@ packages/python-runtime/build/
 # Quint dependencies and compiler/backend generated artifacts.
 node_modules/
 _apalache-out/
+/bindings/rust-runtime/qualification/physical-roundtrip/target/

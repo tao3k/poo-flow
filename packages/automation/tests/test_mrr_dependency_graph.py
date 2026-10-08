@@ -34,6 +34,16 @@ class GraphTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'divergent'):
                 graph.check(root)
 
+    def test_parent_publication_pin_cannot_hide_behind_physical_owner(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            self.copy_graph(root)
+            path = root / 'bindings/rust-runtime/Cargo.toml'
+            _, data = graph.check(root)
+            path.write_text(path.read_text().replace(data, '0' * 40, 1))
+            with self.assertRaisesRegex(ValueError, 'divergent'):
+                graph.check(root)
+
     def test_stale_locked_producer_rejects(self):
         with tempfile.TemporaryDirectory() as work:
             root = Path(work)
