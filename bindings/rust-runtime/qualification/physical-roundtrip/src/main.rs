@@ -415,7 +415,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let flow = datum!({"schema":"poo-flow.context-flow-request.v1","restrictions":restrictions,
         "expectedRestrictionDigest":composed["bindingDigest"].clone(),
         "sourceDigest":historical.result()["sourceDigest"].clone(),
-        "contentDigest":snapshot.cid().hash().digest().iter().map(|b|format!("{b:02x}")).collect::<String>(),
+        "contentDigest":format!("sha256:{}",snapshot.cid().hash().digest().iter().map(|b|format!("{b:02x}")).collect::<String>()),
         "principal":"reader","destination":"library-store","declaredAt":2});
     let plan = fixture(PublicationPlan::new(
         "publication",
@@ -478,6 +478,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 port: &publication_port,
                 guards: &guards,
                 grant_id: "grant",
+                source_id: "source",
                 admission: &historical,
                 runtime: &runtime,
             },
@@ -497,6 +498,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     port: &publication_port,
                     guards: &guards,
                     grant_id: "grant",
+                    source_id: "source",
                     admission: &historical,
                     runtime: &runtime
                 },
@@ -523,6 +525,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap()
         .acknowledged
     );
+    let missing_source: Vec<_> = guards
+        .iter()
+        .filter(|g| g.authority_id != "source")
+        .cloned()
+        .collect();
+    assert!(matches!(
+        plan.commit(
+            PublicationHost {
+                port: &publication_port,
+                guards: &missing_source,
+                grant_id: "grant",
+                source_id: "source",
+                admission: &historical,
+                runtime: &runtime
+            },
+            None,
+            || 2
+        )
+        .await,
+        Err(mrr_data_content::ConditionalCommitPortError::Validation(
+            poo_flow_rust_runtime::mrr_publication::PublicationError::SourceBinding
+        ))
+    ));
     let mut substituted = flow.clone();
     substituted["principal"] = "different-reader".into();
     let substituted_plan = fixture(PublicationPlan::new(
@@ -540,6 +565,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     port: &publication_port,
                     guards: &guards,
                     grant_id: "grant",
+                    source_id: "source",
                     admission: &historical,
                     runtime: &runtime
                 },
@@ -552,7 +578,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ))
     ));
     let mut wrong_payload = flow.clone();
-    wrong_payload["contentDigest"] = "0".repeat(64).into();
+    wrong_payload["contentDigest"] = format!("sha256:{}", "0".repeat(64)).into();
     assert!(
         PublicationPlan::new(
             "publication",
@@ -602,6 +628,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     port: &publication_port,
                     guards: &next_guards,
                     grant_id: "grant",
+                    source_id: "source",
                     admission: &historical,
                     runtime: &runtime
                 },
@@ -637,6 +664,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await,
     )?;
 
+    // Native source is still old: a newer Data fence cannot authorize this mixed cut.
+    assert!(matches!(
+        next_plan
+            .commit(
+                PublicationHost {
+                    port: &publication_port,
+                    guards: &next_guards,
+                    grant_id: "grant",
+                    source_id: "source",
+                    admission: &historical,
+                    runtime: &runtime
+                },
+                Some(&physical_ack),
+                || 2
+            )
+            .await,
+        Err(mrr_data_content::ConditionalCommitPortError::Validation(
+            poo_flow_rust_runtime::mrr_publication::PublicationError::SourceBinding
+        ))
+    ));
+    assert!(
+        fixture(
+            publication_port
+                .publication_delivery("publication", 2)
+                .await
+        )?
+        .is_none()
+    );
+    println!("NATIVE-TO-DATA-MIXED-SOURCE-FENCE-REFUSED");
     // Restore and execute a genuinely changed immutable physical revision.
     let corrected_generation =
         m::GenerationId::from_canonical_bytes(b"temporal-physical-generation-2")?;
@@ -760,6 +816,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let current = revised.current(&runtime)?;
     assert_eq!(revised.result()["classification"], "refuted");
     assert_eq!(current["status"], "current");
+    next_guards[0].state = fixture(
+        publication_port
+            .advance_authority(
+                "publication",
+                AuthorityProposal {
+                    authority_id: "source".into(),
+                    expected: Some(next_guards[0].state),
+                    replacement: ContentBlock::new(
+                        ContentCodec::Raw,
+                        current["currentSourceDigest"].as_str().unwrap().as_bytes(),
+                    )
+                    .cid(),
+                    status: AuthorityStatus::Active,
+                },
+            )
+            .await,
+    )?;
+
     assert_eq!(current["sourceAuthenticated"], false);
     assert_eq!(current["actionAuthorized"], false);
     assert!(
@@ -774,6 +848,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     port: &publication_port,
                     guards: &next_guards,
                     grant_id: "grant",
+                    source_id: "source",
                     admission: &historical,
                     runtime: &runtime
                 },
@@ -785,14 +860,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             poo_flow_rust_runtime::mrr_publication::PublicationError::NotCurrent
         ))
     ));
+    let mut refuted_flow = flow.clone();
+    refuted_flow["sourceDigest"] = revised.result()["sourceDigest"].clone();
+    refuted_flow["contentDigest"] = format!(
+        "sha256:{}",
+        corrected_snapshot
+            .cid()
+            .hash()
+            .digest()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    )
+    .into();
     assert!(
         PublicationPlan::new(
             "publication",
             "refuted",
             Some(first_head),
-            *snapshot.cid(),
+            *corrected_snapshot.cid(),
             &revised,
-            &flow
+            &refuted_flow
         )
         .is_err()
     );
@@ -850,7 +938,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "committedRevision":first_head.revision,"committedRoot":first_head.root.to_string(),
                 "deliveryAcknowledged":true,"metadataRecovered":true,"leaseRefusal":true,
                 "staleRefusal":true,"refutedRefusal":true,"actorSubstitutionRefused":true,
-                "payloadSubstitutionRefused":true,"externalEffectExecuted":false},
+                "payloadSubstitutionRefused":true,"missingSourceGuardRefused":true,"mixedSourceFenceRefused":true,"externalEffectExecuted":false},
             "mrrGeneration":generation.to_string(),"temporalGeneration":1,
             "nativeResultDigest":hex(admitted.receipt().digest()),
             "originalMrrTransport":original_transport,"temporalRequest":request.clone(),"temporalResult":result.clone(),

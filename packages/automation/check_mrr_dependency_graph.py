@@ -64,6 +64,12 @@ def check(root: Path = ROOT, resolved: dict | None = None) -> tuple[str, str]:
                                 capture_output=True, text=True, check=True).stdout.strip()
         if commit != data:
             raise ValueError('resolved Data checkout does not match its immutable source')
+        provider_versions = {p['name']: p['version'] for p in read(data_root / 'Cargo.lock')['package']
+                             if p['name'].startswith('turso')}
+        for package in resolved['packages']:
+            name = package['name']
+            if name.startswith('turso') and package.get('version') != provider_versions.get(name):
+                raise ValueError(f'{name}: provider differs from qualified Data lock')
         for name in ('meta-relational-reasoning', 'mrr-property-source'):
             dep = read(data_root / 'Cargo.toml')['workspace']['dependencies'][name]
             if dep.get('git') != MRR or dep.get('rev') != mrr:

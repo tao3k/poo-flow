@@ -6,6 +6,8 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
 SOURCE = Path(__file__).resolve().parents[1] / 'check_mrr_dependency_graph.py'
 spec = importlib.util.spec_from_file_location('mrr_graph', SOURCE)
@@ -53,6 +55,26 @@ class GraphTest(unittest.TestCase):
             path.write_text(path.read_text().replace(mrr, '0' * 40, 1))
             with self.assertRaisesRegex(ValueError, 'stale or duplicate'):
                 graph.check(root)
+
+    def test_resolved_provider_cannot_drift_from_original_data_lock(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            self.copy_graph(root)
+            mrr, data = graph.check(root)
+            owner = root / 'data'
+            core = owner / 'crates/mrr-data-core/Cargo.toml'
+            core.parent.mkdir(parents=True)
+            core.write_text('[package]\nname="mrr-data-core"\nversion="0.1.0"\n')
+            (owner / 'Cargo.lock').write_text('[[package]]\nname="turso_core"\nversion="0.8.1"\n')
+            packages = [
+                {'name': 'mrr-data-core', 'manifest_path': str(core),
+                 'source': f'git+{graph.DATA}?rev={data}#{data}'},
+                {'name': 'mrr-identity', 'source': f'git+{graph.MRR}?rev={mrr}#{mrr}'},
+                {'name': 'turso_core', 'version': '0.8.2', 'source': 'registry+crates.io'},
+            ]
+            with patch.object(graph.subprocess, 'run', return_value=SimpleNamespace(stdout=data)):
+                with self.assertRaisesRegex(ValueError, 'provider differs'):
+                    graph.check(root, {'packages': packages})
 
     def test_implicit_head_cannot_hide_a_second_producer(self):
         with tempfile.TemporaryDirectory() as work:

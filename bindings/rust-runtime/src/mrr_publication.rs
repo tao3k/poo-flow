@@ -18,6 +18,7 @@ use mrr_data_content::{
 pub enum PublicationError {
     InvalidPlan,
     GrantBinding,
+    SourceBinding,
     Native(crate::Error),
     Proof(crate::mrr::MrrBridgeError),
     NotCurrent,
@@ -34,6 +35,7 @@ pub struct PublicationHost<'a> {
     pub port: &'a ProfilePort,
     pub guards: &'a [AuthorityExpectation],
     pub grant_id: &'a str,
+    pub source_id: &'a str,
     pub admission: &'a MrrFamilyAdmission,
     pub runtime: &'a SemanticRuntime,
 }
@@ -68,17 +70,21 @@ impl PublicationPlan {
             || flow["sourceDigest"] != admission.result()["sourceDigest"]
             || flow["contentDigest"].as_str()
                 != Some(
-                    replacement
-                        .hash()
-                        .digest()
-                        .iter()
-                        .map(|b| format!("{b:02x}"))
-                        .collect::<String>()
-                        .as_str(),
+                    format!(
+                        "sha256:{}",
+                        replacement
+                            .hash()
+                            .digest()
+                            .iter()
+                            .map(|b| format!("{b:02x}"))
+                            .collect::<String>()
+                    )
+                    .as_str(),
                 )
         {
             return Err(PublicationError::InvalidPlan);
         }
+        ContentCodec::from_cid(&replacement).map_err(|_| PublicationError::InvalidPlan)?;
         let mut flow = flow.clone();
         // The fresh Host clock is read only inside protected validation.
         flow["declaredAt"] = 0_i32.into();
@@ -127,6 +133,7 @@ impl PublicationPlan {
             port: base,
             guards,
             grant_id,
+            source_id,
             admission,
             runtime,
         } = host;
@@ -140,6 +147,14 @@ impl PublicationPlan {
                 PublicationError::GrantBinding,
             ));
         }
+        let source = guards
+            .iter()
+            .find(|g| g.authority_id == source_id && g.state.status == AuthorityStatus::Active)
+            .filter(|_| source_id != grant_id)
+            .ok_or(ConditionalCommitPortError::Validation(
+                PublicationError::SourceBinding,
+            ))?
+            .state;
         let port = base
             .with_authorities(guards)
             .map_err(ConditionalCommitPortError::BeforeCommit)?;
@@ -151,12 +166,19 @@ impl PublicationPlan {
         };
         let outcome = port
             .commit(write, physical, |_| {
-                if admission
+                let current = admission
                     .current(runtime)
-                    .map_err(PublicationError::Proof)?["status"]
-                    != "current"
-                {
+                    .map_err(PublicationError::Proof)?;
+                if current["status"] != "current" {
                     return Err(PublicationError::NotCurrent);
+                }
+                let digest = current["currentSourceDigest"]
+                    .as_str()
+                    .ok_or(PublicationError::SourceBinding)?;
+                if ContentBlock::new(ContentCodec::Raw, digest.as_bytes()).cid()
+                    != source.commitment
+                {
+                    return Err(PublicationError::SourceBinding);
                 }
                 let mut flow = self.flow.clone();
                 flow["declaredAt"] = clock().into();

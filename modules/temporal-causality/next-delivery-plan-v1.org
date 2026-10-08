@@ -218,3 +218,28 @@ Data =513d67812c45875bfa991b5b0032f37cffcb5998= additionally refuses a fresh
 replacement when selected head history lacks its exact operation/delivery tuple.
 Both provider suites and strict Clippy passed this added refusal. Current manifests
 and both locks select this newer cut; historical results retain their source cuts.
+
+* Local native publication acceptance
+
+The official AOT builder passed after removing executable =-static= linkage
+from module compilation. Gerbil remains v0.19; ABI and Scheme transport remain
+v1. The executed artifact SHA-256 is
+=36c5c6f2c305109cc227db5caa4a10839d0288e28c6b1daf9bac67043e8d1a3b=.
+The original GQL/Arrow/MRR/native producer passed commit, exact replay, delivery
+ACK, missing source fence, actor/payload substitution, expired lease, mixed
+source cut, corrected-source stale/refuted refusal and native Turso restart.
+Original Scheme receipt and oracle remain local artifacts. The first run failed
+because payload digest omitted the native =sha256:= prefix; that failure is
+retained and the adapter now validates the Data SHA256 CID profile and prefix.
+
+Ten original Rust Library cases plus independent archive replay passed against
+that same artifact, producing all eight original Scheme oracles. Installed
+Python Library replay passed 80 tests with no skips. Six dependency graph cases
+passed, including provider-version drift rejection. Physical producer and Data
+strict Clippy passed. Turso internal components match Data's original 0.8.1 lock;
+registry upgrades cannot be hidden behind a matching Data source revision.
+
+These are local code/artifact-bound receipts. Required CI on the final delivered
+head is still a separate gate; queued or empty checks do not establish success.
+No new model sample, full issuer authentication, declassification/tombstone,
+external effect exactly-once guarantee or general native refinement is claimed.

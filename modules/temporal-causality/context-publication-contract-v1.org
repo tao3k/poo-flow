@@ -168,3 +168,11 @@ existing physical job. Their execution and delivered-head CI remain separate
 from adapter compilation and the isolated Data provider tests. A historical ACK
 never grants another external effect. Tombstones and declassification remain
 separate design/implementation gates.
+
+Publication requires distinct grant and source authority identities. Inside the
+held transaction, the source authority commitment must equal the Raw CID of the
+native current source digest. Missing guards and the interval after Data fence
+advance but before native source refresh refuse without a delivery. The physical
+producer requires an explicit mixed-source refusal marker. Turso internal
+registry versions match the original Data owner's lock; the resolved graph gate
+rejects provider version drift before execution.
