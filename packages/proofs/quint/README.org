@@ -8,8 +8,8 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 * Source and checking authority
 
 All maintained finite formal models are Quint. Quint =0.33.0= and the
-=0.62.1= Apalache distribution match MRR. Verification uses Quint's =tlc=
-backend, with Java 21 or newer (the backend class version is 65). Generated TLA+ is transient compiler output. Lean retains its
+=0.62.1= Apalache distribution match MRR. Verification uses Quint's =quint=
+backend, with Java 21 or newer (the backend class version is 65). Generated Quint is transient compiler output. Lean retains its
 independent algebraic scope; it is not automatically a refinement proof.
 
 #+begin_src sh
@@ -47,5 +47,5 @@ Install dependencies before checking; package manifests only pin build tools.
 The complete executable catalog is =checks/quint.py= in the Python testing
 package. A passing finite case covers that instance's reachable states, not
 arbitrary family cardinality, production concurrency or deployed behavior.
-The legacy TLA+ parser corpus is isolated in =t/fixtures/tla-plus= for language
-API regression tests. It is not part of this proof inventory.
+The public POO model and proof artifacts use their own current names and
+source identities. Build and test discovery contain only maintained entries.

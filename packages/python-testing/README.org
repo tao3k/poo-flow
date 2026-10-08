@@ -26,12 +26,12 @@ temporal-causality fixture check. These are actual checks, not
 coverage placeholders. New module owners add a check near their domain and
 register its target parts in the catalog.
 
-Two =session= native cases invoke the POO Flow Session and WorkTree TLC models,
-including their ten declared guard mutations. The invariants live in TLA+;
-Python only supervises TLC, checks its exit and expected mutant failure, and
+Two =session= native cases invoke the POO Flow Session and WorkTree Quint models,
+including their ten declared guard mutations. The invariants live in Quint;
+Python only supervises Quint, checks its exit and expected mutant failure, and
 records compact observations. =run --receipt PATH= writes a JSON result for
 each selected model, including failures, source revision, worktree dirty flag,
-and any returned evidence. Real TLC progress appears on stdout; the cases do
+and any returned evidence. Real Quint progress appears on stdout; the cases do
 not create raw log files. The Lean Session axiom audit runs through its native
 =lake build PooFlowSessionProof= target.
 

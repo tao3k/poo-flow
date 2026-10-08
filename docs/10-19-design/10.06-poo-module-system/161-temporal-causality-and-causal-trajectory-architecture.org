@@ -21,7 +21,7 @@ The module-local research contract is
 =modules/temporal-causality/framework.org=.  It defines the broader temporal
 type algebra, model/query separation, formal obligations and implementation
 status.  =packages/proofs/quint/model.org= specifies the first finite
-TLA+ slice and its exact limits.
+Quint slice and its exact limits.
 
 =Temporal Causality= is a POO Flow core module, not an SDLC-only algorithm and
 not a Healthcare-only ontology.  =Impact Analysis= is one derived operation of
@@ -47,8 +47,8 @@ Lambda packages own fixed vertical scenarios.  A Healthcare Case may declare
 prescriptions, administrations, clinical risk and its particular formal model;
 an SDLC Case may declare revisions, builds and verification obligations.
 Those declarations instantiate the same core contract.  They do not move
-Healthcare or SDLC terms, fixed =.tla= actions, policy-specific thresholds or
-provider credentials into the core.  GQL, ASCENT, TLA+, Lean and optional
+Healthcare or SDLC terms, fixed =.qnt= actions, policy-specific thresholds or
+provider credentials into the core.  GQL, ASCENT, Quint, Lean and optional
 decision Providers are projections or contributors around the POO semantic
 owner; none becomes a mandatory public DSL for a basic temporal query.
 
@@ -108,10 +108,10 @@ paper's use of the word /causal/ does not itself admit a POO Flow causal fact.
 | R3 | Kakas, Kowalski and Toni, [[https://www.doc.ic.ac.uk/~rak/papers/abdsurv.pdf][Abductive Logic Programming]] (1992) | high | Add POO-native candidate hypothesis, integrity constraint and explanation-set contracts under =modules/temporal-causality/=. A candidate explains observations only relative to declared assumptions and constraints; current =hypothesized= event modality is not an abductive search result. ASCENT or another rule engine may derive candidates but does not own their admission. |
 | R4 | Halpern and Pearl, [[https://www.journals.uchicago.edu/doi/10.1093/bjps/axi147][Causes and Explanations: A Structural-Model Approach, Part I: Causes]] (2005) | high | Add separate intervention/model-family evidence before any actual-cause claim. =poo-flow-temporal-causal-classify= and GQL paths are structural/temporal witnesses; neither implements structural equations or intervention semantics. |
 | R5 | Alvaro et al., [[https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html][Dedalus: Datalog in Time and Space]] (2009) | medium | For optional ASCENT/Scheme derivation, represent delay and reordering as explicit time/arrival facts; do not assume rule closure equals committed event time. =modules/temporal-causality/= remains the semantic owner, not an ASCENT-specific facade. |
-| R6 | Lamport, [[https://lamport.azurewebsites.net/tla/high-level-view.html][A High-Level View of TLA+]] and [[https://lamport.azurewebsites.net/tla/hiding-and-refinement.pdf][Hiding, Refinement, and Auxiliary Variables]] | high | =modules/tla-plus/interface.ss= currently admits parser-owned source/CST, while =packages/proofs/quint/HealthcarePrescriptionCausality.qnt= and =HealthcareAIAssistedPrescriptionCausality.tla= are finite vertical models. Project the supported TLA+ model semantics into POO observations, hypotheses and constraints; explore the exact bounded source with TLC. A generated transition relation, if added later, stays internal to TLA+ rather than becoming a fixed public =Next=. |
-| R7 | Lamport, [[https://lamport.azurewebsites.net/tla/safety-liveness.pdf][Safety and Liveness Properties of Specifications]] | high | A progress claim needs stated fairness and environment assumptions. Current Healthcare =.cfg= files list invariants, not liveness properties; add temporal checks only with an explicit finite model and fairness premise. |
+| R6 | [[https://github.com/informalsystems/quint][Quint specification language]] | high | =packages/proofs/quint/= owns the finite models and verifier entry points; native POO values retain semantic ownership. |
+| R7 | Quint safety and temporal properties | high | A progress claim states fairness and environment assumptions; the shared catalog selects temporal properties explicitly. |
 | R8 | [[https://www.iso.org/standard/76120.html][ISO/IEC 39075:2024, GQL]] | medium | =packages/lambda-episteme/user-interface/scenarios/healthcare/reasoning/prescription-causal-trajectory.gql= asks snapshot graph questions. =modules/query/gql.ss= and the MRR execution boundary may produce candidate paths, not causal admission or complete-world claims. |
-| R9 | =PooFlowProof.PooC4.TemporalCausality= and [[https://lean-lang.org/][Lean]] | medium | =packages/proofs/lean/PooFlowProof/PooC4/TemporalCausality.lean= proves current event modality and cut laws. An optional later theorem can prove soundness of TLA+-to-POO projection and result quantifiers after the Scheme contract is executable; source/digest equality alone is not semantic correspondence. |
+| R9 | =PooFlowProof.PooC4.TemporalCausality= and [[https://lean-lang.org/][Lean]] | medium | =packages/proofs/lean/PooFlowProof/PooC4/TemporalCausality.lean= proves current event modality and cut laws. An optional later theorem can prove soundness of Quint-to-POO projection and result quantifiers after the Scheme contract is executable; source/digest equality alone is not semantic correspondence. |
 | R10 | Akidau et al., [[https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf][The Dataflow Model]] (2015) | medium | A limited timing reference for event, ingress and processing observations and late data. It does not define the AI evidence-use engine or its impact semantics. |
 | R11 | Wang et al., [[https://arxiv.org/abs/2401.02869][Practical Reasoning in DatalogMTL]] (2024) | medium | A future bounded temporal-rule derivation may inform =modules/temporal-causality/funs.ss= and an optional ASCENT adapter. Metric temporal rule closure is not yet implemented here; its complexity and possible nontermination forbid claiming complete inference from an unbounded rule run. |
 | R12 | TypeSafe AI, [[https://typesafe.ai/blog/introducing-system-one-models-and-jev][Introducing System One Models & Jev]] and [[https://docs.typesafe.ai/introduction][Jev documentation]] (2026) | medium | Jev's state plus typed questions suggest an optional candidate-ranking Provider for hypothesis selection under =modules/temporal-causality/=. Its output is a typed probabilistic judgment, not an observed event, temporal proof, or causal admission. No Jev adapter exists in this repository. These are TypeSafe's product and technical resources; no TypeSafe-authored Jev research paper was verified for this record. |
@@ -130,7 +130,7 @@ paper's use of the word /causal/ does not itself admit a POO Flow causal fact.
 
 The literature leaves an implementation choice open: which hypothesis families and
 interventions are admissible for one query.  The core must record that choice
-and its finite bounds.  TLC can refute or exhaust a declared model family; it
+and its finite bounds.  Quint can refute or exhaust a declared model family; it
 cannot invent a causal mechanism from observations alone.  Likewise, a
 counterexample in one generated model does not refute every possible model.
 
@@ -155,7 +155,7 @@ and causal constraints, candidate hypotheses, admissible interventions, query
 goals and explicit exploration bounds.  It does not require a caller to supply
 one closed action list or a =Next= method.  Scheme functions compose these
 values and create identity-bound projections; GQL and optional rule derivation
-contribute candidates; an admitted TLA+ model and TLC explore behaviors
+contribute candidates; an admitted Quint model and Quint explore behaviors
 permitted by the selected hypotheses.  Lean may later prove the projection
 laws.  No
 projection silently promotes candidate evidence to an observed or admitted
@@ -187,103 +187,25 @@ semantics and differential tests are separate evidence.  Dynamic Cedar source
 does not mean that every newly supplied policy already has an instance-specific
 Lean theorem.  Temporal Causality needs the same distinction.
 
-The target is a first-class =TemporalModel= POO composition, built at runtime
-from observation domains, candidate mechanisms, constraints, interventions and
-query obligations.  One model input is native TLA+ source: Gerbil parses it,
-and a *typed semantic projection* maps only supported model constructs to POO
-objects.  POO objects can then be composed or extended through functional
-Scheme helpers.  The parser-owned CST remains the syntax authority; the POO
-projection represents admitted temporal meaning, not a copy of TLA+ syntax.
-Admission assigns a semantic revision and digest and returns explicit
-diagnostics for unsupported constructs, unbound variables, inconsistent
-constraints, incomparable clocks and absent bounds.  A model version may add
-hypotheses without editing the public API or the existing Healthcare =.tla=
-files.  The public contract contains possible behaviors and their constraints,
-not a caller-authored =Next= action list.
+The first-class =TemporalModel= POO composition is built from native observation
+domains, hypotheses, constraints, family completeness and query obligations.
+Pure functional helpers extend it. Native admission assigns a semantic revision
+and digest; source data never grants authority. The public vocabulary does not
+expose the verifier's internal transition relation.
 
-The checked-in Scheme-native parser is
-=gerbil-parser/languages/tla-plus=; its core and layout identities come from
-the corresponding grammar metadata.  The layout grammar admits column-sensitive
-junction lists but does not claim the entire SANY grammar, PlusCal or TLAPS
-proof syntax.  The semantic mapper must declare an even
-narrower supported subset and reject unsupported CST kinds with a typed
-diagnostic; byte-exact roundtrip does not establish TLA+ semantic coverage.
-Full grammar expansion requires a separately admitted grammar identity.
+The executable native classifier is in =modules/temporal-causality/= and its
+focused tests cover unknown evidence, overlapping mechanisms, incomparable
+clocks, incomplete families and finite bounds. The formal projection is
+=packages/proofs/quint/TemporalFamily.qnt=. Its full, bounded and discriminating
+instances are checked by =just check-temporal-family-quint=, including the
+incorrect-necessity counterexample. =packages/proofs/quint/model.org= states the
+interpretation, fairness and finite-scope boundaries.
 
-This is initially a TLA+ source-to-POO path, not a promise of automatic
-POO-to-TLA+ generation.  Later emission back to =.tla/.cfg= is useful for
-composed models, but requires a defined semantic preservation law.  A single
-optional model-source slot on the POO composition could retain the qualified
-TLA+ document identity; individual Event or Hypothesis objects need not each
-carry duplicate source bytes.  Slot shape and projection ownership should be
-settled by an executable source-to-POO fixture before freezing the public API.
-
-| Stage | Owner and current state | Required evidence for dynamic models |
-|-------+-------------------------+--------------------------------------|
-| POO composition | =modules/temporal-causality/{types,objects,funs}.ss= currently owns events, cuts and classification | admit immutable model instances, hypothesis families, time domains and obligations with stable identity; preserve rejected and unknown frontiers |
-| TLA+ source admission | =modules/tla-plus/interface.ss= parses source and exposes the parser-owned CST; =checked-source-{types,objects,funs}.ss= binds the root source, configuration, local =.tla= inventory and parser-owned TLC run to an inert POO receipt | bind external TLA libraries and the complete toolchain, then map the admitted behavior subset to POO transitions and prove or differentially check its interpretation; finite TLC checking does not establish that refinement |
-| Optional TLA+ emission | no dynamic source emitter exists | emit a composed POO model as native =.tla/.cfg= only after defining source-to-POO-to-source semantic preservation and parser/TLC checks |
-| Optional Lean correspondence | =packages/proofs/lean/PooFlowProof/PooC4/TemporalCausality.lean= currently proves event/cut laws | later prove a generic interpretation/projection or trace refinement law; Lean is not required to build, query or model-check a TemporalModel instance |
-| Provider binding | =packages/lambda-episteme/user-interface/scenarios/healthcare/formal-assurance-projection.ss= binds vertical receipts | retain POO model identity, admitted TLA+ source identity and TLC scope/result as distinct fields in a generic projection; optional Lean evidence has its own field; Healthcare remains a vertical consumer |
-| Optional decision Provider | no Jev adapter is present | use typed scores only to rank or propose hypotheses and discriminating questions; retain the full question/option contract and never convert confidence into model-checking exhaustion or a causal fact |
-
-Each dynamically admitted instance needs exact source/semantic identity binding
-and finite TLC exploration when model-checking is claimed.  Unsupported
-constructs fail semantic projection; syntax acceptance alone cannot admit
-them.  Progress claims additionally bind fairness and environment assumptions.
-If a later Lean layer is added, a reusable theorem should relate the POO model
-interpretation to the TLA+ projection for all admitted constructs, then bind
-each instance.  This is an optional proof-strengthening path, not a prerequisite
-for the engine.  The present parser, TLC receipts and Lean theorems do not yet
-establish that relation.
-
-First executable slice, in dependency order:
-
-1. Define POO-native observation-domain, constraint, hypothesis and query
-   objects in =modules/temporal-causality/{types,objects}.ss=.  Preserve the
-   existing event/cut APIs while establishing explicit clock comparability and
-   hypothesis modality; avoid an alist or macro DSL as the public interface.
-2. Add pure admission and bounded classification functions in
-   =modules/temporal-causality/funs.ss= and focused cases in
-   =t/temporal-causality-core-test.ss=: two admissible explanations, one
-   discriminating observation, incomparable clocks, incomplete frontier and
-   empty-family rejection.  Include Healthcare-neutral and SDLC-neutral
-   fixtures through one public API; neither may import the other's Lambda
-   package.  Exhaustion and bounds must appear in the receipt.
-3. Admit one native TLA+ fixture through =modules/tla-plus/=, map its supported
-   definitions, model variables and properties to the same POO model contract,
-   and run TLC on that exact source/configuration.  The existing Healthcare
-   models stay vertical examples; parser success is not semantic projection or
-   TLC execution.  Start with a domain-neutral fixture before a vertical Case.
-4. Add optional POO-to-TLA+ emission and Lean correspondence only after the
-   source-to-POO semantics is executable.  Keep model exhaustion, Lean proof
-   and runtime behavior as separate evidence.
-
-The first core slice is now executable in =modules/temporal-causality/=: a
-finite hypothesis family has POO clock domains, observations,
-explicit order constraints, candidate causes, a bounded query and an
-identity-bound receipt.  The family explicitly chooses exclusive explanations
-or overlapping mechanisms.  It distinguishes admissible, refuted, unknown and
-unexplored candidates; only an exhausted, caller-declared complete exclusive
-family can yield =necessary= relative to that family.  =t/temporal-model-test.ss=
-exercises distinct medication and software-release vocabularies, changed
-evidence, overlapping mechanisms, incomparable clocks, incomplete families
-and finite bounds.  This
-slice does not infer causal mechanisms, compare different clock domains,
-interpret a TLA+ action formula or claim TLC exhaustion.  Stage 3 now has a
-first source-to-POO subset: =packages/proofs/quint/TemporalFamilyCase.qnt=
-declares five finite literal operators; =modules/tla-plus/funs.ss= maps their
-sets and tuples to the same POO model, while a projection binds source,
-grammar and semantic digests.  Extra declarations and nonliteral expressions
-fail closed.  The subset is not a general TLA+ evaluator.  The literal source
-is now the data instance for the module-local, compositional TLC model in
-=packages/proofs/quint/temporal-causality.qnt/=.  Its bounded exploration is separately
-qualified by =just check-temporal-family-quint=; a typed TLC-to-POO receipt and
-general refinement proof remain future work.  The local =model.org= records
-the formal contract, proof obligations, scope and checked configurations.
-The focused interface test compares the projected model digest with an
-independently constructed POO model for this fixture; it is a bounded
-correspondence check for the literal subset, not a general refinement proof.
+Quint owns formal source parsing, typing and verification. There is no retained
+source parser wrapper, alternate syntax corpus or automatic source-to-POO
+translator. A general POO/Quint correspondence theorem remains an explicit
+separate obligation. The pure POO model and formal models carry distinct
+identities and receipts.
 
 A second module-local slice now covers immutable bitemporal evidence
 revisions.  =modules/temporal-causality/revisions/= separates a fact's valid
@@ -294,44 +216,37 @@ when later revisions are appended; =t/temporal-revisions-test.ss= checks this
 replay law.  A distinct projection digest now binds the full valid-time query
 and its selected result, preventing a shared admission cut from being reused
 as a different valid-time answer.  The downstream dependency index and
-conclusion revisions bind both identities.  =packages/proofs/quint/TemporalRevision.qnt*.tla= explores a
+conclusion revisions bind both identities.  =packages/proofs/quint/TemporalRevision.qnt= explores a
 finite revision set, with historical-cut and no-silent-winner invariants
 checked by =just check-temporal-revisions-quint=.  A third module-local slice,
 =modules/temporal-causality/truth-maintenance/=, indexes POO derivations by
 subject and conclusion premises and computes a cut-bound reevaluation plan
-through the transitive reverse dependencies.  The finite TLA+ case checks
+through the transitive reverse dependencies.  The finite Quint case checks
 closure safety and fairness-qualified completion, and a separate Lean 4.34
 target uses LeanPoo proof objects for changed-dependency scheduling and
 certificate reuse.  A valid-time query change now has a distinct
 =valid-time-reprojection= trigger: with no declared parameter-independence
 proof, it conservatively schedules every indexed derivation even if the cut
-and selected evidence are unchanged.  The second TLC configuration checks
+and selected evidence are unchanged.  The second Quint configuration checks
 this full-scope scheduling invariant.  The cut-delta and reprojection entrypoints
 take query instants and replay snapshots from the canonical journal instead
 of trusting caller-supplied snapshot fields.  The caller still owns the
 lower-level explicit delta and inventory completeness assertions; no general
-Scheme/TLA/Lean refinement or active
+Scheme/Quint/Lean refinement or active
 conclusion publication is claimed.  The module now also has immutable
 conclusion revisions, a canonical journal and inert versioned CAS plans in
-=conclusions/=.  A finite TLA+ race case checks two competing proposals;
+=conclusions/=.  A finite Quint race case checks two competing proposals;
 runtime proof admission, pointer commit and effect authority remain separate.
 The precise semantics and limits are in
 =modules/temporal-causality/framework.org= and =packages/proofs/quint/model.org=.
 
-The current TLA+ literal profile has exactly these nullary operators:
-
-| Operator | Literal value admitted by the mapper |
-|----------+--------------------------------------|
-| =ClockDomains= | set of =<<identity, clock-role>>= string tuples |
-| =Observations= | set of =<<identity, domain, natural-position, provenance, modality>>= tuples |
-| =Hypotheses= | set of =<<identity, cause-observation, effect-observation>>= tuples |
-| =Constraints= | set of =<<identity, hypothesis, relation, left-observation, right-observation>>= tuples |
-| =FamilyComplete= | =TRUE= or =FALSE=; a caller assertion about the declared alternative family |
-
-The supported relations are =before= and =not-after=.  Only observations in
-the same explicit clock domain are compared; a declared or missing observation
-keeps the candidate unknown.  The mapper rejects all other declarations and
-expression kinds rather than treating parser acceptance as semantic admission.
+The formal family model takes =OBS=, =CONSTRAINTS= and =LIMIT= as internal
+Quint constants, with expected classification selected by each instance.
+Native POO construction uses the public clock-domain, observation, hypothesis
+and constraint objects directly. Each path has its own source and semantic
+identity; no automatic translation is claimed. Comparable clocks and observed
+evidence determine admitted/refuted/unknown status, and a bounded unexplored
+frontier cannot prove necessity.
 
 The first Healthcare application is a prescription correction.  If a medicine
 order is wrong, the system must distinguish:
@@ -394,20 +309,20 @@ the supplied relation inventory.
 
 The module-local [[file:../../../modules/temporal-causality/evidence/model.org][research and formal model]] maps AI papers R19--R22 to
 these questions and states the missing semantic-evaluation obligations.
-Its first TLA+ model explores retrieval, citation, checking, admission and
+Its first Quint model explores retrieval, citation, checking, admission and
 correction in different orders.  The finite fixture checks that a new
 citation or corrected source cannot leave a previously admitted dependent
-claim silently active.  TLC ranges over every validity assignment for the
+claim silently active.  Quint ranges over every validity assignment for the
 fixture's two candidate uses (195 distinct states), while assuming perfect
-checking within each world.  TLC cannot determine source relevance or textual
-entailment from an identity or digest.  The local Scheme and TLC gates are
+checking within each world.  Quint cannot determine source relevance or textual
+entailment from an identity or digest.  The local Scheme and Quint gates are
 =just check-temporal-evidence= and =just check-temporal-evidence-quint=.
 The second model explores independently supplied reviewer verdicts in either
 order, including disagreement, and withdraws previously active claims on
 new review or source correction.  It checks attestation lifecycle, not
 reviewer accuracy.
 
-** GQL, ASCENT and TLA+ candidate exchange
+** GQL, ASCENT and Quint candidate exchange
 :PROPERTIES:
 :CUSTOM_ID: temporal-candidate-exchange
 :END:
@@ -476,7 +391,7 @@ check atomically revokes reviewability; revision retires coverage and all
 current reviewability while retaining historical receipts.  The finite
 configuration exhausted 19,305 distinct states without an invariant
 violation.  It does not model GQL rows, Datalog closure, semantic support,
-checker authority, runtime CAS or a proof of Scheme/TLA+ correspondence.
+checker authority, runtime CAS or a proof of Scheme/Quint correspondence.
 The internal nondeterministic =Explore= relation is a checker mechanism,
 not the public Temporal API.
 
@@ -512,7 +427,7 @@ validation record is
 | Result level | Implemented owner | Evidence required to advance |
 |--------------+-------------------+------------------------------|
 | Structural witness | =modules/temporal-causality/funs.ss= | A path is not time order or causal effect. |
-| Bounded temporal candidate | =modules/temporal-causality/funs.ss= and =packages/proofs/quint/temporal-causality.qnt/= | Admit a finite family, clock assumptions and exploration bound. |
+| Bounded temporal candidate | =modules/temporal-causality/funs.ss= and =packages/proofs/quint/= | Admit a finite family, clock assumptions and exploration bound. |
 | Supplied trajectory | =modules/temporal-causality/trajectory/= | Canonical series, exact time grid, modality, provenance and evidence scope. |
 | Exact trajectory contrast | =modules/temporal-causality/impact/= | Compare aligned series with the same subject, outcome, unit, cut and projection. |
 | Candidate intervention window | =modules/temporal-causality/impact/= | Bind onset/end to sampled instants; report pre-onset agreement, signed trapezoidal score and time mean. |
@@ -594,13 +509,13 @@ Governance handoff.  In particular, changing an error-path event from
 The trajectory contract is declared exactly once as the POO value stored in a
 Case's =trajectory-declarations= slot.  Its =PooFlowCausalTrajectoryAssessment= and
 =trajectory-assessment-digest= are the common identity consumed by every
-formal boundary.  TLA+, Lean and Cedar do not own parallel Case configuration
+formal boundary.  Quint, Lean and Cedar do not own parallel Case configuration
 languages.
 
 Single-contract admission is a functional operation over POO slots.  The open
 crossing between a formal Provider and a vertical Profile is different: both
 axes can gain implementations independently, so it uses the POO CLOS generic
-=HealthcareFormalAssuranceProjectionGeneric=.  The TLA+ Provider and Lean
+=HealthcareFormalAssuranceProjectionGeneric=.  The Quint Provider and Lean
 Provider specialize on =AIClinicalDecisionSupportProfile= through separate
 methods published by =HealthcareFormalAssuranceProjectionMethods=.  The base
 Provider method fails closed when no vertical method exists.  Cedar already
@@ -611,10 +526,10 @@ uses the equivalent Provider/Profile multi-dispatch in
 flowchart LR
     C["Case trajectory-declarations POO slots"] -->|"functional admission"| S["POO trajectory assessment"]
     S -->|"stable assessment digest"| G["CLOS formal-assurance generic"]
-    TP["TLA+ Provider"] -->|"class specializer"| G
+    TP["Quint Provider"] -->|"class specializer"| G
     LP["Lean Provider"] -->|"class specializer"| G
     HP["Healthcare Profile"] -->|"eql specializer"| G
-    G -->|"TLA and Lean method bindings"| A["Assurance digest"]
+    G -->|"Quint and Lean method bindings"| A["Assurance digest"]
     A -->|"trajectoryHandoffReady plus digest"| CP["Cedar Provider/Profile generic"]
     CP -->|"current action only"| H["Dual-engine authority host"]
 #+end_export
@@ -632,7 +547,7 @@ Gerbil POO owns declarative Event, Decision, Effect, Observation, Profile,
 Scenario and Case objects.  It validates identities, seals the event graph,
 derives the committed causal cut, projects the finite graph and produces
 deterministic witness paths.  It also
-combines its native temporal classification with independently admitted TLC
+combines its native temporal classification with independently admitted Quint
 and Lean evidence into one inert assurance receipt.  Content-bound GQL Sources
 remain non-authoritative analysis contracts until the downstream MRR Rust
 library executes them through gerbil-parser's native FFI and returns a separate
@@ -665,11 +580,11 @@ query is bound to the graph digest and causal-cut identity.  Empty results on
 an incomplete graph are =unknown=, never proof of no Impact.  Gerbil-parser
 syntax/roundtrip admission remains separate from execution admission.
 
-** TLA+ and TLC — bounded transition and counterexample owner
+** Quint — bounded transition and counterexample owner
 
 The Healthcare model defines states such as =Ordered=, =Validated=,
 =Administered=, =ErrorDiscovered=, =Revoked=, =Reassessed=, =Corrected= and
-=Closed=.  TLC explores interleavings of administration, late evidence,
+=Closed=.  Quint explores interleavings of administration, late evidence,
 revocation, notification and correction within a finite patient/horizon model.
 
 Required safety properties include:
@@ -683,7 +598,7 @@ Required safety properties include:
 - a counterfactual trace never becomes an observed clinical fact.
 
 Required liveness properties include eventual reassessment and notification
-under explicitly stated fairness assumptions.  TLC establishes these only for
+under explicitly stated fairness assumptions.  Quint establishes these only for
 the bounded model it exhausts; it is not a general mathematical proof.
 
 ** Lean — invariant, refinement and non-overclaim proof owner
@@ -747,8 +662,8 @@ flowchart LR
     EG --> G[POO relation graph]
     G --> S[Scheme structural witnesses]
     G -. declared GQL Sources .-> Q[MRR Rust analysis boundary]
-    EG --> M[TLA+ finite transition model]
-    M --> T[TLC traces / counterexamples]
+    EG --> M[Quint finite transition model]
+    M --> T[Quint traces / counterexamples]
     C --> L[Lean invariant and refinement obligations]
     S --> I[Impact receipt]
     T --> I
@@ -765,9 +680,9 @@ flowchart LR
    frontier.
 4. Gerbil-parser separately qualifies the declared GQL source bytes; a later
    MRR Rust execution receipt may add non-authoritative analysis witnesses.
-5. TLC explores bounded present/future/counterfactual transitions.
+5. Quint explores bounded present/future/counterfactual transitions.
 6. Lean proves generic invariants and the Healthcare refinement boundary.
-7. Scheme combines the native, TLC and Lean receipts without treating one as
+7. Scheme combines the native, Quint and Lean receipts without treating one as
    proof of another.
 8. Cedar separately decides whether the exact next action may execute; the
    dual-engine Host remains the authority boundary.
@@ -799,7 +714,7 @@ the framework must not manufacture =CAUSED_BY= from temporal ordering.
 | =partial-temporal-classification= | Scheme found useful witnesses but a causal parent frontier is open |
 | =bounded-temporal-classification= | Scheme classified the complete declared inventory relative to one cut and horizon; no model-checking claim |
 | =invalid-causal-cut= | causal parent ordering violates the declared temporal order |
-| =bounded-temporal-impact= | future status reserved for a TLC receipt that exhausted the declared finite model |
+| =bounded-temporal-impact= | future status reserved for a Quint receipt that exhausted the declared finite model |
 | =assurance-closed-impact= | required Lean refinements and identities close |
 | =action-blocked= | current authorization must fail closed |
 
@@ -836,9 +751,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
    This does not yet bind the Healthcare candidate-path queries above or close
    current-cut fences, correction/re-query, deployed recovery and IFC effect
    publication. Historical model receipts are not a fresh model run at these pins.
-- [X] Add the Healthcare TLA+ prescription lifecycle and TLC configuration;
+- [X] Add the Healthcare Quint prescription lifecycle and Quint configuration;
    native parser qualification and byte-exact roundtrip are closed.
-- [X] Run official TLC model exhaustion through the explicit devenv-backed
+- [X] Run official Quint model exhaustion through the explicit devenv-backed
    assurance gate and retain its typed receipt.  The exact AI-assisted
    prescription model generates 16 states, closes 11 distinct states at graph
    depth 7, leaves an empty queue and finds no counterexample.
@@ -849,7 +764,7 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - [X] Bind the exact assurance digest and closed-state blocker into the existing
    Cedar Healthcare snapshot without placing clinical semantics inside the
    Cedar Provider.  Release remains false until the current Cedar boundary.
-- [X] Bind TLA+ and Lean formal Providers to the Healthcare Profile and the
+- [X] Bind Quint and Lean formal Providers to the Healthcare Profile and the
    shared POO trajectory assessment through CLOS multi-dispatch; bind the same
    assessment digest into Cedar request admission.
 
@@ -860,9 +775,9 @@ requires a fresh, exact Cedar decision at the effect boundary.
 - rewriting past events when a prescription is corrected;
 - predicting an unbounded future;
 - accepting an empty GQL result as no Impact on an incomplete inventory;
-- treating TLC model checking as a Lean theorem;
+- treating Quint model checking as a Lean theorem;
 - treating a Lean theorem or Impact receipt as a current Cedar permit;
-- copying the POO trajectory slots into a second TLA, Lean or Cedar-facing Case
+- copying the POO trajectory slots into a second Quint, Lean or Cedar-facing Case
   contract DSL;
 - replacing Provider/Profile multi-dispatch with a central symbolic =case=;
 - implementing a second Healthcare graph runtime or query language.
@@ -920,18 +835,5 @@ All current semantic transport remains bounded inert Scheme datum v1. The
 Python Library ABI and Rust original-owner bridge do not by themselves qualify
 MRR production publication. Raw build/test logs stay in local or CI artifacts.
 
-* Quint proof authority (2026-10-08)
-
-The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
-Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
-Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
-The finite cases include safety checks, declared weak-fairness temporal
-properties and fault mutations required to produce the named counterexample.
-The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
-
-Earlier TLA+/TLC results above are historical evidence, not receipts for the
-Quint source revision. The TLA+ parser and checked-source Library interfaces
-remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
-They do not verify the current Quint models. Quint uses the TLC backend;
-generated TLA+ is temporary backend output rather than maintained source.
-The migrated models do not establish a general Scheme/Rust refinement theorem.
+Current verifier versions, cases and receipt boundaries are documented in
+=packages/proofs/quint/README.org=.

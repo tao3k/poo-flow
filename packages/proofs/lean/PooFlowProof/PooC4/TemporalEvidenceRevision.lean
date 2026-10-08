@@ -5,7 +5,7 @@
 /-!
 An abstract admission-time cut law for the Temporal Causality evidence journal.
 It proves list-level replay stability under future append. It does not prove
-the Gerbil implementation or the TLA+ module refines this model.
+the Gerbil implementation or the Quint module refines this model.
 -/
 
 namespace PooFlowProof.PooC4.TemporalEvidenceRevision

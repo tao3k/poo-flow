@@ -69,7 +69,7 @@ produced the stated bytes.
 
 * Quint lifecycle model
 :PROPERTIES:
-:CUSTOM_ID: temporal-candidate-exchange-tla
+:CUSTOM_ID: temporal-candidate-exchange-quint
 :END:
 
 [[file:../../../packages/proofs/quint/CandidateExchange.qnt][CandidateExchangeExplorer]]
@@ -88,15 +88,15 @@ retains historical receipts, and atomically retires coverage and reviewability.
 | Uniqueness | First receipt/check is unique at its key; a later conflict revokes reviewability | Multiple POO receipts or conflicting checks are =contested= |
 | Dispute | =contested= and =reviewable= stay disjoint | Exchange recomputation gives =contested= priority |
 
-The TLA+ conflict actions abstract a second receipt or contradictory check
+The Quint conflict actions abstract a second receipt or contradictory check
 to one contested bit and atomically withdraw reviewability.  Scheme retains
 both concrete assertions.  A future conformance test must define that
-abstraction map; TLC does not establish it.  The model has no fairness
+abstraction map; Quint does not establish it.  The model has no fairness
 claim, no proof of provider semantics, and no runtime CAS.
 
 =just check-temporal-candidate-exchange= passed with =MODULE-OK=,
-=HARNESS-OK= and =OK=.  =CandidateExchangeCase.cfg= explored 19,305 distinct
-TLC states with no invariant violation (one candidate, two cuts,
+=HARNESS-OK= and =OK=.  =CandidateExchangeCase.qnt= explored 19,305 distinct
+Quint states with no invariant violation (one candidate, two cuts,
 generation 0–1).  These are bounded local checks, not a general refinement
 theorem.
 
@@ -139,4 +139,4 @@ checks source coverage, current revision and premise admission.  No such
 live provider adapter exists in this slice.
 
 The current Quint checking authority and version-scoped receipt requirements
-are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Earlier TLC state counts are historical.
+are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Current state counts are admitted only by the version-bound Quint gate.

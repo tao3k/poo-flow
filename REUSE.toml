@@ -99,8 +99,6 @@ SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
 path = [
   "packages/proofs/lean-poo/PooFlowSessionProof/*.lean",
   "packages/proofs/quint/package*.json",
-  "t/fixtures/tla-plus/**/*.tla",
-  "t/fixtures/tla-plus/**/*.cfg",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"

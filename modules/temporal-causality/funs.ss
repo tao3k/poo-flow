@@ -584,7 +584,7 @@
        contract event-graph diagnostics))))
 
 ;;; Stable cross-engine identity for the exact declarative trajectory and its
-;;; Scheme assessment. TLA+, Lean and Cedar bind this digest; none of them
+;;; Scheme assessment. Quint, Lean and Cedar bind this digest; none of them
 ;;; reconstructs a second trajectory DSL.
 (def (poo-flow-causal-trajectory-assessment-digest assessment)
   (unless (poo-flow-causal-trajectory-assessment? assessment)

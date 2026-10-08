@@ -100,7 +100,7 @@ stopping policy.
 
 * Quint behavioral model
 :PROPERTIES:
-:CUSTOM_ID: temporal-evidence-tla
+:CUSTOM_ID: temporal-evidence-quint
 :END:
 
 =packages/proofs/quint/EvidenceSemantics.qnt= defines the pure finite candidate-use and
@@ -113,18 +113,18 @@ a prediction of the model's next action.
 
 The fixture contains two candidate evidence-to-finding uses and a report
 dependent on the finding.  The initial relation =soundUses= ranges over
-*every subset* of those candidate uses, so TLC checks four possible
+*every subset* of those candidate uses, so Quint checks four possible
 validity worlds as well as their operation interleavings.  A checked use may support
 admission only while its source has not been corrected.  Citation added
 *after* admission invalidates the cited claim and its descendants, because
 the old verification did not cover the expanded evidence set.  Correction
 invalidates checked uses of the corrected evidence and every active claim
 reachable from a *cited* use of it.  Candidate-but-never-cited evidence does
-not invalidate a claim.  TLC exposed both rules while exploring orderings;
+not invalidate a claim.  Quint exposed both rules while exploring orderings;
 they are explicit transitions now.
 
-#+name: temporal-evidence-tla-properties
-#+caption: Finite safety obligations checked by TLC for the declared fixture.
+#+name: temporal-evidence-quint-properties
+#+caption: Finite safety obligations checked by Quint for the declared fixture.
 | Property | Meaning |
 |----------+---------|
 | =TypeInvariant= | State sets remain inside finite declared universes. |
@@ -146,7 +146,7 @@ production system cannot know soundness from a string identity or digest;
 evaluator error and correlated assessment failures remain open.
 The model checks atomic invalidation; actual concurrent runtime publication
 would require a corresponding atomic state transition or versioned CAS and a
-refinement argument.  No general Scheme-to-TLA correspondence theorem,
+refinement argument.  No general Scheme-to-Quint correspondence theorem,
 liveness guarantee, fairness assumption, complete source universe, or claim
 truth theorem is asserted.
 
@@ -184,7 +184,7 @@ identity in a richer protocol.
 | =ReceiptUniquenessInvariant= | One candidate/provider/generation does not acquire conflicting completion records. | No source row authentication. |
 | =PublicationInvariant= | Published candidates have complete receipts from their declared providers in the current generation. | No truth, causal admission, or real runtime atomicity. |
 
-The TLC fixture has two abstract candidate identities and two generations:
+The Quint fixture has two abstract candidate identities and two generations:
 one candidate requires both sources, the other only ASCENT.
 It explores interleavings and stale completions; it does not prove the
 Scheme runtime refines these transitions.  Candidate agreement is only a
@@ -248,7 +248,7 @@ thread.  Its later local =6993dc8= adds finite positive-rule Why-Not,
 independent verification and bounded test progress; that commit had not
 been pushed when this record was written.  =just build= and the 29-module
 local Scheme qualification passed.  The abstract Lean theorem and finite
-TLC session model passed their focused gate.  Remote CI remains a separate
+Quint session model passed their focused gate.  Remote CI remains a separate
 gate.  These checks do not establish cross-system integration.  Temporal
 must still bind
 the exact evidence cut to the ASCENT snapshot, require both native and
@@ -337,7 +337,7 @@ just check-temporal-evidence-quint
 
 The focused Scheme test checks relation canonicalization, distinct
 retrieval/use buckets, exact assessment binding, conflicting judgments,
-source/claim-version consistency and cycle-safe potential impact.  TLC
+source/claim-version consistency and cycle-safe potential impact.  Quint
 explores all four sound-use configurations of the first fixture, and
 reviewer-order/conflict paths in the second.  These are local
 structural and finite-behavior receipts; they do not reproduce any paper's
@@ -358,4 +358,4 @@ abstract was reviewed.  The module does not implement the papers' agents,
 benchmarks or reported quality metrics.
 
 The current Quint checking authority and version-scoped receipt requirements
-are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Earlier TLC state counts are historical.
+are documented in [[file:../../../packages/proofs/quint/README.org][the proof inventory]]. Current state counts are admitted only by the version-bound Quint gate.

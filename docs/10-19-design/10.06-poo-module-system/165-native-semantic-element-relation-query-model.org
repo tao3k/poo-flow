@@ -8,7 +8,7 @@
 
 * Decision
 
-POO Flow has one semantic model across Scheme, Lean and TLA+.  Native POO
+POO Flow has one semantic model across Scheme, Lean and Quint.  Native POO
 Objects carry slots and inheritance.  Entity and Element are roles of those
 Objects, not alternate representations.  Relations reference their stable
 identities.  Queries are bounded read-only POO values.  The current graph-read
@@ -184,20 +184,20 @@ The focused gate is:
 just check-native-semantic-query-lean
 #+end_src
 
-* TLA+ correspondence
+* Quint correspondence
 
-=NativeSemanticQuery.tla= owns the bounded transition model.  Contract binding,
+=NativeSemanticQuery.qnt= owns the bounded transition model.  Contract binding,
 Query admission, Provider execution and terminal quiescence are separate
 transitions.  Terminal quiescence is explicit so deadlock checking remains
-enabled rather than being suppressed in configuration.  TLC checks:
+enabled rather than being suppressed in configuration.  Quint checks:
 
 1. Query execution never changes =semanticRevision=;
 2. Query execution never grants =actionAuthority=;
 3. Provider execution requires an admitted, Contract-bound Query;
 4. every result binds both the Provider and source semantic revision.
 
-TLA+ closure has three independently visible parts: native source/config,
-parser syntax plus byte-roundtrip receipt, and TLC state-space receipt.  Parser
+Quint closure has three independently visible parts: native source/config,
+parser syntax plus byte-roundtrip receipt, and Quint state-space receipt.  Parser
 and model-checker gates remain distinct; the aggregate gate joins them with the
 Lean correspondence check:
 
@@ -226,7 +226,7 @@ just check-native-semantic-query-model
 - [X] Programming Style and POO Guidelines use the same vocabulary.
 - [X] Module authoring admission blocks mechanically certain raw Query forms.
 - [X] Lean defines and proves the identity and non-authority core.
-- [X] TLA+ defines the bounded read-only transition model.
+- [X] Quint defines the bounded read-only transition model.
 - [X] A runtime Query module publishes canonical Query, language, program,
   ElementSpace, result Contract and admission receipt prototypes.
 - [X] A GQL Provider CLOS method bundle admits typed execution candidates

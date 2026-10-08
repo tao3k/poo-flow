@@ -43,16 +43,16 @@ implementation gate.
 
 The models are abstract.  They have not been refined against the Scheme
 =modules/session= implementation, runtime CAS, MRR admission, or MRR Data
-storage.  The finite [[file:../tla/session-context/README.org][TLA+ checks]] cover concurrency and deliberately
+storage.  The finite [[file:../quint/session-context.org][Quint checks]] cover concurrency and deliberately
 broken guards at their own bounded scope.  Run =just check-session-proof= for
 both focused proof gates.
 The PR CI runs this library and its axiom audit in the independent =Session
-and WorkTree LeanPoo proof= job; the Linux native job runs the TLA+ cases.
+and WorkTree LeanPoo proof= job; the independent =Quint finite proof models= job runs the Quint cases.
 
 For Org-backed Memory, the [[file:../../../docs/10-19-design/10.06-poo-module-system/166-session-memory-orgize-boundary.org][Scheme selection boundary]] consumes an Orgize
 Scheme graph and named query. =OrgMemory.lean= proves that a pure POO Flow
 intent preserves its selected source, requires current scope, grant, policy
 and head, and grants neither semantic admission nor publication. The host
 must still authenticate graph/query identity against exact Org bytes and the
-WorkTree cut. TLA+ should exercise reload, revoke, close and two-writer
+WorkTree cut. Quint should exercise reload, revoke, close and two-writer
 publication once that adapter exists. Orgize owns parser and query correctness.

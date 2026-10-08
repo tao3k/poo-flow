@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import re
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -16,6 +17,12 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class GateTest(unittest.TestCase):
+    def test_public_build_entries_resolve_current_sources(self):
+        entries = re.findall(r'"([^"\n]+\.ss)"', (ROOT / 'build.ss').read_text())
+        self.assertTrue(entries)
+        missing = [entry for entry in entries if not (ROOT / entry).is_file()]
+        self.assertEqual(missing, [], 'public build points at removed source entries')
+
     def test_crash_is_not_an_expected_counterexample(self):
         context = SimpleNamespace(repository_root=ROOT)
         with patch.object(quint.subprocess, 'run', return_value=SimpleNamespace(stdout='0.33.0')), \

@@ -48,7 +48,7 @@ the advanced profiles and assurance obligations have different acceptance gates.
 | D2 source binding | Host registration binds inventory, metadata and generation; current native replay rejects changed/stale evidence | Local trust premise implemented; issuer signatures, partition/sequence coverage, late-event completeness and closed absence remain open |
 | D3 time | Explicit domains and same-domain uncertainty; no implicit conversion | Same-domain basic queries supported; verified conversion relations and clock authenticity unimplemented |
 | D4 proof/result admission | Native finite-family replay generates proof/root identities | Root family-relative admission implemented; live MRR/ASCENT derivation and coverage admission remain open |
-| D5 formal assurance | Event/cut Lean laws, abstract TLC lifecycle gates, local checked-source receipts and literal correspondence | Bounded/abstract evidence exists; frozen external dependency/tool closure and generic concrete-runtime refinement remain open |
+| D5 | =packages/proofs/quint/= and shared verifier | Bind staged model identities, declared predicates, completion and counterexample controls |
 | D6 revisions | Immutable revision/projection helpers, reverse dependency and invalidation plans | General authenticated correction/retraction, dual-support SCC stabilization and runtime revision publication remain open |
 | D7 publication | Runtime C SQLite first-root CAS; source/grant/pointer checks, version and receipt in one transaction; Python owner queue | Concrete local first-root slice qualified; replacement/tombstone, signed/Cedar permits, canonical journal replay and external effects remain open |
 | D7 applicability after commit | Historical receipt survives source/grant retirement; pointer() returns stored version/revision | This is outcome recovery, not current validity verification. No automatic durable selection invalidation or current-applicability read receipt |
@@ -65,7 +65,7 @@ a fresh applicability or effect authorization claim after a source/grant change.
 
 | Evidence | Result | Exact supported claim |
 |----------+--------+-----------------------|
-| [[file:../../t/qualification/temporal-library-basic/publication-runtime/receipt.json][Final installed wheel]] | 95 tests passed; 2.90s reported; five-second output watchdog not triggered | Local macOS ARM64 CPython 3.13 native lens/family/admission/publication and related regression scope; 10 new publication cases |
+| Final installed wheel (qualification output is an external artifact) | 95 tests passed; 2.90s reported; five-second output watchdog not triggered | Local macOS ARM64 CPython 3.13 native lens/family/admission/publication and related regression scope; 10 new publication cases |
 | [[file:../../t/qualification/semantic-abi/2026-10-04-tool-roundtrip-abi/summary.json][DeepSeek forced read-only tool roundtrip]] | 24/24 roundtrips; 48 provider responses; no retries | temporal.solve lens task fidelity, actual Library execution, sync/async and consumption of actual tool output |
 | Same summary, source prediction pilots | 11/24 source-closure; 12/24 temperature-zero; gate FAILED | Unaided source prediction remains unqualified; successful tool use does not remove these failures |
 | New family/admission/publication receipts | realModelCalls = 0 | No real-provider acceptance for these new interfaces; historical lens scores cannot transfer to them |
@@ -181,7 +181,7 @@ journal references that can be resolved and replayed; correction/retraction and
 SCC stabilization; atomic verified permit fences; IFC flow/declassification
 receipts bound to the same transfer/commit. Require general publication races
 and recovery tests at their actual operational boundary. Do not infer these from
-first-root CAS, abstract TLC, or a successful read-only model tool batch.
+first-root CAS, abstract Quint, or a successful read-only model tool batch.
 
 * Rust MRR optimization candidates and measurable limits
 

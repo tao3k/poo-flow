@@ -230,8 +230,8 @@ are returned to the target for review or policy-guided resolution.
 | temporal family revision is stale after correction | old Memory proposal is refused until frontier and semantic admission are replayed |
 | only a process log or old receipt hash is available | no current Memory publication or source authority is inferred |
 
-Session/WorkTree TLC models run through two Python case catalog entries and
-produce structured JSON results for each normal and mutant TLC run. The
+Session/WorkTree Quint models run through two Python case catalog entries and
+produce structured JSON results for each normal and mutant Quint run. The
 receipt binds Git HEAD and dirty flag, model/config digests, actual exit,
 state counts, and watchdog limits. CI console output is diagnostic progress;
 its hash alone is a claim about the past run, not a locally replayable current
@@ -240,12 +240,12 @@ also bind the source cut, artifact identity, authorization, and committed head
 revision. Existing
 historical log hashes grant no current source or effect authority.
 
-The =PooFlowSessionProof= Lean library and =session-context= TLA models cover
+The =PooFlowSessionProof= Lean library and =session-context= Quint models cover
 pure guards and finite concurrent transitions for Session and WorkTree heads.
 The =OrgMemory.lean= slice states selected-source identity and refusal laws
 for foreign WorkTree, changed bytes/cut or disallowed query,
 revoked read, inactive Session and changed expected head. It is a pure model
-over supplied current facts. The next POO Flow owned TLA+ slice must explore
+over supplied current facts. The next POO Flow owned Quint slice must explore
 reload/revoke/close/CAS interleavings, including two writers against one
 Memory head. Orgize owns parser, Element and query-pack conformance tests.
 The existing models do not prove Scheme/runtime refinement, authenticated

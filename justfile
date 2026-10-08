@@ -435,13 +435,7 @@ _prepare-gerbil-parser:
     GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=3s 60s gerbil interactive -e '(begin (import :gerbil-parser/src/runtime/artifact) (displayln "gerbil-parser-v19-ready"))'
 
 # separate semantic gate; no source acceptance is presented as model checking.
-[group('check')]
-check-tla-interface: _prepare-gerbil-parser
-    GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} just test-file t/qualification/tla-plus-interface/interface-test.ss
 
-[group('check')]
-check-tla-checked-source: _prepare-gerbil-parser
-    PATH="{{ justfile_directory() }}/.devenv/profile/bin:$PATH" GERBIL_PATH="{{ gerbil_parser_path }}" GERBIL_LOADPATH="{{ gerbil_parser_library_path }}" {{ gerbil_darwin_env }} just test-file t/qualification/tla-plus-interface/external/checked-source-test.ss
 
 # Qualify Case-owned GQL Sources from the parser owner's package environment.
 # Lambda stays independent of gerbil-parser; parser acceptance is not execution.

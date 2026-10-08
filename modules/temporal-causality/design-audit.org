@@ -22,7 +22,7 @@ conclusion selection. At the audited base head, the C/Python ABI =temporal.solve
 invokes =gerbil-ascent/temporal/lens= through =src/ffi/semantic.ss=.
 Those are distinct supported profiles with distinct inputs and receipts.
 The ABI tool roundtrip receipt tests that lens, its binding and model result
-consumption. It does not qualify hypothesis-family execution, TLA+ behavior
+consumption. It does not qualify hypothesis-family execution, Quint behavior
 refinement, clock authenticity or active conclusion publication.
 
 No external research results are requalified by this source audit. The paper
@@ -112,28 +112,20 @@ Temporal must consume its original result admission receipt without inventing
 query, parser or source identities. Raw model output cannot define a new
 hypothesis mechanism or grant effect authority.
 
-* D5: Bind TLC to a frozen dependency closure and a named interpretation
+* D5: Bind Quint to a staged source closure and named interpretation
 
-The first admitted TLA+ profile remains the five literal operators documented
-in RFC 161. General action formulas, liveness properties and generated models
-require a separate supported semantic profile and interpretation law. A parser
-receipt, finite TLC run and native projection are separate artifacts.
+The maintained source inventory is =packages/proofs/quint/*.qnt=. The shared
+checker snapshots the local modules before verification, selects named safety
+and temporal properties and binds all source hashes and exact tool versions.
+Changing an import changes that inventory identity. Missing imports, wrong
+version, unexpected counterexample, interruption or a nonempty final frontier
+fails admission. The five-second no-output and 45-second case limits apply
+independently of dependency preparation.
 
-A complete future qualification must use an immutable staged input inventory
-containing root source, configuration, transitive local/external modules,
-standard-library/tool artifact identities and semantic profile. Resolve imports
-before execution; missing or ambiguous imports fail admission. Run against
-that staged inventory, not mutable caller paths. Bind run output, properties,
-finite domains, exploration limit, fairness/environment assumptions and final
-frontier to it. A killed run or nonempty queue cannot certify exhaustion.
-
-Projection correspondence must name the POO interpretation and map observable
-TLA+ states/traces to it, including stutter and terminal states where relevant.
-Differential fixtures are bounded evidence; a generic theorem is a distinct
-proof obligation. The current checked-source v2 receipt binds local sibling
-sources and reports =semantic-refinement? #f=; this audit does not upgrade it.
-TLC and Lean are optional for the basic pure library query. They are required
-only for the respective assurance claim a caller requests.
+The inert Scheme v1 receipt establishes finite behavioral evidence. The native
+POO semantic model remains the owner of source/cut/authority identity. A general
+projection correspondence needs a separate interpretation and theorem. Formal
+checks are explicit assurance gates and do not execute during pure query use.
 
 * D6: Reconcile late evidence through immutable revisions
 
@@ -209,9 +201,9 @@ this audit. New gates below are obligations, not available commands.
 | D2 | =time/watermark-funs.ss=, =candidates/= and =truth-maintenance/= record scoped declarations | New gate: reject forged/foreign coverage, sequence gaps and stale generations; cancellation at each frontier cannot produce closed absence or exhaustion |
 | D3 | =time/funs.ss= and =time/uncertainty-funs.ss= same-domain arithmetic | Existing =just check-temporal-time=; new conversion gate: missing authority, expired validity, crossing enclosures and competing conversion paths preserve uncertainty or block |
 | D4 | =candidates/model.org= row consistency; MRR live adapter outstanding | Existing =just check-temporal-candidate-exchange=; new integrated gate: changed row, false derivation, stale cut and unauthorized checker all block admission independently |
-| D5 | =../tla-plus/checked-source-funs.ss= local source receipt; literal mapping in =../tla-plus/funs.ss= | New frozen-closure gate: mutate external import/tool/config, inject unsupported syntax and interrupt TLC; each invalidates its claim. Differential/full refinement scopes remain explicit |
-| D6 | =revisions/=, =truth-maintenance/= and =conclusions/= pure plans | Existing revision/invalidation TLC and conclusion Scheme gates; new authenticated late-event/SCC gate: dual supports, retraction, branching, reprojection and oscillation cannot publish stale/transient results |
-| D7 | =conclusions/funs.ss= inert =cas-ready=; abstract TLC/Lean race models | New Runtime C/Python gate: two competing writers, authorization revocation before commit, duplicate request and crash after linearization; at most one transition, recoverable receipt and no effect permit inferred |
+| D5 | =packages/proofs/quint/= and shared verifier | Bind staged model identities, declared predicates, completion and counterexample controls |
+| D6 | =revisions/=, =truth-maintenance/= and =conclusions/= pure plans | Existing revision/invalidation Quint and conclusion Scheme gates; new authenticated late-event/SCC gate: dual supports, retraction, branching, reprojection and oscillation cannot publish stale/transient results |
+| D7 | =conclusions/funs.ss= inert =cas-ready=; abstract Quint/Lean race models | New Runtime C/Python gate: two competing writers, authorization revocation before commit, duplicate request and crash after linearization; at most one transition, recoverable receipt and no effect permit inferred |
 | D8 | =types.ss= finite hypotheses, =trajectory/= and =impact/= exact contrasts | New two-vertical behavior gate: intervention changes model identity, protected variables, safety/reachability/progress and open horizons; witness replay and assumption-qualified claims |
 
 * Delivery order and exit criteria
@@ -260,7 +252,7 @@ finite-family cases and the maintained lens/graph/model-tool tests. It reuses
 two independent vocabularies through the same native API; tests include bounded
 local refutation, overlapping families, uncertainty, permutation, query budget,
 stale results and forged authority. The CI wheel gate includes the new tests.
-[[file:../../t/qualification/temporal-library-basic/family-runtime/receipt.json][The source/artifact qualification receipt]] records its exact scope.
+The source/artifact qualification receipt (qualification output is an external artifact) records its exact scope.
 This closes the D1 runtime connection for the finite profile and adds D4 result
 fidelity evidence. It does not close source verification, derived-conclusion
 admission, D7 publication or D8 behavior refinement. No real-model calls were
@@ -303,7 +295,7 @@ The initial ABI test exposed slot self-reference from constructor variables
 named like their POO slots; renaming the value variables removed that recursion.
 The regression gate covers registration, native result generation and proof
 identity changes. The final installed wheel passed 78 tests, including 18 new admission cases,
-and the CI wheel gate now includes that file. See [[file:../../t/qualification/temporal-library-basic/admission-runtime/receipt.json][the source/artifact acceptance receipt]] for final qualification
+and the CI wheel gate now includes that file. See the source/artifact acceptance receipt (qualification output is an external artifact) for final qualification
 and the recorded initial failure. No real-model evaluation is claimed here.
 
 * Delivered: durable authorized first-root selection (2026-10-04)
@@ -325,7 +317,7 @@ empty predecessor. Business effects, correction/retraction, externally authentic
 source/coverage, general lifecycle refinement and D8 remain open. The crash gate
 sends SIGKILL after commit and opens a new store to recover pointer and receipt;
 it does not qualify power loss or storage hardware. See
-[[file:../../t/qualification/temporal-library-basic/publication-runtime/receipt.json][the exact installed-wheel receipt]]. No real-model calls were made in this slice.
+the exact installed-wheel receipt (qualification output is an external artifact). No real-model calls were made in this slice.
 
 * Current integration readiness audit
 

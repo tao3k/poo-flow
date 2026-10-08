@@ -256,7 +256,7 @@ cannot both publish a head transition.
    report-only until the migration decision.
 4. In Lean, prove that a due signal cannot imply evidence support, a prior
    cut cannot certify a new cut, and a retention verdict cannot imply truth.
-   In TLA+, explore source change, revocation, two workers, stale assessment,
+   In Quint, explore source change, revocation, two workers, stale assessment,
    and lost CAS. Scheme tests prove the actual projection and policy behavior;
    Python coordinates these native gates only.
 5. Only after source authentication, semantic evidence and runtime CAS exist,

@@ -143,7 +143,7 @@ existing Enterprise security proof family to Governance without re-proving the
 Cedar evaluator.  Cedar request, policy, evaluation and response semantics
 remain owned by the upstream Cedar specification and its Lean proof.
 
-* TLA+ transition model and parser authority
+* Quint transition model and parser authority
 
 =packages/proofs/quint/GovernanceCore.qnt= models the temporal boundary from
 pre-threat observation through assessment, Governance admission, enterprise
@@ -152,35 +152,18 @@ observed precondition, closed enterprise assurance before handoff, explicit
 authority evidence for accepted residual risk, and absence of Governance
 action authority.
 
-Syntax qualification uses =gerbil-parser='s native layout grammar, whose
-contract identity is read from grammar metadata and pinned in =gerbil.pkg=.  POO Flow's
-=modules/tla-plus/interface.ss= retains POO-native qualification
-identities and exposes a named advanced accessor to the *same* parser-owned
-CST.  It neither copies that tree into a second object family, implements
-another TLA+ grammar, nor interprets temporal semantics.  =just
-check-tla-interface= tests this boundary atomically; the
-=just check-governance-model= lane verifies the Quint governance model.  The parser package also pins a POO Flow revision; this
-versioned dependency graph must be qualified when either pin changes, without
-introducing an unversioned source loop.
+=packages/proofs/quint/GovernanceCore.qnt= is the maintained finite model.
+=just check-governance-model= invokes the shared Quint verification gate.
+Quint owns source parsing, typechecking and model verification. The executable
+catalog selects every declared safety predicate and required counterexample.
+The checker uses a staged local model inventory and rejects changed input,
+missing completion, nonempty final frontier, unexpected failure or timeout.
 
-The pinned native layout parser accepts the qualified multiline declarations,
-named instances and qualified operators exercised by the atomic interface
-test; it does not claim PlusCal or full proof syntax.  This receipt proves
-admitted TLA+ syntax and losslessness, not temporal semantics.  TLC remains
-the owner of state-space model checking.  The TLA+ language pack owns one public
-=qualify-tla-plus-model= API that composes, without conflating, both owners:
-it obtains the native parser acceptance and then runs the official Nixpkgs
-=tlaplus= distribution over the same source.  POO Flow's
-=just check-governance-model= is only a model-selection adapter over that API;
-it contains no TLC-output parser or receipt implementation.  The versioned
-Gerbil receipt binds the specification and configuration SHA-256 identities,
-resolved tool identity and SHA-256, worker policy, exit status,
-generated/distinct/remaining state
-counts and complete graph depth.  A zero process status alone is insufficient:
-admission also requires TLC's explicit completion result and an empty queue.
-The bounded Governance model intentionally uses one worker: its 42-state graph
-does not benefit from distributed search, while deterministic small-model
-receipts do benefit from avoiding parallel exploration variance.
+The inert Scheme v1 receipt binds source hashes, exact verifier/backend
+versions, selected properties, exit status, generated/distinct state counts
+and output identity. =just check-quint-types= covers every model and import.
+The bounded Governance case retains 42 reachable states; a general runtime
+refinement remains a separate theorem obligation.
 
 * Lambda Episteme migration
 
@@ -215,24 +198,11 @@ is smaller, testable and does not manufacture a second provider framework.
 - [X] Cedar projection binds the complete Case/Profile/assessment composition.
 - [X] A mismatched proof binding fails before runtime handoff.
 - [X] Lean proves core admission and Enterprise security-assurance closure.
-- [X] Native gerbil-parser accepts and losslessly roundtrips the TLA+ model.
-- [X] Official TLC exhausts the Governance state space with all invariants intact.
+- [X] Native gerbil-parser accepts and losslessly roundtrips the Quint model.
+- [X] Official Quint exhausts the Governance state space with all invariants intact.
 - [X] Lambda production closure imports Governance only from POO Flow.
 - [X] Qualify Healthcare medication allow/default-deny/revocation through the real dual-engine Host.
 - [ ] Introduce Provider/Profile CLOS dispatch only after a second real axis exists.
 
-* Quint proof authority (2026-10-08)
-
-The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
-Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
-Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
-The finite cases include safety checks, declared weak-fairness temporal
-properties and fault mutations required to produce the named counterexample.
-The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
-
-Earlier TLA+/TLC results above are historical evidence, not receipts for the
-Quint source revision. The TLA+ parser and checked-source Library interfaces
-remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
-They do not verify the current Quint models. Quint uses the TLC backend;
-generated TLA+ is temporary backend output rather than maintained source.
-The migrated models do not establish a general Scheme/Rust refinement theorem.
+Current verifier versions, cases and receipt boundaries are documented in
+=packages/proofs/quint/README.org=.

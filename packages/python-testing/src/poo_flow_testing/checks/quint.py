@@ -96,7 +96,7 @@ def _run_quint(command: list[str], cwd: Path) -> tuple[int, bytes, int]:
     started = last_output = time.monotonic()
     output = bytearray()
     pending = bytearray()
-    visible = (b"TLC2 Version", b"Parsing file", b"Starting...",
+    visible = (b"Parsing file", b"Starting...",
                b"Finished computing initial states", b"Model checking completed",
                b"Error: Invariant", b"Finished in")
     try:

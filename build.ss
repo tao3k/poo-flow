@@ -90,7 +90,6 @@
     "modules/query/interface.ss"
     "modules/search/interface.ss"
     "modules/query/rust-ir.ss"
-    "modules/tla-plus/interface.ss"
     "modules/standards/interface.ss"
     "modules/temporal-causality/interface.ss"
     "modules/temporal-causality/ascent-exchange.ss"

@@ -69,7 +69,7 @@ an identity suitable for immutable evidence and replay.
 | Candidate hypothesis | Proposed cause, effect and constraints | Explicit exclusive or overlapping family semantics; temporal consistency does not imply actual causation | =types/objects/funs.ss= executable finite family |
 | Candidate exchange | Exact cut/provider receipt and separate checker assertion | Reviewable requires current, complete, checked required providers; it never grants admission | =candidates/{types,objects,funs}.ss= executable; [[file:candidates/model.org][module-local model]] |
 | Temporal query | Target, assumptions, evidence snapshot and optional operational scope | Resource limits belong to query execution, not model truth | current query supports candidate limit or =#f= for full finite family |
-| Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; TLC correspondence open |
+| Assurance receipt | Classification, frontiers, model/source identity and method | Say what was explored, what remains, and what was assumed | native receipt first slice; Quint correspondence open |
 
 The type relations are intentionally partial.  For instants =a= and =b=,
 =compare(a,b)= is =incomparable= if their domains differ without conversion
@@ -137,13 +137,13 @@ before a runtime closes or revises an immutable causal cut.
 * Model and query separation
 
 A =TemporalModel= denotes an immutable evidence snapshot, candidate universe,
-constraints and assumptions.  It does not contain a TLC work budget.  A query
+constraints and assumptions.  It does not contain a Quint work budget.  A query
 selects a target and may request an operational exploration limit.  =#f=
 means exhaust the *finite declared family*.  A positive limit permits an
 unexplored frontier; it must not silently upgrade a result to =necessary=.
 The old =MaxWorlds= name was misleading: the finite example selects candidate
 identities, not complete possible worlds or counterfactual histories.  The
-TLA+ configuration now calls this =ExplorationLimit= and treats it as a
+Quint configuration now calls this =ExplorationLimit= and treats it as a
 checking scope: =0= derives the effective bound from the candidate set,
 while a positive number requests an early stop.  Full possible-world semantics requires a separate behavior
 model with explicit interventions, environment actions and observation map.
@@ -159,7 +159,7 @@ evidence is insufficient.  =Necessary= is available only after exhaustive
 inspection of a caller-declared complete exclusive family, with one admitted
 candidate and no unknowns.  This is a restricted uniqueness judgment, not an
 actual-cause theorem.  The model does not invent mechanisms without a
-hypothesis vocabulary.  The TLA+ hypothesis exploration currently checks the
+hypothesis vocabulary.  The Quint hypothesis exploration currently checks the
 exclusive mode; an overlapping behavior-space projection remains open.
 
 * Composition and ownership
@@ -171,19 +171,18 @@ Domain Lambda ──> POO observations / hypotheses / obligations
    time/  ──> temporal-causality model / event graph / query
                        │                    │
                        v                    v
-               TLA+ source projection    GQL / ASCENT candidate inputs
+               Quint source projection    GQL / ASCENT candidate inputs
                        │
                        v
-               TLC finite behavioral receipt
+               Quint finite behavioral receipt
                        │
                        v
                optional Lean correspondence
 #+end_src
 
 =time/= owns clock-indexed primitives.  The Temporal Module owns model
-admission, event/cut semantics, uncertainty and receipts.  =packages/proofs/quint/temporal-causality.qnt/= owns the
-finite formal projection and checks; =modules/tla-plus/= owns the parser CST
-boundary and supported source-to-POO mapping.  GQL/ASCENT results may supply
+admission, event/cut semantics, uncertainty and receipts.  =packages/proofs/quint/= owns the
+finite formal projection, source typing and verification.  GQL/ASCENT results may supply
 candidate edges or proofs of structural reachability; they do not admit a
 causal conclusion by themselves.  Runtime or Marlin handoff owns effects and
 authority.  Healthcare, software release and other vocabularies belong in
@@ -306,7 +305,7 @@ The Quint submodel in =packages/proofs/quint/TemporalInvalidation.qnt= checks a 
 subject/conclusion graph.  =Direct= is the changed-subject frontier, =Step=
 adds one-hop conclusion dependents, and =Closure= applies =Step= at most
 =|Conclusions|= times.  The explorer schedules any enabled dependent, so
-its action relation admits multiple traversal orders.  TLC checks that every
+its action relation admits multiple traversal orders.  Quint checks that every
 scheduled conclusion belongs to =Closure= and that terminal states equal
 =Closure=.  Under weak fairness of =Advance=, it checks eventual completion
 for the finite fixture with a branch, a cycle and one unaffected conclusion.
@@ -371,13 +370,13 @@ may select the tombstone revision; current applicability must interpret its
 The finite Quint model in =packages/proofs/quint/TemporalConclusionSelection.qnt= represents
 two proposals against the same predecessor and expected version.  Its
 abstract atomic =Commit= increments the version; the other proposal then
-enters =Conflict=.  TLC checks at-most-one commit, version accounting,
+enters =Conflict=.  Quint checks at-most-one commit, version accounting,
 selection membership and completed conflict classification across both
 proposal orders.  Weak fairness of =ResolveAny= is an explicit model
 assumption.  This does not prove a concrete runtime CAS implementation,
 authorization check or effect compensation.  The Scheme test covers the
 same bounded branch and stale-observation cases without claiming a general
-Scheme/TLA refinement.  The separate LeanPoo 4.34 target proves for all
+Scheme/Quint refinement.  The separate LeanPoo 4.34 target proves for all
 natural versions that, after one abstract version increment, a second
 proposal against the old expected version is stale.  It does not prove that
 the runtime's durable store implements that abstract atomic step.
@@ -411,7 +410,7 @@ admission and authorized durable pointer commit remain open.
 * Formal programme
 
 The current =packages/proofs/quint/model.org= gives one finite instance, state machine,
-invariants, liveness assumption and TLC commands.  The general obligations
+invariants, liveness assumption and Quint commands.  The general obligations
 are broader:
 
 - *Temporal soundness*: every admitted native comparison follows from
@@ -439,51 +438,34 @@ are broader:
   implementation refinement proof.
 - *Model/query separation*: changing a checking budget changes only the
   explored frontier and perhaps the answer's certainty, not the model digest.
-- *Source projection*: accepted TLA+ literal values and native POO values
-  have the same admitted interpretation; unsupported syntax fails closed.
+- *Source correspondence*: formal instances and native POO values need a
+  named interpretation; a general translation theorem remains open.
 - *Behavior refinement*: a future observable map relates native state changes
-  to TLA+ traces, including stutter steps and environment assumptions.
-- *Proof/receipt binding*: Lean theorems, TLC executions and native runtime
+  to Quint traces, including stutter steps and environment assumptions.
+- *Proof/receipt binding*: Lean theorems, Quint executions and native runtime
   receipts retain their own identities and scopes.  One is not substituted
   for another.
 
-Finite TLC state exploration is an executable counterexample search.  It
-supports a claim only for an exact source, configuration and finite scope.
-=modules/tla-plus/checked-source-{types,objects,funs}.ss= now wraps the
-parser-owned TLC qualification in a POO receipt.  It checks the parsed root
-source digest, config digest, TLC launcher and output digests, final state
-counts and empty queue.  Its v2 digest also binds the sorted names and bytes
-of every local =.tla= file in the root source directory, checking that
-inventory before and after TLC.  This conservatively includes sibling
-imports; the focused regression changes an imported module while keeping the
-root source unchanged.  External =TLA_LIBRARY= modules, standard modules in
-the TLC distribution, and the full toolchain artifact remain outside this
-receipt's source-set binding.  CI separately verifies the pinned TLC JAR's
-SHA-256.  The receipt
-states =semantic-refinement? #f= and =action-authorized? #f=.  It cannot prove
-that the checked behavior model refines the POO model, or guard against a
-hostile concurrent rewrite of the same source path during TLC execution.
-The focused checked-source gate also projects the two maintained finite
-hypothesis-family data modules through the parser-owned POO projection,
-classifies each with unbounded native traversal, verifies that its matching
-TLC configuration names that exact classification, and runs TLC on both
-cases.  The same gate also generates three small same-domain families with
-two admissible causes, one refuted alternative and a refuted target.  It
-derives each TLC expectation from the projected POO classification and checks
-the independently interpreted TLA+ case.  This is finite differential
-evidence for those five inputs only; it does not establish a general
-native/TLA+ refinement theorem or cover bounded exploration order,
-overlapping families or interventions.
-Progress needs explicit fairness and environmental assumptions.  Lean can
-eventually establish generic laws across admitted models; current Lean
-temporal theorems concern a narrower event/cut model and do not discharge
-the new projection/refinement obligations.
+Finite Quint state exploration checks an exact source inventory and finite
+scope. The shared gate snapshots all local =.qnt= modules, checks that their
+identities remain unchanged and binds the selected predicates, fairness
+obligations, tool versions, exit, counts and output digest in a Scheme v1
+receipt. A zero status without explicit completion and an empty queue fails
+admission. Counterexample cases select a named predicate and must fail by
+violating it; parser errors, process crashes and timeouts do not qualify.
+
+=just check-temporal-family-quint= covers the full family, a one-step bound,
+discriminating evidence and the incorrect-necessity mutation. These checks
+are independent of the native POO classifier and its direct Scheme tests.
+No general source-to-POO translation or implementation refinement theorem is
+claimed. Such correspondence needs an explicit interpretation over observable
+states, stutter, input assumptions and terminal outcomes.
 
 * Work remaining for a complete framework
 
 The [[file:design-audit.org][2026-10-04 design decisions and acceptance ledger]] settles the
 extension rules for these gaps, including scoped evidence admission, frozen
-TLC dependencies and authorized runtime publication. The ledger distinguishes
+Quint dependencies and authorized runtime publication. The ledger distinguishes
 accepted design from executable closure and is the delivery-order reference.
 
 1. Extend the bounded observation layer with source-verified clock
@@ -500,15 +482,15 @@ accepted design from executable closure and is the delivery-order reference.
    interventions and behavior spaces.  Keep candidate generation, assumption
    admission and causal attribution distinct.
 4. Define property and query objects for safety, reachability and progress;
-   generate or interpret TLA+ transitions from the semantic model rather than
+   generate or interpret Quint transitions from the semantic model rather than
    exposing a caller-authored =Next= API.
-5. Extend the typed checked-source receipt from its local source-set binding
-   to a proved or differentially checked native/TLA+ projection.  The receipt
-   currently binds TLC's own finite run, not the POO state-transition
+5. Extend the Quint verification receipt from its staged source-inventory binding
+   to a proved or differentially checked native/Quint projection.  The receipt
+   currently binds Quint's own finite run, not the POO state-transition
    interpretation.
 6. Extend Lean proofs from event/cut facts to generic temporal relations,
    source projection and trace refinement.  The abstract future-append cut
-   lemma is now in the Temporal proof target; retain bounded TLC as separate
+   lemma is now in the Temporal proof target; retain bounded Quint as separate
    executable evidence.
 
 * Trajectory, Impact and 2026 research
@@ -550,17 +532,17 @@ The engine also asks a distinct AI-facing question: which evidence was
 found, which was used for each claim, which use has a separate assessment,
 and which downstream artifacts may depend on a changed premise?  The
 [[file:evidence/model.org][Evidence relation model]] owns this POO-native relation layer and
-its finite TLA+ exploration.  It is shared by short answers, extended
+its finite Quint exploration.  It is shared by short answers, extended
 search, long-running work and autonomous research.  None of those scenario
 names is a public engine type.  Relation reachability gives a potential
 invalidation frontier, not actual influence or claim truth.
 
 * Research and project references
 
-- Lamport, [[https://lamport.azurewebsites.net/pubs/time-clocks.pdf][Time, Clocks, and the Ordering of Events in a Distributed System]]:
+- Lamport, [[https://github.com/informalsystems/quint][Quint specification and verification]]:
   event order is partial and a clock representation needs stated assumptions.
-- Lamport, [[https://lamport.azurewebsites.net/tla/high-level-view.html][A High-Level View of TLA+]] and
-  [[https://lamport.azurewebsites.net/tla/hiding-and-refinement.pdf][Hiding, Refinement, and Auxiliary Variables]]:
+- Lamport, [[https://github.com/informalsystems/quint][Quint specification and verification]] and
+  [[https://github.com/informalsystems/quint][Quint specification and verification]]:
   possible behaviors, internal state and observable refinement.
 - Halpern and Pearl, [[https://www.cs.cornell.edu/home/halpern/papers/actcaus.pdf][Causes and Explanations: A Structural-Model Approach]]:
   actual-cause claims require more than temporal precedence.
@@ -575,16 +557,8 @@ invalidation frontier, not actual influence or claim truth.
 
 * Quint proof authority (2026-10-08)
 
-The maintained finite proof sources are =packages/proofs/quint/*.qnt=.
 Run =just prepare-quint=, =just check-quint-types= and =just check-quint=.
-Quint 0.33.0 and Apalache 0.62.1 match the current MRR verifier versions.
-The finite cases include safety checks, declared weak-fairness temporal
-properties and fault mutations required to produce the named counterexample.
-The case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
-
-Earlier TLA+/TLC results above are historical evidence, not receipts for the
-Quint source revision. The TLA+ parser and checked-source Library interfaces
-remain language capabilities, with frozen fixtures under =t/fixtures/tla-plus=.
-They do not verify the current Quint models. Quint uses the TLC backend;
-generated TLA+ is temporary backend output rather than maintained source.
-The migrated models do not establish a general Scheme/Rust refinement theorem.
+The maintained case catalog is =packages/python-testing/src/poo_flow_testing/checks/quint.py=.
+Quint 0.33.0, backend distribution 0.62.1 and Java 21 match MRR.
+Proof receipts use inert Scheme v1 and remain local or CI artifacts.
+The finite model checks do not establish a general Scheme/Rust refinement.

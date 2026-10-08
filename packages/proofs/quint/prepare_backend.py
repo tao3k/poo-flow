@@ -14,10 +14,10 @@ models = Path(__file__).resolve().parent
 with tempfile.TemporaryDirectory(prefix='poo-quint-prepare-') as directory:
     print('QUINT-PREPARE backend=0.62.1', flush=True)
     prepared = subprocess.run([
-        str(models / 'node_modules/.bin/quint'), 'compile',
+        str(models / 'node_modules/.bin/quint'), 'verify',
         str(models / 'GovernanceCore.qnt'), '--main', 'GovernanceCore',
-        '--target', 'tlaplus', '--apalache-version', '0.62.1',
-        '--out', str(Path(directory) / 'prepared.tla'),
+        '--backend', 'tlc', '--apalache-version', '0.62.1',
+        '--invariant', 'safety', '--verbosity', '3',
     ], cwd=directory, check=False, timeout=60, capture_output=True)
     if prepared.returncode:
         sys.stderr.buffer.write(prepared.stdout + prepared.stderr)
