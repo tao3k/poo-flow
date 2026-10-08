@@ -17,6 +17,7 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass
+from collections.abc import Callable
 
 from ..model import CaseContext, CaseEvidence
 
@@ -86,7 +87,8 @@ def _terminate(child: subprocess.Popen[bytes]) -> None:
         child.wait()
 
 
-def _run_quint(command: list[str], cwd: Path) -> tuple[int, bytes, int]:
+def _run_quint(command: list[str], cwd: Path,
+               progress: Callable[[bytes], None] | None = None) -> tuple[int, bytes, int]:
     """Collect actual Quint/backend bytes, with a strict idle and per-case deadline."""
     child = subprocess.Popen(
         command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -116,9 +118,8 @@ def _run_quint(command: list[str], cwd: Path) -> tuple[int, bytes, int]:
                         pending = bytearray(remainder)
                         visible_line = (any(token in line for token in visible)
                                         or b" states generated, " in line)
-                        if visible_line or line.startswith((b"[", b"PASS", b"# APALACHE")):
-                            sys.stdout.buffer.write(line + b"\n")
-                            sys.stdout.buffer.flush()
+                        if progress is not None and (visible_line or line.startswith((b"[", b"PASS", b"# APALACHE"))):
+                            progress(line + b"\n")
                 now = time.monotonic()
                 if now - last_output > IDLE_LIMIT_SECONDS:
                     raise TimeoutError("process produced no bytes for five seconds")
@@ -130,7 +131,8 @@ def _run_quint(command: list[str], cwd: Path) -> tuple[int, bytes, int]:
         child.stdout.close()
 
 
-def check_quint(context: CaseContext, case: QuintCase) -> CaseEvidence:
+def check_quint(context: CaseContext, case: QuintCase,
+                progress: Callable[[bytes], None] | None = None) -> CaseEvidence:
     models = context.repository_root / "packages/proofs/quint"
     quint = models / "node_modules/.bin/quint"
     version = subprocess.run([str(quint), "--version"], capture_output=True,
@@ -153,8 +155,9 @@ def check_quint(context: CaseContext, case: QuintCase) -> CaseEvidence:
                    "--verbosity", "3"]
         if case.temporal:
             command += ["--temporal", case.temporal]
-        print(f"QUINT-CHECK {case.model} {case.invariant}", flush=True)
-        status, output, duration_ms = _run_quint(command, work)
+        if progress is not None:
+            progress(f"QUINT-CHECK {case.model} {case.invariant}\n".encode())
+        status, output, duration_ms = _run_quint(command, work, progress)
     if sources != {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                    for p in sorted(models.glob("*.qnt"))}:
         raise AssertionError("Quint sources changed during verification")
@@ -170,7 +173,8 @@ def check_quint(context: CaseContext, case: QuintCase) -> CaseEvidence:
     if not accepted or counts is None:
         raise AssertionError(f"{case.model}/{case.invariant}: unexpected Quint result {status}; "
                              + output.decode(errors="replace")[-2400:])
-    print(f"QUINT-OK {case.model} states={counts[2].decode()} negative={case.negative}", flush=True)
+    if progress is not None:
+        progress(f"QUINT-OK {case.model} states={counts[2].decode()} negative={case.negative}\n".encode())
     return CaseEvidence({"model": case.model, "invariant": case.invariant,
                          "negative": case.negative, "temporal": case.temporal,
                          "quint_version": version, "backend": "tlc", "apalache_version": "0.62.1",
@@ -206,11 +210,15 @@ def main() -> int:
     from types import SimpleNamespace
     context = SimpleNamespace(repository_root=root)
     cases = [c for g, items in GROUPS.items() if args.group in ("all", g) for c in items]
-    results = [dict(check_quint(context, c).details) for c in cases]
+    def progress(data: bytes) -> None:
+        sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
+
+    results = [dict(check_quint(context, c, progress).details) for c in cases]
     if args.receipt:
         args.receipt.parent.mkdir(parents=True, exist_ok=True)
         args.receipt.write_text(_scheme({"schema": "poo-flow.quint-proof.v1", "cases": results}) + "\n")
-    print(f"QUINT-QUALIFICATION-OK {len(results)} cases", flush=True)
+    progress(f"QUINT-QUALIFICATION-OK {len(results)} cases\n".encode())
     return 0
 
 

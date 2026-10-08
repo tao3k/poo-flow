@@ -8,6 +8,8 @@ import tempfile
 import re
 from types import SimpleNamespace
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from unittest.mock import patch
 
 from poo_flow_testing.checks import quint
@@ -17,6 +19,25 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class GateTest(unittest.TestCase):
+    def test_library_does_not_write_progress_to_stdout(self):
+        with tempfile.TemporaryDirectory() as work:
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                status, output, _ = quint._run_quint(
+                    [sys.executable, '-c', "print('[ok] actual child output')"], Path(work))
+            self.assertEqual(status, 0)
+            self.assertIn(b'actual child output', output)
+            self.assertEqual(stdout.getvalue(), '')
+
+    def test_explicit_progress_retains_actual_child_output(self):
+        with tempfile.TemporaryDirectory() as work:
+            progress = []
+            status, output, _ = quint._run_quint(
+                [sys.executable, '-c', "print('[ok] actual child output')"],
+                Path(work), progress.append)
+            self.assertEqual(status, 0)
+            self.assertEqual(b''.join(progress), output)
+
     def test_public_build_entries_resolve_current_sources(self):
         entries = re.findall(r'"([^"\n]+\.ss)"', (ROOT / 'build.ss').read_text())
         self.assertTrue(entries)
