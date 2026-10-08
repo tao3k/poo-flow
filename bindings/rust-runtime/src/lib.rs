@@ -246,6 +246,8 @@ impl SemanticRuntime {
                 | "temporal.family.archive.export"
                 | "temporal.family.archive.replay"
                 | "temporal.support.evaluate"
+                | "temporal.support.revise"
+                | "temporal.support.claim"
                 | "temporal.fact.content"
                 | "temporal.support.guard"
                 | "temporal.proof.current"
