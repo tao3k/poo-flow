@@ -33,7 +33,7 @@ This is dependency identity evidence, not source authentication or execution pro
 | Slice | Implemented capability | Evidence boundary |
 |-------+------------------------+-------------------|
 | Quint migration | 42 sources; 33 finite cases with positive and mutant controls | Current finite checks pass; general native/Quint state and trace refinement remains open |
-| Original physical exchange | GQL compilation, Arrow restoration, original result handoff, correction/re-query and historical archive | Prior fixed-v1 receipt qualifies MRR 4ccca987 / Data 203dec65 only; updated Data execution requires a fresh roundtrip |
+| Original physical exchange | GQL compilation, Arrow restoration, original result handoff, correction/re-query and historical archive | Fresh locked physical producer executes in Linux native CI; acceptance requires its original receipt, correction markers and exit zero. Prior receipts retain their recorded source cuts |
 | Support applicability | Conjunctive premises, alternative supports, downstream acyclic evaluation and historical cuts | Declared inventory; completeness and recursive/absence semantics are not proved |
 | Original positive proof | ASCENT replay, MRR rule/catalog and Derivation mapping, exact source leaf/revision content | Scoped positive source-relative proof; issuer authority and exhaustive support inventory remain open |
 | Registered current proof | Retained original proof, append-only journal, current catalog, policy and observed clock | ABI v1 controls implemented; no selection, effect or durability grant |
@@ -84,6 +84,21 @@ No physical Data roundtrip, provider authentication, complete support inventory,
 Data commit/IFC authority, new model call or performance gain follows from it.
 The stronger implicit-HEAD rejection changes dependency tooling only; final-head
 CI must still pass before calling the delivered stage closed.
+
+* Physical producer delivery gate
+
+Linux native CI compiles the locked =qualification/physical-roundtrip= package
+with the configured Gerbil v0.19 SDK, Rust 1.95.0 and warnings-denied Clippy.
+=just qualify-temporal-physical= then runs original GQL, DataFusion, immutable
+Arrow restoration and native Temporal correction against the same job's AOT
+Library. Original and corrected transports and admissions remain in the
+=temporal-physical-original-evidence= CI artifact. The producer must exit zero,
+emit all original protocol/correction/final markers and write both receipt and
+oracle. Five-second idle and 45-second total gates remain unchanged.
+
+This executable gate implements B1. Its exact-head CI result determines whether
+B2 can proceed; dependency metadata or historical receipts cannot substitute for
+physical execution. B3's authoritative Data commit and IFC remain separate.
 
 * Next stages in dependency order
 

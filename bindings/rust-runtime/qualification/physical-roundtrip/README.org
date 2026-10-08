@@ -3,7 +3,39 @@
 
 #+title: Original GQL physical read-only Temporal qualification
 
-* Current immutable v1 graph and acceptance
+* Current immutable v1 graph and executable acceptance
+
+MRR =ffde2798a5246a61f4d6f0e66d7f05156e55e38f= and Data
+=534afe6c946088b8b0fe4e3a4b2bcdbbb50e6873= share one original MRR type
+universe. The native build owner is =1e4f1f65c7ff8e95fe764f2e8549fa9d92275db4=.
+Gerbil stays v0.19; Scheme ABI and transport stay v1.
+
+The Linux =Native Gerbil unit tests= CI job builds this locked producer with
+Rust 1.95.0 and warnings-denied Clippy after the native Scheme gates. Compilation
+uses the package's optimized dev profile and two build jobs. Its executable
+runs against that same job's freshly built semantic AOT Library through
+=just qualify-temporal-physical=. Dependency preparation is outside the semantic
+execution deadline; five-second genuine-progress and 45-second total limits
+remain unchanged.
+
+Acceptance requires original GQL/source/root/catalog/rows/query binding,
+independent substitution and budget rejection, valid empty MRR transport rejected
+by the nonempty Temporal profile, fixed-v1 admission and unsupported-version
+rejection. A second immutable Arrow root changes build's event time, executes a
+fresh original query, preserves the historical necessary conclusion as stale,
+and admits the corrected refuted conclusion as current. Cross-revision execution
+and both directions of receipt substitution must reject.
+
+Successful execution writes original and corrected Scheme transports plus native
+Temporal admissions into =temporal-physical-original-evidence= in CI. The gate
+requires protocol, correction and final markers, process exit zero and nonempty
+receipt/oracle files. No raw logs are committed. Qualification is tied to the
+executed CI head, binary and native artifact; older receipts below cannot qualify
+this graph. The trusted DataFusion executor and synthetic inventory do not prove
+source authenticity, exhaustive coverage, durable publication, IFC authorization,
+production recovery or a real-model lifecycle.
+
+* Historical fixed-v1 physical acceptance
 
 MRR =4ccca987c97065499a366b9d1980419a574032a8= and Data
 =203dec657ba4e57ba4b8313ae18415aab5547f95= now agree across the parent Rust
@@ -20,7 +52,7 @@ is re-queried; historical necessary admission becomes stale, revised refuted
 admission becomes current. Separate MRR Context and fresh-process proof archive
 replay passed in 3.14 seconds using the same semantic native artifact.
 
-See [[file:../../../../t/qualification/temporal-library-basic/mrr-data-physical-v1/qualification.ss][current qualification]] and
+See [[file:../../../../t/qualification/temporal-library-basic/mrr-data-physical-v1/qualification.ss][historical qualification]] and
 [[file:../../../../t/qualification/temporal-library-basic/mrr-data-physical-v1/physical-receipt.ss][original physical result and correction receipt]].
 Scheme ABI/transport is v1. The first execution's final log retained a stale
 V2 text marker; actual transport was v1. That marker is fixed and the final
@@ -36,7 +68,7 @@ below preserve their original source cuts and remain historical.
 
 * Prior fixed v1 graph and qualification boundary
 
-The active package uses Scheme transport and native semantic ABI v1. It pins
+That historical package used Scheme transport and native semantic ABI v1. It pinned
 MRR =9fcc4a42d4ea9462e0ce667bffab74b077696d9e= and MRR Data
 =b37aa9abe3a5be5f5b7759d78fbd8123547280c9=. These exact owner pins agree
 with the parent runtime and the Data qualification receipt. The parent native
