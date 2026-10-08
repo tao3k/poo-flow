@@ -42,7 +42,7 @@ def check(root: Path = ROOT, resolved: dict | None = None) -> tuple[str, str]:
         for package in read(directory / 'Cargo.lock')['package']:
             source = package.get('source', '')
             for url, expected in expected_sources.items():
-                if source.startswith(f'git+{url}?'):
+                if source.split('?', 1)[0].split('#', 1)[0] == f'git+{url}':
                     if source != expected:
                         raise ValueError(f'{directory.name}/{package["name"]}: stale or duplicate owner')
                     found.add(url)
@@ -56,7 +56,7 @@ def check(root: Path = ROOT, resolved: dict | None = None) -> tuple[str, str]:
         for package in resolved['packages']:
             source = package.get('source') or ''
             for url, expected in expected_sources.items():
-                if source.startswith(f'git+{url}?') and source != expected:
+                if source.split('?', 1)[0].split('#', 1)[0] == f'git+{url}' and source != expected:
                     raise ValueError('resolved graph contains a second producer')
         core = next(p for p in resolved['packages'] if p['name'] == 'mrr-data-core')
         data_root = Path(core['manifest_path']).resolve().parents[2]

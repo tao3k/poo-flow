@@ -43,3 +43,14 @@ class GraphTest(unittest.TestCase):
             path.write_text(path.read_text().replace(mrr, '0' * 40, 1))
             with self.assertRaisesRegex(ValueError, 'stale or duplicate'):
                 graph.check(root)
+
+    def test_implicit_head_cannot_hide_a_second_producer(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            self.copy_graph(root)
+            path = root / 'bindings/rust-runtime/Cargo.lock'
+            with path.open('a') as output:
+                output.write('\n[[package]]\nname = "mrr-identity"\nversion = "0.1.0"\n'
+                             f'source = "git+{graph.MRR}#{"0" * 40}"\n')
+            with self.assertRaisesRegex(ValueError, 'stale or duplicate'):
+                graph.check(root)
