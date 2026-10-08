@@ -3,7 +3,7 @@
 #+title: Proof-bound Family lifecycle ABI qualification
 
 This gate extends the original MRR owner-value admission test in
-=bindings/rust-runtime/tests/mrr.rs=. The test reconstructs native MRR query,
+=.ci/mrr-runtime/runtime/tests/mrr.rs=. The test reconstructs native MRR query,
 candidate and receipt values, projects verified observations through the Rust
 Library, and calls the original Scheme owners through the C ABI. No model or
 external business fixture supplies a substitute proof.

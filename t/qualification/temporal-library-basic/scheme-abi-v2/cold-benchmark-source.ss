@@ -41,9 +41,9 @@
                         (native-artifact-sha256 . ,(getenv "POO_FLOW_SEMANTIC_SHA256"))
                         (source-digests . ,(map (lambda (path)
                            (cons path (hex-encode (sha256 (call-with-input-file path read-all-as-u8vector)))))
-                           '("gerbil.pkg" "bindings/rust-runtime/src/lib.rs" "bindings/rust-runtime/src/mrr.rs"
-                             "bindings/rust-runtime/src/wire.rs" "bindings/rust-runtime/tests/mrr.rs"
-                             "bindings/rust-runtime/Cargo.lock" "src/ffi/scheme-wire.ss"
+                           '("gerbil.pkg" ".ci/mrr-runtime/runtime/src/lib.rs" ".ci/mrr-runtime/runtime/src/mrr.rs"
+                             ".ci/mrr-runtime/runtime/src/wire.rs" ".ci/mrr-runtime/runtime/tests/mrr.rs"
+                             ".ci/mrr-runtime/runtime/Cargo.lock" "src/ffi/scheme-wire.ss"
                              "t/qualification/temporal-mrr-native-test.ss"
                              "t/scenarios/performance/temporal-mrr-native/benchmark.ss")))
                         (semantic-samples . ,completed)

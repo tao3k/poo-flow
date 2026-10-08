@@ -29,7 +29,6 @@ version.ss
 
 # Shared native binding build cache.
 /target/
-/bindings/rust-runtime/target/
 /bindings/rust-ir/Cargo.lock
 /bindings/rust-ir/target/
 
@@ -52,4 +51,6 @@ packages/python-runtime/build/
 # Quint dependencies and compiler/backend generated artifacts.
 node_modules/
 _apalache-out/
-/bindings/rust-runtime/qualification/physical-roundtrip/target/
+
+# External MRR runtime checkout used only for cross-repository acceptance.
+/.ci/mrr-runtime/

@@ -747,7 +747,7 @@ requires a fresh, exact Cedar decision at the effect boundary.
    and native finite-family Temporal classification. That receipt predates the
    fixed Scheme v1 transport migration and does not qualify the current ABI. Its exact pins
    and evidence are recorded in
-   [[file:../../../bindings/rust-runtime/qualification/physical-roundtrip/README.org][physical roundtrip qualification]].
+   [[https://github.com/tao3k/meta-relational-reasoning/blob/0d792ceb67b27276eaf5255057943830643faa72/runtime/qualification/physical-roundtrip/README.org][physical roundtrip qualification]].
    This does not yet bind the Healthcare candidate-path queries above or close
    current-cut fences, correction/re-query, deployed recovery and IFC effect
    publication. Historical model receipts are not a fresh model run at these pins.
@@ -794,7 +794,7 @@ This closes the Family history transport/replay gate only. Original physical MRR
 receipt/provider admission, MRR Context current applicability and MRR Data's
 authoritative journal/CAS transaction still need their own integration. A valid
 historical proof is insufficient for current-pointer publication or effects.
-See =bindings/rust-runtime/README.org= and
+See =.ci/mrr-runtime/runtime/README.org= and
 =t/qualification/temporal-family-proof-archive/= for executable evidence.
 
 * MRR Context current binding adapter

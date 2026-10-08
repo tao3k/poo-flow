@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+[consumer]
+repository = "tao3k/meta-relational-reasoning"
+rev = "0d792ceb67b27276eaf5255057943830643faa72"
+path = ".ci/mrr-runtime"
+manifest = "runtime/Cargo.toml"

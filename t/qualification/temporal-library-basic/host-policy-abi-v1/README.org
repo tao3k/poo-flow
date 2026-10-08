@@ -51,7 +51,7 @@ No fake heartbeat, relaxed deadline or retry inside the harness was introduced.
   These last two suites validate Rust projections, not native proof execution.
 
 Rust binaries were built with =cargo test --manifest-path
-bindings/rust-runtime/Cargo.toml --locked --offline --features mrr-transport
+.ci/mrr-runtime/runtime/Cargo.toml --locked --offline --features mrr-transport
 --test temporal_policy --test mrr_support --test mrr_rule --test mrr_derivation
 --no-run= and then run with =--nocapture --test-threads=1= under the watchdog.
 Compiler SDK lookup warnings remain in the raw successful build log.

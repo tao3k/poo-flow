@@ -8,7 +8,7 @@ This package is the Python runtime consumer for POO Flow runtime bindings.
 
 Python runtime code lives in =src/poo_flow_runtime=, Python tests in =tests=,
 and cross-language/model qualification entrypoints in =tools=. The Rust ABI
-consumer lives separately in =bindings/rust-runtime=. Both callers use the
+consumer lives separately in =.ci/mrr-runtime/runtime=. Both callers use the
 shared =bindings/runtime-c= boundary; Temporal semantics stay in Scheme.
 See [[file:tools/README.org][Python qualification tools]] for the entrypoints.
 
@@ -412,7 +412,7 @@ program invocation, and resume-path binding reuse.
 The Legacy =MrrSnapshotResource= static-edge worker adapter has been removed.
 Use the original MRR Scheme v1 result handoff and the native Rust Temporal bridge
 for the qualified read-only event/position path. The physical roundtrip fixture
-is in =bindings/rust-runtime/qualification/physical-roundtrip=. Python has no
+is in =.ci/mrr-runtime/runtime/qualification/physical-roundtrip=. Python has no
 replacement remote snapshot publication or outbox API in this slice.
 
 Typed Python runtime plans are materialized into C ABI graph handles before
@@ -508,3 +508,10 @@ Do not expose this method as a model tool.
 Schemas, bounds and remaining current-state/effect requirements are specified in
 =bindings/runtime-c/README.org=, section Trusted original Derivation admission.
 Qualification is in =t/qualification/temporal-library-basic/proof-control-abi-v1/=.
+
+* External Rust consumer
+
+Rust orchestration and its tests belong to MRR =runtime/=. POO contains no Rust
+runtime implementation. Its CI checks out the immutable MRR owner to compare
+that external consumer with this Python Library on the same native artifact.
+Python implementation and model IO remain under this package.

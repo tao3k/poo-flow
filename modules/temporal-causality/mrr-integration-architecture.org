@@ -7,6 +7,20 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+end_comment
 
+* Runtime ownership
+
+MRR =runtime/= owns the Rust transport, bounded worker lifecycle, original typed
+MRR adapters and Data publication orchestration. POO contains no Rust runtime
+crate or compatibility alias. It supplies Scheme semantic modules, C ABI and
+Python Library. Data supplies Backend/Protocols and durable transactions.
+
+Cross-repository CI checks out the immutable owner declared in
+=packages/automation/mrr-runtime.toml=, then exercises that external consumer
+against this run's POO native artifact. =.ci/mrr-runtime= is a disposable checkout,
+not a POO source module. Source-only Orgize Rust tests run in MRR CI. Historical
+build-freeze receipts identify their original commits and paths, not current
+ownership or current acceptance.
+
 * Current delivery plan
 
 The [[file:next-delivery-plan-v1.org][2026-10-05 delivery audit]] records the updated ASCENT revision,
@@ -286,7 +300,7 @@ payload; none can be inferred from a model's agreement with tool output.
 
 * Rust layout and optimization constraints
 
-Keep =bindings/rust-runtime= the native lifetime/queue/transport adapter. Keep
+Keep =.ci/mrr-runtime/runtime= the native lifetime/queue/transport adapter. Keep
 query admission in MRR and physical IO in MRR Data. Add POO-native projection,
 correspondence and applicability objects in the Temporal module; expose only
 bounded ABI operations required by the runtime. Trusted registration/publication
@@ -336,7 +350,7 @@ a current permit merely because its historical commit receipt still exists.
 - [[file:framework.org][Temporal framework and existing revision/projection contracts]]
 - [[file:design-audit.org][D1--D8 design decisions and remaining implementation gates]]
 - [[file:integration-readiness-audit.org][Pinned runtime and real-model qualification boundaries]]
-- [[file:../../bindings/rust-runtime/README.org][Native Rust adapter and delivered MRR observation profile]]
+- [[file:../../.ci/mrr-runtime/runtime/README.org][Native Rust adapter and delivered MRR observation profile]]
 - [[file:../../bindings/runtime-c/include/poo_flow/temporal_store.h][Current first-root publication ABI]]
 
 * Direct Legacy removal

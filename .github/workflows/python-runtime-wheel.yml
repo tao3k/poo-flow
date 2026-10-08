@@ -287,6 +287,13 @@ jobs:
           path: dist/python-runtime-wheel/*.whl
           if-no-files-found: error
 
+      - name: Checkout MRR runtime owner
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: tao3k/meta-relational-reasoning
+          ref: 0d792ceb67b27276eaf5255057943830643faa72
+          path: .ci/mrr-runtime
+
       - name: Verify Rust consumer against installed Python and native producer
         run: |
           set -euo pipefail
@@ -300,9 +307,9 @@ jobs:
           POO_FLOW_SEMANTIC_SHA256="$(sha256sum "$POO_FLOW_SEMANTIC_LIBRARY" | cut -d ' ' -f 1)"
           export POO_FLOW_RUNTIME_TRACE=1
           export POO_FLOW_RUST_DIFFERENTIAL="$RUNNER_TEMP/poo-rust-oracle.ss"
-          cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context,orgize-source --no-run
+          cargo +1.95.0 test --release --locked --manifest-path .ci/mrr-runtime/runtime/Cargo.toml --features mrr-context,orgize-source --no-run
           timeout --foreground --signal=TERM --kill-after=1s 45s python packages/python-runtime/tools/watch.py \
-            cargo +1.95.0 test --release --locked --manifest-path bindings/rust-runtime/Cargo.toml --features mrr-context,orgize-source -- --nocapture 2>&1 | tee "$RUNNER_TEMP/poo-mrr-context-runtime.log"
+            cargo +1.95.0 test --release --locked --manifest-path .ci/mrr-runtime/runtime/Cargo.toml --features mrr-context,orgize-source -- --nocapture 2>&1 | tee "$RUNNER_TEMP/poo-mrr-context-runtime.log"
           grep -F 'MRR Context checked original receipt, policy, temporal fact and current Source; forged/missing/foreign bindings rejected' "$RUNNER_TEMP/poo-mrr-context-runtime.log"
           grep -Fx 'MRR Context rejected stale native Source after correction' "$RUNNER_TEMP/poo-mrr-context-runtime.log"
           grep -F 'ORGIZE-SOURCE-HOST-OK: current source and stale cut, query, config, bytes' "$RUNNER_TEMP/poo-mrr-context-runtime.log"

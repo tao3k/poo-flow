@@ -329,11 +329,12 @@ applicability or information-flow authorization receipt.
 
 * Delivered: bounded Rust read-only Runtime consumer
 
-=bindings/rust-runtime= consumes the original semantic C ABI on a dedicated
+=.ci/mrr-runtime/runtime= consumes the original semantic C ABI on a dedicated
 owner thread. The qualified release build matches 21 current installed-Python
 native results across finite-family/lens profiles. It checks queue saturation,
 concurrent callers, allocator release, wrong-thread rejection and terminal close.
-See [[file:../../t/qualification/temporal-library-basic/rust-runtime/receipt.json][the exact source/artifact receipt]]. Two debug-startup silent watchdog failures
+This result predates the runtime transfer to MRR; current acceptance is recorded
+in [[file:next-delivery-plan-v1.org][the delivery ledger]]. Two debug-startup silent watchdog failures
 remain recorded; the release gate passed at 1.24s with five-second silence limit.
 The crate makes no independent causal decisions or model effect grants.
 

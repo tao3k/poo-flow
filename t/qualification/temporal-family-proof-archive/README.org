@@ -22,7 +22,7 @@ Rust test rather than treating a frozen historical receipt as a fresh pass.
 
 Build the native library with =bindings/runtime-c/tools/build-semantic.py= and
 compile the Rust =mrr= integration test with =--release --features mrr-transport=.
-Use the MRR devenv profile, immutable pins from =bindings/rust-runtime/Cargo.lock=,
+Use the MRR devenv profile, immutable pins from =.ci/mrr-runtime/runtime/Cargo.lock=,
 and clean Gerbil compiler/SDK flags. Run the fresh executable through the project
 entrypoint (all paths are absolute):
 #+begin_src sh
