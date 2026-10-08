@@ -277,3 +277,39 @@ These are local executable receipts; exact delivered-head CI remains separate.
 No new real model call or external business side effect was performed. General
 source authentication, revocation and cross-engine refinement remain open as
 listed above. Raw logs and native artifacts are not committed.
+
+* B3 durable grant retirement slice (2026-10-09)
+
+Current MRR runtime owner is =5594fc121e1e5942964f4863c9571818c8d5e0cc=.
+The typed producer, Data and native builder pins remain unchanged. The MRR
+ASCII policy failure is repaired by equivalent Unicode escapes, with the actual
+repository policy test and Unicode datum roundtrip passing.
+
+The original physical/native producer now qualifies an independent home while
+its original proof, physical root and flow remain current and eligible. Rotating
+the grant away and back to identical commitment bytes rejects a captured old
+generation. Retiring the current grant rejects a fresh publication before
+native validation. The same stable authority cannot be resurrected, and a
+differently named grant cannot omit the retired mandatory home authority.
+No revision-two delivery appears.
+
+After actual provider shutdown/reopen and genuine physical source correction,
+the retired authority and acknowledged original delivery remain durable. Exact
+old operation replay succeeds even though its native proof is now stale; it
+does not read a fresh clock, rerun semantic validation or create an effect.
+The actual physical gate requires both grant/refusal and recovery markers.
+Strict physical Clippy and the unchanged five-second idle / 45-second execution
+gate passed using the original official artifact =36c5c6f2...8d1a3b=.
+
+The new bounded authority model exhausts 51 states. Its generation mutation
+requires restored matching commitment bytes and produces a counterexample
+(32 states); ignoring retirement also produces a counterexample (19 states).
+The existing atomic tuple model still exhausts 1,980 states and missing-delivery
+control fails as expected. All five publication cases pass their required
+positive/negative gates. The initial backend attempt was sandbox-denied while
+binding its local gRPC port; the explicitly permitted execution qualifies.
+
+This closes the named durable retirement/ABA acceptance slice. It does not
+close content tombstone selection, authenticated grant issuance, declassification
+or external effect execution. A historical delivery is not current authority
+to re-dispatch an effect. Required CI on these delivered heads remains separate.

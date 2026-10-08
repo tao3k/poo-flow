@@ -203,7 +203,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: tao3k/meta-relational-reasoning
-          ref: 0d792ceb67b27276eaf5255057943830643faa72
+          ref: 5594fc121e1e5942964f4863c9571818c8d5e0cc
           path: .ci/mrr-runtime
 
       - name: Cache package-managed physical dependencies
@@ -478,7 +478,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: tao3k/meta-relational-reasoning
-          ref: 0d792ceb67b27276eaf5255057943830643faa72
+          ref: 5594fc121e1e5942964f4863c9571818c8d5e0cc
           path: .ci/mrr-runtime
 
       - name: Download exact-run semantic producer

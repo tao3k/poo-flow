@@ -54,7 +54,10 @@ GROUPS = {
                  QuintCase("EvidenceAssessmentMutation", "ActiveAssessmentInvariant", True),
                  QuintCase("CandidateExchangeMutation", "ReviewabilityInvariant", True)],
     "publication": [QuintCase("TemporalPublicationDeliveryCase"),
-                    QuintCase("TemporalPublicationDeliveryMutation", "AtomicTuple", True)],
+                    QuintCase("TemporalPublicationDeliveryMutation", "AtomicTuple", True),
+                    QuintCase("TemporalPublicationAuthorityCase"),
+                    QuintCase("TemporalPublicationGenerationMutation", "NoUnauthorizedCommit", True),
+                    QuintCase("TemporalPublicationRetirementMutation", "NoUnauthorizedCommit", True)],
     "session": [],
 }
 SESSION_CASES = (

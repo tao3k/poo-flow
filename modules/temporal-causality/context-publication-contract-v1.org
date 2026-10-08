@@ -176,3 +176,16 @@ advance but before native source refresh refuse without a delivery. The physical
 producer requires an explicit mixed-source refusal marker. Turso internal
 registry versions match the original Data owner's lock; the resolved graph gate
 rejects provider version drift before execution.
+
+* Durable grant retirement and historical recovery
+
+MRR's native/Data qualification holds source proof and flow eligibility constant
+while the durable grant changes. Full authority generation prevents same-byte
+ABA. Retirement is terminal for its stable authority ID and stays mandatory
+for that home; a newly enrolled alias cannot bypass it. Refusal happens before
+fresh native validation, and creates neither replacement nor delivery.
+
+After restart and source correction, historical operation replay/ACK remains
+recoverable without fresh clock or validation. This recovers the exact original
+transaction, not permission to execute an external effect again. Authenticated
+grant issuance and content tombstone selection remain independent gates.

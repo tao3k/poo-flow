@@ -732,6 +732,8 @@ qualify-temporal-physical binary library digest output:
     grep -Fx 'Original Scheme v1 transport admitted; unsupported version rejected' "$log" >/dev/null
     grep -Fx 'NATIVE-TO-DATA-COMMIT-REPLAY-ACK-LEASE-OK' "$log" >/dev/null
     grep -Fx 'NATIVE-TO-DATA-MIXED-SOURCE-FENCE-REFUSED' "$log" >/dev/null
+    grep -Fx 'NATIVE-TO-DATA-GRANT-ABA-RETIREMENT-ALIAS-REFUSED' "$log" >/dev/null
+    grep -Fx 'NATIVE-TO-DATA-RETIRED-GRANT-HISTORICAL-REPLAY-RECOVERED' "$log" >/dev/null
     grep -Fx 'NATIVE-TO-DATA-STALE-REFUTED-RESTART-OK' "$log" >/dev/null
     grep -Fx 'PHYSICAL-CORRECTION -> MRR-REQUERY -> HISTORICAL-STALE -> NATIVE-READMISSION OK' "$log" >/dev/null
     grep -Fx 'GQL -> PHYSICAL ROOT -> ORIGINAL MRR SCHEME V1 -> NATIVE TEMPORAL OK' "$log" >/dev/null
