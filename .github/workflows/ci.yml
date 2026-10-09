@@ -83,7 +83,9 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install gcc jq openssl pkg-config sqlite zlib
+          brew install coreutils gcc jq openssl pkg-config sqlite zlib
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+          "$(brew --prefix coreutils)/libexec/gnubin/timeout" --version
 
           gcc_prefix="$(brew --prefix gcc)"
           gcc_bin="$(
