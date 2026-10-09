@@ -24,5 +24,13 @@ Scheme DAG corruption controls. No Quint model was moved here: the current
 Search Quint model is an MRR consumer publication protocol. A producer-specific
 Quint model requires actual POO transition inputs and its own qualification.
 
-The current MRR consumer uses an explicit unpublished local path dependency.
-Published immutable POO source convergence and remote consumer CI remain gates.
+Consumers declare this repository, a full immutable commit SHA and the
+=proofs/Composition= subdirectory in their Lake dependency. The standalone
+=pin_dependency.py= bootstraps the exact LeanPoo revision, even after its topic
+branch is deleted. CI executes the same mathematical controls and axiom audit.
+
+MRR has qualified immutable-source materialization and its consumer proofs from
+an empty dependency cache. Its retained publication Quint model remains MRR-owned.
+Producer mathematics and consumer admission are separate gates; this package's
+CI cannot establish downstream consumer CI, Scheme source refinement or release
+integration. The producer review is [[https://github.com/tao3k/poo-flow/pull/62][PR 62]].

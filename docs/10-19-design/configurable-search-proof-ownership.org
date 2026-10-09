@@ -41,7 +41,9 @@ The MRR publication Quint model, source/generation admission, reflection,
 received-order binding and actual execution witnesses stay in MRR. A generic
 producer transition model has not yet been created; existing consumer state
 models cannot be relabeled as proof of Scheme execution. Standalone Scheme
-corruption controls and immutable producer publication remain open gates.
+corruption controls, producer-specific Quint and merged release integration
+remain open gates. The proof package is published as an immutable consumer
+dependency with independent producer CI; downstream qualification stays separate.
 
 * Configurable composition
 
