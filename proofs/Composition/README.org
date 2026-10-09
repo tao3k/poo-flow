@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: POO Flow Composition Mathematics (Version 1)
+#+language: en
+
+* Ownership
+
+=PooFlowComposition.lean= consumes actual LeanPoo C3/C4 certificates and proves
+role-source agreement, mapped identity/precedence properties and typed sequential
+associativity. Stage and parallel composition have no MRR binding or ASP scenario
+dependency. =CompositionChecks.lean= exercises actual certificate algorithms,
+contradictory-order rejection and typed sequential/parallel operations.
+=CompositionAxioms.lean= permits only standard Lean axioms.
+
+Run =just check-composition-proof= with Lean 4.34.0 available. LeanPoo is pinned
+to the full immutable revision in =lakefile.toml=. The package has no dependency
+on MRR. MRR consumes this package for received-order checks and retains its own
+source/generation, FFI/result admission and publication proofs.
+
+This gate qualifies mathematical composition and certificates. It does not
+prove Scheme implementation refinement or qualify the outstanding standalone
+Scheme DAG corruption controls. No Quint model was moved here: the current
+Search Quint model is an MRR consumer publication protocol. A producer-specific
+Quint model requires actual POO transition inputs and its own qualification.
+
+The current MRR consumer uses an explicit unpublished local path dependency.
+Published immutable POO source convergence and remote consumer CI remain gates.

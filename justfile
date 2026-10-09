@@ -766,3 +766,7 @@ check-quint-types:
 [group('check')]
 check-quint:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group all
+
+# Producer mathematical qualification; consumer binding proofs remain in MRR.
+check-composition-proof:
+    cd proofs/Composition && lake build && lake env lean --run CompositionChecks.lean && lake env lean CompositionAxioms.lean
