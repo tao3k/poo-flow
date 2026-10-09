@@ -75,8 +75,6 @@ jobs:
             pkg-config \
             sqlite3 \
             zlib1g-dev
-          rustup toolchain install 1.95.0 --profile minimal --component clippy
-          cargo +1.95.0 install just --version 1.56.0 --locked
 
       - name: Install macOS system dependencies
         if: runner.os == 'macOS'
@@ -101,6 +99,12 @@ jobs:
           openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
           echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
           "$gcc_bin" --version
+
+      - name: Install pinned recipe runner
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal --component clippy
+          cargo +1.95.0 install just --version 1.56.0 --locked
+          just --version
 
       - name: Install immutable Gerbil v0.19 release
         shell: bash
