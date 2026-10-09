@@ -609,3 +609,7 @@ pin-gerbil-dependency package revision:
 [group('dependency')]
 mod-tidy:
     {{ bazel }} mod tidy --lockfile_mode=update
+
+# Producer mathematical qualification; consumer binding proofs remain in MRR.
+check-composition-proof:
+    cd proofs/Composition && lake build && lake env lean --run CompositionChecks.lean && lake env lean CompositionAxioms.lean
