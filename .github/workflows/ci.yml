@@ -154,8 +154,21 @@ jobs:
       - name: Build native Gerbil package
         run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
+      - name: Compile registered Context use Host test
+        run: gerbil env gxc -V -O t/context-use-host-test.ss
+
       - name: Check registered Context use Host
-        run: gerbil env python3 packages/python-runtime/tools/watch.py just test-file t/context-use-host-test.ss
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: |
+          set -euo pipefail
+          test_module=.gerbil/lib/poo-flow/t/context-use-host-test.ssi
+          test -f "$test_module"
+          gerbil env python3 packages/python-runtime/tools/watch.py \
+            gxtest -v 3 "$test_module" 2>&1 | tee /tmp/context-use-host-test.log
+          grep -F "MODULE-OK $test_module" /tmp/context-use-host-test.log
+          grep -x 'OK' /tmp/context-use-host-test.log
+          ! grep -E 'ERROR|Heap overflow|Stack overflow' /tmp/context-use-host-test.log
 
       - name: Run the single native unit-test entrypoint
         env:
