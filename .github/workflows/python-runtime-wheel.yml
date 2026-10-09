@@ -175,6 +175,7 @@ jobs:
             packages/python-runtime/tests/unit/test_semantic_tools.py \
             packages/python-runtime/tests/unit/test_temporal_family.py \
             packages/python-runtime/tests/unit/test_temporal_admission.py \
+            packages/python-runtime/tests/unit/test_context_use.py \
             packages/python-runtime/tests/unit/test_temporal_publication.py
 
       - name: Test Python module case catalog

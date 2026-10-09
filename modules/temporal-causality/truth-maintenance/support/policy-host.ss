@@ -8,7 +8,8 @@
 (export poo-flow-temporal-support-policy-host
         poo-flow-temporal-support-policy-host-refresh!
         poo-flow-temporal-support-policy-host-guard
-        poo-flow-temporal-support-policy-host-guard-current)
+        poo-flow-temporal-support-policy-host-guard-current
+        poo-flow-temporal-support-policy-host-current)
 ;;; Opaque runtime state, never transported; the host serializes control/use.
 (defstruct policy-host-state (current revisions))
 (def (poo-flow-temporal-support-policy-host)
@@ -86,3 +87,8 @@
       (error "unregistered or stale host policy generation"))
     (poo-flow-temporal-support-guard program journal (.ref snapshot 'effective-at) (.ref snapshot 'effective-at) budget
       (.ref snapshot 'policy) expected-policy-digest (.ref snapshot 'effective-at))))
+
+;;; Read only the registered current snapshot; callers cannot choose its clock.
+(def (poo-flow-temporal-support-policy-host-current host policy-identity)
+  (or (hash-get (policy-host-state-current (state host)) policy-identity)
+      (error "unregistered current policy")))

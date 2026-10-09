@@ -127,3 +127,8 @@ int32_t poo_flow_semantic_v1_proof_state_refresh(const uint8_t *input, size_t le
 int32_t poo_flow_semantic_v1_proof_register(const uint8_t *input, size_t length, poo_flow_semantic_result *result) {
   return semantic_call("$host.temporal.proof.register", input, length, result, 1);
 }
+
+int32_t poo_flow_semantic_v1_context_use_refresh(const uint8_t *input, size_t length,
+    poo_flow_semantic_result *result) {
+  return semantic_call("$host.context.use.refresh", input, length, result, 1);
+}

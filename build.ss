@@ -85,6 +85,7 @@
     "modules/authorization/providers/cedar/interface.ss"
     "modules/governance/interface.ss"
     "modules/proof/interface.ss"
+    "modules/memory-core/context-use-host.ss"
     "src/semantic/context-restriction.ss"
     "src/semantic/orgize-interface.ss"
     "src/semantic/orgize-source-interface.ss"
@@ -98,6 +99,7 @@
     ;; Ordinary authoring continues through the POO-native Temporal interface.
     "src/ffi/scheme-wire.ss"
     "src/ffi/temporal-policy.ss"
+    "src/ffi/context-use.ss"
     "src/ffi/temporal-proof.ss"
     "src/ffi/temporal-proof-host.ss"
     "src/feature-system/interface.ss"))

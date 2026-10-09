@@ -91,6 +91,14 @@ class SemanticRuntime:
         """Read-only native applicability; does not admit proofs or authorize effects."""
         return self.call('temporal.support.evaluate', request)
 
+    def refresh_context_use(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Trusted Host registration of Context contract and purpose; no effect grant."""
+        return self._submit('$host.context.use.refresh', request, control=True).result()
+
+    def observe_context_use(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Observe registered Context scope against native current source and clock."""
+        return self.call('context.use.observe', request)
+
     def refresh_temporal_policy(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Trusted host policy/observed-time registration; does not grant effects."""
         return self._submit('$host.temporal.policy.refresh', request, control=True).result()
@@ -181,6 +189,8 @@ class SemanticRuntime:
             if control:
                 if operation == b'$host.temporal.source.register':
                     status = self._lib.poo_flow_python_semantic_source_register(data, len(data), result)
+                elif operation == b'$host.context.use.refresh':
+                    status = self._lib.poo_flow_python_semantic_context_use_refresh(data, len(data), result)
                 elif operation == b'$host.temporal.policy.refresh':
                     status = self._lib.poo_flow_python_semantic_policy_refresh(data, len(data), result)
                 elif operation == b'$host.temporal.derivation.admit':

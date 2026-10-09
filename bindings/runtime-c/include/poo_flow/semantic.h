@@ -23,6 +23,10 @@ int32_t poo_flow_semantic_v1_call(const char *operation, const uint8_t *input,
  * This validates local snapshot fidelity, not external issuer signatures. */
 int32_t poo_flow_semantic_v1_source_register(const uint8_t *input, size_t length,
                                            poo_flow_semantic_result *result);
+/* Trusted Context contract/purpose registration. Native current Source and the
+ * existing policy Host clock determine use eligibility; no external effect grant. */
+int32_t poo_flow_semantic_v1_context_use_refresh(const uint8_t *input, size_t length,
+                                               poo_flow_semantic_result *result);
 /* Trusted host policy/observed-clock registration. Ordinary semantic calls
  * cannot access this control lane. No provider authentication or effect grant. */
 int32_t poo_flow_semantic_v1_policy_refresh(const uint8_t *input, size_t length,

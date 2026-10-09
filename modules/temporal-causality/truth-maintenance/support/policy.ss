@@ -8,7 +8,7 @@
         (only-in :std/encoding/hex hex-encode)
         (only-in :poo-flow/modules/temporal-causality/time/objects poo-flow-temporal-instant)
         "types.ss" "funs.ss")
-(export poo-flow-temporal-support-policy poo-flow-temporal-support-guard
+(export poo-flow-temporal-support-policy poo-flow-temporal-support-policy-status poo-flow-temporal-support-guard
         poo-flow-temporal-support-guard-replay poo-flow-temporal-support-claim)
 (def (text? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (digest x) (string-append "sha256:" (hex-encode (sha256 (string->utf8
@@ -43,6 +43,17 @@
                (.ref policy 'revision-identity) (.ref policy 'start) (.ref policy 'end)))
     (unless (equal? (.ref value 'semantic-digest) (.ref policy 'semantic-digest))
       (error "support policy digest mismatch")) value))
+;;; Shared temporal applicability; Context use consumes the existing clock owner.
+(def (poo-flow-temporal-support-policy-status policy expected-digest effective-at)
+  (unless (text? expected-digest) (error "expected policy digest required"))
+  (let* ((owned (canonical-policy policy)) (now (instant effective-at))
+         (start (.ref owned 'start)) (end (.ref owned 'end)))
+    (unless (equal? (.ref now 'domain-identity) (.ref start 'domain-identity))
+      (error "policy evaluation time domain mismatch"))
+    (cond ((not (equal? expected-digest (.ref owned 'semantic-digest))) 'stale-policy)
+          ((< (.ref now 'coordinate) (.ref start 'coordinate)) 'not-yet-effective)
+          ((>= (.ref now 'coordinate) (.ref end 'coordinate)) 'expired-policy)
+          (else 'applicable))))
 (def (poo-flow-temporal-support-guard program journal as-of-value valid-at-value budget-value policy expected-digest effective-at)
   (unless (text? expected-digest) (error "expected policy digest required"))
   (let* ((owned (canonical-policy policy)) (now (instant effective-at))
@@ -52,10 +63,7 @@
       (error "policy evaluation time domain mismatch"))
     (unless (equal? (.ref program 'policy-identity) (.ref owned 'identity))
       (error "support program policy owner mismatch"))
-    (let* ((status (cond ((not (equal? expected-digest (.ref owned 'semantic-digest))) 'stale-policy)
-                         ((< (.ref now 'coordinate) (.ref start 'coordinate)) 'not-yet-effective)
-                         ((>= (.ref now 'coordinate) (.ref end 'coordinate)) 'expired-policy)
-                         (else 'applicable)))
+    (let* ((status (poo-flow-temporal-support-policy-status owned expected-digest now))
            (fingerprint (digest (list 'poo-flow.temporal-support-guard.v1
               (.ref evaluation-value 'semantic-digest) (.ref owned 'semantic-digest)
               expected-digest (instant-row now) status))))
