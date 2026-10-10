@@ -30,11 +30,11 @@ assessment is implemented below; the complete joint runtime is not delivered.
 | Context Org projection/anchors | Source replay, selected IDs, exact Scope/Session/Turn | Authenticated multi-source cut and Temporal dependency mapping |
 | Context Session Host | Enrolled byte snapshots, current grant/policy, local owner claim CAS | Full policy graph and Temporal applicability at disclosure/result/publication |
 | Temporal time | Domains, observed/declared modality, intervals, bounded observations | Trusted clock enrollment/conversion and commit-time observation resolution |
-| Temporal admission/applicability | Native family admission replay and same-source current/stale classification | Bind each required original receipt to its independently current source owner |
-| Temporal lifecycle/impact | Family revision/archive values, frontiers and pure lifecycle functions | Context invalidation and candidate refresh over the complete dependency frontier |
+| Temporal admission/applicability | Native family admission/current-source checks plus registered original proof/support applicability | Bind required family/proof handles to their existing current owner registries and exact Context consumers |
+| Temporal lifecycle/impact | Family revisions/archives, reverse dependency plans, support reverse plans and trajectory/Impact refresh | Connect affected source/premise revisions to Context invalidation, candidate refresh and unresolved Attempt obligations |
 | Session | Exact Attempt routing, recovery obligations and pure reconciliation | Resolve actual terminal/isolation evidence and physical worker ownership |
 | Authorization/Cedar | Existing authorization provider and native policy boundaries | Exact joint PARC request, policy/schema/entity revisions and diagnostics |
-| C ABI semantic Host | Single owner thread, bounded inert byte requests, privileged control channel | Versioned joint envelope, operation receipts and immutable source/clock registry handles |
+| C ABI semantic Host | Single owner thread, inert byte transport, existing privileged source/policy/proof-state/proof-registration controls | Versioned joint Context envelope composing current owner handles and per-operation fences |
 | MRR Context adapter | Original six-field contract, typed binding and native grant/current-family checks | Consumer qualification of the joint envelope and original producer evidence |
 | MRR Data Backend | Resource leases, cancellation control and durable authority generations | Joint transaction fences, durable event/obligation recovery and physical roundtrip controls |
 
@@ -93,9 +93,82 @@ Missing evidence, incomparable clocks or unsupported demanded semantics block
 the consequential operation. A historical display uses a separately authorized
 purpose and preserves historical labels; it does not become current inference.
 
-Logical ordering is a partial causal relation; a total timestamp order does not
-supply causal evidence. This design applies that distinction from [[https://www.microsoft.com/en-us/research/publication/time-clocks-ordering-events-distributed-system/][Lamport's
-clock paper]]. Neither Session ID nor a wall-clock timestamp proves causality.
+POO Flow's existing ASCENT-backed temporal-causality Module is the primary
+semantic foundation. Its native causal cuts, temporal lenses, original evaluator
+proofs, support applicability and dependency/Impact owners determine the joint
+Context design. Clock ordering is one of their input constraints. A Session ID
+or timestamp alone supplies no derivation, support or current applicability.
+The delivered window helper is one policy gate inside this larger model.
+
+* Primary ASCENT-backed semantic architecture
+
+The design goal is a Context system with explicit temporal inference, replayable
+proofs, retractable evidence and dependency-directed lifecycle decisions. POO
+Flow's existing Module is the starting implementation, not an external logical
+clock algorithm. Qualification compares semantic coverage, retraction correctness,
+evidence fidelity and measured recomputation work. A timestamp-order example is
+insufficient to qualify that system.
+
+| Existing source owner | Capability to compose into Context | Required qualification boundary |
+|-----------------------+------------------------------------+---------------------------------|
+| =temporal-causality/ascent-exchange.ss= | Explicit POO event/cut-to-ASCENT lens/source binding, solve and verify | Exact original identities, valid/knowledge domains, complete cut and uncertainty; native rows alone do not authenticate source |
+| =evaluator/positive-proof.ss= | Original ASCENT program replay and positive proof DAG admission | Source/candidate/query/rows/nodes and work budget; partial execution cannot become complete proof |
+| =evaluator/rule.ss= and =derivation.ss= | Exact original MRR Rule content, rule application and selected Derivation/direct-premise correspondence | Typed content/catalog/generation and exact proof-root/premise mapping |
+| =evaluator/proof-host.ss= | Retained original proof registration and current registered program/journal/policy/support checks | Expected native state and policy generations; retain historical proof while current applicability changes |
+| =truth-maintenance/support/funs.ss= | Support evaluation and reverse support plans under current evidence cuts | Complete support inventories for absence/exhaustiveness; source-only positive proof does not supply absence |
+| =truth-maintenance/funs.ss= | Dependency index and reverse plans from cuts/projections | Explicit conclusion-to-premise lineage and complete changed-set coverage |
+| =impact/refresh-funs.ss= | Recompute trajectory contrast from admitted source series deltas | Exact old/new trajectory binding, changed coordinates and blocked refresh reasons |
+| =applicability= and =lifecycle= | Family current/stale, revisions, archives and historical continuity | Current source owner, predecessor/frontier binding and explicit publication boundary |
+
+The ASCENT finite lens and original evaluator proof are distinct qualified
+profiles. The existing finite-hypothesis-family profile can classify alternative
+models as possible/necessary/refuted. A positive proof flag must not be cast into
+a necessary classification over an undeclared hypothesis family. Every Context
+Demand chooses a supported profile and required verdict, then retains the exact
+original receipt and its replay inputs. Unsupported mixtures are refused.
+
+Context composition follows this semantic path:
+
+#+begin_example
+Orgize original bytes / IDs / selected Query rows
+  -> explicit source, event, Fact and rule correspondence
+  -> existing Temporal/ASCENT derivation and original proof admission
+  -> current native proof/family handle + support/policy applicability
+  -> dependency reverse plan and trajectory/Impact refresh
+  -> Context candidate, required evidence and lifecycle strategy decision
+  -> independent Session Attempt and current-owner CAS
+  -> FFI/Runtime dispatch or result-admission handoff
+  -> MRR typed consumer and MRR Data conditional durable publication
+#+end_example
+
+A source correction/withdrawal must retain its exact journal revision, invalidate
+all affected supports and Context consumers, and preserve old derivations as
+historical records. Policy/grant changes and temporal expiry also invalidate use
+without rewriting evidence. The reverse planner supplies a candidate affected
+set; publication requires coverage of every declared dependency, including
+nonmatching Query units and negative/complete-inventory obligations. A smaller
+refresh is accepted only after equivalence to the qualified full result. The
+existing planner and Impact refresh are implementation seams; end-to-end Context
+incremental execution and its performance still need their own qualification.
+
+The next joint capsule composes registered capabilities rather than starting a
+second Temporal registry. For an original proof it binds registration/state
+handle, state generation/digest, rule-program/journal identities, original
+Derivation/premise bindings, expected policy generation/digest and Context
+Scope/Session/Turn/Attempt. For a family/lens profile it binds that profile's
+original source/admission/query/cut and current owner witness. Receipt resolution
+uses the appropriate existing native current function; callers cannot select a
+replacement current snapshot or clock. C ABI proof-state/proof-registration
+controls already exist and are reused. The new envelope and Context consumer
+mapping remain separate additions to that qualified surface.
+
+The finite lifecycle model's scalar =temporalVersion= abstracts this complete
+owner witness. It proves current-vector fencing over that abstraction; it does
+not replace the ASCENT proof, support graph or native changed-set checks. Extend
+model-to-native correspondence around actual original proofs, journal corrections,
+withdrawals, catalog changes and partial execution, then connect the registered
+witness to disclosure/result/publication. Keep the window-policy and owner-CAS
+models as component checks inside that architecture.
 
 * Core strategy composition in POO Flow
 
@@ -246,8 +319,10 @@ remain additional work.
 Delivery order:
 
 1. Qualify the native window policy and joint bounded lifecycle obligations.
-2. Add typed current source/Temporal/policy/authority registry capsules and
-   Context-required receipt resolution; qualify rejection and exhaustion.
+2. Compose typed current-owner capsules from existing source, original proof,
+   support policy and authority Hosts. Add the Context consumer/dependency bindings
+   and receipt resolution; qualify rejection and exhaustion. Do not duplicate the
+   ASCENT evaluator or its existing native proof registry.
 3. Route claim/disclosure/result/retirement through one native lifecycle reducer,
    retaining immutable obligations and exact Attempt lineage.
 4. Qualify the versioned C ABI and MRR typed consumer on the exact producer head.

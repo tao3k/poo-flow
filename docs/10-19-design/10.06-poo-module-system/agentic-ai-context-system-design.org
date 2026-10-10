@@ -423,3 +423,12 @@ explicit Temporal applicability and clock domains, admitted strategy composition
 and the versioned FFI/Runtime/MRR/Data handoffs. It records the pure native window
 policy and separates its local qualification from the prospective joint protocol
 model and remaining provider/backend implementation.
+
+* ASCENT-backed Temporal is the primary integration owner
+
+Context composes the existing temporal-causality Module's native ASCENT lens,
+original proof/Rule/Derivation correspondence, registered current applicability,
+support/dependency reverse plans and Impact refresh. [[file:context-temporal-lifecycle-policy-system-design.org][The joint policy design]] maps
+these actual source owners and makes their registered witnesses the next capsule
+inputs. Clock-window checks are a component of that design. Reuse the native
+proof/source/policy controls; do not create a second evaluator or Temporal registry.
