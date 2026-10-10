@@ -362,3 +362,11 @@ Session/Attempt/source/grant model, current-use Host publication/disclosure fenc
 versioned wire/consumer changes, durable recovery and downstream MRR Data
 qualification. Neither a Session transition intent nor a typed input reference
 resolves producer authority or performs dispatch, CAS or durable publication.
+
+* Joint Context, Temporal and lifecycle policy refinement
+
+[[file:context-temporal-lifecycle-policy-system-design.org][The POO Flow joint policy system design]] defines orthogonal lifecycle states,
+explicit Temporal applicability and clock domains, admitted strategy composition,
+and the versioned FFI/Runtime/MRR/Data handoffs. It records the pure native window
+policy and separates its local qualification from the prospective joint protocol
+model and remaining provider/backend implementation.

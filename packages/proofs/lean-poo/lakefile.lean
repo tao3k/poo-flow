@@ -25,7 +25,7 @@ lean_lib PooFlowSessionProof where
              `PooFlowSessionProof.AxiomAudit]
 
 lean_lib PooFlowContextProof where
-  roots := #[`ContextDelta, `OrgAnchor, `ContextSessionClaim]
+  roots := #[`ContextDelta, `OrgAnchor, `ContextSessionClaim, `ContextTemporalPolicy]
 
 lean_lib PooFlowAttemptProof where
   roots := #[`SessionAttempt]

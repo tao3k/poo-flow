@@ -415,3 +415,11 @@ projections, task DAG/claim/join semantics and bounded incremental scheduling.
 Session owns scheduling semantics; Context owns Org binding and projection
 admission. The scheduling runtime and new property-ID source profile are
 proposed implementation slices, not covered by existing headline replay tests.
+
+* Joint Context, Temporal and lifecycle policy refinement
+
+[[file:context-temporal-lifecycle-policy-system-design.org][The POO Flow joint policy system design]] defines orthogonal lifecycle states,
+explicit Temporal applicability and clock domains, admitted strategy composition,
+and the versioned FFI/Runtime/MRR/Data handoffs. It records the pure native window
+policy and separates its local qualification from the prospective joint protocol
+model and remaining provider/backend implementation.

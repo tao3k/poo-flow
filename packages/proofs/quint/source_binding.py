@@ -53,3 +53,8 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/ContextSessionClaim.qnt',
         root / 'packages/proofs/lean-poo/ContextSessionClaim.lean')
     print('CONTEXT-SESSION-CLAIM-SOURCE-BINDING-OK ' + claim_digest, flush=True)
+
+    lifecycle_digest = check_binding(
+        root / 'packages/proofs/quint/ContextTemporalLifecycle.qnt',
+        root / 'packages/proofs/lean-poo/ContextTemporalPolicy.lean')
+    print('CONTEXT-TEMPORAL-LIFECYCLE-SOURCE-BINDING-OK ' + lifecycle_digest, flush=True)

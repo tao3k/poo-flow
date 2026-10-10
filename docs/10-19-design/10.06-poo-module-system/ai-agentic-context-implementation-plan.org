@@ -316,3 +316,11 @@ consumer bindings, recovery obligations and Context-produced input proposals.
 ID bindings and actual serialized current-input claim publication. Authenticated
 source/ABI/provider/Data consumer qualification remains open; this milestone does
 not close the complete scheduling system.
+
+* Joint Context, Temporal and lifecycle policy refinement
+
+[[file:context-temporal-lifecycle-policy-system-design.org][The POO Flow joint policy system design]] defines orthogonal lifecycle states,
+explicit Temporal applicability and clock domains, admitted strategy composition,
+and the versioned FFI/Runtime/MRR/Data handoffs. It records the pure native window
+policy and separates its local qualification from the prospective joint protocol
+model and remaining provider/backend implementation.

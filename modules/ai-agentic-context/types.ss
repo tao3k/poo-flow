@@ -4,8 +4,10 @@
 ;;; Boundary shapes and invariants; no construction or runtime effects.
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type)
-        (only-in :std/list/list every))
-(export AiAgenticContextOrgAnchorType poo-flow-ai-agentic-context-org-anchor-shape?
+        (only-in :std/list/list every)
+        (only-in :poo-flow/modules/temporal-causality/time/types poo-flow-temporal-interval?))
+(export AiAgenticContextTemporalPolicyType poo-flow-ai-agentic-context-temporal-policy-shape?
+        AiAgenticContextOrgAnchorType poo-flow-ai-agentic-context-org-anchor-shape?
         AiAgenticContextDeltaType poo-flow-ai-agentic-context-delta-shape?
         AiAgenticContextScopeType poo-flow-ai-agentic-context-scope-shape?)
 (def (name? x) (and (string? x) (< 0 (string-length x) 257)))
@@ -63,3 +65,21 @@
        (eq? (.ref value 'source-authenticated?) #f) (eq? (.ref value 'action-authorized?) #f)))
 (define-type (AiAgenticContextOrgAnchorType @ Type.)
   .element?: poo-flow-ai-agentic-context-org-anchor-shape?)
+
+(def (poo-flow-ai-agentic-context-temporal-policy-shape? value)
+  (and (object? value)
+       (every (lambda (key) (.slot? value key)) '(kind identity revision window clock-role purposes semantic-digest))
+       (eq? (.ref value 'kind) 'poo-flow.ai-agentic-context.temporal-policy.v1)
+       (name? (.ref value 'identity)) (name? (.ref value 'semantic-digest))
+       (exact-integer? (.ref value 'revision)) (<= 0 (.ref value 'revision) 65535)
+       (poo-flow-temporal-interval? (.ref value 'window))
+       (eq? (.ref (.ref value 'window) 'start-closed?) #t)
+       (eq? (.ref (.ref value 'window) 'end-closed?) #f)
+       (< (.ref (.ref (.ref value 'window) 'start) 'coordinate)
+          (.ref (.ref (.ref value 'window) 'end) 'coordinate))
+       (symbol? (.ref value 'clock-role)) (list? (.ref value 'purposes))
+       (<= 1 (length (.ref value 'purposes)) 5)
+       (every (lambda (purpose) (memq purpose '(prepare disclose accept-result publish-memory revisit)))
+              (.ref value 'purposes))))
+(define-type (AiAgenticContextTemporalPolicyType @ Type.)
+  .element?: poo-flow-ai-agentic-context-temporal-policy-shape?)

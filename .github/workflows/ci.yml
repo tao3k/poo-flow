@@ -194,6 +194,14 @@ jobs:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: gerbil env just test-file t/ai-agentic-context-session-host-test.ss
 
+      - name: Compile Context temporal window policy regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-temporal-test.ss
+
+      - name: Check Context policy clock domains and conservative windows
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-temporal-test.ss
+
       - name: Compile registered Context use Host test
         run: gerbil env gxc -V -O t/context-use-host-test.ss
 
