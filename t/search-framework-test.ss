@@ -8,7 +8,7 @@
 (import :std/test
         (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
-        :poo-flow/modules/search/interface
+        :poo-flow/modules/search-engine/interface
         (only-in :poo-flow/modules/temporal-causality/interface
                  poo-flow-causal-event-graph))
 

@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
-        :poo-flow/modules/search/interface)
+        :poo-flow/modules/search-engine/interface)
 (export search-attempt-test)
 (def stage (poo-flow-search-stage 'a 'acquire '() 'source 'candidates
                                    poo-flow-search-acquisition-role))

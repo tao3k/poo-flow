@@ -36,11 +36,47 @@ Producer mathematics and consumer admission are separate gates; this package's
 CI cannot establish downstream consumer CI, Scheme source refinement or release
 integration. The producer review is [[https://github.com/tao3k/poo-flow/pull/34][PR 34]].
 
+
+* Search Engine and Temporal assurance contract
+
+The canonical producer module is =modules/search-engine/interface.ss=.
+=modules/temporal-causality/interface.ss= supplies Temporal observations and
+causal validity. Search Engine owns strategy lowering, stage readiness, scoped
+attempts and continuation. A structural prerequisite edge permits a dependency;
+an observed Temporal event records actual causal use. C4 precedence alone must
+never be treated as observed causality or authenticated source evidence.
+
+Scheme, Lean and Quint advance together over the same named transitions:
+
+| Producer contract | Scheme implementation | Lean model and LeanPoo reuse | Quint model |
+|-------------------+-----------------------+------------------------------+-------------|
+| Typed composition and stage prerequisites | search-engine/funs.ss, engine.ss | PooFlowComposition; LeanPoo C3/C4 certificates | SearchDag DependencyOrder |
+| Exact request identity and cancellation | search-engine/attempt.ss, engine.ss | SearchAttempt admission, cancellation and revision laws | SearchAttempt safety and cancelAny control |
+| Predecessor completion admission | search-engine/attempt.ss, engine.ss | SearchReadiness, SearchDag frontier_exact | SearchReadiness presence, freshness and scope controls |
+| Selective descendant invalidation | search-engine/engine.ss | SearchTemporal; LeanPoo CertifiedInvalidation; SearchDag descendant settlement rejection | SearchDag FreshResults and BranchRetention |
+| Temporal evidence validity and observed causality | temporal-causality observations, Search factor observations | Separate evidence/graph correspondence obligation | Requires an explicit evidence-state projection before closure |
+
+LeanPoo remains the immutable dependency declared in =lakefile.toml= and
+=lake-manifest.json=. Search models reuse its graph and invalidation certificate
+algorithms rather than recreate C3/C4 mathematics. Lean quantifies over arbitrary
+certified finite graphs; Quint explores the declared bounded transitions and
+requires mutant counterexamples; Scheme controls exercise actual POO objects.
+The source-binding gate links model digests and invariant names, while the
+executable controls compare named outcomes. None of these checks alone proves
+Scheme source refinement.
+
+A transition change must update its Scheme controls, Lean laws or executable
+witnesses, and Quint projection or explicitly document why that projection is
+unchanged. Run =just check-search-engine-proof= for the joined producer gate.
+Physical dispatch, backend capability admission and result authenticity remain
+consumer obligations. Evidence-level Temporal composition requires additional
+models and controls before being described as formally closed.
+
 * Search engine proof increment
 
 =SearchAttempt.lean= proves exact scope admission, once-only settlement,
 revision fencing, monotonic request identifiers within one retained state
-lineage, and retirement rejection. =modules/search/attempt.ss= implements the
+lineage, and retirement rejection. =modules/search-engine/attempt.ss= implements the
 matching pure per-stage POO kernel; =t/search-attempt-test.ss= runs actual
 current/foreign/duplicate/revised/retired request controls.
 
@@ -51,11 +87,12 @@ current/foreign/duplicate/revised/retired request controls.
 | attempt-settle | settle | settle |
 | attempt-revise | revise | revise |
 | attempt-retire | retire | retire |
+| engine-cancel | cancel / revise | cancel |
 
 The bounded Quint projection fixes stage/generation/configuration/source identities
-and varies revision, attempt and retirement. It checks four safety predicates
-and requires counterexamples for omitted revision, attempt and retirement
-guards. Run =just check-search-attempt-quint= using the existing pinned runner.
+and varies revision, attempt and retirement. It checks five safety predicates
+and requires counterexamples for omitted revision, attempt, retirement and exact
+cancellation guards. Run =just check-search-attempt-quint= using the existing pinned runner.
 The source-binding gate checks Quint source freshness and invariant inventory;
 it is not a semantic refinement proof.
 
@@ -80,7 +117,7 @@ backend cancellation. Arbitrary extended POO objects are not authentication
 certificates.
 
 Run =just check-search-engine-proof= to combine the Lean certificate/axiom gate,
-Quint positive and negative cases, and eight actual Scheme control cases.
+Quint positive and negative cases, and twenty-two actual Scheme control cases.
 The Scheme gate bootstraps Gxi and invokes the upstream GxTest entry point.
 The standalone GxTest executable's local =__eval-import= failure also occurs
 in the unchanged Search framework suite; that failure is retained separately
@@ -113,7 +150,7 @@ POO extensions, establish parent result truth, or prove Scheme/Lean refinement.
 
 * Pure DAG controller
 
-=modules/search/engine.ss= lowers the existing Search strategy root directly:
+=modules/search-engine/engine.ss= lowers the existing Search strategy root directly:
 sequential and merge children consume the previous terminal stages; parallel
 children share incoming dependencies and contribute their own terminal stages.
 Stage names must be unique, and every prerequisite must precede its dependent.
@@ -141,8 +178,8 @@ branch retention. The revision-fencing mutant retains old active work as well as
 omitting its version check; it is not a claim that those two guards are redundant.
 The separate attempt/readiness models retain their narrower identity controls.
 
-Run =just check-search-engine-proof=. It now includes six actual DAG Scheme
-cases alongside eight per-stage cases. This qualifies the pure control API;
+Run =just check-search-engine-proof=. It now includes eight actual DAG Scheme
+cases alongside eight per-stage cases and six framework cases. This qualifies the pure control API;
 active MRR runtime pins, backend dispatch/cancellation, candidate payload truth,
 negative-evidence dependencies, observation policy and source-level refinement
 remain separate gates. The Lean graph projection and Scheme composition lowering

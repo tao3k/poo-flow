@@ -10,9 +10,9 @@
 POO Flow maintains the generic =search-engine=. Its semantic core composes
 Search stages with =temporal-causality=: dependency readiness, evidence
 validity, invalidation and logical continuation belong to one engine contract.
-The engine implementation is maintained in =modules/search/engine.ss=, with
-attempt admission in =modules/search/attempt.ss= and the public exports in
-=modules/search/interface.ss=. Lean and Quint producer models are maintained
+The engine implementation is maintained in =modules/search-engine/engine.ss=, with
+attempt admission in =modules/search-engine/attempt.ss= and the public exports in
+=modules/search-engine/interface.ss=. Lean and Quint producer models are maintained
 with this module in POO Flow.
 
 MRR is the Rust dispatch interface and Rust ecosystem scheduling hub. It owns
@@ -22,7 +22,7 @@ query, index and storage adapters. ASP configures code-search scenarios and
 projects public results.
 
 This document records the implementation and its remaining acceptance boundaries.
-Current =modules/search= supplies POO stages, typed composition, strategies and
+Current =modules/search-engine= supplies POO stages, typed composition, strategies and
 an immutable DAG controller. It derives readiness, issues scoped attempts,
 admits matching completions and propagates invalidation to structural descendants.
 Exact cancellation invalidates the active stage and its descendants; stale
@@ -186,6 +186,22 @@ ASP source/resident authority and public packet policy remain scenario-owned.
 Move reusable physical engines into Data only with explicit source, completeness
 and lifecycle contracts. Moving a Cargo dependency alone transfers none of them.
 
+* Three-way producer assurance
+
+The maintained module name is =search-engine=, with the canonical public entry
+point =modules/search-engine/interface.ss=. It composes Temporal capability
+through =modules/temporal-causality/interface.ss=.
+
+For each engine transition, Scheme owns the executable POO contract, Lean proves
+its structural laws using the pinned LeanPoo C3/C4 and invalidation certificates,
+and Quint explores its bounded state projection with positive and negative
+controls. The maintained operation mapping and qualification limits are in
+[[file:../../proofs/Composition/README.org][the producer assurance contract]].
+Dependency readiness, observed causality and physical execution are distinct
+facts: a stage dependency does not manufacture a Temporal event, and physical
+completion does not establish evidence validity. These composition obligations
+must be represented explicitly as the evidence model develops.
+
 * Formal ownership and acceptance
 
 LeanPoo supplies reusable C3/C4 mathematics. POO Flow owns producer models for
@@ -242,7 +258,7 @@ sufficient; backend capability substitution must remain rejected until qualified
 
 * Related source and design
 
-- =modules/search/objects.ss= and =funs.ss=: current POO declarations and observations.
+- =modules/search-engine/objects.ss= and =funs.ss=: current POO declarations and observations.
 - =modules/temporal-causality/interface.ss=: reusable Temporal authority.
 - [[file:configurable-search-proof-ownership.org][Producer and consumer proof ownership]].
 - MRR =docs/architecture/0037-configurable-search-execution.org=: existing
@@ -250,7 +266,7 @@ sufficient; backend capability substitution must remain rejected until qualified
 
 * Implemented attempt boundary
 
-=modules/search/attempt.ss= now supplies the pure per-stage attempt identity
+=modules/search-engine/attempt.ss= now supplies the pure per-stage attempt identity
 transition kernel. The matching Lean/Quint definitions and actual Scheme controls
 are described in [[file:../../proofs/Composition/README.org][the producer proof package]].
 It fences settlement across revisions and retirement; readiness and selective
@@ -258,7 +274,7 @@ Temporal dependency propagation are not implemented by this kernel.
 LeanPoo structural invalidation certificates are reused separately, with an
 explicit stage-graph correspondence prerequisite.
 
-The pure =modules/search/engine.ss= controller now derives prerequisites from
+The pure =modules/search-engine/engine.ss= controller now derives prerequisites from
 Search chain/parallel/merge objects, maintains an admitted-completion frontier,
 and invalidates changed stages plus structural descendants. It retains unaffected
 branches and rejects duplicate stage identities. The consumer runtime pin and

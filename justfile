@@ -860,7 +860,20 @@ check-search-dag-scheme:
     grep -x 'OK' "$log"
 
 [group('check')]
-check-search-engine-proof: check-composition-proof check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme
+check-search-framework-scheme:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s gerbil {{ gerbil_test_runtime_options }} env gxi -e '(import (only-in :gerbil/tools/gxtest main)) (main "-v" "5" "t/search-framework-test.ss")' 2>&1 | tee "$log"
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    test "$(grep -c '^CASE-OK ' "$log")" = 6
+    grep -Fx 'MODULE-OK t/search-framework-test.ss' "$log"
+    grep -F 'HARNESS-OK' "$log"
+    grep -x 'OK' "$log"
+
+[group('check')]
+check-search-engine-proof: check-composition-proof check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme check-search-framework-scheme
 
 # Static native Context/Temporal closure avoids Darwin dynamic-module teardown.
 [group('test')]

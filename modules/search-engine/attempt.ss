@@ -5,7 +5,7 @@
 (import (only-in :clan/poo/object .ref object?)
         (only-in :std/list/list every ormap)
         :poo-flow/src/core/object-syntax
-        (only-in :poo-flow/modules/search/funs poo-flow-search-stage?))
+        (only-in :poo-flow/modules/search-engine/funs poo-flow-search-stage?))
 (export poo-flow-search-attempt-state poo-flow-search-attempt-issue
         poo-flow-search-attempt-settle poo-flow-search-attempt-revise
         poo-flow-search-attempt-retire poo-flow-search-attempt-complete

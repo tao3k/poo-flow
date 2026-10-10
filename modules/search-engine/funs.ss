@@ -6,7 +6,7 @@
 ;;; Search composition is declarative; execution remains consumer-owned.
 (import (only-in :clan/poo/object .ref object?)
         :poo-flow/src/core/object-syntax
-        :poo-flow/modules/search/objects
+        :poo-flow/modules/search-engine/objects
         (only-in :poo-flow/src/core/flow
                  external-flow flow-fanout flow-input-contract
                  flow-output-contract flow-then)

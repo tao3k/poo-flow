@@ -27,8 +27,9 @@ def main : IO Unit := do
   if retained "B" != allRequests "B" then throw (IO.userError "independent B lost")
   if frontier graph revisedStates retained retained != ["A"] then
     throw (IO.userError "invalidated descendants admitted before A")
-  if settle (revisedStates "A") (request "A") |>.isSome then
-    throw (IO.userError "old active work admitted")
+  for name in ["A", "C", "D"] do
+    if settle (revisedStates name) (request name) |>.isSome then
+      throw (IO.userError s!"invalidated {name} admitted old work")
   let some (_, fresh) := issue (revisedStates "A")
     | throw (IO.userError "revised A cannot issue")
   if fresh.attempt != 1 || fresh.scope.revision != 1 then

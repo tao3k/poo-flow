@@ -5,8 +5,8 @@
 (import (only-in :clan/poo/object .ref object?)
         (only-in :std/list/list every filter ormap)
         :poo-flow/src/core/object-syntax
-        :poo-flow/modules/search/funs
-        :poo-flow/modules/search/attempt)
+        :poo-flow/modules/search-engine/funs
+        :poo-flow/modules/search-engine/attempt)
 (export poo-flow-search-engine poo-flow-search-engine-frontier
         poo-flow-search-engine-issue poo-flow-search-engine-complete
         poo-flow-search-engine-revise poo-flow-search-engine-node

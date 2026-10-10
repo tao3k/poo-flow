@@ -94,7 +94,7 @@
     "src/semantic/orgize-interface.ss"
     "src/semantic/orgize-source-interface.ss"
     "modules/query/interface.ss"
-    "modules/search/interface.ss"
+    "modules/search-engine/interface.ss"
     "modules/query/rust-ir.ss"
     "modules/standards/interface.ss"
     "modules/temporal-causality/interface.ss"

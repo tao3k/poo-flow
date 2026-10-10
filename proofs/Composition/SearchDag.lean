@@ -98,4 +98,20 @@ theorem missing_current_parent_blocks (node : LeanPoo.C4.Node) (state : State)
   have parentReady := ready.2.2.2 parent edge
   simp [ParentReady, missing] at parentReady
 
+theorem affected_settlement_rejected {graph : LeanPoo.C4.Graph} {changed : List String}
+    (certificate : POO.Flow.SearchTemporal.ImpactCertificate graph changed)
+    (states : String → State) (cut : Nat) (name : String) (request : Request)
+    (affected : name ∈ certificate.names) :
+    settle (invalidateStates certificate states cut name) request = none := by
+  simp [invalidateStates, affected, resetState, settle, Admits]
+
+theorem descendant_settlement_rejected {graph : LeanPoo.C4.Graph} {changed : List String}
+    (certificate : POO.Flow.SearchTemporal.ImpactCertificate graph changed)
+    (states : String → State) (cut : Nat) (name origin : String) (steps : Nat)
+    (request : Request) (changedOrigin : origin ∈ changed)
+    (path : LeanPoo.Proof.Descendant graph origin steps name) :
+    settle (invalidateStates certificate states cut name) request = none := by
+  exact affected_settlement_rejected certificate states cut name request
+    ((certificate.characterizes name).mpr ⟨origin, changedOrigin, steps, path⟩)
+
 end POO.Flow.SearchDag

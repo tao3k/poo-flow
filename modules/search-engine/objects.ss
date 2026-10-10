@@ -5,7 +5,7 @@
 
 ;;; Backend-neutral Search role objects and immutable declaration prototypes.
 (import :poo-flow/src/core/object-syntax
-        :poo-flow/modules/search/types)
+        :poo-flow/modules/search-engine/types)
 
 (export poo-flow-search-framework-role
         poo-flow-search-acquisition-role
