@@ -34,6 +34,11 @@ class QuintCase:
     temporal: str | None = None
 
 GROUPS = {
+    "search-evidence": [QuintCase("SearchEvidence_none"),
+        QuintCase("SearchEvidence_ignoreParents", "ExactCausalParents", True),
+        QuintCase("SearchEvidence_ignoreScope", "ObservationScope", True),
+        QuintCase("SearchEvidence_ignoreTime", "TemporalOrder", True),
+        QuintCase("SearchEvidence_ignoreCommitted", "CommittedEvidence", True)],
     "search-dag": [QuintCase("SearchDag_none"),
         QuintCase("SearchDag_ignoreParents", "DependencyOrder", True),
         QuintCase("SearchDag_ignoreFreshness", "FreshResults", True),

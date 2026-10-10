@@ -830,6 +830,7 @@ check-search-attempt-quint:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-attempt
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-readiness
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-dag
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-evidence
 
 # Bootstrap the expander in Gxi, then use the upstream GxTest entry point.
 # No private assertion runner; require all Cases and the final harness receipt.
@@ -873,7 +874,28 @@ check-search-framework-scheme:
     grep -x 'OK' "$log"
 
 [group('check')]
-check-search-engine-proof: check-composition-proof check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme check-search-framework-scheme
+check-search-evidence-scheme:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s gerbil {{ gerbil_test_runtime_options }} env gxi -e '(import (only-in :gerbil/tools/gxtest main)) (main "-v" "5" "t/search-evidence-test.ss")' 2>&1 | tee "$log"
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    test "$(grep -c '^CASE-OK ' "$log")" = 6
+    grep -Fx 'MODULE-OK t/search-evidence-test.ss' "$log"
+    grep -F 'HARNESS-OK' "$log"
+    grep -x 'OK' "$log"
+
+[group('check')]
+check-search-model-bindings:
+    python3 packages/proofs/quint/source_binding.py
+    packages/proofs/quint/node_modules/.bin/quint typecheck packages/proofs/quint/SearchAttempt_none.qnt
+    packages/proofs/quint/node_modules/.bin/quint typecheck packages/proofs/quint/SearchReadiness_none.qnt
+    packages/proofs/quint/node_modules/.bin/quint typecheck packages/proofs/quint/SearchDag_none.qnt
+    packages/proofs/quint/node_modules/.bin/quint typecheck packages/proofs/quint/SearchEvidence_none.qnt
+
+[group('check')]
+check-search-engine-proof: check-composition-proof check-search-model-bindings check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme check-search-framework-scheme check-search-evidence-scheme
 
 # Static native Context/Temporal closure avoids Darwin dynamic-module teardown.
 [group('test')]

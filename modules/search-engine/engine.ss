@@ -6,11 +6,16 @@
         (only-in :std/list/list every filter ormap)
         :poo-flow/src/core/object-syntax
         :poo-flow/modules/search-engine/funs
-        :poo-flow/modules/search-engine/attempt)
+        :poo-flow/modules/search-engine/attempt
+        (only-in :poo-flow/modules/temporal-causality/types poo-flow-causal-event?)
+        (only-in :poo-flow/modules/temporal-causality/objects
+                 poo-flow-temporal-observation poo-flow-causal-event)
+        (only-in :poo-flow/modules/temporal-causality/funs poo-flow-causal-event-graph))
 (export poo-flow-search-engine poo-flow-search-engine-frontier
         poo-flow-search-engine-issue poo-flow-search-engine-complete
         poo-flow-search-engine-revise poo-flow-search-engine-node
-        poo-flow-search-engine-cancel)
+        poo-flow-search-engine-cancel
+        poo-flow-search-engine-require-evidence poo-flow-search-engine-observe)
 
 ;;; Private lowering protocol; the public engine and nodes are POO objects.
 (defstruct lowered (nodes terminals))
@@ -24,7 +29,7 @@
               (slots ((kind 'search-engine-node) (name name) (stage node)
                       (dependencies (map values parents))
                       (state (poo-flow-search-attempt-state node generation configuration source-cut))
-                      (request #f) (completion #f))) (supers)))
+                      (request #f) (completion #f) (evidence #f))) (supers)))
        (list name))))
    ((poo-flow-search-composition? node)
     (let ((children (.ref node 'children)) (mode (.ref node 'mode)))
@@ -57,7 +62,7 @@
             (error "duplicate Search stage identity or invalid dependency" name))
           (loop (cdr remaining) (cons name seen)))))
     (poo-core-role-object
-     (slots ((kind 'search-engine) (strategy strategy) (nodes nodes))) (supers))))
+     (slots ((kind 'search-engine) (strategy strategy) (nodes nodes) (evidence-required? #f))) (supers))))
 
 (def (require-engine engine)
   (unless (and (object? engine) (eq? (.ref engine 'kind) 'search-engine))
@@ -75,6 +80,8 @@
                        (.ref node 'dependencies))))
     (and (not (.ref state 'retired?)) (not (.ref state 'active))
          (not (.ref node 'completion))
+         (or (not (.ref engine 'evidence-required?))
+             (every (lambda (parent) (.ref parent 'evidence)) parents))
          (poo-flow-search-attempt-ready? state
            (map (lambda (parent) (.ref parent 'request)) parents)
            (map (lambda (parent) (.ref parent 'completion)) parents)))))
@@ -102,12 +109,75 @@
        (slots ((kind 'search-engine-issue) (engine (replace-node engine next))
                (request request))) (supers)))))
 
-(def (poo-flow-search-engine-complete engine name request)
+(def (complete-node engine name request)
   (let* ((node (poo-flow-search-engine-node engine name))
          (completion (poo-flow-search-attempt-complete (.ref node 'state) request))
          (next (poo-core-role-object
                 (slots ((state (.ref completion 'state)) (completion completion))) (supers node))))
     (replace-node engine next)))
+
+
+;;; Select the evidence contract before issuing any work. This is a pure POO refinement.
+(def (poo-flow-search-engine-require-evidence engine)
+  (require-engine engine)
+  (unless (every (lambda (node) (= (.ref (.ref node 'state) 'next-attempt) 0)) (.ref engine 'nodes))
+    (error "Search evidence contract must be selected before execution"))
+  (poo-core-role-object (slots ((evidence-required? #t))) (supers engine)))
+
+(def (poo-flow-search-engine-complete engine name request)
+  (when (.ref engine 'evidence-required?)
+    (error "Search evidence contract requires an admitted Temporal observation"))
+  (complete-node engine name request))
+
+;;; Snapshot text identities so later mutation of caller-owned strings cannot change evidence.
+(def (snapshot-event event)
+  (let (observation (.ref event 'observation))
+    (poo-flow-causal-event
+     (string-copy (.ref event 'identity)) (string-copy (.ref event 'subject))
+     (.ref event 'event-kind)
+     (poo-flow-temporal-observation
+      (string-copy (.ref observation 'identity)) (.ref observation 'clock-role)
+      (.ref observation 'logical-position)
+      (string-copy (.ref observation 'provenance-identity)))
+     (string-copy (.ref event 'payload-identity))
+     (map string-copy (.ref event 'causal-parent-identities))
+     (.ref event 'modality) (.ref event 'committed?))))
+
+(def (poo-flow-search-engine-observe engine name request event)
+  (let* ((node (poo-flow-search-engine-node engine name))
+         (state (.ref node 'state))
+         (parents (map (lambda (parent) (poo-flow-search-engine-node engine parent))
+                       (.ref node 'dependencies))))
+    (unless (and (.ref engine 'evidence-required?)
+                 (poo-flow-search-attempt-current? state request)
+                 (poo-flow-causal-event? event)
+                 (.ref event 'committed?)
+                 (memq (.ref event 'modality) '(observed derived))
+                 (eq? (.ref event 'event-kind) name)
+                 (eq? (.ref (.ref event 'observation) 'clock-role) 'logical-version)
+                 (integer? (.ref (.ref event 'observation) 'logical-position))
+                 (>= (.ref (.ref event 'observation) 'logical-position) 0)
+                 (equal? (.ref event 'subject) (.ref request 'generation))
+                 (equal? (.ref (.ref event 'observation) 'provenance-identity)
+                         (.ref request 'source-cut))
+                 (every (lambda (parent) (.ref parent 'evidence)) parents))
+      (error "Search observation does not match the current evidence contract"))
+    (let* ((expected (map (lambda (parent) (.ref (.ref parent 'evidence) 'identity)) parents))
+           (actual (.ref event 'causal-parent-identities)))
+      (unless (and (= (length actual) (length expected))
+                   (every (lambda (identity) (member identity expected)) actual))
+        (error "Search causal parents must match current predecessor evidence"))
+      (let* ((retained (filter values (map (lambda (entry) (.ref entry 'evidence))
+                                          (.ref engine 'nodes))))
+             (snapshot (snapshot-event event))
+             (graph (poo-flow-causal-event-graph (.ref request 'generation)
+                                                (cons snapshot retained))))
+        (unless (.ref graph 'complete?)
+          (error "Search observation has missing or temporally invalid causal parents"))
+        (let* ((completed (complete-node engine name request))
+               (next (poo-flow-search-engine-node completed name)))
+          (replace-node completed
+            (poo-core-role-object (slots ((evidence snapshot))) (supers next))))))))
 
 ;;; Logical cancellation belongs to the generic engine, not its Rust consumer.
 ;;; An old request is a no-op; exact cancellation invalidates descendants too.
@@ -142,6 +212,6 @@
                      (if (memq (.ref node 'name) affected)
                        (poo-core-role-object
                         (slots ((state (poo-flow-search-attempt-revise (.ref node 'state) source-cut))
-                                (request #f) (completion #f))) (supers node))
+                                (request #f) (completion #f) (evidence #f))) (supers node))
                        node)) (.ref engine 'nodes)))))
      (supers engine))))

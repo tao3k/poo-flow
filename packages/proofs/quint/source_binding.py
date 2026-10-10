@@ -69,6 +69,11 @@ if __name__ == '__main__':
         root / "proofs/Composition/SearchReadiness.lean")
     print("SEARCH-READINESS-SOURCE-BINDING-OK " + readiness_digest, flush=True)
 
+    evidence_digest = check_binding(
+        root / "packages/proofs/quint/SearchEvidence.qnt",
+        root / "proofs/Composition/SearchEvidence.lean")
+    print("SEARCH-EVIDENCE-SOURCE-BINDING-OK " + evidence_digest, flush=True)
+
     dag_digest = check_binding(
         root / "packages/proofs/quint/SearchDag.qnt",
         root / "proofs/Composition/SearchDag.lean")

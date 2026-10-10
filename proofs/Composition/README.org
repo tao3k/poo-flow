@@ -54,7 +54,7 @@ Scheme, Lean and Quint advance together over the same named transitions:
 | Exact request identity and cancellation | search-engine/attempt.ss, engine.ss | SearchAttempt admission, cancellation and revision laws | SearchAttempt safety and cancelAny control |
 | Predecessor completion admission | search-engine/attempt.ss, engine.ss | SearchReadiness, SearchDag frontier_exact | SearchReadiness presence, freshness and scope controls |
 | Selective descendant invalidation | search-engine/engine.ss | SearchTemporal; LeanPoo CertifiedInvalidation; SearchDag descendant settlement rejection | SearchDag FreshResults and BranchRetention |
-| Temporal evidence validity and observed causality | temporal-causality observations, Search factor observations | Separate evidence/graph correspondence obligation | Requires an explicit evidence-state projection before closure |
+| Temporal event admission | temporal-causality event graph and search-engine/engine-observe | SearchEvidence scope, order, parent and invalidation laws | SearchEvidence positive model and four guard mutants |
 
 LeanPoo remains the immutable dependency declared in =lakefile.toml= and
 =lake-manifest.json=. Search models reuse its graph and invalidation certificate
@@ -117,7 +117,7 @@ backend cancellation. Arbitrary extended POO objects are not authentication
 certificates.
 
 Run =just check-search-engine-proof= to combine the Lean certificate/axiom gate,
-Quint positive and negative cases, and twenty-two actual Scheme control cases.
+Quint positive and negative cases, and twenty-eight actual Scheme control cases.
 The Scheme gate bootstraps Gxi and invokes the upstream GxTest entry point.
 The standalone GxTest executable's local =__eval-import= failure also occurs
 in the unchanged Search framework suite; that failure is retained separately
@@ -184,3 +184,40 @@ active MRR runtime pins, backend dispatch/cancellation, candidate payload truth,
 negative-evidence dependencies, observation policy and source-level refinement
 remain separate gates. The Lean graph projection and Scheme composition lowering
 have matched executable controls, not a mechanically proved parser/refinement link.
+
+* Temporal evidence admission increment
+
+=engine-require-evidence= selects the Temporal evidence contract before the first
+attempt is issued. It refines the existing POO engine, retaining the same DAG
+lowering, request lineage and selective invalidation. =engine-observe= requires
+an exact active request and a committed observed or derived Temporal event.
+The event binds its stage, generation and source cut; its logical-version
+position is a nonnegative integer. Its causal parent identities must match
+current predecessor observations exactly. The existing Temporal event-graph
+analyzer checks unique event identities, missing parents and strict temporal
+order. Arrival order does not define causality.
+
+Evidence is copied on admission, including nested observation identities and
+parent strings. Revision/cancellation clears evidence on the affected stage and
+its structural descendants, preserving independent branches. Identity-only
+=engine-complete= cannot satisfy the evidence-required contract. The original
+identity-only contract remains a boundary check and does not certify evidence.
+
+=SearchEvidence.lean= imports the LeanPoo-backed =SearchDag= model. It proves
+scope binding, missing-parent rejection, uncommitted rejection, temporal-order
+rejection and invalidated-descendant rejection. Its observation inventory is
+assumed to contain current owner-admitted predecessors; authenticating that
+inventory is outside the mathematical abstraction. =SearchEvidence.qnt=
+fixes a three-stage graph and abstracts each returned event's parent, scope,
+order and commitment checks as Boolean projections. It declares an explicit
+completed terminal transition and requires four omitted-guard mutants to fail.
+This abstraction does not establish correctness of the Temporal parser/analyzer.
+
+=just check-search-engine-proof= joins four Scheme suites (28 cases), all four
+Quint groups, the maintained LeanPoo dependency and axiom/source-binding gates.
+The six new Scheme cases exercise actual Temporal event construction, fan-in,
+bad parents, source/stage/modality rejection, time ordering, revision and
+immutable snapshots. Full payload truth, coverage/absence dependencies, retained
+inventory authentication and Scheme source refinement remain open. MRR's wire
+controller must separately qualify transport of this evidence contract before
+downstream execution can claim it.

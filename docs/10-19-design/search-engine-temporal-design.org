@@ -229,6 +229,18 @@ produce invariant violations. Lean proves =stale_cancel_noop= and
 These checks qualify the stated transition laws and exercised Scheme controls;
 they do not establish whole-program refinement or downstream adapter closure.
 
+* Implemented Temporal observation contract
+
+The engine now offers =poo-flow-search-engine-require-evidence= and
+=poo-flow-search-engine-observe=. The contract is selected before issuing any
+attempt. Observation admission binds the current request to an actual Temporal
+event, exact current predecessor evidence and strictly ordered causal parents.
+Selective revision clears affected observations; independent branches remain
+available. The producer Lean/Quint projection and actual Scheme controls are
+maintained together in [[file:../../proofs/Composition/README.org][the assurance package]].
+Coverage, absence evidence, source authentication and downstream transport are
+separate remaining obligations.
+
 * Remaining acceptance
 
 Remaining producer invariants include: no stage readiness without valid inputs;

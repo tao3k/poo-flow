@@ -1,0 +1,74 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test (only-in :clan/poo/object .ref)
+        :poo-flow/modules/search-engine/interface)
+(export search-evidence-test)
+(def (stage name input output)
+  (poo-flow-search-stage name 'search '() input output poo-flow-search-acquisition-role))
+(def a (stage 'a 'source 'candidates))
+(def b (stage 'b 'source 'candidates))
+(def branches (poo-flow-search-parallel 'branches (list a b)))
+(def c (stage 'c (poo-flow-search-node-output-domain branches) 'results))
+(def strategy (poo-flow-search-strategy 'search (poo-flow-search-merge 'join branches c) '()))
+(def (initial)
+  (poo-flow-search-engine-require-evidence
+   (poo-flow-search-engine strategy "generation" "configuration" "cut")))
+(def (reject? thunk) (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
+(def (event factor id position parents . cut)
+  (poo-flow-search-factor-observation id "generation" factor "candidate" position
+    (if (null? cut) "cut" (car cut)) parents 'derived #t))
+(def (observe engine name observation)
+  (let (issued (poo-flow-search-engine-issue engine name))
+    (poo-flow-search-engine-observe (.ref issued 'engine) name (.ref issued 'request) observation)))
+(def (parents-done)
+  (observe (observe (initial) 'b (event b "B" 1 '())) 'a (event a "A" 2 '())))
+(def search-evidence-test
+  (test-suite "Search Engine Temporal evidence"
+    (test-case "observed fan-in follows causal evidence rather than arrival order"
+      (let* ((done (parents-done)) (joined (observe done 'c (event c "C" 3 '("B" "A")))))
+        (check (poo-flow-search-engine-frontier done) => '(c))
+        (check (poo-flow-search-engine-frontier joined) => '())
+        (check (.ref (.ref (poo-flow-search-engine-node joined 'c) 'evidence)
+                     'causal-parent-identities) => '("B" "A"))))
+    (test-case "declared edges cannot replace missing or foreign observed parents"
+      (let* ((issued (poo-flow-search-engine-issue (parents-done) 'c))
+             (next (.ref issued 'engine)) (request (.ref issued 'request)))
+        (for-each (lambda (parents)
+                    (check (reject? (lambda ()
+                      (poo-flow-search-engine-observe next 'c request (event c "C" 3 parents)))) => #t))
+                  '(("A") ("A" "foreign") ("A" "A")))))
+    (test-case "wrong source stage and uncommitted evidence cannot settle an attempt"
+      (let* ((issued (poo-flow-search-engine-issue (initial) 'a))
+             (next (.ref issued 'engine)) (request (.ref issued 'request)))
+        (for-each (lambda (observation)
+          (check (reject? (lambda ()
+            (poo-flow-search-engine-observe next 'a request observation))) => #t))
+          (list (event a "A" 1 '() "old-cut") (event b "B" 1 '())
+                (poo-flow-search-factor-observation "H" "generation" a "candidate" 1
+                  "cut" '() 'hypothesized #f)))))
+    (test-case "causal parents must strictly precede their observed child"
+      (let* ((issued (poo-flow-search-engine-issue (parents-done) 'c))
+             (next (.ref issued 'engine)) (request (.ref issued 'request)))
+        (check (reject? (lambda ()
+          (poo-flow-search-engine-observe next 'c request (event c "C" 2 '("A" "B"))))) => #t)))
+    (test-case "revision clears dependent evidence and retains independent observations"
+      (let* ((done (observe (parents-done) 'c (event c "C" 3 '("A" "B"))))
+             (revised (poo-flow-search-engine-revise done '(a) "cut2"))
+             (fresh (observe revised 'a (event a "A2" 4 '() "cut2")))
+             (joined (observe fresh 'c (event c "C2" 5 '("A2" "B") "cut2"))))
+        (check (.ref (poo-flow-search-engine-node revised 'a) 'evidence) => #f)
+        (check (.ref (poo-flow-search-engine-node revised 'c) 'evidence) => #f)
+        (check (eq? (poo-flow-search-engine-node done 'b)
+                    (poo-flow-search-engine-node revised 'b)) => #t)
+        (check (poo-flow-search-engine-frontier joined) => '())))
+    (test-case "evidence contract rejects identity-only completion and snapshots events"
+      (let* ((issued (poo-flow-search-engine-issue (initial) 'a))
+             (next (.ref issued 'engine)) (request (.ref issued 'request))
+             (identity (string-copy "A"))
+             (observation (event a identity 1 '()))
+             (done (poo-flow-search-engine-observe next 'a request observation)))
+        (check (reject? (lambda () (poo-flow-search-engine-complete next 'a request))) => #t)
+        (check (reject? (lambda () (poo-flow-search-engine-require-evidence next))) => #t)
+        (string-set! identity 0 #\Z)
+        (check (.ref (.ref (poo-flow-search-engine-node done 'a) 'evidence) 'identity) => "A")))))
