@@ -902,10 +902,11 @@ check-search-engine-proof: check-composition-proof check-search-model-bindings c
 test-context-temporal-native executable:
     #!/usr/bin/env bash
     set -euo pipefail
+    test -s "{{ executable }}.modules"
     test -x "{{ executable }}"
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/ai-agentic-context-org-anchors-test.ss t/query-orgize-source-test.ss 2>&1 | tee "$log"
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} --module-order "{{ executable }}.modules" -v 5 t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/ai-agentic-context-org-anchors-test.ss t/query-orgize-source-test.ss 2>&1 | tee "$log"
     if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|\*\*\* ERROR|Heap overflow|Stack overflow' "$log"; then exit 1; fi
     test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 69
     for module in temporal-evaluator ai-agentic-context-session-host ai-agentic-context-delta session-attempt ai-agentic-context-org-anchors query-orgize-source; do grep -Fx "MODULE-OK t/${module}-test.ss" "$log" >/dev/null; done

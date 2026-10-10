@@ -249,3 +249,34 @@ pass from progressing. The exited process group and specific private lock were
 checked before each abandoned lock was removed. Completed compiler objects were
 reused; no watchdog or runtime test limit was widened. All failed passes remain
 local diagnostic artifacts, not source-controlled logs.
+
+** Fresh native consumer qualification
+
+A newly linked native executable against parser
+=78507e68b1275be1be748be465d6354f596d9063= and Orgize
+=790212d09d0d5d7294a06c9657a8737d9a3e1728= completed all 69 cases,
+six MODULE-OK receipts, HARNESS-OK, final OK and process exit zero. The
+consumer used isolated producer namespaces rather than the earlier native
+executable or older Orgize/parser products. Runtime budgets remain five seconds
+without output, 45 seconds total and a one GiB heap.
+
+Linux consumer CI at =7eb126c485240792885a06e453bfdfcd3b5f2236= reached
+linking but lacked the Query source test static module. The build entry now
+explicitly declares all six suite modules before its executable target. A matched
+control removed the private Query suite static product; the build recompiled
+that suite, recreated the missing product and linked successfully with exit zero.
+
+The qualification build now delegates native object jobs and the final link
+barrier to Gerbil's std/make, with four build workers. The build computes the
+entrypoint's dependency order using the official compiler/expander and publishes
+a companion =.modules= artifact after successful linking. Startup imports each
+module after its dependencies and reports only completed imports. This removes
+recursive dependency discovery from the runtime startup path while retaining
+official gxtest discovery, assertions and exit propagation. No test assertion or
+watchdog was weakened. The earlier serial link timeout and silent startup
+watchdog failure remain negative receipts.
+
+This closes the local fresh native Context/Temporal/Session consumer gate.
+Exact-head remote consumer CI and the independent producer qualification remain
+separate gates. It does not establish complete provider refinement, durable
+MRR Data integration or an end-to-end scheduling performance advantage.

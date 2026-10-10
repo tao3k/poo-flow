@@ -197,11 +197,11 @@ jobs:
       - name: Compile static Context and Temporal proof qualification
         env:
           CORCXXFLAGS_GAMBUILD: -O0 -pipe -foptimize-sibling-calls
+          GERBIL_BUILD_CORES: '4'
         run: |
           if [[ "$RUNNER_OS" == "macOS" ]]; then export GERBIL_GCC=/usr/bin/clang; fi
           gerbil env gxi -:max-heap=1G,debug=q t/qualification/context-temporal-native/prepare-static-tools.ss
-          gerbil env gxc -:max-heap=1G,debug=q -V -O t/temporal-evaluator-test.ss
-          gerbil env gxc -:max-heap=1G,debug=q -exe -o "$RUNNER_TEMP/context-temporal-native" t/qualification/context-temporal-native/native-test.ss
+          gerbil env gxi -:max-heap=1G,debug=q t/qualification/context-temporal-native/build.ss "$RUNNER_TEMP/context-temporal-native"
 
       - name: Check original Temporal proof binding and Session invalidation
         env:
