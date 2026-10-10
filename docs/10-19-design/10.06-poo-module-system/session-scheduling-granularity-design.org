@@ -186,3 +186,12 @@ reuse and dropped interruption obligations; replay through native boundaries.
 
 This is a proposed protocol refinement. Existing headline replay, Module closure
 and source-role regression receipts do not qualify these scheduling capabilities.
+
+* Context Delta formal model gate
+
+[[file:context-delta-lean-quint-model-design.org][Context Delta Lean/Quint Model Design]] defines structural reference admission,
+coverage including new/deleted units and nonlocal Query dependencies, exact
+consumer/current-use fences, finite interleavings and native trace correspondence.
+Full-target differential admission precedes dependency-based incremental work.
+Neither source-digest binding nor finite abstract traces alone prove semantic
+refinement or qualify production Delta consumption.

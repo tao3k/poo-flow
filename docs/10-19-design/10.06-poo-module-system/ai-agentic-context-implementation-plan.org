@@ -287,3 +287,12 @@ acceptance, Attempt/Turn routing, admitted output-port release and Context slice
 Implement pure readiness/routing before runtime reuse or delta transport. A
 fresh Session per Attempt is not the default allocation rule; compatible reuse
 requires scope/history admission and preserves each Attempt's exact receipts.
+
+* Context Delta formal model gate
+
+[[file:context-delta-lean-quint-model-design.org][Context Delta Lean/Quint Model Design]] defines structural reference admission,
+coverage including new/deleted units and nonlocal Query dependencies, exact
+consumer/current-use fences, finite interleavings and native trace correspondence.
+Full-target differential admission precedes dependency-based incremental work.
+Neither source-digest binding nor finite abstract traces alone prove semantic
+refinement or qualify production Delta consumption.
