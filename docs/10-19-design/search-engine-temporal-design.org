@@ -236,7 +236,9 @@ The engine now offers =poo-flow-search-engine-require-evidence= and
 attempt. Observation admission binds the current request to an actual Temporal
 event, exact current predecessor evidence and strictly ordered causal parents.
 Selective revision clears affected observations; independent branches remain
-available. The producer Lean/Quint projection and actual Scheme controls are
+available. Admitted event identities remain in the engine generation's history,
+so invalidation cannot make an old identity available for a new observation.
+Rejected observations neither settle attempts nor reserve event identities. The producer Lean/Quint projection and actual Scheme controls are
 maintained together in [[file:../../proofs/Composition/README.org][the assurance package]].
 Coverage, absence evidence, source authentication and downstream transport are
 separate remaining obligations.

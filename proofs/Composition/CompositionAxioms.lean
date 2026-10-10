@@ -6,7 +6,7 @@ import SearchAttempt
 import SearchTemporal
 import SearchReadiness
 import SearchDag
-import SearchEvidence
+import SearchEvidenceHistory
 import Lean.Util.CollectAxioms
 import Lean.Elab.Command
 open Lean Elab Command

@@ -74,6 +74,12 @@ if __name__ == '__main__':
         root / "proofs/Composition/SearchEvidence.lean")
     print("SEARCH-EVIDENCE-SOURCE-BINDING-OK " + evidence_digest, flush=True)
 
+    history_digest = check_binding(
+        root / "packages/proofs/quint/SearchEvidenceHistory.qnt",
+        root / "proofs/Composition/SearchEvidenceHistory.lean",
+        digest_name="historySourceDigest", inventory_name="historyInvariantNames")
+    print("SEARCH-EVIDENCE-HISTORY-SOURCE-BINDING-OK " + history_digest, flush=True)
+
     dag_digest = check_binding(
         root / "packages/proofs/quint/SearchDag.qnt",
         root / "proofs/Composition/SearchDag.lean")

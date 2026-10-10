@@ -117,7 +117,7 @@ backend cancellation. Arbitrary extended POO objects are not authentication
 certificates.
 
 Run =just check-search-engine-proof= to combine the Lean certificate/axiom gate,
-Quint positive and negative cases, and twenty-eight actual Scheme control cases.
+Quint positive and negative cases, and thirty actual Scheme control cases.
 The Scheme gate bootstraps Gxi and invokes the upstream GxTest entry point.
 The standalone GxTest executable's local =__eval-import= failure also occurs
 in the unchanged Search framework suite; that failure is retained separately
@@ -213,11 +213,36 @@ order and commitment checks as Boolean projections. It declares an explicit
 completed terminal transition and requires four omitted-guard mutants to fail.
 This abstraction does not establish correctness of the Temporal parser/analyzer.
 
-=just check-search-engine-proof= joins four Scheme suites (28 cases), all four
+=just check-search-engine-proof= joins four Scheme suites (30 cases), all five
 Quint groups, the maintained LeanPoo dependency and axiom/source-binding gates.
-The six new Scheme cases exercise actual Temporal event construction, fan-in,
+The eight evidence Scheme cases exercise actual Temporal event construction, fan-in,
 bad parents, source/stage/modality rejection, time ordering, revision and
 immutable snapshots. Full payload truth, coverage/absence dependencies, retained
 inventory authentication and Scheme source refinement remain open. MRR's wire
 controller must separately qualify transport of this evidence contract before
 downstream execution can claim it.
+
+* Event identity history across revision
+
+The engine retains =event-identities= independently of current node evidence.
+Every successfully admitted observation adds its copied identity to this
+generation's history. Revision and exact cancellation clear invalidated node
+evidence but retain the history, so a previously admitted event identity cannot
+be assigned to a later attempt even when its old observation is no longer in the
+current causal graph. Failed admission leaves both the active attempt and the
+identity history unchanged. This rule applies to one authoritative retained
+state lineage; replaying an older engine snapshot remains outside exactly-once
+execution guarantees.
+
+=SearchEvidenceHistory.lean= reuses the =SearchEvidence= admission contract and
+the LeanPoo-backed graph model. It proves monotonic history retention and
+rejection of a historical identity, including after revision.
+=SearchEvidenceHistory.qnt= explores one stage, two revisions and two event
+identities. Its positive model and two mutants qualify unique admission and
+history retention; they do not model arbitrary graph or source authentication.
+The source digest and invariant inventory are checked by the joined gate.
+
+History grows by one identity per admitted observation within an engine
+generation. It is not discarded when current evidence is invalidated. Engine
+retirement and consumer resource bounds must manage generation lifetime; no
+implicit history reset or guessed retention window is used to admit old IDs.

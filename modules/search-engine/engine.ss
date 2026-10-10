@@ -62,7 +62,7 @@
             (error "duplicate Search stage identity or invalid dependency" name))
           (loop (cdr remaining) (cons name seen)))))
     (poo-core-role-object
-     (slots ((kind 'search-engine) (strategy strategy) (nodes nodes) (evidence-required? #f))) (supers))))
+     (slots ((kind 'search-engine) (strategy strategy) (nodes nodes) (evidence-required? #f) (event-identities '()))) (supers))))
 
 (def (require-engine engine)
   (unless (and (object? engine) (eq? (.ref engine 'kind) 'search-engine))
@@ -151,6 +151,7 @@
     (unless (and (.ref engine 'evidence-required?)
                  (poo-flow-search-attempt-current? state request)
                  (poo-flow-causal-event? event)
+                 (not (member (.ref event 'identity) (.ref engine 'event-identities)))
                  (.ref event 'committed?)
                  (memq (.ref event 'modality) '(observed derived))
                  (eq? (.ref event 'event-kind) name)
@@ -176,8 +177,11 @@
           (error "Search observation has missing or temporally invalid causal parents"))
         (let* ((completed (complete-node engine name request))
                (next (poo-flow-search-engine-node completed name)))
-          (replace-node completed
-            (poo-core-role-object (slots ((evidence snapshot))) (supers next))))))))
+          (poo-core-role-object
+           (slots ((event-identities (cons (string-copy (.ref snapshot 'identity))
+                                          (.ref engine 'event-identities)))))
+           (supers (replace-node completed
+                     (poo-core-role-object (slots ((evidence snapshot))) (supers next))))))))))
 
 ;;; Logical cancellation belongs to the generic engine, not its Rust consumer.
 ;;; An old request is a no-op; exact cancellation invalidates descendants too.

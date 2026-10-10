@@ -33,4 +33,7 @@ jobs:
           python3 pin_dependency.py .
           lake build
           lake env lean --run CompositionChecks.lean
+          lake env lean --run SearchTemporalChecks.lean
+          lake env lean --run SearchReadinessChecks.lean
+          lake env lean --run SearchDagChecks.lean
           lake env lean CompositionAxioms.lean

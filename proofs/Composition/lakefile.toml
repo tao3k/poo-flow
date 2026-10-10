@@ -3,7 +3,7 @@
 
 name = "POOFlowCompositionProofs"
 version = "0.1.0"
-defaultTargets = ["PooFlowComposition", "SearchAttempt", "SearchTemporal", "SearchReadiness", "SearchDag", "SearchEvidence"]
+defaultTargets = ["PooFlowComposition", "SearchAttempt", "SearchTemporal", "SearchReadiness", "SearchDag", "SearchEvidence", "SearchEvidenceHistory"]
 moreLeanArgs = ["-DautoImplicit=false", "-DwarningAsError=true"]
 
 [[require]]
@@ -28,3 +28,6 @@ name = "SearchDag"
 
 [[lean_lib]]
 name = "SearchEvidence"
+
+[[lean_lib]]
+name = "SearchEvidenceHistory"
