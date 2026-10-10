@@ -203,6 +203,29 @@ zero exit is not a complete producer receipt. Both failed Orgize attempts exited
 70. Fresh producer and consumer qualification remains open without extending
 the watchdog, substituting older artifacts or changing runtime test assertions.
 
+** Source-owned producer bootstrap
+
+Linux consumer CI at =7a031aee3a07530aa3a6acac5d2d4e74afa1885c= failed in both
+native dependency installation and the isolated Bazel package build because
+Orgize's standard build did not generate =orgize/fold= before importing it.
+Orgize now publishes =790212d09d0d5d7294a06c9657a8737d9a3e1728= with an owned
+declaration/generation/runtime bootstrap. The public event and headline property
+interfaces are explicit build targets. POO Flow pins this producer and remains a
+consumer of its public interfaces; it does not generate Org parsing modules.
+
+The producer's standard package build completed with exit zero. Its dynamic
+profile uses =std/make= and verifies the SDK loader's selected versioned products;
+assuming =.o1= would reject valid later object versions. Unchanged generated
+source is retained. A successful repeat rebuilt no fold units. Removing one
+owned inline loader product triggered exactly one fold-unit rebuild and a
+successful completeness check. Earlier failed trials remain negative receipts.
+
+The producer's four-case dynamic source-headline qualification entry failed its
+five-second output watchdog before emitting cases. No timeout was extended.
+Fresh native consumer behavior remains required. The POO Flow production build
+against these products completed in a continuation after its first bounded
+180-second pass timed out; the initial pass remains a failed receipt.
+
 ** Earlier candidate metadata controls
 
 Regeneration produced 105 source units. Removing the four empty import forms
