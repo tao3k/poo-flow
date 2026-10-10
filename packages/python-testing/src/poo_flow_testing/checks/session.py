@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Session and Worktree proof orchestration through the shared Quint gate."""
 from ..model import CaseContext, CaseEvidence
-from .quint import GROUPS, check_quint
+from .quint import check_quint
+from .quint_cases import GROUPS
 
 
 def check_quint_model(context: CaseContext, model: str) -> CaseEvidence:
