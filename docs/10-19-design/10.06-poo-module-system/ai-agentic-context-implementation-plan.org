@@ -264,3 +264,18 @@ Test artifact compilation retained the prior qualification-only
 compiler settings were unchanged. English-only content, local Org links and
 =git diff --check= passed. This receipt covers role alignment and preserved
 behavior, not the proposed Session/Memory lifecycle protocols.
+
+* Next design slice: identity, Org binding and scheduling
+
+Follow [[file:session-org-id-subagent-scheduling-design.org][the Session identity and scheduling contract]] in this order:
+
+1. Textual runtime Session ID admission and direct migration of symbol-ID owners.
+2. Bounded Org property-ID Query/profile, unique source-backed bindings and replay.
+3. Native Session task/attempt/schedule values and pure DAG/claim/budget transitions.
+4. Context per-child input/disclosure and parent result-admission adapters.
+5. Bounded event-driven runtime queues, joins, cancellation and recovery.
+6. Matched Quint/native traces and controlled scheduler performance receipts.
+
+The CLM paper is research input for editable working Context, not qualification
+of this scheduler. Existing finite models, eight core tests and package-build
+receipts remain baseline evidence with their previously declared scope.

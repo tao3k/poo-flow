@@ -406,3 +406,12 @@ cross-Session handoff, policy retirement, lease expiry, and restart.
 Report design acceptance, implemented Library profile, bounded model checking,
 native correspondence, and exact-head consumer CI separately. The full system
 is not complete until its declared consumption and recovery boundaries qualify.
+
+* Session identity and subagent scheduling refinement
+
+[[file:session-org-id-subagent-scheduling-design.org][Session IDs, Org Property Anchors and Subagent Scheduling]] specifies stable
+Session identity, admitted many-to-many Org ID bindings, per-child Context
+projections, task DAG/claim/join semantics and bounded incremental scheduling.
+Session owns scheduling semantics; Context owns Org binding and projection
+admission. The scheduling runtime and new property-ID source profile are
+proposed implementation slices, not covered by existing headline replay tests.
