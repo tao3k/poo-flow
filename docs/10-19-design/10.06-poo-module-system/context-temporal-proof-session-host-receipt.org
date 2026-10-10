@@ -81,7 +81,7 @@ All effect/source/durability flags remain false. Provider dispatch, result
 admission, FFI capsule transport, MRR consumer qualification, MRR Data durable
 atomic fences and terminal receipt resolution remain open.
 
-* Completed local receipt
+* Initial local receipt before the Orgize pin migration
 
 The canonical production =./build.ss= completed with normal compiler settings.
 Workflow actionlint and git diff whitespace checks passed.
@@ -110,3 +110,33 @@ linkage or failed progress checks are retained as negative local logs. The
 completed build reused compiler-owned objects without widening time limits.
 The native CI job now builds and runs the same executable. Remote CI completion
 must be checked against the pushed commit before claiming consumer qualification.
+
+* Orgize native event migration
+
+The concurrent PR dependency update pins Orgize to
+=7561f82166124050a157c4fadc5f17927945dbea=. That producer removes the
+=languages/org/v1= interfaces and the Rowan parser operation. The consumer now
+imports =languages/org= and calls =parse-org-native-events= directly. Its parser
+identity is =orgize.org-v1.native-events+headline-properties.v1=; historical
+receipts keep their original dependency boundary.
+
+Orgize requires parser =a36c4d1ba23245d0768c60c9a2e08ca8ccc01e6d=.
+The consumer direct pin, immutable archive digest and cross-platform Bazel lock
+projections are aligned with that requirement. The earlier remote native job at
+=2979253a37fd5f5285bb192934782f3ad626048f= rejected the previous parser pin
+with an incompatible-tag error. This alignment addresses that exact failure;
+it does not establish subsequent clean-install success.
+
+The native qualification entry now includes eight Org ID controls and four
+source-replay controls in addition to the original 57 controls. Its executable
+gate requires 69 cases, six module receipts, HARNESS-OK, final OK and exit zero.
+The Orgize generated native fold source remains producer-owned. Its generation
+and consumed source/runtime interface build completed under the same SDK as the
+consumer. Foreign producer SDK objects were rejected as ABI-incompatible and
+were not used for qualification.
+
+The complete producer parser build also attempts optional bridge modules. Its
+=gerbil-scheme-rust/scheme/native= import failed to resolve =:std/foreign= in
+this local SDK. That negative receipt remains open; the consumed source/runtime
+interface build is a separate successful boundary. No complete Orgize bridge,
+MRR transport or MRR Data integration claim follows from the native Context gate.

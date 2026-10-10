@@ -36,11 +36,11 @@ gerbil_dependency_sources.source_package(
     name = "gerbil_parser_sources",
     canonical_uri = "https://github.com/tao3k/gerbil-parser",
     package = "gerbil-parser",
-    revision = "4a27d9809a094eb410d46927709b4b26fe1a584e",
-    sha256 = "8f3ffc774a1a9e56409997e0c7a27a865a7a57296629c2defa82e3e78ccd6226",
-    strip_prefix = "gerbil-parser-4a27d9809a094eb410d46927709b4b26fe1a584e",
+    revision = "a36c4d1ba23245d0768c60c9a2e08ca8ccc01e6d",
+    sha256 = "b93d6a482866f1cfd8ec22e96be6c55481371e724f11803260fc0830c0167a04",
+    strip_prefix = "gerbil-parser-a36c4d1ba23245d0768c60c9a2e08ca8ccc01e6d",
     urls = [
-        "https://github.com/tao3k/gerbil-parser/archive/4a27d9809a094eb410d46927709b4b26fe1a584e.tar.gz",
+        "https://github.com/tao3k/gerbil-parser/archive/a36c4d1ba23245d0768c60c9a2e08ca8ccc01e6d.tar.gz",
     ],
 )
 gerbil_dependency_sources.source_package(

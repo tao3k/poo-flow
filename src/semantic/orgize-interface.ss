@@ -4,7 +4,7 @@
 
 ;;; Orgize owns Org Element and Contract semantics. POO Flow publishes the
 ;;; parser-independent POO runtime as a dependency-backed semantic boundary.
-(import :orgize/languages/org/v1/modules/org-elements/runtime-interface
-        :orgize/languages/org/v1/modules/org-contract/runtime-interface)
-(export (import: :orgize/languages/org/v1/modules/org-elements/runtime-interface)
-        (import: :orgize/languages/org/v1/modules/org-contract/runtime-interface))
+(import :orgize/languages/org/modules/org-elements/runtime-interface
+        :orgize/languages/org/modules/org-contract/runtime-interface)
+(export (import: :orgize/languages/org/modules/org-elements/runtime-interface)
+        (import: :orgize/languages/org/modules/org-contract/runtime-interface))

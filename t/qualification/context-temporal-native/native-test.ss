@@ -7,7 +7,9 @@
         "../../temporal-evaluator-test.ss"
         "../../ai-agentic-context-session-host-test.ss"
         "../../ai-agentic-context-delta-test.ss"
-        "../../session-attempt-test.ss")
+        "../../session-attempt-test.ss"
+        "../../ai-agentic-context-org-anchors-test.ss"
+        "../../query-orgize-source-test.ss")
 (export main)
 ;;; Native static closure follows the established parser/family qualification.
 ;;; Upstream gxtest still discovers suites and owns assertions and exit status.
