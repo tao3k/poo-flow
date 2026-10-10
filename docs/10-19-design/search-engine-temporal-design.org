@@ -240,6 +240,15 @@ available. Admitted event identities remain in the engine generation's history,
 so invalidation cannot make an old identity available for a new observation.
 Rejected observations neither settle attempts nor reserve event identities. The producer Lean/Quint projection and actual Scheme controls are
 maintained together in [[file:../../proofs/Composition/README.org][the assurance package]].
+The =poo-flow-search-engine-inputs= operation reads evidence for an exact current
+attempt. It returns detached Temporal snapshots in the original predecessor
+order; callers cannot mutate retained evidence through these inputs. Roots
+return an empty input list. Cancelled or invalidated attempts and missing
+predecessor observations are rejected. MRR delegates its input wire projection
+to this operation. Lean uses the original LeanPoo C4 parent orders for the
+=InputSnapshot= contract, and =SearchInputs= Quint checks stale-request and
+missing-evidence rejection with explicit negative controls.
+
 Coverage, absence evidence, source authentication and downstream transport are
 separate remaining obligations.
 

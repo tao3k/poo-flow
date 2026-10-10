@@ -25,6 +25,35 @@
   (observe (observe (initial) 'b (event b "B" 1 '())) 'a (event a "A" 2 '())))
 (def search-evidence-test
   (test-suite "Search Engine Temporal evidence"
+    (test-case "input snapshots are current and cannot mutate retained evidence"
+      (let* ((issued (poo-flow-search-engine-issue (parents-done) 'c))
+             (next (.ref issued 'engine)) (request (.ref issued 'request))
+             (inputs (poo-flow-search-engine-inputs next 'c request)))
+        (check (map (lambda (input) (.ref input 'identity)) inputs) => '("A" "B"))
+        (string-set! (.ref (car inputs) 'identity) 0 #\Z)
+        (string-set! (.ref (car inputs) 'payload-identity) 0 #\X)
+        (string-set! (.ref (.ref (car inputs) 'observation) 'provenance-identity) 0 #\Y)
+        (check (map (lambda (input) (.ref input 'identity))
+                    (poo-flow-search-engine-inputs next 'c request)) => '("A" "B"))
+        (check (.ref (.ref (poo-flow-search-engine-node next 'a) 'evidence) 'payload-identity)
+               => "candidate")
+        (check (poo-flow-search-engine-frontier
+                 (poo-flow-search-engine-observe next 'c request (event c "C" 3 '("A" "B"))))
+               => '())
+        (check (reject? (lambda ()
+          (poo-flow-search-engine-inputs
+            (poo-flow-search-engine-revise next '(a) "cut2") 'c request))) => #t)))
+    (test-case "roots have no fabricated inputs and identity-only sessions reject input reads"
+      (let* ((issued (poo-flow-search-engine-issue (initial) 'a))
+             (next (.ref issued 'engine)) (request (.ref issued 'request)))
+        (check (poo-flow-search-engine-inputs next 'a request) => '())
+        (check (reject? (lambda ()
+          (poo-flow-search-engine-inputs
+            (poo-flow-search-engine-cancel next 'a request) 'a request))) => #t))
+      (let* ((issued (poo-flow-search-engine-issue
+                      (poo-flow-search-engine strategy "generation" "configuration" "cut") 'a)))
+        (check (reject? (lambda ()
+          (poo-flow-search-engine-inputs (.ref issued 'engine) 'a (.ref issued 'request)))) => #t)))
     (test-case "observed fan-in follows causal evidence rather than arrival order"
       (let* ((done (parents-done)) (joined (observe done 'c (event c "C" 3 '("B" "A")))))
         (check (poo-flow-search-engine-frontier done) => '(c))

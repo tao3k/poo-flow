@@ -74,6 +74,12 @@ if __name__ == '__main__':
         root / "proofs/Composition/SearchEvidence.lean")
     print("SEARCH-EVIDENCE-SOURCE-BINDING-OK " + evidence_digest, flush=True)
 
+    inputs_digest = check_binding(
+        root / "packages/proofs/quint/SearchInputs.qnt",
+        root / "proofs/Composition/SearchEvidence.lean",
+        digest_name="inputsQuintSourceDigest", inventory_name="inputsQuintInvariantNames")
+    print("SEARCH-INPUTS-SOURCE-BINDING-OK " + inputs_digest, flush=True)
+
     history_digest = check_binding(
         root / "packages/proofs/quint/SearchEvidenceHistory.qnt",
         root / "proofs/Composition/SearchEvidenceHistory.lean",

@@ -4,6 +4,8 @@ import SearchDag
 namespace POO.Flow.SearchEvidence
 open POO.Flow.SearchAttempt
 def quintSourceDigest : String := "sha256:095affffc7d2c30046c04dfba89c6a54e7d2b6d784c368666f50514fe9663e60"
+def inputsQuintSourceDigest : String := "sha256:307e8e5dfbe6655625c1b160de50238e925c20a19430cce48583761856ed9e23"
+def inputsQuintInvariantNames : List String := ["CurrentInputs", "CompleteInputs"]
 def quintInvariantNames : List String :=
   ["ExactCausalParents", "ObservationScope", "TemporalOrder", "CommittedEvidence"]
 
@@ -81,5 +83,47 @@ theorem nonpreceding_parent_rejects {node : LeanPoo.C4.Node} {state : State}
   obtain ⟨actual, found, precedes⟩ := admitted.2.2.2.2.2.2.2.2.2 parent edge
   have same : actual = observed := Option.some.inj (found.symm.trans present)
   exact unordered (same ▸ precedes)
+
+/-- Read-only handoff uses the original C4 predecessor orders and a current attempt. -/
+def InputSnapshot (node : LeanPoo.C4.Node) (state : State) (request : Request)
+    (observations : String → Option Event) : Prop :=
+  Admits state request ∧ ∀ parent ∈ node.parentOrders.flatten,
+    ∃ observed, observations parent = some observed
+
+theorem stale_input_snapshot_rejects {node : LeanPoo.C4.Node} {state : State}
+    {request : Request} {observations : String → Option Event}
+    (stale : ¬ Admits state request) : ¬ InputSnapshot node state request observations := by
+  intro snapshot
+  exact stale snapshot.1
+
+theorem missing_input_snapshot_rejects {node : LeanPoo.C4.Node} {state : State}
+    {request : Request} {observations : String → Option Event} {parent : String}
+    (edge : parent ∈ node.parentOrders.flatten) (missing : observations parent = none) :
+    ¬ InputSnapshot node state request observations := by
+  intro snapshot
+  obtain ⟨observed, present⟩ := snapshot.2 parent edge
+  simp [missing] at present
+
+theorem input_snapshot_scope {node : LeanPoo.C4.Node} {state : State}
+    {request : Request} {observations : String → Option Event}
+    (snapshot : InputSnapshot node state request observations) :
+    request.scope = state.scope := snapshot.1.2.2
+
+theorem invalidated_descendant_input_rejects
+    {graph : LeanPoo.C4.Graph} {changed : List String}
+    (certificate : POO.Flow.SearchTemporal.ImpactCertificate graph changed)
+    (states : String → State) (cut : Nat) (node : LeanPoo.C4.Node)
+    (request : Request) (observations : String → Option Event) (origin : String) (steps : Nat)
+    (changedOrigin : origin ∈ changed)
+    (path : LeanPoo.Proof.Descendant graph origin steps node.name) :
+    ¬ InputSnapshot node
+      (POO.Flow.SearchDag.invalidateStates certificate states cut node.name)
+      request observations := by
+  intro snapshot
+  have cleared := POO.Flow.SearchDag.descendant_settlement_rejected
+    certificate states cut node.name origin steps request changedOrigin path
+  have accepted : settle (POO.Flow.SearchDag.invalidateStates certificate states cut node.name)
+      request ≠ none := by simp [settle, snapshot.1]
+  exact accepted cleared
 
 end POO.Flow.SearchEvidence

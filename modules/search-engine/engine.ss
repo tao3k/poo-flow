@@ -15,7 +15,8 @@
         poo-flow-search-engine-issue poo-flow-search-engine-complete
         poo-flow-search-engine-revise poo-flow-search-engine-node
         poo-flow-search-engine-cancel
-        poo-flow-search-engine-require-evidence poo-flow-search-engine-observe)
+        poo-flow-search-engine-require-evidence poo-flow-search-engine-observe
+        poo-flow-search-engine-inputs)
 
 ;;; Private lowering protocol; the public engine and nodes are POO objects.
 (defstruct lowered (nodes terminals))
@@ -142,6 +143,19 @@
      (string-copy (.ref event 'payload-identity))
      (map string-copy (.ref event 'causal-parent-identities))
      (.ref event 'modality) (.ref event 'committed?))))
+
+;;; Read evidence through the owner contract and return detached snapshots.
+;;; Consumers must not mutate retained evidence through their input values.
+(def (poo-flow-search-engine-inputs engine name request)
+  (let (node (poo-flow-search-engine-node engine name))
+    (unless (and (.ref engine 'evidence-required?)
+                 (poo-flow-search-attempt-current? (.ref node 'state) request))
+      (error "Search inputs require a current evidence-bound attempt"))
+    (map (lambda (parent)
+           (let (event (.ref (poo-flow-search-engine-node engine parent) 'evidence))
+             (unless event (error "missing Search predecessor evidence"))
+             (snapshot-event event)))
+         (.ref node 'dependencies))))
 
 (def (poo-flow-search-engine-observe engine name request event)
   (let* ((node (poo-flow-search-engine-node engine name))
