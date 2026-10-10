@@ -23,3 +23,6 @@ lean_lib PooFlowSessionProof where
              `PooFlowSessionProof.OrgMemory,
              `PooFlowSessionProof.PolicyC4,
              `PooFlowSessionProof.AxiomAudit]
+
+lean_lib PooFlowContextProof where
+  roots := #[`ContextDelta]

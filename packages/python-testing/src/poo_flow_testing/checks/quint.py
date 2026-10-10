@@ -59,6 +59,11 @@ GROUPS = {
                     QuintCase("TemporalPublicationGenerationMutation", "NoUnauthorizedCommit", True),
                     QuintCase("TemporalPublicationRetirementMutation", "NoUnauthorizedCommit", True)],
     "session": [],
+    "context-delta": [QuintCase("ContextDelta_none")] + [
+        QuintCase("ContextDelta_" + bug, inv, True) for bug, inv in [
+            ("ignoreCAS", "OnePublication"), ("ignoreCut", "ExactTargetCut"),
+            ("ignoreDelete", "ExactReconstruction"), ("ignoreUseCut", "CurrentConsumption"),
+            ("ignoreGrant", "AuthorizedConsumption")]],
 }
 SESSION_CASES = (
     ("ContextSession", "none", None),

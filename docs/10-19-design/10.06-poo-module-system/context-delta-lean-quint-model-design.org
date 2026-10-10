@@ -22,8 +22,8 @@ to Scheme contracts and concrete source bytes. Each has a separate evidence
 boundary; none alone proves the complete runtime or its performance.
 
 Current =modules/ai-agentic-context/funs-projection.ss= performs full bounded
-headline projection/replay; no Delta implementation or dependency-coverage
-certificate exists. Existing Lean Session/WorkTree laws and finite Quint Session
+headline projection/replay. The reference implementation receipt below extends
+that baseline; no dependency-coverage certificate exists yet. Existing Lean Session/WorkTree laws and finite Quint Session
 controls are baseline evidence, not this Delta qualification.
 
 * Contract vocabulary and initial restrictions
@@ -257,3 +257,55 @@ use; Session owns Attempt/Turn/CAS; Data owns durable conditional publication.
 Completion requires compiled Lean theorems and axiom audit, pinned Quint gates,
 matched native controls and exact consumer receipts. This document designs those
 gates; it does not report them as executed or passed.
+
+* Reference implementation receipt
+
+The core now exports native =AiAgenticContextDelta.= and
+=AiAgenticContextEdit.= proposals and a declarative Delta Type.
+=funs-delta.ss= owns =delta-between=, =delta-apply= and =delta-admit= public
+functions under the =poo-flow-ai-agentic-context-= prefix. Patch admission
+checks exact base, expected old units, duplicate identities and complete target
+order. Source admission replays the original bytes, constructs the target from
+current bytes and compares both content and recomputed target commitment.
+It returns freshly constructed values with =coverage=full-reprojection= and
+source-authenticated/action-authorized/durable flags false. Source-owner replay
+errors retain their existing exception boundary; patch refusals use typed reasons.
+Source-cut labels may change in the proposed envelope; current lineage/authority
+qualification is a separate Host/consumer obligation.
+
+=packages/proofs/lean-poo/ContextDelta.lean= implements ten named pure laws for
+exact replacement, deletion, frame preservation across edit sequences, differential
+admission and rejection. All compile, with an audit of 19 total theorems including
+generated declarations using only standard Lean axioms. These are abstract
+value laws, not a proof of native serialization, Query coverage or runtime refinement.
+The Lake workspace declares =PooFlowContextProof= and CI builds that target.
+Local qualification compiles the standalone core-only source through
+=just check-context-delta-lean= without claiming a fresh LeanPoo dependency build.
+
+The pinned Quint =context-delta= group has one safe fixture model (422 distinct
+states) and five reachable matched controls: publication CAS, target cut, omitted
+deletion, consumption cut and revoked grant. Controls violate their respective
+invariants at 54, 15, 26, 41 and 42 distinct states. The first run stopped under
+the existing five-second no-output watchdog during backend compilation; an
+unchanged full retry passed six cases. Limits were not widened. Source-digest/
+invariant-inventory binding to Lean is checked and remains metadata freshness.
+
+Nine native cases exercise real Org changes, structural insertion/deletion/
+replacement/order, wrong base/old unit, duplicate edits, incomplete order, forged
+target, cross-scope/profile substitution and original-byte replay failure.
+The first native run exposed a POO lazy-slot parameter/name collision in receipt
+construction; corrected binding names passed the same heap/memory/watchdog gates.
+Qualification test artifact compilation retains the previously recorded local
+O0 override; repository production compiler settings remain unchanged.
+Six proof-runner admission/freshness tests also passed.
+The corrected production Delta module was recompiled with default compiler
+settings, the normal PackageSpec build completed, and the eight existing core
+cases passed under the unchanged watchdog. Both native suites contain
+=MODULE-OK=, =HARNESS-OK= and final =OK= without failure/overflow markers.
+
+Remaining gates are dependency-coverage soundness and incremental equivalence,
+combined Session/Attempt/recovery controls, automated concrete trace projection,
+Lean/native semantic correspondence and actual Host/Backend/wire consumption
+fences. Quint publication/consumption controls currently qualify the abstract
+model; they do not assert those runtime fences are implemented. No incremental
+speedup or complete Delta consumer qualification is claimed.

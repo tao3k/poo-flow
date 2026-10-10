@@ -31,3 +31,8 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/HealthcareStandardMigration.qnt',
         root / 'packages/proofs/lean/PooFlowProof/Vertical/Healthcare/StandardMigrationRefinement.lean')
     print('QUINT-LEAN-SOURCE-BINDING-OK ' + digest, flush=True)
+
+    delta_digest = check_binding(
+        root / 'packages/proofs/quint/ContextDelta.qnt',
+        root / 'packages/proofs/lean-poo/ContextDelta.lean')
+    print('CONTEXT-DELTA-SOURCE-BINDING-OK ' + delta_digest, flush=True)

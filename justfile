@@ -570,6 +570,18 @@ check-session-context-quint:
 check-session-proof: check-session-poo-lean check-session-context-quint
 
 [group('check')]
+check-context-delta-lean:
+    cd "{{ temporal_poo_proof_dir }}" && timeout 120s lean ContextDelta.lean
+
+[group('check')]
+check-context-delta-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group context-delta
+
+[group('check')]
+check-context-delta-proof: check-context-delta-lean check-context-delta-quint
+
+
+[group('check')]
 check-native-semantic-query-model: check-native-semantic-query-lean
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group query
 

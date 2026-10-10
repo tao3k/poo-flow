@@ -157,6 +157,14 @@ jobs:
       - name: Compile AI Agentic-context module test
         run: gerbil env gxc -V -O t/ai-agentic-context-core-test.ss
 
+      - name: Compile Context Delta reference regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-delta-test.ss
+
+      - name: Check Context Delta reference admission
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-delta-test.ss
+
       - name: Check AI Agentic-context module composition and source replay
         env:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
@@ -287,7 +295,7 @@ jobs:
           lake-package-directory: packages/proofs/lean-poo
           auto-config: false
           build: true
-          build-args: PooFlowSessionProof
+          build-args: PooFlowSessionProof PooFlowContextProof
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

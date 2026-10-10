@@ -296,3 +296,13 @@ consumer/current-use fences, finite interleavings and native trace correspondenc
 Full-target differential admission precedes dependency-based incremental work.
 Neither source-digest binding nor finite abstract traces alone prove semantic
 refinement or qualify production Delta consumption.
+
+* Delta reference implementation and next gates
+
+The [[file:context-delta-lean-quint-model-design.org][Delta model design]] now records the delivered native full-reprojection
+reference API, compiled Lean structural/rejection laws, pinned Quint safe and
+matched fault cases, source binding and native source-backed controls. CI closes
+the new native regression and Lean target through existing build/proof owners.
+The next implementation gates remain dependency coverage, incremental equivalence
+and concrete Session/Host/Backend consumption/refinement. Do not treat the
+reference API's accepted receipt as authority to publish or execute.

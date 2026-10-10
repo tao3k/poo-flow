@@ -49,3 +49,11 @@ package. A passing finite case covers that instance's reachable states, not
 arbitrary family cardinality, production concurrency or deployed behavior.
 The public POO model and proof artifacts use their own current names and
 source identities. Build and test discovery contain only maintained entries.
+
+* Context Delta reference cases
+
+=just check-context-delta-proof= compiles the separate Lean reference laws and
+checks the pinned =context-delta= group: one full-reconstruction/publication/use
+safety case plus five matched CAS/cut/deletion/grant controls. The fixtures model
+abstract publication/use snapshots and do not qualify native Host or Data fences.
+See [[file:../../../docs/10-19-design/10.06-poo-module-system/context-delta-lean-quint-model-design.org][the Context Delta model design]] for the exact evidence and remaining gates.
