@@ -12,8 +12,8 @@
 (import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/transform-support/memory-intent
-        :poo-flow/modules/memory-core/objects-core
-        :poo-flow/modules/memory-core/org-selection)
+        :poo-flow/modules/ai-agentic-context/features/memory/objects-core
+        :poo-flow/modules/ai-agentic-context/features/memory/org-selection)
 
 (export poo-flow-session-org-memory-selection-context
         poo-flow-session-org-memory-selection-context?

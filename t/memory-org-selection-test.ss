@@ -10,8 +10,8 @@
                  make-org-element-graph-view org-element-query
                  org-elements property descendant-of)
         :poo-flow/modules/session/config
-        :poo-flow/modules/memory-core/config
-        :poo-flow/modules/memory-core/org-selection
+        :poo-flow/modules/ai-agentic-context/features/memory/config
+        :poo-flow/modules/ai-agentic-context/features/memory/org-selection
         :poo-flow/modules/session/org-memory-selection)
 
 (export memory-org-selection-test)

@@ -33,11 +33,11 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
             "-e",
             (
                 "(begin "
-                "(import :poo-flow/modules/memory-core/durable/policy "
-                ":poo-flow/modules/memory-core/durable/policy-manifest "
-                ":poo-flow/modules/memory-core/durable/store "
-                ":poo-flow/modules/memory-core/durable/store-backend "
-                ":poo-flow/modules/memory-core/durable/runtime-manifest) "
+                "(import :poo-flow/modules/ai-agentic-context/features/memory/durable/policy "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/policy-manifest "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/store "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/store-backend "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/runtime-manifest) "
                 "(define policy "
                 "(poo-flow-durable-policy "
                 "(quote durable/python-runtime-envelope) "

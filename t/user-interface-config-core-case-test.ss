@@ -38,7 +38,7 @@
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
   '((flow . funflow)
-    (session . session-core)
+    (session . session)
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)

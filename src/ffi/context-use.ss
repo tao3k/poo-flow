@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Strict inert projection into POO-owned Host values; no query-controlled state.
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/modules/memory-core/context-use-host
+        :poo-flow/modules/ai-agentic-context/use-host
         (only-in :poo-flow/src/ffi/temporal-policy temporal-policy-native-host)
         (only-in :poo-flow/modules/temporal-causality/truth-maintenance/support/policy-host
                  poo-flow-temporal-support-policy-host-current)

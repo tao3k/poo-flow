@@ -8,7 +8,7 @@
 ;;; no memory backend recall or commit is executed.
 
 (import :poo-flow/modules/session/syntax
-        :poo-flow/modules/memory-core/config
+        :poo-flow/modules/ai-agentic-context/features/memory/config
         (only-in :poo-flow/src/user-interface/module-selection
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist))

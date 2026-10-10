@@ -76,8 +76,8 @@
          sandbox-backend-capability-registry-valid?
          sandbox-backend-capability-registry-diagnostic-count
          sandbox-backend-capability-registry-diagnostics
-         session-core-intent-count
-         session-core-intents
+         session-intent-count
+         session-intents
          cicd-intent-count
          cicd-intents
          workflow-cicd-pipeline-count

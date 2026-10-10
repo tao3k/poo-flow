@@ -3,6 +3,12 @@
 
 #+title: 10.06.166 Session, Memory and Orgize source boundary
 
+The [[file:agentic-ai-context-system-design.org][AI Agentic-context Module design]] retains this document's
+Orgize source and canonical Query boundaries while replacing standalone Session
+and memory-core ownership with Features owned by =ai-agentic-context=. Ownership tables
+below describe the previous design and current implementation inventory; direct
+migration has not yet occurred.
+
 The revised temporal model is
 [[file:167-temporal-revisit-evidence-design.org][167 Revisiting Evidence Across Time]]. This document keeps the source
 selection and cross-WorkTree handoff constraints. Its Memory head and durable

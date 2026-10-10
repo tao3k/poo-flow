@@ -86,7 +86,7 @@ def main() -> None:
                    "modules/temporal-causality/truth-maintenance/support/policy.ss",
                    "modules/temporal-causality/truth-maintenance/support/interface.ss",
                    "modules/temporal-causality/truth-maintenance/support/policy-host.ss",
-                   "modules/memory-core/context-use-host.ss",
+                   "modules/ai-agentic-context/use-host.ss",
                    "modules/temporal-causality/evaluator/fact.ss", "src/ffi/temporal-support.ss",
                    "modules/temporal-causality/evaluator/positive-proof.ss",
                    "modules/temporal-causality/evaluator/binding.ss",

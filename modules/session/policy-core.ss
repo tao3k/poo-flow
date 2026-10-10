@@ -6,7 +6,7 @@
 ;;; Boundary: core session policy object shape, projection, and contracts.
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
-        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/policy-syntax
         (only-in :core/module-system/schema/slot-contracts

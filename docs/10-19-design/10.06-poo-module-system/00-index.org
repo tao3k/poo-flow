@@ -52,7 +52,7 @@ Public consumers import the precise owner: shared POO Module mechanisms from =co
 - [[file:35-next-loop-engine-delivery-plan.org][35 Next Loop Engine Delivery Plan]]
 - [[file:36-session-user-interface-ladder.org][36 Session User Interface Ladder]]
 [[file:36-session-user-interface-ladder.org][36 Session User Interface Ladder]]
-- [[file:37-session-core-module.org][37 Session Core Module]]
+- [[file:37-session-module.org][37 Session Core Module]]
 - [[file:38-openrath-session-core-next-plan.org][38 OpenRath Session Core Next Plan]]
 - [[file:39-gerbil-build-optimization-audit.org][39 Gerbil Build Optimization Audit]]
 - [[file:40-module-registry-scale-architecture.org][40 Module Registry Scale Architecture]]

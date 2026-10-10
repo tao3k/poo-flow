@@ -15,11 +15,11 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         "../support/performance"
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/recovery-scenario
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/recovery-scenario
         :poo-flow/modules/session/transform
-        :poo-flow/modules/memory-core/objects)
+        :poo-flow/modules/ai-agentic-context/features/memory/objects)
 
 (export durable-recovery-scenario-performance-test)
 
@@ -72,7 +72,7 @@
            'session/root
            'session/recovery
            'agent/audit
-           poo-flow-memory-core-default-catalog
+           poo-flow-ai-agentic-context-memory-default-catalog
            intent
            (list (cons 'durable-policy poo-flow-durable-policy/default)
                  (cons 'source-watermark 'turn/40)

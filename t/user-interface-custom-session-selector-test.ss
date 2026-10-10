@@ -45,7 +45,7 @@
              (build-candidate (car candidates))
              (governor-candidate (list-ref candidates 2)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.selector-receipt)
         (check-equal? (test-ref row 'selector-id)

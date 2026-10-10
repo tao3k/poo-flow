@@ -5,6 +5,11 @@
 
 * Status and decision
 
+The [[file:agentic-ai-context-system-design.org][AI Agentic-context Module design]] incorporates revisit within its Memory
+Feature and Session as an independent Module composed as a Context dependency. It preserves the
+independent evidence, revisit and retention axes defined here. Standalone
+Session/Memory source paths below are implementation inventory for migration.
+
 Design draft for POO Flow PR #34. It does not claim a running review scheduler,
 source authenticator, verified Memory head, or durable learning engine.
 [[file:43-session-memory-recovery-rfc.org][RFC 43]] and [[file:166-session-memory-orgize-boundary.org][166]] describe the earlier store-centered Memory design. Their

@@ -42,7 +42,7 @@
                (module-config-rows
                 poo-flow-custom-my-module-session-agent-param-case))))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.agent-param-contract)
         (check-equal? (test-ref row 'contract-id)

@@ -4,8 +4,8 @@
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/policy-manifest)
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy-manifest)
 
 (export durable-policy-manifest-test)
 

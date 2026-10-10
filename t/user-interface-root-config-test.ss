@@ -38,7 +38,7 @@
 
 (def root-config-expected-module-keys
   '((flow . funflow)
-    (session . session-core)
+    (session . session)
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)

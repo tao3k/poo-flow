@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :poo-flow/testing-api poo-flow-test-case)
         (only-in :clan/poo/object .o .cc .ref)
-        :poo-flow/modules/memory-core/context-use-host
+        :poo-flow/modules/ai-agentic-context/use-host
         :poo-flow/modules/temporal-causality/truth-maintenance/support/policy-host
         :poo-flow/modules/temporal-causality/truth-maintenance/support/policy
         (only-in :poo-flow/modules/temporal-causality/time/objects poo-flow-temporal-instant))

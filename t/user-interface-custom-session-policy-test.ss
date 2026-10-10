@@ -126,7 +126,7 @@
              (codes (diagnostic-codes
                      (test-ref validation 'diagnostics))))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref durable-row 'runtime-executed) #f)
         (check-equal? (test-ref isolation-row 'schema)
                       'poo-flow.modules.session.policy.isolation.v1)

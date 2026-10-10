@@ -63,11 +63,11 @@
 
     (poo-flow-test-case "resolver orders required Features before dependents"
       (let* ((memory (test-feature 'memory-core))
-             (session (test-feature 'session-core '(memory-core)))
+             (session (test-feature 'session '(memory-core)))
              (profile (test-profile 'default-agent (list session memory)))
              (plan (resolve-feature-profile profile)))
         (check (.ref plan 'status) => 'ready)
-        (check (.ref plan 'feature-ids) => '(memory-core session-core))))
+        (check (.ref plan 'feature-ids) => '(memory-core session))))
 
     (poo-flow-test-case "two profiles share one module-owned descriptor"
       (let* ((memory (test-feature 'memory-core))
@@ -87,7 +87,7 @@
                => #t)))
 
     (poo-flow-test-case "missing dependency rejects the plan"
-      (let* ((session (test-feature 'session-core '(memory-core)))
+      (let* ((session (test-feature 'session '(memory-core)))
              (plan (resolve-feature-profile
                     (test-profile 'missing-memory (list session)))))
         (check (.ref plan 'status) => 'rejected)
@@ -95,23 +95,23 @@
 
     (poo-flow-test-case "unselected optional dependency is ignored"
       (let* ((session
-              (test-feature 'session-core '() '(telemetry-core)))
+              (test-feature 'session '() '(telemetry-core)))
              (plan (resolve-feature-profile
                     (test-profile 'without-telemetry (list session)))))
         (check (.ref plan 'status) => 'ready)
-        (check (.ref plan 'feature-ids) => '(session-core))))
+        (check (.ref plan 'feature-ids) => '(session))))
 
     (poo-flow-test-case "selected optional dependency is ordered first"
       (let* ((telemetry (test-feature 'telemetry-core))
              (session
-              (test-feature 'session-core '() '(telemetry-core)))
+              (test-feature 'session '() '(telemetry-core)))
              (plan (resolve-feature-profile
                     (test-profile
                      'with-telemetry
                      (list session telemetry)))))
         (check (.ref plan 'status) => 'ready)
         (check (.ref plan 'feature-ids)
-               => '(telemetry-core session-core))))
+               => '(telemetry-core session))))
 
     (poo-flow-test-case "duplicate selection rejects the plan"
       (let* ((memory (test-feature 'memory-core))

@@ -24,7 +24,7 @@
                  poo-flow-kernel-profile)
         (only-in :poo-flow/src/utilities/final-projection-syntax
                  poo-flow-product-field-rows/tail)
-        (only-in :poo-flow/modules/memory-core/durable/artifact-policy
+        (only-in :poo-flow/modules/ai-agentic-context/features/memory/durable/artifact-policy
                  artifact-module
                  database-module
                  poo-flow-artifact-profile?

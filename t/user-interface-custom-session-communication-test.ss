@@ -47,7 +47,7 @@
              (sibling (caddr communication-rows))
              (cross-root (cadddr communication-rows)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 8)
         (check-equal? (test-ref root-build-channel 'kind)
                       'poo-flow.session.communication-channel-receipt)

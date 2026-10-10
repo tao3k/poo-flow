@@ -163,7 +163,7 @@
       selected-modules
       feature-fact-rows
       sandbox-profile-derivation-rows
-      session-core-intent-rows
+      session-intent-rows
       cicd-intent-rows
       workflow-cicd-check-maps
       workflow-cicd-functional-dag-rows
@@ -184,7 +184,7 @@
          (cons 'feature-facts (length feature-fact-rows))
          (cons 'sandbox-profile-derivations
                (length sandbox-profile-derivation-rows))
-         (cons 'session-core-intents (length session-core-intent-rows))
+         (cons 'session-intents (length session-intent-rows))
          (cons 'cicd-intents (length cicd-intent-rows))
          (cons 'workflow-cicd-pipelines
                (length workflow-cicd-check-maps))
