@@ -279,3 +279,11 @@ Follow [[file:session-org-id-subagent-scheduling-design.org][the Session identit
 The CLM paper is research input for editable working Context, not qualification
 of this scheduler. Existing finite models, eight core tests and package-build
 receipts remain baseline evidence with their previously declared scope.
+
+* Scheduling granularity refinement
+
+Follow [[file:session-scheduling-granularity-design.org][Scheduling Granularity and Incremental Context]] for independent Task
+acceptance, Attempt/Turn routing, admitted output-port release and Context slices.
+Implement pure readiness/routing before runtime reuse or delta transport. A
+fresh Session per Attempt is not the default allocation rule; compatible reuse
+requires scope/history admission and preserves each Attempt's exact receipts.

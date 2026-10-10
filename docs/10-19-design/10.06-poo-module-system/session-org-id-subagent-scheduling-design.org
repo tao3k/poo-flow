@@ -29,7 +29,7 @@ workloads. Its [[https://arxiv.org/html/2609.37725v1][Section 5.1.2]] also repor
 the tested single-repository benchmark. This motivates editable Context and
 explicit parallelism qualification; it does not demonstrate POO scheduling
 throughput. [[https://github.com/facebookresearch/context-language-models][The authors' repository]] is a research reference, not a runtime dependency.
-The paper identity remains subject to confirmation by the user.
+The user confirmed this paper as the intended research reference.
 
 Our design decision is to let agents propose edits to their working Org content
 and Context selection. Each accepted edit creates a new admitted revision with
@@ -125,10 +125,12 @@ Reject missing executable dependency targets and cycles before dispatch.
 Existing report graph helpers treat missing parents as external roots; this
 presentation behavior cannot qualify executable task dependencies.
 
-Each admitted attempt owns a child Session with a fresh ID, parent/root Session
-reference, Task/Attempt IDs, scope restriction, input projection references and
-budget allocation. Retries create fresh attempts/claim generations and retain
-previous outcomes. A resumed attempt requires reconciled provider identity and
+Each admitted Attempt belongs to an enrolled Session and binds Task/Attempt IDs,
+scope restriction, input projection references and budget allocation. A separate
+child interaction receives a fresh Session ID and parent/root reference.
+Compatible Tasks/Attempts may explicitly reuse that Session under the admission
+rules in [[file:session-scheduling-granularity-design.org][Scheduling Granularity and Incremental Context]]. Retries create fresh
+Attempts/claim generations and retain previous outcomes. A resumed attempt requires reconciled provider identity and
 current enrollment, not a new blind dispatch.
 
 | Coordination | Required contract |
@@ -255,3 +257,10 @@ source correction after dispatch, parent-close/child-spawn races and dropped
 pending obligations. Replay each trace through native admitted contracts.
 Fairness/liveness require explicit eventual-worker/clock assumptions; finite
 safety checks cannot establish high performance or unconditional completion.
+
+* Granularity refinement
+
+[[file:session-scheduling-granularity-design.org][Scheduling Granularity and Incremental Context]] separates persistent Session
+identity, independently accepted Tasks, execution Attempts, provider Turns,
+Context slices and admitted artifact ports. Session reuse requires explicit
+qualification; it is not an implicit new Session for every Attempt.

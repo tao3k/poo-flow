@@ -250,3 +250,11 @@ projections, task DAG/claim/join semantics and bounded incremental scheduling.
 Session owns scheduling semantics; Context owns Org binding and projection
 admission. The scheduling runtime and new property-ID source profile are
 proposed implementation slices, not covered by existing headline replay tests.
+
+* Scheduling granularity refinement
+
+Follow [[file:session-scheduling-granularity-design.org][Scheduling Granularity and Incremental Context]] for independent Task
+acceptance, Attempt/Turn routing, admitted output-port release and Context slices.
+Implement pure readiness/routing before runtime reuse or delta transport. A
+fresh Session per Attempt is not the default allocation rule; compatible reuse
+requires scope/history admission and preserves each Attempt's exact receipts.
