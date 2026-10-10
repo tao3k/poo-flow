@@ -6,8 +6,9 @@
 
 * Decision
 
-POO Flow owns reusable POO composition, DAG compilation and logical continuation
-semantics. LeanPoo owns C3/C4 mathematics. POO Flow producer qualification uses
+POO Flow owns the generic =search-engine=. It composes reusable POO Search
+stages with =temporal-causality= as its semantic core for readiness, evidence
+validity, invalidation and logical continuation. LeanPoo owns C3/C4 mathematics. POO Flow producer qualification uses
 those certificates together with Quint models of its own transitions. Rust MRR
 consumes the admitted Scheme plan and dispatches physical work through MRR Data;
 ASP configures particular scenarios such as code search.
@@ -63,3 +64,9 @@ with Data and scenario consumers, rather than POO role-order certificates.
 The reviewed implementation and acceptance sequence are recorded in MRR
 =docs/architecture/0037-configurable-search-execution.org=. This document records
 upstream ownership only; it adds no new runtime, relocated proof gate or backend.
+
+The engine configuration, logical state, execution request and returned
+observation contracts are specified in
+[[file:search-engine-temporal-design.org][Generic Search Engine with Temporal Causality]].
+That design distinguishes proposed transition APIs from the current static
+Search declarations and keeps physical dispatch in MRR/Data.

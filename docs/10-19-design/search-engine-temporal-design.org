@@ -1,0 +1,216 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+title: Generic Search Engine with Temporal Causality
+#+language: en
+#+startup: overview
+
+* Decision and status
+
+POO Flow maintains the generic =search-engine=. Its semantic core composes
+Search stages with =temporal-causality=: dependency readiness, evidence
+validity, invalidation and logical continuation belong to one engine contract.
+MRR is the execution mediator to the Rust ecosystem. MRR Data owns physical
+query, index and storage adapters. ASP configures code-search scenarios and
+projects public results.
+
+This document defines the implementation target and acceptance boundaries.
+It does not announce a completed engine or publish a new wire ABI.
+Current =modules/search= supplies POO stages, typed composition and strategies.
+Its factor observations already reuse Temporal observations and causal events.
+The engine transition and execution-port contracts below are proposed.
+
+* Composition and configuration
+
+The public extension surface is POO objects, prototypes, named functional
+combinators and consumer profiles. An S-expression can lower a scenario into
+those objects. ASP owns its scenario syntax and code-specific operations;
+POO Flow owns reusable composition and temporal semantics. MRR receives an
+admitted projection, rather than parsing another search language.
+
+An engine configuration binds:
+
+- The original strategy and compiled stage dependency graph.
+- Candidate-space identity, comparison unit and input/output domains.
+- Explicit acquisition, refinement, reasoning, merge and projection operations.
+- Result guarantees and merge/ranking policy, including treatment of partial work.
+- Required physical capabilities and their semantic profiles.
+- Temporal scope, source cut, provenance requirements and validity policy.
+
+Physical concurrency, resource reservations and deadlines are execution policy.
+A change affecting candidate membership, score meaning, truth completeness or
+result order is semantic configuration even if presented as an optimization.
+
+Configuration canonicalization must include all semantic parameters; a stage
+name or existing ABI string is insufficient. Introduce a distinct V1 identity
+contract only after canonicalization and cross-language controls are specified.
+Keep existing published V1 receipts intact.
+
+Generic candidates are opaque identities in an admitted space. File paths,
+language identifiers and parser selectors belong to scenario extensions.
+Combining different spaces requires an explicit admitted mapping stage.
+A merge operation must specify whether it combines exact truth, ranked subsets
+or incomplete evidence. Task completion does not establish exact absence.
+
+* Temporal causality is an engine dependency
+
+The compiled Search graph specifies permitted data dependencies. The Temporal
+event graph records actual causal evidence. They have different responsibilities:
+a declared edge permits a dependency, but cannot manufacture an observed causal
+parent. Every returned observation identifies the exact parent observations
+used by the attempt.
+
+The engine reuses Temporal source revisions, cuts, event graphs, applicability,
+truth maintenance and Impact through their existing named interfaces.
+It adds Search-specific binding and continuation around those mechanisms.
+Existing APIs must be evaluated for their declared scope; a trajectory or
+family-revision receipt is not automatically a Search validity certificate.
+
+Readiness requires valid input observations at the current admitted cut,
+compatible candidate spaces and satisfied stage prerequisites. Invalidation
+uses explicit source/evidence dependencies. A source revision invalidates the
+affected observations and their dependent results; unaffected observations may
+be reused only with valid retained source and configuration bindings.
+
+Negation and absence evidence need coverage and source bindings too.
+An insertion can invalidate a previous empty result even when no old positive
+candidate mentions the inserted item. Capability or policy changes similarly
+require dependency tracking. Source changes alone are not a complete model.
+
+Temporal causality controls logical continuation. MRR may complete independent
+physical requests in any order, while the engine admits their observations
+according to declared dependencies and actual evidence. Arrival order must not
+change causal parents, merge semantics or semantic result identity.
+
+* Four contracts
+
+** Engine configuration
+
+An immutable POO engine configuration composes the strategy, Temporal policy,
+capability requirements, candidate spaces and semantic result policy.
+Concrete operations are supplied through consumer extension objects.
+Backend implementation identities are bound during capability admission.
+POO Flow does not depend on an MRR or Data backend registry.
+
+** Logical engine state
+
+A POO state binds the admitted configuration, generation, source cut, retained
+observations, outstanding attempts and terminal disposition. Named pure
+functions return a successor state and explicit effects; they do not acquire
+connections or call FFI. State is not a public alist or positional record DSL.
+
+Proposed transition responsibilities are:
+
+| Transition | Semantic responsibility |
+|------------+-------------------------|
+| start | Admit configuration, domains and initial source scope |
+| advance | Derive ready stage attempts from currently valid observations |
+| observe | Admit one result against its original attempt and evidence |
+| revise | Apply a source/policy change and invalidate affected observations |
+| retire | Prevent new attempts and result publication for that generation |
+
+These are contract names, not exported functions. Concrete APIs require an
+implementation review against existing Flow and Temporal lifecycle facilities.
+
+** Execution request
+
+A request projects one ready attempt with configuration identity, generation,
+stage, unique attempt identity, current source cut, exact input-observation
+identities, candidate space, required capability, operation and budget.
+
+An attempt is not a stage name: a retry or re-execution receives a new attempt
+identity. The state retains the original immutable request until settlement.
+A completion from a superseded attempt cannot satisfy a newer attempt, including
+when the stage and generation names coincide.
+
+MRR admits request identity and capability before obtaining Rust resources.
+It schedules only the ready work supplied by the engine. Data executes physical
+operations and binds actual source/adapter receipts. Physical batching may
+change execution organization only while preserving each logical request.
+
+** Returned observation
+
+A result carries its original request/attempt identity, actual source and
+adapter bindings, input dependencies, candidates, guarantee, coverage,
+truncation and failure/cancellation disposition. MRR performs boundary admission;
+POO Flow validates logical applicability against the retained attempt and cut.
+
+A succeeded physical operation may still yield incomplete semantic evidence.
+Observations retain that distinction. A result arriving after retirement,
+invalidation or attempt supersession cannot revive invalid evidence.
+Cancellation request, lease release and backend termination are separate facts.
+Backend work that cannot stop is drained or quarantined by its execution owner.
+
+* Worked execution and revision
+
+A consumer configures two independent acquisition stages A and B, an explicit
+merge C, refinement D and projection E. The engine emits A and B requests.
+When B completes first, it retains B's observation; C remains blocked until its
+declared input contract is satisfied. It then emits C, D and E in dependency order.
+
+If A's source revision changes after E was produced, the engine marks the
+dependent A/C/D/E observations invalid and preserves B only if its own scope
+remains valid. A new A attempt uses the new source cut. A delayed old A result
+cannot enter C. Recomputing C/D/E publishes a new projection with the revised
+evidence bindings. No file path or code-language provider is needed in this case.
+
+The same case must cover complete empty A, truncated B, failed C, duplicate
+completion, incompatible candidate spaces and a revision during an in-flight D.
+The result policy determines whether partial output is publishable, with explicit
+guarantees; it cannot silently promote partial output to complete truth.
+
+* Rust mediation and source dependency direction
+
+The source dependency direction is POO Flow -> MRR -> MRR Data -> consumer.
+The runtime call cycle is consumer configuration -> POO engine -> MRR request
+admission/dispatch -> Data execution -> MRR result admission -> POO continuation
+-> consumer projection. This feedback does not create a source dependency cycle.
+
+Rust contributes async execution, connection/resource ownership, cancellation
+coordination, physical adapter access and typed identity admission. Scheme owns
+composition, reasoning and logical readiness. The current single Scheme worker
+boundary remains respected while independent physical work can be concurrent.
+
+ASP source/resident authority and public packet policy remain scenario-owned.
+Move reusable physical engines into Data only with explicit source, completeness
+and lifecycle contracts. Moving a Cargo dependency alone transfers none of them.
+
+* Formal ownership and acceptance
+
+LeanPoo supplies reusable C3/C4 mathematics. POO Flow owns producer models for
+Search composition, Temporal validity and engine transitions. MRR owns FFI
+binding and physical dispatch admission models; Data owns physical correspondence.
+Each consumer qualifies its actual execution and result projection separately.
+
+Proposed producer invariants include: no stage readiness without valid inputs;
+no fabricated causal parents; no stale or duplicate attempt admission; monotonic
+retirement; preservation of unaffected valid observations; explicit incomplete
+evidence; and semantic independence from physical completion order.
+
+Quint must model the actual implemented transition operations and include
+negative controls for omitted invalidation, source cut, parent and attempt
+checks. Lean must prove the corresponding graph/validity properties with explicit
+assumptions. Mathematical witnesses do not establish physical source authenticity
+or implementation refinement by themselves.
+
+Implement and qualify in this order:
+
+1. Reuse Search declarations and Temporal interfaces to implement pure engine
+   readiness, observations, revision and retirement with POO extension objects.
+2. Qualify the A/B/C/D/E execution and revision case with actual Scheme controls.
+3. Add producer Quint/Lean correspondence for those implemented transitions.
+4. Project ready attempts through MRR; extend its root-only dispatch to consume
+   Scheme-owned dependent continuation, retaining original request identities.
+5. Bind Data execution and physical guarantees, then qualify an ASP scenario.
+
+The first engine increment excludes multimodal adapters, speculative retries,
+adaptive ranking and new product command syntax. A generic execution port is
+sufficient; backend capability substitution must remain rejected until qualified.
+
+* Related source and design
+
+- =modules/search/objects.ss= and =funs.ss=: current POO declarations and observations.
+- =modules/temporal-causality/interface.ss=: reusable Temporal authority.
+- [[file:configurable-search-proof-ownership.org][Producer and consumer proof ownership]].
+- MRR =docs/architecture/0037-configurable-search-execution.org=: existing
+  bounded root dispatch and Data integration, with dependent scheduling open.
