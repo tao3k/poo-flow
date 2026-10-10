@@ -21,10 +21,12 @@ Evidence facets of [[file:91-canonical-organization-bundle-rfc.org][RFC 91]]. Th
 [[file:166-session-memory-orgize-boundary.org][166]] and the independent evidence/revisit/retention axes in [[file:167-temporal-revisit-evidence-design.org][167]]. It supersedes
 the earlier proposed placement of Agentic Context under memory-core and the
 standalone Memory ownership assumptions in those documents. Existing
-source paths remain implementation inventory until direct migration qualifies.
+lifecycle details remain proposed contracts. Core and source ownership have
+already migrated; the next protocols are specified in
+[[file:ai-agentic-context-session-memory-contracts.org][Module roles, Session and Memory contracts]].
 
-The inspected source baseline is POO Flow
-=2f7172b59fd088f687a3a8cfea143612c6cccc5f=. Existing native Context Use checks
+The delivered ownership baseline is POO Flow
+=22c4b24c3872daac782d3c836fb17369c0fe51c7=. Existing native Context Use checks
 are a partial Library implementation, not qualification of this whole system.
 All newly authored design documents and examples use English.
 
@@ -47,11 +49,13 @@ another document grammar, parser, truth registry, or global Context head.
 Organization, Authority, Temporal, and Evidence remain their existing semantic
 owners; this system composes their admitted values rather than absorbing them.
 
-The proposed module home is =modules/ai-agentic-context/=. Its core owns Content
+The module home is =modules/ai-agentic-context/=. Its core owns Content
 and Context; =features/memory/= holds the Memory Feature. Independent
 =modules/session/= own the Session dependency.
 One public =interface.ss= closes the Module boundary. Internal Gerbil files
-provide static code ownership. Session remains independently selectable. This target layout is not an existing exported API. Public values are
+provide static code ownership. Session remains independently selectable. The core interface is implemented;
+new Session/Memory protocols remain proposed. Core sources follow the
+=types/objects/funs/config/interface= roles in Programming Style 01. Public values are
 native POO objects; named pure functions own selection, composition, replay,
 and projection. Private records hold Host runtime state. C/Python values are
 projections of the same Scheme contracts; MRR Rust remains a downstream adapter.
@@ -77,7 +81,7 @@ introduced.
 
 | Owned Feature | Contributions | Dependency and activation rule |
 |---------------+---------------+--------------------------------|
-| memory | Retained experiences, recall, consolidation, retention and revisit policies | Requires admitted core Context; ordinary source recall does not require a Session |
+| memory | Retained experiences, recall, consolidation, retention and revisit policies | Requires admitted core Context; ordinary source recall does not require an active Session instance |
 
 Memory capture of a Session turn explicitly requires the composed Session Module and
 binds its turn receipt. Memory revisit explicitly requires a qualified Temporal
@@ -310,19 +314,19 @@ original transaction, never permission to execute another effect.
 | MRR Data | Immutable storage, conditional transactions, CAS, history/outbox and recovery |
 
 Current code includes =modules/query/orgize-source.ss= (bounded source-headline
-Query/replay), =modules/memory-core/org-selection.ss= (structural proposal),
-=modules/session/= (Session declarations/protocol pieces), and
-=modules/memory-core/context-use-host.ss= (registered use/retirement/policy clock).
-Those paths describe delivered implementation, not the target ownership.
+Query/replay), =modules/ai-agentic-context/features/memory/org-selection.ss=
+(structural proposal), =modules/session/= (independent declarations/protocol
+pieces), and =modules/ai-agentic-context/use-host.ss= (registered use,
+retirement and policy clock). The new Context core separates boundary Types,
+inert POO objects, pure functions, configuration and its public interface.
 
-After the contracts are reviewed, migrate core and Feature source roles,
-descriptors, module exports, build roots, FFI imports, consumers, and qualification
-catalogs directly into =modules/ai-agentic-context/=. Remove replaced standalone
-Memory module registrations, ownership paths and duplicate
-policy registries together. Keep Session independently owned and compose its
-native descriptor as a Context dependency; do not retain compatibility facades or a second
-runtime. Data stays the physical owner, and Orgize stays the parser owner.
-Current immutable dependency pins migrate with their consumer qualification.
+The ownership migration removed standalone Memory registrations and moved its
+implementation under Context. The native Session descriptor is composed through
+the existing Module closure. The next Session and Memory semantic changes follow
+[[file:ai-agentic-context-session-memory-contracts.org][the explicit role and protocol contracts]]. Existing Session imports of Memory
+helpers remain adapter-migration inventory; descriptor independence does not
+establish full lifecycle source independence. Data stays the physical owner,
+and Orgize stays the parser owner. Dependency pins require consumer qualification.
 
 POO CI qualifies Scheme/C/Python. MRR CI qualifies original Rust/MRR/Data
 consumers using the exact POO pin; POO does not gain a reverse MRR dependency.

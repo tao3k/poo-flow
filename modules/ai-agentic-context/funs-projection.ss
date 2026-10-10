@@ -6,7 +6,7 @@
         (only-in :std/list/list every delete-duplicates/hash)
         :poo-flow/modules/query/orgize-source
         :poo-flow/src/semantic/context-restriction
-        "scope.ss" "features.ss")
+        "funs-scope.ss" "funs-features.ss")
 (export poo-flow-ai-agentic-context-org-project
         poo-flow-ai-agentic-context-org-replay)
 (def (profile-ids profile)

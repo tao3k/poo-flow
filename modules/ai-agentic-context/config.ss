@@ -6,7 +6,7 @@
         (only-in :poo-flow/src/authoring/module-interface poo-flow-module-interface)
         (only-in :poo-flow/src/authoring/module-descriptor pooFlowModules)
         (only-in :poo-flow/modules/session/descriptor poo-flow-session-module)
-        "features.ss")
+        "funs-features.ss")
 (export poo-flow-ai-agentic-context-module)
 (def (poo-flow-ai-agentic-context-module memory?)
   (let (profile-value (poo-flow-ai-agentic-context-profile memory?))

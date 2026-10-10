@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Public memory-core module interface; all internal roles close through this file.
+;;; Public Memory Feature interface; all internal roles close through this file.
 
 (import "types.ss"
         "objects.ss"

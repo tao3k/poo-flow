@@ -61,6 +61,7 @@ Public consumers import the precise owner: shared POO Module mechanisms from =co
 - [[file:42-openrath-session-multi-agent-audit.org][42 OpenRath Session Multi-Agent Audit]]
 - [[file:43-session-memory-recovery-rfc.org][43 Session Memory Durable Policy RFC]]
 - [[file:167-temporal-revisit-evidence-design.org][167 Revisiting Evidence Across Time]]
+- [[file:ai-agentic-context-session-memory-contracts.org][AI Agentic-context Module Roles, Session and Memory Contracts]]
 - [[file:44-current-project-programming-style.org][44 Current Project Programming Style]]
 - [[file:164-capability-gradient-and-default-expression-surface.org][164 POO Flow Capability Gradient and Default Expression Surface]]
 - [[file:45-durable-policy-research-agenda.org][45 Durable Policy Research Agenda]]

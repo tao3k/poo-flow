@@ -11,8 +11,9 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 Implement [[file:agentic-ai-context-system-design.org][the AI Agentic-context Module design]] as a Context Module composed with an independent Session Module and an owned
 Memory Feature, rooted in Orgize/Org-mode. This plan records source ownership
-and executable gates before implementation; none of the proposed files below
-exists merely because it appears in the plan.
+and executable gates. Ownership migration is delivered at =22c4b24c=; new
+Session and Memory lifecycle contracts remain proposed. Their exact roles and
+transitions are specified in [[file:ai-agentic-context-session-memory-contracts.org][the protocol contract]].
 
 Implementation starts from POO Flow =2f7172b59fd088f687a3a8cfea143612c6cccc5f=.
 The existing Feature system supplies descriptor construction, dependency
@@ -28,19 +29,20 @@ versions retain their declared evidence boundaries during this ownership change.
 modules/ai-agentic-context/
   interface.ss                 public core values and inert Feature descriptors
   config.ss                    module declaration and selected profile lowering
-  features.ss                  owned descriptors and manifest construction
-  types.ss                     native boundary contracts
-  content.ss                   Org source anchors and qualified selections
-  scope.ss                     Bundle/epoch/Project/WorkTree/task/actor binding
-  demand.ss                    query/evidence requirements and budgets
-  projection.ss                immutable projection, replay and exact digest
-  use-host.ss                  trusted current-use state and retirement
-  features/
-    memory/interface.ss        Memory Feature contract boundary
-    memory/experience.ss       retained experiences and source references
-    memory/recall.ss            qualified Demand over retained content
-    memory/revisit.ss           evidence/revisit/retention and new assessments
-    memory/consolidation.ss     derived artifacts and explicit Org write intents
+  types.ss                     boundary shapes and declarative Types
+  objects.ss                   inert Scope and owned Feature descriptors
+  funs.ss                      pure functional role closure
+  funs-scope.ss                admission, freezing and canonical digest
+  funs-features.ss             Feature profile qualification
+  funs-projection.ss           Org projection and current-byte replay
+  use-host.ss                  explicit trusted runtime boundary
+  features/memory/
+    types.ss                   retained-value boundary contracts
+    objects.ss                 experience/assessment/intent prototypes
+    funs.ss                    capture/recall/revisit/consolidation functions
+    config.ss                  Memory Profile composition
+    interface.ss               opt-in Feature closure
+    durable/                   explicit store/transaction adapters
 #+end_src
 
 This is an initial ownership map. Split a growing source by its actual role,
@@ -141,7 +143,7 @@ retention axes kept independent. An Org promotion is a source-write intent with
 expected revision, not a store insertion or an automatic truth upgrade.
 
 Memory requires core Context. Session-turn capture additionally requires the
-independent Session Module and its receipt; pure source recall does not. Enforce the selected
+independent Session Module and its receipt; pure source recall does not require an active Session instance. Enforce the selected
 operation's preconditions at profile/admission time rather than modifying the
 generic resolver to create hidden conditional Features. Revisit and durable
 retention require their explicitly selected Temporal/Backend capabilities.
@@ -150,7 +152,7 @@ Migrate store adapters, intents and recovery behavior that remain valid; retire
 old memory-core selection/registration and duplicate policy owners. Data retains
 durable storage and transactions; this Feature adds no alternative backend.
 
-Gates: Memory enabled with Session absent, capture missing Session refusal,
+Gates: Memory enabled without an active Session instance, capture missing Session refusal,
 stale recall, corrected preference suppression, retained contradiction,
 review-complete without factual support, retention expiry, explicit promotion
 race, and disabling Memory without disabling core checks.
@@ -230,3 +232,35 @@ This receipt does not close redesigned Session turn/CAS/checkpoint protocols,
 new Memory experience/revisit/consolidation semantics, a combined native Scope
 consumption envelope, downstream MRR/Data qualification, or remote CI. Those
 remaining contracts and gates stay explicit in the slices above.
+
+* Source role correction and next protocol contract
+
+The core originally combined shape admission, Scope prototype and pure functions
+in =scope.ss=, with profile values and resolution in =features.ss=. These
+responsibilities now separate into =types.ss=, =objects.ss= and specialized
+=funs-*.ss= sources. =config.ss= composes the native descriptor, while
+=interface.ss= closes these standard roles through imports/exports only.
+Existing public function/prototype identities and digest bindings are preserved.
+
+[[file:ai-agentic-context-session-memory-contracts.org][The protocol contract]] specifies Session inputs, transition CAS, cancellation,
+recovery obligations, Memory experience/assessment lineage and revisit claims.
+It also names existing Session-to-Memory helper imports that must move into
+Context adapter ownership. This correction does not claim those proposed
+protocols are implemented or covered by existing finite proof models.
+
+** Role alignment qualification
+
+The canonical =./build.ss= PackageSpec build completed with normal compiler
+settings within the existing 180-second progress watchdog. The package-manager
+=gerbil build= dependency traversal first rejected a missing isolated Ascent
+manifest; direct PackageSpec qualification used the already built dependency
+closure and does not establish a fresh dependency installation.
+
+The existing eight Context/Module closure cases passed through
+=just test-file t/ai-agentic-context-core-test.ss= after recompilation, with
+=MODULE-OK=, =HARNESS-OK= and final =OK= and no failure/overflow markers.
+Test artifact compilation retained the prior qualification-only
+=CORCXXFLAGS_GAMBUILD=-O0 -pipe -foptimize-sibling-calls= override; production
+compiler settings were unchanged. English-only content, local Org links and
+=git diff --check= passed. This receipt covers role alignment and preserved
+behavior, not the proposed Session/Memory lifecycle protocols.
