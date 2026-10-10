@@ -224,3 +224,10 @@ It fences settlement across revisions and retirement; readiness and selective
 Temporal dependency propagation are not implemented by this kernel.
 LeanPoo structural invalidation certificates are reused separately, with an
 explicit stage-graph correspondence prerequisite.
+
+The pure =modules/search/engine.ss= controller now derives prerequisites from
+Search chain/parallel/merge objects, maintains an admitted-completion frontier,
+and invalidates changed stages plus structural descendants. It retains unaffected
+branches and rejects duplicate stage identities. The consumer runtime pin and
+physical dependent dispatch are separate from this producer implementation.
+See the Composition proof README for its executable controls and refinement limits.

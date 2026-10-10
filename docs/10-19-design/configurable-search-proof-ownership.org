@@ -40,7 +40,7 @@ binding/scenario model was introduced into the producer package.
 
 The MRR publication Quint model, source/generation admission, reflection,
 received-order binding and actual execution witnesses stay in MRR. The per-stage Search attempt transition now has a producer Quint model and
-Lean admission proofs with actual Scheme controls. Full engine readiness and
+Lean admission proofs with actual Scheme controls. Physical dependent dispatch and
 source/graph refinement remain unproved; existing consumer state models
 cannot be relabeled as proof of Scheme execution. Standalone Scheme
 corruption controls, producer-specific Quint and merged release integration
@@ -71,3 +71,9 @@ observation contracts are specified in
 [[file:search-engine-temporal-design.org][Generic Search Engine with Temporal Causality]].
 That design distinguishes proposed transition APIs from the current static
 Search declarations and keeps physical dispatch in MRR/Data.
+
+The producer pure DAG controller now owns composition-derived prerequisites,
+frontier decisions and selective structural invalidation. Its Scheme controls,
+LeanPoo-backed DAG proofs and bounded Quint model ship together. Consumers must
+preserve these decisions when dispatching physical work; this producer increment
+does not certify the consumer runtime or the source-level graph projection.

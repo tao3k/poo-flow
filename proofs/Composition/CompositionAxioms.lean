@@ -5,6 +5,7 @@ import PooFlowComposition
 import SearchAttempt
 import SearchTemporal
 import SearchReadiness
+import SearchDag
 import Lean.Util.CollectAxioms
 import Lean.Elab.Command
 open Lean Elab Command
@@ -19,6 +20,7 @@ run_cmd do
         (`POO.Flow.SearchAttempt).isPrefixOf name ||
         (`POO.Flow.SearchTemporal).isPrefixOf name ||
         (`POO.Flow.SearchReadiness).isPrefixOf name ||
+        (`POO.Flow.SearchDag).isPrefixOf name ||
         (`LeanPoo.Prototype.C3).isPrefixOf name || (`LeanPoo.C4).isPrefixOf name then
       count := count + 1
       if (`LeanPoo.Prototype.C3).isPrefixOf name then c3Count := c3Count + 1

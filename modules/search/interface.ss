@@ -3,8 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "types.ss" "objects.ss" "funs.ss" "config.ss" "attempt.ss")
+(import "types.ss" "objects.ss" "funs.ss" "config.ss" "attempt.ss" "engine.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "funs.ss")
-        (import: "config.ss") (import: "attempt.ss"))
+        (import: "config.ss") (import: "attempt.ss") (import: "engine.ss"))

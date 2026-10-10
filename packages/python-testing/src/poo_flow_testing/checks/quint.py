@@ -34,6 +34,10 @@ class QuintCase:
     temporal: str | None = None
 
 GROUPS = {
+    "search-dag": [QuintCase("SearchDag_none"),
+        QuintCase("SearchDag_ignoreParents", "DependencyOrder", True),
+        QuintCase("SearchDag_ignoreFreshness", "FreshResults", True),
+        QuintCase("SearchDag_clearAll", "BranchRetention", True)],
     "search-readiness": [QuintCase("SearchReadiness_none"),
         QuintCase("SearchReadiness_ignoreMissing", "AllPrerequisites", True),
         QuintCase("SearchReadiness_ignoreRevision", "CurrentPrerequisites", True),

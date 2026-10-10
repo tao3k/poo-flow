@@ -1,0 +1,83 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test (only-in :clan/poo/object .ref)
+        :poo-flow/modules/search/interface)
+(export search-engine-test)
+(def (stage name input output)
+  (poo-flow-search-stage name 'search '() input output poo-flow-search-acquisition-role))
+(def a (stage 'a 'source 'candidates))
+(def b (stage 'b 'source 'candidates))
+(def parallel (poo-flow-search-parallel 'branches (list a b)))
+(def c (stage 'c (poo-flow-search-node-output-domain parallel) 'candidates))
+(def d (stage 'd 'candidates 'results))
+(def strategy (poo-flow-search-strategy 'generic
+                (poo-flow-search-chain 'pipeline
+                  (list (poo-flow-search-merge 'join parallel c) d)) '()))
+(def (initial) (poo-flow-search-engine strategy "generation" "config" "cut"))
+(def (rejected? thunk) (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
+(def (run-stage engine name)
+  (let (issued (poo-flow-search-engine-issue engine name))
+    (poo-flow-search-engine-complete (.ref issued 'engine) name (.ref issued 'request))))
+(def search-engine-test
+  (test-suite "Search DAG controller"
+    (test-case "composition derives roots fan-in and continuation"
+      (let* ((engine (initial)) (after-a (run-stage engine 'a))
+             (after-b (run-stage after-a 'b)) (after-c (run-stage after-b 'c)))
+        (check (poo-flow-search-engine-frontier engine) => '(a b))
+        (check (.ref (poo-flow-search-engine-node engine 'c) 'dependencies) => '(a b))
+        (check (.ref (poo-flow-search-engine-node engine 'd) 'dependencies) => '(c))
+        (check (poo-flow-search-engine-frontier after-a) => '(b))
+        (check (poo-flow-search-engine-frontier after-b) => '(c))
+        (check (poo-flow-search-engine-frontier after-c) => '(d))
+        (check (poo-flow-search-engine-frontier (run-stage after-c 'd)) => '())))
+    (test-case "active and missing parents cannot be scheduled"
+      (let* ((engine (initial)) (issued (poo-flow-search-engine-issue engine 'a))
+             (next (.ref issued 'engine)))
+        (check (poo-flow-search-engine-frontier next) => '(b))
+        (check (rejected? (lambda () (poo-flow-search-engine-issue next 'a))) => #t)
+        (check (rejected? (lambda () (poo-flow-search-engine-issue next 'c))) => #t)
+        (check (rejected? (lambda () (poo-flow-search-engine-issue next 'unknown))) => #t)))
+    (test-case "selective invalidation retains independent branch and fences active work"
+      (let* ((after-b (run-stage (initial) 'b))
+             (a-issued (poo-flow-search-engine-issue after-b 'a))
+             (old (.ref a-issued 'request))
+             (revised (poo-flow-search-engine-revise (.ref a-issued 'engine) '(a) "cut2")))
+        (check (eq? (poo-flow-search-engine-node after-b 'b) (poo-flow-search-engine-node revised 'b)) => #t)
+        (check (poo-flow-search-engine-frontier revised) => '(a))
+        (for-each (lambda (name)
+                    (let (node (poo-flow-search-engine-node revised name))
+                      (check (.ref (.ref node 'state) 'revision) => 1)
+                      (check (.ref node 'completion) => #f))) '(a c d))
+        (check (rejected? (lambda () (poo-flow-search-engine-complete revised 'a old))) => #t)
+        (let* ((fresh (poo-flow-search-engine-issue revised 'a))
+               (request (.ref fresh 'request))
+               (done (poo-flow-search-engine-complete (.ref fresh 'engine) 'a request)))
+          (check (.ref request 'attempt) => 1)
+          (check (poo-flow-search-engine-frontier done) => '(c)))))
+    (test-case "completed descendants are invalidated and must run again"
+      (let* ((done (run-stage (run-stage (run-stage (run-stage (initial) 'a) 'b) 'c) 'd))
+             (revised (poo-flow-search-engine-revise done '(a) "cut2"))
+             (rerun (run-stage (run-stage (run-stage revised 'a) 'c) 'd)))
+        (check (poo-flow-search-engine-frontier revised) => '(a))
+        (check (poo-flow-search-engine-frontier rerun) => '())
+        (check (.ref (.ref (poo-flow-search-engine-node rerun 'c) 'request) 'revision) => 1)
+        (check (rejected? (lambda () (poo-flow-search-engine-revise done '(unknown) "cut"))) => #t)))
+    (test-case "duplicate leaf identities cannot erase a prerequisite"
+      (let* ((duplicate (poo-flow-search-parallel 'bad (list a a)))
+             (bad (poo-flow-search-strategy 'bad duplicate '())))
+        (check (rejected? (lambda () (poo-flow-search-engine bad "generation" "config" "cut"))) => #t)))
+    (test-case "nested branches use terminal stages as merge prerequisites"
+      (let* ((a2 (stage 'a2 'candidates 'results))
+             (b2 (stage 'b2 'candidates 'results))
+             (branches (poo-flow-search-parallel 'nested
+                         (list (poo-flow-search-chain 'left (list a a2))
+                               (poo-flow-search-chain 'right (list b b2)))))
+             (join (stage 'join (poo-flow-search-node-output-domain branches) 'results))
+             (engine (poo-flow-search-engine
+                       (poo-flow-search-strategy 'nested
+                         (poo-flow-search-merge 'merged branches join) '())
+                       "generation" "config" "cut"))
+             (done (run-stage (run-stage (run-stage (run-stage engine 'a) 'a2) 'b) 'b2)))
+        (check (.ref (poo-flow-search-engine-node engine 'join) 'dependencies) => '(a2 b2))
+        (check (poo-flow-search-engine-frontier done) => '(join))))))
