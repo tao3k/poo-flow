@@ -3,12 +3,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Pure per-stage temporal attempt admission. No physical execution or readiness.
 (import (only-in :clan/poo/object .ref object?)
-        (only-in :std/list/list every)
+        (only-in :std/list/list every ormap)
         :poo-flow/src/core/object-syntax
         (only-in :poo-flow/modules/search/funs poo-flow-search-stage?))
 (export poo-flow-search-attempt-state poo-flow-search-attempt-issue
         poo-flow-search-attempt-settle poo-flow-search-attempt-revise
-        poo-flow-search-attempt-retire)
+        poo-flow-search-attempt-retire poo-flow-search-attempt-complete
+        poo-flow-search-attempt-ready? poo-flow-search-attempt-issue-ready)
 
 (def (kind? value expected)
   (and (object? value)
@@ -80,3 +81,36 @@
 (def (poo-flow-search-attempt-retire state)
   (require-state state)
   (poo-core-role-object (slots ((retired? #t))) (supers state)))
+
+;;; Completion is an owner-admitted identity receipt, not proof of result truth.
+(def (poo-flow-search-attempt-complete state request)
+  (let (done (poo-flow-search-attempt-settle state request))
+    (poo-core-role-object
+     (slots ((kind 'search-attempt-completion) (state done)
+             (request (poo-core-role-object
+               (slots ((generation (string-copy (.ref request 'generation)))
+                       (configuration (string-copy (.ref request 'configuration)))
+                       (source-cut (string-copy (.ref request 'source-cut)))))
+               (supers request)))))
+     (supers))))
+
+;;; The DAG owner supplies the exact current predecessor requests. Empty means root.
+;;; Receipts from a prior generation/configuration cannot satisfy prerequisites.
+(def (poo-flow-search-attempt-ready? state prerequisites completions)
+  (require-state state)
+  (and (list? prerequisites) (list? completions)
+       (every
+        (lambda (request)
+          (and (kind? request 'search-attempt-request)
+               (equal? (.ref request 'generation) (.ref state 'generation))
+               (equal? (.ref request 'configuration) (.ref state 'configuration))
+               (ormap (lambda (completion)
+                        (and (kind? completion 'search-attempt-completion)
+                             (same-request? request (.ref completion 'request))))
+                      completions)))
+        prerequisites)))
+
+(def (poo-flow-search-attempt-issue-ready state prerequisites completions)
+  (unless (poo-flow-search-attempt-ready? state prerequisites completions)
+    (error "Search prerequisites are missing, stale or outside the execution scope"))
+  (poo-flow-search-attempt-issue state))

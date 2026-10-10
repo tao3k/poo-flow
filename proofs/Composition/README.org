@@ -22,7 +22,7 @@ This gate qualifies mathematical composition and certificates. It does not
 prove Scheme implementation refinement or qualify the outstanding standalone
 Scheme DAG corruption controls. No consumer Quint model was moved here: the existing
 Search Quint model is an MRR consumer publication protocol. The new per-stage Search attempt producer model qualifies the implemented
-attempt transition kernel; full engine readiness and graph correspondence
+attempt transition kernel; full DAG scheduling and graph correspondence
 remain separate producer gates.
 
 Consumers declare this repository, a full immutable commit SHA and the
@@ -81,8 +81,33 @@ backend cancellation. Arbitrary extended POO objects are not authentication
 certificates.
 
 Run =just check-search-engine-proof= to combine the Lean certificate/axiom gate,
-Quint positive and negative cases, and five actual Scheme control cases.
+Quint positive and negative cases, and eight actual Scheme control cases.
 The Scheme gate bootstraps Gxi and invokes the upstream GxTest entry point.
 The standalone GxTest executable's local =__eval-import= failure also occurs
 in the unchanged Search framework suite; that failure is retained separately
 from successful Gxi-hosted Case/Module/Harness receipts.
+
+* Predecessor readiness admission
+
+=SearchReadiness.lean= and =attempt-issue-ready= require every exact current
+predecessor request to have an owner-admitted completion receipt. Generation
+and configuration must match the downstream execution scope; predecessor
+source cuts and revisions can differ between stages. Duplicate receipts cannot
+replace a missing predecessor. Root stages have an empty prerequisite set.
+The guarded issue delegates to the original attempt gate, preserving retirement,
+active-attempt exclusion and request identity. =attempt-complete= creates the
+receipt only after successful settlement admission and snapshots text identities.
+
+The Lean proofs quantify over arbitrary finite prerequisite lists. The bounded
+Quint projection uses two predecessor slots and one revision per slot, retaining
+old completions across revision changes so that stale evidence is exercised.
+Its exact-request abstraction fixes attempt/source identity per revision and
+varies generation. Positive exhaustion and three single-guard mutants qualify
+presence, revision freshness and scope isolation. Full request fields are tested
+in Scheme and modeled in =SearchAttempt.lean=.
+
+The trusted DAG owner must derive the complete prerequisite set and replace
+expected request identities after invalidation. A caller-provided empty set does
+not certify that an arbitrary stage is a root. These functions are pure admission
+combinators, not an automatic DAG scheduler; they do not authenticate arbitrary
+POO extensions, establish parent result truth, or prove Scheme/Lean refinement.

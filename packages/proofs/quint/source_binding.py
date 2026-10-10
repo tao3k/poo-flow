@@ -63,3 +63,8 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/SearchAttempt.qnt',
         root / 'proofs/Composition/SearchAttempt.lean')
     print('SEARCH-ATTEMPT-SOURCE-BINDING-OK ' + search_digest, flush=True)
+
+    readiness_digest = check_binding(
+        root / "packages/proofs/quint/SearchReadiness.qnt",
+        root / "proofs/Composition/SearchReadiness.lean")
+    print("SEARCH-READINESS-SOURCE-BINDING-OK " + readiness_digest, flush=True)

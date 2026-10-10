@@ -822,12 +822,13 @@ check-quint:
 
 # Producer mathematical qualification; consumer binding proofs remain in MRR.
 check-composition-proof:
-    cd proofs/Composition && lake build && lake env lean --run CompositionChecks.lean && lake env lean --run SearchTemporalChecks.lean && lake env lean CompositionAxioms.lean
+    cd proofs/Composition && lake build && lake env lean --run CompositionChecks.lean && lake env lean --run SearchTemporalChecks.lean && lake env lean --run SearchReadinessChecks.lean && lake env lean CompositionAxioms.lean
 
 # Reuse the existing finite-model runner and exact negative-control admission.
 [group('check')]
 check-search-attempt-quint:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-attempt
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group search-readiness
 
 # Bootstrap the expander in Gxi, then use the upstream GxTest entry point.
 # No private assertion runner; require all Cases and the final harness receipt.
@@ -839,7 +840,7 @@ check-search-attempt-scheme:
     trap 'rm -f "$log"' EXIT
     {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s gerbil {{ gerbil_test_runtime_options }} env gxi -e '(import (only-in :gerbil/tools/gxtest main)) (main "-v" "5" "t/search-attempt-test.ss")' 2>&1 | tee "$log"
     if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
-    test "$(grep -c '^CASE-OK ' "$log")" = 5
+    test "$(grep -c '^CASE-OK ' "$log")" = 8
     grep -Fx 'MODULE-OK t/search-attempt-test.ss' "$log"
     grep -F 'HARNESS-OK' "$log"
     grep -x 'OK' "$log"

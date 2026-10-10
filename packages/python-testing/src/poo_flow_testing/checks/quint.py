@@ -34,6 +34,10 @@ class QuintCase:
     temporal: str | None = None
 
 GROUPS = {
+    "search-readiness": [QuintCase("SearchReadiness_none"),
+        QuintCase("SearchReadiness_ignoreMissing", "AllPrerequisites", True),
+        QuintCase("SearchReadiness_ignoreRevision", "CurrentPrerequisites", True),
+        QuintCase("SearchReadiness_ignoreScope", "ScopeIsolation", True)],
     "search-attempt": [QuintCase("SearchAttempt_none"),
         QuintCase("SearchAttempt_ignoreRevision", "CurrentRevision", True),
         QuintCase("SearchAttempt_ignoreAttempt", "ExactAttempt", True),
