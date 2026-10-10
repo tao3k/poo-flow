@@ -48,7 +48,7 @@
 ;; : (-> Unit [Pair])
 (def (poo-flow-declaration-case-default-module-keys)
   '((flow . funflow)
-    (session . session-core)
+    (session . session)
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)
@@ -61,7 +61,7 @@
   '(selected-modules
     feature-facts
     sandbox-profile-derivations
-    session-core-intents
+    session-intents
     cicd-intents
     workflow-cicd-pipelines
     workflow-cicd-functional-dags

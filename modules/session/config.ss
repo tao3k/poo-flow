@@ -6,5 +6,12 @@
 ;;; Boundary: session configuration facade.
 ;;; Invariant: configuration composes the module-owned syntax surface only.
 
-(import "syntax.ss")
-(export (import: "syntax.ss"))
+(import "syntax.ss" "descriptor.ss"
+        :poo-flow/src/user-interface/module-selection)
+(export (import: "syntax.ss") (import: "descriptor.ss")
+        poo-flow-session-module-bundles)
+
+;;; Independent Session selection uses its own module identity.
+(def poo-flow-session-module-bundles
+  (list (poo-flow-user-module-bundle
+          (session session +lineage +placement +handoff +graph +transform +doctor))))

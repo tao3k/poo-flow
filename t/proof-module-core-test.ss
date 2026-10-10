@@ -14,10 +14,10 @@
   (test-suite
    "POO Proof Module core"
    (poo-flow-test-case "admits exact artifact receipts and refinement bindings"
-     (let* ((tla
+     (let* ((quint
              (poo-flow-proof-artifact
-              "test/tla" 'tlc 'tla-plus "test/model.tla"
-              (poo-flow-proof-digest 'tla-source)
+              "test/quint" 'quint 'quint "test/model.qnt"
+              (poo-flow-proof-digest 'quint-source)
               '(SafetyInvariant) (.o)))
             (lean
              (poo-flow-proof-artifact
@@ -30,14 +30,14 @@
               (poo-flow-proof-digest 'lean-build-receipt) #t))
             (impact
              (poo-flow-proof-impact-binding
-              "test/tla-to-lean" tla lean
+              "test/quint-to-lean" quint lean
               (.o SafetyInvariant: '(safetyRefinement))))
             (refinement
              (poo-flow-proof-refinement-binding
-              "test/refinement" tla lean receipt impact))
+              "test/refinement" quint lean receipt impact))
             (assurance
              ((.ref PooFlowProofModule. '.admit-assurance)
-              "test/assurance" (list tla lean) (list receipt)
+              "test/assurance" (list quint lean) (list receipt)
               (list refinement))))
        (check (poo-flow-proof-module? PooFlowProofModule.) => #t)
        (check (.ref PooFlowProofModule. 'required-slots)
@@ -45,13 +45,13 @@
        (check (poo-flow-proof-assurance? assurance) => #t)
        (check (.ref assurance 'current?) => #t)
        (check (.ref assurance 'admitted?) => #t)
-       (check (hash-get (.ref assurance 'artifact-index) "test/tla")
-              => tla)))
+       (check (hash-get (.ref assurance 'artifact-index) "test/quint")
+              => quint)))
    (poo-flow-test-case "changed upstream digest invalidates the exact refinement"
-     (let* ((tla
+     (let* ((quint
              (poo-flow-proof-artifact
-              "test/tla" 'tlc 'tla-plus "test/model.tla"
-              (poo-flow-proof-digest 'tla-source)
+              "test/quint" 'quint 'quint "test/model.qnt"
+              (poo-flow-proof-digest 'quint-source)
               '(SafetyInvariant) (.o)))
             (lean
              (poo-flow-proof-artifact
@@ -64,17 +64,17 @@
               (poo-flow-proof-digest 'lean-build-receipt) #t))
             (impact
              (poo-flow-proof-impact-binding
-              "test/tla-to-lean" tla lean
+              "test/quint-to-lean" quint lean
               (.o SafetyInvariant: '(safetyRefinement))))
             (refinement
              (poo-flow-proof-refinement-binding
-              "test/refinement" tla lean receipt impact))
-            (changed-tla
-             (.cc tla 'content-digest
-                  (poo-flow-proof-digest 'changed-tla-source)))
+              "test/refinement" quint lean receipt impact))
+            (changed-quint
+             (.cc quint 'content-digest
+                  (poo-flow-proof-digest 'changed-quint-source)))
             (assurance
              (poo-flow-proof-assurance
-              "test/stale" (list changed-tla lean) (list receipt)
+              "test/stale" (list changed-quint lean) (list receipt)
               (list refinement))))
        (check (.ref assurance 'current?) => #f)
        (check (.ref assurance 'admitted?) => #f)))))

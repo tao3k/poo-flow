@@ -5,7 +5,7 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
         :clan/poo/object
-        :poo-flow/modules/memory-core/durable/artifact-policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/artifact-policy
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
         :poo-flow/src/authoring/semantic-module
         :core/profile-composition/selection-syntax

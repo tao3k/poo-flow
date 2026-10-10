@@ -159,6 +159,11 @@ Composition MUST reject unauthorized widening, excess delegation, invalid leases
 
 The Context facet defines visibility, information labels, provenance, context leases, redaction, permitted flows, declassification, and declassification authority.
 
+The [[file:agentic-ai-context-system-design.org][AI Agentic-context Module design]] refines this facet around Orgize/Org-mode
+Content, with an independent Session dependency and Memory as a Feature owned by =ai-agentic-context=.
+Its proposed contracts cover scope, demand, evidence, restriction, immutable
+projection and current use. Existing Library slices remain separately qualified.
+
 Composition follows an information-flow lattice or equivalent restriction model. When constraints combine, the result MUST be at least as restrictive as every input; for permitted readers or flows this is their intersection. Provenance MUST survive composition.
 
 Declassification requires an explicit operation, principal, authority, source and target label or flow class, and Evidence obligation. Composition MUST reject unauthorized widening, missing labels or provenance, invalid leases, unresolved redaction conflicts, and declassification lacking Authority and Evidence links. C4 MUST NOT replace a stricter inherited constraint with a weaker one.

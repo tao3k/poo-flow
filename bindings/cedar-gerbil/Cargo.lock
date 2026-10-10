@@ -314,6 +314,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cedar-poo-bridge"
+version = "0.1.0"
+source = "git+https://github.com/tao3k/cedar-poo-spec?rev=c8d1a0641120cf65e299e8a98f9fe7666ca96ab5#c8d1a0641120cf65e299e8a98f9fe7666ca96ab5"
+dependencies = [
+ "cedar-policy",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1424,11 +1435,13 @@ dependencies = [
 name = "poo-flow-cedar-gerbil"
 version = "0.1.0"
 dependencies = [
+ "cedar-poo-bridge",
  "gerbil-scheme",
  "gerbil-scheme-native-build",
  "gerbil-scheme-sys",
  "poo-flow-cedar-authority",
  "serde",
+ "serde_json",
  "tempfile",
 ]
 

@@ -24,6 +24,10 @@ language.  A pure projector renders standard GQL, and =gerbil-parser= validates
 the byte-exact source independently.  A raw GQL string and the parser's
 internal alist are boundary values, never the public =program= slot.
 
+The same GQL AST may run through the bounded =scheme-gql= mode for single-node
+selection over native POO objects. This is a local functional evaluation of a
+supported GQL slice, not a second Query language or external source admission.
+
 GQL execution returns a receipt
 bound to Query identity, provider identity and semantic revision.  The result
 is evidence, never action authority.  Python adapters and MRR/Rust consumers

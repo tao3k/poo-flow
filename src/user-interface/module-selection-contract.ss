@@ -7,7 +7,9 @@
 ;;; Invariant: macros may stay ergonomic, but every expansion must produce
 ;;; concrete module selections rather than category aliases or loose data.
 
-(import :poo-flow/src/user-interface/module-selection
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :poo-flow/modules/ai-agentic-context/config poo-flow-ai-agentic-context-module)
+        :poo-flow/src/user-interface/module-selection
         :poo-flow/src/utilities/final-projection-syntax)
 
 (export poo-flow-use-module-contract-validation-kind
@@ -283,6 +285,13 @@
 ;;; primitive when they need to construct intentionally invalid receipts.
 ;; : (-> Symbol [UserModuleFlagEntry] [PooUserModuleSelection])
 (def (poo-flow-modules-system-use-module/contract module flags)
-  (poo-flow-require-use-module-contract!
-   module
-   (poo-flow-modules-system-use-module module flags)))
+  (let (selections (poo-flow-require-use-module-contract!
+                    module (poo-flow-modules-system-use-module module flags)))
+    (if (eq? module 'ai-agentic-context)
+      (let* ((descriptor (poo-flow-ai-agentic-context-module
+                          (if (memq '+memory flags) #t #f)))
+             (manifest (.ref (.ref descriptor 'config) 'feature-manifest)))
+        (map (lambda (selection)
+               (.o (:: @ selection) module-descriptor: descriptor
+                   feature-manifest: manifest)) selections))
+      selections)))

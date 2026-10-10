@@ -120,11 +120,24 @@ gerbil_project_compile(
     ],
 )
 
+gerbil_project_compile(
+    name = "gerbil_ascent_package",
+    srcs = ["@gerbil_ascent_sources//:sources"],
+    build_script = "@gerbil_ascent_sources//:build_script",
+    require_library_output = True,
+    source_resolution_receipts = ["@gerbil_ascent_sources//:source_resolution_receipt"],
+    deps = [
+        ":asp_gerbil_scheme_package",
+        ":poo_flow_core_package",
+    ],
+)
+
 filegroup(
     name = "dependency_packages",
     srcs = [
         ":asp_gerbil_scheme_package",
         ":gerbil_parser_package",
+        ":gerbil_ascent_package",
         ":gerbil_poo_package",
         ":orgize_package",
         ":poo_flow_core_package",
@@ -139,6 +152,7 @@ filegroup(
         ("orgize_package_receipt", ":orgize_package"),
         ("poo_flow_core_package_receipt", ":poo_flow_core_package"),
         ("gerbil_parser_package_receipt", ":gerbil_parser_package"),
+        ("gerbil_ascent_package_receipt", ":gerbil_ascent_package"),
     ]
 ]
 
@@ -157,7 +171,7 @@ gerbil_project_compile(
     args = ["compile"],
     build_script = ":build.ss",
     env = {"GERBIL_BUILD_VERBOSE": "1"},
-    deps = [":gerbil_parser_package", ":orgize_package"],
+    deps = [":gerbil_parser_package", ":orgize_package", ":gerbil_ascent_package"],
 )
 
 gerbil_project_environment(
@@ -171,7 +185,7 @@ gerbil_project_dev(
     args = ["compile"],
     build_script = ":build.ss",
     tags = ["local", "manual"],
-    deps = [":gerbil_parser_package", ":orgize_package"],
+    deps = [":gerbil_parser_package", ":orgize_package", ":gerbil_ascent_package"],
 )
 
 filegroup(name = "project_root", srcs = [":compile"], output_group = "project_root")

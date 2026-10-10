@@ -60,9 +60,6 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Check out Core source owner
-        run: git submodule update --init core
-
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -73,6 +70,7 @@ jobs:
             git \
             libsqlite3-dev \
             libssl-dev \
+            openjdk-17-jre-headless \
             openssl \
             pkg-config \
             sqlite3 \
@@ -85,7 +83,9 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install gcc jq openssl pkg-config sqlite zlib
+          brew install coreutils gcc jq openssl pkg-config sqlite zlib
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+          "$(brew --prefix coreutils)/libexec/gnubin/timeout" --version
 
           gcc_prefix="$(brew --prefix gcc)"
           gcc_bin="$(
@@ -101,6 +101,12 @@ jobs:
           openssl_prefix="$(brew --prefix openssl@3 2>/dev/null || brew --prefix openssl)"
           echo "PKG_CONFIG_PATH=$openssl_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
           "$gcc_bin" --version
+
+      - name: Install pinned recipe runner
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal --component clippy
+          cargo +1.95.0 install just --version 1.56.0 --locked
+          just --version
 
       - name: Install immutable Gerbil v0.19 release
         shell: bash
@@ -120,6 +126,7 @@ jobs:
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          python3 packages/automation/gerbil_dependency_pin.py prepare-native --package-root "$GITHUB_WORKSPACE/.gerbil/pkg"
           if [ "${{ steps.native-gerbil-pkg-cache.outputs.cache-hit }}" = "true" ]; then
             if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependency-cache-ready"))' >/tmp/native-gerbil-dependency-cache-check.log 2>&1; then
               echo "::notice::Exact native dependency cache is incomplete; refreshing declared revisions"
@@ -129,7 +136,7 @@ jobs:
             gerbil deps --install
           fi
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'
-          # The Core gitlink owns this checkout's shared POO modules.
+          # The Core subtree owns this checkout's shared POO modules.
           (cd core && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" GERBIL_LOADPATH="$GITHUB_WORKSPACE/core:$GITHUB_WORKSPACE/.gerbil/lib" GERBIL_BUILD_VERBOSE=1 gerbil build)
           # Clean only POO Flow outputs; its build spec excludes Core.
           gerbil clean
@@ -147,12 +154,188 @@ jobs:
       - name: Build native Gerbil package
         run: GERBIL_BUILD_VERBOSE=1 gerbil build
 
+      - name: Compile AI Agentic-context module test
+        run: gerbil env gxc -V -O t/ai-agentic-context-core-test.ss
+
+      - name: Compile Context Delta reference regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-delta-test.ss
+
+      - name: Check Context Delta reference admission
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-delta-test.ss
+
+      - name: Compile Session Attempt regression
+        run: gerbil env gxc -V -O t/session-attempt-test.ss
+
+      - name: Check Session Attempt routing and recovery
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/session-attempt-test.ss
+
+      - name: Check AI Agentic-context module composition and source replay
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-core-test.ss
+
+      - name: Compile parser-backed Context Org anchor regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-org-anchors-test.ss
+
+      - name: Check Context Org ID admission and Session binding
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-org-anchors-test.ss
+
+      - name: Compile current-input Session Host regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-session-host-test.ss
+
+      - name: Check current-input claim publication and source invalidation
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-session-host-test.ss
+
+      - name: Compile original Context and Temporal suites
+        run: gerbil env gxc -V t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/ai-agentic-context-org-anchors-test.ss t/query-orgize-source-test.ss
+
+      - name: Check original Temporal proof binding and Session invalidation
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-context-temporal
+
+      - name: Compile Context temporal window policy regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-temporal-test.ss
+
+      - name: Check Context policy clock domains and conservative windows
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-temporal-test.ss
+
+      - name: Compile registered Context use Host test
+        run: gerbil env gxc -V -O t/context-use-host-test.ss
+
+      - name: Check registered Context use Host
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: |
+          set -euo pipefail
+          test_module=.gerbil/lib/poo-flow/t/context-use-host-test.ssi
+          test -f "$test_module"
+          gerbil env python3 packages/python-runtime/tools/watch.py \
+            gxtest -v 3 "$test_module" 2>&1 | tee /tmp/context-use-host-test.log
+          grep -F "MODULE-OK $test_module" /tmp/context-use-host-test.log
+          grep -x 'OK' /tmp/context-use-host-test.log
+          ! grep -E 'ERROR|Heap overflow|Stack overflow' /tmp/context-use-host-test.log
+
       - name: Run the single native unit-test entrypoint
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: gerbil env ./unit-tests.ss
+
+      - name: Build Scheme semantic AOT byte boundary
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: |
+          mkdir -p .ci/semantic
+          extension=so
+          if [ "$RUNNER_OS" = macOS ]; then extension=dylib; fi
+          python3 bindings/runtime-c/tools/build-semantic.py \
+            --output ".ci/semantic/libpoo_flow_semantic.$extension"
+
+      - name: Upload immutable semantic AOT producer artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: poo-flow-semantic-native-linux
+          path: |
+            .ci/semantic/libpoo_flow_semantic.so
+            .ci/semantic/libpoo_flow_semantic.so.ss
+
+      - name: Run declared ASCENT package integration
+        if: runner.os == 'Linux'
+        run: |
+          gerbil env just test-ascent-integration
+          gerbil env python3 "$GITHUB_WORKSPACE/packages/python-runtime/tools/watch.py" just test-ascent-temporal
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case ascent.source-withdrawal
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case evidence-ascent.hypothesis-status
+          PYTHONPATH="$GITHUB_WORKSPACE/packages/python-testing/src" \
+            gerbil env python3 -m poo_flow_testing run \
+              --case model-study.native-fixtures
 
       - name: Run native performance scenarios without unit-batch contention
         if: runner.os == 'Linux'
-        run: gerbil env ./performance-tests.ss
+        run: |
+          gerbil env gxc -O src/qualification/ascent-table-expression.ss t/scenarios/performance/ascent-table-expression/baseline.ss
+          gerbil env ./performance-tests.ss
+          gerbil env gxi t/scenarios/performance/ascent-table-expression/scenario.ss
+          gerbil env gxi t/scenarios/performance/ascent-table-expression-membership/scenario.ss
+          gerbil env gxi t/scenarios/performance/ascent-reachability-closure/scenario.ss
+
+  quint-proof:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: Quint finite proof models
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Install Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Prepare pinned Quint backend
+        env:
+          QUINT_HOME: ${{ runner.temp }}/poo-quint-cache
+        run: |
+          npm ci --prefix packages/proofs/quint --no-audit --no-fund
+          python3 packages/proofs/quint/prepare_backend.py
+      - name: Check types, receipt admission and source binding
+        env:
+          PYTHONPATH: packages/python-testing/src
+        run: |
+          python3 packages/proofs/quint/typecheck.py
+          python3 -m unittest discover -s packages/proofs/quint -p 'test_*.py'
+          python3 packages/proofs/quint/source_binding.py
+      - name: Verify all finite, temporal and fault cases
+        env:
+          PYTHONPATH: packages/python-testing/src
+          QUINT_HOME: ${{ runner.temp }}/poo-quint-cache
+        run: |
+          python3 -m poo_flow_testing.checks.quint --group all \
+            --receipt "$RUNNER_TEMP/poo-quint-proof.ss"
+      - name: Upload Quint receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: quint-proof-receipt
+          path: ${{ runner.temp }}/poo-quint-proof.ss
+          if-no-files-found: error
+          retention-days: 7
+
+  session-poo-proof:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: Session and WorkTree LeanPoo proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build Session and WorkTree proofs with axiom audit
+        uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1
+        with:
+          lake-package-directory: packages/proofs/lean-poo
+          auto-config: false
+          build: true
+          build-args: PooFlowSessionProof PooFlowContextProof PooFlowAttemptProof
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -322,9 +505,6 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Check out Core source owner
-        run: git submodule update --init core
-
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
@@ -393,9 +573,6 @@ jobs:
     steps: &native-steps
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Check out Core source owner
-        run: git submodule update --init core
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -842,7 +1019,7 @@ jobs:
   python-runtime-wheel:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Python runtime wheel
-    needs: native-linux
+    needs: [native-linux, native-gerbil-tests]
     uses: ./.github/workflows/python-runtime-wheel.yml
 
   lock-linux-seed:

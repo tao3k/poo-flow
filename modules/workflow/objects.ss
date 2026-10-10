@@ -7,7 +7,7 @@
 ;;; Invariant: constructors admit declared values but never execute commands.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        (only-in :poo-flow/modules/memory-core/durable/policy
+        (only-in :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
                  +poo-flow-durable-action-classes+)
         (only-in :std/list/list every)
         "types.ss"

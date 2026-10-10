@@ -43,7 +43,7 @@
              (pending (car rows))
              (failed (cadr rows)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref pending 'kind)
                       'poo-flow.session.materialization-receipt)
         (check-equal? (test-ref pending 'request-id)

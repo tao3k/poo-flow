@@ -6,9 +6,13 @@
 
 from __future__ import annotations
 
+import json
 import os
+import selectors
 import subprocess
+import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import NamedTuple
 
@@ -36,15 +40,22 @@ def runner_source(module_path: Path, projection_path: Path) -> str:
     source_path = scheme_string(str(module_path))
     projection_source_path = scheme_string(str(projection_path))
     return (
-        "(import :core/profile-composition/selection-syntax\n"
-        "        :poo-flow/src/scenario/composition-syntax\n"
-        "        :core/profile-composition/profile-bundle\n"
-        "        :poo-flow/src/scenario/profile-root\n"
-        "        :poo-flow/modules/funflow/profile-library)\n"
-        f"(include {projection_source_path})\n"
-        "(poo-flow-runtime-load-write!\n"
-        f" (let () (include {source_path})))\n"
+        "(for-each (lambda (module)\n"
+        " (display (string-append \"IMPORT \" (symbol->string module) \"\\n\") (current-error-port))\n"
+        " (force-output (current-error-port))\n"
+        " (eval `(import ,module))\n"
+        " (display (string-append \"MODULE-OK \" (symbol->string module) \"\\n\") (current-error-port))\n"
+        " (force-output (current-error-port)))\n"
+        " '(" + " ".join(":" + name for name in _runtime_authoring_imports()) + "))\n"
+        f"(eval '(include {projection_source_path}))\n"
+        "(eval '(poo-flow-runtime-load-write!\n"
+        f" (let () (include {source_path}))))\n"
     )
+
+
+def _runtime_authoring_imports():
+    manifest = Path(__file__).parent / 'projections' / 'runtime_load_imports.json'
+    return json.loads(manifest.read_text())['modules']
 
 
 def aot_runner_source(module_path: Path, projection_path: Path) -> str:
@@ -102,15 +113,7 @@ def _run_scheme_loader(
     failures: list[str] = []
     for command in _scheme_loader_commands(workdir, runner_path):
         try:
-            return subprocess.run(
-                command.argv,
-                cwd=workdir,
-                env=command.env,
-                check=True,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+            return _run_with_native_progress(command, workdir)
         except subprocess.CalledProcessError as exc:
             detail = (exc.stderr or exc.stdout or "").strip()
             failures.append(f"{' '.join(command.argv[:3])}: {detail}")
@@ -119,18 +122,63 @@ def _run_scheme_loader(
     )
 
 
+_SCHEME_LOAD_TOTAL_SECONDS = 90.0
+
+
+def _run_with_native_progress(command, workdir):
+    """Preserve the data stdout and forward real native diagnostics immediately."""
+    process = subprocess.Popen(command.argv, cwd=workdir, env=command.env,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    deadline = time.monotonic() + _SCHEME_LOAD_TOTAL_SECONDS
+    output = {process.stdout: bytearray(), process.stderr: bytearray()}
+    try:
+        with selectors.DefaultSelector() as selector:
+            for stream in output:
+                selector.register(stream, selectors.EVENT_READ)
+            while selector.get_map():
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise RuntimeError('Scheme projection exceeded its total time limit')
+                events = selector.select(timeout=min(5, remaining))
+                if not events and time.monotonic() >= deadline:
+                    raise RuntimeError('Scheme projection exceeded its total time limit')
+                if not events:
+                    raise RuntimeError('Scheme projection emitted no real output for five seconds')
+                for key, _ in events:
+                    chunk = os.read(key.fileobj.fileno(), 65536)
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    output[key.fileobj].extend(chunk)
+                    if key.fileobj is process.stderr:
+                        sys.stderr.write(chunk.decode('utf-8', 'replace')); sys.stderr.flush()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError('Scheme projection exceeded its total time limit')
+        status = process.wait(timeout=min(5, remaining))
+        stdout = output[process.stdout].decode('utf-8')
+        stderr = output[process.stderr].decode('utf-8', 'replace')
+        if status:
+            raise subprocess.CalledProcessError(status, command.argv, stdout, stderr)
+        return subprocess.CompletedProcess(command.argv, status, stdout, stderr)
+    finally:
+        if process.poll() is None:
+            process.kill(); process.wait()
+        process.stdout.close(); process.stderr.close()
+
+
 def _scheme_loader_commands(
     workdir: Path,
     runner_path: Path,
 ) -> tuple[_SchemeLoaderCommand, ...]:
     direct_env = _direct_scheme_loader_env(workdir)
     fallback = _SchemeLoaderCommand(
-        ("gxpkg", "env", "gxi", str(runner_path)),
+        ("gxpkg", "env", "gxi", "-:max-heap=1G,debug=q", str(runner_path)),
         None,
     )
     if direct_env is None:
         return (fallback,)
-    direct = _SchemeLoaderCommand(("gxi", str(runner_path)), direct_env)
+    direct = _SchemeLoaderCommand(("gxi", "-:max-heap=1G,debug=q", str(runner_path)), direct_env)
     return (direct, fallback)
 
 

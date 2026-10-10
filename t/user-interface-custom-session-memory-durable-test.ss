@@ -51,7 +51,7 @@
              (stale-source (list-ref rows 4))
              (repair (list-ref rows 5)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 6)
         (check-equal? (rows-field rows 'kind)
                       '(poo-flow.memory-core.durable-job-receipt

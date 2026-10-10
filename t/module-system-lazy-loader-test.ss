@@ -395,6 +395,12 @@
   (poo-flow-test-case "official contribution sources are optional and resolve by checkout identity"
     (check-equal?
      (map poo-flow-module-source-collection-identity
+          (poo-flow-module-load-path-collections
+           (make-poo-flow-contribution-module-load-path
+            'example-contribution ".")))
+     '(example-contribution poo-flow-maintained))
+    (check-equal?
+     (map poo-flow-module-source-collection-identity
           poo-flow-official-contribution-sources)
      '(poo-flow-official-contributions))
     (let (selection (caar (poo-flow-modules! :custom (lambda-aitia))))

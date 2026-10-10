@@ -53,7 +53,7 @@ def test_scheme_projection_loads_adjacent_artifact_without_subprocess(
     def fail_subprocess(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("artifact load should not start Gerbil")
 
-    monkeypatch.setattr(scheme_runner.subprocess, "run", fail_subprocess)
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress", fail_subprocess)
 
     loaded = scheme_load.load_projection_rows(source, cwd=tmp_path, cache=False)
 
@@ -80,7 +80,7 @@ def test_scheme_projection_loads_adjacent_artifact_without_projection_source(
         raise AssertionError("standalone artifact load should not start Gerbil")
 
     monkeypatch.setattr(scheme_load, "find_runtime_projection_source", lambda _cwd: None)
-    monkeypatch.setattr(scheme_runner.subprocess, "run", fail_subprocess)
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress", fail_subprocess)
 
     loaded = scheme_load.load_projection_rows(source, cwd=tmp_path, cache=False)
 
@@ -121,7 +121,8 @@ def test_scheme_projection_ignores_stale_artifact_and_falls_back(
             stderr="",
         )
 
-    monkeypatch.setattr(scheme_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: fake_run(command.argv))
 
     loaded = scheme_load.load_projection_rows(source, cwd=tmp_path, cache=False)
 
@@ -148,7 +149,8 @@ def test_preproject_load_writes_projection_artifact(tmp_path, monkeypatch) -> No
             stderr="",
         )
 
-    monkeypatch.setattr(scheme_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(scheme_runner, "_run_with_native_progress",
+                        lambda command, workdir: fake_run(command.argv))
 
     artifact = scheme_load.preproject_load(source, cwd=tmp_path)
     loaded = scheme_load.load_projection_rows(source, cwd=tmp_path, cache=False)

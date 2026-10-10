@@ -47,7 +47,7 @@ silently claim another tool's guarantee:
 | Layer | Owner | What it establishes | What it cannot establish |
 | POO Governance | =modules/governance/= | Typed Profile, threat, precondition, assessment and handoff readiness. | Runtime authorization or execution. |
 | Cedar Provider | =modules/authorization/providers/cedar/= and the independent Runtime Host | Exact composition/assessment/proof identity binding and policy authorization. | Mathematical proof of the whole control plane. |
-| TLA+ / TLC | =packages/proofs/tla/GovernanceCore.tla= | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
+| Quint | [[file:packages/proofs/quint/README.org][Finite proof inventory]] | Finite-state transition safety, terminal-state reachability and model-checking counterexamples. | General theorems outside the checked state space. |
 | Lean | =packages/proofs/lean/PooFlowProof/= | General Governance, authority, separation-of-duties and enterprise-assurance theorems. | A fresh runtime decision or an external fact that was never supplied. |
 
 The intended evidence chain is:
@@ -55,13 +55,13 @@ The intended evidence chain is:
 #+begin_src text
 Lambda Scenario / Profile / Case declarations
   -> POO Flow typed Governance assessment
-  -> TLA+ transition-model qualification
+  -> Quint transition-model qualification
   -> Lean enterprise assurance obligations
   -> identity-bound Cedar Provider handoff
   -> independent runtime authorization or rejection
 #+end_src
 
-These arrows are admission boundaries, not authority inheritance.  TLA+ does
+These arrows are admission boundaries, not authority inheritance.  Quint does
 not authorize a Cedar request; Lean does not manufacture observations; Cedar
 does not reinterpret the Profile or threat graph; and a Scheme assessment
 always reports =runtime-executed?: #f=.  The enterprise Lean closure makes
@@ -71,13 +71,12 @@ typed security-graph closure, threat-intelligence provenance, snapshot
 identity and separation of duties are required, and an active critical threat
 contradicts Provider-handoff eligibility.
 
-The executable model gate is =just check-governance-model=.  Gerbil Parser
-owns TLA+ syntax and byte-exact round-trip qualification; official TLC owns
-state exploration.  The checked receipt is written to
-=.ci/governance/tlc-receipt.ss= with source, configuration, tool and output
-digests plus state counts, graph depth and the final admission bit.  A parser
-success, a TLC banner, or a zero exit status alone is not accepted as model
-closure.
+The executable model gate is =just check-governance-model=. Quint owns the
+finite model and its verification entry point. The shared checker pins Quint
+0.33.0 and backend distribution 0.62.1, checks declared properties and binds
+all local model sources, versions, state counts and output identity into an
+inert Scheme v1 receipt. Receipts are local or CI artifacts. Admission requires
+explicit completion and an empty state frontier.
 
 * AI Strategy/Policy Boundary
 The problem this project targets is AI strategy/policy rigor. This should not be described as a worker-execution problem. A worker can execute a unit of work, but the hard part is deciding whether an AI-generated strategy is allowed to start, which policy it refines, which sandbox it may use, which session facts it depends on, and which loop state it may advance.

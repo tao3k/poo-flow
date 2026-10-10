@@ -13,7 +13,7 @@
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
         :poo-flow/src/user-interface/module-presentation
-        :poo-flow/modules/memory-core/interface
+        :poo-flow/modules/ai-agentic-context/features/memory/interface
         :poo-flow/modules/cubeSandbox/config
         :poo-flow/modules/cubeSandbox/profile-interface
         :poo-flow/modules/docker-sandbox/config
@@ -75,7 +75,7 @@
         (import: :poo-flow/modules/cubeSandbox/profile-interface)
         (import: :poo-flow/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/modules/funflow/config)
-        (import: :poo-flow/modules/memory-core/interface)
+        (import: :poo-flow/modules/ai-agentic-context/features/memory/interface)
         (import: :poo-flow/modules/session/config)
         (import: :poo-flow/modules/session/syntax)
         (import: :poo-flow/modules/tool-core/config)
@@ -211,7 +211,7 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config :rows :metadata profiles binding workflow funflow session-core tool-core memory-core loop-engine nono-sandbox cubeSandbox docker-sandbox
+  (syntax-case stx (:config :rows :metadata profiles binding workflow funflow session tool-core ai-agentic-context :memory loop-engine nono-sandbox cubeSandbox docker-sandbox
                     session-case metadata objects rows row-groups
                     .def
                     :inherits :isolation :environment :command :nono)
@@ -229,7 +229,7 @@
             (let* ((prototype-name
                     (object<-alist
                      (list (cons 'slot-name slot-value) ...)
-                     supers: (poo-flow-memory-core-prototype-super
+                     supers: (poo-flow-ai-agentic-context-memory-prototype-super
                               'prototype-super)))
                    ...)
               (poo-flow-modules-system-use-module/contract
@@ -242,7 +242,7 @@
          (syntax
           (let* ((prototype-name
                   (.o (:: prototype-self
-                          (poo-flow-memory-core-prototype-super
+                          (poo-flow-ai-agentic-context-memory-prototype-super
                            'prototype-super)
                           prototype-slot ...)
                       slot-def ...))
@@ -269,7 +269,7 @@
       (poo-flow-modules-system-use-module/contract
        'workflow
        '())))
-    ((_ session-core
+    ((_ session
         :config
         (session-case case-name
           (metadata metadata-entry ...)
@@ -285,7 +285,7 @@
          (rows row-expr ...)
          (row-groups row-group-expr ...))
        ...)))
-    ((_ session-core
+    ((_ session
         :config
         (session-case case-name
           (metadata metadata-entry ...)
@@ -299,15 +299,15 @@
          (objects (object-name object-expr) ...)
          (rows row-expr ...))
        ...)))
-    ((_ session-core
+    ((_ session
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)
         ...)
-     (error "session-core :config .def has been removed; use (use-module session-core :config (session-case ...))"))
-    ((_ session-core
+     (error "session :config .def has been removed; use (use-module session :config (session-case ...))"))
+    ((_ session
         :rows bad-clause ...)
-     (error "session-core :rows has been removed; use (use-module session-core :config (session-case ...))"))
+     (error "session :rows has been removed; use (use-module session :config (session-case ...))"))
     ((_ tool-core
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
@@ -318,7 +318,7 @@
        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
              slot-def ...)
        ...)))
-    ((_ memory-core
+    ((_ ai-agentic-context :memory
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)

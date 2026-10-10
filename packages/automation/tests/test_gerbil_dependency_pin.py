@@ -39,6 +39,24 @@ class GerbilDependencyPinTest(unittest.TestCase):
         pins = module.parse_package_pins((ROOT / "gerbil.pkg").read_text(encoding="utf-8"))
         self.assertGreaterEqual(set(pins), {"asp-gerbil-scheme", "gerbil-parser"})
 
+    def test_release_tag_projects_github_archive_prefix(self) -> None:
+        module = pin_module()
+        pins = module.parse_package_pins(
+            '(depend: ("github.com/tao3k/asp-gerbil-scheme@v0.1.2"))'
+        )
+        self.assertEqual(
+            pins["asp-gerbil-scheme"],
+            ("github.com/tao3k/asp-gerbil-scheme", "v0.1.2"),
+        )
+        projection = module.expected_projection(
+            "github.com/tao3k/asp-gerbil-scheme", "asp-gerbil-scheme", "v0.1.2"
+        )
+        self.assertEqual(projection["strip_prefix"], "asp-gerbil-scheme-0.1.2")
+        self.assertEqual(
+            projection["urls"],
+            ["https://github.com/tao3k/asp-gerbil-scheme/archive/v0.1.2.tar.gz"],
+        )
+
     def test_repository_dependency_projection_is_closed(self) -> None:
         completed = subprocess.run(
             [sys.executable, str(SCRIPT), "check"],

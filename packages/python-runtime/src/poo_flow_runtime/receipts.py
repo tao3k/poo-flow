@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-"""Typed helpers for POO Flow C ABI receipts."""
+"""Typed helpers for POO Flow receipts, including local domain descriptions.
+
+Parsing a receipt does not establish its producer or native execution authority.
+"""
 
 from __future__ import annotations
 

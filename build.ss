@@ -44,6 +44,11 @@
    (else
     '(gxc: "src/ffi/runtime-v0-native"))))
 
+(def +semantic-native-ffi-spec+
+  (cond-expand
+   (darwin '(gxc: "src/ffi/semantic" "-ld-options" "-Wl,-undefined,dynamic_lookup"))
+   (else '(gxc: "src/ffi/semantic"))))
+
 (asp-gerbil-scheme-package-spec!
  (poo-flow-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
@@ -53,6 +58,7 @@
     "testing-api.ss"
     "src/graph/interface.ss"
     "src/authoring/module-descriptor.ss"
+    "src/user-interface/module-activation.ss"
     "src/user-interface/module-selection-syntax.ss"
     "src/authoring/module-source-collection.ss"
     "src/building/official-contributions.ss"
@@ -72,7 +78,9 @@
     "src/scenario/plan-projection.ss"
     "src/user-interface/profile-core.ss"
     "src/user-interface/init-declaration-syntax.ss"
+    "modules/session/interface.ss"
     "modules/funflow/interface.ss"
+    "modules/ai-agentic-context/interface.ss"
     "modules/funflow/runtime-load-projection.ss"
     "src/profiles/human-ai-capability.ss"
     "src/profiles/agentic-research.ss"
@@ -80,16 +88,29 @@
     "modules/authorization/providers/cedar/interface.ss"
     "modules/governance/interface.ss"
     "modules/proof/interface.ss"
+    "modules/ai-agentic-context/use-host.ss"
+    "modules/ai-agentic-context/session-host.ss"
+    "src/semantic/context-restriction.ss"
     "src/semantic/orgize-interface.ss"
+    "src/semantic/orgize-source-interface.ss"
     "modules/query/interface.ss"
+    "modules/search-engine/interface.ss"
     "modules/query/rust-ir.ss"
-    "modules/tla-plus/interface.ss"
     "modules/standards/interface.ss"
     "modules/temporal-causality/interface.ss"
+    "modules/temporal-causality/ascent-exchange.ss"
+    ;; Advanced embedded owner projections must ship in the installed package.
+    ;; Ordinary authoring continues through the POO-native Temporal interface.
+    "src/ffi/scheme-wire.ss"
+    "src/ffi/temporal-policy.ss"
+    "src/ffi/context-use.ss"
+    "src/ffi/temporal-proof.ss"
+    "src/ffi/temporal-proof-host.ss"
     "src/feature-system/interface.ss"))
  (exclude-dirs +poo-flow-build-exclude-dirs+)
  (exclude-modules '("modules/nono-sandbox/_nono.ss"
                     "src/ffi/runtime-v0-native.ss"
+                    "src/ffi/semantic.ss"
                     "observe-contribute-import.ss"
                     "performance-tests.ss"
                     "run-contribute-test.ss"))
@@ -97,6 +118,6 @@
   `((gxc: "modules/nono-sandbox/_nono"
           "-cc-options" ,+nono-c-include-option+
           "-ld-options" ,+nono-c-link-option+)))
- (extra-spec `(,+runtime-v0-native-ffi-spec+)))
+ (extra-spec `(,+runtime-v0-native-ffi-spec+ ,+semantic-native-ffi-spec+)))
 
 (defbuild-script (poo-flow-native-spec))

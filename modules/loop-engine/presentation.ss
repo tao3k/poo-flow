@@ -128,8 +128,8 @@
                    (sandbox-validation)))
         ((sandbox-backend-capability-registry-diagnostics) (poo-flow-sandbox-backend-capability-registry-validation-diagnostics
                    (sandbox-validation)))
-        ((session-core-intent-count) 0)
-        ((session-core-intents) '())
+        ((session-intent-count) 0)
+        ((session-intents) '())
         ((cicd-intent-count) 0)
         ((cicd-intents) '())
         ((workflow-cicd-pipeline-count) 0)
@@ -244,8 +244,8 @@
        sandbox-backend-capability-registry-valid?
        sandbox-backend-capability-registry-diagnostic-count
        sandbox-backend-capability-registry-diagnostics
-       session-core-intent-count
-       session-core-intents
+       session-intent-count
+       session-intents
        cicd-intent-count
        cicd-intents
        workflow-cicd-pipeline-count

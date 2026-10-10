@@ -45,7 +45,7 @@
              (entries (.ref registry 'entries))
              (build-entry (cadr entries)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (.ref registry 'kind)
                       'poo-flow.session.registry-receipt)
         (check-equal? (.ref registry 'project-id) 'custom/project)

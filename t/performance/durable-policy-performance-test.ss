@@ -17,7 +17,7 @@
                  benchmark-run)
         (only-in :clan/poo/object object?)
         "../support/performance"
-        :poo-flow/modules/memory-core/durable/policy)
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy)
 
 (export durable-policy-performance-test)
 

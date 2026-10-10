@@ -3,6 +3,28 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * 10.06.43 Session Memory Durable Policy RFC
+The [[file:agentic-ai-context-system-design.org][AI Agentic-context Module design]] is the new architecture direction:
+Orgize/Org-mode Content is central, with Session as a composed independent Module and Memory as an owned Feature
+of =ai-agentic-context=. The standalone memory-core policy/publication and
+session-first assumptions below are historical proposals, not target owners.
+The original recovery questions remain inputs to the new Session contract.
+
+The temporal revisit redesign is
+[[file:167-temporal-revisit-evidence-design.org][167 Revisiting Evidence Across Time]]. The Memory store/job and promotion
+parts below are historical proposals pending that redesign; Session recovery
+and checkpoint questions remain open on their own terms. A due review, a
+recorded outcome, and current evidence support are separate decisions.
+
+The current source-selection and scope contract is
+[[file:166-session-memory-orgize-boundary.org][Session, Memory and Orgize source boundary]]. This RFC retains the durable
+recovery design. For Org-backed Memory, Orgize's source-backed Org document,
+Element graph and named queries are the canonical syntax and load path;
+the earlier design assigned =memory-core= policy and publication ownership.
+The new system design replaces that ownership while preserving the Org parser
+boundary. The linked contract defines the load receipt and assigns semantic
+admission to MRR. The existing report-only store catalog does not yet
+implement that Org load path.
+
 ** 10.06.43.10 Status
 Draft for discussion.
 
@@ -296,11 +318,11 @@ Default policy:
 ** 10.06.43.100 Module-System Question
 There is an unresolved module-system question:
 
-Should =session-core= become a first-class init category row, for example:
+Should =session= become a first-class init category row, for example:
 #+begin_src scheme
 (poo-flow!
  :session
- (session-core +lineage +placement +handoff +graph +transform +doctor
+ (session +lineage +placement +handoff +graph +transform +doctor
                +persistence +checkpoint +resume +memory-policy)
  :workflow
  (funflow ...)
@@ -317,7 +339,7 @@ Arguments for =:session=:
 
 Arguments against adding it immediately:
 - current init categories do not include =:session=;
-- =session-core= may be a module selected through profile/kernel bundles rather
+- =session= may be a module selected through profile/kernel bundles rather
   than a root user category;
 - adding a category is a public interface change and needs tests/docs first.
 
@@ -363,7 +385,7 @@ Milestone 1: RFC and contracts.
 
 Milestone 2: Scheme declaration layer.
 - Add POO prototypes for durable/checkpoint/session policy.
-- Extend session-core and loop-engine policy rows.
+- Extend session and loop-engine policy rows.
 - Project durable/checkpoint receipts into presentation and runtime handoff.
 - Add negative contract tests for unbounded context and invalid ids.
 
@@ -385,7 +407,7 @@ Milestone 5: Rust/Marlin implementation.
 ** 10.06.43.130 Open Questions
 1. Should the public init category be =:session=, =:context=, or something
    else?
-2. Should durable/checkpoint policy live under =session-core=, or under a
+2. Should durable/checkpoint policy live under =session=, or under a
    shared module-system object family consumed by session, memory, loop-engine,
    and workflow modules?
 3. Should loop-engine memory policy reference durable policy by object ref, or

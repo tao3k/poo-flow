@@ -69,7 +69,7 @@
              (communication-rows
               (rows-with-kind rows 'poo-flow.session.communication-receipt)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? registry-entry-count 3)
         (check-equal? (test-ref graph 'kind)
                       'poo-flow.session.agent-graph)

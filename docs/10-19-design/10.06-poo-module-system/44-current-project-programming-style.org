@@ -23,7 +23,7 @@ The detailed Object/Entity/Element/Relation/Query correspondence is
 | Query, Relation, GQL and one semantic model | [[file:44-current-project-programming-style/04-semantic-query-and-relation.org][04 Semantic Query And Relation]] | authoring Query admission + RFC 165 proofs |
 | Macros, phase separation and declaration lowering | [[file:44-current-project-programming-style/05-macro-phase-and-lowering.org][05 Macro Phase And Lowering]] | macro scenarios and expansion benchmarks |
 | Imports, build roots, lazy loading and performance | [[file:44-current-project-programming-style/06-import-build-and-performance.org][06 Import Build And Performance]] | loader admission + ASP Build API receipts |
-| Scheme contract, TLA+ three-part closure, TLC and Lean | [[file:44-current-project-programming-style/07-formal-assurance-correspondence.org][07 Formal Assurance Correspondence]] | parser receipt + TLC receipt + Lean proofs |
+| Scheme contract, Quint three-part closure, Quint and Lean | [[file:44-current-project-programming-style/07-formal-assurance-correspondence.org][07 Formal Assurance Correspondence]] | parser receipt + Quint receipt + Lean proofs |
 | Tests, observability and bounded resource policy | [[file:44-current-project-programming-style/08-testing-and-observability.org][08 Testing And Observability]] | POO Flow Testing Policy |
 
 These modules refine one style contract; they are not optional profiles and do

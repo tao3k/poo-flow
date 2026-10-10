@@ -18,7 +18,7 @@
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         :poo-flow/modules/workflow/cicd-config
         :poo-flow/modules/workflow/cicd-pipeline-run-config
-        :poo-flow/modules/session-core/presentation
+        :poo-flow/modules/session/presentation
         (only-in :poo-flow/modules/loop-engine/config
                  poo-flow-user-config-loop-engine-intents
                  poo-flow-user-loop-engine-intent-ref)
@@ -84,8 +84,8 @@
                (sandbox-backend-capability-registry-validation
                 (poo-flow-user-config-sandbox-backend-capability-registry-validation
                  selected-modules))
-               (session-core-intent-rows
-                (poo-flow-user-config-session-core-intents config))
+               (session-intent-rows
+                (poo-flow-user-config-session-intents config))
                (cicd-intent-rows
                 (poo-flow-user-config-cicd-intents config))
                (workflow-cicd-runtime-projection
@@ -149,7 +149,7 @@
                  selected-modules
                  feature-fact-rows
                  sandbox-profile-derivation-rows
-                 session-core-intent-rows
+                 session-intent-rows
                  cicd-intent-rows
                  workflow-cicd-check-maps
                  workflow-cicd-functional-dag-rows
@@ -210,9 +210,9 @@
                  (cons 'sandbox-backend-capability-registry-diagnostics
                        (poo-flow-sandbox-backend-capability-registry-validation-diagnostics
                         sandbox-backend-capability-registry-validation))
-                 (cons 'session-core-intent-count
-                       (length session-core-intent-rows))
-                 (cons 'session-core-intents session-core-intent-rows)
+                 (cons 'session-intent-count
+                       (length session-intent-rows))
+                 (cons 'session-intents session-intent-rows)
                  (cons 'cicd-intent-count (length cicd-intent-rows))
                  (cons 'cicd-intents cicd-intent-rows)
                  (cons 'workflow-cicd-pipeline-count

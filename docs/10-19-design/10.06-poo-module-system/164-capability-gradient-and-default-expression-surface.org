@@ -288,7 +288,7 @@ The following are forbidden:
 - a macro or MOP facility that silently changes authority, performs effects or
   hides composition provenance.
 
-Cedar, Lean, TLA+, MRR, Rust, Python and other runtimes consume projections or
+Cedar, Lean, Quint, MRR, Rust, Python and other runtimes consume projections or
 receipts bound to the admitted effective object.  They do not replace it.
 
 * Default expression laws

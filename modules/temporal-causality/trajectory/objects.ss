@@ -28,4 +28,3 @@
         source-cut-digest: cut-value source-projection-digest: projection-value
         time-domain-identity: domain-value modality: modality-value
         samples: samples-value)))
-

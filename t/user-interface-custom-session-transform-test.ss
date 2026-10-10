@@ -49,7 +49,7 @@
              (handoff-intent
               (poo-flow-session-transform-receipt-handoff-intent receipt)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 4)
         (check-equal? (poo-flow-session-memory-intent? memory-intent) #t)
         (check-equal? (poo-flow-session-memory-intent-name memory-intent)

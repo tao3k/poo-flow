@@ -27,24 +27,24 @@ def admissible (state : MigrationState) : Prop :=
     state.conformanceBound = true ∧ state.humanReviewed = true ∧
     state.cedarPermit = true)
 
-def tlaSourceDigest : String :=
-  "sha256:043ac3e0074752fddf6a2ac4dd889d75930a0deb9c06a576d3b3cdb61981c04f"
+def quintSourceDigest : String :=
+  "sha256:b686064c4e647465c847e30c6d654fe86722aa7a0ed86f2fb74b6b7ab69abd88"
 
-def tlaInvariantNames : List String :=
+def quintInvariantNames : List String :=
   ["AINeverGrantsAuthority", "ReviewRequiresConformance",
    "CedarPermitRequiresHumanReview", "CutoverRequiresCedarPermit",
    "CutoverRequiresCompleteEvidence"]
 
-structure TLAImpactContract where
-  tlaSourceDigest : String
+structure QuintImpactContract where
+  quintSourceDigest : String
   impactedLeanDeclarations : List String
   deriving DecidableEq
 
-def migrationImpactContract : TLAImpactContract :=
-  { tlaSourceDigest := tlaSourceDigest
+def migrationImpactContract : QuintImpactContract :=
+  { quintSourceDigest := quintSourceDigest
     impactedLeanDeclarations :=
       ["aiCannotAuthorize", "cutoverRequiresHumanCedarAndEvidence",
-       "tlaImpactContractBindsExactSource"] }
+       "quintImpactContractBindsExactSource"] }
 
 theorem aiCannotAuthorize (state : MigrationState)
     (accepted : admissible state) : state.aiAuthority = false :=
@@ -57,8 +57,8 @@ theorem cutoverRequiresHumanCedarAndEvidence (state : MigrationState)
     state.cedarPermit = true :=
   accepted.2.2.2 ready
 
-theorem tlaImpactContractBindsExactSource :
-    migrationImpactContract.tlaSourceDigest = tlaSourceDigest := by
+theorem quintImpactContractBindsExactSource :
+    migrationImpactContract.quintSourceDigest = quintSourceDigest := by
   rfl
 
 end PooFlowProof.Vertical.Healthcare.StandardMigrationRefinement

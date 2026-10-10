@@ -275,6 +275,16 @@ Pointer updates use:
 A compare-and-swap conflict requires fresh observation and reevaluation. It
 must not use last-write-wins.
 
+The [[file:../../../modules/temporal-causality/design-audit.org][Temporal engine design audit, decision D7]] specifies the runtime handoff:
+the selection, version increment, authorization-fence validation and
+recoverable transition receipt must share one transaction linearization point.
+A preflight permit cannot close a concurrent revocation race. Retrying one
+idempotency identity recovers the original outcome; a crash after selection
+cannot cause a second publication. Runtime C and Python require race, revoked
+fence, duplicate-request and crash-recovery qualification before this RFC's
+active selection is an implemented library capability.
+
+
 * Effects and compensation
 
 A new cut cannot undo an already committed external effect.

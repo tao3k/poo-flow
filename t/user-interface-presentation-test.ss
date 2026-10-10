@@ -33,7 +33,7 @@
   '(selected-modules
     feature-facts
     sandbox-profile-derivations
-    session-core-intents
+    session-intents
     cicd-intents
     workflow-cicd-pipelines
     workflow-cicd-functional-dags
@@ -88,7 +88,7 @@
         (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'module-keys)
                       '((flow . funflow)
-                        (session . session-core)
+                        (session . session)
                         (loop . governor)
                         (sandbox . nono-sandbox)
                         (sandbox . cubeSandbox)
@@ -99,22 +99,22 @@
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
                       '())
-        (check-equal? (.ref presentation 'session-core-intent-count) 1)
+        (check-equal? (.ref presentation 'session-intent-count) 1)
         (check-equal? (alist-value 'key
                                    (car (.ref presentation
-                                             'session-core-intents)))
-                      '(session . session-core))
+                                             'session-intents)))
+                      '(session . session))
         (check-equal? (alist-value 'flags
                                    (car (.ref presentation
-                                             'session-core-intents)))
+                                             'session-intents)))
                       '(+lineage +placement +handoff +graph +transform +doctor))
         (check-equal? (alist-value 'transform-enabled?
                                    (car (.ref presentation
-                                             'session-core-intents)))
+                                             'session-intents)))
                       #t)
         (check-equal? (alist-value 'runtime-executed
                                    (car (.ref presentation
-                                             'session-core-intents)))
+                                             'session-intents)))
                       #f)
         (check-equal? (alist-value 'declaration-index
                                    (car feature-facts))
@@ -276,11 +276,11 @@
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
                       '())
-        (check-equal? (.ref presentation 'session-core-intent-count) 1)
+        (check-equal? (.ref presentation 'session-intent-count) 1)
         (check-equal? (alist-value 'key
                                    (car (.ref presentation
-                                             'session-core-intents)))
-                      '(session . session-core))
+                                             'session-intents)))
+                      '(session . session))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (.ref presentation
                             'workflow-cicd-runtime-command-manifest-agreement-valid?)

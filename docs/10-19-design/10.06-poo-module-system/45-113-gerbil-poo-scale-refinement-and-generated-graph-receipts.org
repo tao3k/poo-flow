@@ -936,7 +936,7 @@ identity grammar.
 The semantic preimage has the following fixed positional schema:
 
 #+begin_src text
-#let semantic-v1(
+#let semantic(
   module-definition,
   module-instance,
   ordered-profile-revisions,
@@ -959,7 +959,7 @@ The semantic preimage has the following fixed positional schema:
   generation-identity,
 )
 
-$ bytes_s = "deterministic-cbor"(semantic-v1(M_d, M_i, P, norm(I), C)) $
+$ bytes_s = "deterministic-cbor"(semantic(M_d, M_i, P, norm(I), C)) $
 $ bytes_a = "deterministic-cbor"(activation-v1(H_s(bytes_s), G)) $
 #+end_src
 

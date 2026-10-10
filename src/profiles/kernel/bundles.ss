@@ -11,9 +11,9 @@
                  poo-flow-funflow-cicd-default-payload
                  poo-flow-funflow-module-bundles
                  poo-upstream-flow-funflow-module-bundles)
-        (only-in :poo-flow/modules/session-core/config
-                 +poo-flow-session-core-default-flags+
-                 poo-flow-session-core-module-bundles)
+        (only-in :poo-flow/modules/session/config
+                 +poo-flow-session-default-flags+
+                 poo-flow-session-module-bundles)
         (only-in :poo-flow/modules/governor/config
                  poo-flow-loop-governor-module-bundles)
         (only-in :poo-flow/modules/nono-sandbox/config
@@ -27,8 +27,8 @@
         poo-flow-kernel-module-bundles
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles
-        +poo-flow-session-core-default-flags+
-        poo-flow-session-core-module-bundles
+        +poo-flow-session-default-flags+
+        poo-flow-session-module-bundles
         poo-flow-loop-governor-module-bundles
         poo-flow-nono-sandbox-module-bundles
         poo-flow-cubeSandbox-module-bundles
@@ -36,7 +36,7 @@
 
 (def poo-flow-kernel-module-bundles
   (append poo-flow-funflow-module-bundles
-          poo-flow-session-core-module-bundles
+          poo-flow-session-module-bundles
           poo-flow-loop-governor-module-bundles
           poo-flow-nono-sandbox-module-bundles
           poo-flow-cubeSandbox-module-bundles

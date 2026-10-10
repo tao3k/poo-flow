@@ -4,10 +4,10 @@
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/store-backend
-        :poo-flow/modules/memory-core/durable/runtime-manifest)
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-backend
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/runtime-manifest)
 
 (export durable-runtime-manifest-test)
 
