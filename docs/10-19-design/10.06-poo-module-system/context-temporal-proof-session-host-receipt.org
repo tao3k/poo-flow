@@ -140,3 +140,40 @@ The complete producer parser build also attempts optional bridge modules. Its
 this local SDK. That negative receipt remains open; the consumed source/runtime
 interface build is a separate successful boundary. No complete Orgize bridge,
 MRR transport or MRR Data integration claim follows from the native Context gate.
+
+* Open exact-pin gate and producer candidate
+
+The migrated POO Flow production build completed with normal settings. The
+six qualification suites compiled and the native executable linked. Running
+that executable against the fixed Orgize/parser pair failed before test cases:
+the generated native fold SSI contained empty =%#import= forms, which this SDK's
+runtime expander rejects. This exact-pin run is not qualified.
+
+A source-owned parser candidate removes empty import forms only when no module
+dependencies exist and adds a generator regression assertion. Its local commit
+=1d2413a79e7677409f664945c883ada375435c58= is based on the existing parser PR
+head =9184d01f6b0a2f5f8b32f421642d33e006526079=. All five generator suite cases
+completed with exit zero, MODULE-OK, HARNESS-OK and final OK. The candidate has
+not been published or pinned by this consumer.
+
+Regeneration produced 105 source units. Removing the four empty import forms
+from the original source gives exactly the candidate source: no other generated
+source differences were found. A compiled Scheme byte-identity attempt failed
+because the generated compilation products contain timestamps and temporary
+identifiers. That attempt is retained as a negative control and is not promoted
+to a byte-identity receipt.
+
+The unchanged native executable, with source-recompiled candidate SSI first on
+its load path, completed 69 cases and six module receipts with exit zero,
+HARNESS-OK and final OK. Runtime limits remained five seconds idle, 45 seconds
+total and a one GiB heap. This is a metadata compatibility control; it does not
+qualify a freshly rebuilt complete producer/consumer pair. Publication, immutable
+manifest/lock alignment, fresh artifact rebuilding and exact-head consumer CI
+remain required before closing the migration.
+
+Bounded native compilation passes also reached the original 180-second build
+budget. A terminated compiler left a temporary object lock, preventing the next
+pass from progressing. The exited process group and specific private lock were
+checked before each abandoned lock was removed. Completed compiler objects were
+reused; no watchdog or runtime test limit was widened. All failed passes remain
+local diagnostic artifacts, not source-controlled logs.
