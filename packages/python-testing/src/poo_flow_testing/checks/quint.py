@@ -34,6 +34,10 @@ class QuintCase:
     temporal: str | None = None
 
 GROUPS = {
+    "search-attempt": [QuintCase("SearchAttempt_none"),
+        QuintCase("SearchAttempt_ignoreRevision", "CurrentRevision", True),
+        QuintCase("SearchAttempt_ignoreAttempt", "ExactAttempt", True),
+        QuintCase("SearchAttempt_ignoreRetired", "NoRetiredAdmission", True)],
     "governance": [QuintCase("GovernanceCore")],
     "query": [QuintCase("NativeSemanticQuery")],
     "healthcare": [QuintCase("HealthcarePrescriptionCausality")],

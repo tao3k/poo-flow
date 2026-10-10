@@ -214,3 +214,13 @@ sufficient; backend capability substitution must remain rejected until qualified
 - [[file:configurable-search-proof-ownership.org][Producer and consumer proof ownership]].
 - MRR =docs/architecture/0037-configurable-search-execution.org=: existing
   bounded root dispatch and Data integration, with dependent scheduling open.
+
+* Implemented attempt boundary
+
+=modules/search/attempt.ss= now supplies the pure per-stage attempt identity
+transition kernel. The matching Lean/Quint definitions and actual Scheme controls
+are described in [[file:../../proofs/Composition/README.org][the producer proof package]].
+It fences settlement across revisions and retirement; readiness and selective
+Temporal dependency propagation are not implemented by this kernel.
+LeanPoo structural invalidation certificates are reused separately, with an
+explicit stage-graph correspondence prerequisite.

@@ -58,3 +58,8 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/ContextTemporalLifecycle.qnt',
         root / 'packages/proofs/lean-poo/ContextTemporalPolicy.lean')
     print('CONTEXT-TEMPORAL-LIFECYCLE-SOURCE-BINDING-OK ' + lifecycle_digest, flush=True)
+
+    search_digest = check_binding(
+        root / 'packages/proofs/quint/SearchAttempt.qnt',
+        root / 'proofs/Composition/SearchAttempt.lean')
+    print('SEARCH-ATTEMPT-SOURCE-BINDING-OK ' + search_digest, flush=True)

@@ -39,9 +39,10 @@ library and runs this gate before its own consumer checks. No MRR dependency or
 binding/scenario model was introduced into the producer package.
 
 The MRR publication Quint model, source/generation admission, reflection,
-received-order binding and actual execution witnesses stay in MRR. A generic
-producer transition model has not yet been created; existing consumer state
-models cannot be relabeled as proof of Scheme execution. Standalone Scheme
+received-order binding and actual execution witnesses stay in MRR. The per-stage Search attempt transition now has a producer Quint model and
+Lean admission proofs with actual Scheme controls. Full engine readiness and
+source/graph refinement remain unproved; existing consumer state models
+cannot be relabeled as proof of Scheme execution. Standalone Scheme
 corruption controls, producer-specific Quint and merged release integration
 remain open gates. The proof package is published as an immutable consumer
 dependency with independent producer CI; downstream qualification stays separate.

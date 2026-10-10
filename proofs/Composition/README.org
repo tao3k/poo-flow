@@ -20,9 +20,10 @@ source/generation, FFI/result admission and publication proofs.
 
 This gate qualifies mathematical composition and certificates. It does not
 prove Scheme implementation refinement or qualify the outstanding standalone
-Scheme DAG corruption controls. No Quint model was moved here: the current
-Search Quint model is an MRR consumer publication protocol. A producer-specific
-Quint model requires actual POO transition inputs and its own qualification.
+Scheme DAG corruption controls. No consumer Quint model was moved here: the existing
+Search Quint model is an MRR consumer publication protocol. The new per-stage Search attempt producer model qualifies the implemented
+attempt transition kernel; full engine readiness and graph correspondence
+remain separate producer gates.
 
 Consumers declare this repository, a full immutable commit SHA and the
 =proofs/Composition= subdirectory in their Lake dependency. The standalone
@@ -33,4 +34,55 @@ MRR has qualified immutable-source materialization and its consumer proofs from
 an empty dependency cache. Its retained publication Quint model remains MRR-owned.
 Producer mathematics and consumer admission are separate gates; this package's
 CI cannot establish downstream consumer CI, Scheme source refinement or release
-integration. The producer review is [[https://github.com/tao3k/poo-flow/pull/62][PR 62]].
+integration. The producer review is [[https://github.com/tao3k/poo-flow/pull/34][PR 34]].
+
+* Search engine proof increment
+
+=SearchAttempt.lean= proves exact scope admission, once-only settlement,
+revision fencing, monotonic request identifiers within one retained state
+lineage, and retirement rejection. =modules/search/attempt.ss= implements the
+matching pure per-stage POO kernel; =t/search-attempt-test.ss= runs actual
+current/foreign/duplicate/revised/retired request controls.
+
+| Scheme operation | Lean definition | Quint action |
+|------------------+-----------------+--------------|
+| attempt-state | State / Scope | init |
+| attempt-issue | issue | issue |
+| attempt-settle | settle | settle |
+| attempt-revise | revise | revise |
+| attempt-retire | retire | retire |
+
+The bounded Quint projection fixes stage/generation/configuration/source identities
+and varies revision, attempt and retirement. It checks four safety predicates
+and requires counterexamples for omitted revision, attempt and retirement
+guards. Run =just check-search-attempt-quint= using the existing pinned runner.
+The source-binding gate checks Quint source freshness and invariant inventory;
+it is not a semantic refinement proof.
+
+=SearchTemporal.lean= reuses LeanPoo's =CertifiedInvalidation= and
+=certifyInvalidation=. Its certificate characterizes exactly the changed nodes
+and structural descendants; unaffected nodes are excluded. The executable
+A/B/C/D/E and cycle controls run inside =just check-composition-proof=.
+
+The stage dependency graph must be projected with actual prerequisites as
+edges before this structural certificate can govern Search invalidation.
+The C4 graph representation here does not make role precedence equivalent to
+observed causal evidence. Scheme source/graph correspondence, complete DAG
+readiness, selective observation reuse, negative-evidence dependency tracking,
+physical execution and full engine refinement remain open.
+
+A kernel scope denotes one retained per-stage state lineage. Reconstructing an
+initial state with the same external generation is not a permitted recovery
+operation. State authority and authenticated source cuts belong to its owner.
+Scheme snapshots text bindings, while Lean abstracts identity equality; an
+injective identity projection is required for cross-language correspondence.
+These controls qualify identity admission only, not truth completeness or
+backend cancellation. Arbitrary extended POO objects are not authentication
+certificates.
+
+Run =just check-search-engine-proof= to combine the Lean certificate/axiom gate,
+Quint positive and negative cases, and five actual Scheme control cases.
+The Scheme gate bootstraps Gxi and invokes the upstream GxTest entry point.
+The standalone GxTest executable's local =__eval-import= failure also occurs
+in the unchanged Search framework suite; that failure is retained separately
+from successful Gxi-hosted Case/Module/Harness receipts.
