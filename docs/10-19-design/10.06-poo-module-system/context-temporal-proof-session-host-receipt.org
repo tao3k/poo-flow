@@ -192,6 +192,17 @@ Context source boundary imports Orgize's current =languages/org/event-runtime=
 interface. Orgize producer CI and fresh consumer qualification remain required;
 manifest alignment alone does not qualify the new native artifacts.
 
+The fresh local parser build reached the original 180-second budget. Its
+incremental continuation returned zero, but Orgize's producer build exposed
+missing dynamic products: the loader attempted to expand
+=gerbil-parser/src/language/grammar~1.scm= as source and rejected =declare=.
+Recompiling that exact source module completed successfully. The next producer
+attempt failed in the same way at =src/compiler/event-fold-aot~1.scm=.
+The private artifact root therefore remains incomplete; the incremental build's
+zero exit is not a complete producer receipt. Both failed Orgize attempts exited
+70. Fresh producer and consumer qualification remains open without extending
+the watchdog, substituting older artifacts or changing runtime test assertions.
+
 ** Earlier candidate metadata controls
 
 Regeneration produced 105 source units. Removing the four empty import forms
