@@ -578,7 +578,22 @@ check-context-delta-quint:
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group context-delta
 
 [group('check')]
-check-context-delta-proof: check-context-delta-lean check-context-delta-quint
+check-context-delta-proof: check-context-delta-lean check-context-delta-quint check-context-coverage-quint
+
+[group('check')]
+check-context-coverage-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group context-coverage
+
+[group('check')]
+check-session-attempt-lean:
+    cd "{{ temporal_poo_proof_dir }}" && timeout 120s lean SessionAttempt.lean
+
+[group('check')]
+check-session-attempt-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group session-attempt
+
+[group('check')]
+check-session-attempt-proof: check-session-attempt-lean check-session-attempt-quint
 
 
 [group('check')]

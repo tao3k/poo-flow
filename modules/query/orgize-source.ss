@@ -27,7 +27,8 @@
                  poo-flow-query-result-set poo-flow-query-result-set-replay)
         :core/poo-clos/interface)
 
-(export poo-flow-query-orgize-open-headlines
+(export poo-flow-query-orgize-open-headlines-incremental
+        poo-flow-query-orgize-open-headlines
         poo-flow-query-orgize-open-headlines-replay
         poo-flow-query-orgize-source-observation?)
 
@@ -92,7 +93,7 @@
          (poo-flow-query-result-cell 'title (cadddr values))
          (poo-flow-query-result-cell 'todo-type (car (cddddr values))))))
 
-(def (poo-flow-query-orgize-open-headlines source)
+(def (open-headlines source previous)
   (let* ((projection (org-source-headline-elements source)))
     (unless (and (org-source-headline-elements? projection)
                  (equal? (.ref projection 'parser-identity)
@@ -127,18 +128,39 @@
            (admission-value (poo-flow-query-admit query-value space)))
       (unless (.ref admission-value 'accepted?)
         (error "source-derived Org Query failed ElementSpace admission"))
-      (let* ((selection
-              (poo-flow-query-select-scheme-nodes
-               query-value (source-elements->query-nodes elements digest)))
+      (let* ((nodes (source-elements->query-nodes elements digest))
+             ;; Complete local inputs exclude the globally rebound source identity.
+             ;; Byte positions are conservative local keys; shifted nodes are recomputed.
+             (snapshot (lambda (node)
+               (list (.ref node 'byteStart) (.ref node 'byteEnd)
+                     (.ref node 'title) (.ref node 'todoType))))
+             (old-inputs (make-hash-table test: equal?))
+             (old-rows (make-hash-table test: equal?))
+             (_ (when previous
+                  (for-each (lambda (v) (hash-put! old-inputs (car v) v)) (.ref previous 'node-snapshots))
+                  (for-each (lambda (v) (hash-put! old-rows (cadr v) v)) (.ref previous 'selection-rows))))
+             (reusable? (lambda (node)
+               (equal? (hash-get old-inputs (.ref node 'byteStart)) (snapshot node))))
+             (changed (filter (lambda (node) (not (reusable? node))) nodes))
+             (selection (poo-flow-query-select-scheme-nodes query-value changed))
+             (changed-rows (make-hash-table test: equal?))
+             (_rows (for-each (lambda (v) (hash-put! changed-rows (cadr v) v)) (.ref selection 'rows)))
+             (selected-values
+               (filter values (map (lambda (node)
+                 (let (row (hash-get (if (reusable? node) old-rows changed-rows) (.ref node 'byteStart)))
+                   (and row (cons (.ref node 'identity) (cdr row))))) nodes)))
              (rows
               (map (lambda (values) (query-row->result-row values digest))
-                   (.ref selection 'rows)))
+                   selected-values))
              (result
               (poo-flow-query-result-set
                (string-append digest ":open-headlines-result")
                OrgOpenHeadlineResult
                (.ref query-value 'identity) (.ref query-value 'version) digest rows #t)))
         (.o kind: 'poo-flow.query.orgize-source-observation
+            node-snapshots: (map snapshot nodes) selection-rows: selected-values
+            evaluated-node-count: (length changed) reused-node-count: (- (length nodes) (length changed))
+            dependency-profile: 'orgize/local-open-headline-v1
             parser-identity: org-source-headline-parser-identity
             source-sha256: digest
             source-size: (.ref projection 'source-size)
@@ -150,6 +172,13 @@
             worktree-bound?: #f
             session-admitted?: #f
             action-authority?: #f)))))
+
+(def (poo-flow-query-orgize-open-headlines source)
+  (open-headlines source #f))
+(def (poo-flow-query-orgize-open-headlines-incremental base-source observed source)
+  ;; Rebuild the cache from source replay; caller-supplied cache slots are never trusted.
+  (let (verified (poo-flow-query-orgize-open-headlines-replay base-source observed))
+    (open-headlines source verified)))
 
 (def (poo-flow-query-orgize-source-observation? value)
   (and (object? value) (.slot? value 'kind)

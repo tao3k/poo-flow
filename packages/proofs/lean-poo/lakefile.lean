@@ -26,3 +26,6 @@ lean_lib PooFlowSessionProof where
 
 lean_lib PooFlowContextProof where
   roots := #[`ContextDelta]
+
+lean_lib PooFlowAttemptProof where
+  roots := #[`SessionAttempt]

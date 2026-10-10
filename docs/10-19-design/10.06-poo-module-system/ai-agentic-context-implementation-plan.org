@@ -306,3 +306,11 @@ the new native regression and Lean target through existing build/proof owners.
 The next implementation gates remain dependency coverage, incremental equivalence
 and concrete Session/Host/Backend consumption/refinement. Do not treat the
 reference API's accepted receipt as authority to publish or execute.
+
+* Incremental Context and independent Session Attempt milestone
+
+[[file:context-delta-lean-quint-model-design.org][The Delta receipt]] records the restricted local Query implementation and its
+Lean/Quint gates. [[file:session-attempt-implementation-receipt.org][The Session receipt]] records actual native roles, exact
+consumer bindings, recovery obligations and Context-produced input proposals.
+Production coordinator/ABI/consumer and parser-backed Org property ID gates
+remain explicit; this milestone does not close the complete scheduling system.

@@ -5,6 +5,8 @@ import Lean.Util.CollectAxioms
 namespace PooFlowContextProof
 
 -- Source freshness only; this metadata is not a semantic refinement proof.
+def coverageSourceDigest : String := "sha256:c099a7dc16730a608a576a27df757241f928a2b61c06ed0527d4c7213460442c"
+def coverageInvariantNames : List String := ["IncrementalEqualsFull"]
 def quintSourceDigest : String := "sha256:21e54b803a31ec72eaaa3999e8b79942e59171162b5e152620f39217d59d986c"
 def quintInvariantNames : List String :=
   ["ExactTargetCut", "ExactReconstruction", "OnePublication",
@@ -78,6 +80,51 @@ theorem incompatible_refused [DecidableEq α] (b a : Nat) (candidate full : List
 theorem missing_content_refused [DecidableEq α] (b a : Nat) (candidate full : List α)
     (different : candidate ≠ full) : admit b a true candidate full = none := by
   simp [admit, different]
+
+-- Local Query semantics: complete source-domain inputs include nonmatching units.
+def localProject (query : α → Option β) (source : Nat → Option α) : Nat → Option β :=
+  fun key => (source key).bind query
+
+def changed [DecidableEq α] (old new : Nat → Option α) (key : Nat) : Bool :=
+  decide (old key ≠ new key)
+
+def incremental [DecidableEq α] (query : α → Option β)
+    (old new : Nat → Option α) : Nat → Option β :=
+  fun key => if changed old new key then localProject query new key
+             else localProject query old key
+
+theorem unchanged_source_is_equal [DecidableEq α] (old new : Nat → Option α) (k : Nat)
+    (same : changed old new k = false) : old k = new k := by
+  simpa [changed] using same
+
+theorem incremental_equals_full [DecidableEq α] (query : α → Option β)
+    (old new : Nat → Option α) : incremental query old new = localProject query new := by
+  funext k
+  by_cases h : old k = new k
+  · simp [incremental, changed, localProject, h]
+  · simp [incremental, changed, h]
+
+theorem insertion_is_covered [DecidableEq α] (old new : Nat → Option α)
+    (k : Nat) (value : α) (absent : old k = none) (added : new k = some value) :
+    changed old new k = true := by simp [changed, absent, added]
+theorem removal_is_covered [DecidableEq α] (old new : Nat → Option α)
+    (k : Nat) (value : α) (present : old k = some value) (removed : new k = none) :
+    changed old new k = true := by simp [changed, present, removed]
+theorem nonmatching_to_matching_is_covered [DecidableEq α] (query : α → Option β)
+    (old new : Nat → Option α) (k : Nat)
+    (previous : localProject query old k = none)
+    (current : localProject query new k ≠ none) : changed old new k = true := by
+  by_cases h : old k = new k
+  · have eqResults : localProject query old k = localProject query new k := by
+      simp [localProject, h]
+    exact False.elim (current (eqResults.symm.trans previous))
+  · simp [changed, h]
+
+theorem rebind_global_source (bind : γ → Option β → δ) (cut : γ)
+    [DecidableEq α] (query : α → Option β) (old new : Nat → Option α) :
+    (fun key => bind cut (incremental query old new key)) =
+    (fun key => bind cut (localProject query new key)) := by
+  rw [incremental_equals_full]
 end PooFlowContextProof
 
 open Lean Elab Command in
@@ -89,7 +136,10 @@ run_cmd do
       `PooFlowContextProof.exact_version_applies, `PooFlowContextProof.deletion_removes,
       `PooFlowContextProof.untouched_edits_frame, `PooFlowContextProof.accepted_equals_full,
       `PooFlowContextProof.wrong_base_refused, `PooFlowContextProof.incompatible_refused,
-      `PooFlowContextProof.missing_content_refused] do
+      `PooFlowContextProof.missing_content_refused,
+      `PooFlowContextProof.unchanged_source_is_equal, `PooFlowContextProof.incremental_equals_full, `PooFlowContextProof.insertion_is_covered,
+      `PooFlowContextProof.removal_is_covered, `PooFlowContextProof.nonmatching_to_matching_is_covered,
+      `PooFlowContextProof.rebind_global_source] do
     unless environment.contains required do
       throwError "Required Context Delta theorem is missing: {required}"
   let mut count : Nat := 0
@@ -99,5 +149,5 @@ run_cmd do
       for axiomName in (← collectAxioms name) do
         unless allowed.contains axiomName do
           throwError "{name} depends on disallowed axiom {axiomName}"
-  if count < 10 then throwError "Delta theorem inventory is incomplete"
+  if count < 16 then throwError "Delta theorem inventory is incomplete"
   logInfo m!"CONTEXT-DELTA-AXIOM-AUDIT-OK: {count} theorems; standard Lean axioms only"

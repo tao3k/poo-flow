@@ -21,9 +21,9 @@ disclosure, result admission and recovery. Native replay qualifies their relatio
 to Scheme contracts and concrete source bytes. Each has a separate evidence
 boundary; none alone proves the complete runtime or its performance.
 
-Current =modules/ai-agentic-context/funs-projection.ss= performs full bounded
-headline projection/replay. The reference implementation receipt below extends
-that baseline; no dependency-coverage certificate exists yet. Existing Lean Session/WorkTree laws and finite Quint Session
+Current =modules/ai-agentic-context/funs-projection.ss= supports full bounded
+headline projection/replay and the restricted local incremental path documented
+below. General Query dependency certificates remain unimplemented. Existing Lean Session/WorkTree laws and finite Quint Session
 controls are baseline evidence, not this Delta qualification.
 
 * Contract vocabulary and initial restrictions
@@ -303,9 +303,62 @@ settings, the normal PackageSpec build completed, and the eight existing core
 cases passed under the unchanged watchdog. Both native suites contain
 =MODULE-OK=, =HARNESS-OK= and final =OK= without failure/overflow markers.
 
-Remaining gates are dependency-coverage soundness and incremental equivalence,
-combined Session/Attempt/recovery controls, automated concrete trace projection,
+At this reference milestone, remaining gates were dependency-coverage soundness
+and incremental equivalence, combined Session/Attempt/recovery controls, automated concrete trace projection,
 Lean/native semantic correspondence and actual Host/Backend/wire consumption
 fences. Quint publication/consumption controls currently qualify the abstract
 model; they do not assert those runtime fences are implemented. No incremental
 speedup or complete Delta consumer qualification is claimed.
+
+* Restricted local Query and Session Attempt implementation
+
+The new =org-project-incremental= and =delta-admit-incremental= functions use
+only the fixed canonical =orgize/open-headlines-v1= single-node Query.
+Orgize still parses the entire target source and admits its complete headline
+domain. Every node, including nonmatching nodes, contributes byte start/end,
+title and TODO classification to the local input snapshot. Reuse requires exact
+snapshot equality; inserted or shifted nodes are evaluated. Removed nodes are
+excluded by enumeration of the complete current domain. Global Element IDs and
+source digest cells are rebuilt from the current parser output for every row.
+A global TODO directive change is observed through parser-produced classification.
+The implementation trusts neither an old selected-row domain as coverage nor
+caller-supplied cache slots: base byte replay reconstructs fresh cache values.
+
+The incremental receipt uses =coverage=local-query-complete-domain=.
+Full projection remains available and remains the reference for unsupported
+Query operators; the incremental entrypoint accepts no custom Query program.
+This is a semantic reuse path, not an incremental parser. Historical base replay
+still performs full parsing and selection, including repeated defensive replay at
+layer boundaries. No end-to-end performance improvement is claimed.
+
+=ContextDelta.lean= adds six named laws for exact unchanged inputs, incremental
+projection equality, insertion, removal, nonmatching-to-matching transitions and
+global binding reconstruction. The audit now inventories 28 theorems including
+generated declarations. The theorem uses complete source maps and equality of
+actual local Query inputs, not full-target equality as a coverage assumption.
+It abstracts parser correctness, ordering/serialization and native compiler
+correspondence; the generic theorem does not prove those implementations.
+
+=ContextCoverage.qnt= exhaustively checks two local keys, each absent,
+nonmatching or matching. Its safe instance has 90 distinct states. Omitted
+insertion, removal and negative-information changes violate equality at 12,
+28 and 21 distinct states. =SessionAttempt.qnt= independently checks claim,
+exact-generation completion, recovery with pending obligation, reconciliation
+and closure through generation cap three. Its safe instance has 50 distinct
+states; wrong-generation routing, dropped recovery obligation and closed resume
+controls fail at 5, 5 and 10 states. These two models do not constitute a combined
+Context/grant/source/publication refinement or a liveness qualification.
+
+See [[file:session-attempt-implementation-receipt.org][the Session Attempt receipt]] for native ownership and recovery boundaries.
+The current Delta suite includes matched real-byte incremental/full comparisons,
+append reuse with newly rebound global IDs, forged cache replacement and the
+source-replayed Context-to-Session input proposal. Local Lean compilation,
+source/invariant metadata freshness and the six existing proof-runner admission
+controls passed. Native and production qualification is recorded in that receipt.
+
+Remaining full-system gates are parser-backed Org property ID anchor admission,
+automated concrete trace projection, Lean/native correspondence, the combined
+Session/Attempt/source/grant model, current-use Host publication/disclosure fences,
+versioned wire/consumer changes, durable recovery and downstream MRR Data
+qualification. Neither a Session transition intent nor a typed input reference
+resolves producer authority or performs dispatch, CAS or durable publication.

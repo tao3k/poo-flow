@@ -59,6 +59,13 @@ GROUPS = {
                     QuintCase("TemporalPublicationGenerationMutation", "NoUnauthorizedCommit", True),
                     QuintCase("TemporalPublicationRetirementMutation", "NoUnauthorizedCommit", True)],
     "session": [],
+    "session-attempt": [QuintCase("SessionAttempt_none"),
+        QuintCase("SessionAttempt_ignoreGeneration", "ExactAttempt", True),
+        QuintCase("SessionAttempt_dropObligation", "RecoveryPreservesObligation", True),
+        QuintCase("SessionAttempt_resumeClosed", "ClosedIsTerminal", True)],
+    "context-coverage": [QuintCase("ContextCoverage_none")] + [
+        QuintCase("ContextCoverage_" + bug, "IncrementalEqualsFull", True)
+        for bug in ("omitInsertion", "omitRemoval", "omitNegative")],
     "context-delta": [QuintCase("ContextDelta_none")] + [
         QuintCase("ContextDelta_" + bug, inv, True) for bug, inv in [
             ("ignoreCAS", "OnePublication"), ("ignoreCut", "ExactTargetCut"),

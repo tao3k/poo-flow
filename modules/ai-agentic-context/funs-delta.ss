@@ -7,7 +7,8 @@
         "types.ss" "objects.ss" "funs-projection.ss" "funs-scope.ss")
 (export poo-flow-ai-agentic-context-delta-between
         poo-flow-ai-agentic-context-delta-apply
-        poo-flow-ai-agentic-context-delta-admit)
+        poo-flow-ai-agentic-context-delta-admit
+        poo-flow-ai-agentic-context-delta-admit-incremental)
 (def (reject reason-value) (.o accepted?: #f reason: reason-value))
 (def (accept content-value) (.o accepted?: #t content: content-value
   stage: 'reconstructed action-authorized?: #f))
@@ -43,15 +44,18 @@
                        (every (lambda (id) (lookup result id)) order))
                 (accept (map (lambda (id) (lookup result id)) order))
                 (reject 'incomplete-order)))))))))
-(def (poo-flow-ai-agentic-context-delta-admit base-source base delta target-source scope restriction profile)
+(def (admit-delta base-source base delta target-source scope restriction profile incremental?)
   ;; Proposal payloads are never returned. Replay both sources and return fresh values.
   (let* ((verified-base (poo-flow-ai-agentic-context-org-replay base-source base (.ref base 'scope)))
          (admitted-scope (poo-flow-ai-agentic-context-scope-admit scope))
          (old-scope (.ref verified-base 'scope))
          (same-scope? (every (lambda (k) (equal? (.ref old-scope k) (.ref admitted-scope k)))
            '(bundle organization epoch project worktree actor task destination session turn)))
-         (target (poo-flow-ai-agentic-context-org-project admitted-scope target-source restriction profile
-                    (.ref verified-base 'row-budget) (.ref verified-base 'byte-budget)))
+         (target (if incremental?
+           (poo-flow-ai-agentic-context-org-project-incremental base-source verified-base
+             admitted-scope target-source restriction profile)
+           (poo-flow-ai-agentic-context-org-project admitted-scope target-source restriction profile
+             (.ref verified-base 'row-budget) (.ref verified-base 'byte-budget))))
          (compatible? (and same-scope?
            (equal? (.ref verified-base 'feature-ids) (.ref target 'feature-ids))
            (equal? (.ref (.ref verified-base 'restriction) 'semantic-digest)
@@ -62,5 +66,10 @@
       ((not (.ref applied 'accepted?)) applied)
       ((not (equal? (.ref delta 'target-digest) (.ref target 'semantic-digest))) (reject 'wrong-target))
       ((not (equal? (.ref applied 'content) (.ref target 'content))) (reject 'target-content-mismatch))
-      (else (.o accepted?: #t projection: target coverage: 'full-reprojection
+      (else (.o accepted?: #t projection: target coverage: (if incremental? 'local-query-complete-domain 'full-reprojection)
                 source-authenticated?: #f action-authorized?: #f durable?: #f)))))
+
+(def (poo-flow-ai-agentic-context-delta-admit base-source base delta target-source scope restriction profile)
+  (admit-delta base-source base delta target-source scope restriction profile #f))
+(def (poo-flow-ai-agentic-context-delta-admit-incremental base-source base delta target-source scope restriction profile)
+  (admit-delta base-source base delta target-source scope restriction profile #t))

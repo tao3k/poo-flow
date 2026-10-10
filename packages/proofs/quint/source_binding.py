@@ -9,13 +9,14 @@ from pathlib import Path
 import re
 
 
-def check_binding(source: Path, lean: Path) -> str:
+def check_binding(source: Path, lean: Path, *, digest_name: str = "quintSourceDigest",
+                  inventory_name: str = "quintInvariantNames") -> str:
     digest = 'sha256:' + hashlib.sha256(source.read_bytes()).hexdigest()
     text = lean.read_text()
-    bound = re.search(r'def quintSourceDigest : String :=\s*"([^"]+)"', text)
+    bound = re.search(r'def ' + re.escape(digest_name) + r' : String :=\s*"([^"]+)"', text)
     if bound is None or bound[1] != digest:
         raise AssertionError('Lean contract retains a stale Quint source digest')
-    predicates = re.search(r'def quintInvariantNames : List String :=\s*\[(.*?)\]', text, re.S)
+    predicates = re.search(r'def ' + re.escape(inventory_name) + r' : List String :=\s*\[(.*?)\]', text, re.S)
     if predicates is None:
         raise AssertionError('Lean contract omitted its Quint invariant inventory')
     names = re.findall(r'"([^"]+)"', predicates[1])
@@ -36,3 +37,14 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/ContextDelta.qnt',
         root / 'packages/proofs/lean-poo/ContextDelta.lean')
     print('CONTEXT-DELTA-SOURCE-BINDING-OK ' + delta_digest, flush=True)
+
+    coverage_digest = check_binding(
+        root / 'packages/proofs/quint/ContextCoverage.qnt',
+        root / 'packages/proofs/lean-poo/ContextDelta.lean',
+        digest_name="coverageSourceDigest", inventory_name="coverageInvariantNames")
+    print('CONTEXT-COVERAGE-SOURCE-BINDING-OK ' + coverage_digest, flush=True)
+
+    attempt_digest = check_binding(
+        root / 'packages/proofs/quint/SessionAttempt.qnt',
+        root / 'packages/proofs/lean-poo/SessionAttempt.lean')
+    print('SESSION-ATTEMPT-SOURCE-BINDING-OK ' + attempt_digest, flush=True)

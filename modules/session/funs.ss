@@ -6,12 +6,12 @@
 ;;; Boundary: session config data and linear row projection functions.
 ;;; Invariant: functions stay below syntax/config and perform no runtime work.
 
-(import
+(import "funs-attempt.ss"
         (only-in :clan/poo/object .ref)
         :poo-flow/src/user-interface/module-selection
         :poo-flow/src/authoring/module-config-syntax)
 
-(export +poo-flow-session-config-kind+
+(export (import: "funs-attempt.ss") +poo-flow-session-config-kind+
         session-config
         poo-flow-session-poo-config?
         poo-flow-session-poo-config->rows

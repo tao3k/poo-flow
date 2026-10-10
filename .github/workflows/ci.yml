@@ -165,6 +165,14 @@ jobs:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: gerbil env just test-file t/ai-agentic-context-delta-test.ss
 
+      - name: Compile Session Attempt regression
+        run: gerbil env gxc -V -O t/session-attempt-test.ss
+
+      - name: Check Session Attempt routing and recovery
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/session-attempt-test.ss
+
       - name: Check AI Agentic-context module composition and source replay
         env:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
@@ -295,7 +303,7 @@ jobs:
           lake-package-directory: packages/proofs/lean-poo
           auto-config: false
           build: true
-          build-args: PooFlowSessionProof PooFlowContextProof
+          build-args: PooFlowSessionProof PooFlowContextProof PooFlowAttemptProof
 
   lean-proof:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}

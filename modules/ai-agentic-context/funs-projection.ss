@@ -7,7 +7,8 @@
         :poo-flow/modules/query/orgize-source
         :poo-flow/src/semantic/context-restriction
         "funs-scope.ss" "funs-features.ss")
-(export poo-flow-ai-agentic-context-org-project
+(export poo-flow-ai-agentic-context-org-project-incremental
+        poo-flow-ai-agentic-context-org-project
         poo-flow-ai-agentic-context-org-replay)
 (def (profile-ids profile)
   (unless (and (object? profile) (.slot? profile 'accepted?) (.ref profile 'accepted?)
@@ -20,8 +21,7 @@
       (error "foreign or incomplete Context Feature profile"))
     (.ref (poo-flow-ai-agentic-context-profile
             (if (memq 'ai-agentic-context/memory ids) #t #f)) 'feature-ids)))
-(def (poo-flow-ai-agentic-context-org-project scope source restriction profile
-                                           (row-limit 256) (byte-limit 1048576))
+(def (project scope source restriction profile row-limit byte-limit base-source base-observation)
   (unless (and (string? source) (exact-integer? row-limit) (<= 0 row-limit 256)
                (exact-integer? byte-limit) (<= 0 byte-limit 1048576))
     (error "invalid Context source or budget"))
@@ -30,7 +30,9 @@
   (let* ((scope-value (poo-flow-ai-agentic-context-scope-admit scope))
          (feature-ids-value (profile-ids profile))
          (restriction-value (poo-flow-context-restriction-compose (list restriction)))
-         (observation-value (poo-flow-query-orgize-open-headlines source))
+         (observation-value (if base-observation
+           (poo-flow-query-orgize-open-headlines-incremental base-source base-observation source)
+           (poo-flow-query-orgize-open-headlines source)))
          (result (.ref observation-value 'result-set))
          (rows (.ref result 'rows)))
     (when (> (length rows) row-limit) (error "Context row budget exceeded; incomplete selection rejected"))
@@ -49,6 +51,13 @@
           source-digest: (string-copy (.ref observation-value 'source-sha256))
           content: content-value semantic-digest: fingerprint complete?: #t
           source-authenticated?: #f action-authorized?: #f durable?: #f))))
+(def (poo-flow-ai-agentic-context-org-project scope source restriction profile
+                                           (row-limit 256) (byte-limit 1048576))
+  (project scope source restriction profile row-limit byte-limit #f #f))
+(def (poo-flow-ai-agentic-context-org-project-incremental base-source base scope source restriction profile)
+  (let (verified (poo-flow-ai-agentic-context-org-replay base-source base (.ref base 'scope)))
+    (project scope source restriction profile (.ref verified 'row-budget) (.ref verified 'byte-budget)
+      base-source (.ref verified 'observation))))
 (def (poo-flow-ai-agentic-context-org-replay source projection expected-scope)
   (unless (and (object? projection) (.slot? projection 'kind)
                (eq? (.ref projection 'kind) 'poo-flow.ai-agentic-context.org-projection.v1)

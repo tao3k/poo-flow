@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 * Source and checking authority
 
 All maintained finite formal models are Quint. Quint =0.33.0= and the
-=0.62.1= Apalache distribution match MRR. Verification uses Quint's =quint=
+=0.62.1= Apalache distribution match MRR. Verification uses Quint's =tlc=
 backend, with Java 21 or newer (the backend class version is 65). Generated Quint is transient compiler output. Lean retains its
 independent algebraic scope; it is not automatically a refinement proof.
 
@@ -53,7 +53,14 @@ source identities. Build and test discovery contain only maintained entries.
 * Context Delta reference cases
 
 =just check-context-delta-proof= compiles the separate Lean reference laws and
-checks the pinned =context-delta= group: one full-reconstruction/publication/use
-safety case plus five matched CAS/cut/deletion/grant controls. The fixtures model
+checks the pinned =context-delta= and =context-coverage= groups: one full-reconstruction/publication/use
+safety case plus five matched CAS/cut/deletion/grant controls, and complete-domain
+local selection with insertion/removal/nonmatching mutation controls. The fixtures model
 abstract publication/use snapshots and do not qualify native Host or Data fences.
 See [[file:../../../docs/10-19-design/10.06-poo-module-system/context-delta-lean-quint-model-design.org][the Context Delta model design]] for the exact evidence and remaining gates.
+
+
+=just check-session-attempt-proof= compiles the standalone pure Session laws and
+checks =session-attempt=: exact completion, preserved recovery obligations and
+closed-state terminal behavior with three matched mutants. These instances are
+separate from the combined production coordination/refinement gate.
