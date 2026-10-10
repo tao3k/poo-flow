@@ -9,7 +9,7 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
         :poo-flow/modules/search-engine/interface
-        (only-in :poo-flow/modules/temporal-causality/interface
+        (only-in :poo-flow/modules/temporal-causality/funs
                  poo-flow-causal-event-graph))
 
 (export poo-flow-search-framework-test)

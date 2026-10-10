@@ -194,19 +194,13 @@ jobs:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: gerbil env just test-file t/ai-agentic-context-session-host-test.ss
 
-      - name: Compile static Context and Temporal proof qualification
-        env:
-          CORCXXFLAGS_GAMBUILD: -O0 -pipe -foptimize-sibling-calls
-          GERBIL_BUILD_CORES: '4'
-        run: |
-          if [[ "$RUNNER_OS" == "macOS" ]]; then export GERBIL_GCC=/usr/bin/clang; fi
-          gerbil env gxi -:max-heap=1G,debug=q t/qualification/context-temporal-native/prepare-static-tools.ss
-          gerbil env gxi -:max-heap=1G,debug=q t/qualification/context-temporal-native/build.ss "$RUNNER_TEMP/context-temporal-native"
+      - name: Compile original Context and Temporal suites
+        run: gerbil env gxc -V -O t/temporal-evaluator-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/query-orgize-source-test.ss
 
       - name: Check original Temporal proof binding and Session invalidation
         env:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
-        run: gerbil env just test-context-temporal-native "$RUNNER_TEMP/context-temporal-native"
+        run: gerbil env just test-context-temporal
 
       - name: Compile Context temporal window policy regression
         run: gerbil env gxc -V -O t/ai-agentic-context-temporal-test.ss

@@ -901,18 +901,16 @@ check-search-model-bindings:
 [group('check')]
 check-search-engine-proof: check-composition-proof check-search-model-bindings check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme check-search-framework-scheme check-search-evidence-scheme
 
-# Static native Context/Temporal closure avoids Darwin dynamic-module teardown.
+# Original Context/Temporal suites through installed Scheme and upstream gxtest.
 [group('test')]
-test-context-temporal-native executable:
+test-context-temporal:
     #!/usr/bin/env bash
     set -euo pipefail
-    test -s "{{ executable }}.modules"
-    test -x "{{ executable }}"
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} --module-order "{{ executable }}.modules" -v 5 t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/ai-agentic-context-org-anchors-test.ss t/query-orgize-source-test.ss 2>&1 | tee "$log"
+    {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" gxi {{ gerbil_test_runtime_options }} -e '(load "t/harness/scheme-progress.ss") (import (only-in :gerbil/tools/gxtest main)) (let (status (main "-v" "5" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/temporal-evaluator-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-session-host-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-delta-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/session-attempt-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-org-anchors-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/query-orgize-source-test.ssi")) (displayln "poo-test: gxtest returned " status) (force-output) (exit status))' 2>&1 | tee "$log"
     if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|\*\*\* ERROR|Heap overflow|Stack overflow' "$log"; then exit 1; fi
     test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 69
-    for module in temporal-evaluator ai-agentic-context-session-host ai-agentic-context-delta session-attempt ai-agentic-context-org-anchors query-orgize-source; do grep -Fx "MODULE-OK t/${module}-test.ss" "$log" >/dev/null; done
+    for module in temporal-evaluator ai-agentic-context-session-host ai-agentic-context-delta session-attempt ai-agentic-context-org-anchors query-orgize-source; do grep -Fx "MODULE-OK {{ justfile_directory() }}/.gerbil/lib/poo-flow/t/${module}-test.ssi" "$log" >/dev/null; done
     grep -Eq '^HARNESS-OK ' "$log"
     grep -Eq '^OK$' "$log"

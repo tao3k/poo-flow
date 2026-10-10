@@ -303,3 +303,29 @@ and invalidates changed stages plus structural descendants. It retains unaffecte
 branches and rejects duplicate stage identities. The consumer runtime pin and
 physical dependent dispatch are separate from this producer implementation.
 See the Composition proof README for its executable controls and refinement limits.
+
+* Scheme test execution boundary
+
+Search composition remains Scheme-owned. The installed Scheme SDK and upstream
+gxtest execute the original Context/Temporal test suites from their ordinary
+module artifacts. There is no separate Context/Temporal test executable, static
+SDK copy, or test-program module-order manifest. CI compiles the original test
+modules and uses =just test-context-temporal= with the existing pre-import heap
+fence. Completed imports and runtime loads report actual preparation work; the
+five-second silence watchdog still rejects stalled execution. gxtest's returned
+status, all 69 case receipts, six module receipts, and the final harness result
+are required together.
+
+The generic Search declaration helpers import Temporal observation objects
+directly. They do not pull the evaluator and query interface into a consumer
+that only constructs observations. MRR imports the causal graph constructor
+from the corresponding Temporal function module and retains its Rust dispatch
+role. Orgize qualification uses its installed =bindings/c/orgize= interface.
+
+Local qualification distinguishes assertion results from process completion.
+The rebuilt original modules produce all 69 passing cases and gxtest returns
+zero, but the installed Darwin SDK still exceeds the five-second silence
+limit after Scheme cleanup. A read-only process sample locates this phase in
+=___cleanup_dyn_module= and dyld =dlclose=. This remains a failed qualification;
+the recipe does not bypass cleanup, ignore process status, or extend either
+the five-second silence limit or the 45-second batch budget.

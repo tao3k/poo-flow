@@ -5,7 +5,7 @@
 ;;; Exercise the installed Orgize dependency through POO Flow's POO surface.
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/semantic/orgize-interface
-        (only-in :orgize/bindings/c/orgize-native orgize-c-round-trip))
+        (only-in :orgize/bindings/c/orgize orgize-c-round-trip))
 (export run-orgize-runtime-reuse-test)
 
 (def (run-orgize-runtime-reuse-test)
