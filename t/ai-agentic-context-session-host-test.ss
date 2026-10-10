@@ -1,9 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :poo-flow/testing-api poo-flow-test-case)
+(import :std/test (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/modules/ai-agentic-context/interface
+        :poo-flow/modules/ai-agentic-context/objects
+        :poo-flow/modules/ai-agentic-context/funs-features
         :poo-flow/modules/ai-agentic-context/session-host
         :poo-flow/modules/ai-agentic-context/use-host
         :poo-flow/modules/temporal-causality/truth-maintenance/support/policy-host

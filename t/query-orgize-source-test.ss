@@ -6,7 +6,9 @@
         (only-in :std/test check check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
         :core/poo-clos/interface
-        :poo-flow/modules/query/interface)
+        :poo-flow/modules/query/objects
+        :poo-flow/modules/query/results/funs
+        :poo-flow/modules/query/orgize-source)
 
 (export query-orgize-source-test)
 

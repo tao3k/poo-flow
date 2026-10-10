@@ -195,7 +195,7 @@ jobs:
         run: gerbil env just test-file t/ai-agentic-context-session-host-test.ss
 
       - name: Compile original Context and Temporal suites
-        run: gerbil env gxc -V -O t/temporal-evaluator-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/query-orgize-source-test.ss
+        run: gerbil env gxc -V t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss t/ai-agentic-context-org-anchors-test.ss t/query-orgize-source-test.ss
 
       - name: Check original Temporal proof binding and Session invalidation
         env:

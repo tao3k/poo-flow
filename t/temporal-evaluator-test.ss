@@ -8,7 +8,7 @@
         :poo-flow/modules/ai-agentic-context/use-host
         :poo-flow/src/semantic/context-restriction
         :std/test (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow/testing-api poo-flow-test-case)
+        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt reasoning-receipt-status reasoning-receipt-proof
                  reasoning-receipt-rows reasoning-receipt-bound?)

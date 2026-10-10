@@ -1,9 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :poo-flow/testing-api poo-flow-test-case)
+(import :std/test (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/modules/ai-agentic-context/interface
+        :poo-flow/modules/ai-agentic-context/objects
+        :poo-flow/modules/ai-agentic-context/types
+        :poo-flow/modules/ai-agentic-context/funs-features
+        :poo-flow/modules/ai-agentic-context/funs-projection
+        :poo-flow/modules/ai-agentic-context/funs-anchors
+        :poo-flow/modules/ai-agentic-context/funs-session
         (only-in :poo-flow/modules/session/funs-attempt poo-flow-session-schedule poo-flow-session-claim)
         :poo-flow/src/semantic/context-restriction)
 (export ai-agentic-context-org-anchors-test)

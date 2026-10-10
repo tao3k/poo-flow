@@ -909,7 +909,7 @@ test-context-temporal:
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
     {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" gxi {{ gerbil_test_runtime_options }} -e '(load "t/harness/scheme-progress.ss") (import (only-in :gerbil/tools/gxtest main)) (let (status (main "-v" "5" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/temporal-evaluator-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-session-host-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-delta-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/session-attempt-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/ai-agentic-context-org-anchors-test.ssi" "{{ justfile_directory() }}/.gerbil/lib/poo-flow/t/query-orgize-source-test.ssi")) (displayln "poo-test: gxtest returned " status) (force-output) (exit status))' 2>&1 | tee "$log"
-    if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|\*\*\* ERROR|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|\*\*\* ERROR|Heap overflow|Stack overflow|WARNING -- Variable.*is undefined' "$log"; then exit 1; fi
     test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 69
     for module in temporal-evaluator ai-agentic-context-session-host ai-agentic-context-delta session-attempt ai-agentic-context-org-anchors query-orgize-source; do grep -Fx "MODULE-OK {{ justfile_directory() }}/.gerbil/lib/poo-flow/t/${module}-test.ssi" "$log" >/dev/null; done
     grep -Eq '^HARNESS-OK ' "$log"

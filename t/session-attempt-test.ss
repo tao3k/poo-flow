@@ -1,9 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :poo-flow/testing-api poo-flow-test-case)
+(import :std/test (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/modules/session/interface)
+        :poo-flow/modules/session/types
+        :poo-flow/modules/session/objects-attempt
+        :poo-flow/modules/session/funs-attempt)
 (export session-attempt-test)
 (def input-ref (.o (:: @ SessionInputRef.) producer: "context" contract: "v1" identity: "projection"
   digest: "content" scope-digest: "scope" source-vector-digest: "source" query-digest: "query"

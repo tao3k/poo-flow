@@ -309,8 +309,11 @@ See the Composition proof README for its executable controls and refinement limi
 Search composition remains Scheme-owned. The installed Scheme SDK and upstream
 gxtest execute the original Context/Temporal test suites from their ordinary
 module artifacts. There is no separate Context/Temporal test executable, static
-SDK copy, or test-program module-order manifest. CI compiles the original test
-modules and uses =just test-context-temporal= with the existing pre-import heap
+SDK copy, or test-program module-order manifest. Test declarations import their
+actual object/function roles and the same Case policy directly, avoiding unused
+configuration and lifecycle interfaces. CI compiles all six original test
+modules in ordinary compiler mode so calls retain exported Scheme entry points,
+and uses =just test-context-temporal= with the existing pre-import heap
 fence. Completed imports and runtime loads report actual preparation work; the
 five-second silence watchdog still rejects stalled execution. gxtest's returned
 status, all 69 case receipts, six module receipts, and the final harness result
@@ -323,9 +326,11 @@ from the corresponding Temporal function module and retains its Rust dispatch
 role. Orgize qualification uses its installed =bindings/c/orgize= interface.
 
 Local qualification distinguishes assertion results from process completion.
-The rebuilt original modules produce all 69 passing cases and gxtest returns
-zero, but the installed Darwin SDK still exceeds the five-second silence
-limit after Scheme cleanup. A read-only process sample locates this phase in
+Both the narrowed source-role closure and its compiled-library replay produce
+all 69 passing cases, six module receipts and a zero gxtest result. Full-process
+qualification still returns 124 during installed Darwin SDK shutdown under the
+unchanged five-second silence / 45-second batch limits. Undefined-runtime-binding
+warnings are also rejecting evidence. The earlier cleanup diagnosis remains: A read-only process sample locates this phase in
 =___cleanup_dyn_module= and dyld =dlclose=. This remains a failed qualification;
 the recipe does not bypass cleanup, ignore process status, or extend either
 the five-second silence limit or the 45-second batch budget.
