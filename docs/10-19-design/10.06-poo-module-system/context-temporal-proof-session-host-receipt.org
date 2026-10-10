@@ -113,6 +113,24 @@ must be checked against the pushed commit before claiming consumer qualification
 
 * Orgize native event migration
 
+** Dependency ownership
+
+Context consumes Org parsing through Orgize's native event and source
+interfaces. Orgize owns the parser implementation, generated folds and parser
+version requirement. Context must not import Gerbil Parser directly or own
+producer bootstrap logic.
+
+The current repository also declares a direct Gerbil Parser dependency because
+the Query module imports GraphSyntax prototypes and the GQL renderer in
+=modules/query/objects.ss= and =modules/query/gql.ss=, and Rust projection macros
+in =modules/query/rust-ir.ss=. Those are separate Query and compiler dependencies;
+the direct declaration is not required merely because Context consumes Orgize.
+Removing the declaration requires migrating these actual imports to their
+appropriate owning interfaces first. Orgize must not acquire unrelated GQL or
+Rust projection responsibilities to hide this dependency.
+
+** Current producer migration
+
 The concurrent PR dependency update pins Orgize to
 =7561f82166124050a157c4fadc5f17927945dbea=. That producer removes the
 =languages/org/v1= interfaces and the Rowan parser operation. The consumer now
@@ -154,7 +172,27 @@ dependencies exist and adds a generator regression assertion. Its local commit
 =1d2413a79e7677409f664945c883ada375435c58= is based on the existing parser PR
 head =9184d01f6b0a2f5f8b32f421642d33e006526079=. All five generator suite cases
 completed with exit zero, MODULE-OK, HARNESS-OK and final OK. The candidate has
-not been published or pinned by this consumer.
+since been rebased and published, with explicit authorization, to parser PR #13
+as =78507e68b1275be1be748be465d6354f596d9063=. The remote branch matched that
+commit immediately after the push.
+
+** Published producer pin alignment
+
+Orgize PR #18 now publishes =39eaaa0fb54d261545c765609709fd5396a89cb5=.
+Its =gerbil.pkg=, =Cargo.toml=, =Cargo.lock= and =fuzz/Cargo.lock= all bind the
+published parser fix. Cargo regenerated both lockfiles; only the two parser
+packages changed. The producer dependency and parser revision checks passed,
+and locked Cargo metadata resolves both packages to the declared commit.
+The remote Orgize branch matched the published commit immediately after push.
+
+POO Flow now pins this Orgize commit and the same parser revision for its
+separate Query/compiler imports. Archive digests and both platform Bazel lock
+projections were regenerated and the dependency contract check passed. The
+Context source boundary imports Orgize's current =languages/org/event-runtime=
+interface. Orgize producer CI and fresh consumer qualification remain required;
+manifest alignment alone does not qualify the new native artifacts.
+
+** Earlier candidate metadata controls
 
 Regeneration produced 105 source units. Removing the four empty import forms
 from the original source gives exactly the candidate source: no other generated
@@ -167,7 +205,7 @@ The unchanged native executable, with source-recompiled candidate SSI first on
 its load path, completed 69 cases and six module receipts with exit zero,
 HARNESS-OK and final OK. Runtime limits remained five seconds idle, 45 seconds
 total and a one GiB heap. This is a metadata compatibility control; it does not
-qualify a freshly rebuilt complete producer/consumer pair. Publication, immutable
+qualify a freshly rebuilt complete producer/consumer pair. Immutable
 manifest/lock alignment, fresh artifact rebuilding and exact-head consumer CI
 remain required before closing the migration.
 
