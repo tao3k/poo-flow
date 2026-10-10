@@ -5,7 +5,8 @@
 (import (only-in :clan/poo/object .ref .slot? object?)
         (only-in :clan/poo/mop Type. define-type)
         (only-in :std/list/list every))
-(export AiAgenticContextDeltaType poo-flow-ai-agentic-context-delta-shape?
+(export AiAgenticContextOrgAnchorType poo-flow-ai-agentic-context-org-anchor-shape?
+        AiAgenticContextDeltaType poo-flow-ai-agentic-context-delta-shape?
         AiAgenticContextScopeType poo-flow-ai-agentic-context-scope-shape?)
 (def (name? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (poo-flow-ai-agentic-context-scope-shape? spec)
@@ -45,3 +46,20 @@
        (every string? (.ref value 'order))))
 (define-type (AiAgenticContextDeltaType @ Type.)
   .element?: poo-flow-ai-agentic-context-delta-shape?)
+
+(def (poo-flow-ai-agentic-context-org-anchor-shape? value)
+  (and (object? value)
+       (every (lambda (key) (.slot? value key))
+          '(kind org-id container-kind container-start value-start value-end source-digest parser-identity
+            projection-digest scope-digest session turn semantic-digest source-authenticated? action-authorized?))
+       (eq? (.ref value 'kind) 'poo-flow.ai-agentic-context.org-anchor.v1)
+       (every (lambda (key) (name? (.ref value key)))
+          '(org-id source-digest parser-identity projection-digest scope-digest session semantic-digest))
+       (memq (.ref value 'container-kind) '(OrgFile OrgSection))
+       (every (lambda (key) (and (exact-integer? (.ref value key)) (>= (.ref value key) 0)))
+          '(container-start value-start value-end turn))
+       (<= (.ref value 'container-start) (.ref value 'value-start))
+       (< (.ref value 'value-start) (.ref value 'value-end) 1048577)
+       (eq? (.ref value 'source-authenticated?) #f) (eq? (.ref value 'action-authorized?) #f)))
+(define-type (AiAgenticContextOrgAnchorType @ Type.)
+  .element?: poo-flow-ai-agentic-context-org-anchor-shape?)

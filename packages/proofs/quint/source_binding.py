@@ -48,3 +48,8 @@ if __name__ == '__main__':
         root / 'packages/proofs/quint/SessionAttempt.qnt',
         root / 'packages/proofs/lean-poo/SessionAttempt.lean')
     print('SESSION-ATTEMPT-SOURCE-BINDING-OK ' + attempt_digest, flush=True)
+
+    claim_digest = check_binding(
+        root / 'packages/proofs/quint/ContextSessionClaim.qnt',
+        root / 'packages/proofs/lean-poo/ContextSessionClaim.lean')
+    print('CONTEXT-SESSION-CLAIM-SOURCE-BINDING-OK ' + claim_digest, flush=True)

@@ -312,5 +312,7 @@ reference API's accepted receipt as authority to publish or execute.
 [[file:context-delta-lean-quint-model-design.org][The Delta receipt]] records the restricted local Query implementation and its
 Lean/Quint gates. [[file:session-attempt-implementation-receipt.org][The Session receipt]] records actual native roles, exact
 consumer bindings, recovery obligations and Context-produced input proposals.
-Production coordinator/ABI/consumer and parser-backed Org property ID gates
-remain explicit; this milestone does not close the complete scheduling system.
+[[file:context-org-anchor-session-host-receipt.org][The Org anchor and local Session Host receipt]] now records parser-backed property
+ID bindings and actual serialized current-input claim publication. Authenticated
+source/ABI/provider/Data consumer qualification remains open; this milestone does
+not close the complete scheduling system.

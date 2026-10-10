@@ -89,6 +89,7 @@
     "modules/governance/interface.ss"
     "modules/proof/interface.ss"
     "modules/ai-agentic-context/use-host.ss"
+    "modules/ai-agentic-context/session-host.ss"
     "src/semantic/context-restriction.ss"
     "src/semantic/orgize-interface.ss"
     "src/semantic/orgize-source-interface.ss"

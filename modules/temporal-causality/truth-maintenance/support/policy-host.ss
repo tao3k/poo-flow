@@ -11,17 +11,19 @@
         poo-flow-temporal-support-policy-host-guard-current
         poo-flow-temporal-support-policy-host-current)
 ;;; Opaque runtime state, never transported; the host serializes control/use.
-(defstruct policy-host-state (current revisions))
+(defstruct policy-host-state (current revisions owner))
 (def (poo-flow-temporal-support-policy-host)
-  (.o kind: 'poo-flow.temporal-causality.policy-host.v1
-      private-runtime-state: (make-policy-host-state (make-hash-table) (make-hash-table))))
+  (let (runtime-value (make-policy-host-state (make-hash-table) (make-hash-table) (current-thread)))
+    (.o kind: 'poo-flow.temporal-causality.policy-host.v1 private-runtime-state: runtime-value)))
 (def (state host)
   (unless (and (object? host) (.slot? host 'kind)
                (eq? (.ref host 'kind) 'poo-flow.temporal-causality.policy-host.v1)
                (.slot? host 'private-runtime-state)
                (policy-host-state? (.ref host 'private-runtime-state)))
     (error "invalid policy host capability"))
-  (.ref host 'private-runtime-state))
+  (let (runtime-value (.ref host 'private-runtime-state))
+    (unless (eq? (policy-host-state-owner runtime-value) (current-thread))
+      (error "Policy Host requires its serialized owner thread")) runtime-value))
 (def (instant-row x)
   (map (lambda (s) (.ref x s)) '(identity domain-identity coordinate provenance-identity modality)))
 (def (canonical-policy p)

@@ -5,7 +5,7 @@
 (import (only-in :clan/poo/object .def)
         :poo-flow/src/feature-system/model
         "types.ss")
-(export AiAgenticContextDelta. AiAgenticContextEdit. AiAgenticContextScope. ai-agentic-context-core-feature
+(export AiAgenticContextOrgAnchor. AiAgenticContextDelta. AiAgenticContextEdit. AiAgenticContextScope. ai-agentic-context-core-feature
         ai-agentic-context-memory-feature)
 (.def AiAgenticContextScope.
   (kind 'poo-flow.ai-agentic-context.scope.v1)
@@ -26,3 +26,10 @@
 (.def AiAgenticContextDelta.
   (kind 'poo-flow.ai-agentic-context.delta.v1)
   (base-digest #f) (target-digest #f) (edits '()) (order '()))
+
+(.def AiAgenticContextOrgAnchor.
+  (kind 'poo-flow.ai-agentic-context.org-anchor.v1)
+  (org-id #f) (container-kind #f) (container-start #f)
+  (value-start #f) (value-end #f) (source-digest #f) (parser-identity #f)
+  (projection-digest #f) (scope-digest #f) (session #f) (turn #f)
+  (semantic-digest #f) (source-authenticated? #f) (action-authorized? #f))

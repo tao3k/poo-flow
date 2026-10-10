@@ -51,10 +51,11 @@ Scope is required. Context owns source/Query interpretation; Session preserves
 references. =receipt-ref= identifies a producer receipt to resolve at publication;
 caller creation or native shape admission does not authenticate that receipt.
 
-Task =anchor-refs= are opaque admitted-reference proposals, copied into the
-Attempt for exact routing. They are not extracted Org =:ID:= values and do not
-yet prove an association between a Session and a parser-owned property ID.
-Parser-backed Org property ID admission remains a required implementation gate.
+Session preserves opaque =anchor-refs= for exact routing. Context now constructs
+those references from parser-owned Org =:ID:= spans after source/Scope replay.
+The opt-in local Host also publishes exact current-input claims. See
+[[file:context-org-anchor-session-host-receipt.org][the Org anchor and Session Host receipt]] for delivered source roles, controls and
+the remaining authenticated-source/provider/backend qualification.
 
 * Executable qualification
 
@@ -78,9 +79,10 @@ are matched by condition; automated model trace-to-native replay is still absent
 
 * Remaining production gate
 
-The actual current-source lineage, grant/policy generation, Session owner CAS,
-producer receipt resolver, provider dispatch/disclosure, result admission and
-terminal/isolation receipt resolver must share an explicit trusted coordinator.
+The local Host now owns enrolled source snapshots, grant/policy checks and
+Session claim CAS. Authenticated current-source lineage, producer receipt
+resolution, provider dispatch/disclosure, result admission and terminal/isolation
+receipt resolution still require a qualified end-to-end trusted coordinator.
 The existing Context Use v1 six-field wire contract does not carry this complete
 Attempt envelope. Define and qualify its successor with MRR and MRR Data
 consumer pin changes. No consumer or ABI qualification is inferred from these

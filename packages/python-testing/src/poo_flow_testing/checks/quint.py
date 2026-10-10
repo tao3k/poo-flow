@@ -59,6 +59,12 @@ GROUPS = {
                     QuintCase("TemporalPublicationGenerationMutation", "NoUnauthorizedCommit", True),
                     QuintCase("TemporalPublicationRetirementMutation", "NoUnauthorizedCommit", True)],
     "session": [],
+    "context-session-claim": [QuintCase("ContextSessionClaim_none")] + [
+        QuintCase("ContextSessionClaim_" + bug, invariant, True) for bug, invariant in [
+            ("ignoreOwner", "ExactOwner"), ("ignoreSource", "ExactSource"),
+            ("ignoreGrantGeneration", "CurrentGrant"), ("ignoreRevocation", "EnabledGrant"),
+            ("ignoreClock", "EffectiveClock"), ("dropObligation", "PendingPreserved"),
+            ("ignoreScope", "FixedScope")]],
     "session-attempt": [QuintCase("SessionAttempt_none"),
         QuintCase("SessionAttempt_ignoreGeneration", "ExactAttempt", True),
         QuintCase("SessionAttempt_dropObligation", "RecoveryPreservesObligation", True),

@@ -178,6 +178,22 @@ jobs:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: gerbil env just test-file t/ai-agentic-context-core-test.ss
 
+      - name: Compile parser-backed Context Org anchor regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-org-anchors-test.ss
+
+      - name: Check Context Org ID admission and Session binding
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-org-anchors-test.ss
+
+      - name: Compile current-input Session Host regression
+        run: gerbil env gxc -V -O t/ai-agentic-context-session-host-test.ss
+
+      - name: Check current-input claim publication and source invalidation
+        env:
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env just test-file t/ai-agentic-context-session-host-test.ss
+
       - name: Compile registered Context use Host test
         run: gerbil env gxc -V -O t/context-use-host-test.ss
 

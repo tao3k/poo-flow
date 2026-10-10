@@ -597,6 +597,21 @@ check-session-attempt-proof: check-session-attempt-lean check-session-attempt-qu
 
 
 [group('check')]
+check-context-org-anchor-lean:
+    cd "{{ temporal_poo_proof_dir }}" && timeout 120s lean OrgAnchor.lean
+
+[group('check')]
+check-context-session-claim-lean:
+    cd "{{ temporal_poo_proof_dir }}" && timeout 120s lean ContextSessionClaim.lean
+
+[group('check')]
+check-context-session-claim-quint:
+    PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group context-session-claim
+
+[group('check')]
+check-context-session-claim-proof: check-context-org-anchor-lean check-context-session-claim-lean check-context-session-claim-quint
+
+[group('check')]
 check-native-semantic-query-model: check-native-semantic-query-lean
     PYTHONPATH="{{ justfile_directory() }}/packages/python-testing/src" python3 -m poo_flow_testing.checks.quint --group query
 
