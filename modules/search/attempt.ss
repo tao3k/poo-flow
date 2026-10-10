@@ -9,7 +9,8 @@
 (export poo-flow-search-attempt-state poo-flow-search-attempt-issue
         poo-flow-search-attempt-settle poo-flow-search-attempt-revise
         poo-flow-search-attempt-retire poo-flow-search-attempt-complete
-        poo-flow-search-attempt-ready? poo-flow-search-attempt-issue-ready)
+        poo-flow-search-attempt-ready? poo-flow-search-attempt-issue-ready
+        poo-flow-search-attempt-request poo-flow-search-attempt-current?)
 
 (def (kind? value expected)
   (and (object? value)
@@ -31,6 +32,19 @@
 
 (def (require-state state)
   (unless (kind? state 'search-attempt-state) (error "expected Search attempt state")))
+
+;;; Reconstruct an inert returned identity as a POO request in the original scope.
+(def (poo-flow-search-attempt-request state source-cut revision attempt)
+  (require-state state)
+  (unless (and (text? source-cut) (integer? revision) (>= revision 0)
+               (integer? attempt) (>= attempt 0))
+    (error "invalid Search attempt identity"))
+  (poo-core-role-object
+   (slots ((kind 'search-attempt-request) (stage (.ref state 'stage))
+           (generation (string-copy (.ref state 'generation)))
+           (configuration (string-copy (.ref state 'configuration)))
+           (source-cut (string-copy source-cut)) (revision revision) (attempt attempt)))
+   (supers)))
 
 ;;; Caller must separately establish DAG readiness and input-evidence validity.
 ;;; The returned state and request are POO objects, not a public record protocol.
@@ -59,12 +73,15 @@
               '(stage generation configuration source-cut revision attempt))))
 
 ;;; Settlement carries identity admission only, not a candidate or truth guarantee.
-(def (poo-flow-search-attempt-settle state request)
+(def (poo-flow-search-attempt-current? state request)
   (require-state state)
-  (unless (and (not (.ref state 'retired?))
-               (same-request? (.ref state 'active) request)
-               (every (lambda (slot) (equal? (.ref state slot) (.ref request slot)))
-                      '(stage generation configuration source-cut revision)))
+  (and (not (.ref state 'retired?))
+       (same-request? (.ref state 'active) request)
+       (every (lambda (slot) (equal? (.ref state slot) (.ref request slot)))
+              '(stage generation configuration source-cut revision))))
+
+(def (poo-flow-search-attempt-settle state request)
+  (unless (poo-flow-search-attempt-current? state request)
     (error "stale, foreign, duplicate or retired Search attempt"))
   (poo-core-role-object (slots ((active #f))) (supers state)))
 

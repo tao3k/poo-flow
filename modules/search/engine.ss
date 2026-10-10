@@ -9,7 +9,8 @@
         :poo-flow/modules/search/attempt)
 (export poo-flow-search-engine poo-flow-search-engine-frontier
         poo-flow-search-engine-issue poo-flow-search-engine-complete
-        poo-flow-search-engine-revise poo-flow-search-engine-node)
+        poo-flow-search-engine-revise poo-flow-search-engine-node
+        poo-flow-search-engine-cancel)
 
 ;;; Private lowering protocol; the public engine and nodes are POO objects.
 (defstruct lowered (nodes terminals))
@@ -107,6 +108,14 @@
          (next (poo-core-role-object
                 (slots ((state (.ref completion 'state)) (completion completion))) (supers node))))
     (replace-node engine next)))
+
+;;; Logical cancellation belongs to the generic engine, not its Rust consumer.
+;;; An old request is a no-op; exact cancellation invalidates descendants too.
+(def (poo-flow-search-engine-cancel engine name request)
+  (let (node (poo-flow-search-engine-node engine name))
+    (if (poo-flow-search-attempt-current? (.ref node 'state) request)
+      (poo-flow-search-engine-revise engine (list name) (.ref request 'source-cut))
+      engine)))
 
 ;;; Same finite reverse-edge propagation as LeanPoo invalidatedNodes:
 ;;; changed identities plus structural descendants, bounded by node count.

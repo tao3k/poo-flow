@@ -1,8 +1,8 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 namespace POO.Flow.SearchAttempt
-def quintSourceDigest : String := "sha256:aa380a1a3cb01a5896cc29afffced2b61331123a08c03a121a8730c11e3ba8b7"
-def quintInvariantNames : List String := ["CurrentRevision", "ExactAttempt", "NoRetiredAdmission", "OncePerAttempt"]
+def quintSourceDigest : String := "sha256:6925f9de5a50181e73b0a5e6dda4da2487807e82128576606a38d3ab538e24ce"
+def quintInvariantNames : List String := ["CurrentRevision", "ExactAttempt", "NoRetiredAdmission", "OncePerAttempt", "NoStaleCancellation"]
 structure Scope where
   stage : Nat
   generation : Nat
@@ -79,6 +79,24 @@ theorem revision_fences_old_attempt {state next : State} {request : Request} {cu
   · cases changed
     simp [settle, Admits]
   · contradiction
+
+def cancel (state : State) (request : Request) : Option State :=
+  if Admits state request then revise state state.scope.sourceCut else some state
+
+theorem stale_cancel_noop (state : State) (request : Request)
+    (stale : ¬ Admits state request) : cancel state request = some state := by
+  simp [cancel, stale]
+
+theorem cancelled_attempt_cannot_settle
+    {state next : State} {request : Request}
+    (current : Admits state request) (cancelled : cancel state request = some next) :
+    settle next request = none := by
+  have revised : revise state state.scope.sourceCut = some next := by
+    unfold cancel at cancelled
+    split at cancelled
+    · exact cancelled
+    · contradiction
+  exact revision_fences_old_attempt revised
 
 theorem issued_identity {state next : State} {request : Request}
     (issued : issue state = some (next, request)) :

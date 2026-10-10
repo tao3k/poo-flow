@@ -854,7 +854,7 @@ check-search-dag-scheme:
     trap 'rm -f "$log"' EXIT
     {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s gerbil {{ gerbil_test_runtime_options }} env gxi -e '(import (only-in :gerbil/tools/gxtest main)) (main "-v" "5" "t/search-engine-test.ss")' 2>&1 | tee "$log"
     if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log"; then exit 1; fi
-    test "$(grep -c '^CASE-OK ' "$log")" = 6
+    test "$(grep -c '^CASE-OK ' "$log")" = 8
     grep -Fx 'MODULE-OK t/search-engine-test.ss' "$log"
     grep -F 'HARNESS-OK' "$log"
     grep -x 'OK' "$log"

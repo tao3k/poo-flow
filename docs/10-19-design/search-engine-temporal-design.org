@@ -10,15 +10,26 @@
 POO Flow maintains the generic =search-engine=. Its semantic core composes
 Search stages with =temporal-causality=: dependency readiness, evidence
 validity, invalidation and logical continuation belong to one engine contract.
-MRR is the execution mediator to the Rust ecosystem. MRR Data owns physical
+The engine implementation is maintained in =modules/search/engine.ss=, with
+attempt admission in =modules/search/attempt.ss= and the public exports in
+=modules/search/interface.ss=. Lean and Quint producer models are maintained
+with this module in POO Flow.
+
+MRR is the Rust dispatch interface and Rust ecosystem scheduling hub. It owns
+FFI sessions, bounded physical dispatch, resource leases, result collection and
+execution handoff to MRR Data and other Rust ecosystem adapters. MRR Data owns physical
 query, index and storage adapters. ASP configures code-search scenarios and
 projects public results.
 
-This document defines the implementation target and acceptance boundaries.
-It does not announce a completed engine or publish a new wire ABI.
-Current =modules/search= supplies POO stages, typed composition and strategies.
-Its factor observations already reuse Temporal observations and causal events.
-The engine transition and execution-port contracts below are proposed.
+This document records the implementation and its remaining acceptance boundaries.
+Current =modules/search= supplies POO stages, typed composition, strategies and
+an immutable DAG controller. It derives readiness, issues scoped attempts,
+admits matching completions and propagates invalidation to structural descendants.
+Exact cancellation invalidates the active stage and its descendants; stale
+cancellation preserves the current engine. Factor observations reuse Temporal
+observations and causal events. Canonical configuration identity and physical
+execution-port qualification remain integration work; this document publishes
+no new wire ABI.
 
 * Composition and configuration
 
@@ -182,7 +193,29 @@ Search composition, Temporal validity and engine transitions. MRR owns FFI
 binding and physical dispatch admission models; Data owns physical correspondence.
 Each consumer qualifies its actual execution and result projection separately.
 
-Proposed producer invariants include: no stage readiness without valid inputs;
+* Qualified cancellation increment
+
+The pure controller delegates request identity admission to
+=poo-flow-search-attempt-current?=. Returned identities are reconstructed as
+POO request objects through =poo-flow-search-attempt-request=.
+=poo-flow-search-engine-cancel= invalidates an exactly matching active request
+and its structural descendants. It returns the original engine for a stale or
+foreign request, preserving independent completed branches and newer attempts.
+Physical cancellation and resource release remain MRR execution obligations.
+
+The focused Scheme gates cover eight attempt-admission cases and eight DAG
+cases, including exact cancellation, stale cancellation and subsequent
+completion of a reconstructed current request. =SearchAttempt.qnt= includes
+=NoStaleCancellation= and a =cancelAny= negative control. The positive bounded
+model explores 92 distinct states; all four deliberately broken controls
+produce invariant violations. Lean proves =stale_cancel_noop= and
+=cancelled_attempt_cannot_settle=, and binds the maintained Quint source digest.
+These checks qualify the stated transition laws and exercised Scheme controls;
+they do not establish whole-program refinement or downstream adapter closure.
+
+* Remaining acceptance
+
+Remaining producer invariants include: no stage readiness without valid inputs;
 no fabricated causal parents; no stale or duplicate attempt admission; monotonic
 retirement; preservation of unaffected valid observations; explicit incomplete
 evidence; and semantic independence from physical completion order.
