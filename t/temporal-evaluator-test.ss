@@ -2,6 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :poo-flow/src/ffi/scheme-wire scheme-wire-read scheme-wire-write)
+        (only-in :poo-flow/modules/ai-agentic-context/objects AiAgenticContextScope.)
+        (only-in :poo-flow/modules/ai-agentic-context/funs-features poo-flow-ai-agentic-context-profile)
+        :poo-flow/modules/ai-agentic-context/session-host
+        :poo-flow/modules/ai-agentic-context/use-host
+        :poo-flow/src/semantic/context-restriction
         :std/test (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/testing-api poo-flow-test-case)
         (only-in :gerbil-ascent/candidate/reasoning
@@ -42,6 +47,67 @@
     (poo-flow-test-case "rejection assertions fail when the operation returns normally"
       (check (rejected? (lambda () 42)) => #f)
       (check (rejected? (lambda () (error "typed rejection"))) => #t))
+    (poo-flow-test-case "Context binds original proof into input and fences prepared claims"
+      (let-values (((context-host proof-host policy-host registration p ctx) (context-proof-setup)))
+        (check (.ref (context-claim context-host 0 0) 'reason) => 'temporal-proof-denied)
+        (let* ((before (poo-flow-ai-agentic-context-session-host-current context-host "session"))
+               (bound (context-bind context-host proof-host registration p 0 0 1 1)))
+          (check (.ref bound 'reason) => 'proof-bound)
+          (check (equal? (.ref (.ref (.ref before 'task) 'input) 'digest)
+                         (.ref (.ref (.ref bound 'task) 'input) 'digest)) => #f)
+          (check (.ref (context-claim context-host 0 0) 'reason) => 'stale-revision)
+          (let (claim (context-claim context-host 1 0))
+            (check (.ref claim 'accepted?) => #t)
+            (check (.ref claim 'provider-disclosed?) => #f)
+            (check (.ref claim 'action-authorized?) => #f)))))
+    (poo-flow-test-case "Temporal correction invalidates active Context while preserving one obligation"
+      (let-values (((context-host proof-host policy-host registration p ctx) (context-proof-setup)))
+        (context-bind context-host proof-host registration p 0 0 1 1)
+        (context-claim context-host 1 0)
+        (poo-flow-temporal-proof-host-refresh! proof-host "source" 2 (car ctx) (corrected-journal (list-ref ctx 9)))
+        (poo-flow-temporal-support-policy-host-refresh! policy-host p 2 (at 2))
+        (let* ((r (poo-flow-ai-agentic-context-session-host-revalidate! context-host "session" 2 0))
+               (schedule (.ref r 'schedule)))
+          (check (.ref r 'reason) => 'temporal-proof-denied)
+          (check (.ref r 'runtime-published?) => #t)
+          (check (.ref schedule 'active) => #f)
+          (check (.ref schedule 'generation) => 3)
+          (check (length (.ref schedule 'obligations)) => 1)
+          (check (.ref (car (.ref schedule 'obligations)) 'identity) => "attempt")
+          (let (again (poo-flow-ai-agentic-context-session-host-revalidate! context-host "session" 3 0))
+            (check (.ref again 'runtime-published?) => #f)
+            (check (length (.ref (.ref again 'schedule) 'obligations)) => 1)))))
+    (poo-flow-test-case "Context source refresh cannot reuse a Temporal requirement at another source generation"
+      (let-values (((context-host proof-host policy-host registration p ctx) (context-proof-setup)))
+        (context-bind context-host proof-host registration p 0 0 1 1)
+        (poo-flow-ai-agentic-context-session-host-refresh! context-host "session" 0 1 context-source
+          (.o (:: @ context-scope) source-cut: "cut:1"))
+        (check (.ref (context-claim context-host 1 1) 'reason) => 'temporal-proof-denied)
+        (context-bind context-host proof-host registration p 1 1 1 1)
+        (check (.ref (context-claim context-host 2 1) 'accepted?) => #t)))
+    (poo-flow-test-case "Context refuses unknown proof budget exhaustion policy drift and stale catalog"
+      (let-values (((context-host proof-host policy-host registration p ctx) (context-proof-setup)))
+        (check-rejected (poo-flow-ai-agentic-context-session-host-require-proof! context-host "session" 0 0
+          proof-host "unknown" 1 1 (.ref p 'semantic-digest) 128))
+        (check-rejected (poo-flow-ai-agentic-context-session-host-require-proof! context-host "session" 0 0
+          proof-host (.ref registration 'identity) 1 1 (.ref p 'semantic-digest) 0))
+        (check (.ref (.ref (poo-flow-ai-agentic-context-session-host-current context-host "session") 'schedule) 'revision) => 0)
+        (context-bind context-host proof-host registration p 0 0 1 1)
+        (poo-flow-temporal-support-policy-host-refresh! policy-host p 2 (at 2))
+        (check (.ref (context-claim context-host 1 0) 'reason) => 'temporal-proof-denied)
+        (let* ((program-value (car ctx))
+               (changed (poo-flow-temporal-rule-program (.ref program-value 'identity) "replaced"
+                 (.ref program-value 'generation) (.ref program-value 'ascent-generation)
+                 (.ref program-value 'relations) (.ref program-value 'rules))))
+          (poo-flow-temporal-proof-host-refresh! proof-host "source" 2 changed (list-ref ctx 9))
+          (check-rejected (context-bind context-host proof-host registration p 1 0 2 2))
+          (check (.ref (context-claim context-host 1 0) 'reason) => 'temporal-proof-denied))))
+    (poo-flow-test-case "Temporal proof capability retains creating owner even before first use"
+      (let* ((ph (poo-flow-temporal-support-policy-host)) (proof-host (poo-flow-temporal-proof-host ph))
+             (ctx (mrr-derivation-fixture)))
+        (check (thread-join! (thread-start! (make-thread (lambda ()
+          (rejected? (lambda () (poo-flow-temporal-proof-host-refresh! proof-host "source" 1 (car ctx) (list-ref ctx 9)))))))) => #t)
+        (check (.ref (poo-flow-temporal-proof-host-refresh! proof-host "source" 1 (car ctx) (list-ref ctx 9)) 'generation) => 1)))
     (poo-flow-test-case "retained native proof uses registered current source policy and observed clock"
       (let* ((ctx (mrr-derivation-fixture)) (ph (poo-flow-temporal-support-policy-host))
              (host (poo-flow-temporal-proof-host ph)) (p (policy "v1"))
@@ -476,3 +542,29 @@
       (append (.ref j 'revisions) (list (poo-flow-temporal-evidence-revision "late-correction"
         (.ref first 'subject-identity) 'correct (.ref first 'identity) (at 2)
         (poo-flow-temporal-interval "v2" (at 0) (at 10) #t #f) "changed"))))))
+
+;;; Context owner enrollment associates its source-relative Task with the retained
+;;; Temporal proof. This fixture does not assert Org-to-Fact source refinement.
+(def context-scope (.o (:: @ AiAgenticContextScope.) bundle: "bundle" organization: "org" epoch: 1
+  project: "project" worktree: "worktree" source-cut: "cut:0" actor: "actor" task: "task"
+  destination: "provider" session: "session" turn: 0))
+(def context-source "* TODO Work\n:PROPERTIES:\n:ID: work\n:END:\n")
+(def (context-proof-setup)
+  (let* ((ctx (mrr-derivation-fixture)) (ph (poo-flow-temporal-support-policy-host))
+         (proof-host (poo-flow-temporal-proof-host ph)) (p (policy "v1"))
+         (snapshot (poo-flow-temporal-proof-host-refresh! proof-host "source" 1 (car ctx) (list-ref ctx 9)))
+         (registration (register-selected proof-host snapshot ctx))
+         (grants (poo-flow-context-use-host)) (context-host (poo-flow-ai-agentic-context-session-host grants ph #t))
+         (contract (poo-flow-context-use-contract "actor" "task" "context-policy" '() '() #t)))
+    (poo-flow-temporal-support-policy-host-refresh! ph p 1 (at 1))
+    (poo-flow-context-use-host-refresh! grants
+      (poo-flow-context-use-grant "grant" 1 "manifest" "admission" contract "policy" (.ref p 'semantic-digest) '(display) #t))
+    (poo-flow-ai-agentic-context-session-host-enroll! context-host 0 context-source context-scope
+      (poo-flow-context-restriction "domain" '("actor") '("provider") '("org") 0 8)
+      (poo-flow-ai-agentic-context-profile #f) 0 '("work") "grant" 1)
+    (values context-host proof-host ph registration p ctx)))
+(def (context-bind host proof-host registration p revision source-generation state-generation policy-generation)
+  (poo-flow-ai-agentic-context-session-host-require-proof! host "session" revision source-generation
+    proof-host (.ref registration 'identity) state-generation policy-generation (.ref p 'semantic-digest) 128))
+(def (context-claim host revision source-generation)
+  (poo-flow-ai-agentic-context-session-host-claim! host "session" revision source-generation "attempt" "request"))

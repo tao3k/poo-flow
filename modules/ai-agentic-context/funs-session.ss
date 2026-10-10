@@ -20,11 +20,15 @@
                         (poo-flow-query->gql (.ref (.ref verified 'observation) 'query))))
          (restriction-value (string-copy (.ref (.ref verified 'restriction) 'semantic-digest)))
          (profile-value (poo-flow-ai-agentic-context-digest (.ref verified 'feature-ids)))
-         (receipt-value (string-copy receipt-reference)))
+         (receipt-value (string-copy receipt-reference))
+         (input-digest-value (poo-flow-ai-agentic-context-digest
+           (list 'context-session-input-v1 "poo-flow/ai-agentic-context" "org-projection-v1"
+                 identity-value scope-digest-value source-value query-value restriction-value
+                 profile-value receipt-value (.ref scope-value 'session) (.ref scope-value 'turn)))))
     (unless (string? (.ref scope-value 'session))
       (error "Context Session input requires an exact Session and Turn scope"))
     (.o (:: @ SessionInputRef. SessionTask.) producer: "poo-flow/ai-agentic-context"
-        contract: "org-projection-v1" identity: identity-value digest: identity-value
+        contract: "org-projection-v1" identity: identity-value digest: input-digest-value
         scope-digest: scope-digest-value source-vector-digest: source-value
         query-digest: query-value restriction-digest: restriction-value
         profile-digest: profile-value receipt-ref: receipt-value

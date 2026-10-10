@@ -785,9 +785,9 @@ test-temporal-evaluator:
     set -euo pipefail
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    timeout --foreground --signal=TERM --kill-after=1s 45s python3 packages/python-runtime/tools/watch.py gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-evaluator-runner.ss 2>&1 | tee "$log"
+    timeout --foreground --signal=TERM --kill-after=1s 45s python3 packages/python-runtime/tools/watch.py gxi {{ gerbil_test_runtime_options }} t/harness/temporal-evaluator-runner.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
-    test "$(grep -c '^CASE-OK ' "$log")" = 23
+    test "$(grep -c '^CASE-OK ' "$log")" = 28
     grep -Fx 'MODULE-OK t/temporal-evaluator-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
@@ -861,3 +861,18 @@ check-search-dag-scheme:
 
 [group('check')]
 check-search-engine-proof: check-composition-proof check-search-attempt-quint check-search-attempt-scheme check-search-dag-scheme
+
+# Static native Context/Temporal closure avoids Darwin dynamic-module teardown.
+[group('test')]
+test-context-temporal-native executable:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -x "{{ executable }}"
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gerbil_darwin_env }} timeout --foreground --signal=TERM --kill-after=1s 45s python3 "{{ justfile_directory() }}/packages/python-runtime/tools/watch.py" "{{ executable }}" {{ gerbil_test_runtime_options }} -v 5 t/temporal-evaluator-test.ss t/ai-agentic-context-session-host-test.ss t/ai-agentic-context-delta-test.ss t/session-attempt-test.ss 2>&1 | tee "$log"
+    if grep -Eq 'ERROR (CHECK|CASE|HARNESS|MODULE)|\*\*\* ERROR|Heap overflow|Stack overflow' "$log"; then exit 1; fi
+    test "$(grep -Ec '^CASE-OK ' "$log" || true)" = 57
+    for module in temporal-evaluator ai-agentic-context-session-host ai-agentic-context-delta session-attempt; do grep -Fx "MODULE-OK t/${module}-test.ss" "$log" >/dev/null; done
+    grep -Eq '^HARNESS-OK ' "$log"
+    grep -Eq '^OK$' "$log"

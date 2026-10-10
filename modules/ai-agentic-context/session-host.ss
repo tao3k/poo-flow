@@ -7,6 +7,7 @@
         (only-in :std/list/list every)
         (only-in :poo-flow/modules/session/funs-attempt poo-flow-session-schedule
                  poo-flow-session-claim poo-flow-session-recover)
+        (only-in :poo-flow/modules/temporal-causality/evaluator/proof-host poo-flow-temporal-proof-host-current)
         "funs-scope.ss" "funs-features.ss" "funs-projection.ss" "funs-session.ss" "use-host.ss"
         (only-in :poo-flow/src/semantic/context-restriction poo-flow-context-flow-decision))
 (export poo-flow-ai-agentic-context-session-host
@@ -14,15 +15,19 @@
         poo-flow-ai-agentic-context-session-host-refresh!
         poo-flow-ai-agentic-context-session-host-current
         poo-flow-ai-agentic-context-session-host-claim!
-        poo-flow-ai-agentic-context-session-host-observe)
-(defstruct session-owner-state (entries owner grants policies))
+        poo-flow-ai-agentic-context-session-host-observe
+        poo-flow-ai-agentic-context-session-host-require-proof!
+        poo-flow-ai-agentic-context-session-host-revalidate!)
+(defstruct session-owner-state (entries owner grants policies proofs proof-required?))
 (defstruct source-entry (generation source scope restriction profile task-revision ids
                         projection task schedule grant-id grant-generation))
+(defstruct proof-binding (host registration state-generation policy-generation policy-digest budget source-generation digest))
 (def (text? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (coordinate? x) (and (exact-integer? x) (<= 0 x 65535)))
-(def (poo-flow-ai-agentic-context-session-host grants policies)
+(def (poo-flow-ai-agentic-context-session-host grants policies proof-required-value)
+  (unless (boolean? proof-required-value) (error "Context proof requirement must be explicit"))
   (let (runtime-value (make-session-owner-state (make-hash-table test: equal?)
-                         (current-thread) grants policies))
+                         (current-thread) grants policies (make-hash-table test: equal?) proof-required-value))
     (.o kind: 'poo-flow.ai-agentic-context.session-host.v1 private-runtime-state: runtime-value)))
 (def (state host)
   (unless (and (object? host) (.slot? host 'kind)
@@ -59,11 +64,11 @@
         source-generation: source-generation-value schedule: schedule-value task: task-value
         runtime-published?: published-value source-authenticated?: #f action-authorized?: #f
         provider-disclosed?: #f provider-result-admitted?: #f durable?: #f)))
-(def (build-task source scope restriction profile revision ids grant-id grant-generation)
+(def (build-task source scope restriction profile revision ids grant-id grant-generation (proof-digest #f))
   (let* ((projection-value (poo-flow-ai-agentic-context-org-project scope source restriction profile))
          (receipt-value (poo-flow-ai-agentic-context-digest
              (list 'session-host-producer-reference-v1 (.ref projection-value 'semantic-digest)
-                   grant-id grant-generation revision ids)))
+                   grant-id grant-generation revision ids proof-digest)))
          (task-value (poo-flow-ai-agentic-context-session-task source projection-value scope receipt-value revision ids)))
     (values projection-value task-value)))
 (def (observe-grant runtime-value row)
@@ -134,6 +139,7 @@
     (cond ((not (equal? expected-revision (.ref (source-entry-schedule row) 'revision))) (view row #f 'stale-revision #f))
           ((not (equal? expected-source-generation (source-entry-generation row))) (view row #f 'stale-source #f))
           ((not (source-entry-task row)) (view row #f 'source-blocked #f))
+          ((not (observe-proof runtime-value row session-id)) (view row #f 'temporal-proof-denied #f))
           ((not (observe-grant runtime-value row)) (view row #f 'current-grant-denied #f))
           (else (view row #t 'current-input-eligible #f)))))
 (def (poo-flow-ai-agentic-context-session-host-claim! host session-id expected-revision expected-source-generation
@@ -146,3 +152,60 @@
         (if (not (.ref proposal 'accepted?)) (view row #f (.ref proposal 'reason) #f)
           (begin (set! (source-entry-schedule row) (.ref proposal 'schedule))
                  (view row #t 'claim-published #t)))))))
+
+;;; Proof requirements are owner-enrolled capabilities, never wire verdicts.
+;;; A binding change fences prepared claims through the same Session revision CAS.
+(def (current-proof binding)
+  (poo-flow-temporal-proof-host-current (proof-binding-host binding)
+    (proof-binding-registration binding) (proof-binding-state-generation binding)
+    (proof-binding-policy-generation binding) (proof-binding-policy-digest binding)
+    (proof-binding-budget binding)))
+(def (observe-proof runtime-value row session-id)
+  (let (binding (hash-get (session-owner-state-proofs runtime-value) session-id))
+    (or (and (not binding) (not (session-owner-state-proof-required? runtime-value)))
+        (and binding (= (source-entry-generation row) (proof-binding-source-generation binding))
+             (with-catch (lambda (exception) #f)
+               (lambda () (.ref (current-proof binding) 'current?)))))))
+(def (poo-flow-ai-agentic-context-session-host-require-proof! host session-id expected-revision
+        expected-source-generation proof-host registration state-generation policy-generation policy-digest budget)
+  (unless (and (text? registration) (text? policy-digest) (coordinate? state-generation)
+               (coordinate? policy-generation) (exact-integer? budget) (<= 0 budget 4096))
+    (error "Invalid Context proof requirement"))
+  (let* ((runtime-value (state host)) (row (entry runtime-value session-id))
+         (schedule-value (source-entry-schedule row)))
+    (unless (and (= expected-revision (.ref schedule-value 'revision))
+                 (= expected-source-generation (source-entry-generation row))
+                 (eq? (.ref schedule-value 'status) 'idle) (source-entry-task row)
+                 (observe-grant runtime-value row))
+      (error "Proof binding requires current idle Session input"))
+    (let* ((binding (make-proof-binding proof-host (string-copy registration) state-generation
+                      policy-generation (string-copy policy-digest) budget expected-source-generation #f))
+           (applicability (current-proof binding)))
+      (unless (.ref applicability 'current?) (error "Context requires current original Temporal proof"))
+      (set! (proof-binding-digest binding)
+        (poo-flow-ai-agentic-context-digest (list 'context-temporal-binding-v1
+          (.ref (source-entry-scope row) 'semantic-digest) expected-source-generation
+          (.ref (.ref (source-entry-task row) 'input) 'digest)
+          (.ref applicability 'semantic-digest))))
+      (let-values (((projection-value task-value)
+        (build-task (source-entry-source row) (source-entry-scope row) (source-entry-restriction row)
+          (source-entry-profile row) (source-entry-task-revision row) (source-entry-ids row)
+          (source-entry-grant-id row) (source-entry-grant-generation row) (proof-binding-digest binding))))
+        (let (fence (poo-flow-session-recover schedule-value expected-revision))
+          (unless (.ref fence 'accepted?) (error "Proof binding coordinate exhausted"))
+          ;; No mutation occurs until proof replay, task replay and fencing all succeed.
+          (hash-put! (session-owner-state-proofs runtime-value) (string-copy session-id) binding)
+          (set! (source-entry-projection row) projection-value)
+          (set! (source-entry-task row) task-value)
+          (set! (source-entry-schedule row) (.ref fence 'schedule))
+          (view row #t 'proof-bound #t))))))
+(def (poo-flow-ai-agentic-context-session-host-revalidate! host session-id expected-revision expected-source-generation)
+  (let* ((runtime-value (state host)) (row (entry runtime-value session-id))
+         (observed (poo-flow-ai-agentic-context-session-host-observe host session-id expected-revision expected-source-generation)))
+    (if (and (memq (.ref observed 'reason) '(temporal-proof-denied current-grant-denied source-blocked))
+             (.ref (source-entry-schedule row) 'active))
+      (let (fence (poo-flow-session-recover (source-entry-schedule row) expected-revision))
+        (unless (.ref fence 'accepted?) (error "Invalidation coordinate exhausted"))
+        (set! (source-entry-schedule row) (.ref fence 'schedule))
+        (view row #f (.ref observed 'reason) #t))
+      observed)))

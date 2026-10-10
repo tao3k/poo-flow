@@ -105,7 +105,11 @@
         (check (poo-flow-session-input-ref-shape? input) => #t)
         (check (.ref input 'consumer-session) => "session")
         (check (.ref input 'consumer-turn) => 7)
-        (check (.ref input 'digest) => (.ref p 'semantic-digest))
+        (check (.ref input 'identity) => (.ref p 'semantic-digest))
+        (check (equal? (.ref input 'digest)
+          (.ref (poo-flow-ai-agentic-context-session-input before p bound-scope "other-receipt") 'digest)) => #f)
+        (check (.ref input 'digest) =>
+          (.ref (poo-flow-ai-agentic-context-session-input before p bound-scope "receipt") 'digest))
         (check-exception (poo-flow-ai-agentic-context-session-input after p bound-scope "receipt") true)))
     (poo-flow-test-case "historical bytes and source mismatch cannot be trusted"
       (check-exception (poo-flow-ai-agentic-context-delta-admit "* TODO Forged\n" (base)

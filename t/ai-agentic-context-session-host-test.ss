@@ -25,7 +25,7 @@
 (def restriction (poo-flow-context-restriction "domain" '("actor") '("provider") '("org") 0 8))
 (def (setup)
   (let* ((grants (poo-flow-context-use-host)) (policies (poo-flow-temporal-support-policy-host))
-         (host (poo-flow-ai-agentic-context-session-host grants policies)))
+         (host (poo-flow-ai-agentic-context-session-host grants policies #f)))
     (poo-flow-temporal-support-policy-host-refresh! policies policy 0 (at 1))
     (poo-flow-context-use-host-refresh! grants (grant 1 #t))
     (poo-flow-ai-agentic-context-session-host-enroll! host 0 source scope restriction
@@ -86,7 +86,7 @@
         (check (.ref (claim host 0 0) 'reason) => 'current-grant-denied)))
     (poo-flow-test-case "Context restriction is rechecked at the current Host clock"
       (let* ((grants (poo-flow-context-use-host)) (policies (poo-flow-temporal-support-policy-host))
-             (host (poo-flow-ai-agentic-context-session-host grants policies))
+             (host (poo-flow-ai-agentic-context-session-host grants policies #f))
              (short (poo-flow-context-restriction "domain" '("actor") '("provider") '("org") 0 3)))
         (poo-flow-temporal-support-policy-host-refresh! policies policy 0 (at 1))
         (poo-flow-context-use-host-refresh! grants (grant 1 #t))

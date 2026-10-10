@@ -13,7 +13,7 @@
         poo-flow-temporal-proof-host-refresh! poo-flow-temporal-proof-host-register!
         poo-flow-temporal-proof-host-current)
 (defstruct proof-context (admission arguments program journal))
-(defstruct proof-host-state (policy-host current proofs))
+(defstruct proof-host-state (policy-host current proofs owner))
 (def (text? x) (and (string? x) (< 0 (string-length x) 257)))
 (def (tag? x k) (and (object? x) (.slot? x 'kind) (eq? (.ref x 'kind) k)))
 (def (digest x) (string-append "sha256:" (hex-encode (sha256 (string->utf8
@@ -45,12 +45,14 @@
     (unless (equal? (.ref value 'semantic-digest) (.ref verified 'semantic-digest))
       (error "retained proof context digest mismatch")) c))
 (def (poo-flow-temporal-proof-host policy-host-value)
-  (.o kind: 'temporal.proof-host.v1 private-runtime-state:
-      (make-proof-host-state policy-host-value (make-hash-table) (make-hash-table))))
+  (let (runtime-value (make-proof-host-state policy-host-value (make-hash-table) (make-hash-table) (current-thread)))
+    (.o kind: 'temporal.proof-host.v1 private-runtime-state: runtime-value)))
 (def (state host)
   (unless (and (tag? host 'temporal.proof-host.v1) (.slot? host 'private-runtime-state)
                (proof-host-state? (.ref host 'private-runtime-state))) (error "invalid proof host capability"))
-  (.ref host 'private-runtime-state))
+  (let (runtime-value (.ref host 'private-runtime-state))
+    (unless (eq? (proof-host-state-owner runtime-value) (current-thread))
+      (error "Temporal proof Host requires its serialized owner thread")) runtime-value))
 ;;; A Host explicitly registers the catalog and complete append-only journal.
 ;;; Validate the entire refresh before changing any current state.
 (def (poo-flow-temporal-proof-host-refresh! host identity-value generation-value program journal)

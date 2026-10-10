@@ -1,0 +1,112 @@
+#+title: Context Temporal Proof Requirement and Session Invalidation
+#+date: [2026-10-10]
+#+language: en
+#+begin_comment
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+end_comment
+
+* Delivered native boundary
+
+The Context Session Host now composes an existing registered Temporal proof Host.
+=require-proof!= takes a retained registration identity, expected source-state and
+policy generations, policy digest and evaluation budget. It calls the original
+proof Host's =current= operation; callers cannot substitute a verdict, journal,
+catalog or clock. Binding is permitted only for the exact idle Session revision
+and enrolled Context source generation with a currently matching Context grant.
+
+The binding digest includes the Context Scope, source generation, original Task
+input digest and native applicability digest. A new Task is replayed from the
+Org source and its producer receipt includes that binding digest. The generic
+Session Attempt therefore retains the proof-bound input without depending on a
+Temporal registry or proof schema. Session's pure idle recovery transition fences
+binding publication by advancing revision and generation. Failed replay or CAS
+checks leave both Task and schedule unchanged.
+
+* Current use and invalidation
+
+For a proof-bound Session, =observe= and =claim!= re-resolve the same retained
+registration through its original Host at the pinned state/policy generations.
+Unknown registrations, exhausted evaluation, changed generations, invalid support,
+expired policy and changed catalog deny claim. Context source refresh retains the
+requirement but makes it inapplicable until the owner explicitly rebinds it to the
+new source generation. There is no operation to remove a required proof.
+
+=revalidate!= performs the same current check. A denied active Attempt is moved
+to the existing Session recovery obligation, advancing revision and generation.
+Repeated invalidation retains the obligation without adding duplicates. Invalid
+caller revisions do not publish recovery. Provider completion cannot settle this
+obligation; the trusted terminal receipt path remains a separate implementation
+gate. No periodic watcher is implied: the serialized owner must call revalidation
+when its registered dependencies change.
+
+The Temporal proof Host now eagerly captures its creating thread and rejects
+foreign-thread access, including before the first operation. This extends the
+same ownership rule already enforced by Context grant, Session and policy Hosts.
+
+* Public runtime operations
+
+| Operation | Required owner inputs | Publication |
+|-----------+-----------------------+-------------|
+| =session-host-require-proof!= | Session/source CAS, proof capability, registration, expected generations/digest, budget | Replayed Task and idle fence |
+| =session-host-observe= | Session/source CAS | Read-only current eligibility |
+| =session-host-claim!= | Session/source CAS, Attempt/Request identities | Local Attempt claim |
+| =session-host-revalidate!= | Session/source CAS | Active invalidation and retained recovery obligation |
+
+The Host constructor requires an explicit =proof-required?= policy argument.
+The joint profile passes true and denies claim until a current proof is bound.
+The source-only profile passes false and makes no Temporal applicability claim.
+There is no implicit default or downgrade operation. Both profiles may enroll
+Org snapshots; enrollment success is distinct from current claim eligibility.
+
+* Qualification and evidence boundary
+
+The Temporal evaluator suite adds five integration controls using original ASCENT
+reasoning, native Rule/Derivation correspondence and registered source/policy
+Hosts. They cover proof-bound input, prepared-claim fencing, correction recovery,
+repeat invalidation, source refresh/rebinding, unknown registration, exhausted
+budget, policy drift, catalog replacement and foreign-thread first use.
+The existing 23 evaluator cases and eight Context Session cases remain required.
+
+The existing ContextTemporalLifecycle Quint and Lean models describe the abstract
+version vector, support applicability and retained obligations. This native slice
+implements current proof checks and local recovery; it does not establish complete
+model-to-code refinement. No new formal proof is claimed by this receipt.
+
+The association between an Org-derived Task and a Temporal registration is a
+trusted owner enrollment premise. This slice does not prove that arbitrary Org
+bytes generated the registered Fact/Rule program. Historical original proof
+admission is source-relative and does not authenticate its physical source.
+All effect/source/durability flags remain false. Provider dispatch, result
+admission, FFI capsule transport, MRR consumer qualification, MRR Data durable
+atomic fences and terminal receipt resolution remain open.
+
+* Completed local receipt
+
+The canonical production =./build.ss= completed with normal compiler settings.
+Workflow actionlint and git diff whitespace checks passed.
+The static native entry completed with exit zero: 57 cases, four MODULE-OK
+receipts, HARNESS-OK and final OK, with no error or overflow marker. The unchanged
+runtime limits were five seconds idle, 45 seconds total and a 1 GiB heap fence.
+The set comprises 28 original evaluator/Context controls, eight Context Session
+Host controls, 13 Context Delta controls and eight generic Session controls.
+The complete Session input digest now includes the producer contract, projection,
+Scope, source/query/restriction/profile digests, receipt reference and exact
+consumer. A negative receipt showed that projection identity alone did not change
+when a Temporal requirement was bound; the strengthened digest closes that defect.
+
+The dynamic Darwin run passed assertions but failed during Gambit module teardown.
+Native stack sampling located the active work in dyld dlclose. That run remains
+unqualified. The compiler-owned executable follows the existing native parser
+and Temporal family qualification pattern; upstream gxtest retains discovery,
+assertions, reporting and exit status. It links Gerbil modules as native objects,
+while normal Darwin system libraries remain dynamic. The installed SDK's missing
+test-tool C/object metadata is materialized from its exact generated sources in
+the separate user artifact root. The installed SDK is not modified. Test object
+compilation uses the existing qualification O0 policy; no performance claim is made.
+
+Build attempts that reached the original 180-second budget, failed SDK metadata
+linkage or failed progress checks are retained as negative local logs. The
+completed build reused compiler-owned objects without widening time limits.
+The native CI job now builds and runs the same executable. Remote CI completion
+must be checked against the pushed commit before claiming consumer qualification.

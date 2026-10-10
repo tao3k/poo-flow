@@ -5,10 +5,12 @@
 ;;; Import progress is reported only at real dependency boundaries. The outer
 ;;; watchdog owns both startup and idle limits; no timer emits keepalive text.
 ;;; ASCENT dependency order follows the compiled imports of pinned REV 964feb3e.
+(def imported-modules (make-hash-table))
 (for-each
  (lambda (module)
    (displayln "IMPORT " module) (force-output)
    (eval `(import ,module))
+   (hash-put! imported-modules module #t)
    (displayln "IMPORT-OK " module) (force-output))
  '(:clan/poo/object
    :clan/poo/mop
@@ -102,4 +104,20 @@
    :poo-flow/modules/temporal-causality/evaluator/proof-host
    :poo-flow/modules/temporal-causality/evaluator/interface
    :gerbil/tools/gxtest))
+;;; Resolve the Context/Orgize closure with the compiler's real dependency order.
+;;; No timer emits progress and no hand-written parser dependency list is kept.
+(eval '(import :gerbil/compiler/driver :gerbil/expander))
+(eval '(let* ((ctx (import-module "modules/ai-agentic-context/session-host.ss"))
+       (deps (gxc#find-runtime-module-deps ctx)))
+  (for-each (lambda (dep)
+    (let* ((id (expander-context-id dep))
+           (name (if (symbol? id) (symbol->string id) id)))
+      (unless (or (and (>= (string-length name) 7) (equal? (substring name 0 7) "gerbil/"))
+                  (member #\~ (string->list name)))
+        (let (module (string->symbol (string-append ":" name)))
+          (unless (hash-get imported-modules module)
+            (displayln "CONTEXT-IMPORT " module) (force-output)
+            (eval `(import ,module))
+            (hash-put! imported-modules module #t)
+            (displayln "CONTEXT-IMPORT-OK " module) (force-output)))))) deps)))
 (eval '(exit (gerbil/tools/gxtest#main "-v" "5" "t/temporal-evaluator-test.ss")))

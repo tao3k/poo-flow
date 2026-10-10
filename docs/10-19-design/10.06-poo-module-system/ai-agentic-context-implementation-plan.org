@@ -333,3 +333,12 @@ support/dependency reverse plans and Impact refresh. [[file:context-temporal-lif
 these actual source owners and makes their registered witnesses the next capsule
 inputs. Clock-window checks are a component of that design. Reuse the native
 proof/source/policy controls; do not create a second evaluator or Temporal registry.
+
+* Registered Temporal proof requirement in the local Session Host
+
+[[file:context-temporal-proof-session-host-receipt.org][The native proof requirement receipt]] records direct composition of the existing
+Temporal proof Host into Context Task preparation, current claim checks and active
+invalidation. Binding publication fences prepared claims, source refresh requires
+explicit rebinding, and repeat invalidation preserves one recovery obligation.
+The remaining joint capsule gates include admitted strategy composition,
+Org-to-Fact source refinement and FFI/MRR/Data effect and terminal receipt paths.
