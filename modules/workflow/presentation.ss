@@ -9,9 +9,9 @@
 (export poo-flow-user-config-workflow-cicd-focused-presentation)
 
 (import (only-in :clan/poo/object .ref object<-fun)
-        :poo-flow/src/authoring/module-interface
-        :poo-flow/src/user-interface/module-selection
-        :poo-flow/src/user-interface/entrypoints
+        :poo-flow/modules/module-authoring/module-interface
+        :core/module-system/selection/objects
+        :poo-flow/modules/workflow/scenario/configuration/entrypoints
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         (only-in :poo-flow/modules/sandbox-core/profile-support/policy-backend-validation
                  poo-flow-sandbox-backend-capability-registry-validation-valid?
@@ -20,7 +20,7 @@
         :poo-flow/modules/workflow/cicd-config
         :poo-flow/modules/workflow/cicd-pipeline-run-config
         :poo-flow/modules/workflow/cicd-runtime-command-config
-        :poo-flow/src/user-interface/presentation-config-support)
+        :poo-flow/modules/workflow/scenario/configuration/presentation-config-support)
 
 ;; Engineering note: workflow-CI focused presentation keeps runtime projection
 ;; memoized so command, handoff, and receipt rows share one projection pass.
@@ -152,8 +152,8 @@
                    (sandbox-validation)))
         ((sandbox-backend-capability-registry-diagnostics) (poo-flow-sandbox-backend-capability-registry-validation-diagnostics
                    (sandbox-validation)))
-        ((session-core-intent-count) 0)
-        ((session-core-intents) '())
+        ((session-intent-count) 0)
+        ((session-intents) '())
         ((cicd-intent-count) (length (cicd-intent-rows)))
         ((cicd-intents) (cicd-intent-rows))
         ((workflow-cicd-pipeline-count) (workflow-field 'pipeline-count 0))
@@ -268,8 +268,8 @@
        sandbox-backend-capability-registry-valid?
        sandbox-backend-capability-registry-diagnostic-count
        sandbox-backend-capability-registry-diagnostics
-       session-core-intent-count
-       session-core-intents
+       session-intent-count
+       session-intents
        cicd-intent-count
        cicd-intents
        workflow-cicd-pipeline-count

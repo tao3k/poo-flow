@@ -7,7 +7,7 @@
 ;;; Invariant: forms create POO policy, validation, memory, and transform
 ;;; values only; runtime execution remains outside Scheme.
 
-(import :poo-flow/modules/memory-core/durable/policy
+(import :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
         (only-in :poo-flow/modules/session/config-session-syntax
                  poo-flow-session-syntax-chunk)
         :poo-flow/modules/session/policy

@@ -17,7 +17,7 @@
                  benchmark-run)
         "../support/performance"
         :poo-flow/modules/session/config
-        :poo-flow/modules/memory-core/config)
+        :poo-flow/modules/ai-agentic-context/features/memory/config)
 
 (export session-agent-param-contract-performance-test)
 

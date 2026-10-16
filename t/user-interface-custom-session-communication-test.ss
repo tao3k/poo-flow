@@ -11,7 +11,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-communication"
@@ -47,7 +47,7 @@
              (sibling (caddr communication-rows))
              (cross-root (cadddr communication-rows)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 8)
         (check-equal? (test-ref root-build-channel 'kind)
                       'poo-flow.session.communication-channel-receipt)

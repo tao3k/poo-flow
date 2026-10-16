@@ -10,9 +10,22 @@ package «poo-flow-temporal-poo-proof» where
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"
-  @ "71609603d45bead8eec6375471991a4f76dbb430"
+  @ "02da82f00ccb7012e33d1ac8c79e4ff791e7dac4"
 
 @[default_target]
 lean_lib PooFlowTemporalPooProof where
   roots := #[`PooFlowTemporalPooProof.TruthMaintenance,
              `PooFlowTemporalPooProof.ConclusionSelection]
+
+lean_lib PooFlowSessionProof where
+  roots := #[`PooFlowSessionProof.Lifecycle,
+             `PooFlowSessionProof.SharedContext,
+             `PooFlowSessionProof.OrgMemory,
+             `PooFlowSessionProof.PolicyC4,
+             `PooFlowSessionProof.AxiomAudit]
+
+lean_lib PooFlowContextProof where
+  roots := #[`ContextDelta, `OrgAnchor, `ContextSessionClaim, `ContextTemporalPolicy]
+
+lean_lib PooFlowAttemptProof where
+  roots := #[`SessionAttempt]

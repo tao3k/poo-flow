@@ -11,7 +11,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-memory-durable"
@@ -51,7 +51,7 @@
              (stale-source (list-ref rows 4))
              (repair (list-ref rows 5)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 6)
         (check-equal? (rows-field rows 'kind)
                       '(poo-flow.memory-core.durable-job-receipt

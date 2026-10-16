@@ -1,0 +1,139 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test (only-in :clan/poo/object .ref .o)
+        (only-in :poo-flow/testing-api poo-flow-test-case)
+        :poo-flow/modules/temporal-causality/time/objects
+        :poo-flow/modules/temporal-causality/revisions/interface
+        :poo-flow/modules/temporal-causality/truth-maintenance/interface)
+(export temporal-support-test)
+(def (at n) (poo-flow-temporal-instant (number->string n) "txn" n "ledger" 'observed))
+(def (valid n) (poo-flow-temporal-instant (number->string n) "valid" n "ledger" 'observed))
+(def (validity) (poo-flow-temporal-interval "validity" (valid 0) (valid 10) #t #f))
+(def (revision id subject op predecessor n)
+  (poo-flow-temporal-evidence-revision id subject op predecessor (at n) (and (not (eq? op 'retract)) (validity))
+                                     (and (not (eq? op 'retract)) id)))
+(def history
+  (poo-flow-temporal-evidence-journal "journal" "txn"
+    (list (revision "a1" "a" 'assert #f 1) (revision "b1" "b" 'assert #f 1)
+          (revision "a2" "a" 'retract "a1" 2) (revision "b2" "b" 'retract "b1" 3))))
+(def (program complete?)
+  (poo-flow-temporal-support-program "program" "policy" complete?
+    (list (poo-flow-temporal-support "left" "claim" "proof-a"
+            (list (poo-flow-temporal-support-premise "a" "a1")) '())
+          (poo-flow-temporal-support "right" "claim" "proof-b"
+            (list (poo-flow-temporal-support-premise "b" "b1")) '())
+          (poo-flow-temporal-support "child" "downstream" "proof-child" '() '("claim")))))
+(def (result p journal n budget)
+  (poo-flow-temporal-support-evaluate p journal (at n) #f budget))
+(def (claim r) (car (.ref r 'conclusions)))
+(def temporal-support-test
+  (test-suite "acyclic temporal support applicability"
+    (poo-flow-test-case "named inventory preserves unsupported claims and scoped uncertainty"
+      (let* ((complete (poo-flow-temporal-support-inventory "empty" "policy" #t '("unproved") '()))
+             (partial (poo-flow-temporal-support-inventory "empty" "policy" #f '("unproved") '())))
+        (check (.ref (claim (result complete history 1 128)) 'status) => 'unsupported)
+        (check (.ref (claim (result partial history 1 128)) 'status) => 'unknown)
+        (check-exception (poo-flow-temporal-support-inventory "bad" "policy" #t '("claim" "claim") '()) true)
+        (check-exception (poo-flow-temporal-support-inventory "bad" "policy" #t '("foreign") (.ref (program #t) 'supports)) true)))
+    (poo-flow-test-case "reverse claim projection groups alternatives and includes downstream claims"
+      (let* ((p (program #t))
+             (first (poo-flow-temporal-support-reverse-plan p history (at 1) (at 2) #f))
+             (last (poo-flow-temporal-support-reverse-plan p history (at 2) (at 3) #f)))
+        (check (.ref first 'changed-subject-identities) => '("a"))
+        (check (.ref first 'affected-conclusion-identities) => '("claim" "downstream"))
+        (check (.ref last 'changed-subject-identities) => '("b"))
+        (check (.ref last 'affected-conclusion-identities) => '("claim" "downstream"))
+        (check (.ref first 'inventory-complete?) => #t)
+        (check (.ref (poo-flow-temporal-support-reverse-plan (program #f) history (at 1) (at 2) #f)
+                    'status) => 'partial)))
+
+    (poo-flow-test-case "two supports then one then none preserves historical cuts"
+      (let* ((p (program #t)) (two (result p history 1 128))
+             (one (result p history 2 128)) (none (result p history 3 128)))
+        (check (.ref (claim two) 'active-support-identities) => '("left" "right"))
+        (check (.ref (claim one) 'active-support-identities) => '("right"))
+        (check (.ref (claim one) 'status) => 'supported)
+        (check (.ref (claim none) 'status) => 'unsupported)
+        (check (.ref (cadr (.ref none 'conclusions)) 'status) => 'unsupported)
+        (check (.ref two 'semantic-digest) => (.ref (result p history 1 128) 'semantic-digest))
+        (check (.ref none 'proof-admitted?) => #f)
+        (check (.ref none 'action-authorized?) => #f)))
+    (poo-flow-test-case "partial inventory and budget never certify no support"
+      (check (.ref (claim (result (program #f) history 3 128)) 'status) => 'unknown)
+      (let (r (result (program #t) history 3 0))
+        (check (.ref (claim r) 'status) => 'unknown)
+        (check (.ref r 'budget-exhausted?) => #t)))
+    (poo-flow-test-case "correction binds exact revision and conflicts remain unknown"
+      (let* ((journal (poo-flow-temporal-evidence-journal "correction" "txn"
+                       (list (revision "a1" "a" 'assert #f 1)
+                             (revision "a2" "a" 'correct "a1" 2)
+                             (revision "a3" "a" 'correct "a1" 3))))
+             (p (poo-flow-temporal-support-program "one" "policy" #t
+                  (list (poo-flow-temporal-support "left" "claim" "proof-a"
+                          (list (poo-flow-temporal-support-premise "a" "a1")) '())))))
+        (check (.ref (claim (result p journal 1 128)) 'status) => 'supported)
+        (check (.ref (claim (result p journal 2 128)) 'status) => 'unsupported)
+        (check (.ref (claim (result p journal 3 128)) 'status) => 'unknown)))
+    (poo-flow-test-case "future evidence is unknown until its admission cut"
+      (check (.ref (claim (result (program #t) history 0 128)) 'status) => 'unknown)
+      (check (.ref (claim (result (program #t) history 1 128)) 'status) => 'supported)
+      (check (.ref (claim (poo-flow-temporal-support-evaluate (program #t) history (at 1) (valid 11) 128)) 'status) => 'unsupported))
+    (poo-flow-test-case "recursive and foreign support declarations reject"
+      (check-exception (poo-flow-temporal-support-program "cycle" "policy" #t
+                         (list (poo-flow-temporal-support "loop" "claim" "proof" '() '("claim")))) true)
+      (check-exception (result (poo-flow-temporal-support-program "foreign" "policy" #t
+                                 (list (poo-flow-temporal-support "x" "claim" "proof"
+                                   (list (poo-flow-temporal-support-premise "foreign" "a1")) '()))) history 1 128) true))
+    (poo-flow-test-case "policy half-open window keeps proof and effects unadmitted"
+      (let* ((p (program #t)) (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (evaluate (lambda (n) (poo-flow-temporal-support-guard p history (at 1) #f 128
+                         policy (.ref policy 'semantic-digest) (at n))))
+             (early (evaluate 0)) (active (evaluate 1)) (expired (evaluate 4)))
+        (check (.ref early 'policy-status) => 'not-yet-effective)
+        (check (.ref active 'policy-status) => 'applicable)
+        (check (.ref active 'policy-applicable?) => #t)
+        (check (.ref expired 'policy-status) => 'expired-policy)
+        (check (.ref expired 'policy-applicable?) => #f)
+        (check (.ref (claim (.ref expired 'evaluation)) 'status) => 'supported)
+        (check (.ref active 'proof-admitted?) => #f)
+        (check (.ref active 'selection-admitted?) => #f)
+        (check (.ref active 'action-authorized?) => #f)
+        (check (.ref active 'durable?) => #f)))
+    (poo-flow-test-case "replacement policy cannot inherit the old binding"
+      (let* ((old (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (new (poo-flow-temporal-support-policy "policy" "rev2" (at 1) (at 4)))
+             (r (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+                  new (.ref old 'semantic-digest) (at 2))))
+        (check (.ref r 'policy-status) => 'stale-policy)
+        (check (.ref r 'policy-applicable?) => #f)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          (poo-flow-temporal-support-policy "foreign" "rev1" (at 1) (at 4))
+          (.ref old 'semantic-digest) (at 2)) true)))
+    (poo-flow-test-case "historical replay binds policy evidence and declared time"
+      (let* ((p (program #t)) (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+             (r (poo-flow-temporal-support-guard p history (at 1) #f 128 policy
+                  (.ref policy 'semantic-digest) (at 2)))
+             (replay (poo-flow-temporal-support-guard-replay r p history policy)))
+        (check (.ref replay 'semantic-digest) => (.ref r 'semantic-digest))
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) effective-at: (at 4)) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) as-of: (at 3)) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) action-authorized?: #t) p history policy) true)
+        (check-exception (poo-flow-temporal-support-guard-replay r p history
+          (poo-flow-temporal-support-policy "policy" "rev2" (at 1) (at 4))) true)
+        (check-exception (poo-flow-temporal-support-guard-replay
+          (.o (:: @ r) semantic-digest: "forged") p history policy) true)))
+    (poo-flow-test-case "invalid policy windows time domains and forged values reject"
+      (let (policy (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 4)))
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 4) (at 1)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (at 1)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1" (at 1) (valid 4)) true)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          policy (.ref policy 'semantic-digest) (valid 2)) true)
+        (check-exception (poo-flow-temporal-support-guard (program #t) history (at 1) #f 128
+          (.o (:: @ policy) semantic-digest: "forged") (.ref policy 'semantic-digest) (at 2)) true)
+        (check-exception (poo-flow-temporal-support-policy "policy" "rev1"
+          (poo-flow-temporal-instant "uncertain" "txn" 1 "ledger" 'uncertain) (at 4)) true)))))

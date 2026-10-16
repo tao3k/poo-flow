@@ -10,11 +10,11 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/store-backend
-        :poo-flow/modules/memory-core/durable/store-operation
-        :poo-flow/modules/memory-core/durable/store-operation-bridge)
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-backend
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-operation
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-operation-bridge)
 
 (export durable-runtime-store-operation-bridge-test)
 

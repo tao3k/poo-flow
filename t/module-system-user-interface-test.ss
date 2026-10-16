@@ -18,26 +18,27 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
-        :poo-flow/src/authoring/module-interface
-        :poo-flow/src/user-interface/module-selection
-        :poo-flow/src/authoring/module-descriptor
-        :poo-flow/src/authoring/module-source-collection
-        :poo-flow/src/user-interface/module-source-tree
-        :poo-flow/src/authoring/module-option-projection
-        :poo-flow/src/user-interface/module-runtime-presentation
-        :poo-flow/src/user-interface/module-value-catalog
+        :poo-flow/modules/module-authoring/module-interface
+        :core/module-system/selection/objects
+        :poo-flow/modules/module-authoring/module-descriptor
+        :core/module-system/source/collection
+        (only-in :poo-flow/modules/module-authoring/module-source-collection make-poo-flow-contribution-module-load-path poo-flow-default-module-load-path poo-flow-maintained-module-source)
+        :poo-flow/modules/workflow/scenario/configuration/module-source-tree
+        :poo-flow/modules/module-authoring/module-option-projection
+        :poo-flow/modules/workflow/scenario/configuration/module-runtime-presentation
+        :core/module-system/catalog/values
         :core/module-system/loader/objects
         :core/module-system/projection/option-objects
         :core/module-system/projection/option-validation
-        :poo-flow/src/user-interface/module-diagnostics
-        :poo-flow/src/user-interface/doctor-presentation
-        :poo-flow/src/authoring/module-imports
+        :poo-flow/modules/workflow/scenario/configuration/module-diagnostics
+        :poo-flow/modules/workflow/scenario/configuration/doctor-presentation
+        :core/module-system/source/imports
         :core/module-system/source/objects
         :core/module-system/funs
-        :poo-flow/src/user-interface/module-activation
+        :poo-flow/modules/workflow/scenario/configuration/module-activation
         :core/module-system/catalog/objects
-        :poo-flow/src/user-interface/module-authoring-syntax
-        :poo-flow/src/user-interface/facade)
+        :core/module-system/authoring/syntax
+        :poo-flow/modules/workflow/scenario/configuration/interface)
 
 (export module-system-user-interface-test)
 

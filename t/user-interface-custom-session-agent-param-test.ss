@@ -11,7 +11,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-agent-param"
@@ -42,7 +42,7 @@
                (module-config-rows
                 poo-flow-custom-my-module-session-agent-param-case))))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.agent-param-contract)
         (check-equal? (test-ref row 'contract-id)

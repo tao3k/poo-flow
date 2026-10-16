@@ -33,36 +33,36 @@
   (.o (:: @ PooFlowGqlQueryProgram.)
       identity: 'healthcare-case-profile-relations
       match:
-      (.o (:: @ GqlQueryPath.)
-          start: (.o (:: @ GqlQueryNode.) binding: 's label: 'Scenario)
+      (.o (:: @ GraphSyntaxPath.)
+          start: (.o (:: @ GraphSyntaxNode.) binding: 's label: 'Scenario)
           next:
-          (.o (:: @ GqlQueryStep.)
+          (.o (:: @ GraphSyntaxStep.)
               relation: 'HAS_CASE
-              target: (.o (:: @ GqlQueryNode.) binding: 'c label: 'Case)
+              target: (.o (:: @ GraphSyntaxNode.) binding: 'c label: 'Case)
               next:
-              (.o (:: @ GqlQueryStep.)
+              (.o (:: @ GraphSyntaxStep.)
                   relation: 'HAS_EFFECTIVE_PROFILE
                   target:
-                  (.o (:: @ GqlQueryNode.) binding: 'p label: 'Profile))))
+                  (.o (:: @ GraphSyntaxNode.) binding: 'p label: 'Profile))))
       where:
-      (.o (:: @ GqlQueryEquals.)
+      (.o (:: @ GraphSyntaxEquals.)
           left:
-          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GraphSyntaxProperty.) binding: 's property: 'identity)
           right:
-          (.o (:: @ GqlQueryLiteral.)
+          (.o (:: @ GraphSyntaxLiteral.)
               literal-kind: 'string value: "healthcare"))
       project:
-      (.o (:: @ GqlQueryProjection.)
+      (.o (:: @ GraphSyntaxProjection.)
           expression:
-          (.o (:: @ GqlQueryProperty.) binding: 's property: 'identity)
+          (.o (:: @ GraphSyntaxProperty.) binding: 's property: 'identity)
           next:
-          (.o (:: @ GqlQueryProjection.)
+          (.o (:: @ GraphSyntaxProjection.)
               expression:
-              (.o (:: @ GqlQueryProperty.) binding: 'c property: 'id)
+              (.o (:: @ GraphSyntaxProperty.) binding: 'c property: 'id)
               next:
-              (.o (:: @ GqlQueryProjection.)
+              (.o (:: @ GraphSyntaxProjection.)
                   expression:
-                  (.o (:: @ GqlQueryProperty.)
+                  (.o (:: @ GraphSyntaxProperty.)
                       binding: 'p property: 'identity))))))
 
 (def Query
@@ -137,16 +137,54 @@
        "WHERE s.identity = 'healthcare'\n"
        "RETURN s.identity, c.id, p.identity\n")))
 
+   (poo-flow-test-case "selects POO nodes with the Scheme GQL syntax slice"
+     (let* ((scheme-program
+             (.o (:: @ PooFlowGqlQueryProgram.)
+                 identity: 'signal-selection
+                 match:
+                 (.o (:: @ GraphSyntaxPath.)
+                     start: (.o (:: @ GraphSyntaxNode.)
+                                binding: 'signal label: 'Signal))
+                 project:
+                 (.o (:: @ GraphSyntaxProjection.)
+                     expression:
+                     (.o (:: @ GraphSyntaxProperty.)
+                         binding: 'signal property: 'identity))))
+            (scheme-query
+             (.o (:: @ Query)
+                 language: PooFlowSchemeGqlQueryLanguage.
+                 program: scheme-program))
+            (result
+             (poo-flow-query-select-scheme-nodes
+              scheme-query
+              (list (.o label: 'Signal identity: 'record)
+                    (.o label: 'Other identity: 'ignored)))))
+       (check (.ref result 'rows) => '((record)))
+       (check (.ref result 'executed-in-scheme?) => #t)
+       (check (.ref result 'external-provenance-verified?) => #f)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ Query)
+             language: PooFlowSchemeGqlQueryLanguage.)
+         (list (.o label: 'Scenario identity: "healthcare")))
+        true)
+       (check-exception
+        (poo-flow-query-select-scheme-nodes
+         (.o (:: @ scheme-query) result-bound: 1)
+         (list (.o label: 'Signal identity: 'first)
+               (.o label: 'Signal identity: 'second)))
+        true)))
+
    (poo-flow-test-case "escapes GQL string literals without transferring parser ownership"
      (let (escaped
            (.o (:: @ CaseProfileProgram)
                where:
-               (.o (:: @ GqlQueryEquals.)
+               (.o (:: @ GraphSyntaxEquals.)
                    left:
-                   (.o (:: @ GqlQueryProperty.)
+                   (.o (:: @ GraphSyntaxProperty.)
                        binding: 's property: 'identity)
                    right:
-                   (.o (:: @ GqlQueryLiteral.)
+                   (.o (:: @ GraphSyntaxLiteral.)
                        literal-kind: 'string value: "patient's-case"))))
        (check
         (poo-flow-query-program->gql escaped)
@@ -193,6 +231,24 @@
        (check (.ref receipt 'runtime-executed?) => #t)
        (check (.ref receipt 'mutation-authority?) => #f)
        (check (.ref receipt 'action-authority?) => #f)))
+
+   (poo-flow-test-case "does not reuse another Query's admission receipt"
+     (let* ((admission (poo-flow-query-admit Query QuerySpace))
+            (wrong-admission
+             (.o (:: @ admission) query-identity: 'other-query))
+            (candidate
+             (poo-flow-query-execution-candidate
+              'test 'healthcare/case-profile-relations "1"
+              "sha256:space-v1"
+              (poo-flow-query-source-content-identity Query)
+              'gerbil-parser "sha256:provenance-v1"
+              "sha256:result-v1" 3 #t))
+            (receipt
+             (poo-flow-query-bind-execution-receipt
+              TestQueryProvider Query wrong-admission candidate)))
+       (check (.ref receipt 'admitted?) => #f)
+       (check (.ref receipt 'diagnostics)
+              => '((query-admission-identity-mismatch)))))
 
    (poo-flow-test-case "rejects drifted or over-bound Provider evidence"
      (let* ((admission (poo-flow-query-admit Query QuerySpace))

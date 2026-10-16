@@ -14,7 +14,7 @@
         (only-in :clan/poo/object .ref)
         :poo-flow/modules/session/config
         :poo-flow/modules/tool-core/config
-        :poo-flow/modules/memory-core/config)
+        :poo-flow/modules/ai-agentic-context/features/memory/config)
 
 (export session-policy-validation-test)
 

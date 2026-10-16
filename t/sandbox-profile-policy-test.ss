@@ -11,7 +11,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :poo-flow/modules/memory-core/durable/policy
+        (only-in :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
                  poo-flow-durable-policy)
         :poo-flow/modules/sandbox-core/profile-support/policy)
 

@@ -65,7 +65,11 @@ class RuntimeGraphExecution:
 
 
 class RuntimeGraphProgram:
-    """Runtime graph program validated through the upstream C ABI."""
+    """Python production graph program with explicit Scheme admission.
+
+    The installed runtime-v0 control lane does not execute graph semantics.
+    Native execution requires Scheme topology admission and a real control session.
+    """
 
     def __init__(
         self,
@@ -392,6 +396,19 @@ class RuntimeGraphProgram:
     def _validated_plan(self) -> tuple[bytes, str | None]:
         if self.runtime.backend == "native":
             self.runtime.require_native_context()
+            from .semantic_runtime import SemanticRuntime
+            semantic = self.runtime.semantic_context
+            if not isinstance(semantic, SemanticRuntime):
+                raise RuntimeGraphError(
+                    "native graph execution is unavailable: runtime-v0 negotiates "
+                    "the control lane but does not execute Scheme graph semantics; "
+                    "a qualified SemanticRuntime is required"
+                )
+            from ._native.session import NativeRuntimeSession
+            if not isinstance(self.runtime.native_context, NativeRuntimeSession):
+                raise RuntimeGraphError("native execution requires an actual runtime-v0 session")
+            receipt = semantic.admit_graph(self.plan, self.graph_bindings)
+            return receipt, parse_runtime_receipt(receipt).plan_digest
         receipt = self.describe()
         return receipt, parse_runtime_receipt(receipt).plan_digest
 
@@ -430,6 +447,8 @@ class RuntimeGraphProgram:
             routers=dict(self.registries.routers),
             runtime=self.runtime,
             reducers=resolve_reducers(self.graph_bindings, self.registries),
+            semantic_graph=(self.runtime.semantic_context.bind_graph(self.plan, self.graph_bindings)
+                            if self.runtime.backend == 'native' else None),
         )
 
     def _internal_state(self, state: Mapping[str, Any]) -> dict[str, Any]:

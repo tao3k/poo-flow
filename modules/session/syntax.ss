@@ -8,10 +8,10 @@
 ;;; selection contract without importing the user-interface aggregate.
 
 (import (only-in :clan/poo/object object<-alist)
-        (only-in :poo-flow/src/user-interface/module-selection-contract
-                 poo-flow-modules-system-use-module/contract)
+        (only-in :poo-flow/modules/workflow/scenario/configuration/selection-policy
+                 poo-flow-product-use-module)
         "funs.ss"
-        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
         :poo-flow/modules/session/agent
         :poo-flow/modules/session/agent-param
         :poo-flow/modules/session/communication
@@ -26,7 +26,7 @@
         :poo-flow/modules/session/config-policy-syntax)
 
 (export (import: "funs.ss")
-        (import: :poo-flow/modules/memory-core/durable/policy)
+        (import: :poo-flow/modules/ai-agentic-context/features/memory/durable/policy)
         (import: :poo-flow/modules/session/agent)
         (import: :poo-flow/modules/session/agent-param)
         (import: :poo-flow/modules/session/communication)
@@ -61,9 +61,9 @@
                   (cons 'metadata '(metadata-entry ...)))
                  supers: session-config)))
              ...)
-        (poo-flow-modules-system-use-module/contract
-         'session-core
-         (poo-flow-session-core-poo-config-flags
+        (poo-flow-product-use-module
+         'session
+         (poo-flow-session-poo-config-flags
           (list case-name ...)
           '(:config
             (session-case case-name
@@ -86,9 +86,9 @@
                   (cons 'metadata '(metadata-entry ...)))
                  supers: session-config)))
              ...)
-        (poo-flow-modules-system-use-module/contract
-         'session-core
-         (poo-flow-session-core-poo-config-flags
+        (poo-flow-product-use-module
+         'session
+         (poo-flow-session-poo-config-flags
           (list case-name ...)
           '(:config
             (session-case case-name

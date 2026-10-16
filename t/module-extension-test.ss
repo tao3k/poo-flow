@@ -17,7 +17,7 @@
                  check-true
                  test-error
                  test-suite)
-        :poo-flow/src/user-interface/facade
+        :poo-flow/modules/workflow/scenario/configuration/interface
         :core/extension-graph/interface
         :core/module-system/schema/interface
         :poo-flow/modules/sandbox-core/shared-object

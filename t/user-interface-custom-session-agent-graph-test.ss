@@ -12,7 +12,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection-key)
         :poo-flow/modules/session/config
@@ -69,7 +69,7 @@
              (communication-rows
               (rows-with-kind rows 'poo-flow.session.communication-receipt)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? registry-entry-count 3)
         (check-equal? (test-ref graph 'kind)
                       'poo-flow.session.agent-graph)

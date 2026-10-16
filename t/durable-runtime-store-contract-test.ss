@@ -11,8 +11,8 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .o object?)
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store)
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store)
 
 (export durable-runtime-store-contract-test)
 

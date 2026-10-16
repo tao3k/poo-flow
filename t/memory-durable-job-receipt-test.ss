@@ -12,9 +12,9 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/modules/memory-core/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
         :poo-flow/modules/session/config
-        :poo-flow/modules/memory-core/config)
+        :poo-flow/modules/ai-agentic-context/features/memory/config)
 
 (export memory-durable-job-receipt-test)
 
@@ -79,7 +79,7 @@
                 'session/root
                 'session/child
                 'agent/reviewer
-                poo-flow-memory-core-default-catalog
+                poo-flow-ai-agentic-context-memory-default-catalog
                 parent-summary
                 options)
                (poo-flow-memory-write-job-receipt
@@ -88,7 +88,7 @@
                 'session/root
                 'session/child
                 'agent/reviewer
-                poo-flow-memory-core-default-catalog
+                poo-flow-ai-agentic-context-memory-default-catalog
                 child-write
                 options)
                (poo-flow-memory-consolidation-job-receipt
@@ -97,7 +97,7 @@
                 'session/root
                 'session/child
                 #f
-                poo-flow-memory-core-default-catalog
+                poo-flow-ai-agentic-context-memory-default-catalog
                 bounded-transcript
                 options)
                (poo-flow-memory-stale-source-job-receipt
@@ -106,7 +106,7 @@
                 'session/root
                 'session/child
                 #f
-                poo-flow-memory-core-default-catalog
+                poo-flow-ai-agentic-context-memory-default-catalog
                 bounded-transcript
                 (cons (cons 'stale-source? #t) options))
                (poo-flow-memory-repair-job-receipt
@@ -115,7 +115,7 @@
                 'session/root
                 'session/child
                 #f
-                poo-flow-memory-core-default-catalog
+                poo-flow-ai-agentic-context-memory-default-catalog
                 bounded-transcript
                 (cons (cons 'job-state 'repair-required) options))))
              (rows
@@ -128,7 +128,7 @@
                       #t)
         (check-equal? (object? recall-row) #f)
         (check-equal? (test-ref recall-row 'kind)
-                      +poo-flow-memory-core-durable-job-receipt-kind+)
+                      +poo-flow-ai-agentic-context-memory-durable-job-receipt-kind+)
         (check-equal? (map (lambda (row) (test-ref row 'job-kind)) rows)
                       '(recall write consolidation stale-source repair))
         (check-equal? (test-ref recall-row 'project-id) 'project/poo-flow)
@@ -166,7 +166,7 @@
                'session/root
                'session/child
                #f
-               poo-flow-memory-core-default-catalog
+               poo-flow-ai-agentic-context-memory-default-catalog
                local-intent))
              (row (poo-flow-memory-durable-job-receipt->alist receipt))
              (diagnostics (test-ref row 'diagnostics)))

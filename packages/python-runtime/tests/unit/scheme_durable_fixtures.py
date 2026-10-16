@@ -25,18 +25,19 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
         pytest.skip("package-local Gerbil build output is not available")
 
     env = os.environ.copy()
-    env["GERBIL_LOADPATH"] = ".gerbil/lib"
+    env.setdefault("GERBIL_LOADPATH", ".gerbil/lib")
     result = subprocess.run(
         [
             "gxi",
+            "-:max-heap=1G,debug=q",
             "-e",
             (
                 "(begin "
-                "(import :poo-flow/modules/memory-core/durable/policy "
-                ":poo-flow/modules/memory-core/durable/policy-manifest "
-                ":poo-flow/modules/memory-core/durable/store "
-                ":poo-flow/modules/memory-core/durable/store-backend "
-                ":poo-flow/modules/memory-core/durable/runtime-manifest) "
+                "(import :poo-flow/modules/ai-agentic-context/features/memory/durable/policy "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/policy-manifest "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/store "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/store-backend "
+                ":poo-flow/modules/ai-agentic-context/features/memory/durable/runtime-manifest) "
                 "(define policy "
                 "(poo-flow-durable-policy "
                 "(quote durable/python-runtime-envelope) "
@@ -55,6 +56,7 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
         env=env,
         check=True,
         capture_output=True,
+        timeout=90,
     )
     policy_manifest, runtime_envelope = result.stdout.split(
         _SCHEME_PAYLOAD_SEPARATOR,

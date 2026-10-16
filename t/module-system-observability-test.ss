@@ -6,7 +6,8 @@
 ;;; Boundary: tests verify strict module-system observability traces.
 ;;; Invariant: trace construction never dereferences POO slots.
 
-(import (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :poo-flow/modules/module-authoring/source-policy PooFlowSourcePolicy)
+        (only-in :core/observability/testing-case poo-flow-test-case)
          :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref object?)
         (only-in :std/test
@@ -18,9 +19,9 @@
                  check-output
                  test-error
                  test-suite)
-        :poo-flow/src/user-interface/module-presentation
-        :poo-flow/src/authoring/module-source-observation
-        :poo-flow/src/authoring/source-authoring
+        :core/module-system/observability/presentation
+        :core/module-system/authoring/observation
+        :core/module-system/authoring/projection
         (only-in :core/observability/funcs
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-sample
@@ -70,11 +71,11 @@
               (poo-flow-authoring-owner-import-port-observations
                'modules/example/funs.ss
                (open-input-string
-                "(import :poo-flow/src/core/api)")))
+                "(import :poo-flow/modules/workflow/control-plane/api)") PooFlowSourcePolicy))
              (observation (car observations)))
         (check-equal? (length observations) 1)
         (check-equal? (.ref observation 'scope) 'modules/example/funs.ss)
-        (check-equal? (.ref observation 'owner) ':poo-flow/src/core/api)
+        (check-equal? (.ref observation 'owner) ':poo-flow/modules/workflow/control-plane/api)
         (check-equal? (.ref observation 'phase) 'module-admission)
         (check-equal? (.ref observation 'status) 'aggregate-owner-import)
         (check-equal? (.ref observation 'code)
@@ -87,19 +88,19 @@
          (poo-flow-authoring-owner-import-port-observations
           'modules/example/funs.ss
          (open-input-string
-           "(import (only-in :poo-flow/src/core/task make-task))"))
+           "(import (only-in :poo-flow/modules/workflow/control-plane/task make-task))") PooFlowSourcePolicy)
          '())
         (let* ((contribution-observations
                 (poo-flow-authoring-owner-import-port-observations
                  'modules/example/objects.ss
                  (open-input-string
-                  "(import (only-in :poo-flow/src/user-interface/facade poo-flow-module-interface))")))
+                  "(import (only-in :poo-flow/modules/workflow/scenario/configuration/interface poo-flow-module-interface))") PooFlowSourcePolicy))
                (contribution-observation
                 (car contribution-observations)))
           (check-equal? (length contribution-observations) 1)
           (check-equal?
            (.ref contribution-observation 'owner)
-           ':poo-flow/src/user-interface/facade)
+           ':poo-flow/modules/workflow/scenario/configuration/interface)
           (check-equal? (.ref contribution-observation 'accepted?) #f))))
     (poo-flow-test-case "all maintained module sources import precise owners"
       (let* ((paths (module-observability-source-files "modules"))
@@ -108,20 +109,20 @@
                      (map (lambda (path)
                             (poo-flow-authoring-owner-import-file-observations
                              (string->symbol path)
-                             path))
+                             path PooFlowSourcePolicy))
                           paths))))
         (check-equal? (> (length paths) 0) #t)
         (check-equal? observations '())))
     (poo-flow-test-case "package build bootstrap imports no package-local owner"
       (check-equal?
        (poo-flow-authoring-build-bootstrap-file-observations
-        'build.ss "build.ss")
+        'build.ss "build.ss" PooFlowSourcePolicy)
        '())
       (let* ((observations
               (poo-flow-authoring-build-bootstrap-import-port-observations
                'build.ss
                (open-input-string
-                "(import (only-in \"./src/building/build-config.ss\" policy))")))
+                "(import (only-in \"./src/building/build-config.ss\" policy))") PooFlowSourcePolicy))
              (observation (car observations)))
         (check-equal? (.ref observation 'phase) 'build-bootstrap-admission)
         (check-equal? (.ref observation 'status)
@@ -134,7 +135,7 @@
        (lambda (form)
          (let* ((observations
                  (poo-flow-authoring-build-bootstrap-datum-observations
-                  'build.ss form))
+                  'build.ss form PooFlowSourcePolicy))
                 (observation (car observations)))
            (check-equal? (length observations) 1)
            (check-equal? (.ref observation 'phase)
@@ -145,7 +146,7 @@
                          'build-bootstrap-parallel-projection)
            (check-equal? (.ref observation 'recommendation)
                          'declare-public-entry-modules)))
-       '((def roots (poo-flow-load-modules maintained-source))
+       '((def roots (poo-flow-module-source-collection-interfaces maintained-source))
          (def roots (all-gerbil-modules))
          (asp-gerbil-scheme-package-spec!
           (package @ prototype)
@@ -154,7 +155,7 @@
       ;; A quoted documentation example does not execute a projection.
       (check-equal?
        (poo-flow-authoring-build-bootstrap-datum-observations
-        'build.ss '(quote (poo-flow-load-modules maintained-source)))
+        'build.ss '(quote (poo-flow-module-source-collection-interfaces maintained-source)) PooFlowSourcePolicy)
        '()))
     (poo-flow-test-case "builds strict presentation trace rows"
       (let* ((native-observation
@@ -400,10 +401,26 @@
         (check-equal? (length observations) 1)
         (check-equal? (.ref (car observations) 'code)
                       'poo-prototype-lookup-inside-composition)))
+    (poo-flow-test-case "native getter paths are literals but receivers remain expressions"
+      (for-each
+       (lambda (initializer)
+         (check-equal? (poo-flow-poo-slot-authoring-status 'pipeline initializer)
+                       'ok))
+       '((.get ff prototypes pipeline)
+         (.@ ff prototypes pipeline)
+         (.o (:: @ (.get ff prototypes pipeline)) checks: '())))
+      (for-each
+       (lambda (initializer)
+         (check-equal? (poo-flow-poo-slot-authoring-status 'pipeline initializer)
+                       'self-referential-slot-initializer))
+       '((.get pipeline checks)
+         (.@ pipeline checks)
+         (.get (.get pipeline source) checks)
+         (.ref ff pipeline))))
     (poo-flow-test-case "production and performance POO slots pass the authoring gate"
       (let* ((paths
               (append
-               (module-observability-source-files "src")
+               (module-observability-source-files "modules")
                (module-observability-source-files "t/performance")))
              (observations
               (apply append
@@ -412,16 +429,16 @@
         (check-equal?
          (poo-flow-poo-slot-authoring-diagnostics observations)
          '())))
-    (poo-flow-test-case "all repository Scheme sources avoid lexical values calls"
-      (let* ((paths (module-observability-source-files "src"))
+    (poo-flow-test-case "product module Scheme sources avoid lexical values calls"
+      (let* ((paths (module-observability-source-files "modules"))
              (observations
               (apply append
                      (map module-observability-source-lexical-shadow-observations
                           paths))))
         (check-equal? (pair? paths) #t)
         (check-equal? observations '())))
-    (poo-flow-test-case "all repository constructors hoist stable prototype lookups"
-      (let* ((paths (module-observability-source-files "src"))
+    (poo-flow-test-case "product module constructors hoist stable prototype lookups"
+      (let* ((paths (module-observability-source-files "modules"))
              (observations
               (apply append
                      (map module-observability-source-inline-prototype-observations

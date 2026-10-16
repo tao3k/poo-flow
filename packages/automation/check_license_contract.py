@@ -87,6 +87,13 @@ def sidecar_patterns(errors: list[str]) -> tuple[str, ...]:
     return tuple(patterns)
 
 
+def validate_source_artifacts(files: tuple[Path, ...], errors: list[str]) -> None:
+    """Raw execution logs belong to local or CI artifacts, never source releases."""
+    for path in files:
+        if ".log" in path.suffixes:
+            errors.append(f"{path.relative_to(ROOT).as_posix()}: execution log must remain a local or CI artifact")
+
+
 def validate_file_coverage(files: tuple[Path, ...], errors: list[str]) -> None:
     patterns = sidecar_patterns(errors)
     for path in files:
@@ -191,6 +198,7 @@ def validate_published_license_copies(errors: list[str]) -> None:
 def main() -> int:
     errors: list[str] = []
     files = project_files()
+    validate_source_artifacts(files, errors)
     validate_file_coverage(files, errors)
     validate_license_texts(errors)
     validate_cargo_metadata(files, errors)

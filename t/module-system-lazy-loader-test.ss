@@ -6,7 +6,8 @@
 ;;; Boundary: lazy loader tests cover deferred source loading only.
 ;;; Invariant: lazy plans never call loader handlers until explicitly forced.
 
-(import (only-in :core/observability/testing-case poo-flow-test-case)
+(import :core/module-system/source/projection
+        (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :std/test
                  check
                  check-eq?
@@ -20,19 +21,20 @@
                  test-suite)
         "./support/performance"
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
-        (only-in :poo-flow/src/core/failure
+        (only-in :poo-flow/modules/workflow/control-plane/failure
                  execution-failure?
                  execution-failure-code)
-        (only-in :poo-flow/src/user-interface/module-selection-syntax poo-flow-modules!)
-        :poo-flow/src/authoring/module-imports
+        (only-in :core/module-system/selection/syntax poo-flow-modules!)
+        :core/module-system/source/imports
         :core/module-system/source/objects
-        :poo-flow/src/authoring/module-descriptor
+        :poo-flow/modules/module-authoring/module-descriptor
         :core/extension-graph/interface
         :core/module-system/loader/objects
-        :poo-flow/src/authoring/module-source-collection
-        :poo-flow/src/building/official-contributions
-        :poo-flow/src/user-interface/module-source-selection
-        :poo-flow/src/user-interface/module-source-tree)
+        :core/module-system/source/collection
+        (only-in :poo-flow/modules/module-authoring/module-source-collection make-poo-flow-contribution-module-load-path poo-flow-default-module-load-path poo-flow-maintained-module-source)
+        :poo-flow/modules/building/official-contributions
+        :poo-flow/modules/workflow/scenario/configuration/module-source-selection
+        :poo-flow/modules/workflow/scenario/configuration/module-source-tree)
 
 (export module-system-lazy-loader-test)
 
@@ -233,7 +235,7 @@
           (check-equal?
            (length plans)
            (+ (length
-               (poo-flow-load-modules poo-flow-maintained-module-source))
+               (poo-flow-module-source-collection-interfaces poo-flow-maintained-module-source))
               (length (poo-flow-module-system-source-refs))))
           (check-equal? (car source-values)
                         "modules/agent-sandbox/interface.ss")
@@ -252,22 +254,22 @@
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/user-interface/profile-config.ss"
+          (check-equal? (if (member "modules/workflow/scenario/configuration/profile-config.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/user-interface/init-syntax.ss"
+          (check-equal? (if (member "modules/workflow/scenario/configuration/init-syntax.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/user-interface/root-profile.ss"
+          (check-equal? (if (member "modules/workflow/scenario/configuration/root-profile.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/user-interface/declaration-case.ss"
+          (check-equal? (if (member "modules/workflow/scenario/configuration/declaration-case.ss"
                                     source-values)
                           #t
                           #f)
@@ -393,6 +395,12 @@
 ;; : TestCase
 (def (module-system-lazy-loader-aitia-submodule-source-case)
   (poo-flow-test-case "official contribution sources are optional and resolve by checkout identity"
+    (check-equal?
+     (map poo-flow-module-source-collection-identity
+          (poo-flow-module-load-path-collections
+           (make-poo-flow-contribution-module-load-path
+            'example-contribution ".")))
+     '(example-contribution poo-flow-maintained))
     (check-equal?
      (map poo-flow-module-source-collection-identity
           poo-flow-official-contribution-sources)

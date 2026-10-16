@@ -30,7 +30,7 @@
              (validation-row
               (caddr poo-flow-custom-my-module-memory-core-case)))
         (check-equal? (test-ref selection-row 'key)
-                      '(session . memory-core))
+                      '(agentic . ai-agentic-context))
         (check-equal? (test-ref catalog-row 'catalog-ref)
                       'memory-core/custom)
         (check-equal? (test-ref catalog-row 'store-refs)

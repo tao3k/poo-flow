@@ -56,7 +56,26 @@
         (check (equal? (.ref first-journal 'semantic-digest)
                        (.ref journal 'semantic-digest)) => #f)
         (check (.ref journal 'semantic-digest)
-               => (.ref reordered 'semantic-digest))))
+               => (.ref reordered 'semantic-digest))
+        (check (.ref (poo-flow-temporal-conclusion-journal-replay journal)
+                     'semantic-digest)
+               => (.ref journal 'semantic-digest))
+        (let (forged
+              (poo-flow-temporal-conclusion-journal-value
+               "history" (.ref journal 'semantic-digest)
+               (list prior corrected)))
+          (check (poo-flow-temporal-conclusion-journal? forged) => #t)
+          (check-exception
+           (poo-flow-temporal-conclusion-journal-replay forged) true)
+          (check-exception
+           (poo-flow-temporal-conclusion-journal-extend forged
+                                                        (list retracted)) true)
+          (check-exception
+           (poo-flow-temporal-selection-prepare
+            forged corrected
+            (poo-flow-temporal-selection-observation
+             "observation-7" "patient-7" "prescription" 7 "c1") 7)
+           true))))
 
     (poo-flow-test-case "valid-time reprojection creates a new conclusion version"
       (let* ((validity
@@ -130,12 +149,28 @@
                      journal retracted after-race 7)))
         (check (.ref correction-plan 'status) => 'cas-ready)
         (check (.ref correction-plan 'proposed-version) => 8)
+        (check (.ref (poo-flow-temporal-selection-plan-replay
+                     correction-plan journal corrected observed) 'status)
+               => 'cas-ready)
         (check (.ref retraction-plan 'proposed-revision-identity) => "c3")
         (check (.ref stale 'status) => 'conflict)
         (check (.ref stale 'observed-version) => 8)
         (check (.ref stale 'observed-revision-identity) => "c2")
         (check (.ref stale 'proposed-version) => #f)
         (check (.ref stale 'runtime-executed?) => #f)
+        (check-exception
+         (poo-flow-temporal-selection-plan-replay
+          correction-plan journal corrected after-race) true)
+        (check-exception
+         (poo-flow-temporal-selection-plan-replay
+          correction-plan journal retracted observed) true)
+        (check-exception
+         (poo-flow-temporal-selection-plan-replay
+          (poo-flow-temporal-selection-plan-value
+           "forged-journal-digest" "observation-7" "patient-7"
+           "prescription" 7 "c1" 8 7 "c1" "c2" "proof-2"
+           'cas-ready)
+          journal corrected observed) true)
         (check-exception
          (poo-flow-temporal-selection-prepare
           journal

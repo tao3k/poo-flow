@@ -7,10 +7,10 @@
 ;;; Invariant: this is crash/replay/repair handoff data only; Scheme does not
 ;;; replay event logs, claim leases, repair state, or run workflow commands.
 
-(import :poo-flow/modules/memory-core/config
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/recovery-scenario
+(import :poo-flow/modules/ai-agentic-context/features/memory/config
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/recovery-scenario
         :poo-flow/modules/session/config)
 
 (export poo-flow-custom-my-module-durable-recovery-case)
@@ -52,7 +52,7 @@
          'custom/root-session
          'custom/audit-session
          'agent/audit
-         poo-flow-memory-core-default-catalog
+         poo-flow-ai-agentic-context-memory-default-catalog
          memory-intent
          (list (cons 'durable-policy durable-policy)
                (cons 'source-watermark 'turn/40)

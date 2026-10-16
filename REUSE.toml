@@ -10,6 +10,8 @@ path = [
   "**/LICENSE",
   "LICENSES/**",
   ".bazelversion",
+  "core/.github/workflows/ci.yml",
+  "core/.gitignore",
   "VERSION",
   "ORG_ZHIXING_REV",
   "*.lock",
@@ -26,6 +28,84 @@ path = [
   "packages/proofs/lean/lean-toolchain",
   "packages/proofs/lean-poo/lean-toolchain",
 ]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/direct-scheme-understanding-20261003/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["docs/10-19-design/10.06-poo-module-system/evidence/python-scheme-runtime-20261003/*.jsonl"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = [
+  "t/qualification/semantic-abi/**/*.xml",
+  "t/qualification/semantic-abi/**/*.json.gz",
+    "t/qualification/semantic-abi/**/paid-batch-claim",
+  "t/qualification/temporal-library-basic/integration/tests.xml",
+  "t/qualification/temporal-library-basic/rule-correspondence-v1/typed-rules.ss",
+  "t/qualification/temporal-library-basic/registered-proof-host-v1/*.scm.gz",
+  "t/qualification/temporal-library-basic/registered-proof-host-v1/native-artifact.ss",
+  "t/qualification/temporal-library-basic/proof-control-abi-v1/*.scm.gz",
+  "t/qualification/temporal-library-basic/proof-control-abi-v1/typed-native-proof.ss",
+  "t/qualification/temporal-library-basic/proof-control-abi-v1/native-artifact.ss",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/*.scm.gz",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/typed-policy.ss",
+  "t/qualification/temporal-library-basic/host-policy-abi-v1/native-artifact.ss",
+  "t/qualification/temporal-library-basic/derivation-authority-v1/typed-derivations.ss",
+  "t/qualification/temporal-library-basic/support-policy-v1/*.scm.gz",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+# Keep immutable acceptance receipts and historical records byte-for-byte intact.
+[[annotations]]
+path = [
+  "bindings/runtime-c/semantic-wire.org",
+  "t/qualification/temporal-library-basic/rust-model-family/historical.org",
+  "t/qualification/temporal-library-basic/rust-mrr-runtime/historical.org",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/README.org",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/model/*.ss",
+  "t/qualification/temporal-library-basic/scheme-abi-v2/mrr-cold-benchmark.ss",
+  "t/qualification/temporal-physical-native/evidence/*",
+  "t/qualification/temporal-current-source/native-build-freeze.ss",
+  "t/qualification/temporal-current-source/physical-pinned-receipt.ss",
+  "t/qualification/temporal-current-source/physical-pinned-oracle.ss",
+  "t/qualification/temporal-family-lifecycle-abi/native-artifact.ss",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = [
+  "t/qualification/temporal-family-proof-archive/archive.ss",
+  "t/qualification/temporal-family-proof-archive/replayed.ss",
+  "t/qualification/temporal-family-proof-archive/native-artifact.ss",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = [
+  "packages/proofs/lean-poo/PooFlowSessionProof/*.lean",
+  "packages/proofs/quint/package*.json",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
+SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["proofs/Composition/lean-toolchain"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 tao3k team and Contributors"
 SPDX-License-Identifier = "Apache-2.0 AND LGPL-2.1-or-later"

@@ -22,8 +22,8 @@
                  +poo-flow-testing-interface+
                  poo-flow-testing-admit-user-profile-set!
                  poo-flow-testing-check-user-profile-set)
-        :poo-flow/src/user-interface/facade
-        :poo-flow/src/user-interface/profile-config)
+        :poo-flow/modules/workflow/scenario/configuration/interface
+        :poo-flow/modules/workflow/scenario/configuration/profile-config)
 
 (export user-interface-profile-set-case-test)
 

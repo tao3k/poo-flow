@@ -9,10 +9,9 @@
         (only-in :core/observability/slot-presentation
                  poo-flow-slot-presentation)
         (only-in :core/module-system/schema/relations poo-flow-semantic-identity)
-        (only-in :poo-flow/src/authoring/semantic-module
-                 poo-flow-semantic-module)
+        (only-in :core/module-system/authoring/roles poo-flow-semantic-module)
         :core/profile-composition/profile-bundle
-        (only-in :poo-flow/src/scenario/profile-root
+        (only-in :poo-flow/modules/workflow/scenario/profile-root
                  poo-flow-profile-bundle-root))
 
 (export profile-bundle-test)

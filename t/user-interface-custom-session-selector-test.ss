@@ -11,7 +11,7 @@
          (only-in :std/test
                  check-equal?
                  test-suite)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-selector"
@@ -45,7 +45,7 @@
              (build-candidate (car candidates))
              (governor-candidate (list-ref candidates 2)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.selector-receipt)
         (check-equal? (test-ref row 'selector-id)

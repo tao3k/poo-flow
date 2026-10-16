@@ -12,7 +12,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         :poo-flow/modules/session/config
@@ -49,7 +49,7 @@
              (handoff-intent
               (poo-flow-session-transform-receipt-handoff-intent receipt)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (length rows) 4)
         (check-equal? (poo-flow-session-memory-intent? memory-intent) #t)
         (check-equal? (poo-flow-session-memory-intent-name memory-intent)

@@ -12,7 +12,7 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-module-selection-key
                  poo-flow-user-module-selection-flag-entry)
         (only-in "../user-interface/custom/my-module/cases/session-registry"
@@ -45,7 +45,7 @@
              (entries (.ref registry 'entries))
              (build-entry (cadr entries)))
         (check-equal? (poo-flow-user-module-selection-key selection)
-                      '(session . session-core))
+                      '(session . session))
         (check-equal? (.ref registry 'kind)
                       'poo-flow.session.registry-receipt)
         (check-equal? (.ref registry 'project-id) 'custom/project)

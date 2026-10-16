@@ -99,18 +99,23 @@ class RuntimeGraphBuilder:
         checkpointer: Any = None,
         metadata: Mapping[str, Any] | None = None,
     ) -> RuntimeGraphExecutor:
+        selected = _runtime_from_compile_options(runtime, thread_id=thread_id,
+            store=store, checkpointer=checkpointer, metadata=metadata, default_backend='reference')
+        semantic_graph = None
+        if selected.backend == 'native':
+            from .semantic_runtime import SemanticRuntime
+            if not isinstance(selected.semantic_context, SemanticRuntime):
+                raise RuntimeGraphError('native builder requires a qualified semantic context')
+            semantic_graph = selected.semantic_context.bind_graph(self.plan(), RuntimeGraphBindings(
+                node_actions={node: node for node in self.nodes},
+                state_reducers={key: key for key in self.reducers}))
         return RuntimeGraphExecutor(
             self.plan(),
             self.nodes,
             routers=self.routers,
             reducers=self.reducers,
-            runtime=_runtime_from_compile_options(
-                runtime,
-                thread_id=thread_id,
-                store=store,
-                checkpointer=checkpointer,
-                metadata=metadata,
-            ),
+            runtime=selected,
+            semantic_graph=semantic_graph,
         )
 
     def compile_program(
@@ -162,11 +167,13 @@ def _runtime_from_compile_options(
     store: Any,
     checkpointer: Any,
     metadata: Mapping[str, Any] | None,
+    default_backend: str = 'native',
 ) -> RuntimeGraphRuntime | None:
     if runtime is None:
         if thread_id is None and store is None and checkpointer is None and metadata is None:
-            return RuntimeGraphRuntime()
+            return RuntimeGraphRuntime(backend=default_backend)
         return RuntimeGraphRuntime(
+            backend=default_backend,
             thread_id=thread_id,
             store=store,
             checkpointer=checkpointer,
@@ -181,4 +188,5 @@ def _runtime_from_compile_options(
         metadata={**dict(runtime.metadata), **dict(metadata or {})},
         backend=runtime.backend,
         native_context=runtime.native_context,
+        semantic_context=runtime.semantic_context,
     )

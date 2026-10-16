@@ -12,7 +12,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
-        (only-in :poo-flow/src/user-interface/profile-core
+        (only-in :core/profile-composition/user-profile
                  pooFlowUserConfigFromProfile
                  poo-flow-user-profile?
                  poo-flow-user-profile-name
@@ -20,7 +20,7 @@
         (only-in :poo-flow/testing-api
                  +poo-flow-testing-interface+
                  poo-flow-testing-admit-user-profile!)
-        (only-in :poo-flow/src/user-interface/module-selection
+        (only-in :core/module-system/selection/objects
                  poo-flow-user-config?
                  poo-flow-user-config-modules
                  poo-flow-user-config-module-keys
@@ -38,7 +38,7 @@
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
   '((flow . funflow)
-    (session . session-core)
+    (session . session)
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)

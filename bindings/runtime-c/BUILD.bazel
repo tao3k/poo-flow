@@ -14,6 +14,7 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "pkgconfig/poo-flow-runtime-v0.pc",
     "include/poo_flow/scheme_native_v1.h",
+    "include/poo_flow/semantic.h",
     "t/validate-runtime-v0-symbol-surface.ss",
 ])
 
@@ -346,4 +347,13 @@ test_suite(
         ":runtime_v0_vector_harness",
         ":scheme_native_v1_header_harness",
     ],
+)
+
+# Temporal local first-root selection; requires the platform SQLite development library.
+cc_library(
+    name = "temporal_store",
+    srcs = ["src/temporal_store.c"],
+    hdrs = ["include/poo_flow/temporal_store.h"],
+    strip_include_prefix = "include",
+    linkopts = ["-lsqlite3", "-lpthread"],
 )

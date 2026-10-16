@@ -46,4 +46,3 @@
   .element?: series-shape?)
 (def (poo-flow-temporal-trajectory-series? value)
   (element? PooFlowTemporalTrajectorySeries value))
-

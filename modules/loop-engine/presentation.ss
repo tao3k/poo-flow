@@ -8,9 +8,9 @@
 (export poo-flow-user-config-loop-engine-only-presentation)
 
 (import (only-in :clan/poo/object object<-fun)
-        :poo-flow/src/authoring/module-interface
-        :poo-flow/src/user-interface/module-selection
-        :poo-flow/src/user-interface/entrypoints
+        :poo-flow/modules/module-authoring/module-interface
+        :core/module-system/selection/objects
+        :poo-flow/modules/workflow/scenario/configuration/entrypoints
         :poo-flow/modules/sandbox-core/backend-capability-catalog
         (only-in :poo-flow/modules/sandbox-core/profile-support/policy-backend-validation
                  poo-flow-sandbox-backend-capability-registry-validation-valid?
@@ -21,7 +21,7 @@
         (only-in "config.ss"
                  poo-flow-user-config-loop-engine-intents
                  poo-flow-user-loop-engine-intent-ref)
-        :poo-flow/src/user-interface/presentation-config-support)
+        :poo-flow/modules/workflow/scenario/configuration/presentation-config-support)
 
 ;; Engineering note: loop-engine-only presentation uses lazy slots so heavy
 ;; receipt projections are computed only when a downstream caller asks for them.
@@ -128,8 +128,8 @@
                    (sandbox-validation)))
         ((sandbox-backend-capability-registry-diagnostics) (poo-flow-sandbox-backend-capability-registry-validation-diagnostics
                    (sandbox-validation)))
-        ((session-core-intent-count) 0)
-        ((session-core-intents) '())
+        ((session-intent-count) 0)
+        ((session-intents) '())
         ((cicd-intent-count) 0)
         ((cicd-intents) '())
         ((workflow-cicd-pipeline-count) 0)
@@ -244,8 +244,8 @@
        sandbox-backend-capability-registry-valid?
        sandbox-backend-capability-registry-diagnostic-count
        sandbox-backend-capability-registry-diagnostics
-       session-core-intent-count
-       session-core-intents
+       session-intent-count
+       session-intents
        cicd-intent-count
        cicd-intents
        workflow-cicd-pipeline-count

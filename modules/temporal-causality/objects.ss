@@ -247,13 +247,14 @@
 
 (def (poo-flow-temporal-model-value
       identity-value digest-value domains-value observations-value
-      hypotheses-value family-complete-value)
+      hypotheses-value family-complete-value semantics-value)
   (validate PooFlowTemporalModel
     (.o kind: poo-flow-temporal-model-kind
         identity: identity-value semantic-digest: digest-value
         domains: domains-value observations: observations-value
         hypotheses: hypotheses-value
-        family-complete?: family-complete-value)))
+        family-complete?: family-complete-value
+        family-semantics: semantics-value)))
 
 (def (poo-flow-temporal-query
       identity-value hypothesis-id-value exploration-limit-value)
@@ -277,5 +278,5 @@
         unexplored-hypothesis-ids: unexplored-value
         exhausted?: exhausted-value
         family-complete?: (.ref model-value 'family-complete?)
-        assumption: 'exclusive-explanations
+        assumption: (.ref model-value 'family-semantics)
         runtime-executed?: #f)))

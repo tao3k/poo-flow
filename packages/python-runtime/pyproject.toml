@@ -42,6 +42,7 @@ poo_flow_runtime = [
   "_native/lib/*",
   "projections/*.ss",
   "projections/*.sexp",
+  "projections/runtime_load_imports.json",
 ]
 
 [tool.pytest.ini_options]

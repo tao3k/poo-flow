@@ -69,7 +69,7 @@ raise SystemExit(1 if any('bazel-no-root-override' in arg for arg in sys.argv[1:
             )
         self.assertFalse(self.log.exists())
 
-    def test_export_contains_pinned_core_submodule_sources(self) -> None:
+    def test_export_contains_pinned_core_subtree_sources(self) -> None:
         exported = Path(self.temporary.name) / "exported"
         exported.mkdir()
         _export_tracked_tree(REPO_ROOT, exported)

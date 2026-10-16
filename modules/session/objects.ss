@@ -7,10 +7,10 @@
 ;;; Invariant: lower owners keep core values, handoff receipts, and graph views
 ;;; separate while this module preserves the historical import path.
 
-(import :poo-flow/modules/session/objects-core
+(import "objects-attempt.ss" :poo-flow/modules/session/objects-core
         :poo-flow/modules/session/objects-handoff
         :poo-flow/modules/session/objects-graph)
 
-(export (import: :poo-flow/modules/session/objects-core)
+(export (import: "objects-attempt.ss") (import: :poo-flow/modules/session/objects-core)
         (import: :poo-flow/modules/session/objects-handoff)
         (import: :poo-flow/modules/session/objects-graph))

@@ -48,9 +48,18 @@ class RuntimeGraphExecutor:
         routers: Mapping[str, RuntimeRouter] | None = None,
         reducers: Mapping[str, RuntimeReducer] | None = None,
         runtime: RuntimeGraphRuntime | None = None,
+        semantic_graph=None,
     ) -> None:
         self.plan = plan
-        self.runtime = runtime or RuntimeGraphRuntime()
+        self.runtime = runtime or RuntimeGraphRuntime.reference()
+        self._semantic_graph = semantic_graph
+        if self.runtime.backend == 'native':
+            from .semantic_runtime import _SemanticGraphBinding
+            from ._native.session import NativeRuntimeSession
+            if not isinstance(self.runtime.require_native_context(), NativeRuntimeSession):
+                raise RuntimeGraphError('native scheduler requires an actual control session')
+            if not isinstance(semantic_graph, _SemanticGraphBinding):
+                raise RuntimeGraphError('native scheduler requires a Scheme graph binding')
         self.actions = {
             node: bind_runtime_action(action, self.runtime)
             for node, action in actions.items()
@@ -58,6 +67,8 @@ class RuntimeGraphExecutor:
         self.routers = dict(routers or {})
         self.reducers = dict(reducers or {})
         self._edges = index_edges(plan.edges)
+        if semantic_graph is not None:
+            self._edges = semantic_graph.static_successors
         self._conditional_edges = index_conditional_edges(plan.conditional_edges)
         self._validate_plan()
         self._validate_actions()
@@ -501,6 +512,9 @@ class RuntimeGraphExecutor:
         outcome: NormalizedActionResult,
     ) -> list[str | RuntimeGraphSend]:
         if outcome.controls_flow:
+            if self._semantic_graph is not None:
+                self._semantic_graph.targets(node, 'control',
+                    targets=[*outcome.goto, *[send.target for send in outcome.sends]])
             return [*outcome.goto, *outcome.sends]
         return [*self._edges[node], *self._conditional_targets(node, state)]
 
@@ -511,6 +525,9 @@ class RuntimeGraphExecutor:
         outcome: NormalizedActionResult,
     ) -> list[str | RuntimeGraphSend]:
         if outcome.controls_flow:
+            if self._semantic_graph is not None:
+                await self._semantic_graph.atargets(node, 'control',
+                    targets=[*outcome.goto, *[send.target for send in outcome.sends]])
             return [*outcome.goto, *outcome.sends]
         return [*self._edges[node], *await self._aconditional_targets(node, state)]
 
@@ -523,7 +540,7 @@ class RuntimeGraphExecutor:
             if router is None:
                 raise RuntimeGraphError(f"missing runtime graph router: {edge.router}")
             route = router(state)
-            targets.extend(self._resolve_conditional_route(edge.router, edge.routes, route))
+            targets.extend(self._resolve_conditional_route(edge.router, edge.routes, route, node=node))
         return targets
 
     async def _aconditional_targets(
@@ -537,7 +554,16 @@ class RuntimeGraphExecutor:
             route = router(state)
             if inspect.isawaitable(route):
                 route = await route
-            targets.extend(self._resolve_conditional_route(edge.router, edge.routes, route))
+            if self._semantic_graph is not None:
+                if isinstance(route, RuntimeGraphSend) or _is_send_sequence(route):
+                    sends = [route] if isinstance(route, RuntimeGraphSend) else list(route)
+                    await self._semantic_graph.atargets(node, 'control', targets=[send.target for send in sends])
+                    targets.extend(sends)
+                else:
+                    labels = list(route) if _is_route_sequence(route) else [route]
+                    targets.extend(await self._semantic_graph.atargets(node, 'route', router=edge.router, labels=labels))
+            else:
+                targets.extend(self._resolve_conditional_route(edge.router, edge.routes, route, node=node))
         return targets
 
     def _resolve_conditional_route(
@@ -545,7 +571,15 @@ class RuntimeGraphExecutor:
         router_name: str,
         routes: Mapping[str, str],
         route: Any,
+        *, node: str | None = None,
     ) -> list[str | RuntimeGraphSend]:
+        if self._semantic_graph is not None:
+            if isinstance(route, RuntimeGraphSend) or _is_send_sequence(route):
+                sends = [route] if isinstance(route, RuntimeGraphSend) else list(route)
+                self._semantic_graph.targets(node, 'control', targets=[send.target for send in sends])
+                return sends
+            labels = list(route) if _is_route_sequence(route) else [route]
+            return self._semantic_graph.targets(node, 'route', router=router_name, labels=labels)
         if isinstance(route, RuntimeGraphSend):
             self._validate_runtime_target(route.target)
             return [route]

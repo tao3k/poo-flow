@@ -39,7 +39,10 @@
     (testing-interface-add-profile
       +poo-flow-testing-interface+
       (.cc +testing-discovery-profile+
-           ignoreDirectories: '("packages/lambda-episteme"
+           ignoreDirectories: '("t/qualification/ascent-integration"
+                                ;; Explicit installed native artifact/performance gate.
+                                "t/qualification/temporal-mrr-native"
+                                "packages/lambda-episteme"
                                 "packages/lambda-aitia"
                                 "core"
                                 "t/performance"
@@ -53,7 +56,6 @@
                                 ;; through dedicated Just gates.
                                 "t/qualification/healthcare-fhirpath-syntax"
                                 "t/qualification/healthcare-hl7v2-migration"
-                                "t/qualification/healthcare-standard-migration-assurance"
                                 "t/qualification/standards-multi-industry"
                                 "t/module-system-poo-performance-test-support")))
     +poo-flow-serial-test-selectors+))

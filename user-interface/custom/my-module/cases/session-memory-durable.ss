@@ -8,7 +8,7 @@
 ;;; commit, consolidate, persist, or repair memory stores.
 
 (import :poo-flow/modules/session/syntax
-        :poo-flow/modules/memory-core/config)
+        :poo-flow/modules/ai-agentic-context/features/memory/config)
 
 (export poo-flow-custom-my-module-session-memory-durable-case)
 
@@ -66,7 +66,7 @@
         'custom/root-session
         'custom/audit-session
         'agent/audit
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         parent-summary
         durable-options)
        (poo-flow-memory-write-job-receipt
@@ -75,7 +75,7 @@
         'custom/root-session
         'custom/audit-session
         'agent/audit
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         child-write-back
         durable-options)
        (poo-flow-memory-recall-job-receipt
@@ -84,7 +84,7 @@
         'custom/root-session
         'custom/audit-session
         'agent/audit
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         bounded-transcript
         durable-options)
        (poo-flow-memory-consolidation-job-receipt
@@ -93,7 +93,7 @@
         'custom/root-session
         'custom/audit-session
         #f
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         bounded-transcript
         durable-options)
        (poo-flow-memory-stale-source-job-receipt
@@ -102,7 +102,7 @@
         'custom/root-session
         'custom/audit-session
         #f
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         bounded-transcript
         (cons (cons 'stale-source? #t) durable-options))
        (poo-flow-memory-repair-job-receipt
@@ -111,7 +111,7 @@
         'custom/root-session
         'custom/audit-session
         #f
-        poo-flow-memory-core-default-catalog
+        poo-flow-ai-agentic-context-memory-default-catalog
         bounded-transcript
         (cons (cons 'job-state 'repair-required) durable-options)))))
     (rows)

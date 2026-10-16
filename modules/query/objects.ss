@@ -8,16 +8,16 @@
 (import (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/list/list every)
-        (only-in :gerbil-parser/languages/gql/iso-39075-2024/query-syntax
-                 GqlQueryNode.
-                 GqlQueryStep.
-                 GqlQueryPath.
-                 GqlQueryProperty.
-                 GqlQueryLiteral.
-                 GqlQueryEquals.
-                 GqlQueryProjection.
-                 GqlQueryProgram.
-                 gql-query-program?)
+        (only-in :gerbil-parser/src/modules/parser/graph-syntax
+                 GraphSyntaxNode.
+                 GraphSyntaxStep.
+                 GraphSyntaxPath.
+                 GraphSyntaxProperty.
+                 GraphSyntaxLiteral.
+                 GraphSyntaxEquals.
+                 GraphSyntaxProjection.
+                 GraphSyntaxProgram.
+                 graph-syntax-program?)
         (only-in "types.ss"
                  poo-flow-query-kind
                  poo-flow-query-language-kind
@@ -38,15 +38,16 @@
 (export PooFlowQuery.
         PooFlowQueryLanguage.
         PooFlowGqlQueryLanguage.
+        PooFlowSchemeGqlQueryLanguage.
         PooFlowQueryProgram.
-        GqlQueryNode.
-        GqlQueryStep.
-        GqlQueryPath.
-        GqlQueryProperty.
-        GqlQueryLiteral.
-        GqlQueryEquals.
-        GqlQueryProjection.
-        GqlQueryProgram.
+        GraphSyntaxNode.
+        GraphSyntaxStep.
+        GraphSyntaxPath.
+        GraphSyntaxProperty.
+        GraphSyntaxLiteral.
+        GraphSyntaxEquals.
+        GraphSyntaxProjection.
+        GraphSyntaxProgram.
         PooFlowGqlQueryProgram.
         PooFlowQueryElementSpace.
         PooFlowQueryResultContract.
@@ -68,7 +69,7 @@
        (every (lambda (slot) (.slot? value slot)) slots)))
 
 (def (poo-flow-gql-query-program? value)
-  (and (gql-query-program? value)
+  (and (graph-syntax-program? value)
        (query-program-has-slots?
         value '(kind identity language-identity representation
                      immutable?))
@@ -85,7 +86,7 @@
       immutable?: #t))
 
 (def PooFlowGqlQueryProgram.
-  (.o (:: @ GqlQueryProgram.)
+  (.o (:: @ GraphSyntaxProgram.)
       kind: poo-flow-query-program-kind
       identity: #f
       language-identity: 'gql
@@ -138,6 +139,11 @@
       syntax-contract: "iso-iec-39075-2024.opengql-1.9.0-syntax.v1"
       .program?: poo-flow-gql-query-program?))
 
+(def PooFlowSchemeGqlQueryLanguage.
+  (.o (:: @ PooFlowGqlQueryLanguage.)
+      execution-boundary: 'pure-control-plane
+      runtime-owner: 'poo-flow))
+
 (def PooFlowQuery.
   (.o kind: poo-flow-query-kind
       identity: #f
@@ -150,12 +156,12 @@
       (.o (:: @ PooFlowGqlQueryProgram.)
           identity: 'unbound-query-program
           match:
-          (.o (:: @ GqlQueryPath.)
-              start: (.o (:: @ GqlQueryNode.) binding: 'x label: 'Element))
+          (.o (:: @ GraphSyntaxPath.)
+              start: (.o (:: @ GraphSyntaxNode.) binding: 'x label: 'Element))
           project:
-          (.o (:: @ GqlQueryProjection.)
+          (.o (:: @ GraphSyntaxProjection.)
               expression:
-              (.o (:: @ GqlQueryProperty.) binding: 'x property: 'identity)))
+              (.o (:: @ GraphSyntaxProperty.) binding: 'x property: 'identity)))
       result-bound: 1
       completeness-requirement: 'bounded
       evidence-requirements: '()

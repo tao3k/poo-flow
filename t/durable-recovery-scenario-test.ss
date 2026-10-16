@@ -11,11 +11,11 @@
                  check-equal?
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/recovery-scenario
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/recovery-scenario
         :poo-flow/modules/session/config
-        :poo-flow/modules/memory-core/config)
+        :poo-flow/modules/ai-agentic-context/features/memory/config)
 
 (export durable-recovery-scenario-test)
 
@@ -56,7 +56,7 @@
            'session/root
            'session/child
            'agent/audit
-           poo-flow-memory-core-default-catalog
+           poo-flow-ai-agentic-context-memory-default-catalog
            intent
            (list (cons 'durable-policy poo-flow-durable-policy/default)
                  (cons 'source-watermark 'turn/40)

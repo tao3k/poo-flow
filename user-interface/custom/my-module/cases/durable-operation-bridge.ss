@@ -7,12 +7,12 @@
 ;;; Invariant: this bridges user-visible durable rows to Marlin operation
 ;;; receipts only; Scheme does not execute runtime store side effects.
 
-(import :poo-flow/modules/memory-core/config
-        :poo-flow/modules/memory-core/durable/policy
-        :poo-flow/modules/memory-core/durable/store
-        :poo-flow/modules/memory-core/durable/store-backend
-        :poo-flow/modules/memory-core/durable/store-operation
-        :poo-flow/modules/memory-core/durable/store-operation-bridge
+(import :poo-flow/modules/ai-agentic-context/features/memory/config
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-backend
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-operation
+        :poo-flow/modules/ai-agentic-context/features/memory/durable/store-operation-bridge
         :poo-flow/modules/session/objects
         :poo-flow/modules/session/config)
 
@@ -64,7 +64,7 @@
          'custom/root-session
          'custom/audit-session
          'agent/audit
-         poo-flow-memory-core-default-catalog
+         poo-flow-ai-agentic-context-memory-default-catalog
          memory-intent
          (list (cons 'durable-policy durable-policy)
                (cons 'source-watermark 'turn/40)

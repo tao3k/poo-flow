@@ -11,8 +11,8 @@
                  check-equal?
                  test-suite)
         :poo-flow/modules/session/config
-        :poo-flow/modules/memory-core/config
-        (only-in :poo-flow/modules/memory-core/objects-core
+        :poo-flow/modules/ai-agentic-context/features/memory/config
+        (only-in :poo-flow/modules/ai-agentic-context/features/memory/objects-core
                  poo-flow-memory-field-rows))
 
 (export memory-core-test)
@@ -68,7 +68,7 @@
         (check-equal? (test-ref manifest 'handoff-ready?) #t)
         (check-equal? (test-ref manifest 'runtime-executed) #f)))
     (poo-flow-test-case "projects default memory stores without runtime execution"
-      (let* ((catalog poo-flow-memory-core-default-catalog)
+      (let* ((catalog poo-flow-ai-agentic-context-memory-default-catalog)
              (local-store
               (poo-flow-memory-catalog-find catalog 'memory/local-session))
              (durable-store

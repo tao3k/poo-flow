@@ -6,9 +6,10 @@
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          (only-in :clan/poo/object .all-slots .ref)
         (only-in :std/test check-equal? test-suite)
-        (only-in :poo-flow/src/scenario/case poo-flow-scenario-case?)
-        :poo-flow/src/scenario/accessors
-        :poo-flow/src/authoring/module-source-collection
+        (only-in :poo-flow/modules/workflow/scenario/case poo-flow-scenario-case?)
+        :poo-flow/modules/workflow/scenario/accessors
+        :core/module-system/source/collection
+        (only-in :poo-flow/modules/module-authoring/module-source-collection make-poo-flow-contribution-module-load-path poo-flow-default-module-load-path poo-flow-maintained-module-source)
         (only-in :core/module-system/source/objects
                  poo-flow-module-source-ref-value)
         (only-in :poo-flow/user-interface/profiles/langchain langchain)
@@ -50,6 +51,6 @@
     (let* ((collection
             (make-poo-flow-module-source-collection
              'user-custom 'user "user-interface" "custom"))
-           (sources (poo-flow-load-modules collection)))
+           (sources (poo-flow-module-source-collection-interfaces collection)))
       (check-equal? (map poo-flow-module-source-ref-value sources)
                     '("user-interface/custom/my-module/interface.ss"))))))

@@ -14,6 +14,15 @@ The workspace contains two explicit crates:
 - =crates/cedar-gerbil=: the thin Gerbil POO/native projection adapter and its
   native conformance fixture.
 
+The =cedar-gerbil= crate directly depends on the pinned =cedar-poo-bridge=
+from =cedar-poo-spec=. Its private [[file:crates/cedar-gerbil/src/artifact.rs][artifact adapter]] checks that a Gerbil POO
+authority snapshot has exactly the policy IDs, Cedar sources, schema, and
+entities in a validated Lean/Cedar case. The public
+=NativeAuthority::new_with_validated_case= entrypoint requires the Gerbil POO
+snapshot; the bridge cannot assemble policy inputs or publish an authority.
+The Gerbil POO owner supplies composition provenance through its normal
+projection.
+
 Run the default workspace gate from the repository root with:
 
 #+begin_src sh
@@ -65,7 +74,9 @@ normal application path: downstream Lean code compiles to a =.cedar= artifact;
 Scheme loads that artifact with =poo-flow-cedar-policy-file=, composes an
 admitted POO authority snapshot, and passes its projection through the native
 Gerbil binding to the Runtime Host. =lean-poo= itself is a Lake package without
-a Rust crate; its downstream Cedar exporter is not a POO Flow Cargo dependency.
+a Rust crate. =cedar-poo-spec='s Rust bridge is a pinned dependency of this
+binding for validated artifact comparison; it does not replace the
+POO-owned authority snapshot or perform Host admission.
 
 The diagnostic manifest contains one authority bootstrap with an empty =policies= array
 and a nonempty =cases= array. Each case contains =name=, =proposal=, and

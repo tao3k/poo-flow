@@ -15,7 +15,7 @@
         :poo-flow/modules/sandbox-core/profile-support/policy-backend-validation
         :poo-flow/modules/sandbox-core/profile-support/policy-profile-core
         :poo-flow/modules/sandbox-core/profile-support/projection-syntax
-        (only-in :poo-flow/modules/memory-core/durable/policy
+        (only-in :poo-flow/modules/ai-agentic-context/features/memory/durable/policy
                  poo-flow-durable-policy?
                  poo-flow-durable-policy-diagnostic->alist
                  poo-flow-durable-policy-diagnostics

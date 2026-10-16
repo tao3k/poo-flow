@@ -6,7 +6,7 @@
 
 (import (only-in :core/observability/testing-case poo-flow-test-case)
          :std/test
-        (only-in :clan/poo/object .call .cc .o .ref .slot?)
+        (only-in :clan/poo/object .call .o .ref .slot?)
         (only-in :core/observability/debug
                  PooFlowDebugMemoryAnomaly?
                  PooFlowDebugMemoryAnomaly-receipt)
@@ -21,7 +21,6 @@
                  poo-flow-native-observability-enabled?
                  poo-flow-testing-observability-profile-prototype
                  poo-flow-testing-case-profile-prototype
-                 poo-flow-default-testing-case-profile
                  make-poo-flow-testing-observability-profile
                  poo-flow-testing-observability-profile-source-load-paths
                  poo-flow-testing-observability-extension))
@@ -64,13 +63,10 @@
 
     (poo-flow-test-case "shared worker Case memory override retains typed rejection"
       (let* ((profile
-              (.o (:: @ poo-flow-testing-case-profile-prototype)
+             (.o (:: @ poo-flow-testing-case-profile-prototype)
                   identity: 'testing/shared-memory-rejection
-                  memory-policy:
-                  (.cc (.ref poo-flow-default-testing-case-profile
-                             'memory-policy)
-                       heap-limit-bytes: 0
-                       sample-interval-milliseconds: 1)))
+                  heap-limit-bytes: 0
+                  sample-interval-milliseconds: 1))
              (captured #f))
         (with-catch
          (lambda (failure) (set! captured failure))
