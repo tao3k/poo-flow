@@ -6,7 +6,7 @@
 ;;; Boundary: runtime tutorial stages prove Docker/Store handoff behavior.
 ;;; Invariant: these tests keep heavy runtime semantics behind command output.
 
-(import (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :yuanxu/observability/testing-case yuanxu-test-case)
          (only-in :std/test
                  check
                  check-eq?
@@ -17,10 +17,10 @@
                  check-true
                  test-error
                  test-suite)
-        :poo-flow/src/core/api
-        :poo-flow/modules/docker/interface
-        :poo-flow/modules/workflow/store
-        :poo-flow/modules/workflow/flows)
+        :yuanxu/modules/funflow/control-plane/api
+        :agentic-ai-lab/modules/docker/interface
+        :yuanxu/modules/funflow/store
+        :agentic-ai-lab/modules/workflow/flows)
 
 (export tutorial-runtime-result-test)
 
@@ -102,7 +102,7 @@
 ;; : TestSuite
 (def tutorial-runtime-result-test
   (test-suite "funflow tutorial runtime result ladder"
-    (poo-flow-test-case "stage 7 docker process runtime command returns CCompilation visible result"
+    (yuanxu-test-case "stage 7 docker process runtime command returns CCompilation visible result"
       (let (seen-request #f)
         (let* ((runtime-command
                 (make-stdout-runtime-command
@@ -145,7 +145,7 @@
           (check-equal? (docker-config-ref docker 'image #f) "gcc:9.3.0")
           (check-equal? (docker-config-ref docker 'output-policy #f)
                         'process-handle))))
-    (poo-flow-test-case "stage 8 docker artifact feeds store manifest"
+    (yuanxu-test-case "stage 8 docker artifact feeds store manifest"
       (let ((seen-docker #f)
             (seen-store #f))
         (let* ((runtime-command
@@ -197,7 +197,7 @@
           (check-equal? (execution-request-kind seen-store) 'store)
           (check-equal? (runtime-command-name runtime-command)
                         'stage-8-docker-store))))
-    (poo-flow-test-case "stage 9 descriptor command drives docker store workflow"
+    (yuanxu-test-case "stage 9 descriptor command drives docker store workflow"
       (let ((seen-docker #f)
             (seen-store #f))
         (let* ((descriptor
@@ -258,11 +258,11 @@
           (check-equal? (execution-request-kind seen-store) 'store)
           (check-equal? (runtime-command-name runtime-command)
                         'stage-9-docker-store-runtime))))
-    (poo-flow-test-case "stage 10 descriptor manifest exposes rust cli handoff"
+    (yuanxu-test-case "stage 10 descriptor manifest exposes rust cli handoff"
       (let* ((descriptor
               (make-stdout-runtime-command-descriptor
                'stage-10-rust-cli
-               "/usr/bin/poo-flow-runtime"
+               "/usr/bin/agentic-ai-lab-runtime"
                (lambda (envelope)
                  (list "run"
                        "--request-id"
@@ -284,7 +284,7 @@
         (check-equal? (cdr (assoc 'name manifest)) 'stage-10-rust-cli)
         (check-equal? (cdr (assoc 'protocol manifest)) 'stdout-s-expression)
         (check-equal? (cdr (assoc 'executable manifest))
-                      "/usr/bin/poo-flow-runtime")
+                      "/usr/bin/agentic-ai-lab-runtime")
         (check-equal? (cdr (assoc 'arguments manifest))
                       '("run"
                         "--request-id"
@@ -292,7 +292,7 @@
                         "--response-protocol"
                         "stdout-s-expression"))
         (check-equal? (cdr (assoc 'argv manifest))
-                      '("/usr/bin/poo-flow-runtime"
+                      '("/usr/bin/agentic-ai-lab-runtime"
                         "run"
                         "--request-id"
                         "stage-10-request"

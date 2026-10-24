@@ -9,27 +9,28 @@
 ;;; Runtime contract: this module emits request data only.
 ;;; Runtime contract: image pulls and mounts stay behind runtime commands.
 ;;; Runtime contract: process control and CAS writes stay out of Scheme.
-;;; Dependency: generic sandbox resources live in =:poo-flow/modules/agent-sandbox/resource=.
+;;; Dependency: generic sandbox resources live in =:agentic-ai-lab/modules/agent-sandbox/resource=.
 ;;; Policy evidence: tests should trust the installed module registry.
 
-(import (only-in :poo-flow/src/core/task
+(import (only-in :clan/poo/mop Function)
+        (only-in :yuanxu/modules/funflow/control-plane/task
                  make-task-family-descriptor task-family-registry-extend
                  default-task-family-registry make-task task? task-kind
                  task-request)
-        (only-in :poo-flow/src/core/failure raise-control-plane-failure)
-        (only-in :poo-flow/src/core/strategy
+        (only-in :yuanxu/modules/funflow/control-plane/failure raise-control-plane-failure)
+        (only-in :yuanxu/modules/funflow/control-plane/strategy
                  make-strategy strategy-name strategy-capabilities
                  strategy-cache-policy strategy-failure-policy strategy-planner
                  make-local-eager-strategy)
-        (only-in :poo-flow/src/core/runtime-adapter
+        (only-in :yuanxu/modules/funflow/control-plane/runtime-adapter
                  make-runtime-adapter runtime-adapter-name
                  runtime-adapter-capabilities runtime-adapter-submitter
                  runtime-adapter-fetcher runtime-adapter-store-putter
                  runtime-adapter-store-getter make-rust-adapter)
-        (only-in :poo-flow/src/core/config make-run-config)
-        (only-in :poo-flow/src/core/flow
+        (only-in :yuanxu/modules/funflow/control-plane/config make-run-config)
+        (only-in :yuanxu/modules/funflow/control-plane/flow
                  default-flow-declaration-registry task-flow flow-name flow-steps)
-        (only-in :poo-flow/modules/agent-sandbox/resource
+        (only-in :agentic-ai-lab/modules/agent-sandbox/resource
                  sandbox-volume-bindings->request
                  sandbox-volume-bindings-merge))
 
@@ -77,7 +78,7 @@
 ;;; can discover report-only handoff data without guessing task entrypoints.
 ;; : (-> Unit Symbol)
 (def +docker-task-input-receipt-schema+
-  'poo-flow.extensions.docker-task-input-receipt.v1)
+  'agentic-ai-lab.extensions.docker-task-input-receipt.v1)
 
 ;;; Docker task input mirrors Funflow's DockerTaskInput: inputBindings plus
 ;;; placeholder argument values. It is input data to the flow, not task config.
@@ -262,8 +263,7 @@
                          (cons 'args args)
                          (cons 'volumes volumes)
                          (cons 'output-policy output-policy)))
-             input-contract
-             output-contract
+             (Function (list output-contract) (list input-contract))
              #f))
 
 ;;; Task config extraction refuses non-Docker tasks instead of assuming the
@@ -321,16 +321,16 @@
 
 ;;; Funflow's dockerFlow takes DockerTaskConfig and returns a flow from
 ;;; DockerTaskInput to a CAS item. This constructor preserves that boundary.
-;; : (-> Symbol Image Command [Arg] Flow)
-(def (docker-task-flow name image command args)
+;; : (-> Symbol Image Command [Arg] Type Type Flow)
+(def (docker-task-flow name image command args input-type output-type)
   (docker-flow name
                image
                command
                args
                '()
                'cas-item
-               'docker-task-input
-               'cas-item))
+               input-type
+               output-type))
 
 ;;; Boundary: receipt helpers validate that the flow is backed by a Docker task
 ;;; before projecting report-only handoff data.

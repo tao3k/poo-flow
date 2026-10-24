@@ -11,19 +11,20 @@
 ;;; Runtime contract: scheduler and plan semantics stay out of this extension.
 ;;; Policy evidence: tests should assert registry, task shape, and interpreter result.
 
-(import (only-in :poo-flow/src/core/task
+(import (only-in :clan/poo/mop Function)
+        (only-in :yuanxu/modules/funflow/control-plane/task
                  make-task-family-descriptor task-family-registry-extend
                  default-task-family-registry make-task task-kind
                  task-request-operation task-request-payload)
-        (only-in :poo-flow/src/core/strategy
+        (only-in :yuanxu/modules/funflow/control-plane/strategy
                  make-strategy strategy-name strategy-capabilities
                  strategy-cache-policy strategy-failure-policy strategy-planner
                  make-local-eager-strategy)
-        (only-in :poo-flow/src/core/runtime-adapter make-request-only-adapter)
-        (only-in :poo-flow/src/core/config make-run-config)
-        (only-in :poo-flow/src/core/flow
+        (only-in :yuanxu/modules/funflow/control-plane/runtime-adapter make-request-only-adapter)
+        (only-in :yuanxu/modules/funflow/control-plane/config make-run-config)
+        (only-in :yuanxu/modules/funflow/control-plane/flow
                  default-flow-declaration-registry task-flow)
-        :poo-flow/src/core/projection-syntax)
+        :yuanxu/modules/funflow/control-plane/projection-syntax)
 
 (export custom-task-family-descriptor
         make-custom-task-family-registry
@@ -93,7 +94,7 @@
     (make-run-config 'custom-local
                      (make-custom-enabled-strategy)
                      (make-request-only-adapter)
-                     (poo-flow-product-field-rows/tail
+                     (yuanxu-product-field-rows/tail
                       options
                       (runtime 'gerbil)
                       (extension 'custom-task))
@@ -149,8 +150,7 @@
     (make-task name
                'custom
                (list 'custom 'repeat spec)
-               input-contract
-               output-contract
+               (Function (list output-contract) (list input-contract))
                (lambda (input)
                  (string-append input
                                 (repeat-string
